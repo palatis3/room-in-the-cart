@@ -907,7 +907,13 @@ import XCTest
         fill("Pepper rice", into: "ledgerDinnerTitle"); fill("3", into: "ledgerDinnerServings")
         fill("Peppers", into: "Ingredient name"); fill("3", into: "Amount, optional", requireDone: true)
         tap(element("ledgerReviewDinner")); tap(element("ledgerSaveDinner")); tap(app.buttons["Done"])
-        tap(element("ledgerChooseTemplate")); tap(element("dinnerApply")); dinnerRoot()
+        tap(element("ledgerChooseTemplate"))
+        let apply = app.buttons["dinnerApply"]
+        tap(apply)
+        // Apply saves asynchronously before dismissing its decision sheet.
+        // Return through the library only after that sheet has closed.
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+        dinnerRoot()
         tap(app.buttons["Pairing and fallback evidence"])
         tap(app.buttons["Load chosen dinners and protected serving groups"])
         tap(app.buttons["Find accepted dinners not chosen for this pickup"])

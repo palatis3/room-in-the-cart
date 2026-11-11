@@ -29,8 +29,8 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI06/07/08 and SharedFallback are active; later groups are pending. UI05 finished6/7 with the new lookup failure qualified locally below. UI02/03/04, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Five qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`) and PickupOffer Shop Button lookup await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI06/08, recovery/cook/closeout and Spanish shared-food editing are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with a switch-state failure to investigate. UI02/03/04, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Six qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`) and pairing Apply-dismissal wait await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
 | StoreKit | Declined-request evidence and the separate private Apple draft are retained; submission approval remains pending. | No blind reruns or submission without the requested approval. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
@@ -45,6 +45,30 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Pairing return qualified locally:** UI07 job130414154436 completes6/7,
+  zero recorded warnings/idle messages/restarts. The original pairing case failed
+  66.908s because its immediate navigation helper found no visible Back control
+  after Apply. The screenshot shows Dinner library, a Back button and Dinner
+  changes saved. Apply saves asynchronously before closing its sheet; the test now
+  explicitly requires the Apply control to disappear within the existing10s
+  convention before navigating. No production behavior or assertion was removed.
+  Original artifact13842696612 is retained at `.build/PairingReturnNov11/hosted/original.zip`,
+  SHA2566288e05af437066e4cb62ca2bc4c058812f7fc0e609da3ce37f823971165f723.
+  Build10667, exact enumeration98794 and test94631 ended0. Strict1/1 passes46.34s,
+  zero warnings/idle messages/restarts, at `.build/PairingReturnNov11/focused/Tests.xcresult`.
+  Source/compiled-plan hashes match; syntax/automation/diff checks pass. Existing
+  chosen-schedule and no-repeat pairing assertions remain. Hosted resolution is
+  not yet qualified; retain this correction for the grouped candidate.
+- **SharedFallback needs its next investigation:** job130419222033 executes2/2;
+  recipe approval/lost-reply recovery passes183.394s, but five-wrap fallback fails
+  129.944s at line128 when selecting the usual dinner. The nested native switch
+  was off, was tapped once, and its parent did not report1 within3s. Zero recorded
+  runtime warnings/idle messages/restarts. The earlier bootstrap crash did not
+  recur in this execution. Original artifact13842981833 is hash-verified at
+  `.build/SharedFallbackNov11/hosted/original.zip`, SHA256
+  2078a551846378cf16147e69a09b5c2e57a70b2714b5bcc47ac35f136f8e5026.
+  Attachments are exported in `hosted/attachments`; inspect the retained event
+  and snapshot before choosing a correction. No local repeat or source edit yet.
 - **UI04 and stock/purchase now pass hosted84:** UI04 job130384868050 completes
   strict7/7, zero recorded runtime warnings/idle messages/restarts. It includes
   the dinner cap/Cancel journey130.762s and the complete protected-lunch,
