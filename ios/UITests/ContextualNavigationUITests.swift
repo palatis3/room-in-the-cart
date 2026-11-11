@@ -529,11 +529,22 @@ import UIKit
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
         fill("Retailer quote", into: "Source of these prices", replacing: true)
         fill("38", into: "Spending cap", replacing: true)
-        fill("34", into: "rice")
-        fill("0", into: "Fee below threshold or fixed fee")
-        fill("0", into: "Eligible discount")
-        fill("0", into: "Deposits and other charges")
-        if knownTax { fill("0", into: "Tax") }
+        // Enter charges in Form order, then dismiss the keyboard once.
+        var charges = [("rice", "34"), ("Fee below threshold or fixed fee", "0"), ("Eligible discount", "0")]
+        if knownTax { charges.append(("Tax", "0")) }
+        charges.append(("Deposits and other charges", "0"))
+        let done = app.buttons["Done"]
+        for (id, value) in charges {
+            let field = app.textFields[id]
+            revealContent(field, above: done)
+            field.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The field must have keyboard focus: \(id)")
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, id)
+        }
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         tap(app.buttons["Save and evaluate checkout"])
         tap(element("checkout.weightReview"))
         tap(element("checkout.weightLine")); tap(app.buttons["apples"])
