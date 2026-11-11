@@ -20,6 +20,12 @@ release requirements and known failures remain visible.
   cache when used. Do not copy cached products between profiles or start an extra
   build just to populate a cache. Continue to serialize native execution. This
   changes local reuse only; hosted coverage and result retention stay unchanged.
+- Before a native session, inspect booted simulators and active test/debugger
+  processes. Shut down unused Room in the Cart diagnostic devices once ownership
+  is clear; preserve their data and leave the active test device alone. Do not
+  use a global shutdown or delete devices. Old minimum-iOS simulators were found
+  consuming CPU in the background on November 10. This cleanup reduces avoidable
+  host contention; it does not prove or fix XCTest animation-idle faults.
 - For a focused local simulator build, select that simulator's destination instead
   of a generic destination that also compiles unused architectures. Keep hosted
   and release architecture coverage unchanged.
