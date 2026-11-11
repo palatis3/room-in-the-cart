@@ -76,7 +76,15 @@ jobs:
     steps: &fixture-build-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: |
+        run: &fixture-toolchain-preflight |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
           sw_vers
           uname -m
           printf '%s\n' /Applications/Xcode*.app
@@ -206,20 +214,7 @@ jobs:
     steps: &fixture-test-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: |
-          sw_vers
-          uname -m
-          printf '%s\n' /Applications/Xcode*.app
-          bash scripts/check_ci_xcode27.sh
-          python3 - <<'PYCODE'
-          import os, sys
-          sys.path.insert(0, "scripts")
-          from select_ci_iphone import runtime_identity
-          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
-          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
-              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
-          print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
-          PYCODE
+        run: *fixture-toolchain-preflight
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
