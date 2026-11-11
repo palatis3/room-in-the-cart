@@ -4,7 +4,8 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows
+from check_ci_workflows import (BITRISE_LABEL, FIXTURE_CONSUMER_RUNNER, FIXTURE_CONSUMER_SLOT_PREFIX, FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
+                                MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT = '''name: Safe fixture
@@ -43,6 +44,54 @@ class WorkflowGuardTests(unittest.TestCase):
         data, _, _ = parse_workflow(self.path)
         self.assertIn('on', data)
         self.assertEqual(data['concurrency'], {'group': 'original-pr-${{ github.ref }}', 'cancel-in-progress': True})
+
+    def test_fixture_provider_route_keeps_external_forks_and_other_repositories_on_github(self):
+        def evaluate(expression, repository, event, head='', provider='github'):
+            value = expression.removeprefix('${{ ').removesuffix(' }}')
+            for token, replacement in [('github.event.pull_request.head.repo.full_name', head),
+                                       ('github.event_name', event), ('github.repository', repository), ('matrix.provider', provider)]:
+                value = value.replace(token, repr(replacement))
+            return eval(value.replace('&&', 'and').replace('||', 'or'), {'__builtins__': {}}, {})
+        canonical = 'palatis3/room-in-the-cart'
+        for event in ('push', 'schedule', 'workflow_dispatch', 'workflow_call', 'pull_request'):
+            for repository in (canonical, 'outside/fork'):
+                for head in (canonical, 'outside/fork', ''):
+                    trusted = repository == canonical and (event != 'pull_request' or head == canonical)
+                    with self.subTest(repository=repository, event=event, head=head):
+                        self.assertEqual(evaluate(FIXTURE_RUNNER, repository, event, head),
+                                         BITRISE_LABEL if trusted else 'xcode-27')
+                        self.assertEqual(evaluate(FIXTURE_SLOT_PREFIX, repository, event, head),
+                                         'ritc-bitrise-slot-' if trusted else 'ritc-macos-slot-')
+                        for provider in ('github', 'bitrise'):
+                            bitrise = trusted and provider == 'bitrise'
+                            self.assertEqual(evaluate(FIXTURE_CONSUMER_RUNNER, repository, event, head, provider),
+                                             BITRISE_LABEL if bitrise else 'xcode-27')
+                            self.assertEqual(evaluate(FIXTURE_CONSUMER_SLOT_PREFIX, repository, event, head, provider),
+                                             'ritc-bitrise-slot-' if bitrise else 'ritc-macos-slot-')
+        for event in ('pull_request_target', 'repository_dispatch', ''):
+            self.assertEqual(evaluate(FIXTURE_RUNNER, canonical, event, canonical), 'xcode-27')
+
+    def test_fixture_provider_and_slot_route_are_exact_and_cannot_escape_inventory(self):
+        text = TEXT.replace('runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER).replace(
+            'ritc-macos-slot-0', FIXTURE_SLOT_PREFIX + '0')
+        self.path = Path(self.temp.name) / 'ios-fixtures.yml'
+        text = text.replace('  native:', '  build-contributor:')
+        policy = {('ios-fixtures.yml', 'build-contributor'): 0}
+        self.assertEqual(len(self.validate(text, policy)), 1)
+        for changed in (text.replace(FIXTURE_RUNNER, "'" + BITRISE_LABEL + "'"),
+                        text.replace(FIXTURE_SLOT_PREFIX + '0', 'ritc-macos-slot-0'),
+                        text.replace(FIXTURE_SLOT_PREFIX + '0', FIXTURE_SLOT_PREFIX + '3'),
+                        text.replace("github.repository == 'palatis3/room-in-the-cart'", 'true'),
+                        text.replace('bitrise-runner-room in cart', 'bitrise-runner-other')):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                self.validate(changed, policy)
+        self.path = Path(self.temp.name) / 'probe.yml'
+        with self.assertRaises(ValueError):
+            self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER))
+        with self.assertRaises(ValueError):
+            self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + BITRISE_LABEL))
+        with self.assertRaisesRegex(ValueError, 'Unreviewed native job'):
+            self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: bitrise-runner-unreviewed'), {})
 
     def test_duplicate_yaml_at_any_depth(self):
         for text in (TEXT.replace('name: Safe fixture', 'name: Safe fixture\nname: shadow'),
@@ -91,7 +140,8 @@ class WorkflowGuardTests(unittest.TestCase):
                 self.validate(text)
 
     def test_nonleaf_namespace_is_case_insensitive_and_computed_prefixes_are_proven_disjoint(self):
-        groups = ('RITC-MACOS-SLOT-0', 'RiTc-MaCoS-sLoT-4',
+        groups = ('RITC-MACOS-SLOT-0', 'RiTc-MaCoS-sLoT-4', 'RITC-BITRISE-SLOT-0',
+                  'ritc-bitrise-slot-${{ matrix.macos_slot }}', "ritc-bitri${{ 'se-slot-0' }}",
                   "${{ 'ritc-macos-' }}slot-0", "${{ format('ritc-macos-slot-{0}', 0) }}",
                   "ritc-${{ 'macos-slot-0' }}", "RITC-MACOS-SLO${{ 't-0' }}")
         for group in groups:

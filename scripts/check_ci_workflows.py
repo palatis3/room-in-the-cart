@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate five native-job slots and bridge only actionlint 1.7.12's queue-key gap."""
+"""Validate five GitHub and three Bitrise native-job slots and bridge only actionlint 1.7.12's queue-key gap."""
 import argparse
 import copy
 import hashlib
@@ -14,6 +14,22 @@ from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 SLOT_PREFIX = 'ritc-macos-slot-'
 MATRIX_GROUP = SLOT_PREFIX + '${{ matrix.macos_slot }}'
+BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
+BITRISE_LABEL = 'bitrise-runner-room in cart'
+FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
+                ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
+# One reviewed routing expression, not arbitrary runner selection. Reusable
+# workflows inherit their caller's event; unknown events fail back to GitHub.
+FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
+                   "(github.event_name == 'push' || github.event_name == 'workflow_dispatch' || "
+                   "github.event_name == 'workflow_call' || github.event_name == 'schedule' || "
+                   "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
+FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
+FIXTURE_SLOT_PREFIX = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
+FIXTURE_CONSUMER_TRUSTED = FIXTURE_TRUSTED + " && matrix.provider == 'bitrise'"
+FIXTURE_CONSUMER_RUNNER = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
+FIXTURE_CONSUMER_SLOT_PREFIX = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
+FIXTURE_MATRIX_GROUP = FIXTURE_CONSUMER_SLOT_PREFIX + '${{ matrix.macos_slot }}'
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
 POLICY = {
@@ -106,11 +122,13 @@ def parse_workflow(path):
 
 def native_job(job):
     labels = job.get('runs-on', [])
+    if labels in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER):
+        return True
     if isinstance(labels, str):
         labels = [labels]
     require(isinstance(labels, list) and all(isinstance(label, str) and '${{' not in label for label in labels),
             'Review dynamic or grouped runs-on before changing the native-job inventory')
-    return any(re.match(r'^(?:macos|xcode)(?:-|$)', label, re.I) for label in labels)
+    return any(re.match(r'^(?:(?:macos|xcode)(?:-|$)|bitrise-runner-)', label, re.I) for label in labels)
 
 
 def nonleaf_group_is_disjoint(group):
@@ -123,11 +141,12 @@ def nonleaf_group_is_disjoint(group):
     if not isinstance(group, str) or not group:
         return False
     folded = group.casefold()
-    if SLOT_PREFIX in folded:
+    if any(prefix in folded for prefix in (SLOT_PREFIX, BITRISE_SLOT_PREFIX)):
         return False
     prefix = folded.split('${{', 1)[0]
-    return bool(prefix) and all(not name.startswith(prefix) for name in
-                                (SLOT_PREFIX + str(slot) for slot in range(5)))
+    reserved = [pool + str(slot) for pool, count in ((SLOT_PREFIX, 5), (BITRISE_SLOT_PREFIX, 3))
+                for slot in range(count)]
+    return bool(prefix) and all(not name.startswith(prefix) for name in reserved)
 
 
 def validate_workflows(paths, policy=POLICY):
@@ -177,12 +196,25 @@ def validate_workflows(paths, policy=POLICY):
                     cancel_node.start_mark.index >= keys[base + ('cancel-in-progress',)].end_mark.index,
                     f'Native cancel-in-progress must be literal false: {identity}')
             expected = policy[identity]
+            fixture = identity in FIXTURE_JOBS
+            if fixture:
+                runner = FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+                require(job.get('runs-on') == runner, f'Unreviewed fixture provider routing: {identity}')
+            else:
+                labels = job.get('runs-on', [])
+                labels = [labels] if isinstance(labels, str) else labels
+                require(job.get('runs-on') not in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER) and
+                        not any(label.lower().startswith('bitrise-runner-') for label in labels),
+                        f'Bitrise routing is restricted to the four fixture jobs: {identity}')
+            slot_prefix = FIXTURE_SLOT_PREFIX if fixture else SLOT_PREFIX
+            matrix_group = FIXTURE_MATRIX_GROUP if fixture else MATRIX_GROUP
+            slot_count = 3 if fixture else 5
             if type(expected) is int:
-                require(concurrency['group'] == SLOT_PREFIX + str(expected), f'Wrong fixed native slot: {identity}')
+                require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
                 require('strategy' not in job or 'matrix' not in job['strategy'],
                         f'Static slot policy cannot silently accept a new matrix: {identity}')
             else:
-                require(concurrency['group'] == MATRIX_GROUP, f'Wrong global native matrix group: {identity}')
+                require(concurrency['group'] == matrix_group, f'Wrong global native matrix group: {identity}')
                 matrix = job.get('strategy', {}).get('matrix')
                 if isinstance(expected[0], str):
                     require(matrix == expected[0], f'Unreviewed native matrix producer: {identity}')
@@ -191,7 +223,7 @@ def validate_workflows(paths, policy=POLICY):
                             isinstance(matrix['include'], list), f'Expected explicit native matrix rows: {identity}')
                     rows = matrix['include']
                     require(all(isinstance(row, dict) and type(row.get('macos_slot')) is int and
-                                0 <= row['macos_slot'] < 5 for row in rows), f'Invalid native matrix slot: {identity}')
+                                0 <= row['macos_slot'] < slot_count for row in rows), f'Invalid native matrix slot: {identity}')
                     require([(row.get(expected[1]), row['macos_slot']) for row in rows] == expected[0],
                             f'Native matrix identity/order/slot changed: {identity}')
             position = (str(path.resolve()), queue_key.start_mark.line + 1, queue_key.start_mark.column + 1)

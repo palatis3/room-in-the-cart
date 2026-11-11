@@ -57,15 +57,17 @@ jobs:
           python3 scripts/test_select_ios_fixture_work.py
           python3 scripts/select_ios_fixture_work.py --github-output "$GITHUB_OUTPUT"
 
+  # Only canonical trusted events use the connected Bitrise pool. External
+  # fork PRs/noncanonical repositories keep full coverage on GitHub runners.
   build-contributor:
     if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
-      group: ritc-macos-slot-0
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}0
       queue: max
       cancel-in-progress: false
     name: Build contributor, stock and carryover fixtures
     needs: fixture-plan
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: contributor
@@ -74,12 +76,34 @@ jobs:
     steps: &fixture-build-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
+          print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - name: Select an iPhone simulator
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
+      - name: Activate Bitrise Xcode compilation cache
+        id: compilation-cache
+        if: runner.environment == 'self-hosted'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Report unavailable optional compilation cache
+        if: steps.compilation-cache.outcome == 'failure'
+        run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
       - name: Build fixture app and UI tests for iPhone
         id: build
         shell: bash
@@ -147,12 +171,12 @@ jobs:
   build-dinner:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
-      group: ritc-macos-slot-1
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}1
       queue: max
       cancel-in-progress: false
     name: Build dinner decision fixture
     needs: fixture-plan
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: dinner
@@ -163,17 +187,17 @@ jobs:
   contributor-tests:
     if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}${{ matrix.macos_slot }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor]
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'bitrise-runner-room in cart' || 'xcode-27' }}
     timeout-minutes: 55
     strategy:
       fail-fast: false
-      # The five global slot queues cap native execution. Admit every row so
-      # jobs waiting on busy slots cannot hold back work for available slots.
+      # Fixture rows share five GitHub and three Bitrise slots with their
+      # other jobs. Forks use only the existing GitHub queues; admit all rows.
       matrix: ${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}
     env:
       TEST_PRODUCTS_ARTIFACT: ${{ needs.build-contributor.outputs.artifact }}
@@ -182,7 +206,20 @@ jobs:
     steps: &fixture-test-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
+          print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
@@ -306,12 +343,12 @@ jobs:
   dinner-tests:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}${{ matrix.macos_slot }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-dinner]
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'bitrise-runner-room in cart' || 'xcode-27' }}
     timeout-minutes: 55
     strategy:
       fail-fast: false

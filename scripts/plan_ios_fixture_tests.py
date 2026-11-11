@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 import re
 
-from ci_mac_slots import with_macos_slots
 
 from plan_ios_tests import UI_TARGET, read_identifiers, selector, write_plan
 
@@ -161,8 +160,15 @@ def shard_members(profile, inventory):
 
 def matrix(inventory=None):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
-    return {"include": with_macos_slots([{"profile": profile, "shard": shard}
-                        for profile in PROFILES for shard in shard_members(profile, inventory)], ("profile", "shard"))}
+    rows = [{"profile": profile, "shard": shard}
+            for profile in PROFILES for shard in shard_members(profile, inventory)]
+    # Five existing GitHub slots plus three Bitrise slots serve the fixture tail.
+    # Keep row identity/order and exact selections; only admission metadata changes.
+    for index, row in enumerate(rows):
+        lane = index % 8
+        row.update(provider="github" if lane < 5 else "bitrise",
+                   macos_slot=lane if lane < 5 else lane - 5)
+    return {"include": rows}
 
 
 def read_enabled_identifiers(configuration, profile, seen):

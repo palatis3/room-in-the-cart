@@ -78,18 +78,51 @@ release requirements and known failures remain visible.
 
 ## When to run hosted checks
 
+### GitHub and Bitrise capacity
+
+The existing Bitrise Build Hub pool `bitrise-runner-room in cart` adds three
+independent `ritc-bitrise-slot-0..2` queues beside the five
+`ritc-macos-slot-0..4` GitHub queues. Both fixture producers build on Bitrise;
+the existing fixture test rows are distributed across five GitHub and three
+Bitrise lanes without duplicating cases. Core, deep, wire, performance and
+CodeQL continue sharing the same five GitHub queues. Fixture jobs can therefore
+keep all eight lanes useful after the core checks finish. This allows up to
+eight concurrent native jobs when both pools have ready work;
+it does not shorten a single test or guarantee eight occupied machines.
+External fork PRs and noncanonical repositories route Bitrise-designated work
+to GitHub slots0–2, within the existing five-slot cap. All fixture selections and required gates
+remain intact. Keep GitHub's fork approval controls enabled; workflow expressions
+alone are not a security boundary against changes in an untrusted PR. GitHub's
+repository policy now requires approval for all external contributors, verified
+through the API on November11.
+
+The two Bitrise fixture producers activate Xcode compilation caching before the
+build in a separate step. The CLI is pinned to3.19.5 and its official archive
+SHA256; Build Hub supplies workspace authentication without a repository token.
+Cache activation is optional for build correctness and reports a warning on
+failure; required compilation and test outcomes still decide the gate. Consumers
+restore the producer's exact test products and always execute their selected
+tests. A cold cache is expected on the first build; measure subsequent useful
+builds rather than rerunning unchanged tests merely to populate it.
+
+The owner activated trials on November11. Build Hub displayed an end date of
+November25; the owner reported a30-day Build Cache trial. These are separate
+subscriptions. Review continued capacity before expiry. Toolchain/runtime guards
+remain pinned; a different provider image must not silently upgrade them.
+
 Keep ordinary edits local while running their affected checks. Publish grouped
 changes to the candidate PR when ready for combined integration; its core and
 fixture workflows still run complete coverage. Do not push status-only edits
 while a useful candidate batch is running.
 
-The large core and contributor matrices use the five global native-job slot
-queues as their execution cap, without a second matrix `max-parallel` window.
+The large core and contributor matrices use their assigned global native-job
+slot queues as their execution cap, without a second matrix `max-parallel` window.
 On November 11 the five admitted contributor rows included three waiting on busy
 slots3/4 and only two executing on slots0/3, while core UI09 occupied slot4.
 The next quote rows for available slots1/2 had not been admitted. Removing that
-redundant window lets all rows reach their existing slot queues; it does not
-increase the five-job global cap, change test coverage or cancel waiting work.
+redundant window let all rows reach their existing slot queues without changing
+the then-five-job cap, coverage or cancellation policy. The Bitrise addition
+above now supplies three separate native slots.
 Confirm utilization on the next combined run; no speedup is claimed from local
 workflow validation alone. GitHub documents the separate
 [matrix limit](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#defining-the-maximum-number-of-concurrent-jobs)

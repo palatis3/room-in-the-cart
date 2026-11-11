@@ -5,8 +5,9 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from check_ci_workflows import POLICY, native_job, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_JOBS, FIXTURE_RUNNER, POLICY, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +35,8 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['build-mode'], 'manual')
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
-                    self.assertEqual(job['runs-on'], 'xcode-27', key)
+                    runner = (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in FIXTURE_JOBS else 'xcode-27'
+                    self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):
                         # Only execution uses the qualified PR compatibility runtime;
@@ -48,12 +50,30 @@ class Xcode27MigrationTests(unittest.TestCase):
                     checkout = next(i for i, step in enumerate(job['steps'])
                                     if step.get('uses', '').startswith('actions/checkout@'))
                     guard = [i for i, step in enumerate(job['steps'])
-                             if step.get('run') == 'bash scripts/check_ci_xcode27.sh']
+                             if 'bash scripts/check_ci_xcode27.sh' in step.get('run', '').splitlines()]
                     self.assertEqual(guard, [checkout + 1], key)
                     self.assertNotIn('continue-on-error', job)
         self.assertEqual(seen, set(POLICY))
         self.assertEqual(len(seen), 18)
         self.assertFalse((ROOT / '.github/workflows/ios-xcode27.yml').exists())
+
+    def test_fixture_preflight_rejects_other_runtime_builds_on_both_providers(self):
+        jobs = parse_workflow(ROOT / '.github/workflows/ios-fixtures.yml')[0]['jobs']
+        for _, name in sorted(FIXTURE_JOBS):
+            step = next(s for s in jobs[name]['steps'] if s.get('name') == 'Require the reviewed Xcode 27.1 toolchain')
+            command = step['run']
+            for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
+                self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
+            code = command.split("python3 - <<'PYCODE'\n", 1)[1].rsplit('\nPYCODE', 1)[0]
+            for version, build, passes in [('27.0', '24A434', True), ('27.0', '24A435', False), ('27.1', '24A434', False)]:
+                with self.subTest(job=name, version=version, build=build), \
+                        patch('select_ci_iphone.runtime_identity', return_value={'version': version, 'buildversion': build}) as identity, \
+                        patch.dict(os.environ, {'CI_IPHONE_RUNTIME': RUNTIME}):
+                    if passes:
+                        exec(code, {})
+                    else:
+                        with self.assertRaises(SystemExit): exec(code, {})
+                    identity.assert_called_once_with(RUNTIME)
 
     def test_actual_toolchain_guard_rejects_drift_without_running_native_tools(self):
         with tempfile.TemporaryDirectory() as folder:

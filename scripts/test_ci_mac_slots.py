@@ -39,11 +39,16 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual([r['shard'] for r in plan['include']], ['models', *[f'ui-{i:02d}' for i in range(1, 11)]])
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
-        validate_macos_slots(fixtures, ('profile', 'shard'))
+        self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise'})
+        validate_macos_slots([row for row in fixtures if row['provider'] == 'github'], ('profile', 'shard'))
+        bitrise = [row for row in fixtures if row['provider'] == 'bitrise']
+        self.assertEqual([row['macos_slot'] for row in bitrise], [i % 3 for i in range(len(bitrise))])
+        self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures[:8]],
+                         [('github', i) for i in range(5)] + [('bitrise', i) for i in range(3)])
         self.assertEqual(len(fixtures), 26)
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
-        self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'macos_slot'})
+        self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot'})
         performance = performance_matrix('\n'.join(COMPILED))['include']
         validate_macos_slots(performance, ('case',))
         self.assertEqual([r['case'] for r in performance], ['launch', 'rendered', 'scroll'])
