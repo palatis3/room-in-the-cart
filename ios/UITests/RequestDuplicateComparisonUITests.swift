@@ -109,7 +109,7 @@ import XCTest
         openRequest(sam,step:"Spanish-Sam-page-one")
         tap(element("household.duplicates.loadMore"))
         capture("S23-Spanish-page-two-loaded-in-same-decision-sheet")
-        assertComparisonValue("selection",request:"sam",value:"Decidiendo esta solicitud")
+        assertComparisonValue("selection",request:"sam",value:"Decidiendo esta solicitud",initiallyForward:false)
         assertComparisonValue("author",request:"sam",value:"Sam",contains:true)
         assertComparisonValue("amountLabel",request:"sam",value:"Cantidad y uso, tal como se escribieron")
         assertComparisonValue("amount",request:"sam",value:"1 box for breakfasts")
@@ -150,7 +150,7 @@ import XCTest
     private var cancelButton: XCUIElement { app.buttons.matching(identifier: "household.decision.cancel").firstMatch }
     private func element(_ id:String)->XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target:XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
-    private func assertComparisonValue(_ field:String,request:String,value:String,contains:Bool=false) {
+    private func assertComparisonValue(_ field:String,request:String,value:String,contains:Bool=false,initiallyForward:Bool=true) {
         let suffix: String
         switch request {
         case "sam": suffix = "1"
@@ -164,7 +164,7 @@ import XCTest
         // actual typed static-text value for this request inside the comparison,
         // rather than a same-word node in the covered inbox or request summary.
         let matches = app.staticTexts.matching(identifier:id).matching(predicate)
-        let found = scanForVisibleElement(description:"\(request)-\(field)-\(value)") {
+        let found = scanForVisibleElement(description:"\(request)-\(field)-\(value)",initiallyForward:initiallyForward) {
             matches.allElementsBoundByIndex.first { $0.exists && $0.isHittable }
         } candidate: {
             matches.allElementsBoundByIndex.last ?? matches.firstMatch
@@ -192,8 +192,8 @@ import XCTest
         }
         XCTAssertTrue(found,"Missing actionable UI element: \(target.debugDescription)")
     }
-    private func scanForVisibleElement(description:String,visible:()->XCUIElement?,candidate:()->XCUIElement)->Bool {
-        var forward = true
+    private func scanForVisibleElement(description:String,initiallyForward:Bool=true,visible:()->XCUIElement?,candidate:()->XCUIElement)->Bool {
+        var forward = initiallyForward
         var reversed = false
         var previousSignature = ""
         var unmoved = 0
@@ -219,7 +219,11 @@ import XCTest
                 if target.frame.maxY <= area.minY { forward = false }
                 else if target.frame.minY >= area.maxY { forward = true }
             }
-            let position = scrollPosition(in:container)
+            guard let observation = scrollObservation(in:container,area:area) else {
+                capture("S23-scroll-observation-unavailable")
+                return false
+            }
+            let position = observation.position
             if forward && position.map({ $0 >= 100 }) == true {
                 if reversed { break }
                 forward = false; reversed = true
@@ -228,7 +232,7 @@ import XCTest
                 // sheet. Stop at the observed boundary instead of doing that.
                 break
             }
-            let signature = visibleSignature(in:container,area:area)
+            let signature = observation.signature
             unmoved = signature == previousSignature ? unmoved + 1 : 0
             previousSignature = signature
             if unmoved >= 2 {
@@ -273,21 +277,30 @@ import XCTest
         area = CGRect(x:area.minX+24,y:top+16,width:max(0,area.width-48),height:max(0,bottom-top-32))
         return area
     }
-    private func scrollPosition(in container:XCUIElement)->Double? {
-        for element in container.descendants(matching:.other).allElementsBoundByIndex.reversed() {
+    private func scrollObservation(in container:XCUIElement,area:CGRect)->(position:Double?,signature:String)? {
+        // These are observations, not actions. Read one fresh tree instead of
+        // resolving each node's label and frame through another remote query.
+        guard let snapshot = try? container.snapshot() else { return nil }
+        var nodes:[XCUIElementSnapshot] = []
+        var pending = Array(snapshot.children.reversed())
+        while let node = pending.popLast() {
+            nodes.append(node)
+            pending.append(contentsOf:node.children.reversed())
+        }
+        var position:Double?
+        for element in nodes.reversed() where element.elementType == .other {
             let label = element.label.lowercased()
             guard label.contains("vertical"),
                   label.contains("scroll") || label.contains("desplazamiento"),
                   let value = element.value as? String, value.hasSuffix("%"),
                   let percent = Double(value.dropLast().replacingOccurrences(of:",",with:".")) else { continue }
-            return percent
+            position = percent
+            break
         }
-        return nil
-    }
-    private func visibleSignature(in container:XCUIElement,area:CGRect)->String {
-        container.staticTexts.allElementsBoundByIndex.filter {
-            $0.exists && $0.frame.intersects(area)
+        let signature = nodes.filter {
+            $0.elementType == .staticText && $0.frame.intersects(area)
         }.map { "\($0.label)@\(Int($0.frame.minY))" }.joined(separator:"|")
+        return (position,signature)
     }
     private func scroll(in area:CGRect,forward:Bool) {
         let distance = min(240,area.height*0.42)
