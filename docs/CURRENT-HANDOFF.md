@@ -19,6 +19,27 @@ then move to the next unresolved cause. Workflow scheduling and fixture balancin
 changes are committed locally but are not yet active on GitHub; publish them with
 the next grouped candidate after the current useful batch finishes.
 
+- **Records switch correction qualified locally:** hosted job130360190957 failed
+  the English source-selection step; Spanish passed163.382s. Its recorded tap hit
+  the visible native switch's track center but left both switch and owning row
+  off. The test now targets the off-position thumb and retains both state checks,
+  all export/privacy/Cancel/deduplication/inert-recovery assertions and deadlines.
+  `.build/SharedRecordsNov11/focused/Tests.xcresult` passes strict2/2: EN112.799s,
+  ES116.908s, one execution each, zero runtime warnings/idle messages/restarts.
+  Build17248 and test4945 ended0; source and exact compiled-plan hashes still match.
+  Swift syntax and the existing automation contract pass. No production change.
+  The original archive13834852047 remains in `.build/SharedRecordsNov11/hosted`,
+  SHA256 ade2ca0e927e4e4f7248a66b30b209d50149bc7753aed0add72d14b2a8aa43cf.
+  No local native process remains active. Private recovery screenshots stay local.
+- **Next independent investigation — store quote timeout:** hosted job130363718894
+  reached its720s deadline in the known-trip/private-proposal/shopper-adoption
+  journey. The log shows repeated reveal scrolling, but the cause is not yet
+  established. Inspect the retained original artifact13834588872 (GitHub SHA256
+  e6526416c03c642c63be917c0fdde0d13eadd12695d446beb9e73f75d0c5753f) before
+  changing source or rerunning the affected original case. Do not raise its limit
+  or repeat unrelated successful cases. Quote lost-reply/relaunch job130364984253
+  passes570.119s, strict1/1, zero runtime warnings/idle messages/restarts. The stale
+  quote job is the last producing fixture job still active at this checkpoint.
 - **UI05's seven original app cases now pass locally:** completed normal products
   were reused after compiled enumeration confirmed the exact hosted selectors.
   `.build/CoreUI05Nov11/local/Tests.xcresult` passes strict7/7 in529.650s, one

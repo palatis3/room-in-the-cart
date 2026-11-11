@@ -147,6 +147,11 @@ tests while `tsc` is still replacing `dist` files. Bind the source and compiled
 output hashes to the finished attempt, and serialize source changes, builds and
 dependent tests. Independent read-only reviews can continue in parallel.
 
+Export a fresh xcresult bundle's summary and test details sequentially. Concurrent
+exports have collided while xcresulttool initialized its database. If only export
+processing fails, retry that processing against the retained bundle, then run the
+existing strict result check; do not repeat the native tests for an export error.
+
 When reusing DerivedData, select the exact test plan produced by the completed
 build and bind its hash. An older plan for another architecture may share the same
 SDK version. Preserve test class names when assembling focused selectors, then

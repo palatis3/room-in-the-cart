@@ -164,7 +164,12 @@ import XCTest
         XCTAssertEqual(value.switches.count, 1, "Expected one native switch inside the Records row")
         let nativeSwitch = value.switches.firstMatch
         reveal(nativeSwitch, requiresFullFrame: true)
-        if nativeSwitch.value as? String == "0" { nativeSwitch.tap() }
+        if nativeSwitch.value as? String == "0" {
+            // The recorded track-center tap left this visible switch off on
+            // iOS 27. Target its visible off-position thumb, then verify both
+            // the native control and the owning SwiftUI row changed state.
+            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        }
         let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             nativeSwitch.value as? String == "1" && value.value as? String == "1"
         }, object: nil)
