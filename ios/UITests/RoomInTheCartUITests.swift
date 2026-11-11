@@ -215,7 +215,9 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         enterComparison(item: "Accessible edit wraps", firstQuantity: "8", cap: "30")
         compare()
-        let edit = element("editComparison")
+        // The visible control is a Button. Restrict resolution to that type;
+        // the broad descendant query can stall before synthesizing this tap.
+        let edit = app.buttons["editComparison"]
         revealFullyInComparison(edit)
         XCTAssertFalse(app.navigationBars.buttons["editComparison"].exists,
                        "Accessibility-sized Edit must use the expandable content row")

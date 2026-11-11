@@ -30,7 +30,8 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published14b combined qualification | Core43005537223 and fixtures43005537178 remain live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages and Dinner5/5 pass. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
+| Published14b combined qualification | Core43005537223 and fixtures43005537178 remain live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages, Dinner5/5 and coreUI01 6/6 pass. CoreUI02 executes6/6 with5passes and one large-text Edit lookup failure. CodeQL reports zero results in all three analyses at the current PR merge SHA and zero open PR alerts. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
+| Next grouped correction: large-text Edit | Hosted14b UI02 job130479862054 stalls while resolving the broad `editComparison` query before sending a tap. Its screenshot and frame attachment show the full control visible and hittable; the spindump records broad snapshot traversal. The affected test now uses `app.buttons["editComparison"]`; production and outcome assertions are unchanged. | Local build23808, exact-one enumeration56175 and test49128 all exit0. Strict1/1 passes95.47s with zero recorded runtime warnings, idle diagnostics or runner restarts and matching source/plan hashes. Retain `.build/LargestEditNov11/focused` for the next grouped candidate; hosted resolution remains unproven. Do not interrupt14b or repeat the unchanged local check. |
 | Previous84 batch | All five workflows are terminal. Core fails only its ios-tests matrix; fixtures fail only contributor-tests; deep billing remains failed. Security and native-wire pass. The last two quote cases pass: Spanish largest text104.688s and stale/locked save454.307s, both strict1/1 with zero recorded warnings/idle messages/restarts. | Retain original failures and local correction evidence. Do not rerun84 or label it green. |
 | Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
 | Ten locally qualified corrections, now published | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction are included in14b. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Await combined results; do not assume hosted resolution from local passes. |
@@ -47,6 +48,25 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 
 ### Retained evidence notes
 
+- **Large-text Edit and security follow-up:** original UI02 artifact13851078320
+  is retained at `.build/LargestEditNov11/hosted/original.zip`, SHA256
+  `391ed905405dd62f1ee6a7ca472ddee3f24bedbd26fcfc55ebcdab5d251bd1a0`.
+  Its exact frames show Edit `(16,151,370,93.333)` fully inside the visible
+  results `(0,116,402,667)`, hittable=true. Before/after screenshots remain on
+  the same result screen; the failed tap produced no synthesized event. The
+  retained spindump shows XCTest resolving broad descendant snapshots. The
+  narrow Button lookup passes the original local case95.47s without weakening
+  layout, input-preservation or comparison-result assertions. Swift syntax and
+  diff checks pass. NativeNormal/dd now contains the freshly built normal Debug
+  plan; the source/plan hashes in `focused/source-and-plan.txt` match. No native
+  process remains, and ownedA50 is shut down with its data retained.
+  CoreUI01 job130479862083 passes all6 cases, including the first Dinner pickup
+  journey, with zero recorded runtime warnings, idle messages or runner restarts.
+  GitHub CodeQL analyses2143378078(Swift),2143114898(JS/TS),2143110306(Actions)
+  all report results_count0 and no analysis error for PR merge commit
+  `a8022f96f1c3a57efe89d87a79bc4f7b65399e1d`; paginated open-alert lookup for
+  refs/pull/1/merge returns0. These scoped results do not close the remaining
+  combined UI, billing or release requirements. No hosted run was dispatched.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
