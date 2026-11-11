@@ -40,11 +40,27 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
         self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise'})
-        validate_macos_slots([row for row in fixtures if row['provider'] == 'github'], ('profile', 'shard'))
-        bitrise = [row for row in fixtures if row['provider'] == 'bitrise']
-        self.assertEqual([row['macos_slot'] for row in bitrise], [i % 3 for i in range(len(bitrise))])
-        self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures[:8]],
-                         [('github', i) for i in range(5)] + [('bitrise', i) for i in range(3)])
+        # The three long groups move to Bitrise; the other 23 rows keep their lanes.
+        self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
+            ('bitrise', 1), ('bitrise', 2), ('github', 2), ('bitrise', 0),
+            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('github', 0), ('github', 1), ('github', 2), ('github', 3),
+            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('github', 0), ('github', 1), ('github', 2), ('github', 3),
+            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('github', 0), ('github', 1),
+        ])
+        self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
+                          for row in fixtures if row['shard'] in {
+                              'contributor-balanced-04', 'contributor-balanced-02', 'contributor-balanced-05'}}, {
+            'contributor-balanced-04': ('bitrise', 0),
+            'contributor-balanced-02': ('bitrise', 1),
+            'contributor-balanced-05': ('bitrise', 2),
+        })
+        for row in fixtures:
+            self.assertIs(type(row['macos_slot']), int)
+            self.assertIn(row['macos_slot'], range(5 if row['provider'] == 'github' else 3))
+        self.assertEqual(len({(row['profile'], row['shard']) for row in fixtures}), 26)
         self.assertEqual(len(fixtures), 26)
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])

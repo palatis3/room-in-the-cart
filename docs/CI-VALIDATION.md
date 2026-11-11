@@ -85,8 +85,13 @@ independent `ritc-bitrise-slot-0..2` queues beside the five
 `ritc-macos-slot-0..4` GitHub queues. Both fixture producers build on Bitrise;
 the existing fixture test rows are distributed across five GitHub and three
 Bitrise lanes without duplicating cases. Core, deep, wire, performance and
-CodeQL continue sharing the same five GitHub queues. Fixture jobs can therefore
-keep all eight lanes useful after the core checks finish. This allows up to
+CodeQL continue sharing the same five GitHub queues. Each Bitrise lane also gets
+one existing long contributor group: balanced-04 on lane 0, balanced-02 on lane 1,
+and balanced-05 on lane 2. The first combined batch finished all nine initially
+assigned Bitrise consumers while GitHub still had fixture, core UI and billing
+work queued. These three groups previously used about 101 minutes of GitHub runner time;
+redistributing that work is not a measured whole-batch time saving. Row order,
+selectors and profiles remain unchanged. This allows up to
 eight concurrent native jobs when both pools have ready work;
 it does not shorten a single test or guarantee eight occupied machines.
 External fork PRs and noncanonical repositories route Bitrise-designated work

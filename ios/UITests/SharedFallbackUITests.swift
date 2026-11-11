@@ -54,7 +54,8 @@ final class SharedFallbackUITests: XCTestCase {
         reveal(element,file:file,line:line)
         // A partially visible SwiftUI switch can report hittable while its trailing knob is under the home indicator.
         let knob = element.switches.firstMatch
-        let control = knob.exists ? knob : element
+        let hasNativeSwitch = knob.exists
+        let control = hasNativeSwitch ? knob : element
         reveal(control, file: file, line: line)
         if control.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
         if control.frame.midY < app.frame.minY + 72 { app.swipeDown() }
@@ -62,8 +63,18 @@ final class SharedFallbackUITests: XCTestCase {
         // native switch off. Target its current thumb, then check both states.
         let thumbX: CGFloat = control.value as? String == "1" ? 0.75 : 0.25
         control.coordinate(withNormalizedOffset: CGVector(dx: thumbX, dy: 0.5)).tap()
+        // The hosted agreement tap turns the switch on, but resolving the old
+        // nested query afterward can fail. Check both values in one fresh tree.
         let applied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            control.value as? String == value && element.value as? String == value
+            guard let snapshot = try? element.snapshot(), snapshot.value as? String == value else { return false }
+            guard hasNativeSwitch else { return true }
+            var descendants = snapshot.children
+            var nativeSwitches: [XCUIElementSnapshot] = []
+            while let child = descendants.popLast() {
+                if child.elementType == .switch { nativeSwitches.append(child) }
+                descendants.append(contentsOf: child.children)
+            }
+            return nativeSwitches.count == 1 && nativeSwitches[0].value as? String == value
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }

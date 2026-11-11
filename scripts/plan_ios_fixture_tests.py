@@ -164,8 +164,15 @@ def matrix(inventory=None):
             for profile in PROFILES for shard in shard_members(profile, inventory)]
     # Five existing GitHub slots plus three Bitrise slots serve the fixture tail.
     # Keep row identity/order and exact selections; only admission metadata changes.
+    # The first combined run exhausted Bitrise's short rows while GitHub still
+    # queued long contributor groups. Give each Bitrise lane one existing group.
+    long_group_lanes = {
+        "contributor-balanced-04": 5,
+        "contributor-balanced-02": 6,
+        "contributor-balanced-05": 7,
+    }
     for index, row in enumerate(rows):
-        lane = index % 8
+        lane = long_group_lanes.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
     return {"include": rows}
