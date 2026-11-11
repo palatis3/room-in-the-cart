@@ -42,7 +42,7 @@ import XCTest
             tap(app.buttons["sharedShop.confirmedOrder"])
         }
         func row(_ prefix: String) -> XCUIElement {
-            app.descendants(matching: .any).matching(identifier: prefix + ".66666666-6666-4666-8666-666666666666").firstMatch
+            app.staticTexts.matching(identifier: prefix + ".66666666-6666-4666-8666-666666666666").firstMatch
         }
         func prepare() {
             tap(app.buttons["sharedOrder.amend"])
@@ -74,6 +74,7 @@ import XCTest
         let retry=app.buttons[spanishLargestText ? "Reintentar la misma acción de compra compartida" : "Retry the same shared shop action"]
         XCTAssertTrue(retry.waitForExistence(timeout:10), "A lost reply must retain the original durable operation")
         app.terminate();open(reset:false)
+        reveal(retry)
         XCTAssertTrue(retry.waitForExistence(timeout:10))
         tap(retry)
         XCTAssertTrue(retry.waitForNonExistence(timeout:10))
