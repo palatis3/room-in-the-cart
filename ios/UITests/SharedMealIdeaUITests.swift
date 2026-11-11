@@ -216,7 +216,7 @@ import XCTest
         XCTAssertEqual(field.value as? String, text)
         let keyboard = app.keyboards.firstMatch
         if keyboard.exists && keyboard.frame.intersects(app.frame) {
-            // Use the production tracking Form's interactive keyboard dismissal.
+            // Scroll the production tracking Form to dismiss its keyboard.
             let area = scrollableArea(), origin = app.coordinate(withNormalizedOffset: .zero)
             let start = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.minY + area.height * 0.25 - app.frame.minY))
             let end = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.maxY - 8 - app.frame.minY))
@@ -265,8 +265,14 @@ import XCTest
             if id == "household-idea-evidence", !old.isEmpty {
                 // This multiline TextField initially places the caret at the
                 // start. Use the observed native edit menu to replace all text.
+                // Focusing can move the field behind the keyboard; reveal it
+                // before the long press rather than scrolling for a menu item.
+                reveal(field, fullyVisible: true)
                 field.press(forDuration: 1.2)
-                tap(app.menuItems["Select All"])
+                let selectAll = app.menuItems["Select All"]
+                XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
+                XCTAssertTrue(selectAll.isHittable)
+                selectAll.tap()
                 app.typeText(XCUIKeyboardKey.delete.rawValue)
             } else { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         }
@@ -281,16 +287,25 @@ import XCTest
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
+            let exists = target.exists
+            let hittable = exists && target.isHittable
+            // Most controls are already actionable. Do not query every keyboard
+            // and navigation bar unless a viewport check or scroll is needed.
+            if hittable && !fullyVisible { return }
             let area = scrollableArea()
+            let frame = exists ? target.frame : .zero
             // A partly visible multiline switch can be hittable while its
             // trailing control is still behind the software keyboard.
-            if target.exists && target.isHittable,
-               !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
+            if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let upward: Bool
-            if target.exists && !target.frame.isEmpty {
-                upward = target.frame.midY > area.midY
+            if exists && !frame.isEmpty {
+                upward = frame.midY > area.midY
             } else { upward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst }
-            scrollContent(upward: upward)
+            // A full-height drag can alternate past a nearly visible row.
+            // Preserve the full-visibility check and move only its overflow.
+            let overflow = upward ? frame.maxY - area.maxY : area.minY - frame.minY
+            let distance = exists && !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
+            scrollContent(upward: upward, area: area, distance: distance)
         }
         let area = scrollableArea()
         XCTAssertTrue(target.exists && target.isHittable &&
@@ -305,14 +320,17 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, area observedArea: CGRect? = nil, distance: CGFloat? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
+        let area = observedArea ?? scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let travel = min(distance ?? (low - high), low - high)
+        let startY = upward ? low : high
+        let endY = startY + (upward ? -travel : travel)
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: startY - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: endY - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertVisibleSupplyPreview() {

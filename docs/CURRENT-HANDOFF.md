@@ -5,8 +5,9 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-Latest workflow implementation commit is **2e7fa53b**; latest product fix is
-**5f1eec54**. Remote candidate remains **49bde552**.
+Latest workflow implementation commit is **2e7fa53b**. The newest qualified product
+correction is the shared-tracking keyboard change below. Remote candidate remains
+**49bde552**.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -18,6 +19,53 @@ then move to the next unresolved cause. Workflow scheduling and fixture balancin
 changes are committed locally but are not yet active on GitHub; publish them with
 the next grouped candidate after the current useful batch finishes.
 
+- **UI05's seven original app cases now pass locally:** completed normal products
+  were reused after compiled enumeration confirmed the exact hosted selectors.
+  `.build/CoreUI05Nov11/local/Tests.xcresult` passes strict7/7 in529.650s, one
+  execution each, zero runtime warnings/idle messages/restarts. Session40744 ended0.
+  This covers ranged-pack relaunch, freezer reservations, next-shop cancellation,
+  Spanish protected lunch, navigation restoration, saved offers and shortcut touch
+  targets. No source correction was required. The original hosted bootstrap failure
+  remains failed; the changed hosted simulator setup still needs verification.
+- **Meal-idea timeout correction qualified locally:** hosted job130350223702 executed
+  the fractional approval/proposal/shopper journey but reached its720s limit while
+  revealing the final shopper controls. Original archive13833073005 is verified at
+  `.build/SharedMealIdeaNov11/hosted`, SHA256
+  8700a4edb3817016caedcc25d79a71cba3241f834813ccfaee3901d554dab333.
+  The existing helper unnecessarily queried viewport geometry before returning
+  already-hittable controls and computed it twice before each scroll. A local
+  test-only correction avoids these duplicate queries, preserving all assertions,
+  24-attempt bounds and original deadlines. Swift syntax/automation checks and
+  fixture build25292 pass in `.build/SharedMealIdeaNov11/focused`.
+  First local run failed the fractional case355.628s on a partially obscured
+  switch; its screenshot proves the interactive keyboard remained visible while
+  large drags oscillated across the row. Lifecycle passed107.185s. Successor
+  `focused-r2` makes the production tracking Form dismiss on scroll immediately
+  and uses near-edge proportional drags without weakening full visibility; the
+  fractional case passes317.787s. Its lifecycle case failed99.947s searching for
+  the Select All menu while scrolling the form. `focused-r3` now reveals the
+  focused field before long press and waits directly for the native menu. Build
+  18482 and test36640 both finished0. Both original cases pass together: fractional
+  journey321.383s, lifecycle108.440s, strict2/2 with one execution each, zero runtime
+  warnings/idle messages/restarts. All approval, cancellation, privacy, fractional
+  food, price-acknowledgement and exactly-once assertions and720s limits remain.
+  The current source/plan hashes match the successful attempt. Normal Debug build
+  91422 also passes at `.build/SharedMealIdeaNov11/Normal-Build.xcresult`.
+  Preserve both failed local bundles and the original hosted timeout. Hosted
+  runtime improvement still needs the combined successor; no speed ratio is claimed.
+  No local native process remains active. Both normal and fixture caches are current.
+- **Hosted saved-change Undo passes:** job130352394524 confirms1/1 in310.133s,
+  zero runtime warnings/idle messages/restarts, including cancellation, relaunch,
+  exact retry and preservation of later food.
+- **Additional hosted passes:** English food-editor130343662276 passes596.073s;
+  Spanish saved-change Undo130358073646 passes350.635s; skipped-dinner Undo passes
+  EN439.498s/ES419.745s in130356584214/130359138519. Idea lifecycle130350641107
+  passes350.333s. Delivery recovery/cook/closeout130335504205 passes all5 original
+  cases. Financial-field quote130362439353 passes249.082s, and Spanish largest-text
+  quote130365595808 passes108.394s. Each log confirms its full selection, zero
+  runtime warnings/idle messages/restarts. The hosted fractional-idea timeout
+  remains failed despite its local correction; Records and other quotes are still
+  active or queued. Do not repeat these successful unchanged cases locally.
 - **New bootstrap failure classified:** SharedFallback job130340123821 finished
   with no selected test started, the same `XCTWaiter(StallHandling)` startup fault
   as UI05. Its original archive13831339171 is retained in
@@ -117,8 +165,9 @@ the next grouped candidate after the current useful batch finishes.
   DinnerDecisionSheet, RecordsMedia, both created-meal Undo journeys, Spanish
   food-edit review and delivery stock/purchase. Delivery is6/6 with zero runtime
   warnings/restarts and two idle messages. Balanced03/05 and SharedFallback retain
-  the failures classified above. English food-edit, fractional meal idea and saved
-  operation Undo are running; other fixtures remain queued. Do not replace this
+  the failures classified above, plus the fractional meal-idea timeout. Food-edit,
+  idea lifecycle, all four operation Undo and recovery/cook cases now pass as
+  recorded above; Records and remaining quote cases are active or queued. Do not replace this
   useful run just because core has finished. No duplicate dispatched.
 - **Next publication:** inspect new terminal failures once, then group verified
   changes after this useful batch. UI02/03/04 and the observed balanced03/05

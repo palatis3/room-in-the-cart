@@ -68,7 +68,7 @@ struct SharedTrackingFlowView: View {
             } else { Text(st("Shared access ended. Return to the household.")) }
         }
         .navigationTitle(st(model.freezing ? "Review frozen pickup" : "Food quantities and sources"))
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboard(.immediately)
         .disabled(model.busy)
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(st("Cancel")) { model.clear(); dismiss() }.accessibilityIdentifier("sharedTracking.cancel")
