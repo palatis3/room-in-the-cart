@@ -5,9 +5,10 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-Latest workflow implementation commit is **2e7fa53b**. The newest qualified product
-correction is the shared-tracking keyboard change below. Remote candidate remains
-**49bde552**.
+The preceding published candidate is **aa176fedcbfe830b2685198364e1ee6f960d5c93**
+on both candidate branches. This revision prepares its early source-check repair;
+verify the successor's actual publication and automatic run IDs from GitHub.
+The newest qualified production correction is the shared-tracking keyboard change.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -16,8 +17,32 @@ The owner reaffirmed these changes going forward. CI-VALIDATION now explicitly
 defers optional polish, speculative coverage and new tooling while the first
 release has unresolved requirements. Finish and qualify the current correction,
 then move to the next unresolved cause. Workflow scheduling and fixture balancing
-changes are committed locally but are not yet active on GitHub; publish them with
-the next grouped candidate after the current useful batch finishes.
+changes are now published. PR1 remains draft and unmerged.
+
+- **aa176fed hosted source failure corrected locally:** core42976888365 source
+  job130377944571 failed two stale Python expectations, so its native build/test
+  jobs were skipped. The observer contract still pinned the reporter before
+  b13a5999's explicit missing-identity failure; the dispatch test still expected an
+  automatic PR performance trigger. Reviewed that reporter diff: missing identity
+  still fails, skips warning qualification and reports unverified execution; no
+  metrics, baseline or successful-case acceptance changed. Its two hash pins now
+  match the reviewed reporter. Dispatch profiles now reject events absent from
+  the actual workflow, and the existing test verifies explicit manual baseline
+  enforcement instead. Full Python source checks pass975 in17.170s at
+  `.build/SourceContractsNov11/tests.log`, session52004 ended0. This is a local
+  source-only correction; no local native rerun is required. Theme, localization,
+  generated Xcode project and shard shell checks also pass. Live recheck confirmed
+  fixture builds130378032119/130378032395 are still pending, with no fixture tests
+  started. Supersede aa176fed once with this verified repair to avoid a full
+  fixture run on an already-disqualified candidate followed by an immediate repeat.
+  Core is terminal failed (source check and gate; native jobs unexecuted); security
+  passed. Preserve both outcomes. Early deep/native-wire work may be cancelled by
+  normal PR concurrency; no completed result is relabeled or original failure erased.
+- **Published runs:** core42976888365, fixtures42976888472, deep42976888389,
+  security42976888381 and native-wire42976888421 all identify aa176fed. No automatic
+  performance run was created, as intended; full release still enforces baselines.
+  The broad existing PR diff still selects deep checks. PR metadata was updated
+  to this candidate, scoped validation and remaining release boundaries.
 
 - **Records switch correction qualified locally:** hosted job130360190957 failed
   the English source-selection step; Spanish passed163.382s. Its recorded tap hit
@@ -38,7 +63,7 @@ the next grouped candidate after the current useful batch finishes.
   now bounds near-edge drags to the observed overflow, preserving full visibility,
   switch state checks, all30attempt bounds and the original720s deadline.
   `.build/SharedStoreQuoteNov11/focused/Tests.xcresult` passes strict2/2: the full
-  original journey311.942s and Spanish largest-text54.859s, one execution each,
+  original journey311.942s and Spanish largest-text54.857s, one execution each,
   zero runtime warnings/idle messages/restarts. Build98925, enumeration73821 and
   test84886 finished0; source and exact compiled-plan hashes still match. Swift
   syntax and the existing automation contract pass. No production change.
@@ -53,8 +78,8 @@ the next grouped candidate after the current useful batch finishes.
   The final quote job passed; there are no additional unknown failures from the
   completed batch. Known assertion/gesture corrections have affected local passes;
   fixture rebalance and UI05/SharedFallback owned setup require hosted verification.
-  Next: publish one grouped successor after final diff/ref review, then verify its
-  automatic runs identify that exact commit. No duplicate manual dispatch.
+  The grouped successor aa176fed was published after final diff/ref review; all
+  five automatic runs identify it. No duplicate manual dispatch occurred.
 - **UI05's seven original app cases now pass locally:** completed normal products
   were reused after compiled enumeration confirmed the exact hosted selectors.
   `.build/CoreUI05Nov11/local/Tests.xcresult` passes strict7/7 in529.650s, one

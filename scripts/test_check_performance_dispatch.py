@@ -32,9 +32,14 @@ class DispatchProfileTests(unittest.TestCase):
         self.assertEqual(env['FRESH_PERFORMANCE_SIMULATOR'], 'false')
         self.assertEqual(env['REQUESTED_PERFORMANCE_CASE'], '')
 
-    def test_pull_request_keeps_baseline_enforcement(self):
-        _, env, _ = profile(self.workflow, 'pull_request', 'all', self.off)
+    def test_manual_baseline_enforcement_is_explicit(self):
+        _, env, _ = profile(self.workflow, 'workflow_dispatch', 'all',
+                            dict(self.off, enforce_baselines=True))
         self.assertEqual(env['ENFORCE_BASELINES'], 'true')
+
+    def test_removed_pull_request_trigger_cannot_be_simulated_as_a_live_profile(self):
+        with self.assertRaisesRegex(ValueError, 'Unknown event'):
+            profile(self.workflow, 'pull_request', 'all', self.off)
 
     def test_helper_profile_expands_exact_manual_all_case_without_other_modes(self):
         script, env, inputs = profile(self.workflow, 'workflow_dispatch', 'all',

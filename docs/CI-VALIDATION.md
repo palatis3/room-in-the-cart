@@ -134,8 +134,19 @@ without an independent task or measured capacity benefit.
 
 Before publishing the next grouped candidate, review the pending diff, finish the
 affected checks and confirm the current hosted batch has yielded its useful results.
+Run the existing cheap source-validation step once on that combined revision,
+including the complete Python suite (`.build/ci-yaml/bin/python -m unittest
+discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization.
+Focused checks did not catch a stale diagnostic hash and removed-trigger expectation
+on November11; all975Python controls take seconds locally and catch dependencies
+outside the edited test module. This is a pre-push source check, not another native
+regression batch. Reuse it while its source inputs remain unchanged.
 Push once for combined integration; do not follow it with status-only pushes or a
-duplicate manual run. If an urgent correctness/security fix supersedes that batch,
+duplicate manual run. If cheap source validation fails before the expensive fixture
+builds or tests start, inspect their live state and qualify the source correction
+locally, then supersede the queued batch once. Record the reason and retain the
+original failure; do not spend a full fixture run on an already-disqualified
+candidate only to repeat it immediately. If an urgent correctness/security fix supersedes that batch,
 record why and preserve its available evidence before replacement. During the next
 batch, prepare diagnosed fixes locally; successful unchanged focused checks need
 no repetition. Keep merge qualification, deferred owner setup and App Store release

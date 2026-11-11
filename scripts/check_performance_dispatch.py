@@ -49,7 +49,7 @@ def profile(document, event, case, options):
         raise ValueError('Workflow boolean roster changed; review required')
     if set(options) != set(FLAGS) or not all(type(value) is bool for value in options.values()):
         raise ValueError('Explicit boolean profile required')
-    if event not in ('workflow_dispatch', 'pull_request') or case not in declared['case']['options']:
+    if event not in ('workflow_dispatch', 'pull_request') or event not in trigger or case not in declared['case']['options']:
         raise ValueError('Unknown event or case')
     inputs = {name: row['default'] for name, row in declared.items()}
     inputs.update(options, case=case)

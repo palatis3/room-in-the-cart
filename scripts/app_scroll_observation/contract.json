@@ -26,7 +26,7 @@
     "scripts/check_ci_workflows.py": "68594eef0954ef20053fd85ebff49a79db4bc7dd9b8572322b9c7c70babe15f9",
     "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
     "scripts/check_ios_performance_environment.py": "ca015a9ab4bcbf90d9a37220a00372d4dc714a5f0f8f4c156aad3f538c8f4300",
-    "scripts/check_ios_test_results.py": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+    "scripts/check_ios_test_results.py": "16bc92ba2409788368733ddd439f293fca31653d6673d24d0a8e2ff946df92ac",
     "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
     "scripts/performance_plan_provenance.py": "cab270919ddfcf69f70b0bf4e92901894e5d1df18da8dcabe42c3b0214a72317",
     "scripts/plan_ios_performance_tests.py": "bbfe795d761a512e3b570fb11684cbdd4157696967ff5cb862302b18a39424ba",
@@ -60,7 +60,7 @@
     "ios/UITests/ReleasePerformanceUITests.swift": "69a7462dd5a916cb243038d8708b829f6623601128f14d1e989e88680bdb3130"
   },
   "checkerSHA256": {
-    "scripts/check_ios_test_results.py": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+    "scripts/check_ios_test_results.py": "16bc92ba2409788368733ddd439f293fca31653d6673d24d0a8e2ff946df92ac",
     "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
     "scripts/check_ios_performance_environment.py": "ca015a9ab4bcbf90d9a37220a00372d4dc714a5f0f8f4c156aad3f538c8f4300",
     "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
