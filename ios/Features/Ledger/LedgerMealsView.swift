@@ -187,15 +187,16 @@ struct LedgerMealEditor: View {
                     TextField(ledgerText("Hard exclusions, separated by commas"), text: $exclusions, axis: .vertical).focused($inputFocus, equals: "exclusions")
                 }.disabled(model.saving || model.hasPendingSave)
                 Section(ledgerText("Ingredients")) {
-                    ForEach($ingredients) { $ingredient in
+                    ForEach(ingredients) { ingredient in
+                        let fields = dinnerDraftBinding(ingredient, in: $ingredients)
                         VStack(alignment: .leading, spacing: 10) {
-                            TextField(ledgerText("Ingredient name"), text: $ingredient.name, axis: .vertical)
+                            TextField(ledgerText("Ingredient name"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
-                            LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                            LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
                                                  amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
-                            TextField(ledgerText("Ingredient notes"), text: $ingredient.notes, axis: .vertical)
+                            TextField(ledgerText("Ingredient notes"), text: fields.notes, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).notes")
-                            TextField(ledgerText("Ingredient exclusions, separated by commas"), text: $ingredient.exclusions, axis: .vertical)
+                            TextField(ledgerText("Ingredient exclusions, separated by commas"), text: fields.exclusions, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).exclusions")
                             Button(ledgerText("Remove ingredient"), role: .destructive) { ingredients.removeAll { $0.id == ingredient.id } }
                         }.padding(.vertical, 6)
@@ -203,13 +204,14 @@ struct LedgerMealEditor: View {
                     Button(ledgerText("Add ingredient")) { ingredients.append(IngredientDraft()) }
                 }.disabled(model.saving || model.hasPendingSave)
                 Section(ledgerText("Named portions")) {
-                    ForEach($portions) { $portion in
+                    ForEach(portions) { portion in
+                        let fields = dinnerDraftBinding(portion, in: $portions)
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField(ledgerText("Who or what this is for"), text: $portion.name, axis: .vertical)
+                            TextField(ledgerText("Who or what this is for"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "portion.\(portion.id).name")
-                            TextField(ledgerText("Portions"), text: $portion.amount).keyboardType(.decimalPad)
+                            TextField(ledgerText("Portions"), text: fields.amount).keyboardType(.decimalPad)
                                 .focused($inputFocus, equals: "portion.\(portion.id).amount")
-                            Toggle(ledgerText("Protect these portions"), isOn: $portion.protected)
+                            Toggle(ledgerText("Protect these portions"), isOn: fields.protected)
                             Button(ledgerText("Remove named portion"), role: .destructive) { portions.removeAll { $0.id == portion.id } }
                         }
                     }

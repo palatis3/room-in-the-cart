@@ -506,7 +506,9 @@ import XCTest
             XCTAssertTrue(snapshot.isEnabled && control.isHittable)
             XCTAssertGreaterThanOrEqual(snapshot.frame.width, 44)
             XCTAssertGreaterThanOrEqual(snapshot.frame.height, 44)
-            XCTAssertTrue(snapshot.frame.contains(label.frame), "The named action must include its visible label")
+            // Native snapshots can differ by floating-point roundoff at a shared edge.
+            XCTAssertTrue(snapshot.frame.insetBy(dx: -0.000001, dy: -0.000001).contains(label.frame),
+                          "The named action must include its visible label")
             if let headerSize {
                 XCTAssertEqual(snapshot.frame.width, headerSize.width, accuracy: 1,
                                "Opening details must keep the header width stable")

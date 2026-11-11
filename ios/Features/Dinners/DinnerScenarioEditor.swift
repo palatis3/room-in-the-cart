@@ -96,12 +96,13 @@ struct DinnerScenarioEditor: View {
                         do { try draft.prepareMatches(accepted: model.state.acceptedDinners); library = nil; reviewed = nil }
                         catch { model.report(error) }
                     }
-                    ForEach($draft.matches) { $match in
+                    ForEach(draft.matches) { match in
+                        let fields = dinnerDraftBinding(match, in: $draft.matches)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(match.recipeName).font(.headline)
                             Text(match.ingredientName)
                             Text(dinnerQuantity(match.quantity))
-                            Picker(dinnerText("Reviewed food identity"), selection: $match.foodID) {
+                            Picker(dinnerText("Reviewed food identity"), selection: fields.foodID) {
                                 Text(dinnerText("Select a food identity")).tag(UUID?.none)
                                 ForEach(draft.foods) { food in Text(food.name.isEmpty ? dinnerText("Unnamed food identity") : food.name).tag(Optional(food.id)) }
                             }
@@ -186,15 +187,16 @@ private struct DinnerScenarioMealFields: View {
     @Binding var draft: DinnerScenarioDraft
     var body: some View {
         Section(dinnerText("Same meal commitments")) {
-            ForEach($draft.meals) { $meal in
+            ForEach(draft.meals) { meal in
+                let fields = dinnerDraftBinding(meal, in: $draft.meals)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Commitment name"), text: $meal.name)
-                    TextField(dinnerText("Required portions"), text: $meal.portions)
-                    recipePicker(dinnerText("Current accepted recipe"), selection: $meal.currentDinnerID)
-                    recipePicker(dinnerText("Candidate accepted recipe"), selection: $meal.candidateDinnerID)
-                    Toggle(dinnerText("Protected commitment"), isOn: $meal.protected)
-                    Toggle(dinnerText("Assign a date"), isOn: $meal.scheduled)
-                    if meal.scheduled { DatePicker(dinnerText("Dinner date"), selection: $meal.date, displayedComponents: .date) }
+                    TextField(dinnerText("Commitment name"), text: fields.name)
+                    TextField(dinnerText("Required portions"), text: fields.portions)
+                    recipePicker(dinnerText("Current accepted recipe"), selection: fields.currentDinnerID)
+                    recipePicker(dinnerText("Candidate accepted recipe"), selection: fields.candidateDinnerID)
+                    Toggle(dinnerText("Protected commitment"), isOn: fields.protected)
+                    Toggle(dinnerText("Assign a date"), isOn: fields.scheduled)
+                    if meal.scheduled { DatePicker(dinnerText("Dinner date"), selection: fields.date, displayedComponents: .date) }
                     Button(dinnerText("Remove commitment"), role: .destructive) { draft.meals.removeAll { $0.id == meal.id } }
                 }.padding(.vertical, 5)
             }
