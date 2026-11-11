@@ -29,8 +29,8 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/09 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys and Spanish saved-change Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI09 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys and Spanish saved-change Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration (`6129bb99`) await combined qualification. | Retain their existing focused passes and the975cheap source checks at6129bb99 while inputs are unchanged. Publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
@@ -45,6 +45,16 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Nine-fix cheap source validation passes:** revision6129bb99 passes all975
+  Python checks in17.598s; session81315 ended0. Log:
+  `.build/SourceContractsNov11/grouped-6129bb99.log`. Theme, localization, generated
+  Xcode project, shard shell syntax and diff checks also pass. Reuse while inputs
+  remain unchanged; no combined hosted acceptance is claimed.
+- **UI08 passes hosted84:** job130415884001 completes strict7/7, with zero
+  recorded runtime warnings/idle messages/restarts. Mixed-language list measures,
+  cook correction/recipient acknowledgement, receipt usable-amount correction,
+  the Spanish Dinner idea journey625.946s, checkout restore, comparison Save
+  viewport and largest-text source/details all pass. No unchanged repeat is needed.
 - **Store-price keyboard enumeration qualified locally:** UI10 job130431281389
   completes7/8; its missing-price case stalls querying an absent keyboard through
   `firstMatch` after Done. The screenshot shows no keyboard; the failure occurs
