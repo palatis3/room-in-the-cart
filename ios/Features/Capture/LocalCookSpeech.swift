@@ -1,6 +1,30 @@
 import AVFoundation
 import UIKit
 
+/// Opt-in fixture diagnostics contain only fixed phases and monotonic time.
+private enum CookReadbackTrace {
+    enum Phase: String {
+        case voicesStarted, voicesReturned, voicesDelivered, audioQueued, audioReady, audioUnavailable
+        case preparationStarted, preparationReady, preparationUnavailable, stopped
+        case intentReady, intentPending, intentInvalid, admissionReady, admissionPending, admissionInvalid
+    }
+    static func record(_ phase: Phase) {
+        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+        let process = ProcessInfo.processInfo
+        guard process.arguments.contains("--ui-testing"), process.arguments.contains("--shared-delivery-fixture"),
+              process.environment["RITC_COOK_READBACK_TRACE"] == "1" else { return }
+        print("RITC_COOK_READBACK_TRACE uptime=\(process.systemUptime) phase=\(phase.rawValue)")
+        #endif
+    }
+    static func gate(_ gate: CookAudioGate, admission: Bool) {
+        switch gate {
+        case .ready: record(admission ? .admissionReady : .intentReady)
+        case .pending: record(admission ? .admissionPending : .intentPending)
+        case .invalid: record(admission ? .admissionInvalid : .intentInvalid)
+        }
+    }
+}
+
 /// Local installed voices only. Playback never requests microphone or speech-recognition permission.
 @MainActor final class LocalCookSpeech: NSObject, CookSpeechPlayback, AVSpeechSynthesizerDelegate {
     var onEnd: ((UUID) -> Void)?
@@ -12,7 +36,11 @@ import UIKit
         loadVoices: CookInstalledVoices.load,
         acquire: { [weak self] lease, completion in
             guard let self else { completion(false); return }
-            self.binding.acquire(lease, completion: completion)
+            CookReadbackTrace.record(.audioQueued)
+            self.binding.acquire(lease) { ready in
+                CookReadbackTrace.record(ready ? .audioReady : .audioUnavailable)
+                completion(ready)
+            }
         },
         release: { [audio] in audio.release($0) }, uniqueLeaseIDs: true
     )
@@ -21,11 +49,23 @@ import UIKit
     func beginIntent(_ id: UUID, changed: @escaping @MainActor @Sendable (UUID) -> Void) -> Bool {
         binding.begin(id, changed: changed)
     }
-    func intentGate(_ id: UUID) -> CookAudioGate { binding.intentGate(id) }
-    func admitPlayback(_ id: UUID) -> CookAudioGate { binding.admit(id) }
+    func intentGate(_ id: UUID) -> CookAudioGate {
+        let gate = binding.intentGate(id)
+        CookReadbackTrace.gate(gate, admission: false)
+        return gate
+    }
+    func admitPlayback(_ id: UUID) -> CookAudioGate {
+        let gate = binding.admit(id)
+        CookReadbackTrace.gate(gate, admission: true)
+        return gate
+    }
     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
         guard binding.currentIntent == id else { completion(false); return }
-        preparation.prepare(for: id, completion: completion)
+        CookReadbackTrace.record(.preparationStarted)
+        preparation.prepare(for: id) { ready in
+            CookReadbackTrace.record(ready ? .preparationReady : .preparationUnavailable)
+            completion(ready)
+        }
     }
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
         guard preparation.sessionID == playbackID else { throw CaptureFailure.audioUnavailable }
@@ -48,6 +88,7 @@ import UIKit
         return synthesizer.continueSpeaking()
     }
     func stop() {
+        CookReadbackTrace.record(.stopped)
         binding.invalidate()
         if !ids.isEmpty { synthesizer.stopSpeaking(at: .immediate) }
         ids.removeAll()
@@ -79,8 +120,13 @@ private enum CookInstalledVoices {
 
     static func load(_ completion: @escaping @MainActor @Sendable ([AVSpeechSynthesisVoice]) -> Void) {
         queue.async {
+            CookReadbackTrace.record(.voicesStarted)
             let voices = AVSpeechSynthesisVoice.speechVoices()
-            DispatchQueue.main.async { completion(voices) }
+            CookReadbackTrace.record(.voicesReturned)
+            DispatchQueue.main.async {
+                CookReadbackTrace.record(.voicesDelivered)
+                completion(voices)
+            }
         }
     }
 }

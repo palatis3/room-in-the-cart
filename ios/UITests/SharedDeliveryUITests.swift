@@ -147,6 +147,7 @@ import XCTest
     }
 
     func testShopperReviewsExactEditedCookWordingBeforeReadback() {
+        app.launchEnvironment["RITC_COOK_READBACK_TRACE"] = "1"
         launch("en", locale: "en_US")
         tap(app.buttons["Delivered food by meal"])
         tap(app.buttons["delivery.cook.AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"])
