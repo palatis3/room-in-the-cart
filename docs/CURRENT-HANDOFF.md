@@ -30,8 +30,10 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published14b combined qualification | Core43005537223 and fixtures43005537178 remain live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages, Dinner5/5 and coreUI01 6/6 pass. CoreUI02 executes6/6 with5passes and one large-text Edit lookup failure. CodeQL reports zero results in all three analyses at the current PR merge SHA and zero open PR alerts. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
+| Published14b combined qualification | Core43005537223 and fixtures43005537178 remain live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages579passed/3separate-wire skips, Dinner5/5, coreUI01 6/6 and models916/916 pass. CoreUI02 is5/6, UI04 is6/7, UI07 is5/7, UI08 is6/7 and UI10 is7/8. UI03/05/06/09 and contributor lost-reply130480619707 are active; other contributor rows remain queued. CodeQL reports zero results in all three analyses at the current PR merge SHA and zero open PR alerts. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
 | Next grouped correction: large-text Edit | Hosted14b UI02 job130479862054 stalls while resolving the broad `editComparison` query before sending a tap. Its screenshot and frame attachment show the full control visible and hittable; the spindump records broad snapshot traversal. The affected test now uses `app.buttons["editComparison"]`; production and outcome assertions are unchanged. | Local build23808, exact-one enumeration56175 and test49128 all exit0. Strict1/1 passes95.47s with zero recorded runtime warnings, idle diagnostics or runner restarts and matching source/plan hashes. Retain `.build/LargestEditNov11/focused` for the next grouped candidate; hosted resolution remains unproven. Do not interrupt14b or repeat the unchanged local check. |
+| Next grouped corrections: Dinner text, reservation and ingredient readback | Three more test-only corrections are committed locally: `823c3421` matches a review text element's own label instead of searching its descendants; `dde06e34` lets reservation callers supply native TextFields; `8247c60b` retains ingredient identity/type through Done for exact readback. Production behavior, assertions and deadlines are unchanged. | Retain focused original passes: Dinner EN147.56s/ES133.06s strict2/2 in `.build/SpanishDinnerIdeaNov11/focused`; reservation49.58s strict1/1 in `.build/MealReservationNov11/focused`; full dinner→protected lunch→checkout→delivery repair→settlement→next shop348.69s strict1/1 in `.build/IngredientReadbackNov11/focused`. All have zero recorded runtime warnings/idle/restarts and matching source/plan hashes at completion. Each result remains bound to its recorded inputs; full combined qualification is still pending. Do not repeat unchanged focused cases or push over the live14b batch. |
+| UI07 share and dinner-move failures | Astra's read-only review and retained captures identify two earlier failures: Close readiness timed out45.322s despite Close visible in the boundary screenshot; the dinner move case never left its initial Manual dinner editor, with keyboard/Done still visible after failed Review. Neither named outcome was reached. | Retain `.build/ShareAndDinnerMoveNov11/hosted`. Next: scope Close targeting to its observed activity navigation host while preserving supported older-system fallback; for the move case, explicitly complete Done and confirm dismissal before the original Review. Review source/capture details below before editing, retain all assertions and deadlines, then qualify the affected original cases. No UI07 fix or rerun has been made yet. |
 | Previous84 batch | All five workflows are terminal. Core fails only its ios-tests matrix; fixtures fail only contributor-tests; deep billing remains failed. Security and native-wire pass. The last two quote cases pass: Spanish largest text104.688s and stale/locked save454.307s, both strict1/1 with zero recorded warnings/idle messages/restarts. | Retain original failures and local correction evidence. Do not rerun84 or label it green. |
 | Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
 | Ten locally qualified corrections, now published | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction are included in14b. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Await combined results; do not assume hosted resolution from local passes. |
@@ -47,6 +49,51 @@ build or a hosted run. The existing CI-VALIDATION policy remains the operational
 workflow; no new suite, monitor, wrapper or approval step is needed.
 
 ### Retained evidence notes
+
+- **Three additional corrections locally qualified:** UI08's Spanish dinner
+  case spent about200s resolving the unknown-quantity warning and reached its
+ 720s allowance near its final restart checks. The text assertion incorrectly
+  used `staticTexts.containing`, which searches descendants, instead of matching
+  the text's own label. Commit823c3421's original EN/ES pair passes147.56s/133.06s.
+  UI10's reservation failure stalled before its first Food name input; its
+  screenshot shows the complete Protect food form. Commitdde06e34 routes those
+  three inputs and later checks through native TextFields; original1/1 passes49.58s.
+  UI04's failed readback used a new broad Ingredient name query after Done, while
+  its failure screenshot visibly retains Wraps. Commit8247c60b captures ingredient
+  identity/type before entry and checks the same control afterward; the complete
+  original journey passes348.69s. Builds24086/37493/94327, exact enumerations
+  66566/84782/6515 and tests82181/87483/31431 all exit0. Strict checks and hashes
+  passed at each attempt's completion; originals and focused results remain in
+  the three case folders named in the queue. No native process remains; ownedA50
+  is shut down with its data retained. The shared normal build cache is current.
+  Original artifact digests: UI08/13851613960
+  `abedfb45bbff797b826be9ada1d2d9ff858d4784ce988f20b24a157952051fcf`;
+  UI10/13852301715 `9e23fbbb771e6fab9c15ea707f4667594ba004e2050127a0ff6fb5c17aa5ac12`;
+  UI04/13853016036 `737949ac63197f91658be2b7fa44306101bf87b6bc22f7714f328f30248a8e4c`.
+- **UI07 evidence and next bounded corrections:** artifact13852957910 has SHA256
+  `3984ef1b11d908858493d033a0a448b366c0a71badcf2b229f1a418b979b6c0b`.
+  In `.build/ShareAndDinnerMoveNov11/hosted/share`, boundary screenshot
+  `9EB746E0-B062-429D-B9C3-A2E061ED8B81.png` shows a rendered activity sheet with
+  Close; facts `3B4203D1-920D-41B3-A3FC-B588F75F37F8.txt` record45.322s and
+  Reduce Motion false. Later hierarchy locates `UIActivityContentView` navigation
+  bar / `header.closeButton`. The boundary screenshot does not prove enabled or
+  hittable state, and the existing broad OR selector is not a stale identifier.
+  In `hosted/move`, `924606B8-41C7-42C3-8354-1E43DF05B376.png` still shows
+  Manual dinner with keyboard and Done. All four initial values passed before
+  Review; no later week move occurred. Inspect those original cases and preserve
+  older-system compatibility of `SystemShareReadiness` when narrowing its query.
+  Astra's three read-only reviews are complete; no agent edit or native process
+  occurred. Root owns the next changes. UI07 remains unqualified5/7.
+- **Hosted model and earlier build logs verified:** job130479862320 passes strict
+ 916/916 with zero recorded runtime warnings, idle diagnostics or runner restarts.
+  Swift packages130472205620 report CoreDomain201, DeviceSurfaces30,
+  HouseholdClient241, LocalStore74 and RecordArchive33 passes, with3 declared
+  separate-wire skips in HouseholdClient. Release130472205716 reports successful
+  compilation and executable/assets/privacy/environment/embedded-extension checks.
+  UI10's missing-store-prices case passes168.47s and UI07's pairing schedule case
+  passes132.66s; these support the corresponding published corrections, without
+  closing their failed groups or the combined release gate. No hosted run was
+  dispatched or candidate branch pushed during these local corrections.
 
 - **Large-text Edit and security follow-up:** original UI02 artifact13851078320
   is retained at `.build/LargestEditNov11/hosted/original.zip`, SHA256
