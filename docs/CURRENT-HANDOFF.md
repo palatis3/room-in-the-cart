@@ -10,6 +10,12 @@ The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
 No additional wrapper, test suite, or unattended monitor has been introduced.
+The owner reaffirmed these changes going forward. CI-VALIDATION now explicitly
+defers optional polish, speculative coverage and new tooling while the first
+release has unresolved requirements. Finish and qualify the current correction,
+then move to the next unresolved cause. Workflow scheduling and fixture balancing
+changes are committed locally but are not yet active on GitHub; publish them with
+the next grouped candidate after the current useful batch finishes.
 
 - **Qualified local changes:** workflow scheduling 6a7a43ca/0813bedb,
   comparison/pickup corrections ebbf4356/ac3493da, numeric dinner input 4cf0ffcc,

@@ -6,6 +6,15 @@ The user has asked to stop overengineering and prioritize completing the app.
 This policy takes precedence over routine repetition described below; existing
 release requirements and known failures remain visible.
 
+- Keep the first-release scope stable. Prioritize confirmed product defects,
+  incomplete acceptance requirements and failures that block the combined
+  candidate. Defer optional visual polish, new diagnostic tooling and speculative
+  coverage unless they resolve one of those items. Do not start a side project
+  simply because a hosted job is still running.
+- Finish the current correction before opening another investigation for the
+  same cause. Once its affected check passes, retain that result and move to the
+  next unresolved item; do not expand validation without a changed dependency,
+  new failure or the planned combined integration gate.
 - During implementation, build the affected target and run the smallest relevant
   existing tests. Add regression coverage for a real defect or critical new
   behavior, not every reversible edit or hypothetical edge case.
