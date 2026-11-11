@@ -690,9 +690,9 @@ import UIKit
         let adoptedSlot = element("quoteAdoptionSlot")
         reveal(adoptedSlot)
         XCTAssertTrue(adoptedSlot.label.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlot.label),adoptedSlot.label)
-        tap(element("dinnerCancelPreview"))
+        tap(app.buttons["dinnerCancelPreview"])
         XCTAssertFalse(app.staticTexts["Current pickup branch: East branch"].exists)
-        tapQuoteRow("Preview using Market B"); tap(element("dinnerApply"))
+        tapQuoteRow("Preview using Market B"); tap(app.buttons["dinnerApply"])
         assertCurrentPickupBranch()
         assertText("This saved comparison uses an earlier pickup revision.")
         let adoptAgain = app.buttons["Preview using Market B"]
