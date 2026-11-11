@@ -159,7 +159,11 @@ def animation_idle_report(idle):
 def test_cases(nodes):
     for node in nodes:
         if node.get("nodeType") == "Test Case":
-            parts = unquote(urlparse(node["nodeIdentifierURL"]).path).strip("/").split("/")
+            identifier_url = node.get("nodeIdentifierURL")
+            if not isinstance(identifier_url, str) or not identifier_url:
+                raise ValueError("XCTest test case is missing nodeIdentifierURL; execution identity is unavailable. "
+                                 "Inspect the original result bundle and log for a runner/bootstrap failure.")
+            parts = unquote(urlparse(identifier_url).path).strip("/").split("/")
             yield "/".join(parts[-3:]), node
         else:
             yield from test_cases(node.get("children", []))
@@ -546,9 +550,15 @@ def main():
     expected = args.selectors.read_text().splitlines()
     summary = json.loads(args.summary.read_text())
     nodes = json.loads(args.tests.read_text())["testNodes"]
-    cases = list(test_cases(nodes))
-    actual = [identifier for identifier, _ in cases]
     failures = []
+    identity_error = None
+    try:
+        cases = list(test_cases(nodes))
+    except ValueError as error:
+        identity_error = str(error)
+        failures.append(identity_error)
+        cases = []
+    actual = [identifier for identifier, _ in cases]
     if not expected or len(expected) != len(set(expected)) or len(expected) != args.expected_count:
         failures.append("Expected selection is empty, duplicated or does not match the build count")
     if len(actual) != len(set(actual)) or set(actual) != set(expected):
@@ -559,7 +569,9 @@ def main():
         failures.append("The shard contains failures, expected failures or skipped tests")
     if any(node.get("result") != "Passed" for _, node in cases):
         failures.append("Every selected test must individually report Passed")
-    report = [f"Executed {len(actual)} of {len(expected)} selected tests.", "", "| Test | Result | Seconds |", "|---|---|---|"]
+    execution_summary = (f"Could not verify execution of {len(expected)} selected tests."
+                         if identity_error else f"Executed {len(actual)} of {len(expected)} selected tests.")
+    report = [execution_summary, "", "| Test | Result | Seconds |", "|---|---|---|"]
     for identifier, node in sorted(cases, key=lambda item: item[1].get("durationInSeconds", 0), reverse=True):
         report.append(f"| {markdown_cell(identifier)} | {markdown_cell(node.get('result', 'Unknown'))} | {node.get('durationInSeconds', 0):.2f} |")
     idle = None
@@ -574,7 +586,10 @@ def main():
         else:
             report.append("The XCTest log confirms one start and one passing completion per selected test.")
     report.extend(["", *animation_idle_report(idle)])
-    append_runtime_warning_report(args, summary, nodes, cases, report, failures)
+    if identity_error:
+        report.append("Runtime-warning evidence cannot be verified without test identities.")
+    else:
+        append_runtime_warning_report(args, summary, nodes, cases, report, failures)
     report.extend(failures)
     output = "\n".join(report) + "\n"
     print(output)

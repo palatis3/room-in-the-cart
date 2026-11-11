@@ -22,7 +22,7 @@ SCRIPT = Path(__file__).with_name('check_ios_test_results.py')
 
 
 class ExecutionInventoryTests(unittest.TestCase):
-    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed', log=None, output=False):
+    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed', log=None, output=False, omit_identity=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'selection.txt').write_text('\n'.join(selected or ['Target/Suite/testOne']) + '\n')
@@ -30,10 +30,14 @@ class ExecutionInventoryTests(unittest.TestCase):
                 'totalTestCount': len(identifiers), 'passedTests': len(identifiers) - skipped,
                 'skippedTests': skipped, 'failedTests': 0, 'expectedFailures': expected_failures, 'result': result,
             }))
-            (root / 'tests.json').write_text(json.dumps({'testNodes': [
+            nodes = [
                 {'nodeType': 'Test Case', 'nodeIdentifierURL': 'test://com.apple.xcode/Project/' + identifier,
                  'result': case_result, 'durationInSeconds': 1} for identifier in identifiers
-            ]}))
+            ]
+            if omit_identity:
+                for node in nodes:
+                    node.pop('nodeIdentifierURL')
+            (root / 'tests.json').write_text(json.dumps({'testNodes': nodes}))
             env = dict(os.environ)
             env.pop('GITHUB_STEP_SUMMARY', None)
             args = [sys.executable, str(SCRIPT), '--selectors', str(root / 'selection.txt'),
@@ -49,6 +53,17 @@ class ExecutionInventoryTests(unittest.TestCase):
 
     def test_exact_execution_passes(self):
         self.assertEqual(self.check_case(['Target/Suite/testOne']), 0)
+
+    def test_unidentified_runner_failure_reports_missing_execution_without_traceback(self):
+        for summary_result, case_result in [('Failed', 'Failed'), ('Passed', 'Passed')]:
+            with self.subTest(summary_result=summary_result):
+                result = self.check_case(['Target/Suite/testOne'], result=summary_result,
+                                         case_result=case_result, omit_identity=True, output=True)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('Could not verify execution of 1 selected tests.', result.stdout)
+                self.assertIn('missing nodeIdentifierURL', result.stdout)
+                self.assertIn('Missing [', result.stdout)
+                self.assertNotIn('Traceback', result.stderr)
 
     def test_wrong_test_with_same_count_fails(self):
         self.assertNotEqual(self.check_case(['Target/Suite/testOther']), 0)
