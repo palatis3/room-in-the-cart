@@ -1718,7 +1718,9 @@ import XCTest
     private func reviewAndApprovePattern(spanish: Bool) throws {
         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
         func assertReviewedText(_ text: String, initiallyUpward: Bool = true) {
-            let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+            // Match the label on the text itself; containing searches its
+            // descendants and can stall while the review's lazy rows scroll.
+            let target = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
             revealScrollableContent(target, initiallyUpward: initiallyUpward)
         }
         func tapDinnerControl(_ target: XCUIElement, initiallyUpward: Bool = true) {
