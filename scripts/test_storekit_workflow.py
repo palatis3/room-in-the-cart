@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import subprocess
 import tempfile
 import unittest
@@ -13,8 +14,8 @@ from check_ci_workflows import parse_workflow
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = {
-    'US English — local StoreKit': ('en', 'en-US', 'en_US', 2),
-    'US Spanish app · Spanish (Mexico) offer · USA storefront': ('es', 'es-US', 'es_MX', 3),
+    'US English — local StoreKit': ('en', 'en-US', 'en_US'),
+    'US Spanish app · Spanish (Mexico) offer · USA storefront': ('es', 'es-US', 'es_MX'),
 }
 
 
@@ -69,12 +70,12 @@ class StoreKitWorkflowTests(unittest.TestCase):
             }]})
         return products / 'LocalStoreKit.xctestrun', {'TestConfigurations': configurations}, resource
 
-    def test_source_plan_and_matrix_keep_both_locales_and_all_scenarios(self):
+    def test_source_plan_and_steps_keep_both_locales_and_all_scenarios(self):
         configurations = self.plan['configurations']
         self.assertEqual(len(configurations), 2)
         self.assertEqual({row['name'] for row in configurations}, set(EXPECTED))
         for entry in configurations:
-            _, language, offer_locale, _ = EXPECTED[entry['name']]
+            _, language, offer_locale = EXPECTED[entry['name']]
             options = entry['options']
             self.assertEqual(options['language'], language)
             self.assertEqual(options['region'], 'US')
@@ -88,9 +89,11 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertEqual(len(selectors), 15)
         self.assertEqual(len(set(selectors)), 15)
         self.assertTrue(all(value.startswith('RoomInTheCartTests/StoreKitScenarioTests/') for value in selectors))
-        rows = self.jobs['storekit']['strategy']['matrix']['include']
-        self.assertEqual(rows, [{'locale': locale, 'macos_slot': slot, 'configuration': name}
-                                for name, (locale, _, _, slot) in EXPECTED.items()])
+        self.assertNotIn('strategy', self.jobs['storekit'])
+        for name, (locale, _, _) in EXPECTED.items():
+            for phase in ('native', 'results', 'verify'):
+                step = self.step('storekit', identifier=f'storekit-{locale}-{phase}')
+                self.assertEqual(step['env'], {'STOREKIT_LOCALE': locale, 'STOREKIT_CONFIGURATION': name})
 
     def test_one_build_exact_artifact_and_test_without_building(self):
         build = self.jobs['storekit-build']
@@ -98,7 +101,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertEqual(build['needs'], 'storekit-plan')
         self.assertEqual(tests['needs'], 'storekit-build')
         self.assertEqual(build['concurrency'], {'group': 'ritc-macos-slot-2', 'queue': 'max', 'cancel-in-progress': False})
-        self.assertEqual(tests['concurrency'], {'group': 'ritc-macos-slot-${{ matrix.macos_slot }}', 'queue': 'max', 'cancel-in-progress': False})
+        self.assertEqual(tests['concurrency'], {'group': 'ritc-macos-slot-2', 'queue': 'max', 'cancel-in-progress': False})
         commands = '\n'.join(step.get('run', '') for step in build['steps'])
         self.assertEqual(commands.count('build-for-testing'), 1)
         self.assertIn('-scheme RoomInTheCart-LocalStoreKit', commands)
@@ -107,22 +110,82 @@ class StoreKitWorkflowTests(unittest.TestCase):
         download = next(step for step in tests['steps'] if step.get('uses', '').startswith('actions/download-artifact@'))
         self.assertEqual(download['with']['artifact-ids'], '${{ needs.storekit-build.outputs.artifact }}')
         self.assertNotIn('run-id', download['with'])
-        command = self.step('storekit', name='Run purchase, restore, renewal and revocation scenarios')['run']
-        self.assertIn('-xctestrun "${test_runs[0]}"', command)
-        self.assertIn('test-without-building', command)
-        self.assertNotIn('-project', command)
-        self.assertNotIn('build-for-testing', command)
-        self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
-        self.assertIn('-default-test-execution-time-allowance 120', command)
-        self.assertIn('-maximum-test-execution-time-allowance 120', command)
-        self.assertEqual(tests['timeout-minutes'], 45)
-        self.assertEqual(self.step('storekit', name='Run purchase, restore, renewal and revocation scenarios')['timeout-minutes'], 35)
-        verifier = self.step('storekit', name='Verify exact StoreKit configuration and all scenario results')
-        self.assertIn('--expected-count 15', verifier['run'])
-        self.assertIn('testPlanConfiguration', verifier['run'])
-        self.assertEqual(verifier['if'], "always() && steps.storekit-results.outcome == 'success'")
-        self.assertFalse(tests['strategy']['fail-fast'])
+        self.assertEqual(tests['timeout-minutes'], 90)  # Sum of the former independent job caps.
+        self.assertEqual(sum(step.get('id') == 'storekit-runtime' for step in tests['steps']), 1)
+        self.assertEqual(sum(step.get('id') == 'storekit-restore' for step in tests['steps']), 1)
+        for locale in ('en', 'es'):
+            native = self.step('storekit', identifier=f'storekit-{locale}-native')
+            command = native['run']
+            self.assertIn('-xctestrun "${test_runs[0]}"', command)
+            self.assertIn('test-without-building', command)
+            self.assertNotIn('-project', command)
+            self.assertNotIn('build-for-testing', command)
+            self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
+            self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
+            self.assertIn('-default-test-execution-time-allowance 120', command)
+            self.assertIn('-maximum-test-execution-time-allowance 120', command)
+            self.assertIn('-collect-test-diagnostics on-failure', command)
+            self.assertEqual(native['timeout-minutes'], 35)
+            verifier = self.step('storekit', identifier=f'storekit-{locale}-verify')
+            self.assertIn('--expected-count 15', verifier['run'])
+            self.assertIn('testPlanConfiguration', verifier['run'])
+            self.assertEqual(verifier['if'], "${{ !cancelled() && steps.storekit-" + locale + "-results.outcome == 'success' }}")
+            upload = next(step for step in tests['steps'] if step.get('with', {}).get('name') ==
+                          'storekit-' + locale + '-${{ github.run_attempt }}')
+            self.assertEqual(upload['if'], 'always()')
+            self.assertIn(f'.build/storekit-{locale}/', upload['with']['path'])
+            self.assertIn('.build/StoreKitRuntime.log', upload['with']['path'])
+            self.assertIn('.build/storekit-product-inventory.json', upload['with']['path'])
         self.assertFalse(any(step.get('continue-on-error') for step in tests['steps']))
+
+    def test_second_locale_is_eligible_after_first_native_export_or_verifier_failure(self):
+        native = self.step('storekit', identifier='storekit-es-native')
+        expression = native['if']
+        self.assertEqual(expression, "${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}")
+        # Evaluate the actual small Actions predicate against prior step outcomes.
+        # The explicit cancellation status function prevents implicit success().
+        def eligible(outcomes, cancelled=False):
+            value = expression.removeprefix('${{ ').removesuffix(' }}')
+            value = value.replace('!cancelled()', str(not cancelled)).replace('&&', 'and')
+            value = re.sub(r'steps\.([a-z-]+)\.outcome',
+                           lambda match: repr(outcomes.get(match[1], '')), value)
+            return eval(value, {'__builtins__': {}}, {})
+        successful = {'storekit-restore': 'success', 'storekit-runtime': 'success',
+                      **{f'storekit-en-{phase}': 'success' for phase in ('native', 'results', 'verify')}}
+        self.assertTrue(eligible(successful))
+        for phase in ('native', 'results', 'verify'):
+            for outcome in ('failure', 'skipped', 'cancelled'):
+                with self.subTest(phase=phase, outcome=outcome):
+                    self.assertTrue(eligible({**successful, f'storekit-en-{phase}': outcome}))
+        for setup in ('storekit-restore', 'storekit-runtime'):
+            for outcome in ('failure', 'skipped', 'cancelled', ''):
+                self.assertFalse(eligible({**successful, setup: outcome}))
+        self.assertFalse(eligible(successful, cancelled=True))
+        steps = self.jobs['storekit']['steps']
+        positions = {step.get('id'): index for index, step in enumerate(steps)}
+        self.assertLess(positions['storekit-en-verify'], positions['storekit-es-native'])
+        for locale in ('en', 'es'):
+            export = self.step('storekit', identifier=f'storekit-{locale}-results')
+            self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-" + locale + "-native.outcome != 'skipped' }}")
+            self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
+
+    def test_locale_gate_rejects_every_failed_skipped_cancelled_or_missing_outcome(self):
+        gate = self.step('storekit', identifier='storekit-locales-gate')
+        self.assertEqual(gate['if'], 'always()')
+        self.assertEqual(gate['env']['STOREKIT_STEP_RESULTS'], '${{ toJSON(steps) }}')
+        code = self.python_block(gate)
+        successful = {f'storekit-{locale}-{phase}': {'outcome': 'success'}
+                      for locale in ('en', 'es') for phase in ('native', 'results', 'verify')}
+        self.execute(code, ROOT, STOREKIT_STEP_RESULTS=json.dumps(successful))
+        for name in successful:
+            for outcome in ('failure', 'skipped', 'cancelled', '', None):
+                values = copy.deepcopy(successful)
+                values[name] = {'outcome': outcome, 'conclusion': 'success'}
+                with self.subTest(step=name, outcome=outcome), self.assertRaises(SystemExit):
+                    self.execute(code, ROOT, STOREKIT_STEP_RESULTS=json.dumps(values))
+            missing = copy.deepcopy(successful); missing.pop(name)
+            with self.subTest(missing=name), self.assertRaises(SystemExit):
+                self.execute(code, ROOT, STOREKIT_STEP_RESULTS=json.dumps(missing))
 
     def test_linux_preflight_installs_hash_pinned_yaml_before_test(self):
         job = self.jobs['storekit-plan']
@@ -225,18 +288,18 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.prepare_runtime('', 'pull_request', [], after_download=[good], download_error=error)
 
     def test_result_checks_exact_runtime_build_device_and_locale_for_both_policies(self):
-        code = self.python_block(self.step('storekit', name='Verify exact StoreKit configuration and all scenario results'))
+        code = self.python_block(self.step('storekit', identifier='storekit-en-verify'))
         for version, build in [('26.2', '23C54'), ('27.0', '24A434')]:
             for locale in EXPECTED:
                 with tempfile.TemporaryDirectory() as directory:
-                    root = Path(directory); (root / '.build').mkdir()
+                    root = Path(directory); output = root / '.build' / ('storekit-' + EXPECTED[locale][0]); output.mkdir(parents=True)
                     device = {'osVersion': version, 'osBuildNumber': build, 'architecture': 'arm64',
                               'modelName': 'iPhone 17', 'platform': 'iOS Simulator', 'deviceId': 'selected-device'}
                     configuration = {'testPlanConfiguration': {'configurationName': locale}, 'device': device}
-                    summary = root / '.build/storekit-summary.json'
+                    summary = output / 'storekit-summary.json'
                     def validate(value):
                         summary.write_text(json.dumps({'devicesAndConfigurations': value}))
-                        self.execute(code, root, STOREKIT_CONFIGURATION=locale, STOREKIT_OS_VERSION=version,
+                        self.execute(code, root, STOREKIT_LOCALE=EXPECTED[locale][0], STOREKIT_CONFIGURATION=locale, STOREKIT_OS_VERSION=version,
                                      STOREKIT_OS_BUILD=build, SIMULATOR_ID='SELECTED-DEVICE')
                     validate([configuration])
                     for key in device:
@@ -256,12 +319,17 @@ class StoreKitWorkflowTests(unittest.TestCase):
             run, fixture, _ = self.compiled_fixture(root)
             run.write_bytes(plistlib.dumps(fixture))
             self.execute(inventory, root, GITHUB_SHA='checked-commit')
-            for configuration in EXPECTED:
-                self.execute(restore, root, GITHUB_SHA='checked-commit', STOREKIT_CONFIGURATION=configuration)
+            self.execute(restore, root, GITHUB_SHA='checked-commit')
             with self.assertRaises(AssertionError):
-                self.execute(restore, root, GITHUB_SHA='different-commit', STOREKIT_CONFIGURATION=next(iter(EXPECTED)))
-            with self.assertRaises(AssertionError):
-                self.execute(restore, root, GITHUB_SHA='checked-commit', STOREKIT_CONFIGURATION='unbuilt-locale')
+                self.execute(restore, root, GITHUB_SHA='different-commit')
+            path = root / '.build/storekit-product-inventory.json'
+            original = json.loads(path.read_text())
+            for configurations in ([], [next(iter(EXPECTED))], [*EXPECTED, 'unbuilt-locale'],
+                                   [next(iter(EXPECTED)), next(iter(EXPECTED))]):
+                value = {**original, 'configurations': configurations}
+                path.write_text(json.dumps(value))
+                with self.subTest(configurations=configurations), self.assertRaises(AssertionError):
+                    self.execute(restore, root, GITHUB_SHA='checked-commit')
 
     def test_shared_products_reject_wrong_sdk_toolchain_or_deployment_target(self):
         inventory = self.python_block(self.step('storekit-build', identifier='storekit-inventory'))

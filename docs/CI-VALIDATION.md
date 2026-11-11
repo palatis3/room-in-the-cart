@@ -21,12 +21,15 @@ release requirements and known failures remain visible.
 - Select the app entry point before a native build: ordinary Shop journeys use
   the normal Debug app; dedicated household fixtures replace `@main`. Group tests
   by compatible build profile and reuse each completed build within that group.
-- Keep separate local DerivedData directories for normal and fixture profiles.
+- Keep separate local DerivedData directories for normal, StoreKit and fixture profiles.
   Switching `SWIFT_ACTIVE_COMPILATION_CONDITIONS` in the same directory invalidates
   dependency builds as well as the app. Use `.build/NativeNormal/dd` for the next
-  normal build; retain `.build/TrackingFlowUIQualificationNov10/r1/dd` for the
+  normal build and `.build/NativeStoreKit/dd` for the next needed StoreKit build;
+  retain `.build/TrackingFlowUIQualificationNov10/r1/dd` for the
   current contributor/stock/carryover profile. Other fixture flags need their own
-  cache when used. Do not copy cached products between profiles or start an extra
+  cache when used. StoreKit also enables coverage flags that the ordinary scheme
+  does not, so sharing their cache forces recompilation even with identical source.
+  Do not copy cached products between profiles or start an extra
   build just to populate a cache. Continue to serialize native execution. This
   changes local reuse only; hosted coverage and result retention stay unchanged.
 - Before a native session, inspect booted simulators and active test/debugger
@@ -38,6 +41,11 @@ release requirements and known failures remain visible.
 - For a focused local simulator build, select that simulator's destination instead
   of a generic destination that also compiles unused architectures. Keep hosted
   and release architecture coverage unchanged.
+- Match the pinned Xcode build and the applicable simulator runtime/build locally.
+  This Mac already runs macOS27.2/26B123; the November11 hosted image reports
+  macOS27.0.1/26A434. They are not identical machines, so retain environment facts
+  with failures. Do not change host OS versions merely to chase an unexplained
+  test failure; there is no demonstrated benefit from doing so here.
 - Keep cheap service/model checks. Avoid repeating native UI, database, wire and
   hosted suites for unrelated or test-only edits. Test a corrected fixture with
   its affected suite before scheduling a broader batch.
@@ -85,6 +93,22 @@ The14b75714 batch subsequently admitted all11core and25contributor rows to those
 queues, with five native jobs executing. Admission behavior is now verified;
 an elapsed-time or overall-utilization improvement has not yet been measured.
 
+The next grouped candidate removes two repeated simulator setups. Core models
+run on the existing build producer after enumeration and product upload; the
+consumer matrix retains all ten UI rows and their original slots. The complete
+compiled plan and model selectors remain unchanged. A failed model step allows
+UI consumers to proceed, but the required CI gate checks its raw outcome and
+rejects failed, skipped, cancelled or missing model results. The producer's outer
+cap is75minutes, replacing separate35-minute build and55-minute model jobs; the
+model step keeps its40-minute limit. UI admission now waits for this model step,
+and producer infrastructure failure can block the UI consumers. Hosted elapsed
+time remains to be measured.
+
+Shard estimates use12 fresh timings from strict-passingaf3338 UI02/UI03 artifacts,
+with provenance retained in `scripts/ios_test_durations.json`. Replanning preserves
+the exact compiled selector inventory; estimates only rebalance work and do not
+change execution deadlines or performance acceptance baselines.
+
 The deep workflow automatically runs for billing/household integration, shared
 Swift packages and their build/test inputs. Unrelated UI-test or diagnostic-script
 edits no longer start StoreKit and both sanitizers. Use its existing manual action
@@ -107,7 +131,21 @@ remain failed. CURRENT-HANDOFF records their evidence and scoped next actions.
 
 The shared StoreKit producer still builds once against the27.0 destination with
 SDK27.1 and the iOS17 deployment target; its inventory records SDK/toolchain identity.
-Each compatibility consumer installs exactly23C54 using Apple's bounded
+The next candidate runs English then Spanish in one consumer, restoring products
+and preparing the exact runtime once. Each locale retains a distinct result
+bundle, artifact, exact-configuration check and all15 selectors. Spanish remains
+eligible after an English native/export/verification failure; a required six-outcome
+gate rejects any incomplete or unsuccessful locale phase. Shared runner/device
+failure can still affect both locales. The outer job cap becomes90minutes in
+place of two45-minute jobs; each native step keeps35minutes and each case120seconds.
+The local sequential rehearsal passes strict15/15 in each configuration on26.2/23C54
+in `.build/StoreKitSharedSetupNov11/{en,es}`, with zero recorded runtime warnings,
+idle notices or restarts and matching source/product hashes at completion. Its
+first enumeration reported Busy before running tests and remains retained; the
+existing explicit boot helper preceded the successful discovery. This qualifies
+the successful shared sequence, not hosted throughput, failure recovery or current-OS billing.
+
+The compatibility consumer installs exactly23C54 using Apple's bounded
 `xcodebuild -downloadPlatform iOS -buildVersion 23C54 -architectureVariant arm64`
 command when missing, then validates installed runtime/build and the actual result
 device/runtime/build. It creates only its job-local iPhone17 if needed. Missing,
@@ -133,8 +171,8 @@ frozen source; the current missing baseline remains an open release requirement.
 For a suspected framework problem, test one concrete hypothesis with the smallest
 relevant original case. If it fails to explain the behavior, preserve the result
 and stop repeating it. Resume only for new evidence or a required release decision.
-No timeout, assertion, required core check or release requirement is relaxed by
-this scheduling policy.
+Native execution allowances, assertions, required core checks and release
+requirements remain enforced. The combined job budgets are documented above.
 
 The November 11 candidate's UI05 and SharedFallback jobs both crashed in XCTest
 bootstrap before any selected case started. The next candidate gives just these
@@ -185,7 +223,7 @@ Run the existing cheap source-validation step once on that combined revision,
 including the complete Python suite (`.build/ci-yaml/bin/python -m unittest
 discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization.
 Focused checks did not catch a stale diagnostic hash and removed-trigger expectation
-on November11; all975Python controls take seconds locally and catch dependencies
+on November11; the complete Python suite takes seconds locally and catches dependencies
 outside the edited test module. This is a pre-push source check, not another native
 regression batch. Reuse it while its source inputs remain unchanged.
 Push once for combined integration; do not follow it with status-only pushes or a

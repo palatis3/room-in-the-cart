@@ -422,7 +422,9 @@ jobs:
       queue: max
       cancel-in-progress: false
     runs-on: xcode-27
-    timeout-minutes: 35
+    # Includes the existing 40-minute model execution step on the prepared
+    # producer. This composite cap replaces separate build/model jobs.
+    timeout-minutes: 75
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
@@ -430,6 +432,7 @@ jobs:
     outputs:
       test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
       test_matrix: ${{ steps.plan.outputs.matrix }}
+      model_result: ${{ steps.models.outcome }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
@@ -489,6 +492,29 @@ jobs:
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
+      - name: Run model tests on the prepared producer and verify every result
+        id: models
+        timeout-minutes: 40
+        # Preserve UI execution after a model failure. The required CI gate
+        # checks this raw outcome separately; a failed model run cannot pass.
+        continue-on-error: true
+        env:
+          TEST_SHARD: models
+          EXPECTED_TEST_COUNT: ${{ steps.plan.outputs.model_count }}
+        run: bash scripts/run_ios_test_shard.sh
+      - name: Retain model results from the prepared producer
+        if: always() && steps.models.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-results-models-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-*.json
+            .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Retain iPhone simulator build evidence
         if: always() && steps.build.outcome != 'skipped'
         continue-on-error: true
@@ -582,6 +608,9 @@ jobs:
           import json, os
           jobs = json.loads(os.environ["JOB_RESULTS"])
           failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          model_result = jobs.get("ios-build", {}).get("outputs", {}).get("model_result")
+          if model_result != "success":
+              failures["ios-models"] = model_result or "missing"
           if failures:
               raise SystemExit(f"Required jobs did not pass: {failures}")
           print("Every required build and test job passed.")

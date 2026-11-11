@@ -32,7 +32,7 @@ POLICY = {
     ('ios-performance.yml', 'performance-tests'): ('${{ fromJSON(needs.performance-build.outputs.test_matrix) }}', ('case',)),
     ('ios-deep.yml', 'sanitizers'): ([('thread', 0), ('address', 1)], 'sanitizer'),
     ('ios-deep.yml', 'storekit-build'): 2,
-    ('ios-deep.yml', 'storekit'): ([('en', 2), ('es', 3)], 'locale'),
+    ('ios-deep.yml', 'storekit'): 2,
     ('ios-native-wire.yml', 'native-wire'): 4,
     ('ios-toggle-diagnostic.yml', 'control'): 4,
 }

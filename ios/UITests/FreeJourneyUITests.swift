@@ -1261,6 +1261,7 @@ import XCTest
         XCTAssertFalse(row.exists && row.isHittable, "The anchor must start beyond the filtered viewport")
         reveal(row)
         let rowID = row.identifier
+        let retainedRow = app.buttons[rowID]
         let originalY = row.frame.minY
         XCTAssertTrue(rowID.hasPrefix("ledgerInspect-"))
         capture("long-filtered-list-before-leaving")
@@ -1273,18 +1274,18 @@ import XCTest
         tap(app.navigationBars["Bring the list"].buttons["Cancel"])
         XCTAssertTrue(search.waitForExistence(timeout: 8))
         XCTAssertEqual(search.value as? String, "Wrap")
-        XCTAssertTrue(element(rowID).isHittable)
-        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
+        XCTAssertTrue(retainedRow.isHittable)
+        XCTAssertEqual(retainedRow.frame.minY, originalY, accuracy: 4)
         XCTAssertFalse(app.buttons["Inspect Wrap cancelled"].exists)
 
-        tap(element(rowID))
+        tap(retainedRow)
         XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 8))
         XCTAssertEqual(element("ledgerIngredientTotal").label, "2 items")
         tap(app.navigationBars["Inspect ingredient"].buttons.element(boundBy: 0))
         XCTAssertTrue(search.waitForExistence(timeout: 8))
         XCTAssertEqual(search.value as? String, "Wrap")
-        XCTAssertTrue(element(rowID).isHittable)
-        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
+        XCTAssertTrue(retainedRow.isHittable)
+        XCTAssertEqual(retainedRow.frame.minY, originalY, accuracy: 4)
         capture("long-filtered-list-after-import-cancel-and-detail-return")
 
         // Search the complete list for the cancelled row; absence from a lazy

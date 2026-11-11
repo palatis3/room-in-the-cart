@@ -55,9 +55,16 @@ def main():
             for path in args.plan_dir.glob('*.txt'):
                 path.unlink()
             write_plan(selected, args.plan_dir)
+        # The producer has just booted this simulator and discovered its tests.
+        # Keep the complete plan, but run models there instead of starting a
+        # second cold consumer. Preserve every UI row's original slot.
+        consumers = [row for row in selected['include'] if row['shard'] != 'models']
+        model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
-            print('matrix=' + json.dumps({'include': selected['include']}), file=output)
-        print(json.dumps({'scope': selected.get('scope', 'full'), 'include': selected['include']}))
+            print('matrix=' + json.dumps({'include': consumers}), file=output)
+            print('model_count=' + str(model_count), file=output)
+        print(json.dumps({'scope': selected.get('scope', 'full'),
+                          'producer_model_count': model_count, 'include': consumers}))
     except (OSError, ValueError, KeyError, TypeError) as error:
         parser.exit(1, f'Cannot select core iOS work: {error}\n')
 

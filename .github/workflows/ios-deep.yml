@@ -213,28 +213,19 @@ jobs:
           if-no-files-found: warn
   storekit:
     needs: storekit-build
-    name: storekit (${{ matrix.locale }}, ${{ matrix.configuration }})
+    name: StoreKit English and Spanish
     concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      group: ritc-macos-slot-2
       queue: max
       cancel-in-progress: false
     runs-on: xcode-27
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - locale: en
-            macos_slot: 2
-            configuration: US English — local StoreKit
-          - locale: es
-            macos_slot: 3
-            configuration: US Spanish app · Spanish (Mexico) offer · USA storefront
+    # Composite cap replaces two independent 45-minute jobs. Each locale keeps
+    # its original 35-minute native step and 120-second case allowances.
+    timeout-minutes: 90
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_NAME: iPhone 17
       REQUIRE_CURRENT_STOREKIT: ${{ inputs.require_current_storekit }}
-      STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
@@ -257,7 +248,9 @@ jobs:
           products = Path(".build/StoreKitDerivedData/Build/Products")
           inventory = json.loads(Path(".build/storekit-product-inventory.json").read_text())
           assert inventory["commit"] == os.environ["GITHUB_SHA"]
-          assert os.environ["STOREKIT_CONFIGURATION"] in inventory["configurations"]
+          expected = {row["name"] for row in json.loads(Path("ios/Tests/LocalStoreKit.xctestplan").read_text())["configurations"]}
+          assert len(inventory["configurations"]) == len(expected) == 2
+          assert set(inventory["configurations"]) == expected
           assert inventory["expectedCountPerLocale"] == 15
           assert inventory["buildSDK"] == "iphonesimulator27.1" and inventory["xcodeBuild"] == "27A9275"
           runs = list(products.glob("*.xctestrun"))
@@ -310,12 +303,19 @@ jobs:
           with Path(os.environ["GITHUB_ENV"]).open("a") as output:
               output.write(f"CI_IPHONE_RUNTIME={runtime}\nSTOREKIT_OS_VERSION={version}\nSTOREKIT_OS_BUILD={build}\nSIMULATOR_ID={simulator}\n")
           PYCODE
-      - name: Run purchase, restore, renewal and revocation scenarios
+      # Explicit eligibility preserves the second locale after native, export or
+      # verifier failure in the first. A shared runner/device is now intentional.
+      - name: Run StoreKit en scenarios
+        id: storekit-en-native
+        if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
         timeout-minutes: 35
+        env: &storekit-en-env
+          STOREKIT_LOCALE: en
+          STOREKIT_CONFIGURATION: US English — local StoreKit
         shell: bash
-        run: |
+        run: &storekit-native |
           set -o pipefail
-          mkdir -p .build
+          mkdir -p ".build/storekit-$STOREKIT_LOCALE"
           python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
           test "${#test_runs[@]}" -eq 1
@@ -324,25 +324,28 @@ jobs:
             -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
             -maximum-test-execution-time-allowance 120 -collect-test-diagnostics on-failure \
-            -resultBundlePath .build/StoreKit.xcresult \
-            test-without-building 2>&1 | tee .build/StoreKit.log
-      - name: Export StoreKit results even after a failed scenario
-        id: storekit-results
-        if: always()
+            -resultBundlePath ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" \
+            test-without-building 2>&1 | tee ".build/storekit-$STOREKIT_LOCALE/StoreKit.log"
+      - name: Export StoreKit en results even after a failed scenario
+        id: storekit-en-results
+        if: ${{ !cancelled() && steps.storekit-en-native.outcome != 'skipped' }}
+        env: *storekit-en-env
         shell: bash
-        run: |
-          test -d .build/StoreKit.xcresult
-          xcrun xcresulttool get test-results summary --path .build/StoreKit.xcresult --compact > .build/storekit-summary.json
-          xcrun xcresulttool get test-results tests --path .build/StoreKit.xcresult --compact > .build/storekit-tests.json
-      - name: Verify exact StoreKit configuration and all scenario results
-        if: always() && steps.storekit-results.outcome == 'success'
+        run: &storekit-export |
+          test -d ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult"
+          xcrun xcresulttool get test-results summary --path ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --compact > ".build/storekit-$STOREKIT_LOCALE/storekit-summary.json"
+          xcrun xcresulttool get test-results tests --path ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --compact > ".build/storekit-$STOREKIT_LOCALE/storekit-tests.json"
+      - name: Verify exact StoreKit en configuration and all scenario results
+        id: storekit-en-verify
+        if: ${{ !cancelled() && steps.storekit-en-results.outcome == 'success' }}
+        env: *storekit-en-env
         shell: bash
-        run: |
+        run: &storekit-verify |
           set -o pipefail
           python3 - <<'PYCODE'
           import json, os
           from pathlib import Path
-          summary = json.loads(Path(".build/storekit-summary.json").read_text())
+          summary = json.loads((Path(".build") / ("storekit-" + os.environ["STOREKIT_LOCALE"]) / "storekit-summary.json").read_text())
           configurations = summary["devicesAndConfigurations"]
           assert len(configurations) == 1
           configuration = configurations[0]
@@ -353,23 +356,67 @@ jobs:
           assert device["deviceId"].upper() == os.environ["SIMULATOR_ID"], device
           PYCODE
           python3 scripts/check_ios_test_results.py --selectors scripts/ios_storekit_test_selectors.txt --expected-count 15 \
-            --summary .build/storekit-summary.json --tests .build/storekit-tests.json \
-            --result-bundle .build/StoreKit.xcresult --test-log .build/StoreKit.log 2>&1 | tee .build/storekit-verification.txt
+            --summary ".build/storekit-$STOREKIT_LOCALE/storekit-summary.json" --tests ".build/storekit-$STOREKIT_LOCALE/storekit-tests.json" \
+            --result-bundle ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --test-log ".build/storekit-$STOREKIT_LOCALE/StoreKit.log" 2>&1 | tee ".build/storekit-$STOREKIT_LOCALE/storekit-verification.txt"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}
+          name: storekit-en-${{ github.run_attempt }}
           include-hidden-files: true
           path: |
-            .build/StoreKit.xcresult
-            .build/StoreKit.log
+            .build/storekit-en/
             .build/StoreKitRuntime.log
-            .build/storekit-summary.json
-            .build/storekit-tests.json
-            .build/storekit-verification.txt
-            .build/test-runtime-warnings.json
             .build/storekit-product-inventory.json
           retention-days: 7
+      # Explicit eligibility preserves the second locale after native, export or
+      # verifier failure in the first. A shared runner/device is now intentional.
+      - name: Run StoreKit es scenarios
+        id: storekit-es-native
+        if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
+        timeout-minutes: 35
+        env: &storekit-es-env
+          STOREKIT_LOCALE: es
+          STOREKIT_CONFIGURATION: US Spanish app · Spanish (Mexico) offer · USA storefront
+        shell: bash
+        run: *storekit-native
+      - name: Export StoreKit es results even after a failed scenario
+        id: storekit-es-results
+        if: ${{ !cancelled() && steps.storekit-es-native.outcome != 'skipped' }}
+        env: *storekit-es-env
+        shell: bash
+        run: *storekit-export
+      - name: Verify exact StoreKit es configuration and all scenario results
+        id: storekit-es-verify
+        if: ${{ !cancelled() && steps.storekit-es-results.outcome == 'success' }}
+        env: *storekit-es-env
+        shell: bash
+        run: *storekit-verify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: storekit-es-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/storekit-es/
+            .build/StoreKitRuntime.log
+            .build/storekit-product-inventory.json
+          retention-days: 7
+      - name: Require both complete StoreKit locale outcomes
+        id: storekit-locales-gate
+        if: always()
+        env:
+          STOREKIT_STEP_RESULTS: ${{ toJSON(steps) }}
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          steps = json.loads(os.environ["STOREKIT_STEP_RESULTS"])
+          required = [f"storekit-{locale}-{phase}" for locale in ("en", "es")
+                      for phase in ("native", "results", "verify")]
+          failures = {name: steps.get(name, {}).get("outcome", "missing") for name in required
+                      if steps.get(name, {}).get("outcome") != "success"}
+          if failures:
+              raise SystemExit(f"StoreKit locale checks did not pass: {failures}")
+          PYCODE
   storekit-gate:
     name: StoreKit build and both locales gate
     needs: [storekit-plan, storekit-build, storekit]
@@ -379,7 +426,7 @@ jobs:
     env:
       JOB_RESULTS: ${{ toJSON(needs) }}
     steps:
-      - name: Require shared build and both locale jobs to succeed
+      - name: Require shared build and both locale runs to succeed
         run: |
           python3 - <<'PYCODE'
           import json, os

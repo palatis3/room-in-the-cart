@@ -73,7 +73,10 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertEqual(sorted(p.name for p in plan_dir.glob('*.txt')), ['models.txt', 'ui-01.txt'])
             self.assertEqual((plan_dir / 'ui-01.txt').read_text().splitlines(), sorted(DINNER))
             self.assertEqual((plan_dir / 'models.txt').read_text().splitlines(), [selector(i) for i in MODELS])
-            self.assertEqual(json.loads(output.read_text().removeprefix('matrix='))['include'][1]['expected_count'], 2)
+            outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
+            self.assertEqual(outputs['model_count'], '2')
+            self.assertEqual(json.loads(outputs['matrix'])['include'], [
+                {'shard': 'ui-01', 'expected_count': 2, 'macos_slot': 1}])
             again = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertNotEqual(again.returncode, 0)
             self.assertIn('full plan changed', again.stderr)
@@ -92,6 +95,59 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertIn("github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner'", expression)
         self.assertIn("'dinner-diagnostic' || 'full'", workflow['concurrency']['group'])
         self.assertIn("'Dinner diagnostic gate' || 'CI gate'", workflow['jobs']['ci-gate']['name'])
+
+    def test_full_cli_keeps_all_compiled_selectors_and_only_moves_models(self):
+        with tempfile.TemporaryDirectory() as folder:
+            plan_dir, output = Path(folder) / 'plan', Path(folder) / 'output'
+            full = make_plan(INVENTORY, DURATIONS, 10)
+            write_plan(full, plan_dir)
+            (plan_dir / 'test-enumeration.json').write_text(json.dumps(INVENTORY))
+            original = {p.name: p.read_bytes() for p in plan_dir.iterdir()}
+            result = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
+                                     '--plan-dir', str(plan_dir), '--github-output', str(output)],
+                                    env={**os.environ, 'GITHUB_EVENT_NAME': 'pull_request',
+                                         'REQUESTED_IOS_SCOPE': 'full'}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
+            self.assertEqual(outputs['model_count'], str(len(MODELS)))
+            self.assertEqual(json.loads(outputs['matrix'])['include'],
+                             [row for row in full['include'] if row['shard'] != 'models'])
+            self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
+
+    def test_producer_model_failure_cannot_pass_the_required_gate(self):
+        jobs = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]['jobs']
+        producer = jobs['ios-build']
+        model = next(s for s in producer['steps'] if s.get('id') == 'models')
+        self.assertIs(model['continue-on-error'], True)
+        self.assertEqual(model['timeout-minutes'], 40)
+        self.assertEqual(model['run'], 'bash scripts/run_ios_test_shard.sh')
+        self.assertEqual(model['env'], {'TEST_SHARD': 'models',
+                         'EXPECTED_TEST_COUNT': '${{ steps.plan.outputs.model_count }}'})
+        self.assertEqual(producer['outputs']['model_result'], '${{ steps.models.outcome }}')
+        self.assertEqual(jobs['ios-tests']['needs'], 'ios-build')
+        gate = jobs['ci-gate']
+        code = gate['steps'][0]['run'].split("<<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
+        results = {name: {'result': 'success'} for name in gate['needs']}
+        results['ios-build']['outputs'] = {'model_result': 'success'}
+        def execute(value):
+            return subprocess.run([sys.executable, '-c', code], capture_output=True, text=True,
+                                  env={**os.environ, 'JOB_RESULTS': json.dumps(value)})
+        self.assertEqual(execute(results).returncode, 0)
+        for outcome in ('failure', 'cancelled', 'skipped', '', None):
+            with self.subTest(outcome=outcome):
+                changed = copy.deepcopy(results)
+                changed['ios-build']['outputs']['model_result'] = outcome
+                result = execute(changed)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('ios-models', result.stderr)
+        for missing in ('outputs', 'ios-build'):
+            changed = copy.deepcopy(results)
+            if missing == 'outputs': del changed['ios-build']['outputs']
+            else: del changed['ios-build']
+            self.assertNotEqual(execute(changed).returncode, 0)
+        changed = copy.deepcopy(results)
+        changed['ios-tests']['result'] = 'failure'
+        self.assertNotEqual(execute(changed).returncode, 0)
 
 
 if __name__ == '__main__':
