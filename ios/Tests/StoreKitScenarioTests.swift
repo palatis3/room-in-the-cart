@@ -172,13 +172,14 @@ import StoreKitTest
         let purchase = beginPurchase(model)
         defer { purchase.task?.cancel(); model.stop() }
         try await eventually("A real Ask to Buy request reaches pending approval") {
-            self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
+            purchase.finished && model.purchaseReport == .pending
+                && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
-        // The SDK may return .pending immediately or keep the purchase call open until resolution.
-        // Assert the actual deferred transaction before allowing either path to be approved.
-        if purchase.finished { XCTAssertEqual(model.notice, .pending) }
-        else { XCTAssertTrue(model.isBusy) }
+        // Follow the documented pending-result then approval sequence. The test
+        // session can expose its pending request before the purchase call returns.
+        XCTAssertEqual(model.notice, .pending)
+        XCTAssertFalse(model.isBusy)
         assertFree(model)
         XCTAssertEqual(session.allTransactions().count, 1, "The fresh approval fixture contains only its pending request")
         // Bounded structural diagnostics only. No transaction identity, token,
