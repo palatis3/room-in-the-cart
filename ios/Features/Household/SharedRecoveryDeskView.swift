@@ -193,8 +193,8 @@ private struct SharedRecoveryEditor: View {
                             .focused($input, equals: .notes)
                     } else { Text(verbatim: draft.title).font(.headline) }
                 }
-                ForEach($draft.ingredients) { $row in
-                    ingredient($row)
+                ForEach(draft.ingredients) { row in
+                    ingredient(dinnerDraftBinding(row, in: $draft.ingredients))
                 }
                 if draft.repeatID == nil {
                     Button(sharedRecoveryText("Add an ingredient")) {
