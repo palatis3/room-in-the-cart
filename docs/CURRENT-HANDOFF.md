@@ -5,7 +5,7 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-Local implementation HEAD is **b13a5999**; remote candidate remains **49bde552**.
+Latest qualified implementation commit is **5b4fb46f**; remote candidate remains **49bde552**.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -16,24 +16,45 @@ No additional wrapper, test suite, or unattended monitor has been introduced.
   and runner-failure reporting b13a5999. The reporter's 48 tests passed; reprocessing
   the original UI05 bundle still fails clearly for 7 unverified selections instead
   of raising KeyError. It does not convert the runner crash into a pass.
-- **Pending UI04:** the cap journey passes locally in 56.839s. The original long Free
-  journey now passes its keyboard boundary and scoped retailer-handoff lookup,
-  but `.build/CoreUI04Nov11/focused-r2/Tests.xcresult` fails after 398.790s after applying
-  the reusable dinner to the next shop: no visible Back control was found while
-  returning to dinnerWeekEntry. Its failure screenshot shows Dinner library and
-  “Dinner changes saved.” A transition/query race is a hypothesis, not proven.
-  Inspect the navigation helper and apply dismissal before changing it or rerunning.
-  Three UI-test files remain uncommitted; do not publish them as qualified.
+- **UI04 qualified locally:** commit 78cf5940 keeps exact keyboard-dismissal/value
+  checks, scopes the retained handoff button to the active collection, waits for
+  the library Back control after Apply, and removes the fragile adjacent-field
+  keyboard/scroll optimization. The original full Free journey passes in 358.031s in
+  `.build/CoreUI04Nov11/focused-r4/Tests.xcresult`, strict 1/1 with no runtime
+  warnings, idle messages or runner restarts. It covers protected lunch, short
+  delivery/repair, settlement, next-shop reuse/relaunch and saved history. The cap
+  journey's unchanged correction passed in 56.839s in the first focused bundle; that
+  bundle overall remains failed. Original hosted and local r1–r3 failures are
+  retained, including r3's 138.069s Group servings scroll oscillation. No original
+  outcome assertion or test execution limit was relaxed.
+- **Household selector qualified locally:** commit 5b4fb46f changes only two
+  meal-change-occurrence lookups from Any to the observed native Button type.
+  The original planner→shopper proposal test passes in 101.813s, strict 1/1,
+  zero runtime warnings/idle messages/restarts, preserving Cancel, send, separate
+  shopper review and exactly-once Apply. Build 55209 and test 36140 ended 0 normally.
+  Results: `.build/SharedMealChangeNov11/focused`. The original balanced05 job
+  130307937540 remains failed (13/14, including all nine guardian tests passing).
+  Its screenshot shows the picker and a passing sibling's log resolves its type.
+  Artifact 13830436305 is retained in `.build/SharedMealChangeNov11/hosted`, verified
+  SHA256 e27dafca2a1f261d63fbce4d54718c4d1b110f7d90d0960a536702c9164fb0ab.
+  Swift syntax and the existing automation contract pass. No new native suite
+  was added and no production behavior changed for this selector correction.
 - **Current hosted batch:** core 42953140531 and fixtures 42953140722 remain active.
-  Core UI07 has now succeeded; UI06/UI08/UI10 are running and UI09 is pending at
+  Core UI07 and UI08 have succeeded; UI06/UI10 are running and UI09 is pending at
   this snapshot. Fixture balanced01/02/04, DinnerDecisionSheet and RecordsMedia
-  succeeded. Balanced05 is newly terminal failure and needs log triage;
-  balanced03 and Spanish created-meal Undo are running. These are job states,
+  succeeded. Balanced05 is 13/14 with the local correction above. Balanced03 and
+  shared-delivery stock/purchase are running. Spanish created-meal Undo now passes
+  1/1 (386.315s), zero runtime warnings/restarts/idle messages; UI08 passes all seven
+  including Spanish dinner review, checkout restoration and largest text, with the
+  same zero diagnostic counts. These are job states,
   not distinct bug counts or final acceptance. No replacement run was dispatched.
-- **Next publication:** finish the pending affected qualification, inspect new
-  terminal failures once, then group verified changes after the current useful
-  batch. Preserve all original failures. Do not repeat passing checks merely for
-  this documentation update. No local native test is active at this checkpoint.
+- **Next publication:** inspect new terminal failures once, then group verified
+  changes after the current useful batch. UI02, UI03, UI04 and balanced05's observed
+  failures now have passing affected local checks. UI05's runner bootstrap failure
+  has clearer reporting, not proven runtime resolution. Preserve all originals;
+  do not repeat these passing checks unchanged. No local native process is active.
+  Normal and contributor fixture caches both contain completed matching builds;
+  retain the profile-specific paths in CI-VALIDATION.
 
 ## Workspace and ownership
 
