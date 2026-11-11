@@ -4,7 +4,17 @@ import XCTest
 extension XCTestCase {
     @MainActor func readySystemShareClose(in app: XCUIApplication,
                                           file: StaticString = #filePath, line: UInt = #line) -> XCUIElement? {
-        let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+        let activityClose = app.navigationBars["UIActivityContentView"].buttons["header.closeButton"]
+        let fallbackClose = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+        var close: XCUIElement?
+        func usableClose() -> Bool {
+            // Resolve within the observed system activity header when available.
+            // Keep the existing lookup for system versions with another hierarchy.
+            let candidate = activityClose.exists ? activityClose : fallbackClose
+            guard candidate.exists && candidate.isEnabled && candidate.isHittable else { return false }
+            close = candidate
+            return true
+        }
         let activityHost = app.otherElements["ActivityListView"].firstMatch
         let remoteContent = activityHost.descendants(matching: .other)["ShareSheet.RemoteContainerView"].firstMatch
         func waitForShareState(_ description: String, timeout: TimeInterval, until ready: @escaping () -> Bool) -> Bool {
@@ -24,12 +34,12 @@ extension XCTestCase {
             return false
         }
         guard waitForShareState("The system share sheet did not begin presenting", timeout: 15, until: {
-            remoteContent.exists || (close.exists && close.isEnabled && close.isHittable)
+            remoteContent.exists || usableClose()
         }) else { return nil }
         // UIKit presents the remote container before the system activity service
         // supplies its controls. Only a usable Close permits cancellation.
         guard waitForShareState("The presented system share sheet did not load its Close control", timeout: 45, until: {
-            close.exists && close.isEnabled && close.isHittable
+            usableClose()
         }) else { return nil }
         return close
     }

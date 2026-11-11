@@ -1425,14 +1425,18 @@ import XCTest
         let ingredientField = copy("Ingredient name", "Nombre del ingrediente")
         let amountField = copy("Amount, optional", "Cantidad, opcional")
         if moveAcrossWeek {
-            // Start with a blank manual dinner. Enter each value directly,
-            // then scroll to Review, as a person completing the form can.
+            // Finish each field before scrolling the lazy form to the next one;
+            // a prior field's keyboard can otherwise intercept its entry tap.
             let fields = [("ledgerDinnerTitle", dinner), ("ledgerDinnerServings", "4"),
                           (ingredientField, ingredient), (amountField, "8")]
             for (identifier, value) in fields {
-                let field = editableElement(identifier)
-                tap(field)
-                field.typeText(value)
+                let original = app.textFields[identifier]
+                reveal(original)
+                let stableID = original.identifier
+                let field = stableID.isEmpty ? original : app.textFields[stableID]
+                fill(value, into: identifier, requireDone: true, useVisibleCenter: true, control: field)
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: copy("Done", "Listo")),
+                              "Finish manual dinner entry before moving to the next field")
                 XCTAssertEqual(field.value as? String, value, "Manual dinner field: \(identifier)")
             }
         } else {
