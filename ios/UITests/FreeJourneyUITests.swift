@@ -908,7 +908,7 @@ import XCTest
     func testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain() {
         launch(reset: true)
         tap(app.tabBars.buttons["Dinners"])
-        tap(element("dinnerStartPickup"))
+        tap(app.buttons["dinnerStartPickup"])
         fill("Dinner plan", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("dinnerLibrary")); tap(element("ledgerNewTemplate"))
         fill("Pepper rice", into: "ledgerDinnerTitle"); fill("3", into: "ledgerDinnerServings")
