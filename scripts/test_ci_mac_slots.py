@@ -40,11 +40,11 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
         self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise'})
-        # The three long groups move to Bitrise; the other 23 rows keep their lanes.
+        # The three long groups and fallback move to Bitrise; other rows keep their lanes.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
             ('bitrise', 1), ('bitrise', 2), ('github', 2), ('bitrise', 0),
             ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('github', 1), ('github', 2), ('github', 3),
+            ('github', 0), ('github', 1), ('bitrise', 2), ('github', 3),
             ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('github', 1), ('github', 2), ('github', 3),
             ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
@@ -52,10 +52,12 @@ class MacSlotMetadataTests(unittest.TestCase):
         ])
         self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
                           for row in fixtures if row['shard'] in {
-                              'contributor-balanced-04', 'contributor-balanced-02', 'contributor-balanced-05'}}, {
+                              'contributor-balanced-04', 'contributor-balanced-02', 'contributor-balanced-05',
+                              'SharedFallbackUITests'}}, {
             'contributor-balanced-04': ('bitrise', 0),
             'contributor-balanced-02': ('bitrise', 1),
             'contributor-balanced-05': ('bitrise', 2),
+            'SharedFallbackUITests': ('bitrise', 2),
         })
         for row in fixtures:
             self.assertIs(type(row['macos_slot']), int)

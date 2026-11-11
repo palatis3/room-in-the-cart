@@ -77,7 +77,7 @@ import XCTest
         promptFrame.name = "S24-empty-price-prompt-frame"; promptFrame.lifetime = .keepAlways; add(promptFrame)
         try assertReadableContrast(price)
         tap(element("household.decision.review"))
-        let apply = element("household.decision.apply")
+        let apply = app.buttons["household.decision.apply"]
         let missingPrice = app.staticTexts["At least one line price is unknown."]
         reveal(missingPrice, fullyVisible: true)
         XCTAssertTrue(missingPrice.isHittable)
@@ -350,7 +350,7 @@ import XCTest
             XCTAssertEqual(row.label, charge)
         }
         capture("S23-shopper-itemized-checkout-details")
-        let apply = element("household.decision.apply")
+        let apply = app.buttons["household.decision.apply"]
         reveal(apply)
         XCTAssertFalse(apply.isEnabled, "Opening the calculation cannot accept the overage")
         tap(element("household.decision.cancel"))
@@ -365,7 +365,7 @@ import XCTest
 
     func testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview() {
         openCerealReview()
-        let apply = element("household.decision.apply")
+        let apply = app.buttons["household.decision.apply"]
         let overage = app.switches["household.decision.overage"]
         let cancelPreview = app.buttons.matching(NSPredicate(format: "label == %@", "Cancel preview"))
         let item = app.textFields["household.decision.item"]
@@ -582,7 +582,7 @@ import XCTest
                                        category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-title")
         try assertCompleteDecisionText(date, style: .body,
                                        category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-date")
-        try assertDisabledApplyRejectsActivation(element("household.decision.apply"), name: "S24-largest-disabled-apply")
+        try assertDisabledApplyRejectsActivation(app.buttons["household.decision.apply"], name: "S24-largest-disabled-apply")
         centerForReading(app.buttons["Cancel preview"])
         capture("Largest text review actions")
         tap(element("household.decision.cancel"))

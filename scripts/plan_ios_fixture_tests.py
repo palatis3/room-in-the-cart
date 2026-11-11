@@ -166,13 +166,15 @@ def matrix(inventory=None):
     # Keep row identity/order and exact selections; only admission metadata changes.
     # The first combined run exhausted Bitrise's short rows while GitHub still
     # queued long contributor groups. Give each Bitrise lane one existing group.
-    long_group_lanes = {
+    lane_overrides = {
         "contributor-balanced-04": 5,
         "contributor-balanced-02": 6,
         "contributor-balanced-05": 7,
+        # Avoid the observed UI02 wait after the Bitrise work had finished.
+        "SharedFallbackUITests": 7,
     }
     for index, row in enumerate(rows):
-        lane = long_group_lanes.get(row["shard"], index % 8)
+        lane = lane_overrides.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
     return {"include": rows}

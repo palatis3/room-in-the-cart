@@ -96,7 +96,7 @@ class SelectCoreWorkTests(unittest.TestCase):
         self.assertIn("'dinner-diagnostic' || 'full'", workflow['concurrency']['group'])
         self.assertIn("'Dinner diagnostic gate' || 'CI gate'", workflow['jobs']['ci-gate']['name'])
 
-    def test_full_cli_keeps_all_compiled_selectors_and_only_moves_models(self):
+    def test_full_cli_keeps_compiled_plan_and_only_reassigns_ui04_admission(self):
         with tempfile.TemporaryDirectory() as folder:
             plan_dir, output = Path(folder) / 'plan', Path(folder) / 'output'
             full = make_plan(INVENTORY, DURATIONS, 10)
@@ -110,8 +110,9 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
-            self.assertEqual(json.loads(outputs['matrix'])['include'],
-                             [row for row in full['include'] if row['shard'] != 'models'])
+            expected_consumers = [copy.deepcopy(row) for row in full['include'] if row['shard'] != 'models']
+            next(row for row in expected_consumers if row['shard'] == 'ui-04')['macos_slot'] = 1
+            self.assertEqual(json.loads(outputs['matrix'])['include'], expected_consumers)
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):
