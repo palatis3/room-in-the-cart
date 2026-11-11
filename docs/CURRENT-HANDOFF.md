@@ -30,7 +30,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published14b combined qualification | Five automatic PR runs are live: core43005537223, fixtures43005537178, deep43005537248, security43005537157 and native-wire43005537184. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results and verify the corrected matrix admission uses the available global slots. No duplicate dispatch or status-only push. |
+| Published14b combined qualification | Core43005537223, fixtures43005537178 and deep43005537248 remain live. Security43005537157 and native-wire43005537184 pass. Core source/web/service/database checks, both sanitizers and the shared StoreKit build pass; native app/fixture builds and other jobs remain active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results and verify the corrected matrix admission uses the available global slots. No duplicate dispatch or status-only push. |
 | Previous84 batch | All five workflows are terminal. Core fails only its ios-tests matrix; fixtures fail only contributor-tests; deep billing remains failed. Security and native-wire pass. The last two quote cases pass: Spanish largest text104.688s and stale/locked save454.307s, both strict1/1 with zero recorded warnings/idle messages/restarts. | Retain original failures and local correction evidence. Do not rerun84 or label it green. |
 | Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
 | Ten locally qualified corrections, now published | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction are included in14b. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Await combined results; do not assume hosted resolution from local passes. |
@@ -49,6 +49,16 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Published14b early gates pass:** security completes all three jobs. Database
+  job130471980001 passes1,054service,448PostgreSQL and15maintenance tests with zero
+  failures/skips. Native-wire130471976207 verifies24Node integration cases and80
+  exact Swift scenario results over pinned HTTPS/PostgreSQL, all passing. Both
+  thread130471976618 and address130471976683 sanitizer jobs pass their package
+  checks; their three declared separate-wire skips remain scoped to those jobs.
+  Shared StoreKit build130472142919 succeeds; EN/ES executions are not yet qualified.
+  Five native slots have been occupied, with completed jobs yielding to queued
+  builds. The large test matrices have not yet been admitted, so this observation
+  alone does not prove the matrix-window change improved utilization.
 - **Grouped successor published once:** atomic push moved both candidate branches
   from84b903d0 to14b75714 after every producing job and final gate completed.
   No force push, manual dispatch or deployment was performed. PR1 remains draft,
