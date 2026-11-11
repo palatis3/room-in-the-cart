@@ -5,9 +5,10 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-The preceding published candidate is **aa176fedcbfe830b2685198364e1ee6f960d5c93**
-on both candidate branches. This revision prepares its early source-check repair;
-verify the successor's actual publication and automatic run IDs from GitHub.
+Published candidate is **84b903d0cfbfe0e57d286654c72988cac0591121** on both
+`codex/parallel-ios-ci` and `codex/combined-candidate-20261109`. PR1 identifies that
+head. Keep this candidate unchanged while its useful native batch runs. This
+handoff-only checkpoint is local and must not cause a status-only push.
 The newest qualified production correction is the shared-tracking keyboard change.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
@@ -19,7 +20,7 @@ release has unresolved requirements. Finish and qualify the current correction,
 then move to the next unresolved cause. Workflow scheduling and fixture balancing
 changes are now published. PR1 remains draft and unmerged.
 
-- **aa176fed hosted source failure corrected locally:** core42976888365 source
+- **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test
   jobs were skipped. The observer contract still pinned the reporter before
   b13a5999's explicit missing-identity failure; the dispatch test still expected an
@@ -32,17 +33,29 @@ changes are now published. PR1 remains draft and unmerged.
   `.build/SourceContractsNov11/tests.log`, session52004 ended0. This is a local
   source-only correction; no local native rerun is required. Theme, localization,
   generated Xcode project and shard shell checks also pass. Live recheck confirmed
-  fixture builds130378032119/130378032395 are still pending, with no fixture tests
-  started. Supersede aa176fed once with this verified repair to avoid a full
-  fixture run on an already-disqualified candidate followed by an immediate repeat.
-  Core is terminal failed (source check and gate; native jobs unexecuted); security
-  passed. Preserve both outcomes. Early deep/native-wire work may be cancelled by
-  normal PR concurrency; no completed result is relabeled or original failure erased.
-- **Published runs:** core42976888365, fixtures42976888472, deep42976888389,
-  security42976888381 and native-wire42976888421 all identify aa176fed. No automatic
+  fixture builds130378032119/130378032395 were still pending, with no fixture tests
+  started. Published84b903d0 once to supersede this already-disqualified candidate
+  before spending a full fixture run. All aa176fed runs are now terminal: core
+  failed, security passed, fixtures/deep/native-wire cancelled by normal concurrency.
+  Original failures and cancellation outcomes remain visible. Successor source
+  job130379939475 passes all975Python checks in12.653s, pinned workflow lint,
+  localization/generated-file checks and the Foundation verifier on GitHub.
+- **Published runs:** core42977513683, fixtures42977513804, deep42977513637,
+  security42977513616 and native-wire42977513755 all identify84b903d0. No automatic
   performance run was created, as intended; full release still enforces baselines.
   The broad existing PR diff still selects deep checks. PR metadata was updated
   to this candidate, scoped validation and remaining release boundaries.
+- **84b903d0 verified progress:** core source/web/service/PostgreSQL jobs pass.
+  Database job130379939021 records1054service,448database and15maintenance passes,
+  zero failures/skips. Native-wire130380056383 passes24Node cases and80 actual Swift
+  executions, zero Node failures/skips. Security42977513616 passes all3jobs.
+  Main test-products build130380172855 is terminal success; its916model selection
+  and UI groups are queued. Contributor fixture build130380090029 passes; all5
+  rebalanced groups are queued. Dinner build130380090022 is still packaging;
+  Swift CodeQL is compiling, English/Spanish StoreKit and Thread Sanitizer are
+  active. These are live checkpoints, not full CI or release acceptance.
+  Next: read the current runs; diagnose actual new failures locally and retain
+  successful unchanged checks. No local native process or background monitor runs.
 
 - **Records switch correction qualified locally:** hosted job130360190957 failed
   the English source-selection step; Spanish passed163.382s. Its recorded tap hit
