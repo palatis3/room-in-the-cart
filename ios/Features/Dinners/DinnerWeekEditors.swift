@@ -111,7 +111,9 @@ struct DinnerManualAdjustmentView: View {
     @State private var servings: String
     @State private var groups: [DinnerGroupDraft]
     @State private var amounts: [DinnerIngredientDraft]
+    @State private var bindings: [DinnerBindingDraft]
     @State private var showPreview = false
+    private var reviewsAllocations: Bool { meal.servingGroups.contains(where: \.isProtected) }
     init(model: DinnerFeatureModel, meal: MealOccurrence) {
         self.model = model; self.meal = meal; baseRevision = model.shop?.revisionID
         _servings = State(initialValue: meal.servings.description)
@@ -121,6 +123,13 @@ struct DinnerManualAdjustmentView: View {
                 DinnerIngredientDraft(MealIngredient(id: $0.id, name: $0.productName, quantity: $0.quantity))
             }
         })
+        let baseline = model.shop.flatMap { try? DinnerPlanningEngine.manualPortionBindings(occurrenceID: meal.id, ledger: $0, state: model.state) } ?? []
+        _bindings = State(initialValue: meal.ingredientContributionIDs.compactMap { id in
+            model.shop?.contributions.first { $0.id == id && $0.removedAt == nil }
+        }.flatMap { source in meal.servingGroups.map { group in
+            DinnerBindingDraft(contribution: source, group: group,
+                existing: baseline.first { $0.contributionID == source.id && $0.groupID == group.id })
+        } })
     }
     var body: some View {
         Form {
@@ -130,11 +139,25 @@ struct DinnerManualAdjustmentView: View {
             }
             Section(dinnerText("Serving groups")) {
                 ForEach($groups) { $group in
-                    TextField(dinnerText("Group name"), text: $group.name)
-                    TextField(dinnerText("Group servings"), text: $group.servings)
-                    if group.isProtected { Text(dinnerText("Protected group")) }
+                    if group.isProtected {
+                        Text(group.name)
+                        Text(dinnerFormat("Protected: %@ servings", group.servings))
+                    } else {
+                        TextField(dinnerText("Group name"), text: $group.name)
+                        TextField(dinnerText("Group servings"), text: $group.servings)
+                    }
                 }
-                Button(dinnerText("Add serving group")) { groups.append(DinnerGroupDraft()) }.disabled(groups.count >= 100)
+                Button(dinnerText("Add serving group")) {
+                    let group = DinnerGroupDraft(); groups.append(group)
+                    if reviewsAllocations {
+                        for id in meal.ingredientContributionIDs {
+                            if let source = model.shop?.contributions.first(where: { $0.id == id }) {
+                                bindings.append(DinnerBindingDraft(contribution: source,
+                                    group: ServingGroup(id: group.id, name: "", servings: .one), existing: nil))
+                            }
+                        }
+                    }
+                }.disabled(groups.count >= 100)
             }
             Section(dinnerText("Resulting grocery amounts")) {
                 ForEach($amounts) { $amount in
@@ -145,12 +168,40 @@ struct DinnerManualAdjustmentView: View {
                     }
                 }
             }
+            if reviewsAllocations {
+                Section(dinnerText("Resulting ingredient portions")) {
+                    Text(dinnerText("Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total."))
+                    ForEach(bindings) { snapshot in
+                        let row = dinnerDraftBinding(snapshot, in: $bindings)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(snapshot.product).font(.headline)
+                            Text(groups.first { $0.id == snapshot.groupID }?.name ?? snapshot.group.name)
+                            if snapshot.group.isProtected {
+                                Text(dinnerText("Protected group"))
+                                Text(dinnerQuantity(snapshot.protectedQuantity))
+                            } else {
+                                TextField(dinnerText("Resulting amount for this group"), text: row.amount)
+                                    .accessibilityIdentifier("dinnerManualBinding.\(snapshot.contributionID).\(snapshot.groupID)")
+                                DinnerUnitPicker(unit: row.unit)
+                            }
+                        }
+                    }
+                    if bindings.contains(where: { $0.group.isProtected && $0.protectedQuantity == nil }) {
+                        Text(dinnerText("The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner."))
+                    }
+                }
+            }
             Section {
                 Button(dinnerText("Review")) {
                     do {
-                        let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try DinnerEntry.quantity($0.amount, unit: $0.unit)) }
+                        let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try $0.reviewedQuantity()) }
+                        let reviewedGroups = try groups.map { try $0.group() }
+                        let reviewedBindings = reviewsAllocations ? try bindings.map { row in
+                            guard let group = reviewedGroups.first(where: { $0.id == row.groupID }) else { throw DinnerPlanningError.reviewRequired("portionBinding") }
+                            return try row.binding(occurrenceID: meal.id, servings: group.servings)
+                        } : nil
                         showPreview = model.prepare([.adjust(DinnerAdjustment(occurrenceID: meal.id, servings: try DinnerEntry.positive(servings),
-                            groups: try groups.map { try $0.group() }, quantities: changes))], expectedRevision: baseRevision)
+                            groups: reviewedGroups, quantities: changes, portionBindings: reviewedBindings))], expectedRevision: baseRevision)
                     } catch { model.report(error) }
                 }.disabled(!model.editable)
             }

@@ -4,7 +4,7 @@ Updated November 10, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Workspace and ownership
 
-Canonical repository `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`; ambient Spanish worktree is stale. Publish non-force to `codex/combined-candidate-20261109`. After grouped fixes pass, fast-forward the existing PR branch once to the same candidate; use its automatic integration batch instead of also dispatching a duplicate manual core run. Records native/UI integration is included in this grouped candidate commit. Use `git log -1` and the remote candidate ref for current commit identity; do not dispatch a broad run solely for these focused changes.
+Canonical repository `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`; ambient Spanish worktree is stale. Both this PR branch and `codex/combined-candidate-20261109` are already published at `5e5f5c90fe5c6d40522e40869e75f3db266b29ba`. The automatic PR integration batch is running; do not dispatch a duplicate or push status-only commits while it runs. Its merge checkout `c9087962d82e51ba9ab26aab459d99d816b458e1` has the same tree as the candidate. Records native/UI integration is included. Recheck actual Git and run state before the next publication.
 
 No Dot/Lumpy. Astra helpers edit explicitly assigned, nonoverlapping files in the canonical checkout; root reviews, integrates, commits and dispatches. Do not create scratch-install approval steps for already authorized local implementation. Root owns the single local native/PostgreSQL execution slot. Preserve original failures, private fixtures and unrelated untracked evidence. Stage named paths only. Do not re-request owner-deferred provider or signing setup.
 
@@ -18,6 +18,16 @@ Do not erase known failures or represent deferred checks as passed.
 
 ## Active execution and next actions
 
+The current core run is [42923487002](https://github.com/palatis3/room-in-the-cart/actions/runs/42923487002), not the older failed run below. All core non-UI jobs pass, including **915 model tests**, Swift packages, unsigned Release and Swift CodeQL. UI01 and UI02 each pass all six cases, including largest-text Edit in UI02; remaining UI work is still being collected. Combined backend passes **1,054 unit / 448 database / 15 maintenance** checks. Security42923487009 and native-wire42923487013 pass. Fixture42923487047 has passed both builds and is executing its matrix. UI03 executed all six cases: five passed; the offer-reminder journey failed waiting for the native Month accessibility value. Its retained screenshot shows December correctly displayed. The local test correction waits for the exact actionable target date and retains the saved-cutoff assertion; the original reminder journey now passes locally in177.39s, retaining exact date and saved-cutoff assertions. Original artifact and attachments are in `.build/ReminderCutoffNov10`. Fixture balanced01 has now failed two of four executed cases: the away-carryover confirmation toggle and the later-page request decision return; Astra is triaging job130212601962. Balanced02 passes. Monitor these existing runs before publishing a combined correction; do not rerun unchanged passing jobs.
+
+Deep42923486877 fails both StoreKit locales: 11/15 pass in each; two pending-request waits, one purchase timeout and the restored/declined-entitlement contradiction remain open. Both sanitizers pass. Performance42923486984 fails its early compatibility gate because the Xcode27.1/iOS27.0 baseline is unapproved; no measurement pass is claimed. Optional framework/performance experiments remain deferred.
+
+A local scene-aware purchase hypothesis built but did not resolve the four selected StoreKit failures. Its source change was **reverted**, not integrated. `.build/StoreKitPresentationNov10/result.json` records the rejected patch and native logs. Xcode finalization was deliberately interrupted after all cases recorded failures; no complete result-bundle qualification is claimed. The cached products at `.build/TrackingFlowUIQualificationNov10/r1/dd` have now been rebuilt from the canonical app plus the local Dinner/reminder correction (`.build/ManualDinnerReminderNov10/Build-r2.xcresult`); the rejected StoreKit source change remains absent. Use the existing local lightweight-capture guidance rather than repeating this hypothesis or adding another diagnostic framework.
+
+Staging048 is now deployed and verified within the scope below. Next product acceptance is authenticated household/provider lifecycle and the remaining device/human release work; public route checks do not close those requirements. Browser walkthrough remains deferred: the latest CUA attempt reports local browser use disabled. Do not repeatedly request owner-deferred setup.
+
+## Earlier component checkpoints
+
 1. Local backend r3 is terminal PASS: `.build/SharedDemandGraphNov09/root-records-protected-backend-r3`. All eight new Records-v2 HTTP cases pass. Full regression: 1,031 offline plus one database-only skip; 441 PostgreSQL plus three separately assigned browser skips. Root verified309inputs/phase hashes and byte-identical compiled production against qualified r1; signed restore/erasure passed; database stopped. [Proof](evidence/service/records-protected-conversion-20261110/records-http-verification.json).
 2. Records import-review correction builds and passes BOTH original EN/ES journeys (2passed,0failed,0skipped,0reported runtime warnings), session82335 terminal0. Original build/test logs and result bundle: `.build/SharedRecordsNov10/review-focus`. Screenshots inspected for review dates/actions and recovered disclosure. r12's failure is retained: opening a later import left the viewport below its details; the view now scrolls and moves accessibility focus to the import review. A subsequent generated-heading localization correction uses the existing Records catalog; final build validation passed (session45626 terminal0). No backend/wire/model suite was unnecessarily repeated.
 
@@ -30,7 +40,11 @@ Do not erase known failures or represent deferred checks as passed.
 8. Hosted run42905420428 remains unqualified: iOS Debug/test build and unsigned Release build pass; UI-01/03/05/06 and Swift CodeQL pass. Hosted UI-02/07/08 failures now have local focused passing repairs (below). UI-04 timed out after720seconds in `FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop`; other6cases passed. Astra’s read-only audit of job130150130793 found cumulative runtime, not a demonstrated stuck route: settlement at689s, next-shop dinner Apply at715s, and a reused-dinner capture at748s after the720s timeout fired. Final relaunch/Records assertions never completed. The small test-only correction now uses typed button queries and returns directly to `dinnerWeekEntry` instead of first revealing the unrelated library. Normal Debug build passes; the original journey passes locally in427.655seconds, including final relaunch and Records assertions, with the original720-second allowance. Strict validation confirms1executed/1passed,0runtime warnings. Logs/results: `.build/FreeJourneyQueryRepairNov10`. Local iOS27.0/SDK27.1 success does not qualify hosted timing or the combined candidate. UI-10 passes all8cases. UI-09 finished with7/8passing; its reminder journey timed out evaluating the known `ledgerReviewImport` Button through an Any query after successful typing. The two-line typed-button correction now builds and passes the original reminder journey locally in146.534seconds,1/1executed with0runtime warnings and every assertion/time limit retained. Results: `.build/ContextualReminderQueryRepairNov10`; original failure: `.build/CombinedCoreNov10/ui-09.log`. Batch all verified corrections into the existing PR head for one integration batch. Shared-meal fixture review is now repaired and all three original S17 UI journeys pass locally: planner proposal/Cancel/separate shopper Apply once; shopper seed/Cancel/Apply; repeated clock-time review and day move without extending the deadline. The fixture explicitly starts with tracked manual soup of unknown usable quantity, not legacy adoption. Current v2 read and v1 review/command responses retain exact proposal identity and preview binding. Strict result checks pass with0runtime warnings. Originals are `.build/FocusedUIRepairsNov10/Shopper-r2.xcresult` and `ProposalDeadline-r2.xcresult`. The initial setup/title-selector failures remain preserved in `Tests.xcresult`. This is isolated-fixture acceptance, not deployed mixed-device verification.
 9. Focused normal-app UI repairs pass: typed Compare-button lookup avoids the saved XCTest Any-query traversal fault; comparison entry waits for its existing focus-driven Done control before typing; share cancellation waits separately for dismissal and the unchanged frozen snapshot. Hosted UI-07 failed the old share-dismissal wait despite a visible frozen snapshot; UI-08 failed typing before the save/viewport assertions because no input had focus. Native normal Debug build passes. All3original failed journeys pass in `.build/FocusedUIRepairsNov10/CoreTests-r2.xcresult`: large-text Edit112.84s, share cancellation107.45s, save/viewport56.12s. Strict validation confirms3executed/3passed and0runtime warnings. Share cancellation retains exact frozen text, persisted cancellation history and unplaced state after relaunch. Comparison tests retain exact input, whole control visibility and known totals. These local passes do not rewrite the historical failed hosted jobs or qualify the complete candidate. No model/service/database suite was repeated for these test-only edits; no broad successor dispatched.
 
-## Staging recovery preparation
+## Local Dinner and reminder correction qualified
+
+Free manual Dinner edits could discard reviewed portion bindings: increasing eight wraps to nine while changing dinner servings could reduce two protected lunch wraps to an inferred1.8. The local correction keeps protected bindings, reviews mutable group amounts explicitly and applies them atomically. Legacy proportional meals use their existing known allocation as the baseline; unknown quantities remain unresolved. Review and Cancel save nothing. Six focused domain cases pass, including the two-pack boundary, replay, legacy compatibility, invalid-allocation rejection and a bindings-only bypass. Normal app/test compilation passes. All8selected native cases pass with0reported runtime warnings: six Dinner draft tests, the existing Free preview/Cancel/apply-once model test and the original offer-reminder UI journey (177.39s). Results: `.build/ManualDinnerReminderNov10/Build-r2.xcresult` and `Tests.xcresult`. The first build failed only in the new test fixture, which was corrected to use the public ledger API; the original build log remains retained. Actual new manual-form interaction/visual review is still separate from these model checks. No successor CI batch has been dispatched; preserve the current hosted5e batch before publishing these local changes.
+
+## Staging048 deployed
 
 A fresh encrypted041backup and two actual restores now pass. The second restore
 upgraded through048, preserving all129original non-registry tables, original
@@ -41,18 +55,32 @@ existing populated integration cases remain separate evidence. Current immutable
 Vercel application/worker entrypoints require authentication. Dry upload inspection
 now excludes Supabase CLI temporary metadata; all211regular inputs are tracked.
 [Review preparation](evidence/b11/staging-048-preparation-20261110/README.md).
-No hosted migration/deployment occurred. Prepare compatible maintenance and the
-final promotion commands before asking for the048rollout approval; do not repeat
-backup/restore solely for unrelated UI-test edits.
+
+The owner explicitly approved042–048 and the matching server/web rollout. All48
+migrations are applied once, and source `5e5f5c90` is live at
+`https://room-in-the-cart-staging.vercel.app`, deployment
+`dpl_BfzRizUi3ksDXfTGdDDFtDcxpN7J`. Both aliases and the scheduled worker point to
+that deployment. Seven public API/auth/worker checks and13exact web-route/asset
+checks pass. Existing rows, backfills, migration checksums, catalogs, roles,
+default ACLs, ownership and privacy-function restrictions were verified; encrypted
+images are detached. The048-compatible maintenance deployment is
+`dpl_72cBW5Biz5YKYjvPyqn4dNYEX4EH`. Use it to close writes if recovery is needed;
+do not promote041over later048writes or automatically restore over later activity.
+
+Two verifier assumptions were corrected without reapplying migrations or changing
+permissions. Hosted extensions equal their live preflight; the selective local
+restore intentionally contains fewer extensions. Direct live runtime/group SQL
+was unavailable because the CLI role cannot impersonate those roles and Vercel
+does not export the sensitive runtime credential. Actual deployed runtime startup,
+authentication checks, hosted role/policy parity and local restored RLS evidence
+are recorded separately; do not claim the unavailable live SQL probe passed.
+The scoped result and original failures are retained in
+`.build/Staging048Nov10/rollout-verification.json` and `.build/StagingDB048Nov10`.
 
 ## Qualified product work
 
-November 10 runtime/rollout check: the existing Supabase CLI can access Room in
-the Cart Staging even though the connector currently cannot. Live registry has
-41 entries, all matching current source; the alias still resolves to ready
-deployment `dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2`. All six existing public API/auth
-smoke checks pass. Read-only results are in `.build/Staging048Nov10`; no hosted
-mutation was performed. Pending migrations remain042–048.
+The existing Supabase CLI can access Room in the Cart Staging even when the
+connector cannot. Do not repeat reconnect requests or the completed048rollout.
 
 The rollout review caught missing production activation of shared-food tracking:
 fixtures enabled `trackingV2`, but `createRuntime` did not. The new actual-runtime
@@ -60,10 +88,10 @@ regression reproduced404, then passed after enabling the existing feature in the
 production composition. Build and21focused runtime/privacy/tracking checks pass
 in `.build/RuntimeTrackingNov10`; the local PostgreSQL cluster is stopped. The
 read does not adopt food, and anonymous/revoked sessions remain denied. Existing
-guardian/provider activation is unchanged. Current service must follow migrations;
-after new-state writes, the041 service is not a safe rollback. Prepare compatible
-maintenance/forward recovery and verify046 label-provenance and047 meal-identity
-backfills during the actual restore rehearsal before requesting rollout approval.
+guardian/provider activation is unchanged. This runtime is now deployed after048;
+the041 service is not a safe rollback after new-state writes. The completed
+rehearsal and hosted verification checked046 label-provenance and047 meal-identity
+backfills against the actual staging snapshot, whose expected backfill sets were empty.
 
 Fresh combined backend r1 passes **1,031 offline / 433 PostgreSQL** with one/three declared skips. Includes 40 protected-conversion tests, 21 actual API cases, 12 Records projection tests and signed restore/erasure. Root independently verified 308 current/archived source inputs, phase hashes and compiled products; PostgreSQL stopped. Actual Swift client transport passes **24 Node cases / 80 Swift scenario invocations**, zero failures/skips, retaining the original21/70. Root verified428inputs; successful private wire fixture removed after shutdown. [Backend and wire proof](evidence/service/records-protected-conversion-20261110/README.md).
 
@@ -100,6 +128,6 @@ Use ordinary permitted-record recovery rather than inventing a separate guardian
 recovery subsystem. Preserve these actual user requirements; do not turn every
 specialized implementation limitation into extra launch scope.
 
-Staging approval extends through041 only. Local042–048 and subsequent code are not deployed and require their reviewed rollout/recovery process. Paid Apple membership/signing, SMTP and KWS activation remain owner deferred. Operator: Venture House Group LLC. Support: hello@roominthecart.com.
+Staging approval and completed deployment extend through048 for source5e5f5c90. Later hosted updates still need their applicable review and authorization. Paid Apple membership/signing, SMTP and KWS activation remain owner deferred. Operator: Venture House Group LLC. Support: hello@roominthecart.com.
 
 Historical originals remain in their evidence folders and git history. Previous handoff text is preserved at `.build/HandoffNov10/before-records-checkpoint-consolidation.md`.

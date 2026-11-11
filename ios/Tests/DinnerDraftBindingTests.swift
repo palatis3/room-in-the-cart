@@ -72,4 +72,36 @@ import CoreDomain
         XCTAssertEqual(box.value[0].name, "Rice"); XCTAssertEqual(box.value[0].amount, "")
         XCTAssertEqual(box.value[0].unit, .count)
     }
+
+    func testManualAllocationDraftPreservesProtectedObservationAndReviewsMutableResultWithoutSaving() throws {
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let dinner = ServingGroup(name: "Dinner", servings: try Rational(3))
+        let basis = UnitBasis(sourceUnit: .count, targetUnit: .gram,
+            targetAmountPerSourceUnit: try Rational(30), sourceNote: "Reviewed package")
+        let protectedQuantity = Quantity(amount: try Rational(2), unit: .count,
+            originalLiteral: "two lunch wraps", confirmedConversion: basis)
+        let total = Quantity(amount: try Rational(8), unit: .count, originalLiteral: "eight wraps", confirmedConversion: basis)
+        var ledger = ShoppingLedger()
+        let occurrence = try ledger.chooseMeal(MealTemplate(title: "Wraps", servings: try Rational(4),
+            ingredients: [.init(name: "Wraps", quantity: total)], servingGroups: [dinner, lunch]), at: Date())
+        let source = try XCTUnwrap(ledger.contributions.first), sourceID = source.id
+        let original = DinnerPortionBinding(occurrenceID: occurrence, contributionID: sourceID,
+            groupID: lunch.id, quantity: protectedQuantity, servings: lunch.servings)
+        let protectedDraft = DinnerBindingDraft(contribution: source, group: lunch, existing: original)
+        XCTAssertEqual(try protectedDraft.binding(occurrenceID: occurrence), original)
+        let mutable = DinnerPortionBinding(occurrenceID: occurrence, contributionID: sourceID,
+            groupID: dinner.id, quantity: Quantity(amount: try Rational(6), unit: .count, originalLiteral: "six dinner wraps"), servings: dinner.servings)
+        var draft = DinnerBindingDraft(contribution: source, group: dinner, existing: mutable)
+        draft.amount = "7"
+        let reviewed = try draft.binding(occurrenceID: occurrence, servings: Rational(4))
+        XCTAssertEqual(reviewed.id, mutable.id); XCTAssertEqual(reviewed.quantity.amount, try Rational(7))
+        XCTAssertEqual(reviewed.servings, try Rational(4)); XCTAssertEqual(mutable.quantity.amount, try Rational(6))
+        draft.amount = ""
+        XCTAssertThrowsError(try draft.binding(occurrenceID: occurrence), "Missing amounts cannot become zero")
+        var ingredient = DinnerIngredientDraft(MealIngredient(id: sourceID, name: "Wraps", quantity: total))
+        XCTAssertEqual(try ingredient.reviewedQuantity(), total, "Untouched observations retain their literal and conversion")
+        ingredient.amount = "9"
+        XCTAssertEqual(try ingredient.reviewedQuantity()?.amount, try Rational(9))
+        XCTAssertNil(try ingredient.reviewedQuantity()?.confirmedConversion, "Changed observations do not silently inherit evidence")
+    }
 }

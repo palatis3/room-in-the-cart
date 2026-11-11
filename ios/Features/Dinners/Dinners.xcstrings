@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Resulting ingredient portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resulting ingredient portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones de ingredientes resultantes"
+          }
+        }
+      }
+    },
+    "Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva los alimentos protegidos tal como están guardados. Ingresa la cantidad resultante para cada otro grupo, incluido cero. La suma debe coincidir con el nuevo total de cada ingrediente."
+          }
+        }
+      }
+    },
+    "Resulting amount for this group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resulting amount for this group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad resultante para este grupo"
+          }
+        }
+      }
+    },
+    "The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad protegida actual está sin resolver. Revisa las cantidades actuales de los ingredientes antes de cambiar esta cena."
+          }
+        }
+      }
+    },
     "Edit": {
       "extractionState": "manual",
       "localizations": {

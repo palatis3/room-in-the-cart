@@ -133,15 +133,15 @@ import XCTest
         let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
         XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
         next.tap()
-        let displayed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", month.string(from: nextMonth)), object: monthHeader)
-        XCTAssertEqual(XCTWaiter.wait(for: [displayed], timeout: 8), .completed)
         let spoken = DateFormatter()
         spoken.locale = Locale(identifier: "en_US")
         spoken.calendar = calendar
         spoken.timeZone = .current
         spoken.dateFormat = "EEEE, MMMM d"
-        // The native calendar can be a separate popover subtree. Match its
-        // exact spoken date across the app, then require one actionable match.
+        // The Month header's accessibility value is not a reliable completion
+        // signal on every runtime. Wait for the exact actionable date instead;
+        // the caller also verifies the saved cutoff in the
+        // reminder context after the offer is committed.
         let days = app.buttons.matching(NSPredicate(format: "label == %@", spoken.string(from: target)))
         let day = days.firstMatch
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: day)

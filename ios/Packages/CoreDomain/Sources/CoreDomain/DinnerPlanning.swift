@@ -113,8 +113,12 @@ public struct DinnerAdjustment: Codable, Equatable, Sendable {
     public let servings: Rational
     public let groups: [ServingGroup]
     public let quantities: [DinnerQuantityEdit]
-    public init(occurrenceID: UUID, servings: Rational, groups: [ServingGroup], quantities: [DinnerQuantityEdit]) {
+    /// Explicit resulting allocations for a manual edit. Absent in older proposals.
+    public let portionBindings: [DinnerPortionBinding]?
+    public init(occurrenceID: UUID, servings: Rational, groups: [ServingGroup], quantities: [DinnerQuantityEdit],
+                portionBindings: [DinnerPortionBinding]? = nil) {
         self.occurrenceID = occurrenceID; self.servings = servings; self.groups = groups; self.quantities = quantities
+        self.portionBindings = portionBindings
     }
 }
 public struct DinnerReservation: Codable, Equatable, Sendable {
@@ -314,6 +318,15 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
                 try dinnerUnique(adjustment.groups.map(\.id)); try dinnerUnique(adjustment.quantities.map(\.contributionID))
                 for group in adjustment.groups { try dinnerText(group.name); guard group.servings > .zero else { throw DinnerPlanningError.invalid("group") } }
                 for quantity in adjustment.quantities { try quantity.quantity?.validate() }
+                if let bindings = adjustment.portionBindings {
+                    guard proposal.tool == .manual, !bindings.isEmpty, bindings.count <= 20_000 else { throw DinnerPlanningError.invalid("portionBindings") }
+                    try dinnerUnique(bindings.map(\.id))
+                    for binding in bindings {
+                        guard binding.occurrenceID == adjustment.occurrenceID, binding.servings > .zero,
+                              binding.quantity.amount >= .zero else { throw DinnerPlanningError.invalid("portionBinding") }
+                        try binding.quantity.validate()
+                    }
+                }
             case .remove: break
             case .reserve(let reservation): try dinnerText(reservation.name); try dinnerText(reservation.purpose); try reservation.quantity.validate(); try reservation.day?.validate()
             case .adoptBasis(let basis): try basis.validate()
@@ -442,7 +455,10 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
                 protectedDays.append(DinnerProtectedDay(shopID: receipt.proposal.shopID, contributionID: reservation.contributionID, day: reservation.day))
             }
             if case .adjust(let adjustment) = change {
-                if receipt.proposal.tool == .guests {
+                if let bindings = adjustment.portionBindings {
+                    portionBindings.removeAll { $0.occurrenceID == adjustment.occurrenceID }
+                    portionBindings += bindings
+                } else if receipt.proposal.tool == .guests {
                     portionBindings = try portionBindings.map { binding in
                         guard binding.occurrenceID == adjustment.occurrenceID,
                               let group = adjustment.groups.first(where: { $0.id == binding.groupID }) else { return binding }
@@ -477,6 +493,7 @@ public enum DinnerPlanningEngine {
         try validateProtectedAdjustments(proposal, ledger: ledger, state: state)
         var projected = ledger; try projected.applyDinnerChanges(changes, expectedRevisionID: ledger.revisionID,
             revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now)
+        try validateManualBindings(proposal, ledger: ledger, projected: projected, state: state)
         let changedSources = projected.contributions.filter { source in ledger.contributions.first(where: { $0.id == source.id }) != source }.map(\.id)
         let changedMeals = projected.mealOccurrences.filter { meal in ledger.mealOccurrences.first(where: { $0.id == meal.id }) != meal }.map(\.id)
         return DinnerPreview(proposal: proposal, projectedLedger: projected, projectedMeals: projected.mealOccurrences,
@@ -529,6 +546,34 @@ public enum DinnerPlanningEngine {
         return DinnerAdjustment(occurrenceID: occurrenceID, servings: try meal.servings.subtracting(removed.servings), groups: remaining, quantities: edits)
     }
 
+    /// Existing allocations for a manual review. Legacy meals without any saved
+    /// bindings use the same proportional interpretation as their current checkout.
+    /// These rows are a draft only; no new evidence is saved before Apply.
+    public static func manualPortionBindings(occurrenceID: UUID, ledger: ShoppingLedger,
+                                            state: DinnerPlanningState) throws -> [DinnerPortionBinding] {
+        guard let meal = ledger.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }) else { throw DinnerPlanningError.notFound(occurrenceID) }
+        let saved = state.portionBindings.filter { $0.occurrenceID == occurrenceID }
+        if !saved.isEmpty {
+            try validateBindings(saved, occurrenceID: occurrenceID, ledger: ledger)
+            for sourceID in meal.ingredientContributionIDs {
+                guard Set(saved.filter { $0.contributionID == sourceID }.map(\.groupID)) == Set(meal.servingGroups.map(\.id))
+                else { throw DinnerPlanningError.reviewRequired("allIngredientBindings") }
+            }
+            return saved
+        }
+        return try meal.ingredientContributionIDs.flatMap { id in
+            guard let source = ledger.contributions.first(where: { $0.id == id && $0.removedAt == nil }),
+                  let quantity = source.quantity else { throw DinnerPlanningError.reviewRequired("quantity") }
+            let portions = try LedgerMealPortions.review(meal: meal, contribution: source, in: ledger, unit: quantity.unit, bindings: [])
+            return try meal.servingGroups.map { group in
+                guard let amount = portions.groups[group.id] else { throw DinnerPlanningError.reviewRequired("portionBinding") }
+                return DinnerPortionBinding(occurrenceID: occurrenceID, contributionID: id, groupID: group.id,
+                    quantity: Quantity(amount: amount, unit: quantity.unit, originalLiteral: amount.description,
+                        confirmedConversion: quantity.confirmedConversion), servings: group.servings)
+            }
+        }
+    }
+
     static func validateProtectedAdjustments(_ proposal: DinnerProposal, ledger: ShoppingLedger, state: DinnerPlanningState) throws {
         for change in proposal.changes {
             guard case .adjust(let adjustment) = change,
@@ -541,8 +586,13 @@ public enum DinnerPlanningEngine {
             }
             let protectedGroups = Set(meal.servingGroups.filter(\.isProtected).map(\.id))
             guard !protectedGroups.isEmpty, !adjustment.quantities.isEmpty else { continue }
-            let bindings = state.portionBindings.filter { $0.occurrenceID == meal.id }
-            try validateBindings(bindings, occurrenceID: meal.id, ledger: ledger)
+            let bindings: [DinnerPortionBinding]
+            if proposal.tool == .manual {
+                bindings = try manualPortionBindings(occurrenceID: meal.id, ledger: ledger, state: state)
+            } else {
+                bindings = state.portionBindings.filter { $0.occurrenceID == meal.id }
+                try validateBindings(bindings, occurrenceID: meal.id, ledger: ledger)
+            }
             for edit in adjustment.quantities {
                 guard let quantity = edit.quantity else { throw DinnerPlanningError.reviewRequired("protectedQuantity") }
                 var reserved = Rational.zero
@@ -551,6 +601,49 @@ public enum DinnerPlanningEngine {
                     reserved = try reserved.adding(amount)
                 }
                 guard quantity.amount >= reserved else { throw DinnerPlanningError.reviewRequired("protectedQuantity") }
+            }
+        }
+    }
+    static func validateManualBindings(_ proposal: DinnerProposal, ledger: ShoppingLedger,
+                                      projected: ShoppingLedger, state: DinnerPlanningState) throws {
+        for change in proposal.changes {
+            guard case .adjust(let adjustment) = change, proposal.tool == .manual,
+                  let meal = ledger.mealOccurrences.first(where: { $0.id == adjustment.occurrenceID }) else { continue }
+            let protectedGroups = Set(meal.servingGroups.filter(\.isProtected).map(\.id))
+            if !protectedGroups.isEmpty {
+                // A bindings-only/servings-only edit must also authenticate its
+                // prior protected amounts; omitted quantity edits are no bypass.
+                _ = try manualPortionBindings(occurrenceID: meal.id, ledger: ledger, state: state)
+            }
+            guard let bindings = adjustment.portionBindings else {
+                // Old unprotected manual edits may still discard stale allocations.
+                // Reviewed protected food must never become an inferred serving ratio.
+                guard protectedGroups.isEmpty else { throw DinnerPlanningError.reviewRequired("reviewPortionBindings") }
+                continue
+            }
+            try validateBindings(bindings, occurrenceID: meal.id, ledger: projected)
+            for sourceID in meal.ingredientContributionIDs {
+                guard Set(bindings.filter { $0.contributionID == sourceID }.map(\.groupID)) == Set(adjustment.groups.map(\.id))
+                else { throw DinnerPlanningError.reviewRequired("allIngredientBindings") }
+            }
+            let old = state.portionBindings.filter { $0.occurrenceID == meal.id }
+            for binding in bindings {
+                if let prior = old.first(where: { $0.contributionID == binding.contributionID && $0.groupID == binding.groupID }) {
+                    guard prior.id == binding.id else { throw DinnerPlanningError.reviewRequired("portionBindingIdentity") }
+                } else {
+                    guard !state.portionBindings.contains(where: { $0.id == binding.id }) else { throw DinnerPlanningError.invalid("portionBindingIdentity") }
+                }
+            }
+            for binding in old where protectedGroups.contains(binding.groupID) {
+                guard bindings.contains(binding) else { throw DinnerPlanningError.reviewRequired("protectedQuantity") }
+            }
+            if old.isEmpty && !protectedGroups.isEmpty {
+                let baseline = try manualPortionBindings(occurrenceID: meal.id, ledger: ledger, state: state)
+                for binding in baseline where protectedGroups.contains(binding.groupID) {
+                    guard let reviewed = bindings.first(where: { $0.contributionID == binding.contributionID && $0.groupID == binding.groupID }),
+                          reviewed.quantity == binding.quantity, reviewed.servings == binding.servings
+                    else { throw DinnerPlanningError.reviewRequired("protectedQuantity") }
+                }
             }
         }
     }
@@ -574,6 +667,7 @@ public enum DinnerPlanningEngine {
         var nextLedger = ledger, nextState = state
         try nextLedger.applyDinnerChanges(proposal.changes, expectedRevisionID: proposal.baseRevisionID,
             revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now)
+        try validateManualBindings(proposal, ledger: ledger, projected: nextLedger, state: state)
         let receipt = DinnerApplyReceipt(proposal: proposal, appliedBy: access.actorID, appliedAt: now, revisionID: nextLedger.revisionID)
         try nextState.applied(receipt); try nextState.validate()
         ledger = nextLedger; state = nextState; return receipt

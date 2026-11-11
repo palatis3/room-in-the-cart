@@ -290,6 +290,31 @@ struct DinnerPreviewView: View {
                         }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-\(meal.id)")
                     }
                 }
+                let allocations = preview.proposal.changes.compactMap { change -> DinnerAdjustment? in
+                    if case .adjust(let adjustment) = change, adjustment.portionBindings != nil { return adjustment }
+                    return nil
+                }
+                if !allocations.isEmpty {
+                    Section(dinnerText("Resulting ingredient portions")) {
+                        ForEach(allocations, id: \.occurrenceID) { adjustment in
+                            ForEach(adjustment.portionBindings ?? []) { binding in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(preview.projectedContributions.first { $0.id == binding.contributionID }?.productName ?? "")
+                                        .font(.headline)
+                                    if let group = adjustment.groups.first(where: { $0.id == binding.groupID }) {
+                                        Text(group.name)
+                                        if group.isProtected { Text(dinnerText("Protected group")) }
+                                    }
+                                    if let old = model.state.portionBindings.first(where: { $0.id == binding.id }) {
+                                        Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
+                                    }
+                                    Text(dinnerFormat("After: %@", dinnerQuantity(binding.quantity)))
+                                }.accessibilityElement(children: .combine)
+                                    .accessibilityIdentifier("dinnerManualReviewBinding.\(binding.id)")
+                            }
+                        }
+                    }
+                }
                 Section(dinnerText("Grocery needs")) {
                     ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) }) { source in
                         VStack(alignment: .leading, spacing: 5) {

@@ -41,9 +41,15 @@ enum DinnerEntry {
 }
 struct DinnerIngredientDraft: Identifiable {
     var id: UUID; var name: String; var amount: String; var unit: UnitOfMeasure; var notes: String; var exclusions: String
+    private var originalQuantity: Quantity?
     init(_ value: MealIngredient? = nil) {
         id = value?.id ?? UUID(); name = value?.name ?? ""; amount = value?.quantity?.amount.description ?? ""
         unit = value?.quantity?.unit ?? .count; notes = value?.notes ?? ""; exclusions = value?.exclusions.joined(separator: "\n") ?? ""
+        originalQuantity = value?.quantity
+    }
+    func reviewedQuantity() throws -> Quantity? {
+        if let originalQuantity, amount == originalQuantity.amount.description, unit == originalQuantity.unit { return originalQuantity }
+        return try DinnerEntry.quantity(amount, unit: unit)
     }
     func ingredient() throws -> MealIngredient {
         MealIngredient(id: id, name: name, quantity: try DinnerEntry.quantity(amount, unit: unit), notes: notes, exclusions: DinnerEntry.list(exclusions))
@@ -89,14 +95,23 @@ struct DinnerTemplateDraft {
 struct DinnerBindingDraft: Identifiable {
     let id: UUID; let contributionID: UUID; let groupID: UUID; let product: String; let group: ServingGroup
     var amount: String; var unit: UnitOfMeasure
+    private let original: DinnerPortionBinding?
     init(contribution: LedgerContribution, group: ServingGroup, existing: DinnerPortionBinding?) {
         id = existing?.id ?? UUID(); contributionID = contribution.id; groupID = group.id
         product = contribution.productName; self.group = group
         amount = existing?.quantity.amount.description ?? ""; unit = existing?.quantity.unit ?? contribution.quantity?.unit ?? .count
+        original = existing
     }
-    func binding(occurrenceID: UUID) throws -> DinnerPortionBinding {
-        guard let quantity = try DinnerEntry.quantity(amount, unit: unit) else { throw DinnerPlanningError.reviewRequired("quantity") }
-        return DinnerPortionBinding(id: id, occurrenceID: occurrenceID, contributionID: contributionID, groupID: groupID, quantity: quantity, servings: group.servings)
+    var protectedQuantity: Quantity? { original?.quantity }
+    func binding(occurrenceID: UUID, servings: Rational? = nil) throws -> DinnerPortionBinding {
+        let quantity: Quantity
+        if let original, amount == original.quantity.amount.description, unit == original.quantity.unit {
+            quantity = original.quantity
+        } else {
+            guard let entered = try DinnerEntry.quantity(amount, unit: unit) else { throw DinnerPlanningError.reviewRequired("quantity") }
+            quantity = entered
+        }
+        return DinnerPortionBinding(id: id, occurrenceID: occurrenceID, contributionID: contributionID, groupID: groupID, quantity: quantity, servings: servings ?? group.servings)
     }
 }
 struct DinnerCommitmentDraft: Identifiable {

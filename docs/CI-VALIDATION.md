@@ -12,6 +12,9 @@ release requirements and known failures remain visible.
 - Select the app entry point before a native build: ordinary Shop journeys use
   the normal Debug app; dedicated household fixtures replace `@main`. Group tests
   by compatible build profile and reuse each completed build within that group.
+- For a focused local simulator build, select that simulator's destination instead
+  of a generic destination that also compiles unused architectures. Keep hosted
+  and release architecture coverage unchanged.
 - Keep cheap service/model checks. Avoid repeating native UI, database, wire and
   hosted suites for unrelated or test-only edits. Test a corrected fixture with
   its affected suite before scheduling a broader batch.
