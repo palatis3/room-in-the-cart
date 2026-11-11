@@ -117,6 +117,40 @@ changes are now published. PR1 remains draft and unmerged.
   An async question requests approval for these two files only. Earlier approval
   covered the different XCTest crash report and is not reused here. Await an
   explicit reply before sending anything to Apple; keep the live84 batch running.
+- **UI02 and UI03 now pass hosted84:** jobs130384868069 and130384868189 each
+  execute all6 original cases with zero runtime warnings, idle messages or
+  restarts. This qualifies the earlier stock/carryover, replacement/cook and
+  saved-offer reminder corrections on the published candidate. UI01 finishes5/6:
+  first-pickup dinner-pattern fails281.785s in an accessibility snapshot query.
+- **Records Media hosted failure retained privately:** job130400401548 reports
+  one executed/failed case, zero skips or runtime warnings, at the switch-state
+  assertion RecordsMediaUITests.swift:144. Only the allowlisted public report was
+  read; no hosted raw RecordsMedia bundle was downloaded or inspected. The
+  unchanged original reused the contributor cache and passes137.949s locally,
+  strict1/1, zero recorded runtime warnings, at
+  `.build/RecordsMediaNov11/original/Tests.xcresult`. Enumeration87379 and test35597
+  ended0; source and compiled-plan hashes still match. Local logs, screenshots,
+  recovery material and result bundles remain private under that directory.
+  The pass covers selection/disclosure, encrypted export, preview/Cancel,
+  separate recovered copy, readable media and scoped deletion. It does not
+  establish the hosted cause or close that failure. No source change or repeat
+  of this passing unchanged local case is justified without new evidence.
+- **First-dinner lookup qualified locally:** UI01's original archive13839774561
+  is retained at `.build/FirstDinnerPatternNov11/hosted/original.zip`, verified
+  SHA25677415ac34137f5e005bff47022e73f53918a6739de0c8f3a1e49726ce7703429.
+  Its screenshot shows the original amount field visible; its scroll trace says
+  found after0gestures. The next broad Any/multiple-editable-type snapshot query
+  stalled. The local test helper now selects explicit `ingredient.*.amount`
+  identities through native TextFields. No production behavior, input, assertion
+  or timeout changed. Syntax/automation checks pass; normal build-for-testing12105
+  and exact two-selector enumeration27986 ended0. Session49477 ended0; the
+  original English first-pickup and Spanish dinner-idea journeys pass136.161s
+  and134.23s at `.build/FirstDinnerPatternNov11/focused/Tests.xcresult`.
+  Sequential exports and strict2/2 validation confirm one execution each,
+  zero recorded runtime warnings, idle messages or runner restarts. Source and
+  exact compiled-plan hashes match. This test-only correction needs combined
+  hosted qualification, not another normal app rebuild. No local native process
+  remains active. Keep this fix local while the useful84 batch continues.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test

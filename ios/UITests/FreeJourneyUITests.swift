@@ -2007,6 +2007,12 @@ import XCTest
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func editableElement(_ id: String) -> XCUIElement {
+        // Ingredient amounts have explicit identities and are native TextFields.
+        // Avoid the all-descendants/multiple-type query after the lazy row is
+        // visible; that broader snapshot query timed out in the dinner journey.
+        if id.hasPrefix("ingredient.") && id.hasSuffix(".amount") {
+            return app.textFields.matching(identifier: id).firstMatch
+        }
         let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
         return app.descendants(matching: .any).matching(identifier: id)
             .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
