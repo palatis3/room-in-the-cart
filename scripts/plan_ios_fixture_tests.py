@@ -66,13 +66,15 @@ DELIVERY_SHARDS = {
     ),
 }
 # Whole suites share a contributor runner; every method still runs exactly once.
-# Per-case times from23a73a8/run42021894739 sum to14.8–16.9 minutes/group.
-# Estimated repeated setup savings need fresh grouped hosted validation.
+# Initial grouping used23a73a8/run42021894739. At49b/run42953140722,
+# group03 exhausted40minutes before its civil-date suite could finish.
+# Move devices to02 and civil dates to04, retaining the same five groups.
+# Current evidence and remaining timing uncertainty: docs/CI-VALIDATION.md.
 BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
-    "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
-    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
-    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
+    "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests", "HouseholdDevicesUITests"),
+    "contributor-balanced-03": ("HouseholdRequestPackUITests",),
+    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"

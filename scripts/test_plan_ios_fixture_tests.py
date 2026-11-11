@@ -99,12 +99,13 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)
         large_lunches = f"{UI_TARGET}/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
         decision_shard = plans["contributor"]["shards"]["contributor-balanced-03"]["test_identifiers"]
+        civil_shard = plans["contributor"]["shards"]["contributor-balanced-04"]["test_identifiers"]
         for language in ("English", "Spanish"):
             optional_night = f"{UI_TARGET}/SharedMealCivilDateUITests/test{language}UnscheduledMealCanBeScheduledWithoutReplacingItsNeeds"
-            self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(optional_night), 1)
+            self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(optional_night), 1)
             for suffix in ("DaySheetStagesCancelAndConfirmWithoutLosingCivilIdentity", "DaySheetRemainsUsableAtLargestTextSize"):
                 date_sheet = f"{UI_TARGET}/SharedMealCivilDateUITests/test{language}{suffix}"
-                self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(date_sheet), 1)
+                self.assertEqual([identifier.removesuffix("()") for identifier in civil_shard].count(date_sheet), 1)
         self.assertIn(large_lunches, [identifier.removesuffix("()") for identifier in decision_shard])
         other_meals = f"{UI_TARGET}/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts"
         self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(other_meals), 1)

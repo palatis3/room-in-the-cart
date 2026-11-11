@@ -853,6 +853,25 @@ Existing CI result-bundle uploads retain those diagnostics for seven days, inclu
 
 A later strict-checker rejection of an otherwise passing XCTest run is not itself an XCTest failure. This option therefore does not guarantee collection for a runtime-warning attachment that is missing from a passing test. Required issue descriptions remain mandatory; changing diagnostic collection does not repair or waive a warning.
 
+## Contributor fixture balance — November 11
+
+Run 42953140722 at 49bde552 exhausted the unchanged 40-minute test step in
+contributor-balanced-03. Its 19 cases contained two device-management tests, nine
+request/pack tests and eight civil-date tests. Eleven finished (nine passed, two
+failed); the first civil-date case was interrupted and its remaining seven never
+started. The uploaded bundle lacks Info.plist and is not a complete XCTest result.
+Preserve its original log and artifact 13831526605; do not infer success for the
+uncompleted selectors.
+
+Move HouseholdDevicesUITests from 03 to 02 and SharedMealCivilDateUITests from 03
+to 04. These remain whole suites in the existing five groups. The device cases
+accounted for 339.636 seconds in that hosted run; groups 02 and 04 finished in 24.3 and
+23.4 minutes respectively. These observations support moving work out of 03;
+they do not establish the successor's wall time. Verify the new distribution in
+one grouped candidate batch. Keep the same 26 fixture jobs, 89 selected tests, five
+macOS slots, per-case assertions, strict execution checks and job deadlines.
+The existing planner and workflow checks verify coverage and dispatch structure.
+
 ## Shared delivery fixture timing
 
 The six shared-delivery cases at `3e96fe3` passed on a hosted iPhone 17 running iOS 26.2. The runner spent about 2m33s on setup before the test step, then about 16m54s running and checking the shard. The six XCTest case durations account for 860.646s of that step. The suite now includes three more journeys. The table groups each whole journey once, using the six hosted case durations and passing local iOS 17 simulator measurements for the additions. [Hosted job and test log](https://github.com/palatis3/room-in-the-cart/actions/runs/42390883332/job/128469594458).
@@ -862,7 +881,7 @@ The six shared-delivery cases at `3e96fe3` passed on a hosted iPhone 17 running 
 | `SharedDeliveryUITests-stock-and-purchase` | Record and correct delivery 168.852, Spanish fractional stock 134.521, freezer correction 180.859 | Linked family purchase 54.555 | 538.787 s |
 | `SharedDeliveryUITests-recovery-cook-and-closeout` | Unresolved replacement 164.069, replace Wednesday 135.417, dated cook copy 76.928 | Edited cook wording 47.302, financial closeout 94.418 | 518.134 s |
 
-Each job restores the contributor build, boots its simulator, and checks its own selector file against the completed XCTest result. The fixture matrix has 17 jobs across both profiles, admitted through the five shared macOS slots. On the next hosted run, the `iphone-fixture-results-<shard>-<attempt>` artifacts record the per-case results. The two job timelines also include setup and result collection.
+Each job restores the contributor build, boots its simulator, and checks its own selector file against the completed XCTest result. The current fixture matrix has 26 jobs across both profiles, admitted through the five shared macOS slots. On the next hosted run, the `iphone-fixture-results-<shard>-<attempt>` artifacts record the per-case results. The two job timelines also include setup and result collection.
 
 ## Merge protection and release checks
 
