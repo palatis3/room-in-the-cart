@@ -101,7 +101,9 @@ strict local verification with unchanged source, products and deadlines in
 executed zero tests because simulator app-preflight was busy; it remains retained
 under `en`. The existing explicit boot helper completed before the passing run.
 This is an explicit merge-stage compatibility baseline, not current-OS billing
-qualification or proof of an SDK root cause. Hosted qualification remains pending.
+qualification or proof of an SDK root cause. The af3338 hosted suites each execute
+all15cases and pass14; English approval ordering and Spanish observer delivery
+remain failed. CURRENT-HANDOFF records their evidence and scoped next actions.
 
 The shared StoreKit producer still builds once against the27.0 destination with
 SDK27.1 and the iOS17 deployment target; its inventory records SDK/toolchain identity.
@@ -110,7 +112,9 @@ Each compatibility consumer installs exactly23C54 using Apple's bounded
 command when missing, then validates installed runtime/build and the actual result
 device/runtime/build. It creates only its job-local iPhone17 if needed. Missing,
 unavailable or mismatched runtimes fail setup without fallback. The command resolves
-locally; fresh installation and timing on the hosted image are not yet established.
+locally. Both af3338 hosted consumers installed/validated23C54 and their result
+identities match. English runtime preparation took approximately3m28s; its cold
+simulator boot took6m53s. These setup observations do not establish suite success.
 
 Manual and reusable deep-workflow calls default `require_current_storekit` to true;
 release-checks explicitly passes true and requires both full locale suites on

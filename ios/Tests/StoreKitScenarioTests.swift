@@ -137,8 +137,63 @@ import StoreKitTest
         defer { model.stop() }
         await model.start()
         let purchased = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
-        try await eventually("The app-scoped StoreKit observer attempts delivery") {
-            model.notice == .failed(.notConfigured)
+        do {
+            try await eventually("The app-scoped StoreKit observer attempts delivery") {
+                model.notice == .failed(.notConfigured)
+            }
+        } catch {
+            // Capture the failed boundary before another await. Keep the original
+            // failure; these fixed flags contain no identities or transaction data.
+            let delivery = model.deliveryOutcomes[String(purchased.id)]
+            let rejections = model.callbackRejections
+            let state = XCTAttachment(string: """
+            phase=after-delivery-predicate-failure-before-raw-read
+            offerLoaded=\(model.offer != nil) stopped=\(model.isStopped) busy=\(model.isBusy)
+            noticePresent=\(model.notice != nil) noticeNotConfigured=\(model.notice == .failed(.notConfigured))
+            issuePresent=\(model.state.issue != nil) issueNotConfigured=\(model.state.issue == .notConfigured)
+            deliveryCount=\(model.deliveryOutcomes.count) purchasedDeliveryAbsent=\(delivery == nil)
+            purchasedDeliveryInFlight=\(delivery == .inFlight) purchasedDeliverySaved=\(delivery == .delivered)
+            purchasedDeliveryNotConfigured=\(delivery == .failed(.notConfigured))
+            callbackCount=\(rejections.count) callbackUnverified=\(rejections.contains(.unverified))
+            callbackAccountMismatch=\(rejections.contains(.accountMismatch)) callbackNotPurchaser=\(rejections.contains(.notPurchaser))
+            callbackSignInRequired=\(rejections.contains(.signInRequired)) paidAccess=\(model.hasPaidAccess)
+            """)
+            state.name = "Observer-failure-model-before-raw-read"
+            state.lifetime = .keepAlways; add(state)
+
+            // One sample-limited read after failure, without adapter conversion, refresh,
+            // sync or finish. It cannot turn the failed predicate into a pass.
+            var sampled = 0, verified = 0, unverified = 0
+            var purchasedVerified = 0, purchasedUnverified = 0
+            var purchasedProductMatches = 0, purchasedTokenMatches = 0, purchasedTokenNil = 0
+            var truncated = false
+            for await result in StoreKit.Transaction.unfinished {
+                guard sampled < 8 else { truncated = true; break }
+                sampled += 1
+                let transaction: StoreKit.Transaction
+                switch result {
+                case .verified(let value):
+                    transaction = value; verified += 1
+                    if value.id == purchased.id { purchasedVerified += 1 }
+                case .unverified(let value, _):
+                    transaction = value; unverified += 1
+                    if value.id == purchased.id { purchasedUnverified += 1 }
+                }
+                if transaction.id == purchased.id {
+                    if transaction.productID == productID { purchasedProductMatches += 1 }
+                    if transaction.appAccountToken == accountToken { purchasedTokenMatches += 1 }
+                    if transaction.appAccountToken == nil { purchasedTokenNil += 1 }
+                }
+            }
+            let raw = XCTAttachment(string: """
+            phase=raw-unfinished-snapshot-after-failed-predicate sampleLimit=8
+            sampled=\(sampled) truncated=\(truncated) verified=\(verified) unverified=\(unverified)
+            purchasedVerified=\(purchasedVerified) purchasedUnverified=\(purchasedUnverified)
+            purchasedProductMatches=\(purchasedProductMatches) purchasedTokenMatches=\(purchasedTokenMatches) purchasedTokenNil=\(purchasedTokenNil)
+            """)
+            raw.name = "Observer-failure-raw-unfinished-after-predicate"
+            raw.lifetime = .keepAlways; add(raw)
+            throw error
         }
         assertFree(model)
         try await eventually("The observed transaction remains unfinished") {
