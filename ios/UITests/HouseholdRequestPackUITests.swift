@@ -711,7 +711,9 @@ import XCTest
         let add = app.buttons["Add packs to this shop"]
         // At AX5 the native menu opens scrolled to its selected option.
         let selected = app.buttons["Save for next shop"]
-        if add.exists && !add.isHittable && selected.isHittable {
+        // An offscreen AX5 menu item can be absent from the hierarchy entirely.
+        // Scroll from the visible selected menu row, not the underlying Form.
+        if (!add.exists || !add.isHittable) && selected.exists && selected.isHittable {
             let start = selected.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 160)))
         }
@@ -809,8 +811,10 @@ import XCTest
         guard keyboard.exists else { return }
         let bounds = app.frame, area = scrollableArea()
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
+        // Start inside the Form and keep the gesture above the keyboard. A drag
+        // along the outer sheet margin may move the sheet without scrolling it.
+        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.minY + area.height * 0.25 - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.maxY - 8 - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)

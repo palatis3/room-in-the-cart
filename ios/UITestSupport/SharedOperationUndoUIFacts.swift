@@ -133,7 +133,7 @@ enum OperationUndoUIFacts {
     "lines": [
       {
         "lineId": "00000000-0000-4000-8000-000000000003",
-        "originalItem": "Original wraps",
+        "originalItem": "Wraps",
         "packs": 3,
         "unitPriceMinor": 200,
         "feeEligible": true
@@ -223,7 +223,7 @@ enum OperationUndoUIFacts {
         "lines": [
           {
             "lineId": "00000000-0000-4000-8000-000000000003",
-            "originalItem": "Original wraps",
+            "originalItem": "Wraps",
             "packs": 2,
             "unitPriceMinor": 200,
             "feeEligible": true
@@ -723,7 +723,7 @@ enum OperationUndoUIFacts {
         "lines": [
           {
             "lineId": "00000000-0000-4000-8000-000000000003",
-            "originalItem": "Original wraps",
+            "originalItem": "Wraps",
             "packs": 2,
             "unitPriceMinor": 200,
             "feeEligible": true

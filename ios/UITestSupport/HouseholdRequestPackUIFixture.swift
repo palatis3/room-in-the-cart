@@ -128,6 +128,24 @@ final class S24FixtureServer: @unchecked Sendable {
             if includeMealFacts { shop["meals"] = Self.protectedLunches + (includeOtherMeal ? [Self.otherDinner] : []) }
             return try json(shop)
         }
+        if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shop + "/demand/tracking") {
+            if accessRevoked { return (403, Data()) }
+            // Apply reads the current v2 tracking state before deciding whether
+            // this ordinary, untracked pickup can use its reviewed pack decision.
+            let basket = recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":CerealCheckout.items,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])
+            let charges = cerealScenario ? CerealCheckout.total - CerealCheckout.items : 0
+            let total: Int? = basket.contains { !($0["unitPriceMinor"] is Int) } ? nil : basket.reduce(charges) {
+                $0 + ($1["unitPriceMinor"] as! Int) * ($1["packs"] as! Int)
+            }
+            let catalog: [[String: Any]] = recordedLines.map { line in
+                ["id": Self.requestID, "revision": 1, "source": ["kind": "request", "requestId": Self.requestID, "appliedRequestRevision": 1],
+                 "sourceLabel": "Request", "originalText": requestRow["originalItem"]!, "originalQuantityText": requestRow["ownQuantity"]!,
+                 "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": line["lineId"]!]
+            }
+            return try json(ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop,
+                revision: revision + (recordedLines.isEmpty ? 0 : 1), basket: basket,
+                checkout: ModelTrackingReadFixture.budget(total, cap: cerealScenario ? 3800 : 500), catalog: catalog))
+        }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shop + "/demand") {
             if accessRevoked { return (403, Data()) }
             return try json(["schemaVersion":1,"shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])

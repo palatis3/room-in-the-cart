@@ -88,6 +88,43 @@ private final class OperationUndoFixtureServer: @unchecked Sendable {
             if state.writes == 1 { page["shopRevision"] = 8; page["graph"] = candidate["after"]; page["totals"] = candidate["afterTotals"]; page["graphDigest"] = String(repeating: "d", count: 64) }
             return try json(page)
         }
+        if path == shopPath + "/demand/tracking", method == "GET" {
+            // Current read-only projection of this already-tracked fixture. The
+            // original Undo receipt remains the sole source of the applied graph.
+            let originalShop = f["shop"] as! [String: Any], originalPage = f["page"] as! [String: Any]
+            let applied = state.writes == 1
+            let graphValue = (applied ? candidate["after"] : originalPage["graph"]) as! [String: Any]
+            let graph: SharedDemandGraph = try OperationUndoUIFacts.decode(graphValue)
+            let basket = (applied ? actionBody["lines"] : originalShop["lines"]) as! [[String: Any]]
+            let totals = (applied ? candidate["afterTotals"] : originalPage["totals"]) as! [[String: Any]]
+            var meals = originalShop["meals"] as! [[String: Any]]
+            if applied, let edit = actionBody["mealEdit"] as? [String: Any], let occurrence = edit["occurrenceId"] as? String {
+                meals.removeAll { $0["occurrenceId"] as? String == occurrence }
+                if let meal = edit["meal"], !(meal is NSNull) { meals.append(["occurrenceId": occurrence, "revision": 8, "meal": meal]) }
+            }
+            var catalog: [[String: Any]] = [], bindings: [[String: Any]] = []
+            for row in graphValue["contributions"] as! [[String: Any]] where row["removedAt"] is NSNull {
+                let source = row["source"] as! [String: Any], kind = source["kind"] as! String
+                if kind == "manual" || kind == "import" { continue }
+                let occurrence = (source["originOccurrenceId"] ?? source["occurrenceId"]) as? String
+                guard let meal = meals.first(where: { $0["occurrenceId"] as? String == occurrence }) else { throw ClientError.invalidResponse }
+                let quantity = row["quantity"] as? [String: Any]
+                catalog.append(["id": row["id"]!, "revision": meal["revision"]!, "source": source,
+                    "sourceLabel": row["originalText"]!, "originalText": row["originalText"]!,
+                    "originalQuantityText": quantity?["originalLiteral"] ?? NSNull(), "quantity": row["quantity"]!,
+                    "sourceExclusions": row["sourceExclusions"] ?? [], "requiredLineId": NSNull()])
+                bindings.append(["factId": row["id"]!, "contributionId": row["id"]!])
+            }
+            var page = try ModelTrackingReadFixture.page(household: household, shop: shopID, revision: applied ? 8 : 7,
+                basket: basket, graph: graph, totals: totals,
+                checkout: (applied ? candidate["afterCheckout"] : candidate["beforeCheckout"]) as! [String: Any],
+                catalog: catalog, bindings: bindings)
+            var tracking = page["state"] as! [String: Any]
+            tracking["authorityEpoch"] = originalShop["authorityEpoch"]!
+            tracking["packReviews"] = f["packs"]!
+            page["authorityEpoch"] = originalShop["authorityEpoch"]!; page["state"] = tracking
+            return try json(page)
+        }
         if path == shopPath + "/demand/operations", method == "GET" {
             var history = f["history"] as! [String: Any]
             if state.writes == 1 {

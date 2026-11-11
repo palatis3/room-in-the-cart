@@ -140,7 +140,8 @@ import XCTest
             "label == %@ OR (label == %@ AND value == %@) OR label == %@ OR label == %@",
             expected, "Later apples", expected, "Later apples, " + expected, "Later apples\n" + expected)
         let total = app.descendants(matching: .any).matching(exactCopy).firstMatch
-        reveal(total, initialSearchDirection: .towardStart)
+        // Current tracking puts basket and checkout before these subtotals.
+        reveal(total, initialSearchDirection: .towardEnd)
         XCTAssertTrue(exactCopy.evaluate(with: total), "Complete localized unknown-total wording must match")
         XCTAssertTrue(app.frame.contains(total.frame), "Complete unknown-total value must fit the app")
         XCTAssertGreaterThan(total.frame.height, 0)
