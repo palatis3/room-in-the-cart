@@ -915,13 +915,16 @@ import UIKit
                 let bounds = app.frame
                 let navigation = app.navigationBars.firstMatch
                 let tabs = app.tabBars.firstMatch
-                let keyboard = app.keyboards.firstMatch
+                // Enumerate present keyboards: probing a missing firstMatch
+                // stalled after Done in the hosted store-price journey.
+                let keyboardTop = app.keyboards.allElementsBoundByIndex
+                    .filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
                 let top = navigation.exists ? navigation.frame.maxY : bounds.minY
                 // The app's Done bar sits above the system keyboard and can cover
                 // a text field that XCTest still considers hittable.
                 let inputBarTop = inputBar.flatMap { $0.exists ? $0.frame.minY : nil } ?? bounds.maxY
                 let bottom = min(tabs.exists ? tabs.frame.minY : bounds.maxY,
-                                 keyboard.exists ? keyboard.frame.minY : bounds.maxY, inputBarTop)
+                                 keyboardTop, inputBarTop)
                 let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top))
                 // A partly visible Form row can be hittable while its center is
                 // behind the tab bar. Scroll its tap point into clear content.

@@ -29,8 +29,8 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/09/10 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, both SharedDelivery groups, both shared-food editing languages and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Eight qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`) and RecordsMedia native off-thumb targeting await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/09 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys and Spanish saved-change Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
@@ -45,6 +45,30 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Store-price keyboard enumeration qualified locally:** UI10 job130431281389
+  completes7/8; its missing-price case stalls querying an absent keyboard through
+  `firstMatch` after Done. The screenshot shows no keyboard; the failure occurs
+  before price assertions. Original artifact13844975113 is retained at
+  `.build/MissingStorePricesNov11/hosted/original.zip`, SHA256
+  3303436dc91162d19e2f084dd88f39544e8a134fe3e0a84d7875971625d537fa.
+  `revealContent` now enumerates present keyboards, matching the existing scroll
+  helper. Viewport bounds, price/availability assertions and deadlines are unchanged.
+  Build16814, exact enumeration22767 and test13197 ended0. Strict2/2 passes at
+  `.build/MissingStorePricesNov11/focused/Tests.xcresult`: entered quotes246.577s,
+  missing prices89.34s, zero recorded warnings/idle messages/restarts. Source and
+  exact compiled-plan hashes match. No production change or normal rebuild is
+  needed; this ninth local correction still needs combined hosted qualification.
+- **Spanish saved-change Undo passes hosted84:** job130441316648 completes
+  strict1/1 in370.965s, with zero recorded runtime warnings/idle messages/restarts.
+  The original Cancel, Apply, relaunch, exact retry and later-food preservation
+  assertions pass. No unchanged repeat is needed.
+- **Correction-privacy recording review:** retained video frames at actual
+  51.933s and53.375s show the fully visible enabled switch. Later requested times
+  resolve to that same53.375s frame; they are not independent later captures.
+  `.build/CorrectionPrivacyNov11/hosted/toggle-frames/frame-times.json` preserves
+  actual times. Together with the event and hierarchy, this does not explain the
+  missing dialog or support copying the off-thumb correction. No source change
+  or unchanged local rerun was made.
 - **Eight-fix cheap source validation passes:** revision9947d9f6 passes all975
   Python checks in16.738s, session75023 ended0, log
   `.build/SourceContractsNov11/grouped-9947d9f6.log`. Theme, localization, generated
