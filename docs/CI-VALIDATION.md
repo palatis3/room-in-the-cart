@@ -54,7 +54,13 @@ release requirements and known failures remain visible.
   required tests, missing outcomes and unapproved skips still fail the job.
 - For focused local form/selector checks, use `-collect-test-diagnostics never`
   and retain the test log, screenshots and result bundle. Use `on-failure` when
-  investigating a crash, hang or simulator fault. Routine assertion failures
+  investigating an unexplained crash, hang or simulator fault. Once the first
+  failure has actionable crash evidence, use `never` for the focused correction
+  check unless new system diagnostics are needed. The November11 shared-meal
+  removal fault was captured in app stdout with `never`; a later visibility
+  assertion under `on-failure` launched a600-second simulator diagnostic command
+  after the45-second test body. Preserve both originals instead of collecting
+  that same system evidence again. Routine assertion failures
   should not trigger a ten-minute simulator diagnostic collection. Hosted CI
   keeps its existing failure diagnostics.
 - Batch related fixes before one integration run. Run broad regression on the

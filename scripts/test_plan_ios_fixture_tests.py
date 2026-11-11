@@ -93,7 +93,10 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 89)
+                             for shard in plan["shards"].values()), 90)
+        removal = f"{UI_TARGET}/SharedMealChangeUITests/testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite"
+        meal_shard = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
+        self.assertEqual([value.removesuffix("()") for value in meal_shard].count(removal), 1)
         later_page = f"{UI_TARGET}/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
         return_shard = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)

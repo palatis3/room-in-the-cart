@@ -14,8 +14,9 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("S17-shared-meal-failure") }
         app.terminate()
     }
-    private func launch(shopperSeed: Bool = false, deadline: Bool = false) {
+    private func launch(shopperSeed: Bool = false, deadline: Bool = false, ingredientRemoval: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : []) + (deadline ? ["--shared-meal-deadline-fixture"] : [])
+        if ingredientRemoval { app.launchArguments += ["--shared-meal-group-amount-fixture", "--shared-meal-removal-fixture"] }
         app.launch()
         let ready = deadline ? app.navigationBars["Shared household shop"] : app.buttons["meal-change-occurrence"]
         XCTAssertTrue(ready.waitForExistence(timeout: 25))
@@ -89,6 +90,27 @@ import XCTest
         tap(element("fixture.s17.seed")); chooseOccurrence(); tap(element("meal-change-shopper-seed"))
         approveSharedDraft()
         XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
+    }
+    func testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite() {
+        launch(ingredientRemoval: true); chooseOccurrence()
+        fill("Remove only the tomato side; keep the protected lunch", into: "meal-change-reason", replacing: true)
+        tap(app.buttons["Tomato side"])
+        tap(app.buttons["Remove proposed ingredient"])
+        XCTAssertFalse(app.buttons["Tomato side"].exists)
+        tap(app.buttons["meal-change-prepare"])
+        reveal(app.buttons["meal-change-send"])
+        XCTAssertTrue(app.buttons["meal-change-send"].isEnabled)
+        capture("S17-bound-side-removed-review-keeps-other-allocations")
+        tap(app.buttons["Cancel proposal review"])
+        XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
+        XCTAssertEqual(element("fixture.s17.applications").label, "Fixture shared applications: 0")
+        tap(app.buttons["Lunch"])
+        tap(app.buttons["Refresh shared changes"])
+        chooseOccurrence()
+        let restoredSide = app.buttons["Tomato side"]
+        reveal(restoredSide, fullyVisible: true)
+        XCTAssertTrue(restoredSide.isHittable)
+        capture("S17-cancelled-side-removal-original-draft-reopened")
     }
     func testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline() {
         launch(deadline: true)

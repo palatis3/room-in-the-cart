@@ -17,11 +17,17 @@ private enum S17GroupAmountFixture {
         func amount(_ value: Int, _ literal: String) -> SharedMealQuantity {
             .init(amount: .init(numerator: value), unit: "count", originalLiteral: literal)
         }
-        return .init(groups: [.init(id: dinner, name: "Dinner", servings: .init(numerator: 6), protected: false),
+        var planning = SharedMealPlanning(groups: [.init(id: dinner, name: "Dinner", servings: .init(numerator: 6), protected: false),
                               .init(id: lunch, name: "Lunch", servings: .init(numerator: 2), protected: true)],
             ingredients: [.init(id: ingredient, name: "Wraps", quantity: amount(8, "8 wraps"), groupIds: [dinner, lunch], exclusions: [])],
             bindings: [.init(id: UUID(uuidString: "dddddddd-dddd-4ddd-8ddd-dddddddddddd")!, groupId: dinner, ingredientId: ingredient, quantity: amount(6, "6 dinner wraps")),
                        .init(id: UUID(uuidString: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")!, groupId: lunch, ingredientId: ingredient, quantity: amount(2, "2 lunch wraps"))])
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-removal-fixture") {
+            let side = UUID(uuidString: "ffffffff-ffff-4fff-8fff-ffffffffffff")!
+            planning.ingredients.append(.init(id: side, name: "Tomato side", quantity: amount(1, "1 tomato"), groupIds: [dinner], exclusions: []))
+            planning.bindings?.append(.init(id: UUID(uuidString: "99999999-9999-4999-8999-999999999999")!, groupId: dinner, ingredientId: side, quantity: amount(1, "1 dinner tomato")))
+        }
+        return planning
     }
 }
 private final class S17FixtureServer: @unchecked Sendable {

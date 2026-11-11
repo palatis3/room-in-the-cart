@@ -187,6 +187,27 @@ extension HouseholdService: SharedMealChangesServing {}
     }
 }
 
+extension SharedMealPlanning {
+    /// Remove only the draft facts selected by the adult. Other allocations and
+    /// ingredient totals stay exact; review still validates any remaining mismatch.
+    mutating func removeProposedIngredient(_ id: UUID) {
+        guard ingredients.contains(where: { $0.id == id }) else { return }
+        ingredients.removeAll { $0.id == id }
+        bindings?.removeAll { $0.ingredientId == id }
+    }
+
+    mutating func setProposedGroup(_ groupID: UUID, for ingredientID: UUID, included: Bool) {
+        guard let index = ingredients.firstIndex(where: { $0.id == ingredientID }),
+              groups.contains(where: { $0.id == groupID }) else { return }
+        if included {
+            if !ingredients[index].groupIds.contains(groupID) { ingredients[index].groupIds.append(groupID) }
+        } else {
+            ingredients[index].groupIds.removeAll { $0 == groupID }
+            bindings?.removeAll { $0.ingredientId == ingredientID && $0.groupId == groupID }
+        }
+    }
+}
+
 /// Match the server's explicit-allocation total before a proposal is retained.
 /// This checks entered facts; it does not infer shares or normalize their units.
 enum SharedMealGroupAmounts {

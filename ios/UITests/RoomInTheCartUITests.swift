@@ -315,7 +315,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(tabs.exists)
         XCTAssertLessThanOrEqual(list.frame.maxY, tabs.frame.minY,
                                  "The results viewport must end above the tab bar")
-        let save = element("saveComparison")
+        let save = app.buttons["saveComparison"]
         for _ in 0..<18 {
             if save.exists && list.frame.contains(save.frame) { break }
             list.swipeUp(velocity: .slow)
@@ -536,9 +536,9 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func saveAndAssertDurableStatus(savedLabel: String = "Saved on this iPhone") {
-        tap(element("saveComparison"))
+        tap(app.buttons["saveComparison"])
         assertSavedStatus(savedLabel)
-        XCTAssertFalse(element("saveComparison").exists)
+        XCTAssertFalse(app.buttons["saveComparison"].exists)
     }
 
     private func assertSavedStatus(_ text: String) {
