@@ -21,6 +21,30 @@ release has unresolved requirements. Finish and qualify the current correction,
 then move to the next unresolved cause. Workflow scheduling and fixture balancing
 changes are now published. PR1 remains draft and unmerged.
 
+### Next actions — current queue
+
+This table supersedes running/queued wording in the evidence notes below. It was
+checked against both GitHub jobs APIs on November 11; recheck live state before
+dispatching. Update this table in place rather than adding another status recap.
+
+| Work | Current decision | Next action |
+| --- | --- | --- |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI04–07 and stock/purchase are active; later groups are pending. UI02/03, models and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Four qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`) and largest-text meal query (`aa84e60b`) await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
+| StoreKit | Declined-request evidence and the separate private Apple draft are retained; submission approval remains pending. | No blind reruns or submission without the requested approval. Other purchase failures remain separate unresolved observations. |
+| Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
+
+For routine progress, report the next decision or a changed result, not every
+poll. Documentation-only queue maintenance needs a diff check, not a native
+build or a hosted run. The existing CI-VALIDATION policy remains the operational
+workflow; no new suite, monitor, wrapper or approval step is needed.
+
+### Retained evidence notes
+
+These notes preserve observations at the time of each check. Historical active
+job descriptions are not the current queue.
+
 - **Capture source Done qualified locally:** published84 fixture job130383822595
   completed all13 cases, with12 passes and one failed keyboard-dismissal assertion
   in the original typed/structured request journey (315.238s). The screenshot
