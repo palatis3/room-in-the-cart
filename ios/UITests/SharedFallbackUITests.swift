@@ -46,8 +46,13 @@ final class SharedFallbackUITests: XCTestCase {
         reveal(control, file: file, line: line)
         if control.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
         if control.frame.midY < app.frame.minY + 72 { app.swipeDown() }
-        control.tap()
-        let applied = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
+        // The hosted recording shows a track-center tap leaving the visible
+        // native switch off. Target its current thumb, then check both states.
+        let thumbX: CGFloat = control.value as? String == "1" ? 0.75 : 0.25
+        control.coordinate(withNormalizedOffset: CGVector(dx: thumbX, dy: 0.5)).tap()
+        let applied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            control.value as? String == value && element.value as? String == value
+        }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }
     private func enter(_ value: String, _ field: String, done: String) {

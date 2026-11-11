@@ -29,10 +29,10 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI06/08, recovery/cook/closeout and Spanish shared-food editing are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with a switch-state failure to investigate. UI02/03/04, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Six qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`) and pairing Apply-dismissal wait await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/10, recovery/cook/closeout and both shared-food editing jobs are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Seven qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`) and SharedFallback switch-thumb targeting await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
-| StoreKit | Declined-request evidence and the separate private Apple draft are retained; submission approval remains pending. | No blind reruns or submission without the requested approval. Other purchase failures remain separate unresolved observations. |
+| StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
 
 For routine progress, report the next decision or a changed result, not every
@@ -59,7 +59,7 @@ job descriptions are not the current queue.
   Source/compiled-plan hashes match; syntax/automation/diff checks pass. Existing
   chosen-schedule and no-repeat pairing assertions remain. Hosted resolution is
   not yet qualified; retain this correction for the grouped candidate.
-- **SharedFallback needs its next investigation:** job130419222033 executes2/2;
+- **SharedFallback switch correction qualified locally:** job130419222033 executes2/2;
   recipe approval/lost-reply recovery passes183.394s, but five-wrap fallback fails
   129.944s at line128 when selecting the usual dinner. The nested native switch
   was off, was tapped once, and its parent did not report1 within3s. Zero recorded
@@ -67,8 +67,21 @@ job descriptions are not the current queue.
   recur in this execution. Original artifact13842981833 is hash-verified at
   `.build/SharedFallbackNov11/hosted/original.zip`, SHA256
   2078a551846378cf16147e69a09b5c2e57a70b2714b5bcc47ac35f136f8e5026.
-  Attachments are exported in `hosted/attachments`; inspect the retained event
-  and snapshot before choosing a correction. No local repeat or source edit yet.
+  The retained event taps340.5,604; recording frames show the usual-dinner switch
+  fully visible and still off after that track-center tap. Exported AX snapshots
+  contain only the application root, so they do not establish the child hierarchy.
+  The test helper now targets the current native thumb and requires both native
+  and parent state to match within the unchanged3s deadline. Build87817,
+  enumeration92849 and original test12162 ended0. Strict1/1 passes153.87s with
+  zero recorded warnings/idle messages/restarts at `.build/SharedFallbackNov11/focused/Tests.xcresult`.
+  Source and exact fixture-plan hashes match; syntax/automation/diff checks pass.
+  Original food, cost, agreements, Apply and cook-note assertions remain.
+  No production change or normal rebuild; hosted resolution remains unproven.
+- **UI06 passes hosted84:** job130413281674 completes strict7/7 with zero recorded
+  runtime warnings/idle messages/restarts. This covers store quotes639.673s,
+  authorization hold, printed fluid-ounce labels, recipe capture/Cancel,
+  retained placement, confirmed deletion and Spanish source wording. No repeat
+  of these unchanged cases is needed.
 - **UI04 and stock/purchase now pass hosted84:** UI04 job130384868050 completes
   strict7/7, zero recorded runtime warnings/idle messages/restarts. It includes
   the dinner cap/Cancel journey130.762s and the complete protected-lunch,
@@ -201,9 +214,9 @@ job descriptions are not the current queue.
   The reviewed draft reuses the original, no-post-decline-sync and after-pending
   results; no tests were repeated. It states the app-hosted scope and unproven
   SDK cause, and includes only structural counts/matches and original hashes.
-  An async question requests approval for these two files only. Earlier approval
-  covered the different XCTest crash report and is not reused here. Await an
-  explicit reply before sending anything to Apple; keep the live84 batch running.
+  The owner answered “Keep the draft for now.” Do not submit these files or
+  re-ask without a changed need or owner instruction. Earlier approval covered
+  the different XCTest crash report and is not reused here. Keep live84 running.
 - **UI02 and UI03 now pass hosted84:** jobs130384868069 and130384868189 each
   execute all6 original cases with zero runtime warnings, idle messages or
   restarts. This qualifies the earlier stock/carryover, replacement/cook and
