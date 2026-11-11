@@ -33,7 +33,7 @@ struct DinnerOccurrenceView: View {
         Result { try model.currentMealDestination(occurrenceID, pickup: pickup) }
     }
     private var occurrenceForm: some View {
-        Form {
+        WorkingForm {
             if let meal {
                 let proposedDay = try? DinnerEntry.date(date, zone: calendarZone, scheduled: scheduled)
                 Section {
@@ -132,11 +132,11 @@ struct DinnerManualAdjustmentView: View {
         } })
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(dinnerText("Total servings")).font(.caption).foregroundStyle(.secondary)
+                    Text(dinnerText("Total servings")).font(.caption).foregroundStyle(Theme.secondary)
                     TextField(dinnerText("Total servings"), text: $servings)
                         .frame(minHeight: 44)
                 }
@@ -149,7 +149,7 @@ struct DinnerManualAdjustmentView: View {
                     } else {
                         TextField(dinnerText("Group name"), text: $group.name)
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(dinnerText("Group servings")).font(.caption).foregroundStyle(.secondary)
+                            Text(dinnerText("Group servings")).font(.caption).foregroundStyle(Theme.secondary)
                             TextField(dinnerText("Group servings"), text: $group.servings)
                                 .frame(minHeight: 44)
                         }
@@ -171,7 +171,7 @@ struct DinnerManualAdjustmentView: View {
                 ForEach($amounts) { $amount in
                     VStack(alignment: .leading) {
                         Text(amount.name).font(.headline)
-                        Text(dinnerText("Amount, optional")).font(.caption).foregroundStyle(.secondary)
+                        Text(dinnerText("Amount, optional")).font(.caption).foregroundStyle(Theme.secondary)
                         TextField(dinnerText("Amount, optional"), text: $amount.amount)
                             .frame(minHeight: 44)
                         DinnerUnitPicker(unit: $amount.unit)
@@ -190,7 +190,7 @@ struct DinnerManualAdjustmentView: View {
                                 Text(dinnerText("Protected group"))
                                 Text(dinnerQuantity(snapshot.protectedQuantity))
                             } else {
-                                Text(dinnerText("Resulting amount for this group")).font(.caption).foregroundStyle(.secondary)
+                                Text(dinnerText("Resulting amount for this group")).font(.caption).foregroundStyle(Theme.secondary)
                                 TextField(dinnerText("Resulting amount for this group"), text: row.amount)
                                     .frame(minHeight: 44)
                                     .accessibilityIdentifier("dinnerManualBinding.\(snapshot.contributionID).\(snapshot.groupID)")

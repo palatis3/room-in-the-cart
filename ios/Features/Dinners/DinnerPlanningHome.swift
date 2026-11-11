@@ -33,53 +33,55 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     @State private var showWeekGrid = false
     var body: some View {
         List {
-            Section {
-                Text(dinnerText("Plan dinners, one decision at a time.")).font(.title2.bold())
-                if let shop = model.shop { Text(shop.title).font(.headline) }
-                Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
-            }
-            if model.shop == nil {
+            Group {
                 Section {
-                    Text(dinnerText("Name your pickup to save dinner ideas and choose what to make."))
-                    Button(ledgerText("Start pickup"), action: startPickup)
-                        .accessibilityIdentifier("dinnerStartPickup")
+                    Text(dinnerText("Plan dinners, one decision at a time.")).font(.title2.bold())
+                    if let shop = model.shop { Text(shop.title).font(.headline) }
+                    Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
                 }
-            } else if !model.accessAvailable {
-                Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
-            } else {
-                Section {
-                    if let shop = model.shop {
-                        NavigationLink(dinnerText("This week")) {
-                            DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
-                                showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
-                        }.accessibilityIdentifier("dinnerWeekEntry")
+                if model.shop == nil {
+                    Section {
+                        Text(dinnerText("Name your pickup to save dinner ideas and choose what to make."))
+                        Button(ledgerText("Start pickup"), action: startPickup)
+                            .accessibilityIdentifier("dinnerStartPickup")
                     }
-                }
-                Section(dinnerText("Plan")) {
-                    NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
-                    NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
-                        .accessibilityIdentifier("dinnerManual")
-                    NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
-                        .accessibilityIdentifier("dinner.scanRecipe")
-                    NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }.accessibilityIdentifier("dinnerLibrary")
-                    NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.shop?.id) }
-                    NavigationLink(dinnerText("Review a dinner idea")) { DinnerIdeasView(model: model) }
-                    NavigationLink(dinnerText("Dinner rotations")) { DinnerRotationsView(model: model, weekStart: weekStart) }
-                    NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
-                    if model.budgetVisible {
+                } else if !model.accessAvailable {
+                    Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
+                } else {
+                    Section {
                         if let shop = model.shop {
-                            DinnerDecisionButton(model: model, title: dinnerText("Pairing and fallback evidence"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
+                            NavigationLink(dinnerText("This week")) {
+                                DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
+                                    showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
+                            }.accessibilityIdentifier("dinnerWeekEntry")
                         }
-                        NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                     }
-                }.disabled(!model.editable)
-                if model.preview != nil {
-                    Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
+                    Section(dinnerText("Plan")) {
+                        NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
+                        NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
+                            .accessibilityIdentifier("dinnerManual")
+                        NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
+                            .accessibilityIdentifier("dinner.scanRecipe")
+                        NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }.accessibilityIdentifier("dinnerLibrary")
+                        NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.shop?.id) }
+                        NavigationLink(dinnerText("Review a dinner idea")) { DinnerIdeasView(model: model) }
+                        NavigationLink(dinnerText("Dinner rotations")) { DinnerRotationsView(model: model, weekStart: weekStart) }
+                        NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
+                        if model.budgetVisible {
+                            if let shop = model.shop {
+                                DinnerDecisionButton(model: model, title: dinnerText("Pairing and fallback evidence"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
+                            }
+                            NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
+                        }
+                    }.disabled(!model.editable)
+                    if model.preview != nil {
+                        Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
+                    }
                 }
-            }
-            DinnerFeedback(model: model)
-            Section { saveStatus() }
-        }.navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
+                DinnerFeedback(model: model)
+                Section { saveStatus() }
+            }.listRowBackground(Theme.surface)
+        }.workingSurface().navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
     }
 }
 
@@ -260,108 +262,110 @@ struct DinnerPreviewView: View {
     private func finish() { if let close { close() } else { dismiss() } }
     var body: some View {
         List {
-            if let preview = model.preview, model.canReviewPreview {
-                Section {
-                    Text(dinnerText("Review before applying")).font(.title2.bold())
-                    Text(dinnerText("Only the changes listed here will be applied. Cancel keeps your saved pickup unchanged."))
-                    if preview.proposal.isIsolatedPreview { Text(dinnerText("Exploration only. This preview cannot be applied.")) }
-                    if preview.needsPurchaseAmendment { Text(dinnerText("This basket is locked. Save a proposal for a purchase amendment.")) }
-                    if model.sharedPreview { Text(dinnerText("Shared changes need an authorized server commit. You can save this proposal on this device.")) }
-                }
-                Section(dinnerText("Dinners")) {
-                    ForEach(preview.projectedMeals.filter { preview.changedOccurrenceIDs.contains($0.id) }) { meal in
-                        let movesDate = preview.proposal.changes.contains {
-                            if case .move(let id, _) = $0 { return id == meal.id }
-                            return false
-                        }
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(meal.title).font(.headline)
-                            Text(meal.removedAt == nil ? dinnerFormat("Servings: %@", meal.servings.description) : dinnerText("Remove chosen dinner"))
-                            if movesDate, let original = model.shop?.mealOccurrences.first(where: { $0.id == meal.id }) {
-                                Text(dinnerFormat("Before: %@", original.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
-                                Text(dinnerFormat("After: %@", meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
-                                Text(dinnerText("The dinner and its serving groups move together. Grocery quantities and separate protected reservations stay as saved. Review any cook instructions already shared for this dinner."))
-                            } else {
-                                Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
-                            }
-                            ForEach(meal.servingGroups.filter(\.isProtected)) { group in
-                                Text(dinnerFormat("Protected: %@ · %@", group.name, group.servings.description))
-                            }
-                        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-\(meal.id)")
+            Group {
+                if let preview = model.preview, model.canReviewPreview {
+                    Section {
+                        Text(dinnerText("Review before applying")).font(.title2.bold())
+                        Text(dinnerText("Only the changes listed here will be applied. Cancel keeps your saved pickup unchanged."))
+                        if preview.proposal.isIsolatedPreview { Text(dinnerText("Exploration only. This preview cannot be applied.")) }
+                        if preview.needsPurchaseAmendment { Text(dinnerText("This basket is locked. Save a proposal for a purchase amendment.")) }
+                        if model.sharedPreview { Text(dinnerText("Shared changes need an authorized server commit. You can save this proposal on this device.")) }
                     }
-                }
-                let allocations = preview.proposal.changes.compactMap { change -> DinnerAdjustment? in
-                    if case .adjust(let adjustment) = change, adjustment.portionBindings != nil { return adjustment }
-                    return nil
-                }
-                if !allocations.isEmpty {
-                    Section(dinnerText("Resulting ingredient portions")) {
-                        ForEach(allocations, id: \.occurrenceID) { adjustment in
-                            ForEach(adjustment.portionBindings ?? []) { binding in
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(preview.projectedContributions.first { $0.id == binding.contributionID }?.productName ?? "")
-                                        .font(.headline)
-                                    if let group = adjustment.groups.first(where: { $0.id == binding.groupID }) {
-                                        Text(group.name)
-                                        if group.isProtected { Text(dinnerText("Protected group")) }
-                                    }
-                                    if let old = model.state.portionBindings.first(where: { $0.id == binding.id }) {
-                                        Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
-                                    }
-                                    Text(dinnerFormat("After: %@", dinnerQuantity(binding.quantity)))
-                                }.accessibilityElement(children: .combine)
-                                    .accessibilityIdentifier("dinnerManualReviewBinding.\(binding.id)")
+                    Section(dinnerText("Dinners")) {
+                        ForEach(preview.projectedMeals.filter { preview.changedOccurrenceIDs.contains($0.id) }) { meal in
+                            let movesDate = preview.proposal.changes.contains {
+                                if case .move(let id, _) = $0 { return id == meal.id }
+                                return false
                             }
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(meal.title).font(.headline)
+                                Text(meal.removedAt == nil ? dinnerFormat("Servings: %@", meal.servings.description) : dinnerText("Remove chosen dinner"))
+                                if movesDate, let original = model.shop?.mealOccurrences.first(where: { $0.id == meal.id }) {
+                                    Text(dinnerFormat("Before: %@", original.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
+                                    Text(dinnerFormat("After: %@", meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
+                                    Text(dinnerText("The dinner and its serving groups move together. Grocery quantities and separate protected reservations stay as saved. Review any cook instructions already shared for this dinner."))
+                                } else {
+                                    Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                                }
+                                ForEach(meal.servingGroups.filter(\.isProtected)) { group in
+                                    Text(dinnerFormat("Protected: %@ · %@", group.name, group.servings.description))
+                                }
+                            }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-\(meal.id)")
                         }
                     }
-                }
-                Section(dinnerText("Grocery needs")) {
-                    ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) }) { source in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(source.productName).font(.headline)
-                            if let old = model.shop?.contributions.first(where: { $0.id == source.id }) {
-                                Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
-                            } else { Text(dinnerText("New need")) }
-                            Text(source.removedAt == nil ? dinnerFormat("After: %@", dinnerQuantity(source.quantity)) : dinnerText("Remove this dinner need"))
-                            if case .protectedNeed(let purpose) = source.source {
-                                Text(dinnerText("Protected need"))
-                                Text(dinnerFormat("Purpose: %@", purpose))
-                                if let reservation = preview.proposal.changes.compactMap({ change -> DinnerReservation? in
-                                    if case .reserve(let value) = change, value.contributionID == source.id { return value }
-                                    return nil
-                                }).first {
-                                    Text(reservation.day.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                    let allocations = preview.proposal.changes.compactMap { change -> DinnerAdjustment? in
+                        if case .adjust(let adjustment) = change, adjustment.portionBindings != nil { return adjustment }
+                        return nil
+                    }
+                    if !allocations.isEmpty {
+                        Section(dinnerText("Resulting ingredient portions")) {
+                            ForEach(allocations, id: \.occurrenceID) { adjustment in
+                                ForEach(adjustment.portionBindings ?? []) { binding in
+                                    VStack(alignment: .leading, spacing: 5) {
+                                        Text(preview.projectedContributions.first { $0.id == binding.contributionID }?.productName ?? "")
+                                            .font(.headline)
+                                        if let group = adjustment.groups.first(where: { $0.id == binding.groupID }) {
+                                            Text(group.name)
+                                            if group.isProtected { Text(dinnerText("Protected group")) }
+                                        }
+                                        if let old = model.state.portionBindings.first(where: { $0.id == binding.id }) {
+                                            Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
+                                        }
+                                        Text(dinnerFormat("After: %@", dinnerQuantity(binding.quantity)))
+                                    }.accessibilityElement(children: .combine)
+                                        .accessibilityIdentifier("dinnerManualReviewBinding.\(binding.id)")
                                 }
                             }
-                        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
-                    }
-                }
-                if preview.reviewsGuestPurchases {
-                    DinnerGuestPurchaseReview(model: model, preview: preview)
-                }
-                if model.budgetVisible, let basis = preview.budgetBasis,
-                   preview.proposal.changes.contains(where: { if case .adoptBasis = $0 { return true }; return false }) {
-                    Section(dinnerText("Reviewed store basis")) {
-                        Text(basis.branch)
-                        if let slot = basis.slot {
-                            Text(dinnerFormat("Store slot: %@",slot.formatted(date: .abbreviated,time: .shortened)))
-                                .accessibilityIdentifier("quoteAdoptionSlot")
                         }
-                        Text(basis.timeZoneIdentifier)
-                        Text(dinnerText("Changing store facts invalidates the current quote. The reviewed comparison remains in history."))
                     }
-                }
-                DinnerSharedProposalEntry(model: model, preview: preview)
-                Section {
-                    Button(dinnerText("Apply once")) { Task { if await model.applyPreview() { finish() } } }
-                        .disabled(!model.canApply).accessibilityIdentifier("dinnerApply")
-                    Button(dinnerText("Save proposal on this device")) { Task { _ = await model.savePreviewAsProposal() } }
-                        .disabled(!model.editable || preview.proposal.isIsolatedPreview)
-                    Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }.accessibilityIdentifier("dinnerCancelPreview")
-                }
-            } else { Section { Text(dinnerText("No dinner changes are waiting for review.")) } }
-            DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Dinner preview")).dinnerAccess(model)
+                    Section(dinnerText("Grocery needs")) {
+                        ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) }) { source in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(source.productName).font(.headline)
+                                if let old = model.shop?.contributions.first(where: { $0.id == source.id }) {
+                                    Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
+                                } else { Text(dinnerText("New need")) }
+                                Text(source.removedAt == nil ? dinnerFormat("After: %@", dinnerQuantity(source.quantity)) : dinnerText("Remove this dinner need"))
+                                if case .protectedNeed(let purpose) = source.source {
+                                    Text(dinnerText("Protected need"))
+                                    Text(dinnerFormat("Purpose: %@", purpose))
+                                    if let reservation = preview.proposal.changes.compactMap({ change -> DinnerReservation? in
+                                        if case .reserve(let value) = change, value.contributionID == source.id { return value }
+                                        return nil
+                                    }).first {
+                                        Text(reservation.day.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                                    }
+                                }
+                            }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
+                        }
+                    }
+                    if preview.reviewsGuestPurchases {
+                        DinnerGuestPurchaseReview(model: model, preview: preview)
+                    }
+                    if model.budgetVisible, let basis = preview.budgetBasis,
+                       preview.proposal.changes.contains(where: { if case .adoptBasis = $0 { return true }; return false }) {
+                        Section(dinnerText("Reviewed store basis")) {
+                            Text(basis.branch)
+                            if let slot = basis.slot {
+                                Text(dinnerFormat("Store slot: %@",slot.formatted(date: .abbreviated,time: .shortened)))
+                                    .accessibilityIdentifier("quoteAdoptionSlot")
+                            }
+                            Text(basis.timeZoneIdentifier)
+                            Text(dinnerText("Changing store facts invalidates the current quote. The reviewed comparison remains in history."))
+                        }
+                    }
+                    DinnerSharedProposalEntry(model: model, preview: preview)
+                    Section {
+                        Button(dinnerText("Apply once")) { Task { if await model.applyPreview() { finish() } } }
+                            .disabled(!model.canApply).accessibilityIdentifier("dinnerApply")
+                        Button(dinnerText("Save proposal on this device")) { Task { _ = await model.savePreviewAsProposal() } }
+                            .disabled(!model.editable || preview.proposal.isIsolatedPreview)
+                        Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }.accessibilityIdentifier("dinnerCancelPreview")
+                    }
+                } else { Section { Text(dinnerText("No dinner changes are waiting for review.")) } }
+                DinnerFeedback(model: model)
+            }.listRowBackground(Theme.surface)
+        }.workingSurface().navigationTitle(dinnerText("Dinner preview")).dinnerAccess(model)
     }
 }
 func dinnerNoteKind(_ kind: DinnerWeekNote.Kind) -> String {
@@ -379,25 +383,27 @@ struct DinnerAllMealsView: View {
     private var currentMeals: Result<DinnerCurrentMeals, Error> { Result { try model.currentMeals(pickup: pickup) } }
     var body: some View {
         List {
-            Section {
-                Text(currentDinnerText("Chosen dinners show their current meal and date. Original purchases and earlier reusable templates remain preserved."))
-                NavigationLink(dinnerText("Dinner library")) { DinnerLibraryView(model: model) }
-            }
-            switch currentMeals {
-            case .success(let current):
-            ForEach(current.all) { meal in
-                NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(meal.title).font(.headline)
-                        Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
-                        if meal.isHidden { Text(dinnerText("Hidden dinner")) }
-                    }
-                }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
-            }
-            case .failure:
-                Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
-                    .accessibilityIdentifier("dinner.currentMealsUnavailable")
-            }
-        }.navigationTitle(dinnerText("All chosen dinners")).dinnerAccess(model)
+            Group {
+                Section {
+                    Text(currentDinnerText("Chosen dinners show their current meal and date. Original purchases and earlier reusable templates remain preserved."))
+                    NavigationLink(dinnerText("Dinner library")) { DinnerLibraryView(model: model) }
+                }
+                switch currentMeals {
+                case .success(let current):
+                ForEach(current.all) { meal in
+                    NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(meal.title).font(.headline)
+                            Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                            if meal.isHidden { Text(dinnerText("Hidden dinner")) }
+                        }
+                    }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
+                }
+                case .failure:
+                    Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                        .accessibilityIdentifier("dinner.currentMealsUnavailable")
+                }
+            }.listRowBackground(Theme.surface)
+        }.workingSurface().navigationTitle(dinnerText("All chosen dinners")).dinnerAccess(model)
     }
 }
