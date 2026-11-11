@@ -43,9 +43,11 @@ import XCTest
         }
         capture("S20 \(language) helper export denied without prepared private document")
 
-        enable(element("records.ownerDisclosure"))
+        enable(app.switches.matching(identifier: "records.ownerDisclosure").firstMatch)
         tap(element("records.prepareOwnerText"))
-        XCTAssertTrue(element("records.saveFile").waitForExistence(timeout: 12))
+        let saveFile = app.buttons.matching(identifier: "records.saveFile").firstMatch
+        reveal(saveFile)
+        XCTAssertTrue(saveFile.waitForExistence(timeout: 12))
         tap(app.buttons.matching(identifier: "records.readablePreview").firstMatch)
         let readable = element("records.readableText")
         reveal(readable, requiresHitTarget: false)
@@ -59,9 +61,10 @@ import XCTest
         let recovery = app.buttons.matching(identifier: "records.encryptedRecovery").firstMatch
         tap(recovery)
         tap(element("records.generateKey"))
-        enable(element("records.savedKey"))
+        enable(app.switches.matching(identifier: "records.savedKey").firstMatch)
         tap(element("records.prepareRecovery"))
-        XCTAssertTrue(element("records.saveFile").waitForExistence(timeout: 12))
+        reveal(saveFile)
+        XCTAssertTrue(saveFile.waitForExistence(timeout: 12))
         capture("S20 \(language) encrypted personal file prepared through production model")
         tap(element("records.saveFile"))
         evidence(copies: 0, files: 1, encrypted: true)
@@ -157,14 +160,23 @@ import XCTest
     }
     private func enable(_ value: XCUIElement) {
         reveal(value)
-        if value.value as? String == "0" { value.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        // The observed SwiftUI row contains a separate native UISwitch.
+        XCTAssertEqual(value.switches.count, 1, "Expected one native switch inside the Records row")
+        let nativeSwitch = value.switches.firstMatch
+        reveal(nativeSwitch, requiresFullFrame: true)
+        if nativeSwitch.value as? String == "0" { nativeSwitch.tap() }
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            nativeSwitch.value as? String == "1" && value.value as? String == "1"
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 12), .completed)
         XCTAssertEqual(value.value as? String, "1")
     }
-    private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true) {
+    private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true, requiresFullFrame: Bool = false) {
         let deadline = ProcessInfo.processInfo.systemUptime + 20
         for attempt in 0..<32 {
             let viewport = touchableArea()
-            if value.exists && (!requiresHitTarget || value.isHittable), viewport.contains(CGPoint(x: value.frame.midX, y: value.frame.midY)) { return }
+            if value.exists && (!requiresHitTarget || value.isHittable),
+               requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(value.frame) : viewport.contains(CGPoint(x: value.frame.midX, y: value.frame.midY)) { return }
             if ProcessInfo.processInfo.systemUptime >= deadline { break }
             let contentUp = value.exists && !value.frame.isEmpty ? value.frame.midY > viewport.midY : attempt < 16 ? !upward : upward
             scrollContent(upward: contentUp)
