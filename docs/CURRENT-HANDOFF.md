@@ -34,6 +34,21 @@ the next grouped candidate after the current useful batch finishes.
   expired-quote/Cancel/Apply/relaunch journey successfully in369.644s, strict1/1.
   Core UI09 remains in progress (job130328328776, test step started05:31:27Z).
   No replacement run was dispatched and no native test was repeated locally.
+- **Interrupted civil-date coverage qualified locally:** all eight original
+  SharedMealCivilDate tests pass against the completed contributor build, without
+  a rebuild or Swift changes, in `.build/SharedMealCivilNov11/Tests.xcresult`.
+  Enumeration verified all eight selectors before execution; strict result
+  validation confirms8/8, one execution each, zero runtime warnings, idle messages
+  and runner restarts. Execution took207.239s. This covers EN/ES, four US zones,
+  largest text, staged cancellation/dismissal/confirmation and scheduling without
+  replacing meal needs. Session73427 ended0. First parallel summary export hit
+  xcresulttool's lazy database creation collision; sequential re-export and strict
+  validation passed without rerunning tests. Do not export the same fresh bundle
+  concurrently. The original hosted timeout remains failed; the rebalanced group
+  still needs hosted qualification. No local native process remains active.
+- **English created-meal Undo now passes hosted:** job130329027253 confirms1/1
+  in504.019s, zero runtime warnings/idle messages/restarts, including Cancel,
+  relaunch and exact retry while preserving lunch, later meals and staples.
 - **Qualified local changes:** workflow scheduling 6a7a43ca/0813bedb,
   comparison/pickup corrections ebbf4356/ac3493da, numeric dinner input 4cf0ffcc,
   and runner-failure reporting b13a5999. The reporter's 48 tests passed; reprocessing
@@ -100,8 +115,8 @@ the next grouped candidate after the current useful batch finishes.
 - **Next publication:** inspect new terminal failures once, then group verified
   changes after this useful batch. UI02/03/04 and the observed balanced03/05
   assertions have passing local affected checks. UI05 bootstrap failure has clearer
-  reporting, not proven runtime resolution; interrupted civil-date coverage still
-  needs execution. No local native process is active. Normal and contributor caches
+  reporting, not proven runtime resolution; civil-date coverage now passes locally
+  as recorded above and still needs combined hosted qualification. No local native process is active. Normal and contributor caches
   both contain completed current builds. Preserve original failures and do not
   repeat unchanged passing checks. Provider/signing owner deferrals remain unchanged.
 
