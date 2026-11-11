@@ -29,8 +29,9 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Core is terminal: UI09 passes8/8; its gate fails only because the ios-tests matrix includes the four retained UI01/05/07/10 failures, each with a local correction below. Keep the remaining meal/proposal/Undo/Records/quote fixture jobs running. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08/09, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys, both saved-change Undo languages, English skipped-dinner Undo and filled quote financial-label/adult-grant checks have passed. | Collect remaining fixture results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration (`6129bb99`) await combined qualification. | Retain their existing focused passes and the975cheap source checks at6129bb99 while inputs are unchanged. Publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Core is terminal: UI09 passes8/8; its gate fails only because the ios-tests matrix includes the four retained UI01/05/07/10 failures, each with a local correction below. Fractional meal-idea job130429903323 reached720s; its focused follow-up now passes locally below. Proposal-return130432093233 and quote proposal/adoption130451862218 now pass. Keep the remaining Undo/Records/quote fixture jobs running. Earlier scoped successes are retained below. | Collect remaining fixture results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
+| Ten qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction await combined qualification. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Publish one successor when the current batch has yielded useful results. |
 | Matrix scheduling correction | Removed the redundant five-row admission limit from the large core/contributor matrices. The five global native slot queues remain the execution cap. Current hosted evidence showed pending rows occupying the admission window while slots1/2 had no admitted work. | Include with the grouped successor; confirm utilization there. All975source checks and workflow validation pass; no separate native rerun or dispatch is needed. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
@@ -46,6 +47,39 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Ten-fix source checks pass:** session23816 ended0; all975Python checks pass
+  in16.833s after the fractional meal-idea correction. Theme, localization,
+  generated project, shard shell and diff checks pass. Log:
+  `.build/SourceContractsNov11/grouped-meal-idea-followup.log`. Workflow inputs
+  remain those already qualified by `matrix-window-workflow-lint.json`.
+- **Published84 fractional meal-idea timeout:** job130429903323 executes the
+  original case but reaches720s at the shopper tracking preview. Zero recorded
+  warnings/idle messages, one runner restart boundary after timeout. Source
+  matching query runs498.40–579.83s; downward searches for the preceding quantity
+  and the preview meal heading add repeated scrolls. The original is retained
+  separately at `.build/SharedMealIdeaFollowupNov11/hosted/original.zip`, artifact
+  13845334716, SHA256d6f2f69a1b80701c60fbe8b68e1dc3bab24180ea6f7f9e6bd27bf1e6cc1cd37a.
+  The local correction retains the entire approval/proposal/first-adoption journey,
+  every original assertion and720s allowance. Build36976, enumeration82764 and
+  original test16144 ended0; strict1/1 passes316.514s with zero recorded runtime
+  warnings/idle messages/restarts. Source and exact compiled-plan hashes match.
+  Final evidence is `SharedMealIdeaFollowupNov11/focused/Tests.xcresult` and
+  `validation.txt`. No production change or normal app rebuild was needed;
+  hosted resolution remains unproven.
+- **Evidence path collision recovered:** the first follow-up attempted an existing
+  `.build/SharedMealIdeaNov11/focused/Build.xcresult` and xcodebuild exited64 before
+  building. Its earlier raw build console log was overwritten; the original build
+  and test bundles and successful r2/r3 evidence remain intact. A notice and the
+  rejected command output record that limitation. The earlier hosted directory
+  was also reused accidentally; its original archive13833073005 was downloaded,
+  hash-verified8700a4edb3817016caedcc25d79a71cba3241f834813ccfaee3901d554dab333 and
+  restored into a fresh directory. The mixed directory was retained as
+  `SharedMealIdeaNov11/hosted-mixed-after-collision`; do not use it as an original.
+  Current84 evidence was extracted afresh into `SharedMealIdeaFollowupNov11/hosted`.
+- **More hosted84 fixture passes:** proposal-return130432093233 passes strict1/1
+  in349.406s; quote proposal/shopper-adoption130451862218 passes strict1/1 in560.706s.
+  Both report zero runtime warnings/idle messages/restarts. Their existing checks
+  remain qualified on84; the changed fractional case is separate.
 - **Core84 is terminal; UI09 passes8/8:** job130425452320 completes with zero
   recorded runtime warnings/idle messages/restarts. First-run evidence, long paste,
   explicit reminder scheduling/cancellation, preserved filtered-list context,

@@ -111,7 +111,9 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
         enterFirstAdoption(chickpeaID: chickpeaID)
         tap(app.buttons["sharedTracking.preview"])
-        assertText("Fractional chickpea supper")
+        // Preview replaces the entry form while retaining its lower scroll
+        // position. Its meal heading is above the pack controls we just edited.
+        assertText("Fractional chickpea supper", searchTowardEndFirst: false)
         assertText("1/2 cups")
         assertText("Peanuts"); assertText("Milk")
         assertText("Unpriced basket items")
@@ -200,11 +202,17 @@ import XCTest
         // selection; it must not be matched to the unrelated soup pack.
         let basket = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Basket item", "Choose an item")).firstMatch
         tap(basket); tap(app.buttons["Chickpeas"])
-        let confirm = app.switches.matching(NSPredicate(format: "label == %@ AND value == %@", "I confirm this source matches the selected food", "0")).firstMatch
+        // Resolve the small set of named switches before inspecting state.
+        // The combined label/value firstMatch query stalled in hosted XCTest.
+        let confirm = app.switches.matching(identifier: "I confirm this source matches the selected food")
+            .allElementsBoundByIndex.first { $0.value as? String == "0" }
+        XCTAssertNotNil(confirm, "The meal source must still require explicit matching")
+        guard let confirm else { return }
         reveal(confirm, fullyVisible: true); confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         // Resolve the identifier after changing its value, rather than keeping a
         // query that deliberately stops matching once the switch is on.
-        assertText("1/2 cups")
+        // The source's quantity precedes its basket picker and confirmation.
+        assertText("1/2 cups", searchTowardEndFirst: false)
         enableSwitch("sharedTracking.pack.66666666-6666-4666-8666-666666666666")
         let unit = app.buttons["sharedTracking.pack." + chickpeaID + ".unit"]
         tap(unit); tap(app.buttons["cups"])
@@ -363,10 +371,10 @@ import XCTest
         reveal(fact)
         XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
-    private func assertText(_ text: String) {
+    private func assertText(_ text: String, searchTowardEndFirst: Bool = true) {
         let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))
         if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
-        reveal(matches.firstMatch)
+        reveal(matches.firstMatch, searchTowardEndFirst: searchTowardEndFirst)
         XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
     }
     private func assertElementContains(_ id: String, _ text: String) {
