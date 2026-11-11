@@ -29,7 +29,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Core is terminal: UI09 passes8/8; its gate fails only because the ios-tests matrix includes the four retained UI01/05/07/10 failures, each with a local correction below. Fractional meal-idea job130429903323 reached720s; its focused follow-up now passes locally below. Proposal-return130432093233 and quote proposal/adoption130451862218 now pass. Keep the remaining Undo/Records/quote fixture jobs running. Earlier scoped successes are retained below. | Collect remaining fixture results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Published core42977513683 and fixtures42977513804 | Core is terminal: UI09 passes8/8; its gate fails only because the ios-tests matrix includes the four retained UI01/05/07/10 failures, each with a local correction below. Fractional meal-idea job130429903323 reached720s; its focused follow-up now passes locally below. Only Spanish largest-text quote130458506418 and stale/locked quote130460142405 remain active. Spanish skipped-dinner Undo, Records EN/ES and lost-response quote retry now pass. | Collect these last fixture results and gate; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
 | Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
 | Ten qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction await combined qualification. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Publish one successor when the current batch has yielded useful results. |
 | Matrix scheduling correction | Removed the redundant five-row admission limit from the large core/contributor matrices. The five global native slot queues remain the execution cap. Current hosted evidence showed pending rows occupying the admission window while slots1/2 had no admitted work. | Include with the grouped successor; confirm utilization there. All975source checks and workflow validation pass; no separate native rerun or dispatch is needed. |
@@ -47,6 +47,12 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Four more hosted84 journeys pass:** Spanish skipped-dinner Undo130446453968
+  passes1/1 in563.841s. Records130447526908 passes2/2, English157.400s and
+  Spanish251.362s, including export/Cancel/deduplication/inert recovery. Lost-reply
+  quote130457623018 passes1/1 in465.851s, including exact retry without a duplicate
+  private save. All report zero runtime warnings/idle messages/restarts. PR1 stays
+  draft/open; both remote candidate branches remain84 and main remains1a2530a7.
 - **Ten-fix source checks pass:** session23816 ended0; all975Python checks pass
   in16.833s after the fractional meal-idea correction. Theme, localization,
   generated project, shard shell and diff checks pass. Log:
