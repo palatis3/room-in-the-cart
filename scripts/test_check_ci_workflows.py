@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import (BITRISE_LABEL, FIXTURE_CONSUMER_RUNNER, FIXTURE_CONSUMER_SLOT_PREFIX, FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
+from check_ci_workflows import (BITRISE_LABEL, BITRISE_PERFORMANCE_GUARD, BITRISE_PERFORMANCE_GUARD_NAME, FIXTURE_CONSUMER_RUNNER, FIXTURE_CONSUMER_SLOT_PREFIX, FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
                                 MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,6 +92,36 @@ class WorkflowGuardTests(unittest.TestCase):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + BITRISE_LABEL))
         with self.assertRaisesRegex(ValueError, 'Unreviewed native job'):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: bitrise-runner-unreviewed'), {})
+
+    def test_isolated_performance_guard_rejects_other_contexts_and_routes(self):
+        text = (ROOT / '.github/workflows/ios-performance.yml').read_text()
+        self.path = Path(self.temp.name) / 'ios-performance.yml'
+        policy = {key: value for key, value in POLICY.items() if key[0] == self.path.name}
+        self.assertEqual(len(self.validate(text, policy)), 3)
+        for old, new in [
+                ('bitrise-runner-room in cart', 'bitrise-runner-other'),
+                ('ritc-bitrise-slot-2', 'ritc-bitrise-slot-3'),
+                ('ritc-bitrise-slot-${{ matrix.macos_slot }}', MATRIX_GROUP),
+                ('refs/heads/codex/bitrise-performance-calibration', 'refs/heads/main'),
+                ('test "$ENFORCE_BASELINES" = false', 'true'),
+                (BITRISE_PERFORMANCE_GUARD_NAME, 'Unvalidated calibration'),
+                ('needs: performance-plan', 'needs: unrelated')]:
+            with self.subTest(old=old), self.assertRaises(ValueError):
+                self.validate(text.replace(old, new, 1), policy)
+        good = {
+            'GITHUB_REPOSITORY': 'palatis3/room-in-the-cart',
+            'GITHUB_EVENT_NAME': 'workflow_dispatch',
+            'GITHUB_REF': 'refs/heads/codex/bitrise-performance-calibration',
+            'REQUESTED_PERFORMANCE_CASE': 'scroll',
+            **{key: 'false' for key in ('ENFORCE_BASELINES', 'SIMULATOR_SIGNPOST_CONTROL',
+                'OBSERVE_APP_SCROLL_SIGNPOSTS', 'CAPTURE_SCROLL_SIGNPOSTS', 'CAPTURE_PREFLIGHT_ONLY',
+                'FRESH_PERFORMANCE_SIMULATOR', 'ENABLE_PERFORMANCE_DIAGNOSTICS')},
+        }
+        cases = [(good, 0)] + [({**good, key: 'unreviewed'}, 1) for key in good]
+        for environment, expected in cases:
+            result = subprocess.run(['/bin/bash', '-e', '-o', 'pipefail', '-c', BITRISE_PERFORMANCE_GUARD],
+                                    env=environment, capture_output=True, text=True)
+            self.assertEqual(result.returncode, expected, environment)
 
     def test_duplicate_yaml_at_any_depth(self):
         for text in (TEXT.replace('name: Safe fixture', 'name: Safe fixture\nname: shadow'),

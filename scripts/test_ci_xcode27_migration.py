@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_JOBS, FIXTURE_RUNNER, POLICY, native_job, parse_workflow
+from check_ci_workflows import BITRISE_LABEL, BITRISE_PERFORMANCE_JOBS, FIXTURE_CONSUMER_RUNNER, FIXTURE_JOBS, FIXTURE_RUNNER, POLICY, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +36,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
                     runner = (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in FIXTURE_JOBS else 'xcode-27'
+                    if key in BITRISE_PERFORMANCE_JOBS: runner = BITRISE_LABEL
                     self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):
@@ -58,8 +59,8 @@ class Xcode27MigrationTests(unittest.TestCase):
         self.assertFalse((ROOT / '.github/workflows/ios-xcode27.yml').exists())
 
     def test_fixture_preflight_rejects_other_runtime_builds_on_both_providers(self):
-        jobs = parse_workflow(ROOT / '.github/workflows/ios-fixtures.yml')[0]['jobs']
-        for _, name in sorted(FIXTURE_JOBS):
+        for workflow, name in sorted(FIXTURE_JOBS | BITRISE_PERFORMANCE_JOBS):
+            jobs = parse_workflow(ROOT / '.github/workflows' / workflow)[0]['jobs']
             step = next(s for s in jobs[name]['steps'] if s.get('name') == 'Require the reviewed Xcode 27.1 toolchain')
             command = step['run']
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):

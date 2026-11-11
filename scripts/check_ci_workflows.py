@@ -18,6 +18,21 @@ BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
 BITRISE_LABEL = 'bitrise-runner-room in cart'
 FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
                 ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
+# This isolated branch permits only one canonical manual scroll calibration.
+BITRISE_PERFORMANCE_JOBS = {('ios-performance.yml', name) for name in
+                            ('performance-build', 'performance-tests')}
+BITRISE_PERFORMANCE_GUARD_NAME = 'Require the isolated Bitrise scroll calibration'
+BITRISE_PERFORMANCE_GUARD = '''test "${GITHUB_REPOSITORY:-}" = palatis3/room-in-the-cart
+test "${GITHUB_EVENT_NAME:-}" = workflow_dispatch
+test "${GITHUB_REF:-}" = refs/heads/codex/bitrise-performance-calibration
+test "$REQUESTED_PERFORMANCE_CASE" = scroll
+test "$ENFORCE_BASELINES" = false
+test "$SIMULATOR_SIGNPOST_CONTROL" = false
+test "$OBSERVE_APP_SCROLL_SIGNPOSTS" = false
+test "$CAPTURE_SCROLL_SIGNPOSTS" = false
+test "$CAPTURE_PREFLIGHT_ONLY" = false
+test "$FRESH_PERFORMANCE_SIMULATOR" = false
+test "$ENABLE_PERFORMANCE_DIAGNOSTICS" = false'''
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
@@ -197,18 +212,33 @@ def validate_workflows(paths, policy=POLICY):
                     f'Native cancel-in-progress must be literal false: {identity}')
             expected = policy[identity]
             fixture = identity in FIXTURE_JOBS
+            performance = identity in BITRISE_PERFORMANCE_JOBS
             if fixture:
                 runner = FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
                 require(job.get('runs-on') == runner, f'Unreviewed fixture provider routing: {identity}')
+            elif performance:
+                require(job.get('runs-on') == BITRISE_LABEL, f'Unreviewed performance runner: {identity}')
+                plan = data['jobs'].get('performance-plan', {})
+                guards = [step for step in plan.get('steps', [])
+                          if step.get('name') == BITRISE_PERFORMANCE_GUARD_NAME]
+                require('if' not in plan and 'continue-on-error' not in plan and 'env' not in plan and
+                        guards == [{'name': BITRISE_PERFORMANCE_GUARD_NAME,
+                                    'run': BITRISE_PERFORMANCE_GUARD + '\n'}],
+                        'Bitrise performance requires the exact isolated manual calibration guard')
+                dependency = 'performance-plan' if type(expected) is int else 'performance-build'
+                condition = ('${{ !inputs.simulator_signpost_control }}' if type(expected) is int else
+                             '${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}')
+                require(job.get('needs') == dependency and job.get('if') == condition,
+                        'Bitrise performance must depend on successful guarded prerequisites')
             else:
                 labels = job.get('runs-on', [])
                 labels = [labels] if isinstance(labels, str) else labels
                 require(job.get('runs-on') not in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER) and
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
-                        f'Bitrise routing is restricted to the four fixture jobs: {identity}')
-            slot_prefix = FIXTURE_SLOT_PREFIX if fixture else SLOT_PREFIX
-            matrix_group = FIXTURE_MATRIX_GROUP if fixture else MATRIX_GROUP
-            slot_count = 3 if fixture else 5
+                        f'Bitrise routing is restricted to reviewed fixture/calibration jobs: {identity}')
+            slot_prefix = FIXTURE_SLOT_PREFIX if fixture else BITRISE_SLOT_PREFIX if performance else SLOT_PREFIX
+            matrix_group = FIXTURE_MATRIX_GROUP if fixture else slot_prefix + '${{ matrix.macos_slot }}'
+            slot_count = 3 if fixture or performance else 5
             if type(expected) is int:
                 require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
                 require('strategy' not in job or 'matrix' not in job['strategy'],

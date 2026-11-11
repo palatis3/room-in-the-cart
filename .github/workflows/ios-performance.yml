@@ -1,5 +1,6 @@
 name: iOS Release performance
 run-name: iOS performance${{ inputs.simulator_signpost_control && ' · standalone helper (diagnostic only)' || '' }}${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
+# Isolated Bitrise calibration only; do not merge this branch into app CI.
 
 on:
   # Run deliberately during development; release-checks always calls this workflow.
@@ -71,6 +72,19 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the isolated Bitrise scroll calibration
+        run: |
+          test "${GITHUB_REPOSITORY:-}" = palatis3/room-in-the-cart
+          test "${GITHUB_EVENT_NAME:-}" = workflow_dispatch
+          test "${GITHUB_REF:-}" = refs/heads/codex/bitrise-performance-calibration
+          test "$REQUESTED_PERFORMANCE_CASE" = scroll
+          test "$ENFORCE_BASELINES" = false
+          test "$SIMULATOR_SIGNPOST_CONTROL" = false
+          test "$OBSERVE_APP_SCROLL_SIGNPOSTS" = false
+          test "$CAPTURE_SCROLL_SIGNPOSTS" = false
+          test "$CAPTURE_PREFLIGHT_ONLY" = false
+          test "$FRESH_PERFORMANCE_SIMULATOR" = false
+          test "$ENABLE_PERFORMANCE_DIAGNOSTICS" = false
       - name: Validate performance selection before allocating macOS
         run: |
           python3 scripts/test_plan_ios_performance_tests.py
@@ -108,11 +122,11 @@ jobs:
     if: ${{ !inputs.simulator_signpost_control }}
     needs: performance-plan
     concurrency:
-      group: ritc-macos-slot-2
+      group: ritc-bitrise-slot-2
       queue: max
       cancel-in-progress: false
     name: ${{ inputs.capture_preflight_only && 'Check scroll capture capabilities (no build)' || 'Build optimized iPhone test products' }}
-    runs-on: xcode-27
+    runs-on: bitrise-runner-room in cart
     timeout-minutes: 35
     outputs:
       artifact: ${{ steps.upload.outputs['artifact-id'] }}
@@ -120,7 +134,28 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
+          print(f"Performance runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version
@@ -228,12 +263,12 @@ jobs:
   performance-tests:
     if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}
     concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      group: ritc-bitrise-slot-${{ matrix.macos_slot }}
       queue: max
       cancel-in-progress: false
     name: Release performance (${{ matrix.case }})
     needs: performance-build
-    runs-on: xcode-27
+    runs-on: bitrise-runner-room in cart
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -247,7 +282,28 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
+          print(f"Performance runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.performance-build.outputs.artifact }}
