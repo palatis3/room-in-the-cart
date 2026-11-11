@@ -5,6 +5,7 @@ import XCTest
 @MainActor
 final class RoomInTheCartUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var doneIdentifier = "Done"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -469,6 +470,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
+        doneIdentifier = language == "es" ? "Listo" : "Done"
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
@@ -570,11 +572,14 @@ final class RoomInTheCartUITests: XCTestCase {
     private func type(_ text: String, into id: String) {
         let field = app.textFields[id]
         tap(field)
-        let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "Hecho"])).firstMatch
+        // keyboardDoneAction uses the localized title as its identifier.
+        // Avoid a label-predicate snapshot and a redundant second readiness query.
+        let done = app.buttons[doneIdentifier]
         // Form scrolling can recycle the row after the first tap. Reacquire it
         // once before entering any text, and require the focus-driven Done control.
-        if !done.waitForExistence(timeout: 3) { tap(field) }
-        XCTAssertTrue(done.waitForExistence(timeout: 3), "Input must expose its keyboard dismissal control before typing")
+        var focused = done.waitForExistence(timeout: 3)
+        if !focused { tap(field); focused = done.waitForExistence(timeout: 3) }
+        XCTAssertTrue(focused, "Input must expose its keyboard dismissal control before typing")
         // Once focus is ready, typing through the app avoids querying a row
         // that the keyboard may have scrolled out of the current snapshot.
         app.typeText(text)
