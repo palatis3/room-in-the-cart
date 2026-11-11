@@ -524,7 +524,9 @@ import XCTest
                     ? app.descendants(matching: original.elementType).matching(identifier: identifier).firstMatch
                     : original
                 fill(value, into: name, requireDone: true, useVisibleCenter: true, control: field)
-                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+                // Hosted app resolution and snapshot acquisition exceeded five
+                // seconds even after UIKit had dismissed the keyboard.
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
                 let entered = XCTNSPredicateExpectation(
                     predicate: NSPredicate(format: "value == %@", value), object: field)
                 XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
