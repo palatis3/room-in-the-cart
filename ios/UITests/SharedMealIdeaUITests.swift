@@ -183,10 +183,8 @@ import XCTest
         capture("S26-approved-proposal-reopens-after-authorized-parent-refresh")
     }
     private func enterFirstAdoption(chickpeaID: String) {
-        let soup = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sharedTracking.manual."))
-            .containing(.staticText, identifier: "Entered soup packs").firstMatch
+        guard let soup = revealManualSource(named: "Entered soup packs") else { return }
         let add = soup.switches["Add a manual need"]
-        reveal(add, fullyVisible: true)
         let manualID = soup.identifier
         if add.value as? String == "0" { add.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         XCTAssertEqual(add.value as? String, "1")
@@ -202,13 +200,9 @@ import XCTest
         // selection; it must not be matched to the unrelated soup pack.
         let basket = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Basket item", "Choose an item")).firstMatch
         tap(basket); tap(app.buttons["Chickpeas"])
-        // Resolve the small set of named switches before inspecting state.
-        // The combined label/value firstMatch query stalled in hosted XCTest.
-        let confirm = app.switches.matching(identifier: "I confirm this source matches the selected food")
-            .allElementsBoundByIndex.first { $0.value as? String == "0" }
-        XCTAssertNotNil(confirm, "The meal source must still require explicit matching")
-        guard let confirm else { return }
-        reveal(confirm, fullyVisible: true); confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        guard let confirm = revealUnconfirmedSourceMatch() else { return }
+        confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(confirm.value as? String, "1")
         // Resolve the identifier after changing its value, rather than keeping a
         // query that deliberately stops matching once the switch is on.
         // The source's quantity precedes its basket picker and confirmation.
@@ -218,6 +212,74 @@ import XCTest
         tap(unit); tap(app.buttons["cups"])
         enableSwitch("sharedTracking.pack." + chickpeaID)
         capture("S26-first-adoption-explicit-soup-unknown-and-half-cup-meal-source")
+    }
+    private func revealManualSource(named name: String) -> XCUIElement? {
+        // A compound ancestor/descendant query can stall while this lazy Form
+        // row is offscreen. Find its exact identity in one snapshot before
+        // querying the live switch; retain the original 24-scroll budget.
+        for attempt in 0...24 {
+            guard let snapshot = try? app.snapshot() else {
+                XCTFail("Could not inspect manual food sources")
+                return nil
+            }
+            var pending = snapshot.children
+            var matches: [(group: XCUIElementSnapshot, toggle: XCUIElementSnapshot)] = []
+            while let node = pending.popLast() {
+                pending.append(contentsOf: node.children)
+                guard node.identifier.hasPrefix("sharedTracking.manual.") else { continue }
+                var children = node.children
+                var hasName = false
+                var toggle: XCUIElementSnapshot?
+                while let child = children.popLast() {
+                    children.append(contentsOf: child.children)
+                    if child.elementType == .staticText && (child.label == name || child.identifier == name) { hasName = true }
+                    if child.elementType == .switch && (child.label == "Add a manual need" || child.identifier == "Add a manual need") { toggle = child }
+                }
+                if hasName, let toggle { matches.append((node, toggle)) }
+            }
+            guard matches.count <= 1 else {
+                XCTFail("Ambiguous manual food source: " + name)
+                return nil
+            }
+            let area = scrollableArea()
+            var frame = matches.first?.toggle.frame ?? .zero
+            if let match = matches.first, !frame.isEmpty,
+               frame.minY >= area.minY, frame.maxY <= area.maxY {
+                let group = app.descendants(matching: match.group.elementType).matching(identifier: match.group.identifier).firstMatch
+                let add = group.switches["Add a manual need"]
+                if add.exists {
+                    frame = add.frame
+                    if add.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return group }
+                }
+            }
+            guard attempt < 24 else { break }
+            let upward = frame.isEmpty ? attempt < 16 : frame.midY > area.midY
+            let overflow = upward ? frame.maxY - area.maxY : area.minY - frame.minY
+            let distance = !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
+            scrollContent(upward: upward, area: area, distance: distance)
+        }
+        XCTFail("Missing fully actionable manual food source: " + name)
+        return nil
+    }
+    private func revealUnconfirmedSourceMatch() -> XCUIElement? {
+        // Dismissing the basket picker can scroll back to the last edited field.
+        // Re-enumerate the named switches after each scroll; the lazy meal row
+        // may not exist yet, and index-bound controls can change as rows appear.
+        for attempt in 0...24 {
+            let target = app.switches.matching(identifier: "I confirm this source matches the selected food")
+                .allElementsBoundByIndex.first { $0.value as? String == "0" }
+            let area = scrollableArea()
+            let frame = target?.frame ?? .zero
+            if let target, target.isHittable, !frame.isEmpty,
+               frame.minY >= area.minY, frame.maxY <= area.maxY { return target }
+            guard attempt < 24 else { break }
+            let upward = frame.isEmpty ? attempt < 16 : frame.midY > area.midY
+            let overflow = upward ? frame.maxY - area.maxY : area.minY - frame.minY
+            let distance = !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
+            scrollContent(upward: upward, area: area, distance: distance)
+        }
+        XCTFail("The meal source must still require explicit matching and be fully actionable")
+        return nil
     }
     private func enterTrackingText(_ text: String, field: XCUIElement) {
         reveal(field, fullyVisible: true); field.tap(); field.typeText(text)
