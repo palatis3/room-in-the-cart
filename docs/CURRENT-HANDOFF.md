@@ -29,9 +29,9 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/10, recovery/cook/closeout and both shared-food editing jobs are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Seven qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`) and SharedFallback switch-thumb targeting await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
-| Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/10, recovery/cook/closeout and English shared-food editing are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, stock/purchase, Spanish shared-food editing and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Eight qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`) and RecordsMedia native off-thumb targeting await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
 
@@ -45,6 +45,22 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **RecordsMedia off-thumb targeting qualified locally:** the new SharedFallback
+  evidence supports testing native thumb targeting in RecordsMedia's enabling
+  helper, which previously tapped92percent across the owning row. The helper now
+  requires the native child switch, reveals it, taps its off-thumb once if off,
+  and retains the original immediate parent-state assertion plus a native-state
+  assertion. No retry, timeout increase, production change or removed privacy gate.
+  Build32039, exact enumeration60062 and test61678 ended0. The allowlisted report
+  confirms strict1/1, zero skips and zero runtime warnings at
+  `.build/RecordsMediaNov11/thumb-target/Tests.xcresult`; source and exact compiled
+  plan hashes match. Raw logs, recovery material, screenshots and bundles remain
+  private; no hosted raw RecordsMedia artifact was downloaded. Syntax/automation/
+  diff checks pass. This is a qualified test interaction change, not a proved
+  root cause or closure of the hosted failure. No further normal build is needed.
+- **Spanish shared-food editing passes hosted84:** job130420763601 completes
+  strict1/1 in456.063s with zero recorded warnings/idle messages/restarts. The
+  original expired-quote, Cancel, Apply and relaunch-retry assertions pass.
 - **Pairing return qualified locally:** UI07 job130414154436 completes6/7,
   zero recorded warnings/idle messages/restarts. The original pairing case failed
   66.908s because its immediate navigation helper found no visible Back control

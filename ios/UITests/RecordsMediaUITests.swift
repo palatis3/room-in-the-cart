@@ -140,7 +140,13 @@ import XCTest
     }
     private func enableSwitch(_ value: XCUIElement, upward: Bool = false) {
         reveal(value, upward: upward)
-        if value.value as? String == "0" { value.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        let nativeSwitch = value.switches.firstMatch
+        XCTAssertTrue(nativeSwitch.exists, "The reviewed row must contain its native switch")
+        reveal(nativeSwitch, upward: upward)
+        if nativeSwitch.value as? String == "0" {
+            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        }
+        XCTAssertEqual(nativeSwitch.value as? String, "1", "The native switch must be on")
         XCTAssertEqual(value.value as? String, "1", "The reviewed switch must be on")
     }
     private func assertVisibleStatus(_ expected: String) {
