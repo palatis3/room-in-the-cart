@@ -226,9 +226,31 @@ import StoreKitTest
         let (storefront, model) = try await loadedModel()
         let purchase = beginPurchase(model)
         defer { purchase.task?.cancel(); model.stop() }
-        try await eventually("A real Ask to Buy request reaches pending approval") {
-            purchase.finished && model.purchaseReport == .pending
-                && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
+        do {
+            try await eventually("A real Ask to Buy request reaches pending approval") {
+                purchase.finished && model.purchaseReport == .pending
+                    && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
+            }
+        } catch {
+            // Observe only after the original predicate fails, before teardown.
+            // Retain fixed state labels/counts, never purchase identities or payloads.
+            let report: String
+            switch model.purchaseReport {
+            case .some(.awaitingResult): report = "awaiting-result"
+            case .some(.pending): report = "pending"
+            case .some(.cancelled): report = "cancelled"
+            case .some(.unverified): report = "unverified"
+            case .some(.verified): report = "verified"
+            case .some(.failed): report = "failed"
+            case .none: report = "none"
+            }
+            let state = "finished=\(purchase.finished) busy=\(model.isBusy) stopped=\(model.isStopped) report=\(report)"
+            let transactions = session.allTransactions()
+            let sample = transactions.prefix(8)
+            let attachment = XCTAttachment(string: "phase=initial-pending-predicate-failed \(state) sessionTotal=\(transactions.count) sampleLimit=8 sampleCount=\(sample.count) pendingInSample=\(sample.filter { $0.pendingAskToBuyConfirmation }.count) truncated=\(transactions.count > 8)")
+            attachment.name = "AskToBuy-initial-pending-failure"
+            attachment.lifetime = .keepAlways; add(attachment)
+            throw error
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
         // Follow the documented pending-result then approval sequence. The test
