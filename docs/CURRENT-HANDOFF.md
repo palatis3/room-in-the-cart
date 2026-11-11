@@ -56,6 +56,32 @@ changes are now published. PR1 remains draft and unmerged.
   active. These are live checkpoints, not full CI or release acceptance.
   Next: read the current runs; diagnose actual new failures locally and retain
   successful unchanged checks. No local native process or background monitor runs.
+- **Additional84b903d0 results:** unsigned iPhone Release job130380173794 passes
+  compilation and built executable/assets/privacy/environment/extension checks.
+  This run does not establish signing or production release metadata. Package
+  job130380173826 passes579 tests (CoreDomain201, DeviceSurfaces30,
+  HouseholdClient241, LocalStore74, RecordArchive33), with3deliberate client-wire
+  skips covered separately by the passing actual-transport job. Both Address and
+  Thread Sanitizer jobs130380128198/130380128257 pass. Dinner fixture build
+  130380090022 passes; contributor groups01,02,04,05 are executing or booting.
+  Swift CodeQL remains active; ordinary model/UI groups remain queued.
+- **Billing remains failed at the unchanged source:** deep42977513637 finishes
+  both locale jobs with EN11/15 (130382728246), ES10/15 (130382728889), zero skips
+  or recorded runtime warnings. Failures match the previous families: Ask to Buy
+  readiness/approval timeouts, purchase timeout, verified current entitlement for
+  the declined request, plus the Spanish transaction-observer timeout. The decline
+  diagnostic still records failed1/purchased0 versus verified current1; membership
+  stays Free. No new root cause is established for the timing failures. Billing
+  source is unchanged from49b; StoreKitScenarioTests SHA256 remains
+  f5efe4f674f5708dc784cd5cacf8e67e854f92302b0d83cb0aa80ad522d12c88.
+  Preserve the original GitHub ZIPs locally: `.build/StoreKitTriageNov11/hosted-en-84/original.zip`
+  (artifact13836524188, SHA256 f331b4aca60df944d6020a1c1a4dddaa137362a9bc339835937ec9ad81c367a1)
+  and `hosted-es-84/original.zip` (artifact13837517541, SHA256
+  9f553fca9a5d72f79a9ad5ac4f6cfaca7d7a6d5f6c452089e43a5be3309624d0).
+  Both downloads match the hosted hashes and archived summaries. Do not repeat
+  the already-rejected local StoreKit experiments without new evidence. Continue
+  the independent core/fixture batch; no assertions, deadlines or release gates
+  have been relaxed. Keep this checkpoint local without a status-only push.
 
 - **Records switch correction qualified locally:** hosted job130360190957 failed
   the English source-selection step; Spanish passed163.382s. Its recorded tap hit
