@@ -29,7 +29,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/09/10 and English shared-food editing are active; later groups are pending. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, both SharedDelivery groups, Spanish shared-food editing and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI08/09/10 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06, models, both SharedDelivery groups, both shared-food editing languages and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
 | Eight qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`) and RecordsMedia native off-thumb targeting await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
@@ -68,9 +68,12 @@ job descriptions are not the current queue.
   private; no hosted raw RecordsMedia artifact was downloaded. Syntax/automation/
   diff checks pass. This is a qualified test interaction change, not a proved
   root cause or closure of the hosted failure. No further normal build is needed.
-- **Spanish shared-food editing passes hosted84:** job130420763601 completes
-  strict1/1 in456.063s with zero recorded warnings/idle messages/restarts. The
-  original expired-quote, Cancel, Apply and relaunch-retry assertions pass.
+- **Both shared-food editing languages pass hosted84:** Spanish130420763601
+  completes strict1/1 in456.063s; English130419812928 completes strict1/1 in549.149s.
+  Both have zero recorded warnings/idle messages/restarts. The original expired-
+  quote, Cancel, Apply and relaunch-retry assertions pass on the same candidate.
+  English's initial log404 occurred while the job was completing; the same handle
+  subsequently returned its successful result and logs, with no restart.
 - **Pairing return qualified locally:** UI07 job130414154436 completes6/7,
   zero recorded warnings/idle messages/restarts. The original pairing case failed
   66.908s because its immediate navigation helper found no visible Back control
