@@ -30,7 +30,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published14b combined qualification | Core43005537223 and fixtures43005537178 remain live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages579passed/3separate-wire skips, Dinner5/5, coreUI01 and UI03 each6/6, UI09 8/8, quote lost-reply1/1 and models916/916 pass. CoreUI02 is5/6, UI04 is6/7, UI07 is5/7, UI08 is6/7 and UI10 is7/8; UI06 ended without a complete qualification. UI05 and contributor rows remain active/queued. Spanish largest-quote130480619947 is terminal failure0/1: the identified bilingual keyboard onboarding card did not disappear within its original5s after Continue; root cause remains unclassified. Its original artifact is retained below. CodeQL reports zero results in all three analyses at the current PR merge SHA and zero open PR alerts. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
+| Published14b combined qualification | Core43005537223 has completed its native rows, with known failures retained; fixtures43005537178 remains live. Security43005537157 and native-wire43005537184 pass. Main, both fixture and unsigned Release builds, Swift packages579passed/3separate-wire skips, Dinner5/5, coreUI01 and UI03 each6/6, UI05 7/7, UI09 8/8, quote lost-reply1/1, English shared food editor1/1, meal-idea parent return1/1 and models916/916 pass. CoreUI02 is5/6, UI04 is6/7, UI07 is5/7, UI08 is6/7 and UI10 is7/8; UI06 ended without a complete qualification. Other contributor rows remain active/queued. UI05 has one recorded animation-idle diagnostic, zero runtime warnings and no runner restart; its strict7/7 result remains passing. Spanish largest-quote130480619947 is terminal failure0/1: the five-second title-absence predicate failed. The retained recording shows visual dismissal before the failing predicate evaluation. Local commit1878c360 uses the native disappearance wait with the same title and5s limit; the original case passes strict1/1 in65.49s on fresh owned simulator2869BB51, actually exercising onboarding. Hosted resolution remains unproved. CodeQL reports zero results in all three analyses at the current PR merge SHA and zero open PR alerts. All11core and25contributor matrix rows are admitted. Deep43005537248 is terminal failure: EN11/15 and ES10/15 repeat the retained billing failures. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
 | Next grouped correction: large-text Edit | Hosted14b UI02 job130479862054 stalls while resolving the broad `editComparison` query before sending a tap. Its screenshot and frame attachment show the full control visible and hittable; the spindump records broad snapshot traversal. The affected test now uses `app.buttons["editComparison"]`; production and outcome assertions are unchanged. | Local build23808, exact-one enumeration56175 and test49128 all exit0. Strict1/1 passes95.47s with zero recorded runtime warnings, idle diagnostics or runner restarts and matching source/plan hashes. Retain `.build/LargestEditNov11/focused` for the next grouped candidate; hosted resolution remains unproven. Do not interrupt14b or repeat the unchanged local check. |
 | Next grouped corrections: Dinner text, reservation and ingredient readback | Three more test-only corrections are committed locally: `823c3421` matches a review text element's own label instead of searching its descendants; `dde06e34` lets reservation callers supply native TextFields; `8247c60b` retains ingredient identity/type through Done for exact readback. Production behavior, assertions and deadlines are unchanged. | Retain focused original passes: Dinner EN147.56s/ES133.06s strict2/2 in `.build/SpanishDinnerIdeaNov11/focused`; reservation49.58s strict1/1 in `.build/MealReservationNov11/focused`; full dinner→protected lunch→checkout→delivery repair→settlement→next shop348.69s strict1/1 in `.build/IngredientReadbackNov11/focused`. All have zero recorded runtime warnings/idle/restarts and matching source/plan hashes at completion. Each result remains bound to its recorded inputs; full combined qualification is still pending. Do not repeat unchanged focused cases or push over the live14b batch. |
 | UI07 share and dinner-move corrections | Local commit `dd8b8213` scopes Close to the observed activity navigation host with the older-system fallback retained, and finishes each manual meal field with Done, keyboard dismissal and exact readback. Production behavior and outcome assertions are unchanged. | `.build/ShareAndDinnerMoveNov11/focused` records share passing80.213s inside a failed1/2 batch; the move case initially failed for missing keyboard focus. After the per-field correction, `move-focused` passes the original move case strict1/1 in192.10s, zero recorded warnings/idle/restarts, with matching source/plan hashes. Do not call the mixed batch green or repeat its unchanged share case. Retain both attempts for the next combined candidate. |
@@ -66,9 +66,29 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
   executed, zero recorded warnings/idle/restarts, but the case failed. Preserve
   `.build/SpanishQuoteKeyboardNov11/hosted/original.zip`, artifact13854407217,
   SHA256 `0e7ec9b8eeab9acbb5695b3a55a3443f7afce7bdef6cb6b758ea51fb4e82344c`.
-  Download digest and extraction passed. Inspect the retained before/after
-  screenshots and interaction activity before changing selectors or deadlines;
-  no correction, local rerun or product defect has been established.
+  Download digest and extraction passed. Before/failure screenshots and retained
+  video frames show the card visually disappearing: actual recording times127.988s
+  and129.990s show the normal keyboard. The first exists evaluation starts at
+  test129.02s and retries at133.31s, consuming most of its5s budget. Visual absence
+  does not establish accessibility-tree absence or a proven SDK cause.
+  Astra reviewed the evidence read-only. Commit1878c360 changes only this helper
+  to native `title.waitForNonExistence(timeout:5)`, retaining the same absence
+  requirement and deadline. Local build26667, enumeration64927 and test90506
+  exit0; strict1/1 passes65.49s, zero recorded runtime warnings/idle/restarts and
+  matching source/plan hashes in `focused`. Onboarding actually executes at43.06s;
+  the native `existsNoRetry == 0` check succeeds and the dismissed attachment is
+  recorded at45.05s. Exact typing, value preservation and Done checks also pass.
+  Onboarding appeared after the first typing in this local run, whereas hosted
+  it appeared before typing; this qualifies the shared helper path in this run,
+  not elimination of intermittency. No unchanged repeat is warranted. The fresh
+  owned simulator2869BB51 is already Shutdown after XCTest; its data is retained.
+  The contributor fixture cache is current; no native process remains.
+- **Further hosted successes:** coreUI05 job130479862297 passes strict7/7, zero
+  runtime warnings/restarts and one recorded animation-idle message. English food
+  editor130480620008 passes401.511s and meal-idea parent return130480620116 passes
+  246.811s, each strict1/1 with zero recorded warnings/idle/restarts. Core workflow
+  43005537223 is terminal failure for its retained UI groups; fixture workflow
+  43005537178 still has live jobs. No candidate branch push or dispatch occurred.
 
 - **Three additional corrections locally qualified:** UI08's Spanish dinner
   case spent about200s resolving the unknown-quantity warning and reached its
