@@ -717,7 +717,8 @@ import UIKit
         capture("S27-reopened-adopted-branch-and-dated-comparison")
         tap(app.buttons["quoteEditReviewed"])
         let restoredName = app.textFields["Commitment name"]
-        revealContent(restoredName)
+        // Commitment fields precede the store sections at the retained offset.
+        revealContent(restoredName, initiallyUpward: false)
         XCTAssertEqual(restoredName.value as? String, "Dinner and protected lunch")
         XCTAssertEqual(app.textFields["Required portions"].value as? String, "3")
         let corrected = app.textFields["quote.second.eligibilityTerms"]
@@ -907,7 +908,8 @@ import UIKit
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func revealContent(_ target: XCUIElement, above inputBar: XCUIElement? = nil) {
+    private func revealContent(_ target: XCUIElement, above inputBar: XCUIElement? = nil,
+                               initiallyUpward: Bool = true) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             if target.exists && !target.frame.isEmpty {
@@ -931,7 +933,8 @@ import UIKit
                 if viewport.insetBy(dx: 0, dy: 4).contains(center) && target.isHittable { return }
                 scrollContent(upward: center.y > area.midY, besideFields: inputBar != nil)
             } else {
-                scrollContent(upward: attempt < 16, besideFields: inputBar != nil)
+                scrollContent(upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
+                              besideFields: inputBar != nil)
             }
         }
         XCTFail("Content tap point is obscured: \(target.debugDescription)")
