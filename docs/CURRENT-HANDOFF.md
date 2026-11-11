@@ -30,13 +30,14 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published14b combined qualification | Core43005537223, fixtures43005537178 and deep43005537248 remain live. Security43005537157 and native-wire43005537184 pass. Core source/web/service/database checks, both sanitizers and the shared StoreKit build pass; native app/fixture builds and other jobs remain active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results and verify the corrected matrix admission uses the available global slots. No duplicate dispatch or status-only push. |
+| Published14b combined qualification | Core43005537223, fixtures43005537178 and deep43005537248 remain live. Security43005537157 and native-wire43005537184 pass. Main and both fixture builds pass; all11core and25contributor matrix rows are admitted alongside Dinner. EN billing130475229159 repeats11/15 with the same four failures; ES is active. Other native work is active or queued. Both candidate branches and PR1 identify14b75714; main remains1a2530a7. | Collect this batch's results. Matrix admission is verified; elapsed-time benefit remains unmeasured. No duplicate dispatch or status-only push. |
 | Previous84 batch | All five workflows are terminal. Core fails only its ios-tests matrix; fixtures fail only contributor-tests; deep billing remains failed. Security and native-wire pass. The last two quote cases pass: Spanish largest text104.688s and stale/locked save454.307s, both strict1/1 with zero recorded warnings/idle messages/restarts. | Retain original failures and local correction evidence. Do not rerun84 or label it green. |
 | Fractional meal-idea follow-up | The original hosted case continued making progress but spent81s on a compound switch query and repeatedly searched downward for text above its current position. Local test-only changes enumerate named switches before checking state and search upward for those two known-above labels. | Build36976, exact enumeration82764 and test16144 ended0. Strict1/1 passes316.514s in `.build/SharedMealIdeaFollowupNov11/focused`, with matching source/plan hashes and zero recorded warnings/idle messages/restarts. Retain for combined qualification. |
 | Ten locally qualified corrections, now published | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`), store-price keyboard enumeration (`6129bb99`) and fractional meal-idea query/scroll direction are included in14b. | Retain existing focused passes and refreshed975source checks below while inputs stay unchanged. Await combined results; do not assume hosted resolution from local passes. |
 | Matrix scheduling correction, now published | Removed the redundant five-row admission limit from the large core/contributor matrices. The five global native slot queues remain the execution cap. Earlier hosted evidence showed pending rows occupying the admission window while slots1/2 had no admitted work. | Confirm utilization in14b. All975source checks and workflow validation pass; no separate native rerun or dispatch is needed. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
+| StoreKit runtime comparison | Historical42544579944 passed both decline cases in both locales on Xcode26.3/iOS26.2/23C54 after pending-reconciliation ccdbd768. Relevant membership/test/fixture/plan/scheme sources are unchanged versus14b; root verified the retained log hash. This supports an environment hypothesis, not a proved SDK defect. | Current original source is building in session21467 for two English decline cases on the already installed iOS26.2/23C54 using Xcode27.1. Root owns simulatorD7456DF3-8ACB-49E8-907A-95477A9919A7 and `.build/StoreKitRuntimeComparisonNov11/r1-ios26_2`; boot32397 ended0. No native test has started. Poll the build before consuming its exact LocalStoreKit plan. A26.2pass would justify the same-products27.0comparison; a failure does not justify an unchanged retry. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
 
 For routine progress, report the next decision or a changed result, not every
@@ -49,6 +50,24 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Published14b test admission verified:** main build130472204605 and Dinner
+  build130472104325 pass; contributor build130472104784 also passes. All11core
+  groups (916models plus69UI cases) and25contributor groups were admitted without
+  the old five-row window. The five global execution slots remain occupied.
+  Actual elapsed-time improvement is not yet measured. EN StoreKit130475229159
+  executes15cases:11pass, two pending waits fail, purchase reaches120s and the
+  restored/declined case repeats its verified-current-entitlement contradiction.
+  Zero runtime warnings/idle diagnostics, one restart after the purchase timeout.
+- **New historical billing comparator:** Astra identified all four original
+  decline passes (two cases in each locale) in42544579944 atd1705d92, including
+  ccdbd768's reconciliation. Root verified the original log SHA256
+  `6167e5e81ea4a9c2d2f7d2de48497e89c9337e1e8b9d4db33916d4d35e5b239e` and an empty
+  diff for the relevant membership production/test/plan/scheme inputs versus14b.
+  This distinguishes the new runtime comparison from rejected same-runtime sync,
+  pending-order and scene experiments. The current hosted command still uses120s
+  despite the plan's60s default; do not attribute the contrast to a shorter case
+  allowance. App/build infrastructure changed, so the historical comparison alone
+  cannot identify a single causal component. The Apple draft remains untouched.
 - **Published14b early gates pass:** security completes all three jobs. Database
   job130471980001 passes1,054service,448PostgreSQL and15maintenance tests with zero
   failures/skips. Native-wire130471976207 verifies24Node integration cases and80
