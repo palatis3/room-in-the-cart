@@ -43,12 +43,44 @@ changes are now published. PR1 remains draft and unmerged.
   duplicate-request journey's sheet-dismissal wait at RequestDuplicateComparisonUITests:146
   (job130383822777). Balanced05 completes13/14, failing the correction-privacy
   opt-out confirmation's existence assertion at LibraryPrivacyUITests:240
-  (job130383822827); all3 shared-meal-change cases pass. These two new failures
-  need screenshot/result diagnosis before changing the app or harness. Do not
-  infer a shared cause solely because both involve UI transitions. Core UI01–03,
+  (job130383822827); all3 shared-meal-change cases pass. Follow-up evidence for
+  these two failures is recorded below; neither hosted failure is closed. Core UI01–03,
   balanced03 and DinnerDecisionSheet are active or queued with later fixtures.
   Keep the published batch running and the qualified Capture fix local; do not
   push a checkpoint or dispatch duplicate tests. Billing remains unresolved below.
+- **Duplicate-request cancellation lookup qualified locally:** original hosted
+  failure493.788s is preserved in artifact13839196346, verified SHA256
+  f71398b8c84f715d90168a4e20349a4c02322dd34e406b4aaba863e5290d0ac3,
+  `.build/RequestDuplicateNov11/hosted/original.zip`. Its screenshot and hierarchy
+  show the inbox and saved Lee outcome after the failed5s disappearance wait;
+  they do not prove exactly when dismissal completed. The test now scopes all
+  Cancel queries to the actual Button instead of all accessibility descendants.
+  The original later-page journey passes93.35s, strict1/1, zero runtime warnings,
+  idle messages or restarts, at `.build/RequestDuplicateNov11/focused/Tests.xcresult`.
+  Build83280, enumeration26119 and test99766 ended0; source and compiled-plan hashes
+  match. Syntax, existing automation contract and diff checks pass. No production
+  behavior, assertion, timeout or test selection changed. This is scoped local
+  qualification, not proof that the hosted timing failure is resolved. Hold for
+  the next combined candidate; no normal app rebuild is needed for this test-only edit.
+- **Correction privacy remains a hosted-only observation:** original artifact
+  13838907255 is verified SHA256
+  8313748d3bd09d506b6bc0d05b0504cf073cad6387e69ae50b3f2ab1147baca1,
+  `.build/CorrectionPrivacyNov11/hosted/original.zip`. The synthesized event lands
+  at356.4,504.83 inside the visible on-switch309,491,63,28; the failure screenshot
+  still shows enabled memory and no dialog. A simple missed/off-screen coordinate
+  is not supported. One unchanged original journey reused the existing fixture
+  build and passes80.35s, strict1/1, zero warnings/idle messages/restarts, at
+  `.build/CorrectionPrivacyNov11/original/Tests.xcresult` (enumeration57438,
+  test49804 both ended0). It includes named forgetting, last-entry outcome,
+  Cancel/no deletion, explicit opt-out, retained Spanish spellings and redacted
+  offline support. No production or test source change is justified by this pass;
+  retain the hosted failure and investigate further only with new evidence.
+  Original source/plan identity is recorded in `original/source-and-plan.txt`;
+  the fixture cache was subsequently rebuilt for the duplicate-request correction.
+- **Single current queue:** RELEASE-EXECUTION now points here instead of repeating
+  an obsolete49b live-run summary. It retains integration/release completion
+  criteria. No new workflow, tool, suite or status-only push was added. No local
+  native process remains active at this checkpoint; useful84 jobs are still live.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test

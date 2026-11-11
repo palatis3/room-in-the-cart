@@ -38,7 +38,7 @@ import XCTest
         let apply = element("household.decision.apply")
         tap(apply)
         let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
-                                                object: element("household.decision.cancel"))
+                                                object: cancelButton)
         XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
         expectsDecisionSheet = false
         let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444441")
@@ -73,7 +73,7 @@ import XCTest
         tap(element("household.decision.review"))
         tap(element("household.decision.apply"))
         let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
-                                                object: element("household.decision.cancel"))
+                                                object: cancelButton)
         XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
         expectsDecisionSheet = false
         let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444443")
@@ -133,18 +133,21 @@ import XCTest
         reveal(request)
         XCTAssertTrue(request.waitForExistence(timeout:5))
         tap(request)
-        let cancel = element("household.decision.cancel")
+        let cancel = cancelButton
         XCTAssertTrue(cancel.waitForExistence(timeout:5))
         XCTAssertTrue(cancel.isHittable)
         expectsDecisionSheet = true
         capture("S23-opened-\(step)")
     }
     private func closeDecision() {
-        tap(element("household.decision.cancel"))
+        tap(cancelButton)
         expectsDecisionSheet = false
-        let dismissed = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:element("household.decision.cancel"))
+        let dismissed = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:cancelButton)
         XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed)
     }
+    // Cancellation is a Button. Keep disappearance checks scoped to that type
+    // instead of searching every accessibility descendant after the sheet closes.
+    private var cancelButton: XCUIElement { app.buttons.matching(identifier: "household.decision.cancel").firstMatch }
     private func element(_ id:String)->XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target:XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
     private func assertComparisonValue(_ field:String,request:String,value:String,contains:Bool=false) {
@@ -195,7 +198,7 @@ import XCTest
         var previousSignature = ""
         var unmoved = 0
         for attempt in 0..<48 {
-            let cancel = element("household.decision.cancel")
+            let cancel = cancelButton
             if expectsDecisionSheet && (!cancel.exists || !cancel.isHittable) {
                 capture("S23-unexpected-sheet-dismissal-\(attempt)")
                 XCTFail("The decision sheet disappeared while revealing \(description)")
@@ -240,7 +243,7 @@ import XCTest
     }
     private func activeScrollableContent()->XCUIElement? {
         let viewport = app.frame
-        let cancelFrame = expectsDecisionSheet ? element("household.decision.cancel").frame : nil
+        let cancelFrame = expectsDecisionSheet ? cancelButton.frame : nil
         for candidates in [app.collectionViews.allElementsBoundByIndex,app.tables.allElementsBoundByIndex,app.scrollViews.allElementsBoundByIndex] {
             let visible = candidates.filter { candidate in
                 guard candidate.exists else { return false }
@@ -264,7 +267,7 @@ import XCTest
         var area = container.frame.intersection(app.frame)
         let bars = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable && $0.frame.intersects(area) }
         var top = max(area.minY,bars.map { $0.frame.maxY }.max() ?? area.minY)
-        if expectsDecisionSheet { top = max(top,element("household.decision.cancel").frame.maxY) }
+        if expectsDecisionSheet { top = max(top,cancelButton.frame.maxY) }
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? area.maxY
         let bottom = min(area.maxY,keyboardTop,app.frame.maxY-20)
         area = CGRect(x:area.minX+24,y:top+16,width:max(0,area.width-48),height:max(0,bottom-top-32))
