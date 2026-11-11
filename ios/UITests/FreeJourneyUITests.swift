@@ -512,26 +512,32 @@ import XCTest
             reveal(occurrence)
         }
         func fillReviewedFields(_ fields: [(String, String)]) {
-            // Reuse the ordinary entry helper and dismiss between fields. Keeping
-            // a prior field focused can make UIKit restore its scroll position.
+            // These controls are TextFields. Reveal their visible center once;
+            // repeating the broad lookup and reveal adds work to every entry.
             for (name, value) in fields {
-                let original = editableElement(name)
-                reveal(original)
-                let identifier = original.identifier
+                let field = app.textFields.matching(identifier: name).firstMatch
+                tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
                 // Ingredient labels repeat across lazy rows. Keep the concrete
                 // identity and native type from entry for the post-Done readback.
-                let field = identifier.hasPrefix("ingredient.")
-                    ? app.descendants(matching: original.elementType).matching(identifier: identifier).firstMatch
-                    : original
-                fill(value, into: name, requireDone: true, useVisibleCenter: true, control: field)
+                let ingredient = ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name)
+                let readback: XCUIElement
+                if ingredient {
+                    let identifier = field.identifier
+                    XCTAssertTrue(identifier.hasPrefix("ingredient."), "Retain the concrete ingredient field")
+                    readback = app.textFields.matching(identifier: identifier).firstMatch
+                } else { readback = field }
+                field.typeText(value)
+                let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
+                XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(name)")
+                done.tap()
                 // Hosted app resolution and snapshot acquisition exceeded five
                 // seconds even after UIKit had dismissed the keyboard.
                 XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
                 let entered = XCTNSPredicateExpectation(
-                    predicate: NSPredicate(format: "value == %@", value), object: field)
+                    predicate: NSPredicate(format: "value == %@", value), object: readback)
                 XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
                                "Exact entered value must survive Done for \(name)")
-                XCTAssertEqual(field.value as? String, value, name)
+                XCTAssertEqual(readback.value as? String, value, name)
             }
         }
 
