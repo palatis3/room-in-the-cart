@@ -476,6 +476,18 @@ import XCTest
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         avoidIOS17SnapshotLoggingCrash()
+        func applyLibraryDinner() {
+            let apply = app.buttons["dinnerApply"]
+            tap(apply)
+            XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+            // Applying saves asynchronously and dismisses a sheet. Wait for the
+            // library's Back control before inspecting its navigation stack.
+            let back = app.navigationBars["Dinner library"].buttons.firstMatch
+            let ready = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "exists == true AND hittable == true"), object: back)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 10), .completed,
+                           "Applying the dinner must return to the usable library")
+        }
         func verifyChosenDinnerInWeek(expectedShopTitle: String? = nil) {
             // Return to the destination we are opening, without first revealing the library.
             returnToVisibleAnchor(app.buttons["dinnerWeekEntry"], rootTitles: ["Dinners", "Cenas"])
@@ -490,52 +502,21 @@ import XCTest
                                                                "dinnerOccurrence-", "Wrap dinner")).firstMatch
             reveal(occurrence)
         }
-        func fillAdjacentFields(_ fields: [(String, String)]) {
-            // Keep the keyboard between adjacent fields in this journey only.
-            // reveal still measures the unobscured content before any drag.
+        func fillReviewedFields(_ fields: [(String, String)]) {
+            // Reuse the ordinary entry helper and dismiss between fields. Keeping
+            // a prior field focused can make UIKit restore its scroll position.
             for (name, value) in fields {
+                fill(value, into: name, requireDone: true, useVisibleCenter: true)
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
                 let field = editableElement(name)
-                var tapped = false
-                for attempt in 0..<24 {
-                    var area = scrollableArea()
-                    let done = app.buttons["Done"]
-                    if app.keyboards.firstMatch.exists && done.exists {
-                        // The Done strip is above the keyboard and can cover a
-                        // field that XCTest still reports as hittable.
-                        area.size.height = max(0, min(area.maxY, done.frame.minY) - area.minY)
-                    }
-                    XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before entering \(name)")
-                    if field.exists && !field.frame.isEmpty {
-                        let coordinate = field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                        let point = coordinate.screenPoint
-                        if field.isHittable && area.contains(point) {
-                            print("ADJACENT_FIELD_TAP id=\(name) point=\(point) area=\(area)")
-                            coordinate.tap()
-                            tapped = true
-                            break
-                        }
-                        scrollContent(upward: point.y > area.midY, area: area)
-                    } else {
-                        scrollContent(upward: attempt < 16, area: area)
-                    }
-                }
-                XCTAssertTrue(tapped, "No visible field tap point for \(name)")
-                field.typeText(value)
-                // Hosted typing can finish before the last character reaches
-                // the accessibility value. Wait for the exact input once;
-                // never repair the value by typing again.
                 let entered = XCTNSPredicateExpectation(
                     predicate: NSPredicate(format: "value == %@", value), object: field)
                 XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
-                               "Typed value must finish updating for \(name)")
+                               "Exact entered value must survive Done for \(name)")
                 XCTAssertEqual(field.value as? String, value, name)
             }
-            let done = app.buttons["Done"]
-            XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable,
-                          "Done must remain reachable after adjacent form fields")
-            done.tap()
-            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         }
+
         launch(reset: true)
         tap(app.buttons["settings"])
         let consent = app.switches["Offer optional feedback after a pickup"]
@@ -548,20 +529,20 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerNewTemplate"])
-        fillAdjacentFields([
+        fillReviewedFields([
             ("ledgerDinnerTitle", "Wrap dinner"), ("ledgerDinnerServings", "6"),
             ("Ingredient name", "Wraps"), ("Amount, optional", "6"),
             ("Ingredient exclusions, one per line", "No sesame"),
         ])
         tap(app.buttons["Add serving group"])
-        fillAdjacentFields([("Group name", "Lunch"), ("Group servings", "2")])
+        fillReviewedFields([("Group name", "Lunch"), ("Group servings", "2")])
         enableSwitch("Protected group")
         tap(app.buttons["ledgerReviewDinner"])
         assertText("Lunch")
         tap(app.buttons["ledgerSaveDinner"])
         tap(app.buttons["Done"])
         tap(app.buttons["ledgerChooseTemplate"])
-        tap(app.buttons["dinnerApply"])
+        applyLibraryDinner()
         verifyChosenDinnerInWeek()
         assertText("Unscheduled")
         capture("Free-dinner-and-protected-lunch")
@@ -573,7 +554,7 @@ import XCTest
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
         tap(app.buttons["ledgerPackChoice"])
-        fillAdjacentFields([
+        fillReviewedFields([
             ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
             ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
             ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
@@ -624,7 +605,9 @@ import XCTest
         source.typeText("Retailer preview reviewed by shopper")
         XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper", "Source of these prices")
         tap(app.buttons["Done"])
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"),
+                      "Done must leave the checkout unobscured and remove its input bar")
+        XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper")
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
@@ -651,7 +634,7 @@ import XCTest
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])
         assertText("Frozen · placement unconfirmed")
-        tap(app.buttons["Prepare retailer handoff"])
+        tap(app.collectionViews.buttons["Prepare retailer handoff"])
         let placeOrder = app.buttons["I placed this order"]
         reveal(placeOrder)
         // A sliver above the floating tab bar can report hittable. Bring the
@@ -737,7 +720,7 @@ import XCTest
         dinnerRoot()
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerChooseTemplate"])
-        tap(app.buttons["dinnerApply"])
+        applyLibraryDinner()
         verifyChosenDinnerInWeek()
         capture("Free-one-dinner-reused-for-next-shop")
         restart()

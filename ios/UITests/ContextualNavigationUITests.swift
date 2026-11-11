@@ -335,7 +335,9 @@ import UIKit
         let slot = app.switches["Set a pickup date and time"]
         enableSwitch("Set a pickup date and time")
         fill("35", into: "ledgerCap")
-        XCTAssertFalse(app.keyboards.firstMatch.exists, "Done must dismiss the decimal keyboard")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "ledgerFactsKeyboardDone"),
+                      "Done must dismiss the decimal keyboard and its input bar")
+        XCTAssertEqual(app.textFields["ledgerCap"].value as? String, "35")
         choose("What the cap covers", value: "Dinners only")
         tap(element("ledgerReviewFacts"))
         assertText("$35.00 · Dinners only")

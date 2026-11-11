@@ -84,6 +84,23 @@ import XCTest
 
 @MainActor
 extension XCUIApplication {
+    /// UIKit may retain a dismissed keyboard below the viewport. Measure one
+    /// snapshot instead of waiting for that offscreen accessibility node to vanish.
+    func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5) -> Bool {
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let root = try? self.snapshot(), !root.frame.isEmpty else { return false }
+            var nodes = [root]
+            while let node = nodes.popLast() {
+                nodes.append(contentsOf: node.children)
+                guard !node.frame.isEmpty, node.frame.intersects(root.frame) else { continue }
+                if node.elementType == .keyboard { return false }
+                if node.elementType == .button && node.identifier == doneIdentifier { return false }
+            }
+            return true
+        }, object: nil)
+        return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
+    }
+
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
         let picker = buttons["ledgerShopPicker"]
         XCTAssertTrue(picker.waitForExistence(timeout: 8), file: file, line: line)
