@@ -127,6 +127,25 @@ private final class FoodEditorFixtureServer: @unchecked Sendable {
             return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": state.writes + 1, "authorityEpoch": 1,
                 "status": "enabled", "graph": try object(graph(revision: state.writes + 1)), "totals": totals])
         }
+        if path == shopPath + "/demand/tracking", method == "GET" {
+            // This fixture already has a fully bound manual graph. Current
+            // editor preflight must read it without changing any source facts.
+            let updated = state.writes == 1
+            let checkout: [String: Any] = ["currency": "USD", "totalMinor": NSNull(),
+                "overCapMinor": NSNull(), "headroomMinor": NSNull(), "status": "unresolved",
+                "scope": "wholeCheckout", "missing": ["tax"], "lowerBoundMinor": updated ? 1295 : 645,
+                "upperBoundMinor": NSNull(), "wholeCheckoutWithinCap": false]
+            var page = try ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: state.writes + 1,
+                basket: object(basket(updated: updated)) as! [[String: Any]], graph: graph(revision: state.writes + 1),
+                totals: totals, checkout: checkout)
+            if updated {
+                guard let bytes = state.previewRequest else { throw ClientError.invalidResponse }
+                let reviewed = try JSONDecoder().decode(SharedDemandPreviewRequest.self, from: bytes)
+                var tracking = page["state"] as! [String: Any]
+                tracking["packReviews"] = try object(reviewed.packs); page["state"] = tracking
+            }
+            return try json(page)
+        }
         if path == shopPath + "/demand/previews", method == "POST" {
             try require(state.writes == 0, "No new preview after committed retry")
             let input = try JSONDecoder().decode(SharedDemandPreviewRequest.self, from: bytes); try check(input)
