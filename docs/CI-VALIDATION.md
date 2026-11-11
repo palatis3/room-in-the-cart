@@ -69,6 +69,18 @@ changes to the candidate PR when ready for combined integration; its core and
 fixture workflows still run complete coverage. Do not push status-only edits
 while a useful candidate batch is running.
 
+The large core and contributor matrices use the five global native-job slot
+queues as their execution cap, without a second matrix `max-parallel` window.
+On November 11 the five admitted contributor rows included three waiting on busy
+slots3/4 and only two executing on slots0/3, while core UI09 occupied slot4.
+The next quote rows for available slots1/2 had not been admitted. Removing that
+redundant window lets all rows reach their existing slot queues; it does not
+increase the five-job global cap, change test coverage or cancel waiting work.
+Confirm utilization on the next combined run; no speedup is claimed from local
+workflow validation alone. GitHub documents the separate
+[matrix limit](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#defining-the-maximum-number-of-concurrent-jobs)
+and [concurrency queues](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+
 The deep workflow automatically runs for billing/household integration, shared
 Swift packages and their build/test inputs. Unrelated UI-test or diagnostic-script
 edits no longer start StoreKit and both sanitizers. Use its existing manual action

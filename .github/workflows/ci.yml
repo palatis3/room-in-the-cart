@@ -512,7 +512,8 @@ jobs:
     timeout-minutes: 55
     strategy:
       fail-fast: false
-      max-parallel: 5
+      # The five global slot queues cap native execution. Admit every row so
+      # jobs waiting on busy slots cannot hold back work for available slots.
       matrix: ${{ fromJSON(needs.ios-build.outputs.test_matrix) }}
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
