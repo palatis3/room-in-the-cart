@@ -29,7 +29,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI09 and the remaining meal/proposal/Undo fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys and Spanish saved-change Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI09 and the remaining meal/proposal/Undo/Records/quote fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys, both saved-change Undo languages and English skipped-dinner Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
 | Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration (`6129bb99`) await combined qualification. | Retain their existing focused passes and the975cheap source checks at6129bb99 while inputs are unchanged. Publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
 | StoreKit | Owner chose “Keep the draft for now.” Declined-request evidence and the separate private Apple draft remain local. | Do not submit or re-ask without a changed need or owner instruction. No blind reruns. Other purchase failures remain separate unresolved observations. |
@@ -45,6 +45,17 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Grouped source review:** the complete iOS diff from published84 through
+  383553ec contains the Capture source-editor Done behavior and eight test
+  targeting/synchronization corrections. Reviewed the focus binding and existing
+  Done action, actual control identities and retained assertions. No additional
+  finding, removed acceptance assertion, increased existing deadline or added
+  retry was identified. This review does not replace combined execution.
+- **English saved-change and skipped-dinner Undo pass hosted84:** jobs130438757335
+  and130439790701 each complete strict1/1, in375.861s and402.290s respectively,
+  with zero recorded runtime warnings/idle messages/restarts. Saved-change now
+  passes in both languages. These original cases retain Cancel, relaunch, exact
+  retry, later food and protected-lunch assertions. No unchanged repeat is needed.
 - **Nine-fix cheap source validation passes:** revision6129bb99 passes all975
   Python checks in17.598s; session81315 ended0. Log:
   `.build/SourceContractsNov11/grouped-6129bb99.log`. Theme, localization, generated
