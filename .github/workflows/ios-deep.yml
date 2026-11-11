@@ -2,8 +2,24 @@ name: iOS deep checks
 on:
   pull_request:
     paths:
-      - 'ios/**'
-      - 'scripts/**'
+      # Full core/UI coverage stays in ci.yml and ios-fixtures.yml. These
+      # specialist jobs run automatically for billing, shared packages and
+      # their build/test infrastructure; release-checks always runs them all.
+      - 'ios/Packages/**'
+      - 'ios/Features/Membership/**'
+      - 'ios/Features/Household/**'
+      - 'ios/App/Membership*.swift'
+      - 'ios/App/RoomInTheCartApp.swift'
+      - 'ios/Tests/Membership*.swift'
+      - 'ios/Configuration/**'
+      - 'ios/RoomInTheCart.xcodeproj/project.pbxproj'
+      - 'scripts/generate_xcode_project.py'
+      - 'scripts/check_ci_xcode27.sh'
+      - 'scripts/check_swift_syntax.py'
+      - 'scripts/select_ci_iphone.py'
+      - 'scripts/boot_ios_simulator.py'
+      - 'scripts/test_storekit_workflow.py'
+      - 'scripts/ci_yaml_requirements.txt'
       - 'shared/**'
       - 'config/**'
       - '.github/workflows/ios-deep.yml'

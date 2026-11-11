@@ -203,7 +203,14 @@ class PerformanceEnvironmentTests(unittest.TestCase):
     def test_workflow_orders_guards_before_expensive_work_and_keeps_late_validation(self):
         workflow = parse_workflow(ROOT / '.github/workflows/ios-performance.yml')[0]
         self.assertEqual(workflow['env']['ENFORCE_BASELINES'],
-                         "${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}")
+                         "${{ inputs.enforce_baselines }}")
+        self.assertNotIn('pull_request', workflow['on'])
+        self.assertIn('workflow_dispatch', workflow['on'])
+        self.assertTrue(workflow['on']['workflow_call']['inputs']['enforce_baselines']['default'])
+        release = parse_workflow(ROOT / '.github/workflows/release-checks.yml')[0]
+        self.assertEqual(release['jobs']['performance']['uses'], './.github/workflows/ios-performance.yml')
+        self.assertTrue(release['jobs']['performance']['with']['enforce_baselines'])
+        self.assertEqual(release['jobs']['diagnostics']['uses'], './.github/workflows/ios-deep.yml')
         for job in workflow['jobs'].values():
             self.assertNotIn('ENFORCE_BASELINES', job.get('env', {}))
         plan = workflow['jobs']['performance-plan']

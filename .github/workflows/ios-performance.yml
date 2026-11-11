@@ -2,27 +2,7 @@ name: iOS Release performance
 run-name: iOS performance${{ inputs.simulator_signpost_control && ' · standalone helper (diagnostic only)' || '' }}${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
 
 on:
-  pull_request:
-    paths:
-      - 'ios/**'
-      - 'scripts/**'
-      - 'shared/**'
-      - 'config/**'
-      - '.github/workflows/ios-performance.yml'
-      - 'scripts/check_ios_test_results.py'
-      - 'scripts/test_check_ios_test_results.py'
-      - 'scripts/scroll_signpost_diagnostic.py'
-      - 'scripts/test_scroll_signpost_diagnostic.py'
-      - 'scripts/check_ios_performance.py'
-      - 'scripts/test_check_ios_performance.py'
-      - 'scripts/plan_ios_performance_tests.py'
-      - 'scripts/test_plan_ios_performance_tests.py'
-      - 'scripts/performance_plan_provenance.py'
-      - 'scripts/test_performance_plan_provenance.py'
-      - 'scripts/ios_performance_baselines.json'
-      - 'ios/UITests/ReleasePerformanceUITests.swift'
-      - 'ios/UITests/Fixtures/ReleaseLedger500.txt'
-      - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme'
+  # Run deliberately during development; release-checks always calls this workflow.
   workflow_dispatch:
     inputs:
       case:
@@ -76,7 +56,7 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
   CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
   CI_IPHONE_NAME: iPhone 17
-  ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
+  ENFORCE_BASELINES: ${{ inputs.enforce_baselines }}
   REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
   ENABLE_PERFORMANCE_DIAGNOSTICS: ${{ inputs.enable_performance_diagnostics || false }}
   CAPTURE_SCROLL_SIGNPOSTS: ${{ inputs.capture_scroll_signposts || false }}

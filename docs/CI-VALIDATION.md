@@ -53,6 +53,30 @@ release requirements and known failures remain visible.
   limitation are sufficient. Preserve existing failure artifacts and keep
   credentials and private fixtures out of committed evidence.
 
+## When to run hosted checks
+
+Keep ordinary edits local while running their affected checks. Publish grouped
+changes to the candidate PR when ready for combined integration; its core and
+fixture workflows still run complete coverage. Do not push status-only edits
+while a useful candidate batch is running.
+
+The deep workflow automatically runs for billing/household integration, shared
+Swift packages and their build/test inputs. Unrelated UI-test or diagnostic-script
+edits no longer start StoreKit and both sanitizers. Use its existing manual action
+when a change outside those paths warrants investigation. The full release
+workflow always invokes deep checks regardless of changed paths.
+
+Performance runs through the existing manual action or full release workflow,
+not on every PR update. Manual calibration is not release acceptance. The release
+workflow still requires approved baselines, complete measurements and the same
+frozen source; the current missing baseline remains an open release requirement.
+
+For a suspected framework problem, test one concrete hypothesis with the smallest
+relevant original case. If it fails to explain the behavior, preserve the result
+and stop repeating it. Resume only for new evidence or a required release decision.
+No timeout, assertion, required core check or release requirement is relaxed by
+this scheduling policy.
+
 ## Default feedback loop
 
 1. Read the existing run's compact report before scheduling more work:
