@@ -30,7 +30,7 @@ Each invocation uses a fixed batch of 25, a 10-second auth-loop budget, an 8-sec
 
 ## Operator CLI
 
-Use Node 22.23.4 and install/build the service first. Load credentials from the deployment secret manager into the process environment; do not paste them into command history, an issue, or this document.
+Use Node 22.23.5 and install/build the service first. Load credentials from the deployment secret manager into the process environment; do not paste them into command history, an issue, or this document.
 
 ```sh
 npm --prefix service ci --ignore-scripts

@@ -22,7 +22,7 @@ Costs and limits apply only to the item. They exclude other groceries, fees and 
 
 ## Build and verify
 
-Requirements: macOS, Xcode with an installed iPhone simulator, Python 3.9+, Node 22.23.4/npm. The handoff reference verifier separately requires Python 3.13+.
+Requirements: macOS, Xcode with an installed iPhone simulator, Python 3.9+, Node 22.23.5/npm. The handoff reference verifier separately requires Python 3.13+.
 
 ```sh
 bash scripts/check.sh
