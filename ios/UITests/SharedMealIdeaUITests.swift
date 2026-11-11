@@ -111,9 +111,9 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
         enterFirstAdoption(chickpeaID: chickpeaID)
         tap(app.buttons["sharedTracking.preview"])
-        // Preview replaces the entry form while retaining its lower scroll
-        // position. Its meal heading is above the pack controls we just edited.
-        assertText("Fractional chickpea supper", searchTowardEndFirst: false)
+        // The preview begins with basket and checkout facts; the proposed
+        // meal facts follow those sections.
+        assertText("Fractional chickpea supper")
         assertText("1/2 cups")
         assertText("Peanuts"); assertText("Milk")
         assertText("Unpriced basket items")

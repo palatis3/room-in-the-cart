@@ -116,9 +116,7 @@ The cold build uploaded504.5MB; the warm build downloaded504.5MB and reported
 Healthy reuse. Both builds, compiled discovery and product uploads passed. This
 is one measured pair for compilation, not an84% whole-CI speedup. The Bitrise
 consumer and full focused gate43064729384 pass: original Spanish quote journey
-strict1/1 in81.713s, zero runtime warnings/idle messages/restarts. The GitHub
-consumer in43065528907 is queued; cross-provider execution and the next combined
-candidate remain separate qualification.
+strict1/1 in81.713s, zero runtime warnings/idle messages/restarts. The GitHub consumer130681559128 and full focused gate43065528907 also pass: original financial-fields journey strict1/1 in237.759s, zero runtime warnings/idle messages/restarts. Both providers consume the Bitrise-produced products successfully on this exactbeb02a1e pilot. The next combined candidate remains separate qualification.
 
 Keep ordinary edits local while running their affected checks. Publish grouped
 changes to the candidate PR when ready for combined integration; its core and
