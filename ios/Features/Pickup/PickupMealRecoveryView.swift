@@ -265,8 +265,8 @@ private struct PickupMealRecoveryEditor: View {
                 field("Recipe source URL (optional)", text: $draft.sourceURL, id: "source")
                 Text(recoveryText("This is a new manual dinner version. It does not edit the reusable recipe. Serving groups, protected portions and saved exclusions remain in force."))
             }
-            ForEach(Array(draft.rows.indices), id: \.self) { index in
-                ingredient(index)
+            ForEach(draft.rows) { row in
+                ingredient(row)
             }
             ForEach(draft.template == nil ? draft.editableGroups : [], id: \.self) { groupID in
                 Button(recoveryText("Add ingredient") + " · " + draft.groupName(groupID)) { draft.add(groupID: groupID) }
@@ -288,8 +288,8 @@ private struct PickupMealRecoveryEditor: View {
             if !draft.identityReviewed { previewButton }
         }
     }
-    @ViewBuilder private func ingredient(_ index: Int) -> some View {
-        let row = draft.rows[index]
+    @ViewBuilder private func ingredient(_ row: PickupRecoveryDraft.Ingredient) -> some View {
+        let fields = dinnerDraftBinding(row, in: $draft.rows)
         VStack(alignment: .leading, spacing: 10) {
             Text(draft.groupName(row.groupID)).font(.headline)
             if draft.template != nil {
@@ -297,26 +297,29 @@ private struct PickupMealRecoveryEditor: View {
                 if let quantity = try? DinnerEntry.quantity(row.amount, unit: row.unit) { Text(pQuantity(quantity)) }
                 if !row.notes.isEmpty { Text(row.notes) }
             } else {
-                field("Food name", text: $draft.rows[index].name, id: row.id.uuidString + ".name")
+                field("Food name", text: fields.name, id: row.id.uuidString + ".name")
             }
-            Picker(recoveryText("Reviewed matching food"), selection: $draft.rows[index].foodID) {
+            Picker(recoveryText("Reviewed matching food"), selection: fields.foodID) {
                 Text(recoveryText("No confirmed matching food · unresolved")).tag(UUID?.none)
                 ForEach(model.recoveryStockMatches) { Text($0.name).tag(Optional($0.id)) }
             }
             if draft.template == nil {
-                field("Required usable amount", text: $draft.rows[index].amount, id: row.id.uuidString + ".amount")
+                field("Required usable amount", text: fields.amount, id: row.id.uuidString + ".amount")
                     .keyboardType(.decimalPad)
-                Picker(recoveryText("Usable unit"), selection: $draft.rows[index].unit) {
+                Picker(recoveryText("Usable unit"), selection: fields.unit) {
                     ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                field("Ingredient notes", text: $draft.rows[index].notes, id: row.id.uuidString + ".notes", multiline: true)
+                field("Ingredient notes", text: fields.notes, id: row.id.uuidString + ".notes", multiline: true)
             }
             Text(recoveryText("Keep these exclusions") + ": " + row.requiredExclusions.joined(separator: ", "))
-            field("Additional exclusions, one per line", text: $draft.rows[index].extraExclusions,
+            field("Additional exclusions, one per line", text: fields.extraExclusions,
                   id: row.id.uuidString + ".exclusions", multiline: true)
             if draft.template == nil {
-                Button(recoveryText("Remove ingredient"), role: .destructive) { draft.rows.remove(at: index) }
-                    .foregroundStyle(Theme.error)
+                Button(role: .destructive) { draft.rows.removeAll { $0.id == row.id } } label: {
+                    Text(recoveryText("Remove ingredient"))
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.borderless).foregroundStyle(Theme.error)
             }
         }
     }

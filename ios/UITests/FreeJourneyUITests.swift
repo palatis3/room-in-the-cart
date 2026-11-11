@@ -123,7 +123,7 @@ import XCTest
         XCTAssertEqual(app.buttons.matching(identifier: "Correct usable amount").count, 1)
     }
 
-    private func createReplacementFromPrivatePickup() {
+    private func createReplacementFromPrivatePickup(replaceDraftIngredient: Bool = false) {
         launch(reset: true, privateRecovery: true)
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])
@@ -137,6 +137,15 @@ import XCTest
         fill("Heat the beans for dinner", into: "mealRecovery.notes", useVisibleCenter: true)
         let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
         reveal(name)
+        if replaceDraftIngredient {
+            let removedFieldID = name.identifier
+            tap(app.buttons["Remove ingredient"])
+            XCTAssertFalse(app.textFields[removedFieldID].exists)
+            tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Add ingredient ·")).firstMatch)
+            reveal(name, initiallyUpward: false)
+            XCTAssertNotEqual(name.identifier, removedFieldID, "A replacement draft row must have its own identity")
+            capture("Manual-recovery-removed-row-replaced-with-new-ingredient")
+        }
         let ingredientID = String(name.identifier.dropLast(".name".count))
         fill("Beans", into: ingredientID + ".name", useVisibleCenter: true)
         choose("Reviewed matching food", value: "Beans")
@@ -214,7 +223,7 @@ import XCTest
     }
 
     func testCreateReplacementFromPrivatePickupAndReopenForCook() throws {
-        createReplacementFromPrivatePickup()
+        createReplacementFromPrivatePickup(replaceDraftIngredient: true)
         restart()
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])
