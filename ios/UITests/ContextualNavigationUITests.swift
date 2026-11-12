@@ -746,14 +746,15 @@ import UIKit
         tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
         fill("Unpriced pickup",into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(app.buttons["Compare two store trips"])
-        fillQuote("Two dinners",into: "Commitment name"); fillQuote("2",into: "Required portions")
+        enterQuoteFields([("Commitment name", "Two dinners"), ("Required portions", "2")])
         for (slot,name) in [("first","A"),("second","B")] {
             let prefix = "quote." + slot + "."
-            fillQuote(name,into: prefix + "label")
-            fillQuote(name,into: prefix + "storeID")
-            fillQuote("Main",into: prefix + "branch")
-            fillQuote("Shopper note",into: prefix + "source")
-            enableSwitch(prefix + "quantitiesMatched"); enableSwitch(prefix + "singleStore")
+            enterQuoteFields([
+                (prefix + "label", name), (prefix + "storeID", name),
+                (prefix + "branch", "Main"), (prefix + "source", "Shopper note")
+            ])
+            enableSwitch(prefix + "quantitiesMatched", nativeThumb: slot == "second")
+            enableSwitch(prefix + "singleStore")
         }
         tapQuoteRow("Review two complete trips")
         assertText("Checkout change, second minus first: Unresolved")
