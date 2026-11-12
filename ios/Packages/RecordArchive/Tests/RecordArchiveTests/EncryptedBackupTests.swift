@@ -225,6 +225,48 @@ final class EncryptedBackupTests: XCTestCase {
         XCTAssertEqual(newSave[identity(recipe)]?.savedAtMilliseconds, 20)
     }
 
+    func testOriginalDevelopmentDuplicateMediaReceiptOpensOnlyWithCorroboratingCopies() async throws {
+        // Produced by the 17af86ec writer from the package's archive-v1.1-media fixture.
+        let fixture = try XCTUnwrap(Bundle.module.url(forResource: "registry-development-selected-media", withExtension: "json", subdirectory: "Fixtures"))
+        let original = try Data(contentsOf: fixture), url = try location()
+        try original.write(to: url)
+        let registry = try RecoveryRegistry(url: url)
+        let copies = await registry.list()
+        let plain = try XCTUnwrap(copies.first { $0.record.media == nil }?.record)
+        let selected = try XCTUnwrap(copies.first { $0.record.media != nil }?.record)
+        let scope = [identity(plain): Set(copies.map(\.id))]
+        let localDate = try await registry.lastEncryptedBackups(for: [plain])
+        XCTAssertTrue(localDate.isEmpty)
+        let proven = try await registry.lastEncryptedBackups(for: [selected], recoveredCopyIDs: scope)
+        XCTAssertEqual(proven, [identity(plain): .init(savedAtMilliseconds: 200_000, revisions: [plain.revision])])
+        XCTAssertEqual(try Data(contentsOf: url), original)
+        let intent = try await registry.prepareEncryptedBackup([selected], recoveredCopyIDs: scope)
+        try await registry.recordSuccessfulBackup(intent, savedAtMilliseconds: 300_000)
+        let reopened = try RecoveryRegistry(url: url)
+        let newDate = try await reopened.lastEncryptedBackups(for: [plain], recoveredCopyIDs: scope)
+        XCTAssertEqual(newDate[identity(plain)]?.savedAtMilliseconds, 300_000)
+
+        let manifest = try XCTUnwrap(JSONSerialization.jsonObject(with: original) as? [String: Any])
+        let marks = try XCTUnwrap(manifest["encryptedBackups"] as? [[String: Any]])
+        let originalMark = try XCTUnwrap(marks.first)
+        let revisions = try XCTUnwrap(originalMark["revisions"] as? [[String: Any]])
+        let scoped = try XCTUnwrap(revisions.first { !(($0["dependentCopyIDs"] as? [String]) ?? []).isEmpty })
+        let empty = try XCTUnwrap(revisions.first { ($0["dependentCopyIDs"] as? [String])?.isEmpty == true })
+        let unsupportedMarks: [[String: Any]] = [
+            originalMark.merging(["usesBaseOwnerIdentity": true]) { _, new in new },
+            originalMark.merging(["revisions": [empty, empty]]) { _, new in new },
+            originalMark.merging(["revisions": [scoped, scoped]]) { _, new in new },
+            originalMark.merging(["revisions": [scoped, empty, empty]]) { _, new in new }
+        ]
+        for unsupportedMark in unsupportedMarks {
+            let invalid = manifest.merging(["encryptedBackups": [unsupportedMark]]) { _, new in new }
+            let bytes = try JSONSerialization.data(withJSONObject: invalid)
+            try bytes.write(to: url, options: .atomic)
+            XCTAssertThrowsError(try RecoveryRegistry(url: url)) { XCTAssertEqual($0 as? ArchiveError, .integrity) }
+            XCTAssertEqual(try Data(contentsOf: url), bytes)
+        }
+    }
+
     func testHelperCannotSupplyOwnerProvenanceAndOtherRegistryCannotAcceptIntent() async throws {
         let first = try RecoveryRegistry(url: location()), second = try RecoveryRegistry(url: location())
         let privateRecord = record(), id = try await restore(privateRecord, registry: first, kind: .helperShop)

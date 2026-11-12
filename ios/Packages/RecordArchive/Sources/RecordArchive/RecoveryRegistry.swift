@@ -69,6 +69,10 @@ fileprivate struct BackupMark: Codable {
     let savedAtMilliseconds: Int64
     var revisions: [Revision]
     var usesBaseOwnerIdentity: Bool?
+    var couldHaveSelectedMedia: Bool {
+        let id = source.recordID
+        return id == "meal-library" || UUID(uuidString: id)?.uuidString == id
+    }
 }
 
 /// A single atomic manifest commits snapshots and canonical receipts together. Original
@@ -470,15 +474,35 @@ public actor RecoveryRegistry {
             _ = try ArchiveCodec.make(records: [saved.record], kind: saved.documentKind, origin: saved.record.origin, revision: saved.record.revision)
             if saved.documentKind == .helperShop, saved.record.nativePayload != nil { throw ArchiveError.integrity }
         }
-        let ownerCopies = Dictionary(uniqueKeysWithValues: current.records.filter { $0.documentKind == .personalRecovery && $0.record.nativePayload != nil }.map { ($0.id, $0.record.origin) })
+        let ownerCopies = Dictionary(uniqueKeysWithValues: current.records.filter { $0.documentKind == .personalRecovery && $0.record.nativePayload != nil }.map { ($0.id, $0) })
         var marked = Set<ArchiveSourceIdentity>()
         for mark in current.encryptedBackups ?? [] {
             guard marked.insert(mark.source).inserted, !sources.contains(mark.source), !origins.contains(mark.source.origin),
                   ArchiveCodec.identifier(mark.source.origin), ArchiveCodec.identifier(mark.source.recordID), mark.savedAtMilliseconds > 0,
                   !mark.revisions.isEmpty, mark.revisions.count <= ArchiveCodec.maximumRecords,
-                  Set(mark.revisions.map(\.revision)).count == mark.revisions.count,
-                  mark.revisions.allSatisfy({ ArchiveCodec.identifier($0.revision) && $0.dependentCopyIDs.allSatisfy { ownerCopies[$0] == mark.source.origin } })
+                  mark.revisions.allSatisfy({ ArchiveCodec.identifier($0.revision) && $0.dependentCopyIDs.allSatisfy { ownerCopies[$0]?.record.origin == mark.source.origin } })
             else { throw ArchiveError.integrity }
+            let byRevision = Dictionary(grouping: mark.revisions, by: \.revision)
+            for (revision, duplicates) in byRevision where duplicates.count > 1 {
+                // The development writer could save the plain revision with its copy
+                // dependencies, then the same revision once per selected-media subset
+                // without dependencies. Require the actual distinct receipts as evidence.
+                let scoped = duplicates.filter { !$0.dependentCopyIDs.isEmpty }
+                guard mark.usesBaseOwnerIdentity == nil, mark.couldHaveSelectedMedia,
+                      scoped.count == 1 else { throw ArchiveError.integrity }
+                let backing = scoped[0].dependentCopyIDs.compactMap { ownerCopies[$0] }.filter {
+                    $0.record.id == mark.source.recordID && $0.record.revision == revision
+                }
+                guard let plain = backing.first(where: { $0.record.media == nil })?.record,
+                      plain.kind == .ledger || plain.kind == .pickup else { throw ArchiveError.integrity }
+                let selections = backing.filter { copy in
+                    guard copy.record.media != nil else { return false }
+                    var base = copy.record
+                    base.media = nil
+                    return base == plain
+                }
+                guard selections.count >= duplicates.count - 1 else { throw ArchiveError.integrity }
+            }
         }
         // The first development format missed recovered-copy dependencies when the
         // file included media. Its marks omitted both the record kind and the selection.
@@ -489,9 +513,7 @@ public actor RecoveryRegistry {
         current.encryptedBackups = current.encryptedBackups?.compactMap { original in
             guard original.usesBaseOwnerIdentity != true else { return original }
             var mark = original
-            let id = mark.source.recordID
-            let couldHaveSelectedMedia = id == "meal-library" || UUID(uuidString: id)?.uuidString == id
-            if !neverRecovered && couldHaveSelectedMedia {
+            if !neverRecovered && mark.couldHaveSelectedMedia {
                 mark.revisions.removeAll { $0.dependentCopyIDs.isEmpty }
             }
             mark.usesBaseOwnerIdentity = true
