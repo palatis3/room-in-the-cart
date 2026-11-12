@@ -3,7 +3,7 @@
 export type PublicLanguage = 'en' | 'es';
 export type PublicPageKey = 'help' | 'privacy' | 'terms' | 'support';
 export type PublicCopy = Readonly<Record<PublicLanguage, string>>;
-export type PublicPage = Readonly<{ title: PublicCopy; lead: PublicCopy; notice: PublicCopy;
+export type PublicPage = Readonly<{ title: PublicCopy; lead: PublicCopy; notice: PublicCopy | null;
   sections: readonly Readonly<{ title: PublicCopy; paragraphs: readonly PublicCopy[] }>[] }>;
 
 export const publicPages = {
@@ -13,13 +13,10 @@ export const publicPages = {
       "es": "Ayuda"
     },
     "lead": {
-      "en": "Use the invited web app or the private iPhone tools. Typed entry and offline native help stay available.",
-      "es": "Usa la app web por invitación o las herramientas privadas del iPhone. La entrada escrita y la ayuda nativa sin conexión siguen disponibles."
+      "en": "You can compare packs and plan a pickup on your iPhone without signing in. Open a household invitation to send a request or read shared instructions in your browser.",
+      "es": "Puedes comparar paquetes y planificar una recogida en tu iPhone sin iniciar sesión. Abre una invitación del hogar para enviar una solicitud o leer las instrucciones compartidas en tu navegador."
     },
-    "notice": {
-      "en": "English and US-Spanish help copy is prepared for review. Human language and device review are still required before release.",
-      "es": "La ayuda en inglés y español de EE. UU. está preparada para revisión. Antes del lanzamiento aún se requieren revisión humana del idioma y pruebas en dispositivos."
-    },
+    "notice": null,
     "sections": [
       {
         "title": {

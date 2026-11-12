@@ -12,8 +12,8 @@ const labels = {
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
   operator: { en: 'Operator', es: 'Operador' },
   footer: {
-    en: 'Public implementation information. These pages do not sign you in or load household data.',
-    es: 'Información pública de la implementación. Estas páginas no inician sesión ni cargan datos del hogar.'
+    en: 'You can read these pages without signing in.',
+    es: 'Puedes leer estas páginas sin iniciar sesión.'
   }
 } as const;
 
@@ -110,7 +110,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       const contact = element('a', supportURL.protocol === 'mailto:' ? labels.emailSupport[language] + ' · ' + supportURL.pathname : labels.support[language]);
       contact.href = supportURL.href; contact.rel = 'noreferrer';
       contact.className = 'public-contact'; main.append(contact);
-    } else {
+    } else if (page.notice) {
       const notice = element('aside', page.notice[language]);
       notice.className = 'notice'; notice.setAttribute('role', 'note'); main.append(notice);
     }

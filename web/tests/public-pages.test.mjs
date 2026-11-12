@@ -37,7 +37,10 @@ test('every public page renders both languages, one main, named navigation and a
     for (const section of root.querySelectorAll('.public-article')) assert.ok(dom.window.document.getElementById(section.getAttribute('aria-labelledby')));
     assert.ok(root.querySelector('label[for="public-language"]'));
     assert.equal(root.querySelector('.public-skip').hash, '#public-main');
-    for (const page of Object.values(publicPages)) for (const copy of [page.title, page.lead, page.notice, ...page.sections.flatMap(section => [section.title, ...section.paragraphs])]) {
+    if (key === 'help') assert.equal(root.querySelector('[role=note]'), null);
+    if (key === 'terms' || key === 'privacy') assert.equal(root.querySelector('[role=note]').textContent, publicPages[key].notice[language]);
+    const page = publicPages[key];
+    for (const copy of [page.title, page.lead, ...page.sections.flatMap(section => [section.title, ...section.paragraphs]), ...(page.notice ? [page.notice] : [])]) {
       assert.deepEqual(Object.keys(copy).sort(), ['en', 'es']);
       assert.ok(copy.en.trim()); assert.ok(copy.es.trim());
     }
