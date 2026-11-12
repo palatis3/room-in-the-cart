@@ -305,7 +305,10 @@ public enum ReadableArchive {
                 (spanish ? "Revisión: " : "Revision: ") + record.revision, saved].joined(separator: "\n")
     }
 
-    public static func text(_ records: [ArchiveRecord], owner: Bool, locale: Locale = .current) -> String {
+    public static func text(_ records: [ArchiveRecord], owner: Bool, locale: Locale = .current,
+                            quantityText: (HelperLine) -> String = {
+                                [$0.originalAmount, $0.originalUnit].filter { !$0.isEmpty }.joined(separator: " · ")
+                            }) -> String {
         let spanish = locale.language.languageCode?.identifier == "es"
         return records.map { record in
             var lines = [heading(record, locale: locale)]
@@ -325,7 +328,7 @@ public enum ReadableArchive {
                 return lines.joined(separator: "\n")
             }
             lines += record.helperLines.map { line in
-                [line.label, line.originalAmount, line.originalUnit, line.purpose, line.action, line.foodStatus].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+                [line.label, quantityText(line), line.purpose, line.action, line.foodStatus].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
             }
             if owner, let bytes = record.nativePayload, let text = String(data: bytes, encoding: .utf8) { lines.append(text) }
             return lines.joined(separator: "\n")

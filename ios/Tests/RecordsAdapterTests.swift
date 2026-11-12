@@ -268,7 +268,7 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertFalse(owner.contains("normalizedRequest"))
         await model.prepareExport(.helperText)
         let helper = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
-        XCTAssertTrue(helper.contains("Arroz"))
+        XCTAssertTrue(helper.contains("Arroz · " + pQuantity("2", unit: .count, singular: false, language: recordsInterfaceLocale.language.languageCode?.identifier)))
         for privateValue in ["Original A", "Original B", "6.00", "5.00", "3.49", "6.98"] {
             XCTAssertFalse(helper.contains(privateValue), privateValue)
         }
@@ -276,6 +276,31 @@ final class RecordsAdapterTests: XCTestCase {
         await model.prepareExport(.encryptedRecovery)
         let restored = try EncryptedArchive.open(XCTUnwrap(model.preparedDocument).data, key: model.recoveryKey)
         XCTAssertEqual(restored.payload.records, [record])
+    }
+
+    @MainActor func testCookCopyKeepsOriginalFractionsAndSpelledUnitsInBothLanguages() throws {
+        let lines = [
+            HelperLine(label: "Caldo", originalAmount: "1.00", originalUnit: "fluidOunce"),
+            HelperLine(label: "Rice", originalAmount: "1 1/2", originalUnit: "cup", purpose: "Lunch"),
+            HelperLine(label: "Arroz", originalAmount: "1½ tazas de arroz", originalUnit: "cup"),
+            HelperLine(label: "Wraps", originalAmount: "2 tortillas", originalUnit: "count"),
+            HelperLine(label: "Hierbas", originalAmount: "2", originalUnit: "manojos"),
+            HelperLine(label: "Nota", action: "Reservar para el jueves")
+        ]
+        let record = ArchiveRecord(id: "copy", origin: "family", revision: "1", kind: .pickup,
+                                   title: "Lista", savedAtMilliseconds: 0, helperLines: lines)
+        for (language, fluid, cups) in [("en", "fl oz", "cups"), ("es", "onza líquida", "tazas")] {
+            let readable = recordsReadableText(record, owner: false, locale: Locale(identifier: language))
+            let rows = readable.components(separatedBy: "\n")
+            XCTAssertTrue(rows.contains("Caldo · 1.00 " + fluid))
+            XCTAssertTrue(rows.contains("Rice · 1 1/2 " + cups + " · Lunch"))
+            XCTAssertTrue(rows.contains("Arroz · 1½ tazas de arroz"))
+            XCTAssertTrue(rows.contains("Wraps · 2 tortillas"))
+            XCTAssertTrue(rows.contains("Hierbas · 2 manojos"))
+            XCTAssertTrue(rows.contains("Nota · Reservar para el jueves"))
+        }
+        let archive = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: "family", revision: "1", shopID: "copy")
+        XCTAssertEqual(try ArchiveCodec.decode(ArchiveCodec.encode(archive)).payload.records.first?.helperLines, lines)
     }
 
     @MainActor func testComparisonTextDistinguishesMissingPriceNoPurchaseAndLegacyDraft() throws {

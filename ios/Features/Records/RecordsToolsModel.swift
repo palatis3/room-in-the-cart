@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import RecordArchive
+import CoreDomain
 
 struct RecordsSelectionID: Hashable {
     let origin: String
@@ -187,14 +188,15 @@ struct RecordsMediaSelectionID: Hashable {
                 let bounded = try ArchiveCodec.make(records: records, kind: choice == .ownerText ? .personalRecovery : .helperShop,
                     origin: "selected-local-records", revision: "readable-preview")
                 _ = try ArchiveCodec.encode(bounded)
-                let text = try records.map { record in
+                let readableRecords = choice == .helperText ? bounded.payload.records : records
+                let text = try readableRecords.map { record in
                     if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
                     if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
                     if choice == .ownerText, record.kind == .comparison, let bytes = record.nativePayload {
                         let comparison = try RecordsNativeCodec.comparison(bytes)
                         return try ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + comparison.readableText()
                     }
-                    return ReadableArchive.text([record], owner: choice == .ownerText, locale: recordsInterfaceLocale)
+                    return recordsReadableText(record, owner: choice == .ownerText)
                 }.joined(separator: "\n\n")
                 document = RecordsFileDocument(data: Data(text.utf8), kind: .text)
                 name = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
@@ -416,6 +418,28 @@ struct RecordsMediaSelectionID: Hashable {
 }
 
 var recordsInterfaceLocale: Locale { Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en") }
+func recordsReadableText(_ record: ArchiveRecord, owner: Bool, locale: Locale = recordsInterfaceLocale) -> String {
+    let language = locale.language.languageCode?.identifier ?? "en"
+    return ReadableArchive.text([record], owner: owner, locale: locale) { line in
+        let literal = line.originalAmount
+        guard let unit = UnitOfMeasure(rawValue: line.originalUnit) else {
+            return [literal, line.originalUnit].filter { !$0.isEmpty }.joined(separator: " ")
+        }
+        if let amount = try? ListQuantityParser.numericAmount(literal) {
+            return pQuantity(literal, unit: unit, singular: amount == .one, language: language)
+        }
+        // List imports can retain the entire original ingredient, including its unit.
+        var tokens = ListQuantityParser.itemTokens(literal)
+        if let amount = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true) {
+            if tokens.isEmpty { return pQuantity(literal, unit: unit, singular: amount == .one, language: language) }
+            let writtenUnit = ListQuantityParser.takeUnit(from: &tokens)
+            if writtenUnit == unit || (writtenUnit == nil && unit == .count) { return literal }
+        }
+        let label = pUnitLabel(unit, singular: false, language: language)
+        return [literal, label].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
 func recordsText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Records") }
 
 extension RecipeImportReport {

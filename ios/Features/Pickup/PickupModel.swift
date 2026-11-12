@@ -25,14 +25,18 @@ func pQuantity(_ amount: Rational, unit: UnitOfMeasure, language: String? = nil)
 
 // Coverage from the shared service can contain exact fractions larger than Int64.
 func pQuantity(_ exactAmount: String, unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
+    let label = pUnitLabel(unit, singular: singular, language: language)
+    return "\(exactAmount) \(label)"
+}
+
+func pUnitLabel(_ unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
     let key: String
     if unit == .count {
         key = singular ? "One count unit" : "count"
     } else {
         key = singular ? unit.rawValue : "Quantity plural " + unit.rawValue
     }
-    let label = language.map { pCook(key, language: $0) } ?? pTr(key)
-    return "\(exactAmount) \(label)"
+    return language.map { pCook(key, language: $0) } ?? pTr(key)
 }
 
 enum NextShopDisposition: String, Codable, CaseIterable {
