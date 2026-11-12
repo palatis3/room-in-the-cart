@@ -1858,7 +1858,9 @@ import XCTest
         revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
         XCTAssertTrue(editReview.exists && editReview.isHittable)
         // Supply rows precede Accept; start toward them without visiting the title again.
-        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")], initiallyUpward: false)
+        let supplyButton = app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")]
+        revealScrollableContent(supplyButton, initiallyUpward: false, entireRow: true)
+        supplyButton.tap()
         let supplyHeading = app.staticTexts["ideaSupplyHeading"]
         revealScrollableContent(supplyHeading, entireRow: true)
         XCTAssertEqual(supplyHeading.label, copy("Review ingredient supply", "Revisar el abastecimiento del ingrediente"))
