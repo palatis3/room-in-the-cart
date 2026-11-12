@@ -23,9 +23,9 @@ struct DinnerQuotesView: View {
                     Text(dinnerText("These are entered observations, not live prices or stock."))
                     quoteResult(pair.first, result.first).accessibilityIdentifier("quoteFirstResult")
                     quoteResult(pair.second, result.second).accessibilityIdentifier("quoteSecondResult")
-                    Text(dinnerFormat("Items before fees and discounts, second minus first: %@", dinnerMoney(result.itemSubtotalChange)))
-                    Text(dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(result.checkoutChange)))
-                    Text(dinnerFormat("Checkout plus trip cash, second minus first: %@", dinnerMoney(result.tripCashChange)))
+                    quoteMoneyChange("Items before fees and discounts, second minus first: %@", result.itemSubtotalChange)
+                    quoteMoneyChange("Checkout change, second minus first: %@", result.checkoutChange)
+                    quoteMoneyChange("Checkout plus trip cash, second minus first: %@", result.tripCashChange)
                     if let minutes = result.extraMinutesChange { Text(dinnerFormat("Extra minutes change: %d", minutes)) }
                     if let breakEven = result.secondTripCashBreakEven { Text(dinnerFormat("Second trip cash break-even: %@", dinnerMoney(breakEven))) }
                     ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
@@ -229,6 +229,15 @@ struct DinnerStoreFields: View {
         let identifier = prefix + key
         return TextField(title, text: value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
     }
+}
+
+func quoteMoneyChange(_ format: String, _ money: Money?) -> some View {
+    let amount = dinnerMoney(money)
+    // Keep the sign beside its currency amount when a comparison wraps across lines.
+    let visible = amount.replacingOccurrences(of: "-", with: "-\u{2060}")
+        .replacingOccurrences(of: "−", with: "−\u{2060}")
+    return Text(verbatim: dinnerFormat(format, visible))
+        .accessibilityLabel(Text(verbatim: dinnerFormat(format, amount)))
 }
 
 /// Financial and time meaning remains visible after the placeholder becomes an entered value.

@@ -278,9 +278,9 @@ private struct SharedStoreQuoteFacts: View {
         if let result = try? SharedStoreQuoteMath.compare(options, commitments: commitments, shopID: shopID) {
             facts(options.first, result: result.first).accessibilityIdentifier("sharedQuotes.firstFacts")
             facts(options.second, result: result.second).accessibilityIdentifier("sharedQuotes.secondFacts")
-            Text(dinnerFormat("Items before fees and discounts, second minus first: %@", dinnerMoney(result.itemSubtotalChange)))
-            Text(dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(result.checkoutChange)))
-            Text(dinnerFormat("Checkout plus trip cash, second minus first: %@", dinnerMoney(result.tripCashChange))).accessibilityIdentifier("sharedQuotes.cashDelta")
+            quoteMoneyChange("Items before fees and discounts, second minus first: %@", result.itemSubtotalChange)
+            quoteMoneyChange("Checkout change, second minus first: %@", result.checkoutChange)
+            quoteMoneyChange("Checkout plus trip cash, second minus first: %@", result.tripCashChange).accessibilityIdentifier("sharedQuotes.cashDelta")
             if let minutes = result.extraMinutesChange { Text(dinnerFormat("Extra minutes change: %d", minutes)) }
             if let breakEven = result.secondTripCashBreakEven { Text(dinnerFormat("Second trip cash break-even: %@", dinnerMoney(breakEven))).accessibilityIdentifier("sharedQuotes.breakEven") }
             if let preferred = result.preferredByTotalCash {
