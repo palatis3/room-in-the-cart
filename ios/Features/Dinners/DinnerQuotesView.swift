@@ -70,7 +70,9 @@ struct DinnerQuotesView: View {
             .toolbar {
                 if pair != nil {
                     ToolbarItem(placement: .primaryAction) {
-                        Button(dinnerText("Edit quotes"), action: editQuotes).accessibilityIdentifier("quoteEditReviewed")
+                        Button(dinnerText("Edit"), action: editQuotes)
+                            .accessibilityLabel(dinnerText("Edit quotes"))
+                            .accessibilityIdentifier("quoteEditReviewed")
                     }
                 }
             }
