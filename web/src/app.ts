@@ -321,6 +321,8 @@ export class WebApp {
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
     lang.addEventListener('change',()=>{this.language=lang.value as Language;this.render();});header.append(lang);this.root.append(header);
     const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
+    // A mobile browser can retain this hidden page as its cold-start preview.
+    if(this.historyAway)return;
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}

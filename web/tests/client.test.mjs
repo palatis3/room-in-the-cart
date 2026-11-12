@@ -103,10 +103,15 @@ test('offline unconsented send is not saved and retry preserves operation key',a
 });
 
 test('explicitly consented disconnected request is durably queued, never labeled received',async()=>{
- const s={...session(),queueConsent:true};const {root,dom}=await setup(fakeAPI({session:async()=>s,command:async()=>{throw new ApiError('network',0);}}));
+ const s={...session(),queueConsent:true};const {app,root,dom}=await setup(fakeAPI({session:async()=>s,command:async()=>{throw new ApiError('network',0);}}));
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Waiting to send from this browser/);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+ app.suspendForHistory();
+ assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Rice|Family A/);
+ app.resumeFromHistory();await waitForIdle(root);
+ assert.match(root.textContent,/Waiting to send from this browser/);
+ assert.match(root.textContent,/Rice/);
 });
 
 test('a request reviewed after disconnect survives reload and retries only after fresh authorization',async()=>{
