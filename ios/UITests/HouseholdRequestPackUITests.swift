@@ -767,7 +767,8 @@ import XCTest
         tap(element("household.pack.compare"))
         assertText("Cheapest sufficient option among reviewed available packs with known prices")
         capture("S24-reviewed-available-pack-result")
-        let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled); tap(use)
+        let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled)
+        XCTAssertTrue(use.isHittable, use.debugDescription); use.tap()
         tap(element("household.decision.review"))
         let apply = app.buttons["household.decision.apply"]; reveal(apply); XCTAssertFalse(apply.isEnabled)
         try assertDisabledApplyRejectsActivation(apply, name: "S24-overage-disabled-apply")
@@ -775,7 +776,8 @@ import XCTest
         assertText("After this decision")
         capture("S24-actual-household-preview-before-overage-approval")
         enableSwitch("household.decision.overage")
-        reveal(apply); XCTAssertTrue(apply.isEnabled); tap(apply)
+        reveal(apply); XCTAssertTrue(apply.isEnabled)
+        XCTAssertTrue(apply.isHittable, apply.debugDescription); apply.tap()
         assertReturnedToConfirmedRequest()
         capture("S23-updated-original-request-after-confirmed-apply")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
@@ -810,7 +812,8 @@ import XCTest
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields[id]
         // A partially clipped field can report hittable on the smaller iOS 17 screen.
-        reveal(field, fullyVisible: true); tap(field)
+        reveal(field, fullyVisible: true)
+        XCTAssertTrue(field.isHittable, field.debugDescription); field.tap()
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
