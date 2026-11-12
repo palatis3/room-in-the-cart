@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import (BITRISE_LABEL, FIXTURE_CONSUMER_RUNNER, FIXTURE_CONSUMER_SLOT_PREFIX, FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
+from check_ci_workflows import (BITRISE_LABEL, CORE_BUILD_GROUP, CORE_BUILD_JOB, FIXTURE_CONSUMER_RUNNER, FIXTURE_CONSUMER_SLOT_PREFIX, FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
                                 MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +62,8 @@ class WorkflowGuardTests(unittest.TestCase):
                                          BITRISE_LABEL if trusted else 'xcode-27')
                         self.assertEqual(evaluate(FIXTURE_SLOT_PREFIX, repository, event, head),
                                          'ritc-bitrise-slot-' if trusted else 'ritc-macos-slot-')
+                        self.assertEqual(evaluate(CORE_BUILD_GROUP, repository, event, head),
+                                         'ritc-bitrise-slot-2' if trusted else 'ritc-macos-slot-3')
                         for provider in ('github', 'bitrise'):
                             bitrise = trusted and provider == 'bitrise'
                             self.assertEqual(evaluate(FIXTURE_CONSUMER_RUNNER, repository, event, head, provider),
@@ -70,6 +72,7 @@ class WorkflowGuardTests(unittest.TestCase):
                                              'ritc-bitrise-slot-' if bitrise else 'ritc-macos-slot-')
         for event in ('pull_request_target', 'repository_dispatch', ''):
             self.assertEqual(evaluate(FIXTURE_RUNNER, canonical, event, canonical), 'xcode-27')
+            self.assertEqual(evaluate(CORE_BUILD_GROUP, canonical, event, canonical), 'ritc-macos-slot-3')
 
     def test_fixture_provider_and_slot_route_are_exact_and_cannot_escape_inventory(self):
         text = TEXT.replace('runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER).replace(
@@ -99,6 +102,21 @@ class WorkflowGuardTests(unittest.TestCase):
                         consumer.replace('  ios-tests:', '  ios-build:')):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 self.validate(changed, core_policy)
+        producer = TEXT.replace('  native:', '  ios-build:').replace(
+            'runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER).replace(
+            'ritc-macos-slot-0', CORE_BUILD_GROUP)
+        producer_policy = {CORE_BUILD_JOB: POLICY[CORE_BUILD_JOB]}
+        self.assertEqual(len(self.validate(producer, producer_policy)), 1)
+        for changed in (producer.replace(CORE_BUILD_GROUP, FIXTURE_SLOT_PREFIX + '2'),
+                        producer.replace(CORE_BUILD_GROUP, FIXTURE_SLOT_PREFIX + '3'),
+                        producer.replace('ritc-macos-slot-3', 'ritc-macos-slot-2'),
+                        producer.replace('ritc-bitrise-slot-2', 'ritc-bitrise-slot-3'),
+                        producer.replace(FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER),
+                        producer.replace(FIXTURE_RUNNER, BITRISE_LABEL),
+                        producer.replace("github.repository == 'palatis3/room-in-the-cart'", 'true'),
+                        producer.replace('  ios-build:', '  ios-release:')):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                self.validate(changed, producer_policy)
         self.path = Path(self.temp.name) / 'probe.yml'
         with self.assertRaises(ValueError):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER))

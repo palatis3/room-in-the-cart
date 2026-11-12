@@ -18,7 +18,8 @@ BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
 BITRISE_LABEL = 'bitrise-runner-room in cart'
 FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
                 ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
-ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {('ci.yml', 'ios-tests')}
+CORE_BUILD_JOB = ('ci.yml', 'ios-build')
+ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB, ('ci.yml', 'ios-tests')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
@@ -27,6 +28,8 @@ FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
 FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
 FIXTURE_SLOT_PREFIX = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
+# The main producer uses Bitrise slot 2 but retains its original GitHub slot 3.
+CORE_BUILD_GROUP = "${{ " + FIXTURE_TRUSTED + " && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}"
 FIXTURE_CONSUMER_TRUSTED = FIXTURE_TRUSTED + " && matrix.provider == 'bitrise'"
 FIXTURE_CONSUMER_RUNNER = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
 FIXTURE_CONSUMER_SLOT_PREFIX = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
@@ -206,12 +209,16 @@ def validate_workflows(paths, policy=POLICY):
                 labels = [labels] if isinstance(labels, str) else labels
                 require(job.get('runs-on') not in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER) and
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
-                        f'Bitrise routing is restricted to reviewed fixture jobs and core consumers: {identity}')
+                        f'Bitrise routing is restricted to reviewed native jobs: {identity}')
             slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
             matrix_group = FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
             slot_count = 3 if routed else 5
             if type(expected) is int:
-                require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
+                if identity == CORE_BUILD_JOB:
+                    require(expected == 3 and concurrency['group'] == CORE_BUILD_GROUP,
+                            f'Wrong main producer dual-provider slots: {identity}')
+                else:
+                    require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
                 require('strategy' not in job or 'matrix' not in job['strategy'],
                         f'Static slot policy cannot silently accept a new matrix: {identity}')
             else:

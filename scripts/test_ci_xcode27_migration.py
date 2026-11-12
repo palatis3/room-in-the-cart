@@ -62,6 +62,29 @@ class Xcode27MigrationTests(unittest.TestCase):
             jobs = parse_workflow(ROOT / '.github/workflows' / workflow)[0]['jobs']
             step = next(s for s in jobs[name]['steps'] if s.get('name') == 'Require the reviewed Xcode 27.1 toolchain')
             command = step['run']
+            self.assertIn('if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then', command)
+            self.assertIn('bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer', command)
+            self.assertIn('Build version 27A9275', command)
+            if (workflow, name) == ('ci.yml', 'ios-build'):
+                producer = jobs[name]
+                self.assertEqual(producer['timeout-minutes'], 75)
+                steps = producer['steps']
+                cache = next(s for s in steps if s.get('id') == 'compilation-cache')
+                self.assertEqual(cache['run'], 'bash scripts/activate_bitrise_xcode_cache.sh')
+                self.assertEqual(cache['if'], "runner.environment == 'self-hosted'")
+                self.assertIs(cache['continue-on-error'], True)
+                self.assertEqual(cache['timeout-minutes'], 3)
+                warning = next(s for s in steps if s.get('name') == 'Report unavailable optional compilation cache')
+                self.assertEqual(warning['if'], "steps.compilation-cache.outcome == 'failure'")
+                self.assertIn('::warning::', warning['run'])
+                build = next(s for s in steps if s.get('id') == 'build')
+                self.assertLess(steps.index(step), steps.index(cache))
+                self.assertLess(steps.index(cache), steps.index(warning))
+                self.assertLess(steps.index(warning), steps.index(build))
+                self.assertNotIn('continue-on-error', build)
+                self.assertNotIn('if', build)
+                self.assertIn('set -o pipefail', build['run'])
+                self.assertIn('build-for-testing', build['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
             code = command.split("python3 - <<'PYCODE'\n", 1)[1].rsplit('\nPYCODE', 1)[0]

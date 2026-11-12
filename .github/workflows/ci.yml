@@ -418,10 +418,10 @@ jobs:
   ios-build:
     needs: source-checks
     concurrency:
-      group: ritc-macos-slot-3
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}
       queue: max
       cancel-in-progress: false
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
     # Includes the existing 40-minute model execution step on the prepared
     # producer. This composite cap replaces separate build/model jobs.
     timeout-minutes: 75
@@ -436,7 +436,28 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected core producer runtime: {runtime}")
+          print(f"Core producer runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
@@ -446,6 +467,15 @@ jobs:
         run: |
           swift --version
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Activate Bitrise Xcode compilation cache
+        id: compilation-cache
+        if: runner.environment == 'self-hosted'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Report unavailable optional compilation cache
+        if: steps.compilation-cache.outcome == 'failure'
+        run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
       - name: Build iPhone simulator test products once
         id: build
         shell: bash

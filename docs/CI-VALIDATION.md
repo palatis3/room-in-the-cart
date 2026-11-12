@@ -87,9 +87,19 @@ the existing fixture test rows are distributed across five GitHub and three
 Bitrise lanes without duplicating cases. Core groups except UI05, plus deep,
 wire, performance and CodeQL, share the five GitHub queues. UI05 uses Bitrise0
 for trusted events and its original GitHub0 slot for external/noncanonical events.
-The GitHub producer and complete compiled manifest stay intact; the next ordinary
-required UI05 execution must qualify GitHub-produced core products on Bitrise.
-The prior cross-provider pilot covered the opposite direction only. Each Bitrise lane also gets
+Candidate640c0aef still uses the GitHub producer; its ordinary UI05 execution must
+qualify GitHub-produced core products on Bitrise. The prepared successor moves
+only the main producer to Bitrise2 for trusted events, with an explicit GitHub3
+fallback. It retains the complete compiled manifest, model execution and gate,
+artifact identity,75-minute limit and exact toolchain/runtime checks. The prior
+9b producer spent353seconds compiling,424seconds discovering and237seconds
+running models; current640 compilation takes347seconds. Compilation caching
+can reduce build work, while discovery and model execution remain required.
+This moves work off GitHub3 and initially fills the third Bitrise build lane,
+but can delay Bitrise2 fixture consumers; measure the next complete batch before
+claiming net savings. Main core production/model execution on Bitrise and its
+consumer results remain unqualified until that ordinary batch. The prior
+cross-provider fixture pilot is a separate scope. Each Bitrise lane also gets
 one existing long contributor group: balanced-04 on lane 0, balanced-02 on lane 1,
 and balanced-05 on lane 2. The first combined batch finished all nine initially
 assigned Bitrise consumers while GitHub still had fixture, core UI and billing
@@ -108,21 +118,30 @@ The subsequent9b batch finished GitHub3's last row at01:52:22UTC, while UI09
 still waited behind financial-fields and SpanishFoodEditor fixtures onGitHub4.
 Its single slot reassignment uses that observed repository-lane opportunity;
 it does not establish account-wide idle capacity or measured future savings.
-External fork PRs and noncanonical repositories route Bitrise-designated work
-to GitHub slots0–2, within the existing five-slot cap. All fixture selections and required gates
+External fork PRs and noncanonical repositories route Bitrise-designated fixture
+work to GitHub slots0–2 and the main producer to its original GitHub3 slot,
+within the existing five-slot cap. All fixture selections and required gates
 remain intact. Keep GitHub's fork approval controls enabled; workflow expressions
 alone are not a security boundary against changes in an untrusted PR. GitHub's
 repository policy now requires approval for all external contributors, verified
 through the API on November11.
 
-The two Bitrise fixture producers activate Xcode compilation caching before the
-build in a separate step. The CLI is pinned to3.19.5 and its official archive
+The two Bitrise fixture producers and the prepared main producer activate Xcode
+compilation caching before the build in a separate step. The CLI is pinned to3.19.5 and its official archive
 SHA256; Build Hub supplies workspace authentication without a repository token.
 Cache activation is optional for build correctness and reports a warning on
 failure; required compilation and test outcomes still decide the gate. Consumers
 restore the producer's exact test products and always execute their selected
 tests. A cold cache is expected on the first build; measure subsequent useful
 builds rather than rerunning unchanged tests merely to populate it.
+
+On640c0aef, the two fixture build invocations report Healthy remote cache and
+280/293 task hits (95.56%): Dinner24.850seconds and contributor28.153seconds.
+Their later test-enumeration invocations correctly report no cache activity;
+do not mistake the job's last cache notice for the compilation report. Verified
+original-log hashes and invocation identities are retained in
+`.build/CombinedCandidate4cad300cNov11/cache-verification.json`. These are fixture
+compilation measurements, not projected main-producer or whole-batch timings.
 
 The owner activated trials on November11. Build Hub displayed an end date of
 November25; the completed Build Cache wizard confirms November11–December11.

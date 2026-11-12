@@ -4,8 +4,26 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint — November 11
 
-Source **4cad300c23ad12cf98a7de75d87b206a7d08c51b** is frozen for the next
-combined qualification after the fully terminal9b554506 batch. All988 source
+Published640c0aef is actively running its five automatic workflows recorded in
+`.build/CombinedCandidate4cad300cNov11/publication.json`. A local successor moves
+only the main app/model producer to trusted Bitrise2 with the existing pinned
+compilation cache, retaining GitHub3 fallback and all original products, model
+gates and limits. Thirty affected workflow/toolchain/core-selection checks and
+18-node actionlint pass; root and independent Astra review find no blocker.
+Keep640 running and hold this change for the next grouped candidate. Do not
+push or dispatch a duplicate solely for this routing change. Main production
+and models on Bitrise, downstream consumption and timing gains require actual
+qualification. Details are in `.build/BitriseCoreProducerNov11/review.json`.
+
+Both640 sanitizer jobs now pass580 cases each with3declared wire-only skips;
+all five corrected shopper fixtures execute once and pass with no sanitizer
+findings. The unsigned Release iPhone build also passes. The two Bitrise fixture
+builds report Healthy remote cache,95.56% task reuse and24.850/28.153seconds.
+Private sanitizer/cache receipts are in the current publication directory.
+Remaining current native/UI jobs and release acceptance are still incomplete.
+
+Source **4cad300c23ad12cf98a7de75d87b206a7d08c51b** was frozen for the current
+640c0aef qualification after the fully terminal9b554506 batch. All988 source
 controls pass17.425s, plus18queue-node/actionlint, the live Node22.23.5 guard,
 generated theme/project, localization and shard-shell checks. The source receipt
 is `.build/SourceContractsNov11/combined-4cad300c/receipt.json`.
@@ -55,6 +73,7 @@ lagged the final delivery completion. Recheck live state before dispatching. Upd
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
+| Main producer and Bitrise cache | Locally prepared after640: trusted Bitrise2, original GitHub3 fallback, existing optional pinned cache and exact platform preflight. Thirty affected checks and18-node lint pass; independent Astra review approves. | Keep current640 workflows running. Hold for the next grouped candidate; then verify original full model/product/consumer results and measure compilation plus whole-batch timing. No extra cache-warming or duplicate run. Private review: `.build/BitriseCoreProducerNov11/review.json`. |
 | 4cad300c combined qualification | All988 source checks and the complete cheap preflight pass. Affected native checks and final Astra review are recorded above and in the scoped rows below. CoreUI05→Bitrise0 andUI09→GitHub3 retain the five/three caps, selectors and strict gates. Cook target and reverse-provider UI05 execution remain open. | Read `.build/CombinedCandidate4cad300cNov11/publication.json` and live refs before acting. If absent, publish the frozen source and documentation in one atomic push; if present, monitor only its five automatic workflows. Do not dispatch duplicates, repeat unchanged passing native checks, suppress failures or claim a combined pass. |
 | Previous9b554506 combined qualification | All five workflows are terminal on9b: core43125120190, fixtures43125120150 anddeep43125120200 fail; security43125120168 andnative-wire43125120189 pass. Core66/69 andfixtures21/26 pass. All920models, unsigned Release, packages/AddressSanitizer580with3wire-only skips, service1054unit/448database/15operations andnative-wire24Node/80Swift pass. Core failures are UI02SegmentID, UI04second-quote switch andUI05reminder, each corrected locally below. | Preserve original logs and `.build/CombinedCandidate95effNov11/terminal-preflight.json`. Fixture failures and test-fixture race remain scoped to their reviewed local corrections; cook remains unexercised. Swift CodeQL/StoreKit lost their runners with unavailable original logs. No duplicate recheck or rawRecordsMedia access. This batch is not qualified; the prepared successor requires its own complete results. |
 | 9b carry-test fixture data race | Original ThreadSanitizer130875121186 reports two words of captured echoedRequest: the async test writes ShopperClientTests129 while the CFNetwork mock callback reads109. The ordinary case says passed, but sanitizer diagnostics and process signal6 correctly fail the job. This is test-fixture shared state; no production race is established. A bounded same-file audit identifies four sibling fixtures with the same unguarded callback/test access pattern; those are source-established exposures, not four additional observed runtime failures. | One NSLock per affected test now protects shared fixture values, including assertion snapshots and compound role/capability changes. Handler locking ends before protocol callbacks; no lock spans await. Astra approves both diffs with no blockers. The original focused case passes1/1 under ThreadSanitizer. After all five fixture corrections, the full existing HouseholdClient package44435 passes242with3declared wire-only skips,0sanitizer warnings and raw exit0. Compiled inventory, linked sanitizer and source/product hashes are verified in `.build/CarryFixtureThreadSanitizerNov11/sibling-state/validation.json`; earlier focused/full evidence remains in its parent. No suppression, production change, new helper or new test was added. Hold the reviewed corrections until the current cohort yields useful results; no unchanged native repeat. |
