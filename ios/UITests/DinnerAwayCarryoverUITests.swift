@@ -90,7 +90,9 @@ import XCTest
         }
         XCTAssertTrue(nativeSwitch.isHittable && scrollableArea().insetBy(dx: 0, dy: 8).contains(nativeSwitch.frame),
                       "The native switch must be clear of the keyboard and toolbar")
-        if nativeSwitch.value as? String == "0" { nativeSwitch.tap() }
+        if nativeSwitch.value as? String == "0" {
+            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        }
         let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             nativeSwitch.value as? String == "1" && control.value as? String == "1"
         }, object: nil)
