@@ -22,7 +22,8 @@ concurrency:
 jobs:
   native-wire:
     concurrency:
-      group: ritc-macos-slot-4
+      # Use the gap before fixture builds finish so Swift CodeQL can start on slot 4.
+      group: ritc-macos-slot-3
       queue: max
       cancel-in-progress: false
     runs-on: xcode-27

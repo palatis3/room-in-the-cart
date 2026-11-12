@@ -115,6 +115,8 @@ The native queues stay independent: `ritc-macos-slot-0..4`,
 `ritc-bitrise-slot-0..2` and `ritc-bitrise-m4-slot-0..5`. The main app/model
 producer uses the larger M2 slot 2 with its original GitHub 3 fallback. Both
 fixture producers remain on M2 slots 0/1, and UI05 remains on M2 slot 0.
+The native Swift HTTPS/PostgreSQL job uses GitHub slot 3. On `a5607f91`, it occupied slot 4 for 6m38s, overlapping the first 6m05s after source checks passed. Swift CodeQL also needed slot 4 and finished last after 49 minutes of work. The first slot 3 fixture started 43s before the wire job finished. On `9e9b42cc`, CodeQL started four seconds after the wire job finished, while the first slot 3 fixture overlapped only its final 1m17s. Compare the interval from source-check completion to CodeQL start, and the time to the last required result, on the next full PR run. [Completed core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43275490695) · [Native wire run](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488957) · [Fixture timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968).
+
 The following jobs share the six M4 slots.
 
 | Job or group | M4 slot | Original GitHub fallback |
