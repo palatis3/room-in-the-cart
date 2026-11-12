@@ -74,6 +74,11 @@ release requirements and known failures remain visible.
   Enter related visible fields together and verify the values and saved result.
   When checking that a sheet closed, query its identified toolbar button and
   verify the underlying screen. Keep its existing deadline and assertions.
+  When the failure snapshot already contains the intended control, use its
+  recorded accessibility type and identifier in the affected query. The
+  November 12 pickup, request and delivery logs show that a search across
+  all descendants timed out while the button or text row was on screen.
+  Rerun the original user journey and retain its saved-state assertions.
 - Batch related fixes before one integration run. Run broad regression on the
   combined merge candidate and applicable release checks before distribution;
   do not require that full batch for every intermediate commit.
