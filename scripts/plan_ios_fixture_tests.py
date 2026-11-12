@@ -178,6 +178,8 @@ def matrix(inventory=None):
         "contributor-balanced-04": 1,
         "contributor-balanced-05": 5,
         "SharedDeliveryUITests-recovery-cook-and-closeout": 3,
+        # This journey otherwise queues directly ahead of the bilingual StoreKit run.
+        "SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 4,
         "SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 1,
         "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
         "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,

@@ -103,8 +103,10 @@ The following jobs share the six M4 slots.
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
 | Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
 | Delivery recovery/cook/closeout and core UI04 | 3 | 1 |
-| Core UI02 and the filled financial fields fixture | 4 | 2 and 4 |
+| Core UI02, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 4 and 2 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
+
+On `cd85377c`, the bilingual StoreKit job waited 38m22s for GitHub slot 2 after the build finished. The Spanish skipped-dinner Undo journey occupied that slot for the last 15m37s of the wait. On trusted builds its existing selector now uses M4 slot 4. On the next full revision, compare the StoreKit start, the M4 jobs’ finish times and the last required check. The whole-batch gain has not yet been measured.
 
 In the November 12 combined run, the final M4 test finished at 06:32 UTC.
 UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.

@@ -46,7 +46,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('github', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('github', 1), ('github', 2), ('github', 3),
+            ('github', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('bitrise-m4', 0), ('github', 1),
         ])
@@ -75,6 +75,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('contributor-balanced-03', 4, 2),
             ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3),
             ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
+            ('SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple', 2, 4),
             ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
             ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5)])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
