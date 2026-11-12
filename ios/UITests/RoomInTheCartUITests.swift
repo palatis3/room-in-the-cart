@@ -165,7 +165,9 @@ final class RoomInTheCartUITests: XCTestCase {
         launch(language: "es")
         XCTAssertEqual(app.buttons["newComparison"].label, "Comparar paquetes")
         openEmptyComparison()
-        enterComparison(item: "Abuela’s tortillas", firstQuantity: "8")
+        type([("itemName", "Abuela’s tortillas")])
+        type([("needed", "12"), ("aQuantity", "8"), ("aPrice", "3"),
+              ("bQuantity", "6"), ("bPrice", "2")])
         compare()
         assertScope("Comparación de un solo artículo")
         assertContains("Abuela’s tortillas")
