@@ -147,9 +147,10 @@ import XCTest
             capture("Manual-recovery-removed-row-replaced-with-new-ingredient")
         }
         let ingredientID = String(name.identifier.dropLast(".name".count))
-        fill("Beans", into: ingredientID + ".name", useVisibleCenter: true)
+        let nameID = ingredientID + ".name", amountID = ingredientID + ".amount"
+        fill("Beans", into: nameID, useVisibleCenter: true, control: app.textFields[nameID])
         choose("Reviewed matching food", value: "Beans")
-        fill("4", into: ingredientID + ".amount", useVisibleCenter: true)
+        fill("4", into: amountID, useVisibleCenter: true, control: app.textFields[amountID])
         enableSwitch("I reviewed every food identity, usable unit and inherited exclusion")
         let preview = element("mealRecovery.preview")
         XCTAssertTrue(preview.waitForExistence(timeout: 5) && preview.isHittable && preview.isEnabled)
