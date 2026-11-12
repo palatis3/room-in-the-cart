@@ -34,10 +34,6 @@ class PerformanceSetupTests(unittest.TestCase):
         elif command[1:3] == ["simctl", "listapps"]:
             name, value = "list", b"raw plist inventory"
             self.assertEqual(command[-1], SIMULATOR)
-        elif command[1:3] == ["simctl", "pbcopy"]:
-            name, value = "paste", None
-            self.assertEqual(command[-1], SIMULATOR)
-            self.assertEqual(kwargs["stdin"].read(), self.fixture.read_bytes())
         else:
             name, value = "boot", None
             self.assertEqual(Path(command[1]).name, "boot_ios_simulator.py")
@@ -65,21 +61,21 @@ class PerformanceSetupTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "passed")
         self.assertNotIn("com.apple.Preferences", self.output.read_text())
 
-    def test_rendered_and_scroll_seed_once_after_verified_absence(self):
+    def test_rendered_and_scroll_verify_the_fixture_after_checking_app_absence(self):
         for case in ("rendered", "scroll"):
             with self.subTest(case=case):
                 self.calls.clear()
                 receipt = self.run_setup(case)
-                self.assertEqual(self.calls, ["boot", "list", "convert", "paste"])
+                self.assertEqual(self.calls, ["boot", "list", "convert"])
                 self.assertEqual(receipt["status"], "passed")
-                self.assertEqual(receipt["stages"][-1]["stage"], "seed-pasteboard")
+                self.assertEqual(receipt["schemaVersion"], 2)
+                self.assertEqual(receipt["stages"][-1]["stage"], "verify-paste-fixture")
 
     def test_each_command_failure_is_fatal_and_stops_later_commands(self):
         for name, stage, calls in (
             ("boot", "boot", ["boot"]),
             ("list", "list-installed-apps", ["boot", "list"]),
             ("convert", "verify-app-absent", ["boot", "list", "convert"]),
-            ("paste", "seed-pasteboard", ["boot", "list", "convert", "paste"]),
         ):
             with self.subTest(command=name):
                 self.failing = name
@@ -112,14 +108,22 @@ class PerformanceSetupTests(unittest.TestCase):
                 self.assertEqual(self.calls, ["boot", "list", "convert"])
                 self.assertEqual(json.loads(self.output.read_text())["status"], "failed")
 
-    def test_missing_fixture_is_attributed_to_seed_without_invoking_pbcopy(self):
+    def test_missing_fixture_is_attributed_to_fixture_setup(self):
         self.fixture.unlink()
         with self.assertRaises(FileNotFoundError):
             self.run_setup()
         receipt = json.loads(self.output.read_text())
-        self.assertEqual(receipt["stages"][-1]["stage"], "seed-pasteboard")
+        self.assertEqual(receipt["stages"][-1]["stage"], "verify-paste-fixture")
         self.assertEqual(receipt["status"], "failed")
-        self.assertNotIn("paste", self.calls)
+        self.assertEqual(self.calls, ["boot", "list", "convert"])
+
+    def test_unusable_fixture_fails_before_xctest(self):
+        for value in (b"", b"   \n", b"\xff"):
+            with self.subTest(value=value):
+                self.fixture.write_bytes(value)
+                with self.assertRaises(ValueError):
+                    self.run_setup()
+                self.assertEqual(json.loads(self.output.read_text())["status"], "failed")
 
     def test_ambiguous_device_alias_never_invokes_simctl(self):
         with patch("prepare_ios_performance_simulator.subprocess.run") as command:

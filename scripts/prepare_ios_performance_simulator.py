@@ -17,7 +17,7 @@ def prepare(simulator, case, fixture, output):
     UUID(simulator)  # Never operate on the ambiguous 'booted' alias.
     if case not in {"launch", "rendered", "scroll"}:
         raise ValueError("Unknown performance case")
-    receipt = {"schemaVersion": 1, "case": case, "status": "running", "stages": []}
+    receipt = {"schemaVersion": 2, "case": case, "status": "running", "stages": []}
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -70,10 +70,10 @@ def prepare(simulator, case, fixture, output):
 
     stage("verify-app-absent", require_absent)
     if case != "launch":
-        def paste():
-            with Path(fixture).open("rb") as stream:
-                subprocess.run(["xcrun", "simctl", "pbcopy", simulator], stdin=stream, check=True)
-        stage("seed-pasteboard", paste)
+        def verify_fixture():
+            if not Path(fixture).read_text(encoding="utf-8").strip():
+                raise ValueError("Expected a nonempty UTF-8 pickup fixture")
+        stage("verify-paste-fixture", verify_fixture)
     receipt["status"] = "passed"
     save()
 

@@ -287,8 +287,9 @@ def verify_config(c):
     require(sha(c['plan'])==c['planSHA256'],'plan_changed')
     require(sha(c['setupReceipt'])==c['setupReceiptSHA256'],'setup_changed')
     setup=read(c['setupReceipt'])
-    require(setup['status']=='passed' and setup['case']=='scroll'
-            and [s['stage'] for s in setup['stages']]==['boot','list-installed-apps','verify-app-absent','seed-pasteboard']
+    fixture_stage = {1: 'seed-pasteboard', 2: 'verify-paste-fixture'}.get(setup.get('schemaVersion'))
+    require(setup['status']=='passed' and setup['case']=='scroll' and fixture_stage is not None
+            and [s['stage'] for s in setup['stages']]==['boot','list-installed-apps','verify-app-absent',fixture_stage]
             and all(s['status']=='passed' for s in setup['stages']),'setup_not_passed')
     for name,digest in c['inputReceipts'].items():require(sha(Path(c['evidenceRoot'])/name)==digest,'input_receipt_changed:'+name)
     from preserve_performance_store import owned, binding, load

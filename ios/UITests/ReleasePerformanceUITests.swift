@@ -1,5 +1,6 @@
 #if RELEASE
 import XCTest
+import UIKit
 import MachO
 import Darwin
 
@@ -223,11 +224,14 @@ final class ReleasePerformanceUITests: XCTestCase {
         XCTAssertTrue(startShop.label.contains("Start pickup"), "Install the Release app on a fresh simulator for each pickup test")
         tap(startShop)
         app.renameSelectedPickup("Fictional weekly pickup")
+        // The test runner acts as the app the shopper copied the list from.
+        // Keep the fictional clipboard item on this simulator.
+        UIPasteboard.general.setItems([["public.utf8-plain-text": Data(fixture.utf8)]], options: [.localOnly: true])
         tap(element("ledgerImport"))
 
         let paste = app.buttons["Paste list"]
         XCTAssertTrue(paste.waitForExistence(timeout: 10))
-        XCTAssertTrue(paste.isEnabled, "Copy the ReleaseLedger500 fixture to this simulator before running the test")
+        XCTAssertTrue(paste.isEnabled, "Native Paste must accept the runner’s plain-text fixture")
         // iOS 17 can expose the entire Form row for the leading Paste control.
         paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
         let editor = element("ledgerImportText")
