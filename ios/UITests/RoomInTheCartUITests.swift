@@ -553,7 +553,9 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func saveAndAssertDurableStatus(savedLabel: String = "Saved on this iPhone") {
-        tap(app.buttons["saveComparison"])
+        let save = app.buttons["saveComparison"]
+        revealFullyInComparison(save)
+        save.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         assertSavedStatus(savedLabel)
         XCTAssertFalse(app.buttons["saveComparison"].exists)
     }
@@ -593,6 +595,31 @@ final class RoomInTheCartUITests: XCTestCase {
         id == "itemName" ? element(id) : app.textFields[id]
     }
 
+    private func focusComparisonInput(_ field: XCUIElement) {
+        reveal(field)
+        if field.elementType == .textView {
+            // iOS 17 can choose the very top edge of an empty multiline editor.
+            field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        } else {
+            field.tap()
+        }
+    }
+
+    private func dismissComparisonKeyboard(_ done: XCUIElement) {
+        let keyboard = app.keyboards.firstMatch
+        // Synthesized typing can temporarily move Done onto the next keyboard's Backspace key.
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard keyboard.exists, done.exists else { return false }
+            let pad = keyboard.frame, bar = done.frame
+            return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+        }, object: nil)
+        guard XCTWaiter.wait(for: [visible], timeout: 5) == .completed else {
+            XCTFail("Done must be above the visible comparison keyboard")
+            return
+        }
+        done.tap()
+    }
+
     private func type(_ fields: [(id: String, text: String)]) {
         let done = app.buttons[doneIdentifier]
         for (index, entry) in fields.enumerated() {
@@ -601,13 +628,13 @@ final class RoomInTheCartUITests: XCTestCase {
             // A partially exposed row can be hittable underneath the keyboard accessory.
             if index > 0, done.exists,
                !field.exists || !field.isHittable || field.frame.midY >= done.frame.minY {
-                done.tap()
+                dismissComparisonKeyboard(done)
             }
-            tap(field)
+            focusComparisonInput(field)
             let fieldDone = app.buttons["comparison.done." + id]
             if !fieldDone.waitForExistence(timeout: 3) {
-                if done.exists { done.tap() }
-                tap(field)
+                if done.exists { dismissComparisonKeyboard(done) }
+                focusComparisonInput(field)
                 guard fieldDone.waitForExistence(timeout: 3) else {
                     XCTFail("The comparison field must own keyboard focus before typing: " + id)
                     return
@@ -615,23 +642,14 @@ final class RoomInTheCartUITests: XCTestCase {
             }
             let keyboard = app.keyboards.firstMatch
             XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
-            if id == "itemCap" {
-                // Synthesized typing briefly hides the decimal pad and moves Done over Backspace.
-                for character in text {
-                    let key = keyboard.keys[String(character)]
-                    XCTAssertTrue(key.isHittable)
-                    key.tap()
-                }
-                XCTAssertEqual(field.value as? String, text)
-                XCTAssertLessThanOrEqual(fieldDone.frame.maxY, keyboard.frame.minY + 1)
-            } else if field.exists {
+            if field.exists {
                 field.typeText(text)
             } else {
                 // At accessibility sizes the focused row can scroll out of the snapshot.
                 app.typeText(text)
             }
         }
-        done.tap()
+        dismissComparisonKeyboard(done)
         for (id, text) in fields {
             let field = comparisonInput(id)
             reveal(field)
