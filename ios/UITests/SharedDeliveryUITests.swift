@@ -113,7 +113,7 @@ import XCTest
         tap(app.buttons["sharedShop.deliveryEvidence"])
     }
     private func reveal(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        if target.waitForExistence(timeout: 3), target.isHittable { return }
+        if target.exists || target.waitForExistence(timeout: 3), target.isHittable { return }
         for step in 0..<16 {
             let exists = target.exists
             if exists && target.isHittable { return }
@@ -380,7 +380,7 @@ import XCTest
             tap(preview)
         }
         func assertFields(_ identifier: String, _ fields: [(String,String)], line: UInt = #line) {
-            let row = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            let row = app.otherElements.matching(identifier: identifier).firstMatch
             reveal(row, line: line)
             let snapshot: XCUIElementSnapshot
             do { snapshot = try row.snapshot() }

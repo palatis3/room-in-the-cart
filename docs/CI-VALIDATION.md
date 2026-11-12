@@ -79,6 +79,11 @@ release requirements and known failures remain visible.
   November 12 pickup, request and delivery logs show that a search across
   all descendants timed out while the button or text row was on screen.
   Rerun the original user journey and retain its saved-state assertions.
+  In the shared delivery tests, check whether a control already exists before
+  starting the three-second existence wait. On the same iOS 27.0 simulator,
+  the freezer correction journey started 63 polling waits before this change
+  and four afterward. It passed in 142.92s and 83.17s respectively. The
+  remaining waits, scrolling and quantity checks still run when needed.
 - Batch related fixes before one integration run. Run broad regression on the
   combined merge candidate and applicable release checks before distribution;
   do not require that full batch for every intermediate commit.
