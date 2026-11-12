@@ -84,10 +84,8 @@ private struct SharedMealIdeaEditor: View {
                 Text(draft.source == "app_template" ? ht("Source: app-owned editable template") : ht("Source: household manual entry"))
                 Stepper(value: $draft.servings, in: 1...1000) { LabeledContent(ht("Suggested servings"), value: draft.servings.formatted()) }
                 number(ht("Preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
-                TextField(ht("Assumed extras, one per line"), text: lines($draft.assumedExtras), axis: .vertical)
-                    .focused($inputFocus, equals: "extras")
-                TextField(ht("Shared household exclusions, one per line"), text: lines($draft.exclusions), axis: .vertical)
-                    .focused($inputFocus, equals: "exclusions")
+                multilineField(ht("Assumed extras, one per line"), values: $draft.assumedExtras, focus: "extras")
+                multilineField(ht("Shared household exclusions, one per line"), values: $draft.exclusions, focus: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
             }.disabled(!own || model.pending != nil)
             ForEach(draft.ingredients) { snapshot in
@@ -166,6 +164,15 @@ private struct SharedMealIdeaEditor: View {
             Button(ht("Cancel")) { reviewApproval = false }
                 .accessibilityIdentifier("household-idea-cancel-approval")
         } message: { Text(ht("This saves adult approval only. Linking a meal and changing shared packs require separate reviews.")) }
+    }
+    private func multilineField(_ title: String, values: Binding<[String]>, focus: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.subheadline).accessibilityHidden(true)
+            TextField("", text: lines(values), axis: .vertical)
+                .focused($inputFocus, equals: focus)
+                .accessibilityLabel(title)
+                .frame(minHeight: 44)
+        }
     }
     private func lines(_ value: Binding<[String]>) -> Binding<String> {
         Binding(get: { value.wrappedValue.joined(separator: "\n") },
