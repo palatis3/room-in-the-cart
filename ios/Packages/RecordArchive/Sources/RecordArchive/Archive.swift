@@ -96,6 +96,7 @@ public struct ArchiveReceipt: Codable, Equatable, Sendable {
 }
 
 public enum ArchiveCodec {
+    static let supportedMinorVersions = 0...2
     public static let maximumFileBytes = 8 * 1_048_576
     public static let maximumRecords = 500
     public static let maximumNativeBytes = 4 * 1_048_576
@@ -191,7 +192,7 @@ public enum ArchiveCodec {
         guard Set(object.keys).isSubset(of: allowed) else { throw ArchiveError.unsupportedRecord }
     }
     public static func validate(_ value: ArchiveEnvelope) throws {
-        guard value.formatMajor == 1, (0...2).contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
+        guard value.formatMajor == 1, supportedMinorVersions.contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
         guard value.projectionID == projection(for: value.documentKind) else { throw ArchiveError.unsupportedProjection }
         guard identifier(value.originNamespace), identifier(value.sourceRevisionID), value.parentRevisionID.map(identifier) ?? true,
               value.shopID.map(identifier) ?? true, value.producerBuild.utf8.count <= 128 else { throw ArchiveError.invalidIdentity }

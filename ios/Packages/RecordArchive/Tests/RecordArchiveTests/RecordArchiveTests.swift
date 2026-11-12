@@ -123,6 +123,12 @@ final class RecordArchiveTests: XCTestCase {
         let restored = await registry.list(); XCTAssertEqual(restored.count, 2)
         let reimport = try await registry.review(archive); XCTAssertTrue(reimport.canApply)
     }
+    func testSupportReportNamesSupportedFormatsAndKeepsDiagnosticCodesInBothLanguages() {
+        let spanish = ReadableArchive.supportReport(error: .invalidKey, recordCount: 2, locale: Locale(identifier: "es_US"))
+        XCTAssertEqual(spanish, "Soporte de Room in the Cart\nFormatos compatibles: 1.0, 1.1, 1.2\nNúmero de registros: 2\nEstado: invalidKey")
+        let english = ReadableArchive.supportReport(error: nil, recordCount: 0, locale: Locale(identifier: "en_US"))
+        XCTAssertEqual(english, "Room in the Cart support\nSupported archive formats: 1.0, 1.1, 1.2\nRecord count: 0\nStatus: ok")
+    }
     func testRecipeGraphPreservesOriginalTextAndReportsSkippedFieldsAndDuplicates() throws {
         let data = Data(#"{"@context":"https://unreachable.invalid/context","formatVersion":1,"@graph":[{"@type":"Recipe","name":"Arroz","recipeYield":"three plates + lunch","recipeIngredient":["2 cans (15 oz) tomatoes","salt to taste"],"recipeInstructions":[{"@type":"HowToStep","text":"Keep original words."}],"url":"https://example.invalid/recipe","notes":"Family note","nutrition":{"calories":"unknown"}},{"@type":"Person","name":"ignored"},{"@type":"Recipe","name":"Arroz","recipeYield":"three plates + lunch","recipeIngredient":["2 cans (15 oz) tomatoes","salt to taste"],"recipeInstructions":[{"@type":"HowToStep","text":"Keep original words."}],"url":"https://example.invalid/recipe","notes":"Family note"}]}"#.utf8)
         let report = try RecipeImporter.stage(data)

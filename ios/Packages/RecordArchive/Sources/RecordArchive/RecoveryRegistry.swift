@@ -310,7 +310,14 @@ public enum ReadableArchive {
             return lines.joined(separator: "\n")
         }.joined(separator: "\n\n")
     }
-    public static func supportReport(error: ArchiveError?, recordCount: Int) -> String {
-        "Room in the Cart support\nArchive format: 1.0\nRecord count: \(max(0, recordCount))\nStatus: \(error.map { String(describing: $0) } ?? "ok")\nNo titles, receipt text, identifiers, account data or paths included."
+    public static func supportReport(error: ArchiveError?, recordCount: Int, locale: Locale = .current) -> String {
+        let spanish = locale.language.languageCode?.identifier == "es"
+        let formats = ArchiveCodec.supportedMinorVersions.map { "1.\($0)" }.joined(separator: ", ")
+        let count = max(0, recordCount)
+        let code = error.map { String(describing: $0) } ?? "ok"
+        if spanish {
+            return "Soporte de Room in the Cart\nFormatos compatibles: \(formats)\nNúmero de registros: \(count)\nEstado: \(code)"
+        }
+        return "Room in the Cart support\nSupported archive formats: \(formats)\nRecord count: \(count)\nStatus: \(code)"
     }
 }
