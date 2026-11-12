@@ -277,8 +277,9 @@ struct RecordsToolsView: View {
         }
     }
     private func reviewSection(_ review: RecoveryReview) -> some View {
-        Section {
-            Text(review.envelope.originNamespace).font(.caption).textSelection(.enabled)
+        let currentVersions = model.currentImportVersions
+        return Section {
+            importDetail(recordsText("File source"), value: review.envelope.originNamespace)
             // File export is a separate event from each record's source save.
             Text(RecordsDatePresentation.exportedAt(review.envelope.exportedAtMilliseconds)).accessibilityIdentifier("records.importExportDate")
             if let report = model.recipeReport {
@@ -292,6 +293,7 @@ struct RecordsToolsView: View {
                     Text(dispositionLabel(row.disposition)).accessibilityIdentifier("records.importDisposition." + row.record.id)
                     Text(recordsText("Revision: ") + row.record.revision).font(.caption).textSelection(.enabled)
                     if let parent = row.record.parentRevision { Text(recordsText("Parent: ") + parent).font(.caption).textSelection(.enabled) }
+                    importVersions(row, fileKind: review.envelope.documentKind, current: currentVersions[row.id] ?? [])
                     ForEach(row.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
                 }
             }
@@ -308,6 +310,64 @@ struct RecordsToolsView: View {
                 .id("records.importReview")
                 .accessibilityFocused($importReviewFocused)
         }
+    }
+    private func importVersions(_ row: RecoveryReviewRow, fileKind: ArchiveKind,
+                                current: [RecordsImportSourceVersion]) -> some View {
+        let hasMatches = !current.isEmpty || !row.priorCopies.isEmpty
+        let label = hasMatches ? recordsText("Compare versions") : recordsText("Record details")
+        let key = importIdentityKey(row.id)
+        return DisclosureGroup(label) {
+            importDetail(recordsText("Record source"), value: row.id.origin)
+                .accessibilityIdentifier("records.importOrigin." + key)
+            importDetail(recordsText("Record ID"), value: row.id.recordID)
+                .accessibilityIdentifier("records.importRecordID." + key)
+            importVersion(heading: recordsText("In this file"), revision: row.id.revision,
+                          date: row.record.savedAtMilliseconds, kind: fileKind,
+                          referenceCount: row.record.media?.count ?? 0, projection: row.id.projection)
+                .accessibilityIdentifier("records.importFileVersion." + key)
+            ForEach(current) { version in
+                importVersion(heading: recordsText("Current work"), revision: version.revision,
+                              date: version.savedAtMilliseconds)
+                    .accessibilityIdentifier("records.importCurrentVersion." + key + "." + version.revision)
+            }
+            ForEach(row.priorCopies) { copy in
+                importVersion(heading: recordsText("Previously recovered on this iPhone"), revision: copy.id.revision,
+                              date: copy.savedAtMilliseconds, kind: copy.documentKind,
+                              referenceCount: copy.selectedReferenceCount, projection: copy.id.projection)
+                    .accessibilityIdentifier("records.importPriorVersion." + importIdentityKey(copy.id))
+            }
+        }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(
+            label: label + ", " + recordsTitle(row.record), identifier: "records.importVersions." + key))
+    }
+
+    private func importIdentityKey(_ identity: ArchiveIdentity) -> String {
+        [identity.origin, identity.recordID, identity.revision, identity.projection]
+            .map { $0.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? $0 }
+            .joined(separator: "/")
+    }
+
+    private func importDetail(_ label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(verbatim: value).textSelection(.enabled)
+        }.accessibilityElement(children: .combine)
+    }
+
+    private func importVersion(heading: String, revision: String, date: Int64,
+                               kind: ArchiveKind? = nil, referenceCount: Int = 0, projection: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(heading).font(.subheadline.bold())
+            Text(recordsText("Revision: ") + revision)
+            Text(RecordsDatePresentation.sourceSavedAt(date))
+            if let kind {
+                Text(kind == .personalRecovery ? recordsText("Personal recovery copy") : recordsText("Helper copy"))
+            }
+            if referenceCount > 0, let projection {
+                Text(String(format: recordsText("Selected references · %lld"), Int64(referenceCount)))
+                Text(String(format: recordsText("Selection ID · %@"), projection)).foregroundStyle(.secondary)
+            }
+        }.font(.caption).textSelection(.enabled).accessibilityElement(children: .combine)
     }
     @ViewBuilder private var recoveredSection: some View {
         let remaining = model.recoveredRecords.filter { !model.reopenedCopyIDs.contains($0.id) }
@@ -394,7 +454,7 @@ struct RecordsToolsView: View {
     }
     private func dispositionLabel(_ value: RecoveryDisposition) -> String {
         switch value {
-        case .absent: return recordsText("Absent here — recover separately")
+        case .absent: return recordsText("Ready to recover a separate copy")
         case .identical: return recordsText("Identical — reopen existing copy")
         case .sibling: return recordsText("Related revision — keep both copies")
         case .quarantined: return recordsText("Same identity, different content — blocked")

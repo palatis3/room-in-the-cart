@@ -9,6 +9,39 @@ final class SharedRecordArchiveTests: XCTestCase {
         let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/partial-v2.json"))
         return try SharedRecordArchiveAdapter.make(SharedRecordWire.snapshot(from: bytes))
     }
+    @MainActor func testImportRechecksHouseholdListingOnceAndWithdrawsComparisonOnAccessLoss() async throws {
+        let live = try record(), shopID = try XCTUnwrap(UUID(uuidString: live.id))
+        let source = RecordsToolsModel.selectionID(live)
+        var reads = 0, unreadable = false, authorized = true
+        let model = RecordsToolsModel(registry: try registry(), snapshot: {
+            reads += 1
+            if unreadable { throw ArchiveError.unavailable }
+            return try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shopID,
+                authorized: { authorized }, current: { live }, history: { throw ClientError.transport })
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in },
+           beginAuthorization: { { authorized } })
+        let archive = try ArchiveCodec.make(records: [live], kind: .personalRecovery, origin: "file", revision: "export")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try ArchiveCodec.encode(archive).write(to: url)
+        await model.refresh()
+        unreadable = true
+        await model.importFile(url, recipes: false)
+        let rowID = try XCTUnwrap(model.review?.rows.first).id
+        XCTAssertEqual(reads, 2)
+        XCTAssertTrue(model.currentImportVersions.isEmpty)
+        unreadable = false
+        await model.refresh()
+        XCTAssertEqual(model.currentImportVersions[rowID], [.init(revision: source.revision, savedAtMilliseconds: live.savedAtMilliseconds)])
+        XCTAssertEqual(reads, 3)
+        authorized = false
+        XCTAssertTrue(model.currentImportVersions.isEmpty)
+        authorized = true
+        model.liveSharedAccessEnded()
+        XCTAssertTrue(model.currentImportVersions.isEmpty)
+        XCTAssertEqual(reads, 3)
+    }
+
     @MainActor func testLiveRecordReadsDiscardEarlierShopDataWhenShopperAccessEnds() async throws {
         let live = try record()
         let shopID = try XCTUnwrap(UUID(uuidString: live.id))

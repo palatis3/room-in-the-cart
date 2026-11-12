@@ -44,6 +44,74 @@ final class RecordArchiveTests: XCTestCase {
         let stillNew = await registry.load(id: newCopy.records[0].id)
         XCTAssertEqual(stillNew?.record.revision, "newer")
     }
+    func testImportReviewListsOnlyMatchingSourceVersionsWithTheirOriginalDatesAndMediaSelection() async throws {
+        let url = try temporaryURL(), registry = try RecoveryRegistry(url: url)
+        let plain = record(revision: "b", saved: 600)
+        var selected = plain
+        selected.media = [.init(id: "pack", kind: .packageReference, data: Data("private label".utf8))]
+        let unknown = record(revision: "unknown-date", saved: 0)
+        var otherOrigin = record(revision: "other origin", saved: 900)
+        otherOrigin.origin = "other"
+        let ownerFile = try envelope([plain, selected, unknown, otherOrigin, record(id: "other-id")])
+        let ownerCommit = try await registry.apply(registry.review(ownerFile))
+        let helperFile = try envelope([record(revision: "a", saved: 600)], kind: .helperShop)
+        let helperCommit = try await registry.apply(registry.review(helperFile))
+        let reopened = try RecoveryRegistry(url: url)
+        let incoming = try envelope([record(revision: "new"), plain, record(id: "unrelated")])
+        let review = try await reopened.review(incoming)
+        let plainCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == plain })
+        let selectedCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == selected })
+        let unknownCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == unknown })
+        let byRevision = [helperCommit.records[0], plainCopy, selectedCopy].sorted {
+            ($0.receipt.identity.revision, $0.receipt.identity.projection) < ($1.receipt.identity.revision, $1.receipt.identity.projection)
+        } + [unknownCopy]
+        let expected = byRevision.map { saved in
+            RecoveredCopySummary(id: saved.receipt.identity, documentKind: saved.documentKind,
+                                 savedAtMilliseconds: saved.record.savedAtMilliseconds, selectedReferenceCount: saved.record.media?.count ?? 0)
+        }
+        let sibling = try XCTUnwrap(review.rows.first { $0.record.revision == "new" })
+        let identical = try XCTUnwrap(review.rows.first { $0.record == plain })
+        let absent = try XCTUnwrap(review.rows.first { $0.record.id == "unrelated" })
+        XCTAssertEqual([sibling.disposition, identical.disposition, absent.disposition], [.sibling, .identical, .absent])
+        XCTAssertEqual(sibling.priorCopies, expected)
+        XCTAssertEqual(identical.priorCopies, expected)
+        XCTAssertEqual(identical.existingCopyID, plainCopy.id)
+        XCTAssertTrue(absent.priorCopies.isEmpty)
+        XCTAssertEqual(sibling.priorCopies.last?.savedAtMilliseconds, 0)
+        XCTAssertEqual(sibling.priorCopies.filter { $0.selectedReferenceCount == 1 }.map(\.id), [selectedCopy.receipt.identity])
+    }
+
+    func testHelperAndErasedReviewHideOwnerMetadataAndConflictingBatchLeavesBytesUntouched() async throws {
+        let url = try temporaryURL(), registry = try RecoveryRegistry(url: url)
+        let owner = record(revision: "private"), other = record(revision: "sibling")
+        let commit = try await registry.apply(registry.review(envelope([owner, other])))
+        let helperFile = try envelope([record(revision: "helper")], kind: .helperShop)
+        let helperReview = try await registry.review(helperFile)
+        XCTAssertEqual(helperReview.rows[0].disposition, .sibling)
+        XCTAssertTrue(helperReview.rows[0].priorCopies.isEmpty)
+        let savedHelper = try await registry.apply(helperReview)
+        let helperVersions = try await registry.review(helperFile).rows[0].priorCopies
+        XCTAssertEqual(helperVersions.map(\.id), [savedHelper.records[0].receipt.identity])
+        XCTAssertEqual(helperVersions.map(\.selectedReferenceCount), [0])
+        let rewrapped = try await registry.review(envelope(helperFile.payload.records))
+        XCTAssertEqual(rewrapped.rows[0].priorCopies, helperVersions)
+        _ = try await registry.delete(.copy(commit.records[0].id))
+        var changed = other
+        changed.title = "Conflict"
+        let before = try Data(contentsOf: url)
+        let blocked = try await registry.review(envelope([owner, changed, record(id: "new")]))
+        let erased = try XCTUnwrap(blocked.rows.first { $0.record == owner })
+        let quarantined = try XCTUnwrap(blocked.rows.first { $0.record == changed })
+        let absent = try XCTUnwrap(blocked.rows.first { $0.record.id == "new" })
+        XCTAssertEqual([erased.disposition, quarantined.disposition, absent.disposition], [.erased, .quarantined, .absent])
+        XCTAssertTrue(erased.priorCopies.isEmpty)
+        XCTAssertNil(erased.existingCopyID)
+        XCTAssertEqual(Set(quarantined.priorCopies.map(\.id)), [savedHelper.records[0].receipt.identity, commit.records[1].receipt.identity])
+        do { _ = try await registry.apply(blocked); XCTFail("The entire batch must be refused") }
+        catch { XCTAssertEqual(error as? ArchiveError, .conflict) }
+        XCTAssertEqual(try Data(contentsOf: url), before)
+    }
+
     func testSameRevisionDifferentDigestQuarantinesEntireBatch() async throws {
         let registry = try RecoveryRegistry(url: temporaryURL())
         _ = try await registry.apply(registry.review(envelope([record()])))

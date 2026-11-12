@@ -131,6 +131,100 @@ final class EncryptedBackupTests: XCTestCase {
         XCTAssertTrue(liveOnly.isEmpty)
     }
 
+    func testSelectedMediaUsesSameOwnerBackingForBackupDatesAndKeepsRecoveryProjectionDistinct() async throws {
+        let registry = try RecoveryRegistry(url: location())
+        let plain = record(), copyID = try await restore(plain, registry: registry)
+        var withMedia = plain
+        withMedia.media = [.init(id: "pack-photo", kind: .packageReference, data: Data("saved label".utf8))]
+        let baseID = identity(plain), selectedID = identity(withMedia)
+        XCTAssertNotEqual(baseID, selectedID)
+        let file = try ArchiveCodec.make(records: [withMedia], kind: .personalRecovery, origin: "owner", revision: "file")
+        let key = EncryptedArchive.generateKey()
+        let opened = try EncryptedArchive.open(EncryptedArchive.seal(file, key: key), key: key)
+        XCTAssertEqual(opened.payload.records[0].media, withMedia.media)
+        let scope = [baseID: Set([copyID])]
+        let intent = try await registry.prepareEncryptedBackup(opened.payload.records, recoveredCopyIDs: scope)
+        try await registry.recordSuccessfulBackup(intent, savedAtMilliseconds: 30)
+        let local = try await registry.lastEncryptedBackups(for: [withMedia])
+        XCTAssertTrue(local.isEmpty, "The independent source must not inherit a recovered copy's successful export.")
+        let recovered = try await registry.lastEncryptedBackups(for: [withMedia], recoveredCopyIDs: scope)
+        XCTAssertEqual(recovered, [baseID: .init(savedAtMilliseconds: 30, revisions: [plain.revision])])
+        let withoutMedia = try await registry.lastEncryptedBackups(for: [plain], recoveredCopyIDs: scope)
+        XCTAssertEqual(withoutMedia, recovered)
+        try await registry.registerErasedMedia([.init(origin: plain.origin, mediaID: "pack-photo")])
+        try await registry.recordSuccessfulBackup(intent, savedAtMilliseconds: 40)
+        let delayed = try await registry.lastEncryptedBackups(for: [plain], recoveredCopyIDs: scope)
+        XCTAssertEqual(delayed[baseID]?.savedAtMilliseconds, 30)
+        _ = try await registry.delete(.copy(copyID))
+        let erased = try await registry.lastEncryptedBackups(for: [withMedia], recoveredCopyIDs: scope)
+        XCTAssertTrue(erased.isEmpty)
+    }
+
+    func testDistinctMediaSelectionsInOneFileRecordOneDateAndCheckEachSelectionsErasure() async throws {
+        let url = try location(), registry = try RecoveryRegistry(url: url)
+        let plain = record(), id = try await restore(plain, registry: registry)
+        var first = plain, second = plain
+        first.media = [.init(id: "one", kind: .packageReference, data: Data("one".utf8))]
+        second.media = [.init(id: "two", kind: .packageReference, data: Data("two".utf8))]
+        let file = try ArchiveCodec.make(records: [first, second], kind: .personalRecovery, origin: "owner", revision: "file")
+        let key = EncryptedArchive.generateKey()
+        let rows = try EncryptedArchive.open(EncryptedArchive.seal(file, key: key), key: key).payload.records
+        let scope = [identity(plain): Set([id])]
+        do { _ = try await registry.prepareEncryptedBackup([first, first], recoveredCopyIDs: scope); XCTFail("An exact duplicate is invalid") }
+        catch { XCTAssertEqual(error as? ArchiveError, .invalidIdentity) }
+        let intent = try await registry.prepareEncryptedBackup(rows, recoveredCopyIDs: scope)
+        try await registry.recordSuccessfulBackup(intent, savedAtMilliseconds: 10)
+        let reopened = try RecoveryRegistry(url: url)
+        let saved = try await reopened.lastEncryptedBackups(for: rows, recoveredCopyIDs: scope)
+        XCTAssertEqual(saved, [identity(plain): .init(savedAtMilliseconds: 10, revisions: [plain.revision])])
+        try await registry.registerErasedMedia([.init(origin: plain.origin, mediaID: "one")])
+        try await reopened.recordSuccessfulBackup(intent, savedAtMilliseconds: 20)
+        let surviving = try await registry.lastEncryptedBackups(for: rows, recoveredCopyIDs: scope)
+        XCTAssertEqual(surviving[identity(plain)]?.savedAtMilliseconds, 20)
+        try await registry.registerErasedMedia([.init(origin: plain.origin, mediaID: "two")])
+        try await reopened.recordSuccessfulBackup(intent, savedAtMilliseconds: 30)
+        let blocked = try await registry.lastEncryptedBackups(for: rows, recoveredCopyIDs: scope)
+        XCTAssertEqual(blocked, surviving)
+    }
+
+    func testUnversionedBackupDatesRetainProvenSourcesAndSuppressAmbiguousMediaProvenanceAfterRecovery() async throws {
+        func writeLegacyMarkFormat(_ url: URL) throws {
+            var file = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            var marks = try XCTUnwrap(file["encryptedBackups"] as? [[String: Any]])
+            for index in marks.indices { marks[index].removeValue(forKey: "usesBaseOwnerIdentity") }
+            file["encryptedBackups"] = marks
+            try JSONSerialization.data(withJSONObject: file).write(to: url, options: .atomic)
+        }
+        let url = try location(), original = try RecoveryRegistry(url: url)
+        let shop = record(UUID().uuidString)
+        try await original.recordSuccessfulBackup(original.prepareEncryptedBackup([shop]), savedAtMilliseconds: 10)
+        try writeLegacyMarkFormat(url)
+        let migrated = try RecoveryRegistry(url: url)
+        let knownIndependent = try await migrated.lastEncryptedBackups(for: [shop])
+        XCTAssertEqual(knownIndependent[identity(shop)]?.savedAtMilliseconds, 10)
+        let id = try await restore(shop, registry: migrated)
+        let afterImport = try await migrated.lastEncryptedBackups(for: [shop])
+        XCTAssertEqual(afterImport, knownIndependent)
+
+        let edited = record(shop.id, "copy edit"), library = record("meal-library")
+        var recipe = record("recipe-digest")
+        recipe.kind = .recipe
+        let scope = [identity(edited): Set([id])]
+        let intent = try await migrated.prepareEncryptedBackup([shop, edited, library, recipe], recoveredCopyIDs: scope)
+        try await migrated.recordSuccessfulBackup(intent, savedAtMilliseconds: 20)
+        try writeLegacyMarkFormat(url)
+        let restarted = try RecoveryRegistry(url: url)
+        let independent = try await restarted.lastEncryptedBackups(for: [shop, library, recipe])
+        XCTAssertEqual(independent, [identity(recipe): .init(savedAtMilliseconds: 20, revisions: [recipe.revision])])
+        let recovered = try await restarted.lastEncryptedBackups(for: [edited], recoveredCopyIDs: scope)
+        XCTAssertEqual(recovered, [identity(edited): .init(savedAtMilliseconds: 20, revisions: [edited.revision])])
+        try await restarted.recordSuccessfulBackup(restarted.prepareEncryptedBackup([library]), savedAtMilliseconds: 30)
+        let newSave = try await migrated.lastEncryptedBackups(for: [shop, library, recipe])
+        XCTAssertNil(newSave[identity(shop)])
+        XCTAssertEqual(newSave[identity(library)]?.savedAtMilliseconds, 30)
+        XCTAssertEqual(newSave[identity(recipe)]?.savedAtMilliseconds, 20)
+    }
+
     func testHelperCannotSupplyOwnerProvenanceAndOtherRegistryCannotAcceptIntent() async throws {
         let first = try RecoveryRegistry(url: location()), second = try RecoveryRegistry(url: location())
         let privateRecord = record(), id = try await restore(privateRecord, registry: first, kind: .helperShop)

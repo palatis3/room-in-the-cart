@@ -71,7 +71,7 @@ import XCTest
         tap(recovery, upward: true)
 
         tap(element("records.chooseFile"))
-        assertDisposition(text("Absent here — recover separately", "No está aquí — recuperar por separado"))
+        assertDisposition(text("Ready to recover a separate copy", "Puedes recuperar una copia por separado"))
         assertLabel("records.importSourceDate." + shop, equals: unknown)
         let exportDate = element("records.importExportDate")
         reveal(exportDate, requiresHitTarget: false)
@@ -86,7 +86,7 @@ import XCTest
         capture("S20 \(language) Cancel leaves no recovered shared record")
 
         tap(element("records.chooseFile"))
-        assertDisposition(text("Absent here — recover separately", "No está aquí — recuperar por separado"))
+        assertDisposition(text("Ready to recover a separate copy", "Puedes recuperar una copia por separado"))
         tap(element("records.applyImport"))
         evidence(copies: 1, files: 1, encrypted: true)
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", "none"), object: element("fixture.sharedRecords.copyID"))], timeout: 12) == .completed)

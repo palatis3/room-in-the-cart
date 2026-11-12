@@ -2,11 +2,19 @@ import Foundation
 import Darwin
 
 public enum RecoveryDisposition: String, Codable, Sendable { case absent, identical, sibling, quarantined, erased }
+/// Source metadata for one separate local copy. No stored content is needed to compare versions.
+public struct RecoveredCopySummary: Identifiable, Equatable, Sendable {
+    public let id: ArchiveIdentity
+    public let documentKind: ArchiveKind
+    public let savedAtMilliseconds: Int64
+    public let selectedReferenceCount: Int
+}
 public struct RecoveryReviewRow: Identifiable, Equatable, Sendable {
     public let id: ArchiveIdentity
     public let record: ArchiveRecord
     public let disposition: RecoveryDisposition
     public let existingCopyID: String?
+    public let priorCopies: [RecoveredCopySummary]
 }
 public struct RecoveryReview: Sendable {
     public let envelope: ArchiveEnvelope
@@ -60,6 +68,7 @@ fileprivate struct BackupMark: Codable {
     let source: ArchiveSourceIdentity
     let savedAtMilliseconds: Int64
     var revisions: [Revision]
+    var usesBaseOwnerIdentity: Bool?
 }
 
 /// A single atomic manifest commits snapshots and canonical receipts together. Original
@@ -118,7 +127,7 @@ public actor RecoveryRegistry {
         for record in records where record.nativePayload != nil {
             let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
             guard let mark = marks[source] else { continue }
-            let identity = ArchiveCodec.identity(record, projection: projection)
+            let identity = ArchiveIdentity(origin: source.origin, recordID: source.recordID, revision: record.revision, projection: projection)
             // An imported owner copy can outlive access to a live shop with the very
             // same archive identity. Only a common backing source can disclose a date.
             let copies = recoveredCopyIDs[identity]
@@ -134,7 +143,8 @@ public actor RecoveryRegistry {
         return result
     }
     /// Capture the selected owner metadata immediately before sealing the file. The caller
-    /// identifies recovered-only outputs, whose edited IDs/revisions can differ from the import.
+    /// identifies recovered-only outputs by their base owner identity, independent of the
+    /// chosen attachments. Edited IDs/revisions can differ from the import.
     public func prepareEncryptedBackup(_ records: [ArchiveRecord], recoveredCopyIDs: [ArchiveIdentity: Set<String>] = [:]) throws -> EncryptedBackupIntent {
         guard records.count <= ArchiveCodec.maximumRecords else { throw ArchiveError.tooLarge }
         let lock = try acquireLock()
@@ -148,9 +158,10 @@ public actor RecoveryRegistry {
         var seen = Set<ArchiveIdentity>()
         for record in records where record.nativePayload != nil {
             let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
-            let identity = ArchiveCodec.identity(record, projection: projection)
+            let identity = ArchiveIdentity(origin: source.origin, recordID: source.recordID, revision: record.revision, projection: projection)
             guard ArchiveCodec.identifier(source.origin), ArchiveCodec.identifier(source.recordID),
-                  ArchiveCodec.identifier(identity.revision), seen.insert(identity).inserted else { throw ArchiveError.invalidIdentity }
+                  ArchiveCodec.identifier(identity.revision),
+                  seen.insert(ArchiveCodec.identity(record, projection: projection)).inserted else { throw ArchiveError.invalidIdentity }
             let mediaIDs = Set((record.media ?? []).map(\.id))
             guard !erasedOrigins.contains(source.origin), !erasedSources.contains(source),
                   !mediaIDs.contains(where: { erasedMedia.contains(.init(origin: source.origin, mediaID: $0)) }) else { throw ArchiveError.conflict }
@@ -185,14 +196,18 @@ public actor RecoveryRegistry {
         for (source, targets) in Dictionary(grouping: intent.targets, by: \.source) {
             guard !erasedSources.contains(source), !erasedOrigins.contains(source.origin),
                   savedAtMilliseconds > (marks[source]?.savedAtMilliseconds ?? 0) else { continue }
+            // Media selections are separate file projections with the same base owner
+            // backing. Record a revision once if any selected projection remains eligible.
+            var eligibleRevisions = Set<String>()
             let revisions: [BackupMark.Revision] = targets.compactMap { target in
                 guard !target.mediaIDs.contains(where: { erasedMedia.contains(.init(origin: source.origin, mediaID: $0)) }) else { return nil }
                 let remaining = target.copyLifetimes.filter { copies[$0.key] == $0.value }
-                guard target.copyLifetimes.isEmpty || !remaining.isEmpty else { return nil }
+                guard target.copyLifetimes.isEmpty || !remaining.isEmpty,
+                      eligibleRevisions.insert(target.revision).inserted else { return nil }
                 return .init(revision: target.revision, dependentCopyIDs: Set(remaining.keys))
             }
             guard !revisions.isEmpty else { continue }
-            marks[source] = .init(source: source, savedAtMilliseconds: savedAtMilliseconds, revisions: revisions)
+            marks[source] = .init(source: source, savedAtMilliseconds: savedAtMilliseconds, revisions: revisions, usesBaseOwnerIdentity: true)
             changed = true
         }
         if changed {
@@ -222,18 +237,54 @@ public actor RecoveryRegistry {
         try refreshFromDisk()
         return try makeReview(envelope)
     }
-    private func makeReview(_ envelope: ArchiveEnvelope) throws -> RecoveryReview {
+    private func makeReview(_ envelope: ArchiveEnvelope, includePriorCopies: Bool = true) throws -> RecoveryReview {
         try ArchiveCodec.validate(envelope)
-        let rows = try envelope.payload.records.map { record -> RecoveryReviewRow in
+        let incoming = envelope.payload.records
+        let sources = Set(incoming.map { ArchiveSourceIdentity(origin: $0.origin, recordID: $0.id) })
+        let erasedOrigins = Set(manifest.erasedOrigins ?? []), erasedSources = Set(manifest.erasedSources ?? [])
+        let erasedMedia = Set(manifest.erasedMediaSources ?? []), erasedIdentities = Set(manifest.erasedIdentities)
+        var receipts: [ArchiveIdentity: ArchiveReceipt] = [:], relatedSources = Set<ArchiveSourceIdentity>()
+        var prior: [ArchiveSourceIdentity: [RecoveredCopySummary]] = [:]
+        for saved in manifest.records {
+            let source = ArchiveSourceIdentity(origin: saved.record.origin, recordID: saved.record.id)
+            guard sources.contains(source) else { continue }
+            receipts[saved.receipt.identity] = saved.receipt
+            relatedSources.insert(source)
+            if includePriorCopies && (envelope.documentKind == .personalRecovery || saved.documentKind == .helperShop) {
+                prior[source, default: []].append(.init(id: saved.receipt.identity, documentKind: saved.documentKind,
+                                                       savedAtMilliseconds: saved.receipt.savedAtMilliseconds,
+                                                       selectedReferenceCount: saved.record.media?.count ?? 0))
+            }
+        }
+        // Rows sharing a stable source share these sorted arrays. Build the redacted index
+        // once, including when a personal file carries a previously imported helper projection.
+        let sorted = prior.mapValues { copies in
+            copies.sorted { lhs, rhs in
+                if lhs.savedAtMilliseconds != rhs.savedAtMilliseconds {
+                    if lhs.savedAtMilliseconds == 0 { return false }
+                    if rhs.savedAtMilliseconds == 0 { return true }
+                    return lhs.savedAtMilliseconds > rhs.savedAtMilliseconds
+                }
+                return (lhs.id.revision, lhs.id.projection) < (rhs.id.revision, rhs.id.projection)
+            }
+        }
+        let helpers = envelope.documentKind == .helperShop ? sorted : sorted.mapValues { $0.filter { $0.documentKind == .helperShop } }
+        let rows = try incoming.map { record -> RecoveryReviewRow in
             let identity = ArchiveCodec.identity(record, projection: envelope.projectionID)
-            let digest = ArchiveCodec.digest(try ArchiveCodec.canonical(record))
-            let exact = manifest.records.first { $0.receipt.identity == identity }
-            let related = manifest.records.first { $0.record.origin == record.origin && $0.record.id == record.id }
+            let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
+            if erasedOrigins.contains(record.origin) || erasedSources.contains(source) || erasedIdentities.contains(identity) ||
+                (record.media ?? []).contains(where: { erasedMedia.contains(.init(origin: record.origin, mediaID: $0.id)) }) {
+                return .init(id: identity, record: record, disposition: .erased, existingCopyID: nil, priorCopies: [])
+            }
+            let exact = receipts[identity]
             let disposition: RecoveryDisposition
-            if (manifest.erasedOrigins ?? []).contains(record.origin) || manifest.erasedIdentities.contains(identity) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: record.origin, recordID: record.id)) || (record.media ?? []).contains(where: { (manifest.erasedMediaSources ?? []).contains(ArchiveMediaSourceIdentity(origin: record.origin, mediaID: $0.id)) }) { disposition = .erased }
-            else if let exact { disposition = exact.receipt.digest == digest ? .identical : .quarantined }
-            else { disposition = related == nil ? .absent : .sibling }
-            return RecoveryReviewRow(id: identity, record: record, disposition: disposition, existingCopyID: exact?.id)
+            if let exact {
+                let digest = ArchiveCodec.digest(try ArchiveCodec.canonical(record))
+                disposition = exact.digest == digest ? .identical : .quarantined
+            } else { disposition = relatedSources.contains(source) ? .sibling : .absent }
+            let visible = envelope.documentKind == .personalRecovery && record.nativePayload != nil ? sorted : helpers
+            return .init(id: identity, record: record, disposition: disposition, existingCopyID: exact?.localCopyID,
+                         priorCopies: visible[source] ?? [])
         }
         return RecoveryReview(envelope: envelope, rows: rows, registryGeneration: manifest.generation)
     }
@@ -243,7 +294,7 @@ public actor RecoveryRegistry {
         let lock = try acquireLock()
         defer { releaseLock(lock) }
         try refreshFromDisk()
-        let checked = try makeReview(reviewed.envelope)
+        let checked = try makeReview(reviewed.envelope, includePriorCopies: false)
         guard checked.canApply else { throw ArchiveError.conflict }
         // A lost successful response may retry the very same review. Reopen only
         // when every receipt now matches exactly; other generation changes re-review.
@@ -393,7 +444,7 @@ public actor RecoveryRegistry {
     private static func readManifest(_ url: URL) throws -> Manifest {
         let bytes = try boundedRead(url, maximum: maximumRegistryBytes)
         try ArchiveCodec.preflight(bytes, maximum: maximumRegistryBytes)
-        let current: Manifest
+        var current: Manifest
         do { current = try JSONDecoder().decode(Manifest.self, from: bytes) } catch { throw ArchiveError.malformed }
         guard current.formatMajor == 1 else { throw ArchiveError.unsupportedVersion }
         var identities = Set<ArchiveIdentity>(), copies = Set<String>()
@@ -428,6 +479,23 @@ public actor RecoveryRegistry {
                   Set(mark.revisions.map(\.revision)).count == mark.revisions.count,
                   mark.revisions.allSatisfy({ ArchiveCodec.identifier($0.revision) && $0.dependentCopyIDs.allSatisfy { ownerCopies[$0] == mark.source.origin } })
             else { throw ArchiveError.integrity }
+        }
+        // The first development format missed recovered-copy dependencies when the
+        // file included media. Its marks omitted both the record kind and the selection.
+        // Native records with selectable media used canonical shop/pickup UUIDs or
+        // the separate meal-library ID. Undo Import can remove the last trace of a copy.
+        let neverRecovered = current.generation == emptyGeneration && current.records.isEmpty && erased.isEmpty &&
+            sources.isEmpty && origins.isEmpty && erasedMedia.isEmpty
+        current.encryptedBackups = current.encryptedBackups?.compactMap { original in
+            guard original.usesBaseOwnerIdentity != true else { return original }
+            var mark = original
+            let id = mark.source.recordID
+            let couldHaveSelectedMedia = id == "meal-library" || UUID(uuidString: id)?.uuidString == id
+            if !neverRecovered && couldHaveSelectedMedia {
+                mark.revisions.removeAll { $0.dependentCopyIDs.isEmpty }
+            }
+            mark.usesBaseOwnerIdentity = true
+            return mark.revisions.isEmpty ? nil : mark
         }
         return current
     }

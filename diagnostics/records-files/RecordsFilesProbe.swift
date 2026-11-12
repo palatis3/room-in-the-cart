@@ -51,7 +51,7 @@ extension RoomInTheCartUITests {
         assertContains("n06-local-kitchen")
         let savedAt = Date(timeIntervalSince1970: 1_700_000_000).formatted(date: .abbreviated, time: .shortened)
         assertContains("Saved at " + savedAt)
-        assertContains("Absent here — recover separately")
+        assertContains("Ready to recover a separate copy")
         let revision = "3f67f5c2977250473b9e87bbb3869ab4657a1464ee702f4b125e81b2e9abe739"
         assertContains("Revision: " + revision)
         tap(app.buttons["records.cancelImport"])

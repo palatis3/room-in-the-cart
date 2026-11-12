@@ -28,6 +28,57 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testImportComparesIndependentRevisionsBySourceAndClearsErasedReview() async throws {
+        let directory = try temporaryDirectory(), registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let incoming = try comparison(), id = try XCTUnwrap(UUID(uuidString: incoming.id))
+        var edited = try comparison { $0.id = id; $0.aPrice = "4.25" }
+        edited.savedAtMilliseconds += 10_000
+        var recoveredOnly = try comparison { $0.id = id; $0.aPrice = "4.75" }
+        recoveredOnly.savedAtMilliseconds += 20_000
+        var otherSource = incoming; otherSource.origin = "other-workspace"
+        let selected = RecordsToolsModel.selectionID(recoveredOnly)
+        var batch = RecordsSnapshotBatch(records: [incoming, edited, recoveredOnly, otherSource], recoveredCopyIDsByRecord: [selected: ["separate-copy"]])
+        let model = RecordsToolsModel(registry: registry, snapshot: { batch },
+                                     validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        let owner = try ArchiveCodec.make(records: [incoming], kind: .personalRecovery, origin: "file", revision: "export")
+        let file = directory.appendingPathComponent("records.json")
+        try ArchiveCodec.encode(owner).write(to: file)
+        await model.importFile(file, recipes: false)
+        let rowID = try XCTUnwrap(model.review?.rows.first).id
+        XCTAssertEqual(model.currentImportVersions[rowID], [
+            .init(revision: incoming.revision, savedAtMilliseconds: incoming.savedAtMilliseconds),
+            .init(revision: edited.revision, savedAtMilliseconds: edited.savedAtMilliseconds)
+        ])
+        batch.records = [edited, recoveredOnly, otherSource]
+        await model.refresh()
+        XCTAssertEqual(model.currentImportVersions[rowID]?.map(\.revision), [edited.revision])
+
+        let helper = try ArchiveCodec.make(records: [incoming], kind: .helperShop, origin: "file", revision: "export")
+        for redacted in [helper, try ArchiveCodec.make(records: helper.payload.records, kind: .personalRecovery, origin: "file", revision: "wrapped")] {
+            try ArchiveCodec.encode(redacted).write(to: file)
+            await model.importFile(file, recipes: false)
+            XCTAssertNotNil(model.review)
+            XCTAssertTrue(model.currentImportVersions.isEmpty)
+        }
+
+        let committed = try await registry.apply(registry.review(owner))
+        let copyID = try XCTUnwrap(committed.insertedCopyIDs.first)
+        try ArchiveCodec.encode(owner).write(to: file)
+        await model.importFile(file, recipes: false)
+        XCTAssertEqual(model.review?.rows.first?.disposition, .identical)
+        await model.deleteRecovered(.copy(copyID))
+        XCTAssertNil(model.review)
+        await model.importFile(file, recipes: false)
+        XCTAssertEqual(model.review?.rows.first?.disposition, .erased)
+        XCTAssertTrue(model.currentImportVersions.isEmpty)
+        await model.undoRecoveredDeletion()
+        XCTAssertNil(model.review)
+        await model.importFile(file, recipes: false)
+        XCTAssertEqual(model.review?.rows.first?.disposition, .identical)
+        XCTAssertEqual(model.currentImportVersions[rowID]?.map(\.revision), [edited.revision])
+    }
+
     @MainActor func testChangingRecoveryKeyRetiresTheFileEncryptedWithThePreviousKey() async throws {
         let record = try comparison()
         let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))

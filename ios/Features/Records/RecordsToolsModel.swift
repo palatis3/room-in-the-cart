@@ -19,6 +19,12 @@ struct RecordsMediaSelectionID: Hashable {
     let attachmentID: String
 }
 
+struct RecordsImportSourceVersion: Identifiable, Equatable {
+    let revision: String
+    let savedAtMilliseconds: Int64
+    var id: String { revision }
+}
+
 /// Native export/validation/open/delete are provided by the composition root. Validation
 /// must decode and re-encode an allowlisted domain payload, never raw database/account data.
 @MainActor final class RecordsToolsModel: ObservableObject {
@@ -33,6 +39,23 @@ struct RecordsMediaSelectionID: Hashable {
     @Published private(set) var recoveredRecords: [RecoveredRecord] = []
     var unavailableRecords: [RecordsUnavailableRecord] { sourceListing.unavailable }
     @Published private(set) var review: RecoveryReview?
+    // An unreadable fresh listing cannot authorize a prior household comparison.
+    private var verifiedLiveImportListing = false
+    var currentImportVersions: [ArchiveIdentity: [RecordsImportSourceVersion]] {
+        guard let review, review.envelope.documentKind == .personalRecovery, reviewAuthorization?() == true else { return [:] }
+        var bySource: [ArchiveSourceIdentity: [RecordsImportSourceVersion]] = [:]
+        for record in currentRecords where record.nativePayload != nil {
+            let id = Self.selectionID(record)
+            guard sourceListing.recoveredCopyIDsByRecord[id] == nil,
+                  !sourceListing.liveSharedRecordIDs.contains(id) || verifiedLiveImportListing else { continue }
+            bySource[id.source, default: []].append(.init(revision: record.revision, savedAtMilliseconds: record.savedAtMilliseconds))
+        }
+        var matches: [ArchiveIdentity: [RecordsImportSourceVersion]] = [:]
+        for row in review.rows where row.disposition != .erased && row.record.nativePayload != nil {
+            matches[row.id] = bySource[Self.selectionID(row.record).source]
+        }
+        return matches
+    }
     @Published private(set) var recipeReport: RecipeImportReport?
     @Published private(set) var busy = false
     private struct ActionStatus {
@@ -149,6 +172,7 @@ struct RecordsMediaSelectionID: Hashable {
             } else if sourceListing.recoveredCopyIDsByRecord != batch.recoveredCopyIDsByRecord {
                 backupStatuses = [:]
             }
+            verifiedLiveImportListing = true
             sourceListing = batch
         }
     }
@@ -305,6 +329,17 @@ struct RecordsMediaSelectionID: Hashable {
     private var reviewAuthorization: Authorization?
     private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
         for record in envelope.payload.records { try await validateRecord(record); try requireAuthorization(authorize) }
+        let liveSources = Set(sourceListing.liveSharedRecordIDs.map(\.source))
+        if envelope.documentKind == .personalRecovery,
+           envelope.payload.records.contains(where: { $0.nativePayload != nil && liveSources.contains(Self.selectionID($0).source) }) {
+            verifiedLiveImportListing = false
+            do { try await reloadListing(authorize: authorize) }
+            catch {
+                try Task.checkCancellation()
+                try requireAuthorization(authorize)
+                // The file can still be reviewed without a fresh household comparison.
+            }
+        }
         let staged = try await registry.review(envelope)
         try requireAuthorization(authorize)
         reviewAuthorization = authorize
@@ -323,7 +358,8 @@ struct RecordsMediaSelectionID: Hashable {
         // Every projection must reconcile erasure, including helper-only records.
         try await validate(record)
     }
-    func cancelReview() { review = nil; reviewAuthorization = nil; recipeReport = nil; publishOutcome(recordsText("Import cancelled. Your records are unchanged.")) }
+    private func discardImportReview() { review = nil; reviewAuthorization = nil; recipeReport = nil }
+    func cancelReview() { discardImportReview(); publishOutcome(recordsText("Import cancelled. Your records are unchanged.")) }
     func applyReviewedImport() async {
         guard !busy, let review else { return }
         busy = true; error = nil
@@ -359,7 +395,7 @@ struct RecordsMediaSelectionID: Hashable {
         do {
             let authorize = try authorization()
             cancelRecoveredOpen()
-            try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?()
+            try await registry.undoImport(insertedCopyIDs: lastImportIDs); discardImportReview(); lastImportIDs = []; try await cleanupRecovered?()
             try requireAuthorization(authorize)
             try await reloadListing(authorize: authorize)
             publishOutcome(recordsText("The imported batch was undone."))
@@ -383,6 +419,7 @@ struct RecordsMediaSelectionID: Hashable {
             let authorize = try authorization()
             cancelRecoveredOpen()
             let token = try await registry.delete(scope)
+            discardImportReview()
             let outcome: String
             if let cleanupRecovered {
                 deleteUndo = nil
@@ -404,6 +441,7 @@ struct RecordsMediaSelectionID: Hashable {
         do {
             let authorize = try authorization()
             try await registry.undoDelete(token)
+            discardImportReview()
             deleteUndo = nil
             let recovered = try await registry.refreshList()
             try requireAuthorization(authorize)
@@ -415,7 +453,9 @@ struct RecordsMediaSelectionID: Hashable {
         guard let deleteSource, deletable(record) else { fail(ArchiveError.unavailable); return }
         do {
             error = nil
-            try await deleteSource(record); canUndoSourceDeletion = sourceUndo != nil
+            try await deleteSource(record)
+            discardImportReview()
+            canUndoSourceDeletion = sourceUndo != nil
             await refresh()
             guard error == nil else { return }
             publishOutcome(recordsText("The selected source was deleted from this iPhone."))
@@ -424,7 +464,7 @@ struct RecordsMediaSelectionID: Hashable {
     }
     func undoCurrentDeletion() async {
         guard let sourceUndo, canUndoSourceDeletion else { return }
-        do { error = nil; try await sourceUndo(); canUndoSourceDeletion = false; await refresh(); if error == nil { publishOutcome(recordsText("Deletion undone.")) } } catch { fail(error) }
+        do { error = nil; try await sourceUndo(); discardImportReview(); canUndoSourceDeletion = false; await refresh(); if error == nil { publishOutcome(recordsText("Deletion undone.")) } } catch { fail(error) }
     }
     func reviewWholeLedgerDeletion() async {
         guard !busy, let wholeLedgerDeletionAction else { return }
