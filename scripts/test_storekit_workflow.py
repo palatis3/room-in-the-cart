@@ -122,6 +122,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertNotIn('-project', command)
             self.assertNotIn('build-for-testing', command)
             self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
+            self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
             self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
             self.assertIn('-default-test-execution-time-allowance 120', command)
             self.assertIn('-maximum-test-execution-time-allowance 120', command)

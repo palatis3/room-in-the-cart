@@ -82,6 +82,33 @@ class BootSimulatorTests(unittest.TestCase):
                 boot_simulator("booted")
             popen.assert_not_called()
 
+    def test_restart_boots_after_shutdown_or_exact_already_shutdown_error(self):
+        already_down = (
+            "An error was encountered processing the command (domain=com.apple.CoreSimulator.SimError, code=405):\n"
+            "Unable to shutdown device in current state: Shutdown\n"
+        )
+        for status, output, expected in (
+            (0, "", 0), (149, already_down, 0),
+            (149, already_down.replace("state: Shutdown", "state: Shutting Down"), 149),
+            (149, already_down.replace("code=405", "code=406"), 149),
+            (70, already_down, 70), (-signal.SIGTERM, "", 143),
+        ):
+            with (
+                self.subTest(status=status, output=output),
+                patch("boot_ios_simulator.subprocess.run") as shutdown,
+                patch("boot_ios_simulator.subprocess.Popen") as popen,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                shutdown.return_value = subprocess.CompletedProcess([], status, stdout=output)
+                process = popen.return_value.__enter__.return_value
+                process.stdout = io.StringIO(FINISHED)
+                process.wait.return_value = 0
+                result = boot_simulator(SIMULATOR, restart=True)
+                shutdown.assert_called_once_with(["xcrun", "simctl", "shutdown", SIMULATOR],
+                                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                self.assertEqual(popen.called, expected == 0)
+                self.assertEqual(result, expected)
+
 
 class BootSimulatorCommandTests(unittest.TestCase):
     def setUp(self):

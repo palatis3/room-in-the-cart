@@ -338,8 +338,7 @@ jobs:
             mkdir "$output/launch-failure"
             mv "$output/StoreKit.xcresult" "$output/StoreKit.log" "$output/first-tests.json" "$output/launch-failure/"
             echo 'Retrying this StoreKit configuration after the simulator launch service died before any scenario started.'
-            xcrun simctl shutdown "$SIMULATOR_ID"
-            python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+            python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"
             run_storekit
           else
             exit "$native_status"
