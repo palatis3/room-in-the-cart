@@ -734,12 +734,15 @@ private struct PickupWeightReview: View {
     }
     private var limit: CheckoutWeightLimit {
         guard let lineID, let quote = currentQuote, let price = try? ComparisonModel.money(rate),
-              let step = try? Rational(decimal: increment) else { return .unresolved }
+              let step = try? ListQuantityParser.numericAmount(increment) else { return .unresolved }
         return (try? CheckoutEngine.maximumWeight(quote: quote, cap: journey?.cap, lineID: lineID,
             rate: price, increment: step, rounding: rounding)) ?? .unresolved
     }
 
     private func billedWeight(_ amount: Rational) -> String {
+        // Display the exact cap when a billing increment does not terminate within 18 decimal places.
+        let decimalScale: Int64 = 1_000_000_000_000_000_000
+        guard decimalScale.isMultiple(of: amount.denominator) else { return pQuantity(amount, unit: unit) }
         let value = Decimal(amount.numerator) / Decimal(amount.denominator)
         let unitName = pTr(amount == .one ? unit.rawValue : "Quantity plural " + unit.rawValue)
         return "\(value.formatted(.number.precision(.fractionLength(0...18)))) \(unitName)"
@@ -774,7 +777,7 @@ private struct PickupWeightReview: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(pTr("Retailer billing increment")).font(.caption).accessibilityHidden(true)
                     TextField(pTr("Retailer billing increment"), text: $increment)
-                        .keyboardType(.decimalPad).focused($field, equals: .increment).accessibilityIdentifier("checkout.weightIncrement")
+                        .keyboardType(.numbersAndPunctuation).focused($field, equals: .increment).accessibilityIdentifier("checkout.weightIncrement")
                 }
                 Text(pTr("Enter the smallest weight the retailer bills in that unit, such as 0.01 lb."))
                 Picker(pTr("Fractional-cent rounding"), selection: $rounding) {

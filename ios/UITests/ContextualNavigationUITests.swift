@@ -574,6 +574,15 @@ import UIKit
             XCTAssertTrue(row.label.contains(amount) || (row.value as? String)?.contains(amount) == true, row.debugDescription)
         }
         capture("S05-billed-weight-under-saved-cap")
+        fill("3", into: "checkout.weightRate", replacing: true)
+        fill("1/3", into: "checkout.weightIncrement", replacing: true)
+        reveal(result)
+        XCTAssertTrue(result.label.contains("4/3 pounds") || (result.value as? String)?.contains("4/3 pounds") == true, result.debugDescription)
+        for (id, amount) in [("checkout.maximumLineCharge", "$4.00"), ("checkout.maximumTotal", "$38.00")] {
+            let row = element(id)
+            reveal(row)
+            XCTAssertTrue(row.label.contains(amount) || (row.value as? String)?.contains(amount) == true, row.debugDescription)
+        }
         tap(app.navigationBars["Check price by weight"].buttons["Whole checkout"])
         XCTAssertTrue(app.navigationBars["Whole checkout"].waitForExistence(timeout: 5))
         let price = app.textFields["apples"]
