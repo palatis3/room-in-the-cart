@@ -116,7 +116,8 @@ jobs:
           CREATE ROLE ritc_guardian_combined_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
           GRANT ritc_guardian_verifier, ritc_worker TO ritc_guardian_combined_worker;
           SQL
-      - run: npm test && npm run test:integration
+      - name: Run PostgreSQL integration, billing and browser retry tests
+        run: npm run test:integration
         working-directory: service
         env:
           RITC_TEST_WEB_WIRE: "1"

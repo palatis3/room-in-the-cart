@@ -47,7 +47,7 @@ function reader(options={}){
   db:{query:async(sql,values)=>{
    calls.push({sql,values});assert.match(sql,/^SELECT /);assert.equal(values[0],record.origin.householdId);
    let rows;
-   if(sql.startsWith('SELECT 1 FROM ritc.shop '))rows=options.retired?[]:[{}];
+   if(sql==='SELECT history_retired_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2')rows=options.missing?[]:[{history_retired_at:options.retired?asOf:null}];
    else if(sql.startsWith('SELECT DISTINCT p.shop_id'))rows=options.joint||options.jointAllowed?[{shop_id:record.origin.householdId,shopper_id:options.joint?'different-shopper':actor,history_retired_at:null}]:[];
    else if(sql.startsWith('SELECT l.lot_id,l.origin_shop_id'))rows=(record.stockHistory?.lots??[]).map(l=>({lot_id:l.lotId,origin_shop_id:carried.find(c=>c.source.sourceId===l.lotId)?.originShopId??(options.foreignDelivery&&l.deliverySourceId?record.origin.householdId:record.origin.shopId),delivery_source_id:l.deliverySourceId,actor_id:actor,history_retired_at:null}));
    else if(sql.startsWith('SELECT d.source_id,d.shop_id'))rows=carried.map(c=>({source_id:c.source.sourceId,shop_id:c.originShopId,actor_id:sourceActor,snapshot_digest:options.erasedCarried?'0'.repeat(64):digest(carriedSnapshot(c))}));
@@ -83,7 +83,7 @@ function reader(options={}){
   }} };
  const repo={requireShopper:()=>{if(options.denied)throw new ServiceError(404,'unavailable','Unavailable');},consent:async()=>{if(options.consentEnded)throw new ServiceError(403,'access_ended','Access ended');}};
  const shop={household_id:record.origin.householdId,shop_id:record.origin.shopId,revision:record.shopRevision,phase:record.phase};
- return{calls,run:()=>readSharedRecordHistory(repo,ctx,shop)};
+ return{calls,run:includeRetirementStatus=>readSharedRecordHistory(repo,ctx,shop,includeRetirementStatus)};
 }
 
 test('authorized Free history uses bounded read-only scope and strips snapshot-only receipts',async()=>{
@@ -93,8 +93,18 @@ test('authorized Free history uses bounded read-only scope and strips snapshot-o
 });
 
 test('shopper denial and retired history stop before historical payload reads',async()=>{
- const deniedReader=reader({denied:true});await assert.rejects(deniedReader.run(),e=>e.code==='unavailable');assert.equal(deniedReader.calls.length,0);
- const retired=reader({retired:true});await assert.rejects(retired.run(),e=>e.code==='unavailable');assert.equal(retired.calls.length,1);
+ for(const includeRetirementStatus of [false,true]){
+  const deniedReader=reader({denied:true,retired:true});
+  await assert.rejects(deniedReader.run(includeRetirementStatus),e=>e.status===404&&e.code==='unavailable');
+  assert.equal(deniedReader.calls.length,0);
+  const missing=reader({missing:true});
+  await assert.rejects(missing.run(includeRetirementStatus),e=>e.status===404&&e.code==='unavailable');
+  assert.equal(missing.calls.length,1);
+  const retired=reader({retired:true});
+  const expected=includeRetirementStatus?'shared_history_retired':'unavailable';
+  await assert.rejects(retired.run(includeRetirementStatus),e=>e.status===404&&e.code===expected);
+  assert.equal(retired.calls.length,1);
+ }
 });
 
 test('revoked author, ended consent and cross-shop cook source fail before payload reads',async()=>{
