@@ -688,7 +688,8 @@ import XCTest
         fill("4", into: "Physical amount received")
         fill("4", into: "Confirmed usable amount (optional)")
         enableSwitch("I checked the identity, units and meal constraints")
-        fill("segment-1", into: "Segment ID (distinct for each split delivery)")
+        fill("segment-1", into: "Segment ID (distinct for each split delivery)",
+             control: app.textFields["Segment ID (distinct for each split delivery)"])
         tap(app.buttons["Save observed arrival"])
         assertText("segment-1")
         capture("Free-observed-short-fill")
