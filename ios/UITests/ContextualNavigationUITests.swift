@@ -53,14 +53,23 @@ import UIKit
         tap(app.buttons["Leave without saving"])
         XCTAssertTrue(element("openPickupList").label.contains("Start pickup"))
         tap(shortcut)
-        fill("Defer coffee, keep salsa", into: "oneChange.change")
-        fill("North Market West", into: "oneChange.branch")
-        fill("Retailer app", into: "oneChange.source")
-        fill("40.90", into: "oneChange.before")
+        let doneTyping = app.buttons["oneChange.done"]
+        for fields in [[("change", "Defer coffee, keep salsa"), ("branch", "North Market West"), ("source", "Retailer app")],
+                       [("before", "40.90"), ("after", "36.30"), ("cap", "38")]] {
+            for (id, value) in fields {
+                let field = app.textFields["oneChange." + id]
+                revealContent(field, above: doneTyping)
+                field.tap()
+                XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+                field.typeText(value)
+                XCTAssertEqual(field.value as? String, value, id)
+            }
+            XCTAssertTrue(doneTyping.isHittable)
+            doneTyping.tap()
+            XCTAssertTrue(doneTyping.waitForNonExistence(timeout: 5))
+        }
         enableSwitch("oneChange.beforeIncludesCharges")
-        fill("36.30", into: "oneChange.after")
         enableSwitch("oneChange.afterIncludesCharges")
-        fill("38", into: "oneChange.cap")
         enableSwitch("oneChange.samePickup")
         tap(element("oneChange.review"))
 
