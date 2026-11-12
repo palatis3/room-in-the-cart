@@ -47,7 +47,7 @@ The following are draft claim boundaries, not permission to publish them while r
 | Two-store comparison | Two entered quotes and separate trip cash/time; [five scoped native cases](evidence/native/connected-store-quotes/acceptance.json). | Say manually entered quotes. No fetched prices, universal cheapest-store finder or automatic routing. |
 | Household annual membership | StoreKit2 localized product, restore/manage, verified server entitlement and up to two named adult seats. | Actual Apple product and signed sandbox/TestFlight lifecycle. `$49.99/year` is a US research hypothesis, not the current storefront offer. |
 
-## Screenshot candidates and remaining scenes
+## Screenshot candidates
 
 Apple's currently retrieved [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) require at least one iPhone screenshot for the Dynamic Island medium display and allow 1–10 per device size. Accepted portrait sizes for that class include 1179×2556 and 1206×2622; use the exact final device/output size accepted by App Store Connect. Files must be JPEG/JPG/PNG without transparency. iPad assets are needed only if iPad support is added. Recheck the live specification at upload; do not reuse an old size checklist.
 
@@ -55,9 +55,9 @@ The November 4 Release simulator run captured both pack results and the saved Re
 
 Four additional iPhone 17 candidates show the same dated dinner and separate school-lunch reservation in List and Grid, in both languages. The meal-week manifest records the Release executable, the saved data read after relaunch, the simulator bundle cleanup and the source and output hashes. The final signed build and human language review remain open. [Meal-week capture manifest](app-store/screenshots/meal-week-manifest.json)
 
-Capture the remaining scenes with fictional data in the ordinary iPhone app. Keep the source/build, device, locale, date and displayed inputs with each asset. Verify every captured claim against the actual product behavior before submission.
+All six planned scenes now have English and US Spanish captures from the ordinary iPhone app with fictional data. Compare these with the signed release build before submission. The optional Household scene still needs a real storefront offer.
 
-| Draft frame | Real screen / visible point | Gate before capture |
+| Draft frame | What the screen shows | Capture status and remaining checks |
 |---|---|---|
 | 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Local bilingual draft captures are available. Match the final signed build and retain its known/unknown review evidence. |
 | 2. Review the whole pickup | Previewing a $3.49 cereal request moves a $37.20 pickup to $40.69, $2.69 over the $38 cap. The preview also shows two protected school-lunch portions. | [English and US Spanish Release captures](app-store/screenshots/whole-pickup-preview-manifest.json) use a local synthetic household. The request stayed pending. Match the final signed build and complete human language review. |
