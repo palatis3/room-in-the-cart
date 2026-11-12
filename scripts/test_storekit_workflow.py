@@ -123,6 +123,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertNotIn('build-for-testing', command)
             self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
             self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
+            self.assertEqual(command.count('tee "$output/launch-failure/StoreKitRecoveryBoot.log"'), 2)
             self.assertIn('"$output/first-tests.json" "$native_status" "$SIMULATOR_ID"', command)
             self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
             self.assertIn('-default-test-execution-time-allowance 120', command)
@@ -140,6 +141,23 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertIn('.build/StoreKitRuntime.log', upload['with']['path'])
             self.assertIn('.build/storekit-product-inventory.json', upload['with']['path'])
         self.assertFalse(any(step.get('continue-on-error') for step in tests['steps']))
+
+    def test_pretest_boot_failure_keeps_locale_log_and_exit_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            helper = root / 'scripts/boot_ios_simulator.py'
+            helper.parent.mkdir()
+            helper.write_text('import sys\nprint("migration stopped", file=sys.stderr)\nsys.exit(70)\n')
+            for locale in ('en', 'es'):
+                step = self.step('storekit', identifier=f'storekit-{locale}-native')
+                result = subprocess.run(['bash', '-e', '-c', step['run']], cwd=root,
+                                        env={**os.environ, **step['env'], 'SIMULATOR_ID': 'fixture'},
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 70)
+                self.assertIn('migration stopped', result.stdout)
+                output = root / '.build' / f'storekit-{locale}'
+                self.assertEqual((output / 'StoreKitBoot.log').read_text(), 'migration stopped\n')
+                self.assertFalse((output / 'StoreKit.log').exists())
 
     def test_second_locale_is_eligible_after_first_native_export_or_verifier_failure(self):
         native = self.step('storekit', identifier='storekit-es-native')

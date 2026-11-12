@@ -318,7 +318,7 @@ jobs:
           set -o pipefail
           output=".build/storekit-$STOREKIT_LOCALE"
           mkdir -p "$output"
-          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" 2>&1 | tee "$output/StoreKitBoot.log"
           test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
@@ -339,10 +339,10 @@ jobs:
             mv "$output/StoreKit.xcresult" "$output/StoreKit.log" "$output/first-tests.json" "$output/launch-failure/"
             if [ "$native_status" -eq 65 ]; then
               echo 'Restarting the simulator after a pre-test StoreKit launch service death.'
-              python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"
+              python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
             else
               echo 'Rechecking the same simulator after Xcode listed no concrete iOS Simulator destinations.'
-              python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+              python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
             fi
             run_storekit
           else
