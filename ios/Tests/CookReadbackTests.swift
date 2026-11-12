@@ -473,6 +473,39 @@ import AVFoundation
         model.close()
     }
 
+    func testSlowVoiceDiscoveryLeavesInstructionReadableAndOnlyServesAnExplicitRetry() async throws {
+        var systemReplies: [CookVoiceDiscovery<String>.Completion] = []
+        let discovery = CookVoiceDiscovery<String>(timeout: .milliseconds(20)) { systemReplies.append($0) }
+        let expired = expectation(description: "Voice lookup returned the readable fallback")
+        let speech = FakeCookSpeech()
+        var acquisitions = 0
+        speech.preparation = CookSpeechPreparation(loadVoices: { reply in
+            discovery.load { voices in
+                reply(voices)
+                if voices.isEmpty { expired.fulfill() }
+            }
+        }, acquire: { _, ready in acquisitions += 1; ready(true) }, release: { _ in })
+        let original = instruction()
+        let model = CookReadbackModel(instruction: original, speech: speech, clock: { self.now }) { _, _ in true }
+        defer { model.close() }
+        model.playFromBeginning()
+        await fulfillment(of: [expired], timeout: 2)
+        XCTAssertEqual(model.state, .stopped)
+        XCTAssertTrue(model.unavailable)
+        XCTAssertEqual(model.instruction.text, original.text)
+        XCTAssertTrue(speech.spoken.isEmpty)
+        XCTAssertEqual(acquisitions, 0)
+
+        // A second tap joins the outstanding system query without queuing another behind it.
+        model.playFromBeginning()
+        XCTAssertEqual(systemReplies.count, 1)
+        let reply = try XCTUnwrap(systemReplies.popLast())
+        reply([original.localeIdentifier])
+        XCTAssertEqual(acquisitions, 1)
+        XCTAssertEqual(speech.spoken, [original.text])
+        XCTAssertEqual(model.state, .speaking)
+    }
+
     func testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog() {
         let control = ControlledCookPreparation()
         control.preparation.prepare(for: UUID()) { _ in XCTFail("Cancelled preparation completed") }

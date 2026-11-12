@@ -33,7 +33,7 @@ private enum CookReadbackTrace {
     private let audio: CookAudioSession
     private lazy var binding = CookSpeechSessionBinding(audio: audio, stop: { [weak self] in self?.stop() })
     private lazy var preparation = CookSpeechPreparation<AVSpeechSynthesisVoice>(
-        loadVoices: CookInstalledVoices.load,
+        loadVoices: CookInstalledVoices.discovery.load,
         acquire: { [weak self] lease, completion in
             guard let self else { completion(false); return }
             CookReadbackTrace.record(.audioQueued)
@@ -115,10 +115,10 @@ private enum CookReadbackTrace {
 }
 
 /// Only installed-voice discovery crosses this queue; synthesizers and utterances stay on MainActor.
-private enum CookInstalledVoices {
+@MainActor private enum CookInstalledVoices {
     static let queue = DispatchQueue(label: "dev.roominthecart.cook-installed-voices", qos: .userInitiated)
 
-    static func load(_ completion: @escaping @MainActor @Sendable ([AVSpeechSynthesisVoice]) -> Void) {
+    static let discovery = CookVoiceDiscovery<AVSpeechSynthesisVoice>(timeout: .seconds(5)) { completion in
         queue.async {
             CookReadbackTrace.record(.voicesStarted)
             let voices = AVSpeechSynthesisVoice.speechVoices()
@@ -126,6 +126,42 @@ private enum CookInstalledVoices {
             DispatchQueue.main.async {
                 CookReadbackTrace.record(.voicesDelivered)
                 completion(voices)
+            }
+        }
+    }
+}
+
+/// Share only an in-flight system lookup. Each Play gets its own deadline, including a
+/// retry while the system is still loading voices. A late result cannot start expired playback.
+@MainActor final class CookVoiceDiscovery<Voice: Sendable> {
+    typealias Completion = @MainActor @Sendable ([Voice]) -> Void
+    private let timeout: Duration
+    private let lookup: (@escaping Completion) -> Void
+    private var loading = false
+    private var pending: [UUID: (reply: Completion, timer: Task<Void, Never>)] = [:]
+
+    init(timeout: Duration, lookup: @escaping (@escaping Completion) -> Void) {
+        self.timeout = timeout
+        self.lookup = lookup
+    }
+
+    func load(_ reply: @escaping Completion) {
+        let id = UUID()
+        let timer = Task { [weak self, timeout] in
+            do { try await Task.sleep(for: timeout) } catch { return }
+            self?.pending.removeValue(forKey: id)?.reply([])
+        }
+        pending[id] = (reply, timer)
+        guard !loading else { return }
+        loading = true
+        lookup { [weak self] voices in
+            guard let self else { return }
+            self.loading = false
+            let requests = self.pending
+            self.pending.removeAll()
+            for request in requests.values {
+                request.timer.cancel()
+                request.reply(voices)
             }
         }
     }
@@ -166,6 +202,7 @@ private enum CookInstalledVoices {
             preparedFor = nil; voices = []
             loadVoices { [weak self] voices in
                 guard let self, self.generation == token else { return }
+                guard !voices.isEmpty else { completion(false); return }
                 self.voices = voices; self.preparedFor = id
                 self.acquireAudio(for: id, token: token, completion: completion)
             }
