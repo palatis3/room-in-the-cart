@@ -27,6 +27,35 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testChangingRecoveryKeyRetiresTheFileEncryptedWithThePreviousKey() async throws {
+        let record = try comparison()
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) },
+                                     validateNativePayload: { _ in }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        model.generateRecoveryKey()
+        let firstKey = model.recoveryKey
+        await model.prepareExport(.encryptedRecovery)
+        let originalBytes = try XCTUnwrap(model.preparedDocument).data
+        XCTAssertEqual(try EncryptedArchive.open(originalBytes, key: firstKey).payload.records, [record])
+        model.recoveryKey = firstKey
+        XCTAssertEqual(model.preparedDocument?.data, originalBytes)
+
+        model.generateRecoveryKey()
+        XCTAssertNotEqual(model.recoveryKey, firstKey)
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertNil(model.status)
+        await model.prepareExport(.encryptedRecovery)
+        let newBytes = try XCTUnwrap(model.preparedDocument).data
+        XCTAssertEqual(try EncryptedArchive.open(newBytes, key: model.recoveryKey).payload.records, [record])
+        XCTAssertThrowsError(try EncryptedArchive.open(newBytes, key: firstKey))
+        await model.prepareExport(.helperText)
+        let helperBytes = try XCTUnwrap(model.preparedDocument).data
+        model.recoveryKey = ""
+        XCTAssertEqual(model.preparedDocument?.data, helperBytes)
+    }
+
     @MainActor func testRevokedReadNeverPublishesPrivateListingOrRecoveredCopies() async throws {
         let record = try comparison()
         let omitted = RecordsUnavailableRecord(origin: record.origin, recordID: "unreadable", title: "Private omitted title", reason: .invalidNative)

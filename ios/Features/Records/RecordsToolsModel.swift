@@ -37,7 +37,14 @@ struct RecordsMediaSelectionID: Hashable {
     @Published var selectedIDs: Set<RecordsSelectionID> = []
     /// Attachment disclosure is separate from record selection and defaults off.
     @Published var selectedMediaIDs: Set<RecordsMediaSelectionID> = []
-    @Published var recoveryKey = ""
+    @Published var recoveryKey = "" {
+        didSet {
+            if recoveryKey != oldValue, preparedDocument?.kind == .recovery {
+                dismissPreparedFile()
+                status = nil
+            }
+        }
+    }
     @Published private(set) var preparedDocument: RecordsFileDocument?
     @Published private(set) var preparedName = "Room-in-the-Cart"
     @Published private(set) var preparedIsPrivate = false
