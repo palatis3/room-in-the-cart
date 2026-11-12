@@ -98,12 +98,16 @@ redistributing that work is not a measured whole-batch time saving. Row order,
 selectors and profiles remain unchanged. This allows up to
 eight concurrent native jobs when both pools have ready work;
 it does not shorten a single test or guarantee eight occupied machines.
-Core UI04 uses GitHub slot1 in the consumer matrix; its discovered full plan
-remains unchanged. SharedFallback uses Bitrise slot2. These two admission
+Core UI04 uses GitHub slot1 and UI09 uses GitHub slot3 in the consumer matrix;
+their discovered full plan remains unchanged. SharedFallback uses Bitrise slot2. These admission
 assignments address the November11 tail, where UI04 waited behind UI09 on
 GitHub4 and SharedFallback waited behind UI02 on GitHub2 after the Bitrise work
 finished. They preserve the five/three caps and all required cases; future
 whole-batch timing must still be measured.
+The subsequent9b batch finished GitHub3's last row at01:52:22UTC, while UI09
+still waited behind financial-fields and SpanishFoodEditor fixtures onGitHub4.
+Its single slot reassignment uses that observed repository-lane opportunity;
+it does not establish account-wide idle capacity or measured future savings.
 External fork PRs and noncanonical repositories route Bitrise-designated work
 to GitHub slots0–2, within the existing five-slot cap. All fixture selections and required gates
 remain intact. Keep GitHub's fork approval controls enabled; workflow expressions

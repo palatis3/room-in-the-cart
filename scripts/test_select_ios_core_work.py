@@ -112,6 +112,7 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
             expected_consumers = [copy.deepcopy(row) for row in full['include'] if row['shard'] != 'models']
             next(row for row in expected_consumers if row['shard'] == 'ui-04')['macos_slot'] = 1
+            next(row for row in expected_consumers if row['shard'] == 'ui-09')['macos_slot'] = 3
             for row in expected_consumers:
                 row['provider'] = 'bitrise' if row['shard'] == 'ui-05' else 'github'
             self.assertEqual(json.loads(outputs['matrix'])['include'], expected_consumers)

@@ -57,12 +57,13 @@ def main():
             write_plan(selected, args.plan_dir)
         # The producer has just booted this simulator and discovered its tests.
         # Keep the complete plan, but run models there instead of starting a
-        # second cold consumer. UI04 and UI09 contended on slot 4 after slot 1
-        # finished its work. UI05 also waited behind GitHub0 after the prior
+        # second cold consumer. UI04 moves to slot 1; UI09 moves to slot 3,
+        # whose work finished while slot 4 still had two fixtures ahead of it.
+        # UI05 also waited behind GitHub0 after the prior
         # Bitrise fixture tail finished. Change admission, not the full plan;
         # untrusted events retain UI05's original GitHub0 fallback.
         consumers = [{**row, 'provider': 'bitrise' if row['shard'] == 'ui-05' else 'github',
-                      'macos_slot': 1 if row['shard'] == 'ui-04' else row['macos_slot']}
+                      'macos_slot': {'ui-04': 1, 'ui-09': 3}.get(row['shard'], row['macos_slot'])}
                      for row in selected['include'] if row['shard'] != 'models']
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
