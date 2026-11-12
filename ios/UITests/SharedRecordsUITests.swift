@@ -68,7 +68,7 @@ import XCTest
         capture("S20 \(language) encrypted personal file prepared through production model")
         tap(element("records.saveFile"))
         evidence(copies: 0, files: 1, encrypted: true)
-        tap(recovery, upward: true)
+        assertLabel("records.status", equals: text("Encrypted recovery file saved.", "Se guardó el archivo de recuperación cifrado."))
 
         tap(element("records.chooseFile"))
         assertDisposition(text("Ready to recover a separate copy", "Puedes recuperar una copia por separado"))
