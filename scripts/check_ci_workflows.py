@@ -43,6 +43,19 @@ FIXTURE_MATRIX_GROUP = ("${{ " + FIXTURE_TRUSTED +
     " && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
     " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))" +
     " || format('ritc-macos-slot-{0}', matrix.macos_slot) }}")
+# Isolated qualification branch only; never merge these pilot exceptions.
+PILOT_JOBS = {('ios-fixtures.yml', 'build-contributor'): 0,
+              ('ios-fixtures.yml', 'contributor-tests'): 1}
+PILOT_SHARD = 'SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave'
+PILOT_GUARD_STEP = {
+    'name': 'Require the isolated M4 qualification invocation',
+    'shell': 'bash',
+    'env': {'REQUESTED_FIXTURE_SHARD': '${{ inputs.shard }}'},
+    'run': 'test "$GITHUB_REPOSITORY" = palatis3/room-in-the-cart\n'
+           'test "$GITHUB_EVENT_NAME" = workflow_dispatch\n'
+           'test "$GITHUB_REF" = refs/heads/codex/m4-fixture-pilot\n'
+           'test "$REQUESTED_FIXTURE_SHARD" = ' + PILOT_SHARD + '\n',
+}
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
 POLICY = {
@@ -210,7 +223,17 @@ def validate_workflows(paths, policy=POLICY):
                     f'Native cancel-in-progress must be literal false: {identity}')
             expected = policy[identity]
             routed = identity in ROUTED_NATIVE_JOBS
-            if routed:
+            pilot = identity in PILOT_JOBS and job.get('runs-on') == M4_LABEL
+            if pilot:
+                plan = data['jobs'].get('fixture-plan', {})
+                require(plan.get('steps') and plan['steps'][0] == PILOT_GUARD_STEP and
+                        'continue-on-error' not in plan,
+                        'Literal M4 pilot routes require the exact first-step invocation guard')
+                expected_needs = 'fixture-plan' if name == 'build-contributor' else ['fixture-plan', 'build-contributor']
+                require(job.get('needs') == expected_needs and
+                        job.get('if') == "needs.fixture-plan.outputs.build_contributor == 'true'",
+                        'M4 pilot native jobs must depend on the successful guarded plan')
+            elif routed:
                 runner = M4_RUNNER if identity in M4_BUILD_JOBS else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
                 require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             else:
@@ -220,10 +243,13 @@ def validate_workflows(paths, policy=POLICY):
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
                         f'Bitrise routing is restricted to reviewed native jobs: {identity}')
             slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
-            matrix_group = FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
+            matrix_group = M4_SLOT_PREFIX + str(PILOT_JOBS[identity]) if pilot else FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
             slot_count = 3 if routed else 5
             if type(expected) is int:
-                if identity == CORE_BUILD_JOB:
+                if pilot:
+                    require(concurrency['group'] == M4_SLOT_PREFIX + str(PILOT_JOBS[identity]),
+                            f'Wrong isolated pilot slot: {identity}')
+                elif identity == CORE_BUILD_JOB:
                     require(expected == 3 and concurrency['group'] == CORE_BUILD_GROUP,
                             f'Wrong main producer dual-provider slots: {identity}')
                 elif identity == RELEASE_BUILD_JOB:

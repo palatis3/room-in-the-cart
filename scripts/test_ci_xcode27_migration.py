@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, M4_BUILD_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
+from check_ci_workflows import PILOT_JOBS, M4_LABEL, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, M4_BUILD_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +36,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
                     runner = M4_RUNNER if key in M4_BUILD_JOBS else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
+                    if key in PILOT_JOBS: runner = M4_LABEL
                     self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):

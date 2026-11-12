@@ -4,3 +4,4 @@ self-hosted-runner:
   labels:
     - xcode-27
     - "bitrise-runner-room in cart"
+    - "bitrise-runner-ci 2"

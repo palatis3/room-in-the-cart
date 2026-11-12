@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import (BITRISE_LABEL, M4_LABEL, M4_RUNNER, CORE_BUILD_GROUP, CORE_BUILD_JOB,
+from check_ci_workflows import (PILOT_GUARD_STEP, PILOT_JOBS, BITRISE_LABEL, M4_LABEL, M4_RUNNER, CORE_BUILD_GROUP, CORE_BUILD_JOB,
                                 RELEASE_BUILD_GROUP, RELEASE_BUILD_JOB, FIXTURE_CONSUMER_RUNNER, FIXTURE_MATRIX_GROUP,
                                 FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
                                 MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
@@ -146,6 +146,28 @@ class WorkflowGuardTests(unittest.TestCase):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + BITRISE_LABEL))
         with self.assertRaisesRegex(ValueError, 'Unreviewed native job'):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: bitrise-runner-unreviewed'), {})
+
+    def test_isolated_pilot_literal_routes_require_exact_guard_slots_and_dependencies(self):
+        self.path = Path(self.temp.name) / 'ios-fixtures.yml'
+        original = (ROOT / '.github/workflows/ios-fixtures.yml').read_text()
+        policy = {key: value for key, value in POLICY.items() if key[0] == 'ios-fixtures.yml'}
+        self.assertEqual(len(self.validate(original, policy)), 4)
+        guard_line = '          test "$GITHUB_REF" = refs/heads/codex/m4-fixture-pilot\n'
+        for changed in (original.replace(guard_line, ''),
+                        original.replace('shell: bash\n        env:\n          REQUESTED_FIXTURE_SHARD: ${{ inputs.shard }}',
+                                         'shell: bash\n        continue-on-error: true\n        env:\n          REQUESTED_FIXTURE_SHARD: ${{ inputs.shard }}', 1),
+                        original.replace('test "$GITHUB_REPOSITORY" = palatis3/room-in-the-cart', 'true'),
+                        original.replace('test "$GITHUB_EVENT_NAME" = workflow_dispatch', 'true'),
+                        original.replace('refs/heads/codex/m4-fixture-pilot', 'refs/heads/codex/other'),
+                        original.replace(PILOT_GUARD_STEP['run'].splitlines()[-1].strip(), 'true'),
+                        original.replace('ritc-bitrise-m4-slot-0', 'ritc-bitrise-m4-slot-2', 1),
+                        original.replace('ritc-bitrise-m4-slot-1', 'ritc-bitrise-m4-slot-0', 1),
+                        original.replace('runs-on: bitrise-runner-ci 2', 'runs-on: bitrise-runner-tessss', 1),
+                        original.replace('    needs: fixture-plan\n', '    needs: []\n', 1),
+                        original.replace("if: needs.fixture-plan.outputs.build_contributor == 'true'", 'if: always()', 1),
+                        original.replace('needs: [fixture-plan, build-contributor]', 'needs: [build-contributor]')):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                self.validate(changed, policy)
 
     def test_duplicate_yaml_at_any_depth(self):
         for text in (TEXT.replace('name: Safe fixture', 'name: Safe fixture\nname: shadow'),
