@@ -171,6 +171,47 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Unknown-pack-quantity-reopened")
     }
 
+    func testPackageLabelConversionResolvesOnlyAfterConfirmationAndReopens() {
+        launch()
+        openEmptyComparison()
+        type([("itemName", "Measured oats"), ("needed", "3")])
+        tap(app.buttons["neededUnit"]); tap(app.buttons["US cups"])
+        type([("aQuantity", "180"), ("aPrice", "2.50")])
+        tap(app.buttons["aUnit"]); tap(app.buttons["grams"])
+
+        tap(app.buttons["aConversion"])
+        let source = app.textFields["conversion.source"]
+        tap(source); source.typeText("120")
+        tap(app.buttons["conversion.cancel"])
+        compare()
+        let unresolved = app.staticTexts["aIssue_usableConversionUnknown"].firstMatch
+        reveal(unresolved)
+        XCTAssertFalse(app.staticTexts["aTotal"].exists)
+
+        tap(app.buttons["editComparison"]); tap(app.buttons["aConversion"])
+        tap(source); source.typeText("120.0")
+        let target = app.textFields["conversion.target"]
+        tap(target); target.typeText("1")
+        dismissComparisonKeyboard(app.buttons["conversion.done"])
+        tap(app.buttons["conversion.confirm"])
+        compare()
+        assertMoney("aTotal", amount: "5.00")
+        let packs = app.staticTexts["aPacks"]
+        reveal(packs); XCTAssertTrue(packs.label.contains("2"))
+        let basis = app.staticTexts["aConversionBasis"]
+        reveal(basis)
+        let originalBasis = basis.label
+        XCTAssertTrue(originalBasis.contains("120.0 grams"))
+        XCTAssertTrue(originalBasis.contains("1 cup"))
+        saveAndAssertDurableStatus()
+
+        app.terminate()
+        launch(reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: "Measured oats")
+        assertMoney("aTotal", amount: "5.00")
+        reveal(basis); XCTAssertEqual(basis.label, originalBasis)
+    }
+
     func testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer() throws {
         launch(language: "es")
         XCTAssertEqual(app.buttons["newComparison"].label, "Comparar paquetes")

@@ -80,6 +80,79 @@ final class LedgerPackBridgeTests: XCTestCase {
         let frozenText = snapshot.revision.lines.first?.quantity.amount
         XCTAssertEqual(frozenText, try Rational(10))
     }
+    @MainActor func testMeasuredPackConversionRetainsEnteredEqualityThroughSelectionAndCheckoutRestart() async throws {
+        let (ledger, pickup, directory, cleanup) = try await fixture()
+        let shopID = try XCTUnwrap(ledger.shop?.id)
+        let need = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500.0")
+        try saved(await ledger.editShop(key: "flour", shopID: shopID) { shop in
+            _ = try shop.addManualLine(name: "Masa harina", quantity: need)
+        })
+        let shop = try XCTUnwrap(ledger.shop)
+        let line = try XCTUnwrap(shop.lines.first { $0.name == "Masa harina" })
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: line.id)
+        var draft = ComparisonDraft()
+        draft.item = requirement.name
+        draft.unit = requirement.quantity.unit
+        draft.aLabel = "Measured bag"; draft.aQuantity = "1½"; draft.aUnit = .cup; draft.aPrice = "1.25"
+        draft.bLabel = "Other bag"; draft.bQuantity = "2"; draft.bUnit = .cup; draft.bPrice = "1.00"
+        let equality = ComparisonConversion(sourceLiteral: "⅔", targetLiteral: "80.0", sourceUnit: .cup, targetUnit: .gram,
+                                            sourceNote: "Weighed this masa harina")
+        draft.aConversion = equality
+        let offers = try ComparisonModel(draft: draft).request()
+        let review = try LedgerPackReview.prepare(ledger: ledger, shopID: shopID, lineID: line.id,
+            offerA: offers.offerA, offerB: offers.offerB, itemCap: nil, at: Date(), source: "Local shelf label", pickup: pickup)
+        XCTAssertEqual(review.result.offerA.packsToBuy, 3)
+        XCTAssertEqual(review.result.offerA.leftover, try Rational(40))
+        XCTAssertEqual(review.result.offerA.totalCost, Money(minorUnits: 375))
+        XCTAssertEqual(review.result.offerB.issues, [.usableConversionUnknown])
+        XCTAssertNil(review.result.offerB.packsToBuy)
+        let basis = try XCTUnwrap(review.request.offerA.confirmedConversion)
+        XCTAssertEqual(basis.sourceLiteral, "⅔"); XCTAssertEqual(basis.targetLiteral, "80.0")
+        XCTAssertEqual(basis.sourceNote, equality.sourceNote)
+        XCTAssertEqual(basis.targetAmountPerSourceUnit, try Rational(120))
+        XCTAssertEqual(ComparisonConversion.readableText(for: basis), equality.readableText())
+        try saved(try await review.save(offerID: "a", ledger: ledger, pickup: pickup))
+        let reopened = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(reopened)
+        await reopened.open()
+        let selection = try XCTUnwrap(reopened.workspace.packSelections.first)
+        XCTAssertEqual(selection.source, "Local shelf label")
+        XCTAssertEqual(selection.request.offerA.confirmedConversion, basis)
+        XCTAssertEqual(selection.request.offerA.usableQuantity?.originalLiteral, "1½")
+        XCTAssertEqual(selection.request.offerA.usableQuantity?.unit, .cup)
+        XCTAssertEqual(selection.request.needed?.amount, need.amount)
+        let checkout = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(reopened.shop), workspaceRevision: reopened.revision,
+            previous: nil, packSelections: reopened.workspace.packSelections, workspaceID: reopened.sourceWorkspaceID)
+        let purchased = try XCTUnwrap(checkout.lines.first { $0.id == line.id })
+        XCTAssertEqual(purchased.quantity.amount, try Rational(540)); XCTAssertEqual(purchased.quantity.unit, .gram)
+        XCTAssertEqual(purchased.expectedCost, .exact(Money(minorUnits: 375)))
+        XCTAssertEqual(checkout.needs.filter { $0.orderLineID == line.id }.map(\.amount.amount), [need.amount])
+        try saved(try await LedgerCheckoutAdapter.apply(checkout, ledger: reopened, pickup: pickup))
+        let reopenedPickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        cleanup.track(reopenedPickup)
+        await reopenedPickup.load()
+        XCTAssertEqual(reopenedPickup.journey?.ledgerPackSelections, [selection])
+
+        let scoped = try RecordsNativeCodec.ledgerScope(reopened.workspace, shop: shop)
+        let bytes = try RecordsNativeCodec.canonical(LedgerDocumentFixture(formatVersion: 1, workspace: scoped))
+        let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + (try XCTUnwrap(reopened.sourceWorkspaceID)).uuidString,
+            revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title, savedAtMilliseconds: 1_000,
+            helperLines: [HelperLine(label: line.name, originalAmount: need.originalLiteral, originalUnit: need.unit.rawValue)], nativePayload: bytes)
+        let records = RecordsToolsModel(registry: try RecoveryRegistry(url: directory.appendingPathComponent("recovery.json")),
+            snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await records.refresh()
+        records.selectAll()
+        await records.prepareExport(.ownerText)
+        let owner = String(decoding: try XCTUnwrap(records.preparedDocument).data, as: UTF8.self)
+        XCTAssertTrue(owner.contains(equality.readableText()))
+        await records.prepareExport(.helperText)
+        let helper = String(decoding: try XCTUnwrap(records.preparedDocument).data, as: UTF8.self)
+        XCTAssertTrue(helper.contains(line.name))
+        for detail in [equality.sourceNote, equality.sourceLiteral, equality.targetLiteral, "Measured bag"] {
+            XCTAssertFalse(helper.contains(detail), detail)
+        }
+    }
+
     @MainActor func testExactSelectionRetryAndUnchangedCheckoutReviewDoNotCreateRevisionsOrClearFreshQuote() async throws {
         let (ledger, pickup, _, _) = try await fixture()
         let line = try XCTUnwrap(ledger.shop?.lines.first?.id)

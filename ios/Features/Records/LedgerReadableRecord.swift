@@ -153,6 +153,9 @@ import CoreDomain
             lines += ["", joined([selection.request.itemName, ledgerFormat("Reviewed pack choice: %@", offer.label)]),
                       joined([selection.source, stamp(selection.reviewedAt)])]
             if selection.isNoPurchase { lines.append(ledgerText("Use confirmed food at home · no purchase needed")) }
+            if !selection.isNoPurchase, let basis = offer.confirmedConversion {
+                lines.append(ComparisonConversion.readableText(for: basis))
+            }
             if let packs = selection.selectedResult.packsToBuy { lines.append(field(ledgerText("Whole packs to buy"), String(packs))) }
             if let price = selection.selectedResult.totalCost { lines.append(ledgerFormat("Item cost: %@", dinnerMoney(price))) }
         }

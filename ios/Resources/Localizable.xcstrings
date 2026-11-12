@@ -1660,24 +1660,6 @@
         }
       }
     },
-    "These units need a confirmed conversion for this food. Enter a known usable amount in the needed unit, or leave unresolved.": {
-      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These units need a confirmed conversion for this food. Enter a known usable amount in the needed unit, or leave unresolved."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estas unidades requieren una conversión confirmada para este alimento. Ingresa una cantidad aprovechable conocida en la unidad necesaria o deja el dato sin confirmar."
-          }
-        }
-      }
-    },
     "This comparison could not be opened": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -2307,6 +2289,198 @@
           "stringUnit": {
             "state": "translated",
             "value": "Contraído"
+          }
+        }
+      }
+    },
+    "Add ingredient conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ingredient conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir conversión para este ingrediente"
+          }
+        }
+      }
+    },
+    "Amount in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad en %@"
+          }
+        }
+      }
+    },
+    "Confirm conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar conversión"
+          }
+        }
+      }
+    },
+    "Confirmed ingredient conversion: %@ = %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed ingredient conversion: %@ = %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversión confirmada para este ingrediente: %@ = %@"
+          }
+        }
+      }
+    },
+    "Conversion evidence: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversion evidence: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de la conversión: %@"
+          }
+        }
+      }
+    },
+    "Edit ingredient conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit ingredient conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar conversión para este ingrediente"
+          }
+        }
+      }
+    },
+    "Edit this pack to add a conversion from its label or a measurement. Until then, the number of packs to buy is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this pack to add a conversion from its label or a measurement. Until then, the number of packs to buy is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita este paquete para añadir una conversión basada en su etiqueta o en una medición. Sin ella, no se sabe cuántos paquetes comprar."
+          }
+        }
+      }
+    },
+    "Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe dos cantidades equivalentes de este alimento según la etiqueta, una receta o una medición propia."
+          }
+        }
+      }
+    },
+    "Enter two positive amounts. Use a decimal or fraction and keep the source note brief.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter two positive amounts. Use a decimal or fraction and keep the source note brief."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe dos cantidades mayores que cero. Usa un decimal o una fracción y una nota breve sobre la fuente."
+          }
+        }
+      }
+    },
+    "Ingredient conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversión para este ingrediente"
+          }
+        }
+      }
+    },
+    "Label or measurement note (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label or measurement note (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota sobre la etiqueta o la medición (opcional)"
+          }
+        }
+      }
+    },
+    "Remove conversion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar conversión"
           }
         }
       }

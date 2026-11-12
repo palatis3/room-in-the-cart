@@ -288,7 +288,15 @@ struct LedgerCheckoutEntry: View {
                             ForEach(review.packSelections) { selection in
                                 VStack(alignment: .leading, spacing: 5) {
                                     if selection.isNoPurchase { Text(ledgerText("Use confirmed food at home · no purchase needed")) }
-                                    else { Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label)) }
+                                    else {
+                                        let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
+                                        Text(ledgerFormat("Reviewed pack choice: %@", offer.label))
+                                        if let basis = offer.confirmedConversion {
+                                            DisclosureGroup(tr("Ingredient conversion")) {
+                                                Text(ComparisonConversion.readableText(for: basis))
+                                            }
+                                        }
+                                    }
                                     if let stock = selection.request.confirmedAtHome { Text(ledgerFormat("Confirmed at home for this need: %@", ledgerQuantity(stock))) }
                                     if let quantity = selection.purchasedQuantity { Text(ledgerFormat("Purchased usable amount: %@", ledgerQuantity(quantity))) }
                                     if !selection.isNoPurchase, let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }

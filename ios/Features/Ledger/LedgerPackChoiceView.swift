@@ -6,15 +6,7 @@ struct LedgerPackChoiceView: View {
     @EnvironmentObject private var pickup: PickupModel
     let shopID: UUID
     let lineID: UUID
-    @State private var firstLabel = ""
-    @State private var firstAmount = ""
-    @State private var firstUnit: UnitOfMeasure = .count
-    @State private var firstPrice = ""
-    @State private var secondLabel = ""
-    @State private var secondAmount = ""
-    @State private var secondUnit: UnitOfMeasure = .count
-    @State private var secondPrice = ""
-    @State private var cap = ""
+    @State private var draft = ComparisonDraft()
     @State private var source = ""
     @State private var observedAt = Date()
     @State private var review: LedgerPackReview?
@@ -22,10 +14,22 @@ struct LedgerPackChoiceView: View {
     @State private var validation: String?
     @State private var initialized = false
     @Environment(\.dismiss) private var dismiss
+    private struct Ingredient: Equatable {
+        let shopID: UUID
+        let lineID: UUID
+        let name: String
+        let unit: UnitOfMeasure
+    }
     private enum Field { case firstLabel, firstAmount, firstPrice, secondLabel, secondAmount, secondPrice, source, cap }
     @FocusState private var field: Field?
 
+    private var currentRequirement: LedgerPackRequirement? {
+        guard let shop = model.workspace.shops.first(where: { $0.id == shopID }) else { return nil }
+        return try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings)
+    }
     var body: some View {
+        let requirement = currentRequirement
+        let ingredient = requirement.map { Ingredient(shopID: shopID, lineID: lineID, name: $0.name, unit: $0.quantity.unit) }
         Form {
             if saved {
                 Section {
@@ -64,8 +68,7 @@ struct LedgerPackChoiceView: View {
                 }
                 Button(ledgerText("Keep editing")) { self.review = nil; validation = nil }
             } else {
-                if let shop = model.workspace.shops.first(where: { $0.id == shopID }),
-                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings) {
+                if let requirement {
                     Section(ledgerText("Current ingredient need")) {
                         Text(requirement.name).font(.headline)
                         LabeledContent(ledgerText("Needed for this list"), value: ledgerQuantity(requirement.quantity))
@@ -86,21 +89,31 @@ struct LedgerPackChoiceView: View {
                     }
                 } else {
                 Section(ledgerText("First pack")) {
-                    TextField(ledgerText("First pack label"), text: $firstLabel).focused($field, equals: .firstLabel)
-                    TextField(ledgerText("First pack usable amount"), text: $firstAmount).keyboardType(.numbersAndPunctuation).focused($field, equals: .firstAmount)
-                    unitPicker($firstUnit)
-                    TextField(ledgerText("First pack price, USD"), text: $firstPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
+                    TextField(ledgerText("First pack label"), text: $draft.aLabel).focused($field, equals: .firstLabel)
+                    TextField(ledgerText("First pack usable amount"), text: $draft.aQuantity).keyboardType(.numbersAndPunctuation).focused($field, equals: .firstAmount)
+                    unitPicker($draft.aUnit)
+                    if let requirement {
+                        PackConversionControl(packLabel: draft.aLabel.isEmpty ? ledgerText("First pack") : draft.aLabel,
+                                              sourceUnit: draft.aUnit, targetUnit: requirement.quantity.unit,
+                                              conversion: $draft.aConversion, identifier: "ledgerPackConversion-a")
+                    }
+                    TextField(ledgerText("First pack price, USD"), text: $draft.aPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
                 }
                 Section(ledgerText("Second pack")) {
-                    TextField(ledgerText("Second pack label"), text: $secondLabel).focused($field, equals: .secondLabel)
-                    TextField(ledgerText("Second pack usable amount"), text: $secondAmount).keyboardType(.numbersAndPunctuation).focused($field, equals: .secondAmount)
-                    unitPicker($secondUnit)
-                    TextField(ledgerText("Second pack price, USD"), text: $secondPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
+                    TextField(ledgerText("Second pack label"), text: $draft.bLabel).focused($field, equals: .secondLabel)
+                    TextField(ledgerText("Second pack usable amount"), text: $draft.bQuantity).keyboardType(.numbersAndPunctuation).focused($field, equals: .secondAmount)
+                    unitPicker($draft.bUnit)
+                    if let requirement {
+                        PackConversionControl(packLabel: draft.bLabel.isEmpty ? ledgerText("Second pack") : draft.bLabel,
+                                              sourceUnit: draft.bUnit, targetUnit: requirement.quantity.unit,
+                                              conversion: $draft.bConversion, identifier: "ledgerPackConversion-b")
+                    }
+                    TextField(ledgerText("Second pack price, USD"), text: $draft.bPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
                 }
                 Section(ledgerText("Reviewed price evidence")) {
                     TextField(ledgerText("Where you checked these packs and prices"), text: $source).focused($field, equals: .source)
                     DatePicker(ledgerText("Checked at"), selection: $observedAt)
-                    TextField(ledgerText("Item-only spending limit, optional"), text: $cap).keyboardType(.decimalPad).focused($field, equals: .cap)
+                    TextField(ledgerText("Item-only spending limit, optional"), text: $draft.cap).keyboardType(.decimalPad).focused($field, equals: .cap)
                     Text(ledgerText("Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown."))
                     Button(ledgerText("Review whole packs"), action: prepare).buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerReviewPacks")
                 }
@@ -119,12 +132,16 @@ struct LedgerPackChoiceView: View {
             }
             .keyboardDoneAction(visible: field != nil, title: ledgerText("Done")) { field = nil }
             .task { await pickup.load() }
-            .onAppear {
-                guard !initialized else { return }; initialized = true
-                if let shop = model.workspace.shops.first(where: { $0.id == shopID }),
-                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings) {
-                    firstUnit = requirement.quantity.unit; secondUnit = requirement.quantity.unit
+            .onChange(of: ingredient, initial: true) { previous, current in
+                guard let current else { draft.aConversion = nil; draft.bConversion = nil; return }
+                if !initialized || previous?.shopID != current.shopID || previous?.lineID != current.lineID {
+                    draft = ComparisonDraft()
+                    draft.aUnit = current.unit
+                    draft.bUnit = current.unit
+                    initialized = true
                 }
+                draft.item = current.name
+                draft.unit = current.unit
             }
     }
     private func unitPicker(_ selection: Binding<UnitOfMeasure>) -> some View {
@@ -132,6 +149,10 @@ struct LedgerPackChoiceView: View {
     }
     @ViewBuilder private func result(_ result: OfferResult, offer: PackOffer, review: LedgerPackReview) -> some View {
         Section(offer.label) {
+            if let basis = offer.confirmedConversion {
+                Text(ComparisonConversion.readableText(for: basis))
+                    .accessibilityIdentifier("ledgerPackBasis-\(offer.id)")
+            }
             if let count = result.packsToBuy {
                 LabeledContent(ledgerText("Whole packs to buy"), value: String(count))
                     .accessibilityElement(children: .combine).accessibilityIdentifier("ledgerPackCount-\(offer.id)")
@@ -179,12 +200,13 @@ struct LedgerPackChoiceView: View {
     private func prepare() {
         do {
             guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  !firstLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  !secondLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw LedgerPackError.invalidEvidence }
+                  !draft.aLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !draft.bLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw LedgerPackError.invalidEvidence }
+            guard let requirement = currentRequirement,
+                  draft.item == requirement.name, draft.unit == requirement.quantity.unit else { throw LedgerPackError.staleSource }
+            let offers = try ComparisonModel(draft: draft).request()
             review = try LedgerPackReview.prepare(ledger: model, shopID: shopID, lineID: lineID,
-                offerA: PackOffer(id: "a", label: firstLabel, usableQuantity: ComparisonModel.quantity(firstAmount, firstUnit), price: ComparisonModel.money(firstPrice)),
-                offerB: PackOffer(id: "b", label: secondLabel, usableQuantity: ComparisonModel.quantity(secondAmount, secondUnit), price: ComparisonModel.money(secondPrice)),
-                itemCap: ComparisonModel.money(cap), at: observedAt, source: source, pickup: pickup)
+                offerA: offers.offerA, offerB: offers.offerB, itemCap: offers.itemCap, at: observedAt, source: source, pickup: pickup)
             field = nil
             validation = nil
         } catch LedgerPackError.staleSource { validation = ledgerText("The list or confirmed stock changed. Review the current checkout copy and allocation, then review packs again.") }

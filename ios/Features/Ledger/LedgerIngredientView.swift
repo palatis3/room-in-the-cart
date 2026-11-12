@@ -49,7 +49,13 @@ struct LedgerIngredientView: View {
                         if let workspaceID = model.sourceWorkspaceID,
                            let selection = currentSelection(shop: shop, workspaceID: workspaceID) {
                             if selection.isNoPurchase { Text(ledgerText("Use confirmed food at home · no purchase needed")) }
-                            else { Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label)) }
+                            else {
+                                let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
+                                Text(ledgerFormat("Reviewed pack choice: %@", offer.label))
+                                if let basis = offer.confirmedConversion {
+                                    Text(ComparisonConversion.readableText(for: basis))
+                                }
+                            }
                             if let stock = selection.request.confirmedAtHome { Text(ledgerFormat("Confirmed at home for this need: %@", ledgerQuantity(stock))) }
                             if !selection.isNoPurchase, let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }
                         } else if model.workspace.packSelections.contains(where: { $0.shopID == shopID && $0.lineID == lineID }) {
