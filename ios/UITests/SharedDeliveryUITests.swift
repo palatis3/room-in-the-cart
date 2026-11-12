@@ -613,6 +613,8 @@ import XCTest
         XCTAssertTrue(exclusions.waitForExistence(timeout: 5))
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "School lunch")).firstMatch.exists)
         tap(app.buttons["Match this ingredient"])
+        XCTAssertTrue(app.navigationBars["Tortillas"].waitForNonExistence(timeout: 8),
+                      "Saving the ingredient match should dismiss its review")
         tap(app.buttons["Delivered food by meal"])
         let covered = app.descendants(matching: .any).matching(NSPredicate(format:
             "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "Covered by deliveries", "2 units", "2 units")).firstMatch

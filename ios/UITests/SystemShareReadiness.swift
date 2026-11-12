@@ -34,13 +34,16 @@ extension XCTestCase {
             XCTFail("\(description). \(app.debugDescription)", file: file, line: line)
             return false
         }
+        // The host and its remote controls share one minute. Fail early if the host never appears.
+        let readinessDeadline = ProcessInfo.processInfo.systemUptime + 60
         guard waitForShareState("The system share sheet did not begin presenting", timeout: 15, until: {
             remoteContent.exists || usableClose()
         }) else { return nil }
         // UIKit presents the remote container before the system activity service
         // supplies its controls. Only a usable Close permits cancellation.
         var previous: (identifier: String, label: String, frame: CGRect)?
-        guard waitForShareState("The presented system share sheet did not load its Close control", timeout: 45, until: {
+        let remaining = max(0, readinessDeadline - ProcessInfo.processInfo.systemUptime)
+        guard waitForShareState("The presented system share sheet did not load its Close control", timeout: remaining, until: {
             guard usableClose(), let close else { previous = nil; return false }
             guard requireStableFrame else { return true }
             // The remote header can be hittable while its presentation is still moving.
