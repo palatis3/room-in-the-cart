@@ -315,8 +315,11 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     }
 
     func importFile(_ url: URL, recipes: Bool) async {
-        guard let presentation = beginImport(recipes ? .recipeFile : .recordsFile) else { return }
-        await finishFileImport(.success(url), from: presentation)
+        guard !busy else { return }
+        do {
+            let authorize = try authorization()
+            await importFile(url, recipes: recipes, authorize: authorize)
+        } catch { fail(error, reveal: true) }
     }
     private func importFile(_ url: URL, recipes: Bool, authorize: @escaping Authorization) async {
         guard !busy else { return }
