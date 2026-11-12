@@ -205,19 +205,13 @@ struct DinnerAwayCarryoverView: View {
             guard let meal, let need, let supply, let zone = dinner.shop?.basis.timeZoneIdentifier else { throw AwayCarryoverError.invalid }
             let count = try quantity(counted, supply.quantity.unit)
             let amount = try quantity(reserved, need.amount.unit)
-            let servings = try rational(servings)
+            let servings = try DinnerEntry.positive(servings)
             if model.prepare(id: operationID, occurrenceID: meal.id, needID: need.id, supply: supply, counted: count, reserved: amount,
                 servings: servings, day: try MealDay(date: targetDate, timeZoneIdentifier: zone), observedAt: observedAt) { approved = false }
         } catch { formError = pTr("Enter exact positive amounts and a real later date. Nothing has been saved.") }
     }
-    private func rational(_ text: String) throws -> Rational {
-        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let parts = value.split(separator: "/", omittingEmptySubsequences: false)
-        if parts.count == 2, let n = Int64(parts[0]), let d = Int64(parts[1]) { return try Rational(n, d) }
-        return try Rational(decimal: value)
-    }
     private func quantity(_ text: String, _ unit: UnitOfMeasure) throws -> Quantity {
-        Quantity(amount: try rational(text), unit: unit, originalLiteral: text)
+        Quantity(amount: try DinnerEntry.positive(text), unit: unit, originalLiteral: text)
     }
 }
 

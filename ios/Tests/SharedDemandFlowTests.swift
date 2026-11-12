@@ -58,7 +58,7 @@ import HouseholdClient
         XCTAssertEqual(value.change.contributions[0].originalText, "Twelve wraps for the week")
     }
     func testExactDecimalFractionAndSpanishDecimalNeverRoundThroughDouble() throws {
-        let cases: [(String, Int64, Int64)] = [("1,25", 5, 4), ("15/16", 15, 16), ("0.000000001", 1, 1_000_000_000)]
+        let cases: [(String, Int64, Int64)] = [("1,25", 5, 4), ("15/16", 15, 16), ("1 1/2", 3, 2), ("2⅓", 7, 3), ("0.000000001", 1, 1_000_000_000)]
         for (literal, n, d) in cases {
             let q = try SharedFoodAmountDraft(literal: literal, unit: .ounce, unknown: false).quantity()
             XCTAssertEqual(q?.amount.numerator, n); XCTAssertEqual(q?.amount.denominator, d); XCTAssertEqual(q?.originalLiteral, literal)

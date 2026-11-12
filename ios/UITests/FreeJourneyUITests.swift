@@ -189,7 +189,7 @@ import XCTest
         tap(element("awayCarryover.supply"))
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Beans")).firstMatch)
         fill("4", into: "awayCarryover.counted", useVisibleCenter: true)
-        fill("2", into: "awayCarryover.reserved", useVisibleCenter: true)
+        fill("1 1/2", into: "awayCarryover.reserved", useVisibleCenter: true)
         fill("2", into: "awayCarryover.servings", useVisibleCenter: true)
         if app.keyboards.firstMatch.exists { app.typeText(XCUIKeyboardKey.return.rawValue) }
         enableSwitch("awayCarryover.checked")
@@ -218,7 +218,7 @@ import XCTest
         XCTAssertEqual(matches.count, 2)
         tap(matches.matching(NSPredicate(format: "identifier != %@", originalID)).firstMatch)
         XCTAssertTrue(target.waitForExistence(timeout: 8))
-        let reserved = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Reserved quantity: 2")).firstMatch
+        let reserved = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Reserved quantity: 3/2")).firstMatch
         reveal(reserved)
         XCTAssertTrue(reserved.exists)
     }
@@ -957,9 +957,12 @@ import XCTest
         fill("Dinner plan", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("dinnerLibrary")); tap(element("ledgerNewTemplate"))
         fill("Pepper rice", into: "ledgerDinnerTitle"); fill("3", into: "ledgerDinnerServings")
-        fill("Peppers", into: "Ingredient name"); fill("3", into: "Amount, optional", requireDone: true)
+        fill("Peppers", into: "Ingredient name"); fill("1 1/2", into: "Amount, optional", requireDone: true)
         tap(element("ledgerReviewDinner")); tap(element("ledgerSaveDinner")); tap(app.buttons["Done"])
         tap(element("ledgerChooseTemplate"))
+        let need = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerPreviewNeed-'")).firstMatch
+        XCTAssertTrue(need.waitForExistence(timeout: 8))
+        XCTAssertEqual(need.label, "Peppers, New need, After: 3/2 units")
         let apply = app.buttons["dinnerApply"]
         tap(apply)
         // Apply saves asynchronously before dismissing its decision sheet.
@@ -1262,7 +1265,7 @@ import XCTest
         XCTAssertTrue(commit.isEnabled)
         let earlierAmount = element("ledgerImportAmount-1")
         revealPreviewControl(earlierAmount, upward: false)
-        fill("9/2", into: "ledgerImportAmount-1", replacing: true)
+        fill("4 1/2", into: "ledgerImportAmount-1", replacing: true)
         XCTAssertFalse(commit.isEnabled, "Changing the earlier supply must invalidate the later same-need choice")
         openChoices(2)
         XCTAssertFalse(mergePreview.exists || mergeSaved.exists)

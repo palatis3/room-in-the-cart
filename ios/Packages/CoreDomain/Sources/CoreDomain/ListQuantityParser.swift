@@ -20,6 +20,18 @@ public enum ListQuantityParser {
         return tokens
     }
 
+    /// Consume a complete numeric food field without inferring a unit or ignoring trailing text.
+    public static func numericAmount(_ text: String) throws -> Rational {
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")
+        guard value.utf8.count <= 64, value.allSatisfy({
+            $0.isNumber || $0 == "." || $0 == "/" || ($0.isWhitespace && !$0.isNewline)
+        }) else { throw DomainError.invalidNumber }
+        var tokens = value.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        let amount = try takeAmount(from: &tokens)
+        guard tokens.isEmpty else { throw DomainError.invalidNumber }
+        return amount
+    }
+
     public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
         var rest = tokens
         let amount = try takeNumberPart(from: &rest, allowingWords: allowingWords)

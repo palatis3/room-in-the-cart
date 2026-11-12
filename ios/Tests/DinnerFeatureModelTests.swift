@@ -358,6 +358,18 @@ import CoreDomain
     func testParsingExactFractionSpanishDecimalAndUnknown() throws {
         XCTAssertEqual(try DinnerEntry.rational("1/3"), try Rational(1, 3))
         XCTAssertEqual(try DinnerEntry.rational("1,25"), try Rational(5, 4))
+        var draft = DinnerTemplateDraft(try recipe())
+        draft.servings = "1½"
+        draft.ingredients[0].amount = "1 1/2"
+        draft.ingredients[0].unit = .cup
+        let reviewed = try draft.template()
+        XCTAssertEqual(reviewed.servings, try Rational(3, 2))
+        XCTAssertEqual(reviewed.ingredients[0].quantity, Quantity(amount: try Rational(3, 2), unit: .cup, originalLiteral: "1 1/2"))
+        XCTAssertEqual(try DinnerTemplateDraft(reviewed).template().ingredients, reviewed.ingredients)
+        for invalid in ["1 3/2", "1 1/2 cups", "1\n1/2", "1 and a half", "1.5 1/2"] {
+            XCTAssertThrowsError(try DinnerEntry.quantity(invalid, unit: .cup), invalid)
+        }
+        XCTAssertThrowsError(try DinnerEntry.money("1 1/2"))
         XCTAssertNil(try DinnerEntry.quantity("", unit: .count))
         XCTAssertNil(try DinnerEntry.money(" "))
         XCTAssertThrowsError(try DinnerEntry.money("0.001"))

@@ -5,6 +5,12 @@ import CoreDomain
 enum DinnerEntry {
     static func rational(_ text: String) throws -> Rational {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.contains(where: { $0.isWhitespace || !$0.isASCII }) {
+            return try ListQuantityParser.numericAmount(value)
+        }
+        return try singleNumber(value)
+    }
+    private static func singleNumber(_ value: String) throws -> Rational {
         guard value.utf8.count <= 64 else { throw DomainError.invalidNumber }
         let parts = value.split(separator: "/", omittingEmptySubsequences: false)
         if parts.count == 2 {
@@ -21,8 +27,9 @@ enum DinnerEntry {
         return Quantity(amount: try rational(text), unit: unit, originalLiteral: text)
     }
     static func money(_ text: String) throws -> Money? {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        let cents = try rational(text).multiplied(by: Rational(100))
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return nil }
+        let cents = try singleNumber(value).multiplied(by: Rational(100))
         guard cents.denominator == 1 else { throw DomainError.invalidNumber }
         return Money(minorUnits: cents.numerator)
     }

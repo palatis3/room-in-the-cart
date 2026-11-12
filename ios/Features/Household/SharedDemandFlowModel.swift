@@ -15,12 +15,7 @@ struct SharedFoodAmountDraft: Equatable {
     var conversionNote = ""
     func quantity() throws -> SharedDemandQuantity? {
         if unknown { return nil }
-        let text = literal.trimmingCharacters(in: .whitespacesAndNewlines)
-        let rational: Rational
-        let parts = text.split(separator: "/", omittingEmptySubsequences: false)
-        if parts.count == 2, let n = Int64(parts[0]), let d = Int64(parts[1]) {
-            rational = try Rational(n, d)
-        } else { rational = try Rational(decimal: text.replacingOccurrences(of: ",", with: ".")) }
+        let rational = try DinnerEntry.rational(literal)
         var conversion: SharedDemandConversion?
         if useConversion {
             let rate = try DinnerEntry.rational(conversionRate)

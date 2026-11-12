@@ -27,13 +27,7 @@ private struct RequestPackDraft: Equatable {
 func requestPackQuantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
     let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleaned.isEmpty else { return nil }
-    let number = cleaned.replacingOccurrences(of: ",", with: ".")
-    guard number.utf8.count <= 64, number.allSatisfy({
-        $0.isNumber || $0 == "." || $0 == "/" || ($0.isWhitespace && !$0.isNewline)
-    }) else { throw RequestPackError.invalid }
-    var tokens = number.split(whereSeparator: \.isWhitespace).map(String.init)[...]
-    let amount = try ListQuantityParser.takeAmount(from: &tokens)
-    guard tokens.isEmpty else { throw RequestPackError.invalid }
+    let amount = try ListQuantityParser.numericAmount(cleaned)
     return Quantity(amount: amount, unit: unit, originalLiteral: text)
 }
 

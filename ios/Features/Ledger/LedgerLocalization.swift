@@ -33,12 +33,11 @@ func ledgerAmountInput(_ value: Rational) -> String {
     static func rational(_ literal: String) throws -> Rational? {
         let value = literal.trimmingCharacters(in: .whitespacesAndNewlines)
         let parts = value.split(separator: "/", omittingEmptySubsequences: false)
-        if parts.count == 2 {
-            guard value.count <= 40, let numerator = Int64(parts[0]), let denominator = Int64(parts[1]),
-                  numerator >= 0, denominator > 0 else { throw EntryError.invalidNumber }
+        if parts.count == 2, let numerator = Int64(parts[0]), let denominator = Int64(parts[1]) {
+            guard value.count <= 40, numerator >= 0, denominator > 0 else { throw EntryError.invalidNumber }
             return try Rational(numerator, denominator)
         }
-        return try ComparisonModel.rational(value)
+        return try ComparisonModel.quantity(value, .count)?.amount
     }
     static func quantity(_ literal: String, _ unit: UnitOfMeasure) throws -> Quantity? {
         guard let amount = try rational(literal) else { return nil }
