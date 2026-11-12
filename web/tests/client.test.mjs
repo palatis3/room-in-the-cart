@@ -1,3 +1,4 @@
+import {waitForIdle} from './fixtures/wait-for-idle.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {JSDOM} from 'jsdom';
@@ -9,13 +10,6 @@ import {WebApp} from '../dist/app.js';
 const session = () => ({authenticated:true,role:'contributor',household:{id:'household-a',label:'Family A'},memberId:'member-a',shopId:'shop-a',replayWindow:{id:'window-a',expiresAt:'2099-01-01T00:00:00Z'},csrf:'csrf-test',enrolled:true,queueConsent:false});
 const own = () => ({requestId:'request-a',shopId:'shop-original',revision:1,originalItem:'No-salt frijoles',ownQuantity:'two 15 oz cans',authoredAt:'2026-01-01T12:00:00Z',receivedAt:'2026-01-01T12:00:01Z',route:'current',status:'pending',ownActionAllowed:true,clarification:null,followupTo:null});
 const command = () => ({v:1,replayWindow:'window-a',clientKey:'stable-key',shopId:'shop-a',kind:'request.send',base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:'request-client',originalItem:'Beans',ownQuantity:null,authoredAt:'2026-01-01T12:00:00Z',route:'current'}});
-async function waitForIdle(root) {
- const deadline=Date.now()+3000;
- while(root.querySelector('main')?.getAttribute('aria-busy')==='true'){
-  assert.ok(Date.now()<deadline,'the page did not finish its action');
-  await new Promise(resolve=>setTimeout(resolve,5));
- }
-}
 const setup = async (api,language='en',outbox=new Outbox(new IDBFactory())) => {
  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite'});
  Object.defineProperty(dom.window.navigator,'language',{value:language});
