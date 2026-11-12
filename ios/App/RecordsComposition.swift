@@ -251,12 +251,14 @@ struct RecordsToolsEntryView: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
-    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
-        _composition = StateObject(wrappedValue: RecordsComposition(app: app, ledger: ledger, pickup: pickup, erasureCleanup: erasureCleanup))
+    private let dinnerModel: DinnerFeatureModel?
+    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, dinnerModel: DinnerFeatureModel? = nil) {
+        self.dinnerModel = dinnerModel
+        _composition = StateObject(wrappedValue: RecordsComposition(app: app, ledger: ledger, pickup: pickup, erasureCleanup: erasureCleanup, recipeLibraryOnly: dinnerModel != nil))
     }
     var body: some View {
         Group {
-            if let tools = composition.tools { RecordsToolsView(model: tools) }
+            if let tools = composition.tools { RecordsToolsView(model: tools, recipeLibraryOnly: dinnerModel != nil) }
             else if composition.error != nil {
                 ContentUnavailableView {
                     Label(recordsText("Records could not open"), systemImage: "exclamationmark.triangle")
@@ -290,7 +292,7 @@ struct RecordsToolsEntryView: View {
                             NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
                         }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
-                    case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger)
+                    case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel)
                     case let .sharedRecord(record, text):
                         ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
                             .navigationTitle(recordsTitle(record))
@@ -387,7 +389,9 @@ private struct RecordsRecoveredDinnersView: View {
                 self.ledger.sourceWorkspaceID == ledgerID && self.app.store?.workspaceID == comparisonID
         }
     }
-    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
+    private let recipeLibraryOnly: Bool
+    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, recipeLibraryOnly: Bool) {
+        self.recipeLibraryOnly = recipeLibraryOnly
         self.app = app; self.ledger = ledger; self.pickup = pickup; self.erasureCleanup = erasureCleanup
     }
     func load() async {
@@ -489,6 +493,9 @@ private struct RecordsRecoveredDinnersView: View {
         guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
         try await synchronizeErasure()
         guard authorize() else { throw ArchiveError.unavailable }
+        // Imported recipes live in the recovered-copy registry. This destination
+        // needs no projections of unrelated pickups, budgets or shared history.
+        if recipeLibraryOnly { return RecordsSnapshotBatch() }
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
         var unavailableRecords: [RecordsUnavailableRecord] = []
@@ -854,6 +861,7 @@ private struct RecordsLedgerDeletionView: View {
 private struct RecordsRecipeAdoptionView: View {
     let recipe: ImportedRecipe
     @ObservedObject var ledger: LedgerModel
+    let dinnerModel: DinnerFeatureModel?
     @State private var editing = false
     private var template: MealTemplate {
         // The placeholder is never shown or saved. The editor requires the person to
@@ -881,7 +889,13 @@ private struct RecordsRecipeAdoptionView: View {
         }
         .navigationTitle(recordsText("Saved recipe"))
         .sheet(isPresented: $editing) {
-            NavigationStack { LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true) }
+            NavigationStack {
+                if let dinnerModel {
+                    DinnerTemplateEditor(model: dinnerModel, purpose: .manual, initial: template, servingsUnknown: true)
+                } else {
+                    LedgerMealEditor(model: ledger, template: template, chooseNow: true, servingsUnknown: true)
+                }
+            }
         }
     }
 }

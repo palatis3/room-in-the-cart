@@ -49,11 +49,13 @@ struct DinnerTemplateEditor: View {
     @State private var completed = false
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
-    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
+    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false) {
         self.model = model; self.purpose = purpose; originalIdea = idea
         _originalIdentity = State(initialValue: model.editorIdentity)
         _supplyEvidence = State(initialValue: idea?.supplyEvidence ?? [])
-        _draft = State(initialValue: DinnerTemplateDraft(idea?.template ?? initial))
+        var draft = DinnerTemplateDraft(idea?.template ?? initial)
+        if servingsUnknown { draft.servings = "" }
+        _draft = State(initialValue: draft)
         _acceptedID = State(initialValue: model.state.acceptedDinners.first(where: { $0.sourceIdeaID == idea?.id && idea != nil })?.id ?? UUID())
         _yieldConfirmed = State(initialValue: idea?.yieldConfirmed ?? false)
         _availabilityConfirmed = State(initialValue: idea?.availabilityConfirmed ?? false)
@@ -291,6 +293,7 @@ struct DinnerUnitPicker: View {
 }
 struct DinnerLibraryView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @Environment(\.pickupLedger) private var liveLedger
     @State private var showPreview = false
     var body: some View {
         List {
@@ -298,6 +301,9 @@ struct DinnerLibraryView: View {
                 Section {
                     Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
                     NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
+                }
+                if let liveLedger, model.store === liveLedger {
+                    Section { RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model) }
                 }
                 Section(dinnerText("Accepted dinners")) {
                     if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }

@@ -8,9 +8,10 @@ struct RecordsRecoveryLink: View {
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     var accessibilityID = "records.recovery"
+    var dinnerModel: DinnerFeatureModel? = nil
 
     var body: some View {
-        NavigationLink(tr("Recovery, exports and saved records")) {
+        NavigationLink(dinnerModel == nil ? tr("Recovery, exports and saved records") : recordsText("Import and use recipes")) {
             RecordsToolsEntryView(app: app, ledger: ledger, pickup: pickup,
                 erasureCleanup: RecordsErasureCleanup(eraseLedgerWorkspace: { id in
                     try await surfaces.eraseLedgerWorkspace(id)
@@ -19,7 +20,7 @@ struct RecordsRecoveryLink: View {
                             localeIdentifier: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US"))
                 }, erasePickupRecord: { workspaceID, recordID in
                     try await surfaces.erasePickupRecord(workspaceID: workspaceID, recordID: recordID)
-                }))
+                }), dinnerModel: dinnerModel)
         }.accessibilityIdentifier(accessibilityID)
     }
 }

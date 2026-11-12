@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Saved recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recetas guardadas"
+          }
+        }
+      }
+    },
+    "Import and use recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import and use recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar y usar recetas"
+          }
+        }
+      }
+    },
     "File source": {
       "extractionState": "manual",
       "localizations": {
@@ -3284,6 +3318,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se guardó el archivo. La fecha de esta copia de seguridad no está disponible en este iPhone."
+          }
+        }
+      }
+    },
+    "No saved recipes yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved recipes yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay recetas guardadas."
+          }
+        }
+      }
+    },
+    "Save these recipes to your library. Open a saved recipe to review its ingredients for a pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save these recipes to your library. Open a saved recipe to review its ingredients for a pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda estas recetas en tu biblioteca. Abre una receta guardada para revisar sus ingredientes y usarlos en una recogida."
+          }
+        }
+      }
+    },
+    "Save reviewed recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar las recetas revisadas"
           }
         }
       }
