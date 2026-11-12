@@ -20,8 +20,10 @@ extension HouseholdClientTests {
     }
     func testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities() async throws {
         let auth = try auth(); var privateCalls = 0
+        let stateLock = NSLock()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.bootstrapBytes(role: "contributor")) }
@@ -33,12 +35,14 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         do { _ = try await service.shopperInbox(shopID: shopID); XCTFail("Contributor fetched other requests") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(privateCalls, 0)
+        XCTAssertEqual(stateLock.withLock { privateCalls }, 0)
     }
     func testPreviewUsesReviewedBaseAndDecisionRetryKeepsExactBytes() async throws {
         let auth = try auth(); var role = "shopper"; var previews: [Data] = []; var commands: [Data] = []
+        let stateLock = NSLock()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), "device-token")
@@ -55,17 +59,17 @@ extension HouseholdClientTests {
             base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
             decision: .add(line: .init(originalItem: "Cereal", packs: 1, unitPriceMinor: 349, feeEligible: true), promote: false))
         XCTAssertEqual(result.after.totalMinor, 4069); XCTAssertEqual(result.after.overCapMinor, 269); XCTAssertTrue(result.requiresOverageAcceptance)
-        let previewBody = try XCTUnwrap(JSONSerialization.jsonObject(with: previews[0]) as? [String: Any])
+        let previewBody = try XCTUnwrap(JSONSerialization.jsonObject(with: stateLock.withLock { previews[0] }) as? [String: Any])
         XCTAssertEqual((previewBody["base"] as? [String: Int])?["shopRevision"], 7)
         XCTAssertEqual((previewBody["decision"] as? [String: Any])?["choice"] as? String, "add")
         let operation = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shopID, kind: "request.apply", base: result.base,
             body: ["requestId": .string(requestID), "previewId": .string(result.previewId), "acceptOverage": .bool(true), "acceptUnknown": .bool(false)]), bootstrap: projection)
         for _ in 0..<2 { do { _ = try await service.executeShopper(operation); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
-        XCTAssertEqual(commands, [operation.bytes, operation.bytes])
-        role = "contributor"
+        XCTAssertEqual(stateLock.withLock { commands }, [operation.bytes, operation.bytes])
+        stateLock.withLock { role = "contributor" }
         do { _ = try await service.executeShopper(operation); XCTFail("Old shopper retried after transfer") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(commands.count, 2)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 2)
     }
     func testShopperDecisionsEncodeOnlyDocumentedDiscriminatedFields() throws {
         for decision in [ShopperDecision.deferRequest, .dismiss, .handled] {
@@ -145,7 +149,9 @@ extension HouseholdClientTests {
         let line = UUID().uuidString.lowercased()
         var role = "shopper", capability = true, reply = "loss"
         var posts: [Data] = []
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") {
@@ -178,19 +184,19 @@ extension HouseholdClientTests {
         XCTAssertEqual(restored, operation)
         XCTAssertFalse(restored.targetsShop(nil))
         XCTAssertFalse(restored.targetsShop(UUID().uuidString))
-        reply = "notBought"
+        stateLock.withLock { reply = "notBought" }
         do { _ = try await service.executeShopper(restored); XCTFail("A different outcome was accepted") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        reply = "bought"
+        stateLock.withLock { reply = "bought" }
         let receipt = try await service.executeShopper(restored)
-        XCTAssertEqual(receipt.purchaseOutcome, reply)
-        capability = false
+        XCTAssertEqual(receipt.purchaseOutcome, stateLock.withLock { reply })
+        stateLock.withLock { capability = false }
         do { _ = try await service.executeShopper(restored); XCTFail("Missing purchase capability") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        role = "contributor"; capability = true
+        stateLock.withLock { role = "contributor"; capability = true }
         do { _ = try await service.executeShopper(restored); XCTFail("Transferred shopper could replay") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(posts, [operation.bytes, operation.bytes, operation.bytes])
+        XCTAssertEqual(stateLock.withLock { posts }, [operation.bytes, operation.bytes, operation.bytes])
     }
 
     func testOwnPurchaseReadbackAcceptsOnlyRecordedOutcomesAndRejectsPrivateLinks() async throws {
@@ -198,7 +204,9 @@ extension HouseholdClientTests {
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                       auth: auth, deviceVault: MemoryVault(), transport: transport())
         var outcome: String?, privateLink = false
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.bootstrapBytes(role: "contributor")) }
@@ -213,13 +221,13 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household)
         for known: ConfirmedRequestPurchase? in [nil, .bought, .notBought] {
-            outcome = known?.rawValue
+            stateLock.withLock { outcome = known?.rawValue }
             let page = try await service.ownRequests()
             XCTAssertEqual(page.requests.count, 1)
             XCTAssertEqual(page.requests[0].purchaseOutcome, known)
             XCTAssertEqual(page.requests[0].status, "added")
         }
-        privateLink = true
+        stateLock.withLock { privateLink = true }
         do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private link") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
     }
