@@ -85,6 +85,20 @@ class WorkflowGuardTests(unittest.TestCase):
                         text.replace('bitrise-runner-room in cart', 'bitrise-runner-other')):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 self.validate(changed, policy)
+        self.path = Path(self.temp.name) / 'ci.yml'
+        consumer = TEXT.replace('  native:', '  ios-tests:').replace(
+            'runs-on: macos-15', 'runs-on: ' + FIXTURE_CONSUMER_RUNNER).replace(
+            'ritc-macos-slot-0', FIXTURE_CONSUMER_SLOT_PREFIX + '${{ matrix.macos_slot }}').replace(
+            '    steps:', '    strategy:\n      matrix: ${{ fromJSON(needs.ios-build.outputs.test_matrix) }}\n    steps:')
+        core_policy = {('ci.yml', 'ios-tests'): POLICY[('ci.yml', 'ios-tests')]}
+        self.assertEqual(len(self.validate(consumer, core_policy)), 1)
+        for changed in (consumer.replace(FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER),
+                        consumer.replace("matrix.provider == 'bitrise'", 'true'),
+                        consumer.replace(FIXTURE_CONSUMER_SLOT_PREFIX, 'ritc-macos-slot-'),
+                        consumer.replace('needs.ios-build.outputs.test_matrix', 'needs.other.outputs.test_matrix'),
+                        consumer.replace('  ios-tests:', '  ios-build:')):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                self.validate(changed, core_policy)
         self.path = Path(self.temp.name) / 'probe.yml'
         with self.assertRaises(ValueError):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + FIXTURE_RUNNER))

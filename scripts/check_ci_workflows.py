@@ -18,6 +18,7 @@ BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
 BITRISE_LABEL = 'bitrise-runner-room in cart'
 FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
                 ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
+ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {('ci.yml', 'ios-tests')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
@@ -196,19 +197,19 @@ def validate_workflows(paths, policy=POLICY):
                     cancel_node.start_mark.index >= keys[base + ('cancel-in-progress',)].end_mark.index,
                     f'Native cancel-in-progress must be literal false: {identity}')
             expected = policy[identity]
-            fixture = identity in FIXTURE_JOBS
-            if fixture:
+            routed = identity in ROUTED_NATIVE_JOBS
+            if routed:
                 runner = FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
-                require(job.get('runs-on') == runner, f'Unreviewed fixture provider routing: {identity}')
+                require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             else:
                 labels = job.get('runs-on', [])
                 labels = [labels] if isinstance(labels, str) else labels
                 require(job.get('runs-on') not in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER) and
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
-                        f'Bitrise routing is restricted to the four fixture jobs: {identity}')
-            slot_prefix = FIXTURE_SLOT_PREFIX if fixture else SLOT_PREFIX
-            matrix_group = FIXTURE_MATRIX_GROUP if fixture else MATRIX_GROUP
-            slot_count = 3 if fixture else 5
+                        f'Bitrise routing is restricted to reviewed fixture jobs and core consumers: {identity}')
+            slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
+            matrix_group = FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
+            slot_count = 3 if routed else 5
             if type(expected) is int:
                 require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
                 require('strategy' not in job or 'matrix' not in job['strategy'],

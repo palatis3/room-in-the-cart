@@ -76,7 +76,7 @@ class SelectCoreWorkTests(unittest.TestCase):
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], '2')
             self.assertEqual(json.loads(outputs['matrix'])['include'], [
-                {'shard': 'ui-01', 'expected_count': 2, 'macos_slot': 1}])
+                {'shard': 'ui-01', 'expected_count': 2, 'macos_slot': 1, 'provider': 'github'}])
             again = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertNotEqual(again.returncode, 0)
             self.assertIn('full plan changed', again.stderr)
@@ -96,7 +96,7 @@ class SelectCoreWorkTests(unittest.TestCase):
         self.assertIn("'dinner-diagnostic' || 'full'", workflow['concurrency']['group'])
         self.assertIn("'Dinner diagnostic gate' || 'CI gate'", workflow['jobs']['ci-gate']['name'])
 
-    def test_full_cli_keeps_compiled_plan_and_only_reassigns_ui04_admission(self):
+    def test_full_cli_keeps_compiled_plan_and_only_reassigns_reviewed_consumers(self):
         with tempfile.TemporaryDirectory() as folder:
             plan_dir, output = Path(folder) / 'plan', Path(folder) / 'output'
             full = make_plan(INVENTORY, DURATIONS, 10)
@@ -112,7 +112,11 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
             expected_consumers = [copy.deepcopy(row) for row in full['include'] if row['shard'] != 'models']
             next(row for row in expected_consumers if row['shard'] == 'ui-04')['macos_slot'] = 1
+            for row in expected_consumers:
+                row['provider'] = 'bitrise' if row['shard'] == 'ui-05' else 'github'
             self.assertEqual(json.loads(outputs['matrix'])['include'], expected_consumers)
+            self.assertEqual([(r['shard'], r['macos_slot']) for r in expected_consumers
+                              if r['provider'] == 'bitrise'], [('ui-05', 0)])
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):

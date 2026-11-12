@@ -58,8 +58,11 @@ def main():
         # The producer has just booted this simulator and discovered its tests.
         # Keep the complete plan, but run models there instead of starting a
         # second cold consumer. UI04 and UI09 contended on slot 4 after slot 1
-        # finished its work; adjust admission without rewriting the full plan.
-        consumers = [{**row, 'macos_slot': 1 if row['shard'] == 'ui-04' else row['macos_slot']}
+        # finished its work. UI05 also waited behind GitHub0 after the prior
+        # Bitrise fixture tail finished. Change admission, not the full plan;
+        # untrusted events retain UI05's original GitHub0 fallback.
+        consumers = [{**row, 'provider': 'bitrise' if row['shard'] == 'ui-05' else 'github',
+                      'macos_slot': 1 if row['shard'] == 'ui-04' else row['macos_slot']}
                      for row in selected['include'] if row['shard'] != 'models']
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
