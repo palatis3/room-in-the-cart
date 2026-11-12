@@ -31,13 +31,13 @@ import XCTest
         app.launch(); waitForShop(spanish: spanish)
         counts(previews: 0, posts: 0, writes: 0, retries: 0)
         openHistory(); openCandidate(spanish: spanish)
-        let value = element("sharedUndo.store.unchanged")
+        let value = app.staticTexts["sharedUndo.store.unchanged"]
         reveal(value, initialSearchDirection: .towardStart)
         XCTAssertEqual(value.label, spanish ? "Se mantendrá la tienda seleccionada." : "The selected store will stay the same.")
         XCTAssertTrue(app.frame.contains(value.frame)); XCTAssertGreaterThan(value.frame.height, 0)
         XCTAssertTrue(value.isHittable)
         capture("Same-Store-Undo-\(spanish ? "es" : "en")-unchanged-store-copy")
-        tap(element("sharedUndo.cancel")); waitForShop(spanish: spanish)
+        tap(app.buttons["sharedUndo.cancel"]); waitForShop(spanish: spanish)
         counts(previews: 0, posts: 0, writes: 0, retries: 0)
         app.launchEnvironment["RITC_OPERATION_UNDO_STORE"] = "0"
     }
@@ -50,28 +50,28 @@ import XCTest
         openHistory(); openCandidate(spanish: spanish)
         assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.")
         assertText("Original taco dinner"); enterPacks(amount: "8")
-        tap(element("sharedUndo.preview")); assertMealReview(spanish: spanish)
+        tap(app.buttons["sharedUndo.preview"]); assertMealReview(spanish: spanish)
         capture("Meal-Undo-\(language)-before-Cancel")
-        tap(element("sharedUndo.cancel")); waitForShop(spanish: spanish)
+        tap(app.buttons["sharedUndo.cancel"]); waitForShop(spanish: spanish)
         counts(previews: 1, posts: 0, writes: 0, retries: 0)
         openHistory(); openCandidate(spanish: spanish)
         assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.")
-        enterPacks(amount: "8"); tap(element("sharedUndo.preview")); assertMealReview(spanish: spanish)
-        setSwitch("sharedUndo.acknowledged", on: true); tap(element("sharedUndo.apply"))
+        enterPacks(amount: "8"); tap(app.buttons["sharedUndo.preview"]); assertMealReview(spanish: spanish)
+        setSwitch("sharedUndo.acknowledged", on: true); tap(app.buttons["sharedUndo.apply"])
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        tap(element("sharedUndo.return")); reveal(element("sharedShop.retry"))
+        tap(app.buttons["sharedUndo.return"]); reveal(app.buttons["sharedShop.retry"])
         capture("Meal-Undo-\(language)-lost-reply")
         app.terminate(); app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "0"; app.launch(); waitForShop(spanish: spanish)
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        tap(element("sharedShop.retry")); counts(previews: 2, posts: 2, writes: 1, retries: 1)
-        XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
+        tap(app.buttons["sharedShop.retry"]); counts(previews: 2, posts: 2, writes: 1, retries: 1)
+        XCTAssertTrue(app.buttons["sharedShop.retry"].waitForNonExistence(timeout: 12))
         assertText(spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed")
         assertText("Original taco dinner", initialSearchDirection: .towardEnd)
         assertText("Protected lunch", initialSearchDirection: .towardStart); assertText("Later apples", initialSearchDirection: .towardStart)
         openHistory()
-        let already = element("sharedUndo.unavailable." + target)
+        let already = app.staticTexts["sharedUndo.unavailable." + target]
         reveal(already); XCTAssertEqual(already.label, spanish ? "Este cambio ya se deshizo." : "This change was already undone.")
-        tap(element("sharedUndo.cancel")); tap(element("sharedShop.foodQuantities"), initialSearchDirection: .towardStart)
+        tap(app.buttons["sharedUndo.cancel"]); tap(app.buttons["sharedShop.foodQuantities"], initialSearchDirection: .towardStart)
         assertUnknownTotal(spanish: spanish)
         assertText("Six original taco wraps"); assertText("Two wraps held for lunch", initialSearchDirection: .towardStart)
         assertText("Later apples — amount unknown")
@@ -79,7 +79,7 @@ import XCTest
         capture("Meal-Undo-\(language)-restored-dinner-and-survivors")
     }
     private func assertMealReview(spanish: Bool) {
-        let apply = element("sharedUndo.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
+        let apply = app.buttons["sharedUndo.apply"]; reveal(apply); XCTAssertFalse(apply.isEnabled)
         // SwiftUI propagates the source VStack identifier to its Text rows.
         // Select the exact wording on that source, not children of its first Text.
         let lunch = app.staticTexts.matching(identifier: "sharedUndo.after.source.00000000-0000-4000-8000-000000000022")
@@ -104,29 +104,29 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--shared-operation-undo-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", spanish ? "es_US" : "en_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch(); waitForShop(spanish: spanish); counts(previews: 0, posts: 0, writes: 0, retries: 0)
         openHistory()
-        let unsupported = element("sharedUndo.unavailable.00000000-0000-4000-8000-000000000030")
+        let unsupported = app.staticTexts["sharedUndo.unavailable.00000000-0000-4000-8000-000000000030"]
         reveal(unsupported); XCTAssertTrue(unsupported.label.contains(spanish ? "Este cambio de comida" : "This meal change"), unsupported.label)
         openCandidate(spanish: spanish); enterPacks()
-        tap(element("sharedUndo.preview")); assertReview(spanish: spanish)
+        tap(app.buttons["sharedUndo.preview"]); assertReview(spanish: spanish)
         capture("Operation-Undo-\(language)-before-Cancel")
-        tap(element("sharedUndo.cancel")); waitForShop(spanish: spanish)
+        tap(app.buttons["sharedUndo.cancel"]); waitForShop(spanish: spanish)
         counts(previews: 1, posts: 0, writes: 0, retries: 0)
         openHistory(); openCandidate(spanish: spanish); enterPacks()
-        tap(element("sharedUndo.preview")); assertReview(spanish: spanish)
-        setSwitch("sharedUndo.acknowledged", on: true); tap(element("sharedUndo.apply"))
+        tap(app.buttons["sharedUndo.preview"]); assertReview(spanish: spanish)
+        setSwitch("sharedUndo.acknowledged", on: true); tap(app.buttons["sharedUndo.apply"])
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        tap(element("sharedUndo.return")); reveal(element("sharedShop.retry"))
+        tap(app.buttons["sharedUndo.return"]); reveal(app.buttons["sharedShop.retry"])
         capture("Operation-Undo-\(language)-lost-reply")
         app.terminate(); app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "0"; app.launch(); waitForShop(spanish: spanish)
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        tap(element("sharedShop.retry")); counts(previews: 2, posts: 2, writes: 1, retries: 1)
-        XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
+        tap(app.buttons["sharedShop.retry"]); counts(previews: 2, posts: 2, writes: 1, retries: 1)
+        XCTAssertTrue(app.buttons["sharedShop.retry"].waitForNonExistence(timeout: 12))
         assertText(spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed")
         assertText("Later apples")
         openHistory()
-        let already = element("sharedUndo.unavailable." + target)
+        let already = app.staticTexts["sharedUndo.unavailable." + target]
         reveal(already); XCTAssertEqual(already.label, spanish ? "Este cambio ya se deshizo." : "This change was already undone.")
-        tap(element("sharedUndo.cancel")); tap(element("sharedShop.foodQuantities"), initialSearchDirection: .towardStart)
+        tap(app.buttons["sharedUndo.cancel"]); tap(app.buttons["sharedShop.foodQuantities"], initialSearchDirection: .towardStart)
         assertUnknownTotal(spanish: spanish)
         assertText("Original source wording"); assertText("Later apples — amount unknown")
         counts(previews: 2, posts: 2, writes: 1, retries: 1)
@@ -151,21 +151,21 @@ import XCTest
         XCTAssertTrue(app.navigationBars[spanish ? "Compra compartida del hogar" : "Shared household shop"].waitForExistence(timeout: 25), app.debugDescription)
     }
     private func openHistory() {
-        tap(element("sharedShop.savedChanges"))
-        XCTAssertTrue(element("sharedUndo.loaded").waitForExistence(timeout: 20), app.debugDescription)
+        tap(app.buttons["sharedShop.savedChanges"])
+        XCTAssertTrue(app.staticTexts["sharedUndo.loaded"].waitForExistence(timeout: 20), app.debugDescription)
     }
     private func openCandidate(spanish: Bool) {
-        tap(element("sharedUndo.history." + target))
+        tap(app.buttons["sharedUndo.history." + target])
         XCTAssertTrue(app.navigationBars[spanish ? "Revisar lo que se deshará" : "Review undo"].waitForExistence(timeout: 20), app.debugDescription)
     }
     private func enterPacks(amount: String = "4") {
         setSwitch("sharedUndo.pack." + wraps + ".unknown", on: false)
         fill(amount, id: "sharedUndo.pack." + wraps + ".amount")
-        tap(element("sharedUndo.done")); XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        tap(app.buttons["sharedUndo.done"]); XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         setSwitch("sharedUndo.pack." + apples + ".acceptUnknown", on: true)
     }
     private func assertReview(spanish: Bool) {
-        let apply = element("sharedUndo.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
+        let apply = app.buttons["sharedUndo.apply"]; reveal(apply); XCTAssertFalse(apply.isEnabled)
         let survivor = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000012")
         reveal(survivor, initialSearchDirection: .towardStart); XCTAssertTrue(survivor.exists && survivor.isHittable)
         assertText(spanish ? "Cantidades utilizables revisadas" : "Reviewed usable amounts")
@@ -222,10 +222,14 @@ import XCTest
         for _ in 0..<30 {
             let area = scrollableArea(), exists = target.exists
             let frame = exists ? target.frame : .zero
-            if exists && target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
-            // Toolbars lie outside the content viewport, but their complete
-            // button frame still has to fit the app and be directly actionable.
-            if exists && target.isHittable && app.frame.contains(frame) && target.elementType == .button && (target.identifier == "sharedUndo.cancel" || target.identifier == "sharedUndo.done") { return }
+            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+                if target.isHittable { return }
+            } else if !frame.isEmpty && target.elementType == .button,
+                      ["sharedUndo.cancel", "sharedUndo.done"].contains(target.identifier),
+                      app.frame.contains(frame), target.isHittable {
+                // Toolbar buttons sit outside the scrolling viewport.
+                return
+            }
             // Virtualized rows may be more than six swipes away. Keep the
             // journey's requested direction until a target frame is available.
             let upward = exists && !frame.isEmpty ? frame.midY > area.midY : startsBySwipingUp
