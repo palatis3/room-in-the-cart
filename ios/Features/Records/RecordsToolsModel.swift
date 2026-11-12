@@ -16,15 +16,16 @@ struct RecordsMediaSelectionID: Hashable {
 /// Native export/validation/open/delete are provided by the composition root. Validation
 /// must decode and re-encode an allowlisted domain payload, never raw database/account data.
 @MainActor final class RecordsToolsModel: ObservableObject {
-    typealias Snapshot = () async throws -> [ArchiveRecord]
+    typealias Snapshot = @MainActor () async throws -> RecordsSnapshotBatch
     typealias Validate = (ArchiveRecord) async throws -> Void
     typealias Open = (RecoveredRecord) async throws -> Void
     typealias Delete = (ArchiveRecord) async throws -> Void
     typealias Authorization = @MainActor @Sendable () -> Bool
 
-    @Published private(set) var currentRecords: [ArchiveRecord] = []
+    @Published private(set) var sourceListing = RecordsSnapshotBatch()
+    var currentRecords: [ArchiveRecord] { sourceListing.records }
     @Published private(set) var recoveredRecords: [RecoveredRecord] = []
-    @Published private(set) var unavailableRecords: [RecordsUnavailableRecord] = []
+    var unavailableRecords: [RecordsUnavailableRecord] { sourceListing.unavailable }
     @Published private(set) var review: RecoveryReview?
     @Published private(set) var recipeReport: RecipeImportReport?
     @Published private(set) var busy = false
@@ -44,7 +45,6 @@ struct RecordsMediaSelectionID: Hashable {
     @Published private(set) var deleteUndo: RecoveryUndoToken?
     let registry: RecoveryRegistry
     private let snapshot: Snapshot
-    private let unavailableSnapshot: () -> [RecordsUnavailableRecord]
     private let validate: Validate
     private let open: Open
     private let deleteSource: Delete?
@@ -72,25 +72,24 @@ struct RecordsMediaSelectionID: Hashable {
     }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
         self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
-        self.unavailableSnapshot = unavailableRecords
         self.beginAuthorization = beginAuthorization
         self.willRemoveRecovered = willRemoveRecovered
     }
-    private func readSnapshot() async throws -> [ArchiveRecord] {
-        let records = try await snapshot()
-        unavailableRecords = unavailableSnapshot()
-        return records
+    private func reloadListing(authorize: Authorization) async throws {
+        let batch = try await snapshot()
+        try requireAuthorization(authorize)
+        let recovered = try await registry.refreshList()
+        try requireAuthorization(authorize)
+        sourceListing = batch
+        recoveredRecords = recovered
     }
     func refresh() async {
         do {
             let authorize = try authorization()
-            currentRecords = try await readSnapshot()
-            try requireAuthorization(authorize)
-            recoveredRecords = try await registry.refreshList()
-            try requireAuthorization(authorize)
+            try await reloadListing(authorize: authorize)
             selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
             selectedMediaIDs.formIntersection(Set(currentRecords.flatMap { record in (record.media ?? []).map { Self.mediaSelectionID($0, record: record) } }))
         } catch { fail(error) }
@@ -104,8 +103,9 @@ struct RecordsMediaSelectionID: Hashable {
         defer { busy = false }
         do {
             let authorize = try authorization()
-            currentRecords = try await readSnapshot()
+            let batch = try await snapshot()
             try requireAuthorization(authorize)
+            sourceListing = batch
             let records = selectedSnapshot.map { source -> ArchiveRecord in
                 var record = source
                 record.media = choice == .encryptedRecovery ? source.media?.filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: source)) } : nil
@@ -122,6 +122,7 @@ struct RecordsMediaSelectionID: Hashable {
                 let revision = ArchiveCodec.digest(try ArchiveCodec.canonical(records.map { [$0.origin, $0.id, $0.revision] }.sorted { $0.lexicographicallyPrecedes($1) }))
                 let envelope = try ArchiveCodec.make(records: records, kind: kind, origin: "selected-local-records", revision: revision, shopID: kind == .helperShop ? records.first?.id : nil)
                 let data = choice == .encryptedRecovery ? try EncryptedArchive.seal(envelope, key: recoveryKey) : try ArchiveCodec.encode(envelope)
+                try requireAuthorization(authorize)
                 preparedDocument = RecordsFileDocument(data: data, kind: choice == .encryptedRecovery ? .recovery : .helper)
                 preparedName = choice == .encryptedRecovery ? "Personal-recovery" : "Helper-copy"
                 preparedIsPrivate = choice == .encryptedRecovery
@@ -134,11 +135,11 @@ struct RecordsMediaSelectionID: Hashable {
                     if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
                     return ReadableArchive.text([record], owner: choice == .ownerText)
                 }.joined(separator: "\n\n")
+                try requireAuthorization(authorize)
                 preparedDocument = RecordsFileDocument(data: Data(text.utf8), kind: .text)
                 preparedName = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
                 preparedIsPrivate = choice == .ownerText
             }
-            try requireAuthorization(authorize)
             status = recordsText("Your file is ready to review and save.")
         } catch { fail(error, reveal: true) }
     }
@@ -229,10 +230,7 @@ struct RecordsMediaSelectionID: Hashable {
             }
             lastImportIDs = result.insertedCopyIDs
             self.review = nil; reviewAuthorization = nil; recipeReport = nil
-            currentRecords = try await readSnapshot()
-            try requireAuthorization(authorize)
-            recoveredRecords = try await registry.refreshList()
-            try requireAuthorization(authorize)
+            try await reloadListing(authorize: authorize)
             publishOutcome(result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged."))
         } catch { fail(error) }
     }
@@ -243,8 +241,7 @@ struct RecordsMediaSelectionID: Hashable {
             cancelRecoveredOpen()
             try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?()
             try requireAuthorization(authorize)
-            currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList()
-            try requireAuthorization(authorize)
+            try await reloadListing(authorize: authorize)
             publishOutcome(recordsText("The imported batch was undone."))
         }
         catch { fail(error) }
@@ -277,16 +274,22 @@ struct RecordsMediaSelectionID: Hashable {
                 outcome = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
             }
             try requireAuthorization(authorize)
-            currentRecords = try await readSnapshot()
-            recoveredRecords = try await registry.refreshList()
-            try requireAuthorization(authorize)
+            try await reloadListing(authorize: authorize)
             publishOutcome(outcome)
         }
         catch { fail(error) }
     }
     func undoRecoveredDeletion() async {
         guard let token = deleteUndo else { return }
-        do { try await registry.undoDelete(token); deleteUndo = nil; recoveredRecords = try await registry.refreshList(); publishOutcome(recordsText("Deletion undone.")) } catch { fail(error) }
+        do {
+            let authorize = try authorization()
+            try await registry.undoDelete(token)
+            deleteUndo = nil
+            let recovered = try await registry.refreshList()
+            try requireAuthorization(authorize)
+            recoveredRecords = recovered
+            publishOutcome(recordsText("Deletion undone."))
+        } catch { fail(error) }
     }
     func deleteCurrentRecord(_ record: ArchiveRecord) async {
         guard let deleteSource, deletable(record) else { fail(ArchiveError.unavailable); return }
@@ -317,7 +320,7 @@ struct RecordsMediaSelectionID: Hashable {
         recoveredOpenGeneration = UUID()
         preparedDocument = nil; recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
-        currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; actionOutcomeID = nil; error = nil
+        sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; status = nil; actionOutcomeID = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil }
     private func authorization() throws -> Authorization {

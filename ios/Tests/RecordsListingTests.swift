@@ -23,18 +23,15 @@ final class RecordsListingTests: XCTestCase {
         let original = try await store.list()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
         let origin = "comparisons/" + store.workspaceID.uuidString
-        var unavailable: [RecordsUnavailableRecord] = []
         let model = RecordsToolsModel(registry: registry, snapshot: {
-            let batch = RecordsSnapshotProjection.project(try await store.listing(), origin: origin) { saved in
+            try await RecordsSnapshotProjection.project(store.listing(), origin: origin) { saved in
                 let payload = try RecordsNativeCodec.comparison(saved.payload)
                 guard payload.draft.id == saved.id else { throw ArchiveError.invalidIdentity }
                 let bytes = try RecordsNativeCodec.canonical(payload)
                 return ArchiveRecord(id: saved.id.uuidString, origin: origin, revision: ArchiveCodec.digest(bytes), kind: .comparison,
                     title: payload.draft.item, savedAtMilliseconds: 100, helperLines: [HelperLine(label: payload.draft.item)], nativePayload: bytes)
             }
-            unavailable = batch.unavailable
-            return batch.records
-        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in }, unavailableRecords: { unavailable })
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await model.refresh()
         XCTAssertEqual(model.currentRecords.map(\.id), [draft.id.uuidString])
         XCTAssertEqual(Set(model.unavailableRecords.map(\.recordID)), [malformedID.uuidString, futureID.uuidString])

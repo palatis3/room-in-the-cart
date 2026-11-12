@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import CoreDomain
 import LocalStore
 import RecordArchive
@@ -26,6 +27,71 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testRevokedReadNeverPublishesPrivateListingOrRecoveredCopies() async throws {
+        let record = try comparison()
+        let omitted = RecordsUnavailableRecord(origin: record.origin, recordID: "unreadable", title: "Private omitted title", reason: .invalidNative)
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let archive = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "saved")
+        _ = try await registry.apply(registry.review(archive))
+        for export in [false, true] {
+            // Refresh must remain authorized through its registry read. Export must
+            // still be authorized when its source snapshot comes back.
+            var remainingChecks: Int?
+            let model = RecordsToolsModel(registry: registry, snapshot: {
+                remainingChecks = export ? 0 : 1
+                return .init(records: [record], unavailable: [omitted])
+            }, validateNativePayload: { _ in XCTFail("A revoked snapshot cannot be exported") },
+               openRecovered: { _ in }, beginAuthorization: {
+                {
+                    guard let remaining = remainingChecks else { return true }
+                    remainingChecks = remaining - 1
+                    return remaining > 0
+                }
+            })
+            var published = Set<AnyCancellable>()
+            defer { published.forEach { $0.cancel() } }
+            model.$sourceListing.sink { batch in
+                XCTAssertTrue(batch.records.isEmpty)
+                XCTAssertTrue(batch.unavailable.isEmpty)
+            }.store(in: &published)
+            model.$recoveredRecords.sink { XCTAssertTrue($0.isEmpty) }.store(in: &published)
+            if export { await model.prepareExport(.ownerText) } else { await model.refresh() }
+            XCTAssertEqual(model.error, .unavailable)
+            XCTAssertNil(model.preparedDocument)
+        }
+    }
+
+    @MainActor func testOverlappingSourceReadsPublishTheirOwnUnavailableTitles() async throws {
+        let first = try comparison(), second = try comparison()
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let started = expectation(description: "First read suspended")
+        var resume: CheckedContinuation<Void, Never>?
+        var readCount = 0
+        let model = RecordsToolsModel(registry: registry, snapshot: {
+            readCount += 1
+            let record = readCount == 1 ? first : second
+            let omitted = RecordsUnavailableRecord(origin: record.origin, recordID: "omitted", title: record.id, reason: .invalidNative)
+            if readCount == 1 {
+                await withCheckedContinuation { continuation in resume = continuation; started.fulfill() }
+            }
+            return .init(records: [record], unavailable: [omitted])
+        }, validateNativePayload: { _ in }, openRecovered: { _ in })
+        var seen = Set<String>()
+        let observation = model.$sourceListing.sink { batch in
+            guard let source = batch.records.first else { return }
+            XCTAssertEqual(batch.unavailable.compactMap(\.title), [source.id])
+            seen.insert(source.id)
+        }
+        defer { observation.cancel() }
+        let initial = Task { await model.refresh() }
+        await fulfillment(of: [started], timeout: 2)
+        await model.refresh()
+        resume?.resume()
+        await initial.value
+        XCTAssertEqual(readCount, 2)
+        XCTAssertTrue(seen.contains(second.id))
+    }
+
     @MainActor func testEncryptedBackupRetainsOwnerComparisonWhenRedactedCopyIsImported() async throws {
         let record = try comparison()
         let owner = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "saved")
@@ -36,7 +102,7 @@ final class RecordsAdapterTests: XCTestCase {
                 _ = try await registry.apply(registry.review(envelope), now: Date(timeIntervalSince1970: Double(index + 1)))
             }
             let model = RecordsToolsModel(registry: registry, snapshot: {
-                try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record))
+                RecordsSnapshotBatch(records: try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record)))
             }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
             await model.refresh()
             XCTAssertEqual(model.recoveredRecords.count, 2)
@@ -64,7 +130,7 @@ final class RecordsAdapterTests: XCTestCase {
                                          origin: "backup", revision: "saved")
         _ = try await registry.apply(registry.review(ArchiveCodec.decode(ArchiveCodec.encode(file))))
         let model = RecordsToolsModel(registry: registry, snapshot: {
-            try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record))
+            RecordsSnapshotBatch(records: try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record)))
         }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await model.refresh()
 
@@ -133,7 +199,7 @@ final class RecordsAdapterTests: XCTestCase {
     }
     @MainActor func testHelperExportDropsNativeFinanceAndPersonalExportRequiresWorkingKey() async throws {
         let record = try comparison(), registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("manifest.json"))
-        let model = RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await model.refresh(); model.selectAll()
         await model.prepareExport(.helperJSON)
         let helper = try ArchiveCodec.decode(XCTUnwrap(model.preparedDocument).data)
@@ -150,7 +216,7 @@ final class RecordsAdapterTests: XCTestCase {
     @MainActor func testSourceErasureBetweenSelectionAndExportCannotExportCachedPrivateData() async throws {
         let record = try comparison(), registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("manifest.json"))
         var sources = [record]
-        let model = RecordsToolsModel(registry: registry, snapshot: { sources }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: sources) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await model.refresh(); model.selectAll()
         sources = []
         await model.prepareExport(.ownerText)
@@ -167,7 +233,7 @@ final class RecordsAdapterTests: XCTestCase {
         let old = try ArchiveCodec.make(records: [earlier], kind: .personalRecovery, origin: earlier.origin, revision: earlier.revision)
         _ = try await registry.apply(registry.review(old))
         let before = try Data(contentsOf: manifest)
-        let model = RecordsToolsModel(registry: registry, snapshot: { [live] },
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [live]) },
                                      validateNativePayload: { _ in XCTFail("A damaged file must not reach record validation") },
                                      openRecovered: { _ in XCTFail("A damaged file must not open a workspace") })
         await model.refresh()
@@ -194,7 +260,7 @@ final class RecordsAdapterTests: XCTestCase {
         let archive = try ArchiveCodec.make(records: [corrupt], kind: .personalRecovery, origin: "fixture", revision: "bad")
         let file = directory.appendingPathComponent("bad.json")
         try ArchiveCodec.encode(archive).write(to: file)
-        let model = RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await model.importFile(file, recipes: false)
         XCTAssertNil(model.review)
         XCTAssertNotNil(model.error)
@@ -210,7 +276,7 @@ final class RecordsAdapterTests: XCTestCase {
 
         var checks = 0
         var validations = 0
-        let model = RecordsToolsModel(registry: registry, snapshot: { [] },
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
             validateNativePayload: { _ in validations += 1 }, openRecovered: { _ in }, beginAuthorization: {
                 { checks += 1; return checks == 1 }
             })
@@ -227,7 +293,7 @@ final class RecordsAdapterTests: XCTestCase {
         let directory = try temporaryDirectory()
         let registryURL = directory.appendingPathComponent("manifest.json")
         let registry = try RecoveryRegistry(url: registryURL)
-        let model = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in }, openRecovered: { _ in })
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in }, openRecovered: { _ in })
         let file = directory.appendingPathComponent("recipes.json")
         try Data(#"""
         {"@graph":[
@@ -307,7 +373,7 @@ final class RecordsAdapterTests: XCTestCase {
             }, phase: { _ in .draft }, clock: { now })
         }
         func recordsModel(_ ledger: LedgerModel, registry: RecoveryRegistry) -> RecordsToolsModel {
-            RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { try RecordsNativeCodec.validate($0) },
+            RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { try RecordsNativeCodec.validate($0) },
                 openRecovered: { _ in XCTFail("Recipe preview must not open a recovered record") },
                 beginAuthorization: { [weak ledger] in { [weak ledger] in ledger?.ready == true } })
         }
@@ -511,7 +577,7 @@ final class RecordsAdapterTests: XCTestCase {
         let envelope = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: record.origin, revision: "old")
         let file = directory.appendingPathComponent("helper.json"); try ArchiveCodec.encode(envelope).write(to: file)
         var validated = 0
-        let tools = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in
             validated += 1
             try await registry.registerErasedOrigins(["ledger/retired"])
         }, openRecovered: { _ in })

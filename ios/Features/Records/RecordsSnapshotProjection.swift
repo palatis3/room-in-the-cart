@@ -1,6 +1,7 @@
 import Foundation
 import LocalStore
 import RecordArchive
+import HouseholdClient
 
 struct RecordsUnavailableRecord: Equatable, Identifiable {
     enum Reason: Equatable { case unreadableStorage, unsupportedStorage, invalidNative }
@@ -20,6 +21,39 @@ struct RecordsSnapshotBatch {
 }
 
 @MainActor enum RecordsSnapshotProjection {
+    static func liveSharedRecords(householdID: String, shopID: UUID, authorized: () -> Bool,
+                                  current: @escaping () async throws -> ArchiveRecord,
+                                  history: @escaping () async throws -> ArchiveRecord) async throws -> RecordsSnapshotBatch {
+        let shop = shopID.uuidString.lowercased()
+        let currentWarning = RecordsUnavailableRecord(origin: "shared-shop/" + householdID, recordID: shop,
+                                                     title: nil, reason: .unreadableStorage)
+        let historyWarning = RecordsUnavailableRecord(origin: "shared-history/" + householdID, recordID: shop + "/history",
+                                                     title: recordsText("Shared pickup history"), reason: .unreadableStorage)
+        var batch = RecordsSnapshotBatch()
+        for (warning, read) in [(currentWarning, current), (historyWarning, history)] {
+            guard authorized() else { throw ArchiveError.unavailable }
+            do {
+                let record = try await read()
+                batch.records.append(record)
+            } catch {
+                guard authorized() else { throw ArchiveError.unavailable }
+                if let failure = error as? ClientError {
+                    switch failure {
+                    case .accessEnded, .sessionNeeded, .cancelled,
+                         .service(status: 404, code: "unavailable", correlationID: _, retryAfter: _):
+                        // An authoritative denial applies to both live reads of the same shop.
+                        return RecordsSnapshotBatch(records: [], unavailable: [currentWarning, historyWarning])
+                    default: break
+                    }
+                }
+                if error is CancellationError { throw error }
+                batch.unavailable.append(warning)
+            }
+        }
+        guard authorized() else { throw ArchiveError.unavailable }
+        return batch
+    }
+
     static func mergeForExport(_ records: [ArchiveRecord]) throws -> [ArchiveRecord] {
         var merged: [ArchiveRecord] = []
         var indices: [RecordsSelectionID: Int] = [:]

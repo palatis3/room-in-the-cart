@@ -30,7 +30,7 @@ import UIKit
         return (record, source)
     }
     private func model(_ record: ArchiveRecord, registry: RecoveryRegistry) -> RecordsToolsModel {
-        RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
     }
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {
         let (record, source) = try package(), root = try location()
@@ -127,7 +127,7 @@ import UIKit
     func testLiveScopeChangeDuringValidationClearsPrivateExportAndStagedImport() async throws {
         let (record, _) = try package(), root = try location(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
         var generation = UUID(), invalidate = false
-        let tools = RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { value in
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { value in
             try RecordsNativeCodec.validate(value)
             if invalidate { generation = UUID() }
         }, openRecovered: { _ in }, beginAuthorization: {
@@ -166,13 +166,12 @@ import UIKit
         let file = folder.appendingPathComponent(source.id.uuidString.lowercased() + ".json"), corrupt = Data("corrupt optional evidence".utf8)
         try corrupt.write(to: file)
         let registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
-        var warnings: [RecordsUnavailableRecord] = []
         let tools = RecordsToolsModel(registry: registry, snapshot: {
             let listing = try await store.archiveListing(workspaceID: source.target.workspaceID, authorize: { true })
-            warnings = (0..<listing.unavailableCount).map { RecordsUnavailableRecord(origin: "media", recordID: String($0), title: "Source reference", reason: .unreadableStorage) }
+            let warnings = (0..<listing.unavailableCount).map { RecordsUnavailableRecord(origin: "media", recordID: String($0), title: "Source reference", reason: .unreadableStorage) }
             var native = base; native.media = nil
-            return [try RecordsMediaCodec.attaching(listing.records, to: native)]
-        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in }, unavailableRecords: { warnings })
+            return .init(records: [try RecordsMediaCodec.attaching(listing.records, to: native)], unavailable: warnings)
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await tools.refresh(); tools.selectAll(); tools.generateRecoveryKey()
         XCTAssertEqual(tools.currentRecords.count, 1); XCTAssertEqual(tools.unavailableRecords.count, 1)
         await tools.prepareExport(.encryptedRecovery)
@@ -248,7 +247,7 @@ import UIKit
             XCTAssertEqual(projection.parentRevision, original.revision)
             XCTAssertNoThrow(try RecordsNativeCodec.validate(projection))
         }
-        let exporter = RecordsToolsModel(registry: registry, snapshot: { projections },
+        let exporter = RecordsToolsModel(registry: registry, snapshot: { .init(records: projections) },
             validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await exporter.refresh(); exporter.selectAll(); exporter.generateRecoveryKey()
         // A prior selection cannot cause the discarded photo to travel with a new owner.

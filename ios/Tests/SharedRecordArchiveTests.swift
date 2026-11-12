@@ -9,6 +9,29 @@ final class SharedRecordArchiveTests: XCTestCase {
         let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/partial-v2.json"))
         return try SharedRecordArchiveAdapter.make(SharedRecordWire.snapshot(from: bytes))
     }
+    @MainActor func testLiveRecordReadsDiscardEarlierShopDataWhenShopperAccessEnds() async throws {
+        let live = try record()
+        let shopID = try XCTUnwrap(UUID(uuidString: live.id))
+        for denial: ClientError in [.accessEnded, .sessionNeeded,
+                                     .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)] {
+            let revoked = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shopID,
+                authorized: { true }, current: { live }, history: { throw denial })
+            XCTAssertTrue(revoked.records.isEmpty)
+            XCTAssertEqual(revoked.unavailable.count, 2)
+        }
+        let denied = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shopID,
+            authorized: { true }, current: { throw ClientError.accessEnded }, history: {
+                XCTFail("A denied shopper should make no further live Records reads")
+                return live
+            })
+        XCTAssertTrue(denied.records.isEmpty)
+
+        let interrupted = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shopID,
+            authorized: { true }, current: { live }, history: { throw ClientError.transport })
+        XCTAssertEqual(interrupted.records, [live])
+        XCTAssertEqual(interrupted.unavailable.map(\.recordID), [live.id + "/history"])
+    }
+
     @MainActor func testHistoricalArchiveIsEncryptedIndependentDeduplicatedAndNeverHelperData() async throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let legacyBytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-v1.json"))
@@ -111,7 +134,7 @@ final class SharedRecordArchiveTests: XCTestCase {
         let model = RecordsToolsModel(registry: registry, snapshot: {
             reads += 1
             if refreshFails { throw ArchiveError.unavailable }
-            return [source]
+            return .init(records: [source])
         }, validateNativePayload: {
             validations += 1
             try RecordsNativeCodec.validate($0)

@@ -72,7 +72,7 @@ import UIKit
         XCTAssertEqual(attachment.captureNamespace?.physicalWorkspaceID, captured.target.workspaceID)
         XCTAssertEqual(attachment.captureNamespace?.archiveOrigin, original.origin)
         XCTAssertNoThrow(try RecordsNativeCodec.validate(record))
-        let exporter = RecordsToolsModel(registry: registry, snapshot: { projected }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let exporter = RecordsToolsModel(registry: registry, snapshot: { .init(records: projected) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await exporter.refresh(); exporter.selectAll(); exporter.generateRecoveryKey()
         await exporter.prepareExport(.encryptedRecovery)
         XCTAssertNil(try EncryptedArchive.open(XCTUnwrap(exporter.preparedDocument).data, key: exporter.recoveryKey).mediaManifest)
@@ -232,7 +232,7 @@ import UIKit
         let root = try root(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json")), saved = try await commit(try original(), registry: registry)
         let lifetime = RecordsRecoveryLifetime(), lease = try await lifetime.begin(copy: saved, registry: registry, authorize: { true }), folder = root.appendingPathComponent(saved.id)
         let opened = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: folder, authorize: lease.authorize)
-        let tools = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in }, openRecovered: { _ in }, cleanupRecoveredWorkspaces: {
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in }, openRecovered: { _ in }, cleanupRecoveredWorkspaces: {
             XCTAssertFalse(lease.authorize())
             try await opened.store.close(); lifetime.finish(lease); await lifetime.drain()
             try FileManager.default.removeItem(at: folder)
@@ -283,7 +283,7 @@ import UIKit
         let root = try root(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json")), saved = try await commit(try original(), registry: registry)
         let started = expectation(description: "Open awaits store"), deletion = expectation(description: "Deletion completed")
         var resume: CheckedContinuation<Void, Never>?
-        let tools = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in }, openRecovered: { _ in
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in }, openRecovered: { _ in
             await withCheckedContinuation { resume = $0; started.fulfill() }
             throw ArchiveError.unavailable
         }, cleanupRecoveredWorkspaces: {})
@@ -295,7 +295,7 @@ import UIKit
         resume?.resume(); await opening.value
         XCTAssertEqual(tools.actionOutcomeID, outcome); XCTAssertNil(tools.error)
         let second = try await commit(try original(), registry: registry)
-        let denied = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in }, openRecovered: { _ in }, beginAuthorization: { nil })
+        let denied = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in }, openRecovered: { _ in }, beginAuthorization: { nil })
         await denied.deleteRecovered(.copy(second.id))
         XCTAssertEqual(denied.error, .unavailable)
         let retained = try await registry.refreshList()

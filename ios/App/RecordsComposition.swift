@@ -349,11 +349,16 @@ private struct RecordsRecoveredDinnersView: View {
     private var directory: URL?
     private var loading = false
     private var pickupOrigin: String?
-    private var unavailableRecords: [RecordsUnavailableRecord] = []
     private weak var access: WorkspaceAccess?
     private weak var household: HouseholdModel?
     private var active = false
-    private var visibleIdentity: CapturePrivateIdentity?
+    private struct RecordsScope: Equatable {
+        let identity: CapturePrivateIdentity
+        let shopID: String?
+        let grantID: String?
+        let capabilities: Set<String>
+    }
+    private var visibleIdentity: RecordsScope?
     private var authorizationGeneration = UUID()
     private let recoveryLifetime = RecordsRecoveryLifetime.shared
     func bind(access: WorkspaceAccess, household: HouseholdModel, active: Bool) {
@@ -365,9 +370,12 @@ private struct RecordsRecoveredDinnersView: View {
         if identity != visibleIdentity { clearPrivatePreviews(); visibleIdentity = identity }
     }
     func clearPrivatePreviews() { authorizationGeneration = UUID(); recoveryLifetime.invalidate(); tools?.invalidateForSourceErasure(); destination = nil }
-    private func privateIdentity() -> CapturePrivateIdentity? {
-        guard let access, let household else { return nil }
-        return CapturePrivateIdentity.current(access: access, household: household)
+    private func privateIdentity() -> RecordsScope? {
+        guard let access, let household,
+              let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
+        let projection = household.projection
+        return RecordsScope(identity: identity, shopID: projection?.shopId, grantID: projection?.grantId,
+                           capabilities: Set(projection?.capabilities ?? []))
     }
     private func captureAuthorization() -> RecordsToolsModel.Authorization? {
         guard active, let identity = privateIdentity() else { return nil }
@@ -420,7 +428,7 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
-            }, unavailableRecords: { [weak self] in self?.unavailableRecords ?? [] }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
+            }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }
     }
@@ -477,35 +485,25 @@ private struct RecordsRecoveredDinnersView: View {
             try FileManager.default.removeItem(at: url)
         }
     }
-    private func snapshot() async throws -> [ArchiveRecord] {
+    private func snapshot() async throws -> RecordsSnapshotBatch {
         guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
         try await synchronizeErasure()
         guard authorize() else { throw ArchiveError.unavailable }
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
-        unavailableRecords = []
+        var unavailableRecords: [RecordsUnavailableRecord] = []
         // Refresh current permissions and privacy before every listing/export.
         // No previous shared snapshot is used as an offline authorization fallback.
         if let household, let scope = household.projection, scope.capabilities.contains("shopper_commands"),
            let shop = scope.shopId, let shopID = UUID(uuidString: shop), let service = household.service {
-            do {
-                let shared = try await service.sharedRecordSnapshot(shopID: shopID)
-                guard authorize() else { throw ArchiveError.unavailable }
-                result.append(try SharedRecordArchiveAdapter.make(shared))
-            } catch {
-                guard authorize() else { throw ArchiveError.unavailable }
-                unavailableRecords.append(RecordsUnavailableRecord(origin: "shared-shop/" + scope.household.id,
-                    recordID: shopID.uuidString.lowercased(), title: nil, reason: .unreadableStorage))
-            }
-            do {
-                let history = try await service.sharedRecordHistory(shopID: shopID)
-                guard authorize() else { throw ArchiveError.unavailable }
-                result.append(try SharedHistoryArchiveAdapter.make(history))
-            } catch {
-                guard authorize() else { throw ArchiveError.unavailable }
-                unavailableRecords.append(RecordsUnavailableRecord(origin: "shared-history/" + scope.household.id,
-                    recordID: shopID.uuidString.lowercased() + "/history", title: recordsText("Shared pickup history"), reason: .unreadableStorage))
-            }
+            let shared = try await RecordsSnapshotProjection.liveSharedRecords(householdID: scope.household.id, shopID: shopID,
+                authorized: authorize, current: {
+                    try await SharedRecordArchiveAdapter.make(service.sharedRecordSnapshot(shopID: shopID))
+                }, history: {
+                    try await SharedHistoryArchiveAdapter.make(service.sharedRecordHistory(shopID: shopID))
+                })
+            result += shared.records
+            unavailableRecords += shared.unavailable
         }
         let comparisonOrigin = "comparisons/" + store.workspaceID.uuidString
         let comparisonBatch = RecordsSnapshotProjection.project(try await store.listing(), origin: comparisonOrigin) { saved in
@@ -558,10 +556,10 @@ private struct RecordsRecoveredDinnersView: View {
         if let registry {
             let pendingOrigin = ledger.pendingLedgerDeletionReview.map { "ledger/" + $0.workspaceID.uuidString }
             for saved in try await registry.refreshList() where saved.record.origin != pendingOrigin {
-                do { result += try await recoveredSnapshot(saved, authorize: authorize) }
+                do { result += try await recoveredSnapshot(saved, authorize: authorize, unavailableRecords: &unavailableRecords) }
                 catch {
                     guard authorize() else { throw ArchiveError.unavailable }
-                    _ = omitRecovered(saved, reason: .unreadableStorage)
+                    _ = omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords)
                 }
             }
         }
@@ -570,18 +568,19 @@ private struct RecordsRecoveredDinnersView: View {
         // provide namespace authority; typed owner binding filters each attachment.
         var sourceMedia: [SourceMediaRecord] = []
         if ledger.ready, !ledger.hasPendingLedgerDeletion, let id = ledger.sourceWorkspaceID {
-            let listing = try await mediaListing(workspaceID: id, authorize: authorize)
+            let listing = try await mediaListing(workspaceID: id, authorize: authorize, unavailableRecords: &unavailableRecords)
             sourceMedia += listing.records
         }
         guard authorize() else { throw ArchiveError.unavailable }
-        sourceMedia += try await mediaListing(workspaceID: pickupSnapshot.workspaceID, authorize: authorize).records
+        sourceMedia += try await mediaListing(workspaceID: pickupSnapshot.workspaceID, authorize: authorize, unavailableRecords: &unavailableRecords).records
         guard authorize() else { throw ArchiveError.unavailable }
         for index in result.indices {
             result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
         }
-        return try RecordsSnapshotProjection.mergeForExport(result)
+        return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(result), unavailable: unavailableRecords)
     }
-    private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil) async throws -> CaptureMediaArchiveListing {
+    private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil,
+                              unavailableRecords: inout [RecordsUnavailableRecord]) async throws -> CaptureMediaArchiveListing {
         if let liveScope, liveScope.workspaceID != workspaceID { throw ArchiveError.invalidIdentity }
         let listing: CaptureMediaArchiveListing
         do {
@@ -600,7 +599,8 @@ private struct RecordsRecoveredDinnersView: View {
         }
         return listing
     }
-    private func recoveredSnapshot(_ saved: RecoveredRecord, authorize: @escaping RecordsToolsModel.Authorization) async throws -> [ArchiveRecord] {
+    private func recoveredSnapshot(_ saved: RecoveredRecord, authorize: @escaping RecordsToolsModel.Authorization,
+                                   unavailableRecords: inout [RecordsUnavailableRecord]) async throws -> [ArchiveRecord] {
         guard let registry, let directory, UUID(uuidString: saved.id) != nil else { throw ArchiveError.invalidIdentity }
         let lease = try await recoveryLifetime.begin(copy: saved, registry: registry, authorize: authorize)
         defer { recoveryLifetime.finish(lease) }
@@ -613,12 +613,12 @@ private struct RecordsRecoveredDinnersView: View {
         case .pickup: filename = "pickup.sqlite"
         case .recipe, .sharedShop, .sharedHistory:
             do { try RecordsNativeCodec.validate(saved.record); return saved.record.nativePayload == nil ? [] : [saved.record] }
-            catch { return omitRecovered(saved, reason: .invalidNative) }
+            catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         let url = folder.appendingPathComponent(filename)
         guard FileManager.default.fileExists(atPath: url.path) else {
             do { try RecordsNativeCodec.validate(saved.record); return [saved.record] }
-            catch { return omitRecovered(saved, reason: .invalidNative) }
+            catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         if saved.record.kind == .ledger {
             let opened = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: folder, authorize: authorize)
@@ -627,11 +627,11 @@ private struct RecordsRecoveredDinnersView: View {
             try await store.close()
             try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize() else { throw ArchiveError.unavailable }
-            guard let current else { return omitRecovered(saved, reason: .unreadableStorage) }
+            guard let current else { return omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords) }
             do {
-            let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope).records
+            let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope, unavailableRecords: &unavailableRecords).records
             return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources)
-            } catch { return omitRecovered(saved, reason: .invalidNative) }
+            } catch { return omitRecovered(saved, reason: .invalidNative, unavailableRecords: &unavailableRecords) }
         }
         let store: ComparisonStore
         let liveScope: RecordsRecoveryCapture.Scope?
@@ -643,7 +643,7 @@ private struct RecordsRecoveredDinnersView: View {
         try await store.close()
         try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
         guard authorize() else { throw ArchiveError.unavailable }
-        if listing.records.isEmpty && listing.unavailable.isEmpty { return omitRecovered(saved, reason: .unreadableStorage) }
+        if listing.records.isEmpty && listing.unavailable.isEmpty { return omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords) }
         let batch = RecordsSnapshotProjection.project(listing, origin: saved.record.origin, localCopyID: saved.id) { current in
             if saved.record.kind == .comparison {
                 let value = try RecordsNativeCodec.comparison(current.payload), bytes = try RecordsNativeCodec.canonical(value)
@@ -658,12 +658,13 @@ private struct RecordsRecoveredDinnersView: View {
         }
         unavailableRecords += batch.unavailable
         if let liveScope {
-            let sources = try await mediaListing(workspaceID: liveScope.workspaceID, authorize: authorize, liveScope: liveScope).records
+            let sources = try await mediaListing(workspaceID: liveScope.workspaceID, authorize: authorize, liveScope: liveScope, unavailableRecords: &unavailableRecords).records
             return try batch.records.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: liveScope) }
         }
         return batch.records
     }
-    private func omitRecovered(_ saved: RecoveredRecord, reason: RecordsUnavailableRecord.Reason) -> [ArchiveRecord] {
+    private func omitRecovered(_ saved: RecoveredRecord, reason: RecordsUnavailableRecord.Reason,
+                               unavailableRecords: inout [RecordsUnavailableRecord]) -> [ArchiveRecord] {
         unavailableRecords.append(RecordsUnavailableRecord(origin: saved.record.origin, recordID: saved.record.id, title: saved.record.title, reason: reason, localCopyID: saved.id))
         return []
     }
