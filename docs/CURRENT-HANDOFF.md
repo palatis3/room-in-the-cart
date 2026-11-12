@@ -14,18 +14,41 @@ Main build/models remain on larger M2 slot2; Release and six existing groups use
 M4 slots0–5 with original GitHub fallback slots. All selectors, gates, artifacts,
 limits and exact platform checks remain. Fifty-one affected checks and18-node
 lint pass; root and independent Astra review approve. Capacity and validation
-receipts are in `.build/BitriseM4Nov11/`; actual M4 execution is not qualified.
-Keep640 running; use one bounded new-pool qualification and hold the combined
-changes for the next grouped candidate. No duplicate full dispatch or cache-warming run.
+receipts are in `.build/BitriseM4Nov11/`; the isolated [M4 pilot](https://github.com/palatis3/room-in-the-cart/actions/runs/43151520545)
+passed. One M4 compiled the fixture and a second M4 executed the original lost-reply
+test in 234.232 seconds with zero runtime warnings. This first build reported
+0 hits in 264 cacheable tasks and uploaded 504.5 MB. Six-way concurrent execution
+and cache reuse on the next M4 build still need observation. Keep the isolated
+pilot branch off the merge path and group the workflow changes into the next candidate.
 
-640 has one preserved fractional-idea failure: fixture130942327542 executes1/1,
-with0passed and one720-second timeout,10animation-idle messages,1restart and
-0runtime warnings. Original artifact13913525151 is digest-verified in
-`.build/FractionalIdeaCandidate640Nov11`. The scoped first-fault chain shows
-XCTest missing animation-idle notifications after Done while the event loop
-responds and keyboard dismissal eventually passes. Root cause remains unresolved;
-no supported source fix, timeout increase, suppression or unchanged retry was made.
-Other hosted results continue; contributor-balanced02 is now passing.
+Two 640 fixture jobs hit the 720-second case limit after the keyboard Done action.
+Fractional idea (130942327542) logged ten XCTest animation-idle waits, and quote
+adoption (130942328062) logged six. Both app event loops responded. The scoped
+originals are in `.build/FractionalIdeaCandidate640Nov11` and
+`.build/QuoteAdoptionCandidate640Nov11`. Their underlying cause is open.
+
+The recovery/cook fixture ran five cases and failed two (130942327333).
+The readback trace stopped inside installed-voice discovery. Local 88220c00
+bounds each Play request, preserves the readable instruction, and lets an explicit
+retry share a lookup already in progress. All 36 readback model cases and the
+original edited-instruction journey passed locally. The dated-copy case failed after tapping Close during system presentation.
+Its follow-up waits for stable Close geometry before each of the two genuine
+taps. The complete original journey passed locally in 114.16 seconds with zero
+runtime warnings. Both result bundles are in `.build/CookVoiceAndShareNov12/`.
+All 988 portable source checks passed. Combined hosted qualification is pending.
+
+Recipe imports now reject Boolean version markers, source URLs with empty hosts,
+and UTF-16/32 files that Foundation previously auto-detected. The four encoding
+regressions failed before the correction and all 33 RecordArchive tests pass at
+33835bbc. The app simulator build passed after the version and URL fixes.
+
+Hosted Spanish StoreKit passed all 15 scenarios. English passed 14 and rejected
+a purchase under another fixture account. Commit f6c56a03 checks that StoreKit
+has finished clearing its history, entitlements and unfinished transactions before
+the durable-delivery case, then verifies the purchased transaction identity. On
+the local simulator the original durable-delivery case passed in the full English
+suite. Two declined-purchase cases still failed (13/15 total). Keep the separate
+Apple report as a draft, per owner direction.
 
 Both640 sanitizer jobs now pass580 cases each with3declared wire-only skips;
 all five corrected shopper fixtures execute once and pass with no sanitizer
