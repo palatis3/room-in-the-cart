@@ -136,8 +136,12 @@ public actor RecoveryRegistry {
         guard let records = undo[token.id] else { throw ArchiveError.unavailable }
         guard !records.contains(where: { (manifest.erasedOrigins ?? []).contains($0.record.origin) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }) else { throw ArchiveError.conflict }
         var next = manifest
-        for record in records where !next.records.contains(where: { $0.receipt.identity == record.receipt.identity }) { next.records.append(record) }
-        let identities = Set(records.map(\.receipt.identity))
+        let erasedMedia = Set(next.erasedMediaSources ?? [])
+        let restorable = try records.map { try scrubbing($0, erasedMedia: erasedMedia) }
+        for record in restorable where !next.records.contains(where: { $0.receipt.identity == record.receipt.identity }) {
+            next.records.append(record)
+        }
+        let identities = Set(restorable.map(\.receipt.identity))
         next.erasedIdentities.removeAll { identities.contains($0) }
         try persist(&next); undo[token.id] = nil
     }
@@ -184,24 +188,24 @@ public actor RecoveryRegistry {
         let known = Set(manifest.erasedMediaSources ?? []), incoming = Set(sources)
         guard !incoming.isSubset(of: known) else { return }
         let all = known.union(incoming)
-        func scrub(_ saved: RecoveredRecord) throws -> RecoveredRecord {
-            guard let media = saved.record.media else { return saved }
-            let remaining = media.filter { !all.contains(ArchiveMediaSourceIdentity(origin: saved.record.origin, mediaID: $0.id)) }
-            guard remaining.count != media.count else { return saved }
-            var record = saved.record
-            record.media = remaining.isEmpty ? nil : remaining
-            record.parentRevision = record.revision
-            // The former receipt distinguishes different original projections.
-            record.revision = "media-erasure/" + ArchiveCodec.digest(try ArchiveCodec.canonical([saved.receipt.digest, ArchiveCodec.digest(try ArchiveCodec.canonical(record))]))
-            let receipt = try ArchiveCodec.receipt(record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id)
-            return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds)
-        }
         var next = manifest
         next.erasedMediaSources = Array(all)
-        next.records = try next.records.map(scrub)
-        let scrubbedUndo = try undo.mapValues { try $0.map(scrub) }
+        next.records = try next.records.map { try scrubbing($0, erasedMedia: all) }
+        let scrubbedUndo = try undo.mapValues { try $0.map { try scrubbing($0, erasedMedia: all) } }
         try persist(&next)
         undo = scrubbedUndo
+    }
+    private func scrubbing(_ saved: RecoveredRecord, erasedMedia: Set<ArchiveMediaSourceIdentity>) throws -> RecoveredRecord {
+        guard let media = saved.record.media else { return saved }
+        let remaining = media.filter { !erasedMedia.contains(ArchiveMediaSourceIdentity(origin: saved.record.origin, mediaID: $0.id)) }
+        guard remaining.count != media.count else { return saved }
+        var record = saved.record
+        record.media = remaining.isEmpty ? nil : remaining
+        record.parentRevision = record.revision
+        // The former receipt distinguishes different original projections.
+        record.revision = "media-erasure/" + ArchiveCodec.digest(try ArchiveCodec.canonical([saved.receipt.digest, ArchiveCodec.digest(try ArchiveCodec.canonical(record))]))
+        let receipt = try ArchiveCodec.receipt(record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id)
+        return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds)
     }
     public func discardUndo() { undo.removeAll() }
     /// Roll back only snapshots inserted by this reviewed batch; identical pre-existing
