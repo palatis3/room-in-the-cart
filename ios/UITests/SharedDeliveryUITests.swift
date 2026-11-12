@@ -605,7 +605,7 @@ import XCTest
         tap(app.buttons["sharedShop.deliveryEvidence"])
         XCTAssertTrue(hasUsable("7 units"))
         XCTAssertEqual(app.buttons.matching(identifier: "Record arrival").count, 1)
-        let openMatches = app.buttons["Meal ingredient matches"], ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
+        let openMatches = app.buttons["Meal ingredient matches"], ingredient = app.buttons["Tortillas"]
         tap(openMatches)
         tap(ingredient)
         let exclusions = app.descendants(matching: .any).matching(NSPredicate(format:
