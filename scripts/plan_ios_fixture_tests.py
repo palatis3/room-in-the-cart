@@ -173,13 +173,20 @@ def matrix(inventory=None):
         # Avoid the observed UI02 wait after the Bitrise work had finished.
         "SharedFallbackUITests": 7,
     }
+    m4_slots = {
+        "contributor-balanced-03": 2,
+        "SharedDeliveryUITests-recovery-cook-and-closeout": 3,
+        "SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 1,
+        "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
+        "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,
+    }
     for index, row in enumerate(rows):
         lane = lane_overrides.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
         # Keep the original GitHub slot for untrusted/noncanonical events.
-        if row["shard"] in ("SharedDeliveryUITests-recovery-cook-and-closeout", "contributor-balanced-03"):
-            row.update(provider="bitrise-m4", m4_slot=3 if row["shard"].startswith("SharedDeliveryUITests-") else 2)
+        if row["shard"] in m4_slots:
+            row.update(provider="bitrise-m4", m4_slot=m4_slots[row["shard"]])
     return {"include": rows}
 
 

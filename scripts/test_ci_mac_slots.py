@@ -45,10 +45,10 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('bitrise', 1), ('bitrise', 2), ('github', 2), ('bitrise', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('github', 3),
-            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('github', 1), ('github', 2), ('github', 3),
-            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('github', 1),
+            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('bitrise-m4', 0), ('github', 1),
         ])
         self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
                           for row in fixtures if row['shard'] in {
@@ -70,7 +70,11 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual(len({(row['profile'], row['shard']) for row in fixtures}), 26)
         self.assertEqual(len(fixtures), 26)
         self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in fixtures if 'm4_slot' in r], [
-            ('contributor-balanced-03', 4, 2), ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3)])
+            ('contributor-balanced-03', 4, 2),
+            ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3),
+            ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
+            ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
+            ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5)])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
         self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot'})

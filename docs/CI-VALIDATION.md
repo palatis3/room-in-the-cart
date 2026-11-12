@@ -100,16 +100,23 @@ The following jobs share the six M4 slots.
 | Job or group | M4 slot | Original GitHub fallback |
 | --- | --- | --- |
 | Core UI03 and UI10 | 0 | 3 and 0 |
-| Unsigned Release and core UI06 | 1, serialized | 1 |
+| Unsigned Release, core UI06 and the Spanish expired-quote fixture | 1 | 1, 1 and 4 |
 | Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
 | Delivery recovery/cook/closeout and core UI04 | 3 | 1 |
-| Core UI02 | 4 | 2 |
-| Core UI09 | 5 | 3 |
+| Core UI02 and the filled financial fields fixture | 4 | 2 and 4 |
+| Core UI09 and the stale quote save fixture | 5 | 3 and 0 |
 
 In the November 12 combined run, the final M4 test finished at 06:32 UTC.
 UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.
 The revised routing lets those three groups reuse M4 slots. Queue order and
 the final elapsed-time change depend on the hosted run.
+
+On `3390ad19`, the last M4 job finished at 10:04 UTC. The Spanish expired-quote
+fixture started at 10:19. At 10:20 the filled financial fields and stale quote
+save fixtures were still waiting on GitHub. These same fixtures took about 13,
+11 and 23 minutes respectively in the preceding batch. The next candidate routes
+them to three separate M4 slots. Compare actual queue and completion times on
+that candidate. [Fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43191347210)
 
 Each consumer keeps its original `macos_slot` for GitHub fallback and adds a
 separate `m4_slot` only when assigned to M4. Canonical trusted events select
