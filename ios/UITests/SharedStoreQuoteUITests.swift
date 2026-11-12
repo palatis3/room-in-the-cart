@@ -30,13 +30,14 @@ import XCTest
         counter("saves",1); counter("proposals",0); counter("adoptions",0)
 
         tap(element("sharedQuotes.enter"))
-        fill("East unknown",into:"sharedQuotes.first.label",replacing:true)
-        fill("West unknown",into:"sharedQuotes.second.label",replacing:true)
-        fill("",into:"sharedQuotes.second.tripCash",replacing:true)
+        enterValue("East unknown",into:"sharedQuotes.first.label",replacing:true)
+        enterValue("West unknown",into:"sharedQuotes.second.label",replacing:true)
+        fill("",into:"sharedQuotes.second.tripCash",replacing:true,requireDone:true)
         tap(element("sharedQuotes.reviewSave"))
         assertVisibleLabel("sharedQuotes.breakEven", contains: "$3.00")
         capture("S27-unknown-trip-three-dollar-break-even")
         confirm(); counter("saves",2); counter("proposals",0)
+        XCTAssertTrue(app.buttons["East unknown / West unknown"].exists, "Both edited labels must survive the private save")
 
         tap(app.buttons["East / West"])
         tap(element("sharedQuotes.select.second"))
