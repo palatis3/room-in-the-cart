@@ -53,8 +53,12 @@ struct RecordsToolsView: View {
                 Section {
                     Group {
                         if let error = model.error {
-                            Label(errorMessage(error), systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.red).accessibilityIdentifier("records.error")
+                            let message = errorMessage(error)
+                            Label(message, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.red)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(Text(verbatim: message))
+                                .accessibilityIdentifier("records.error")
                         } else if let status = model.status {
                             Text(status).accessibilityIdentifier("records.status")
                         }
@@ -89,6 +93,9 @@ struct RecordsToolsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        // Reopening moves the saved rows from the bottom of the form to the result.
+        // A fresh list prevents iOS 17 from restoring the old offset after that move.
+        .id(model.reopenedCopyIDs)
         .task(id: model.review != nil) {
             guard model.review != nil else { return }
             importReviewFocused = false
