@@ -113,10 +113,12 @@ the final elapsed-time change depend on the hosted run.
 
 On `3390ad19`, the last M4 job finished at 10:04 UTC. The Spanish expired-quote
 fixture started at 10:19. At 10:20 the filled financial fields and stale quote
-save fixtures were still waiting on GitHub. These same fixtures took about 13,
-11 and 23 minutes respectively in the preceding batch. The next candidate routes
-them to three separate M4 slots. Compare actual queue and completion times on
-that candidate. [Fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43191347210)
+save fixtures were still waiting on GitHub. On `37c34724`, all three started
+within one second of one another on separate M4 machines and passed. The total
+job times for expired quote, filled financial fields and stale save were 5m34s,
+4m05s and 6m14s respectively. Their preceding GitHub jobs took 15m05s, 12m36s
+and 16m36s. These times cover each job individually. The full batch also
+depends on other suites. [GitHub fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43191347210) · [M4 fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604221)
 
 Each consumer keeps its original `macos_slot` for GitHub fallback and adds a
 separate `m4_slot` only when assigned to M4. Canonical trusted events select
