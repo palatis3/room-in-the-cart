@@ -98,6 +98,7 @@ export class WebApp {
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
+    this.clearInvitationDraft();this.browserAuth=null;
     this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
@@ -115,8 +116,9 @@ export class WebApp {
   private adoptBrowserAuth(fresh:BrowserAuthState|null):void {
     const previous=this.browserAuth;
     if(previous&&(previous.csrf!==fresh?.csrf||previous.authenticated!==fresh?.authenticated)){
+      const hadInvitation=this.invitation!==null;
       this.clearInvitationDraft();
-      this.notice='';
+      this.notice=hadInvitation?'Your sign-in changed. Reopen the invitation you want to use.':'';
     }
     this.browserAuth=fresh;
   }
@@ -140,7 +142,7 @@ export class WebApp {
     const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
-      this.clearPrivate();this.clearInvitationDraft();this.notice='';this.render();
+      this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     const previous=this.session;
@@ -218,7 +220,7 @@ export class WebApp {
     this.session=fresh;return fresh;
   }
   private hideWhileSigningOut():void {
-    this.logoutPending=true;this.clearPrivate();this.clearInvitationDraft();this.browserAuth=null;
+    this.logoutPending=true;this.clearPrivate();
     this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';
   }
   private async signOut(scope?:Session,identityCSRF?:string):Promise<void> {
@@ -234,7 +236,12 @@ export class WebApp {
       if(identityCSRF)this.browserAuth=await this.api.authState().catch(()=>null);
     } catch { /* Keep the private view closed until a confirmed retry. */ }
   }
+  private async recoverBrowserIdentity(historyGeneration:number):Promise<void> {
+    this.adoptBrowserAuth(await this.api.authState().catch(()=>null));
+    if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
+  }
   private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
+    const historyGeneration=this.historyGeneration;
     this.failurePurpose=purpose;
     let e=error instanceof ApiError ? error:new ApiError('unavailable',500);
     if (e.code==='queue_permission_ended' && this.session) {
@@ -268,7 +275,7 @@ export class WebApp {
       }
     }
     if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
-      this.clearPrivate();this.clearInvitationDraft();this.browserAuth=null;
+      this.clearPrivate();
       this.render();
       try {
         await this.outbox.clear();
@@ -276,9 +283,11 @@ export class WebApp {
       } catch {
         this.notice='Access has ended. Clear site data before sharing this browser.';
       }
+      await this.recoverBrowserIdentity(historyGeneration);
       return;
     }
     if(e.status===401) {
+      if(this.session){this.clearInvitationDraft();this.browserAuth=null;}
       this.session=null;this.requests=[];this.view=null;this.pending=[];
       this.receivedSuggestions=[];this.suggestionsState='unchecked';
       this.notice=this.draft.item || this.draft.amount || this.correction
@@ -286,11 +295,7 @@ export class WebApp {
         : 'Sign in again to continue.';
       this.codeRequested=false;this.loginCode='';
       this.render();
-      const historyGeneration=this.historyGeneration;
-      this.adoptBrowserAuth(await this.api.authState().catch(()=>null));
-      // An explicit identity denial has removed the private projection. Allow
-      // sign-in recovery even when the retained household cookie keeps returning 401.
-      if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
+      await this.recoverBrowserIdentity(historyGeneration);
     }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';

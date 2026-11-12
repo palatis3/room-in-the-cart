@@ -130,3 +130,79 @@ test('an invitation cannot be submitted with a newly active household when its i
   assert.equal(root.textContent.includes('Previous adult'), false);
   assert.deepEqual(calls, []);
 });
+
+for (const ending of ['grant expires', 'session returns 401']) {
+  test('an invitation opened by an enrolled helper is cleared when its '+ending, async t => {
+    let ended = false;
+    const now = Date.now();
+    const scope = { authenticated:true, role:'helper', grantId:'grant-a', shopId:'shop-a',
+      memberId:'member-a', household:{id:'household-a',label:'A'}, csrf:'scope-a' };
+    const { app, dom, root } = await fixture({
+      session:async () => {
+        if (ended) throw new ApiError('session_needed',401);
+        return scope;
+      },
+      authState:async () => ({ available:true, authenticated:true, csrf:'identity-b' }),
+      view:async () => ({ grantId:'grant-a', shopId:'shop-a', shopLabel:'A', revision:1,
+        asOf:new Date(now).toISOString(), expiresAt:new Date(now+60_000).toISOString(),
+        canPropose:false, instructions:[] }),
+      receivedProposals:async () => ({ proposals:[], nextCursor:null })
+    });
+    input(dom, 'invite-alias', 'First helper');
+    root.querySelector('#adult-attestation').click();
+    if (ending === 'grant expires') {
+      t.mock.method(Date,'now',()=>now+60_001);
+      app.checkExpiry();
+    }
+    ended = true;
+    await app.start();
+    assert.equal(root.querySelector('#invitation')?.value, '');
+    assert.equal(root.querySelector('#invite-alias')?.value, '');
+    assert.equal(root.querySelector('#adult-attestation')?.checked, false);
+  });
+}
+
+test('a revoked household cookie lets a signed-in adult sign out using current identity', async () => {
+  let ended = false, signedOut = false;
+  const { app, root, dom } = await fixture({
+    session:async () => { if(ended)throw new ApiError('access_ended',403);return null; },
+    authState:async () => ({ available:true, authenticated:!signedOut, csrf:signedOut?'new-challenge':'current-identity' }),
+    logoutIdentity:async csrf => { assert.equal(csrf,'current-identity');signedOut=true;return {providerRevoked:true}; }
+  });
+  input(dom,'invite-alias','Previous name');
+  root.querySelector('#adult-attestation').click();
+  ended = true;
+  app.suspendForHistory();
+  app.resumeWithFreshAuthority();
+  await tick();
+  assert.match(root.textContent,/Access has ended/);
+  assert.equal(root.querySelector('#adult-attestation')?.checked,false);
+  assert.equal(root.querySelector('#invitation')?.value,'');
+  const button=[...root.querySelectorAll('button')].find(b=>b.textContent==='Sign out');
+  assert.ok(button);
+  button.click();
+  await tick();
+  assert.equal(signedOut,true);
+  assert.ok(root.querySelector('#login-email'));
+});
+
+test('when a verified adult cookie outlives a lost response, explain how to recover the invitation', async () => {
+  let verified=false, verifies=0;
+  const { app, dom, root } = await fixture({
+    authState:async () => ({ available:true,authenticated:verified,csrf:verified?'verified':'challenge' }),
+    verifyEmailCode:async () => { verifies++;verified=true;throw new Error('Lost response'); }
+  });
+  input(dom,'login-email','first@example.invalid');
+  submit(dom);
+  await tick();
+  input(dom,'login-code','123456');
+  submit(dom);
+  await tick();
+  app.suspendForHistory();
+  app.resumeWithFreshAuthority();
+  await tick();
+  assert.match(root.textContent,/Reopen the invitation you want to use/);
+  assert.equal(root.querySelector('#invitation')?.value,'');
+  assert.equal(root.querySelector('#adult-attestation')?.checked,false);
+  assert.equal(verifies,1);
+});

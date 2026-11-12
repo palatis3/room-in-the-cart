@@ -35,6 +35,7 @@ const es: Record<string, string> = {
   'Check your email for a six-digit code.':'Busca en tu correo un código de seis dígitos.',
   'Six-digit code':'Código de seis dígitos', 'Verify code':'Verificar código',
   'Use a different email':'Usar otro correo',
+  'Your sign-in changed. Reopen the invitation you want to use.':'Tu sesión cambió. Vuelve a abrir la invitación que quieres usar.',
   'Signed in. Review your invitation before joining.':'Sesión iniciada. Revisa tu invitación antes de unirte.',
   'That code was not accepted. Check the latest code or request another one.':'No se aceptó ese código. Revisa el código más reciente o solicita otro.',
   'Wait before requesting or checking another code.':'Espera antes de solicitar o verificar otro código.',
