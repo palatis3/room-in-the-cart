@@ -179,9 +179,9 @@ import XCTest
     private func counts(previews: Int, posts: Int, writes: Int, retries: Int) {
         let value = "Previews: \(previews); POSTs: \(posts); Writes: \(writes); Exact retries: \(retries)"
         let predicate = NSPredicate(format: "exists == true AND label == %@", value)
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element("fixture.operationUndo.counts"))], timeout: 15), .completed)
-        XCTAssertFalse(element("fixture.operationUndo.rejected").exists, app.debugDescription)
-        XCTAssertFalse(element("fixture.failure").exists, app.debugDescription)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: app.staticTexts["fixture.operationUndo.counts"])], timeout: 15), .completed)
+        XCTAssertFalse(app.staticTexts["fixture.operationUndo.rejected"].exists, app.debugDescription)
+        XCTAssertFalse(app.staticTexts["fixture.failure"].exists, app.debugDescription)
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private enum SearchDirection { case towardStart, towardEnd }
