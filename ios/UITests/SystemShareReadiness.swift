@@ -3,6 +3,7 @@ import XCTest
 
 extension XCTestCase {
     @MainActor func readySystemShareClose(in app: XCUIApplication,
+                                          requireStableFrame: Bool = false,
                                           file: StaticString = #filePath, line: UInt = #line) -> XCUIElement? {
         let activityClose = app.navigationBars["UIActivityContentView"].buttons["header.closeButton"]
         let fallbackClose = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
@@ -38,8 +39,15 @@ extension XCTestCase {
         }) else { return nil }
         // UIKit presents the remote container before the system activity service
         // supplies its controls. Only a usable Close permits cancellation.
+        var previous: (identifier: String, label: String, frame: CGRect)?
         guard waitForShareState("The presented system share sheet did not load its Close control", timeout: 45, until: {
-            usableClose()
+            guard usableClose(), let close else { previous = nil; return false }
+            guard requireStableFrame else { return true }
+            // The remote header can be hittable while its presentation is still moving.
+            guard let snapshot = try? close.snapshot(), !snapshot.frame.isEmpty else { previous = nil; return false }
+            let current = (identifier: snapshot.identifier, label: snapshot.label, frame: snapshot.frame)
+            defer { previous = current }
+            return previous?.identifier == current.identifier && previous?.label == current.label && previous?.frame == current.frame
         }) else { return nil }
         return close
     }

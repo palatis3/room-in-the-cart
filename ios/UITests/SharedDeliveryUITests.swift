@@ -482,15 +482,11 @@ import XCTest
         }
         openSavedCopy()
         tap(app.buttons["delivery.cook.savedShare"])
-        let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
         func dismissReviewedShare() -> Bool {
-            let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
-            guard XCTWaiter.wait(for: [ready], timeout: 15) == .completed else {
-                XCTFail("The system share Close control did not become ready")
-                return false
-            }
+            guard let close = readySystemShareClose(in: app, requireStableFrame: true) else { return false }
             close.tap()
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: close)
+            let remainingClose = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: remainingClose)
             guard XCTWaiter.wait(for: [dismissed], timeout: 15) == .completed else {
                 let screen = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
                 screen.name = "Shared cook share did not dismiss after Close"; screen.lifetime = .keepAlways; add(screen)
