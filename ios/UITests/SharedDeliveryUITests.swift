@@ -126,7 +126,7 @@ import XCTest
         }
         if openShare {
             tap(app.buttons["delivery.cook.share"], file: file, line: line)
-            guard let close = readySystemShareClose(in: app, file: file, line: line) else { return }
+            guard let close = readySystemShareClose(in: app, requireStableFrame: true, file: file, line: line) else { return }
             close.tap()
             reveal(preview, file: file, line: line)
             XCTAssertEqual(preview.label, copy, file: file, line: line)
@@ -138,7 +138,7 @@ import XCTest
         field.typeText(input)
     }
     private func hasUsable(_ text: String) -> Bool {
-        let row = app.descendants(matching: .any).matching(NSPredicate(format:
+        let row = app.staticTexts.matching(NSPredicate(format:
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
     }
