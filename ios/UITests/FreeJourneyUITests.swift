@@ -359,8 +359,7 @@ import XCTest
             }
             try await FreeJourneyUITests.restoreReduceMotion(original)
         }
-        try Self.setReduceMotion(true, using: control)
-        try await Self.requireRunnerReduceMotion(true)
+        try await Self.setReduceMotion(true, using: control, in: settings)
         captureSystemScreen("System Settings - Reduce Motion enabled")
 
         avoidIOS17SnapshotLoggingCrash()
@@ -460,12 +459,16 @@ import XCTest
                              "Read the native Reduce Motion switch")
     }
 
-    private static func setReduceMotion(_ enabled: Bool, using control: XCUIElement) throws {
+    private static func setReduceMotion(_ enabled: Bool, using control: XCUIElement, in settings: XCUIApplication) async throws {
         if try switchValue(control) != enabled {
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
+        // A Settings snapshot taken after the tap can describe its root screen.
+        // Verify the system preference, then read the switch on the Motion screen.
+        try await requireRunnerReduceMotion(enabled)
+        let current = try reduceMotionSwitch(in: settings)
         let targetValue = enabled ? "1" : "0"
-        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", targetValue), object: control)
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", targetValue), object: current)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, "Confirm native Reduce Motion switch state")
     }
 
@@ -480,8 +483,7 @@ import XCTest
     private static func restoreReduceMotion(_ original: Bool) async throws {
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         let control = try reduceMotionSwitch(in: settings)
-        try setReduceMotion(original, using: control)
-        try await requireRunnerReduceMotion(original)
+        try await setReduceMotion(original, using: control, in: settings)
     }
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
