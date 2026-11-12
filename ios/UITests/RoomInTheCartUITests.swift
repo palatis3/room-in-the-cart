@@ -79,6 +79,12 @@ final class RoomInTheCartUITests: XCTestCase {
         let preview = app.staticTexts.containing(NSPredicate(format:
             "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", title, "Source:", "Revision:")).firstMatch
         XCTAssertTrue(preview.waitForExistence(timeout: 5), "The reviewed file must contain the selected source and revision")
+        let ownerText = preview.label
+        for expected in ["Item-only comparison", "Item cost to buy enough: $6.00", "Item cost to buy enough: $4.00",
+                         "Room within the item limit: $26.00", "Lower cost to buy enough for this item"] {
+            XCTAssertTrue(ownerText.contains(expected), expected)
+        }
+        XCTAssertFalse(ownerText.contains("normalizedRequest"))
         screenshot("Private-owner-export-reviewed-with-fictional-data")
         tap(app.buttons["Discard prepared file"])
         XCTAssertFalse(app.buttons["Save file…"].exists, "Discard must remove the prepared export")
@@ -607,8 +613,18 @@ final class RoomInTheCartUITests: XCTestCase {
                     return
                 }
             }
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-            if field.exists {
+            let keyboard = app.keyboards.firstMatch
+            XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+            if id == "itemCap" {
+                // Synthesized typing briefly hides the decimal pad and moves Done over Backspace.
+                for character in text {
+                    let key = keyboard.keys[String(character)]
+                    XCTAssertTrue(key.isHittable)
+                    key.tap()
+                }
+                XCTAssertEqual(field.value as? String, text)
+                XCTAssertLessThanOrEqual(fieldDone.frame.maxY, keyboard.frame.minY + 1)
+            } else if field.exists {
                 field.typeText(text)
             } else {
                 // At accessibility sizes the focused row can scroll out of the snapshot.
