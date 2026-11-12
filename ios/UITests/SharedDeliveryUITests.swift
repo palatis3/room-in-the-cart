@@ -50,7 +50,25 @@ import XCTest
             let packs=app.textFields["sharedOrder.packs"]
             tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
             XCTAssertEqual(packs.value as? String, "3")
-            tap(app.buttons["sharedOrder.keepLine"])
+            let keep = app.buttons["sharedOrder.keepLine"]
+            if !keep.isHittable {
+                // At the largest text size, a swipe on the app starts in the keyboard toolbar.
+                let toolbar = app.buttons[done]
+                XCTAssertTrue(toolbar.isHittable)
+                let top = app.buttons[cancel].firstMatch.frame.maxY
+                let height = toolbar.frame.minY - top
+                XCTAssertGreaterThan(height, 0)
+                let origin = app.coordinate(withNormalizedOffset: .zero)
+                let x = packs.frame.midX - app.frame.minX, y = top - app.frame.minY
+                let lower = origin.withOffset(CGVector(dx: x, dy: y + height * 0.85))
+                let upper = origin.withOffset(CGVector(dx: x, dy: y + height * 0.4))
+                for _ in 0..<16 {
+                    if keep.isHittable { break }
+                    lower.press(forDuration: 0.05, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0.3)
+                }
+            }
+            XCTAssertTrue(keep.isHittable)
+            keep.tap()
             let reference=app.textFields["sharedOrder.reference"]
             tap(reference); reference.typeText("Native market ABC-51")
             tap(app.buttons[done])
