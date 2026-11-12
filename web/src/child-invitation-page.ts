@@ -144,8 +144,16 @@ export class ChildInvitationPage {
       if(this.auth&&this.auth.csrf!==auth.csrf){this.clear();this.phase='signin';this.auth=auth;this.notice='ended';return;}
       this.auth=auth;this.phase=this.requested?'code':'signin';return;
     }
-    this.auth=auth;const live=await this.live(generation);
-    if(!live){this.clear();this.phase='blocked';this.notice='blocked';return;}
+    const live=await this.live(generation);
+    if(!live){this.clear();this.auth=auth;this.phase='blocked';this.notice='blocked';return;}
+    if(live.auth.csrf!==auth.csrf)throw new ApiError('access_ended',403);
+    if(this.token){
+      const [householdId,inviteId]=this.token.split('.');
+      const matchesAdmission=householdId?.toLowerCase()===live.child.householdId&&inviteId?.toLowerCase()===live.child.inviteId;
+      // A lost response to this page's verification can be recovered from the
+      // admission. An unrelated tab's sign-in cannot inherit this page's token.
+      if(!matchesAdmission||(this.auth&&this.auth.csrf!==auth.csrf&&!this.verificationUncertain))this.token=null;
+    }
     this.adopt(live);this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;
     if(live.child.status==='active'){
       if(await this.scoped(generation,live))return;
@@ -171,7 +179,13 @@ export class ChildInvitationPage {
     const auth=await this.api.authState();this.check(generation);
     if(auth.authenticated){await this.load(generation);return;}
     if(!auth.available||!auth.csrf||auth.csrf!==this.auth?.csrf)throw new ApiError('access_ended',403);
-    this.verificationUncertain=true;await this.api.verifySignin(this.code,auth.csrf);this.check(generation);this.verificationUncertain=false;this.code='';this.email='';this.intent=null;this.requested=false;await this.load(generation);
+    this.verificationUncertain=true;
+    const verified=await this.api.verifySignin(this.code,auth.csrf);
+    this.check(generation);
+    this.auth=verified;
+    this.verificationUncertain=false;
+    this.code='';this.email='';this.intent=null;this.requested=false;
+    await this.load(generation);
   }
   private async claim(generation:number):Promise<void> {
     if(!this.controller||!this.token)throw new ApiError('invalid_entry',422);

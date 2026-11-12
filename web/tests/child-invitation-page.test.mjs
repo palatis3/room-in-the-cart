@@ -131,6 +131,22 @@ test('an account change while the child is entering an email clears the invitati
   assert.equal(f.fixture.counts.starts, 0);
 });
 
+test('a child signing in elsewhere cannot inherit an earlier invitation on this tab', async t => {
+  const f = await mountedInvitation(t);
+  const anotherInvite = fixtureInput.token.replace('22222222-', '99999999-');
+  input(f.dom, 'child-invitation', anotherInvite);
+  input(f.dom, 'child-email', 'previous@example.invalid');
+  f.visibility('hidden');
+  const auth = await f.api.authState();
+  await f.api.startSignin(fixtureInput, auth.csrf);
+  await f.api.verifySignin(fixtureInput.code, auth.csrf);
+  f.visibility('visible');
+  await ready(f.root);
+  assert.equal(f.root.querySelector('#child-invitation')?.value, '');
+  assert.equal(f.fixture.counts.claimPosts, 0);
+  assert.equal(f.fixture.counts.finishPosts, 0);
+});
+
 test('configured covered flow uses guardian-approved auth, server pairing confirmation and exact scoped handoff',async t=>{
   const f=await setup(t);await paired(f);
   assert.equal(f.fixture.counts.starts,1);assert.equal(f.fixture.counts.verifies,1);assert.equal(f.fixture.counts.claims,1);assert.equal(f.fixture.counts.finishPosts,0);assert.doesNotMatch(f.root.textContent,/Finish child setup/);
@@ -182,6 +198,8 @@ test('uncertain covered OTP send has explicit code checking and no automatic res
 test('lost verify response reconciles cookie-bound admission without another OTP or verification',async t=>{
   const f=await setup(t);input(f.dom,'child-email',fixtureInput.email);await submit(f.dom,f.root);f.fixture.control('lose-verify');input(f.dom,'child-code',fixtureInput.code);await submit(f.dom,f.root);
   assert.match(f.root.textContent,/Sign-in could not be confirmed/);await click(f.root,'Check current status');assert.match(f.root.textContent,/Claim this child invitation/);assert.equal(f.fixture.counts.starts,1);assert.equal(f.fixture.counts.verifies,1);
+  assert.equal(f.root.querySelector('#child-invitation')?.value,fixtureInput.token);
+  await click(f.root,'Claim this child invitation');assert.ok(f.root.querySelector('#pairing-code'));
 });
 
 test('lost claim response retries the original pairing and key, then shows confirmed pairing',async t=>{
