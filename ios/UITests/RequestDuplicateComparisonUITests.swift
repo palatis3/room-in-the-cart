@@ -109,13 +109,15 @@ import XCTest
         openRequest(sam,step:"Spanish-Sam-page-one")
         tap(element("household.duplicates.loadMore"))
         capture("S23-Spanish-page-two-loaded-in-same-decision-sheet")
-        assertComparisonValue("selection",request:"sam",value:"Decidiendo esta solicitud",initiallyForward:false)
+        let explanation = app.staticTexts["household.duplicates.separateOutcomes"]
+        reveal(explanation, initiallyForward: false)
+        XCTAssertTrue(explanation.label.contains("Cada solicitante conserva un resultado por separado."))
+        assertComparisonValue("selection",request:"sam",value:"Decidiendo esta solicitud")
         assertComparisonValue("author",request:"sam",value:"Sam",contains:true)
         assertComparisonValue("amountLabel",request:"sam",value:"Cantidad y uso, tal como se escribieron")
         assertComparisonValue("amount",request:"sam",value:"1 box for breakfasts")
         assertComparisonValue("author",request:"lee",value:"Lee",contains:true)
         assertComparisonValue("amount",request:"lee",value:"2 boxes for the school snack drive")
-        assertVisible("Cada solicitante conserva un resultado por separado.",contains:true)
         capture("S23-Spanish-large-type-original-request-words")
         closeDecision()
         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 0")
@@ -147,7 +149,7 @@ import XCTest
     }
     // Cancellation is a Button. Keep disappearance checks scoped to that type
     // instead of searching every accessibility descendant after the sheet closes.
-    private var cancelButton: XCUIElement { app.buttons.matching(identifier: "household.decision.cancel").firstMatch }
+    private var cancelButton: XCUIElement { app.navigationBars.buttons.matching(identifier: "household.decision.cancel").firstMatch }
     private func element(_ id:String)->XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target:XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
     private func assertComparisonValue(_ field:String,request:String,value:String,contains:Bool=false,initiallyForward:Bool=true) {
@@ -183,9 +185,9 @@ import XCTest
         }
         XCTAssertTrue(found,"Missing visible text: \(text)")
     }
-    private func reveal(_ target:XCUIElement) {
+    private func reveal(_ target:XCUIElement, initiallyForward:Bool = true) {
         let description = target.exists ? target.identifier : "unmaterialized-control"
-        let found = scanForVisibleElement(description:description) {
+        let found = scanForVisibleElement(description:description, initiallyForward:initiallyForward) {
             target.exists && target.isHittable ? target : nil
         } candidate: {
             target
