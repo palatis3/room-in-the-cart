@@ -534,6 +534,7 @@ struct RecordsToolsView: View {
         case .locked, .invalidKey: return recordsText("The recovery key could not unlock this file. Check the key and try again.")
         case .conflict: return recordsText("This batch conflicts with an existing or deleted copy. Nothing was imported.")
         case .staleReview: return recordsText("Your local copies changed during review. Select the file again before importing.")
+        case .exportSelectionChanged: return recordsText("Your selection changed. Review the selected records and source references, then prepare the file again.")
         case .invalidRecipe: return recordsText("Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.")
         case .unavailable: return recordsText("The local operation could not finish. Your current records are still available. Try again.")
         }

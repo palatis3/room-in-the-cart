@@ -32,6 +32,53 @@ import UIKit
     private func model(_ record: ArchiveRecord, registry: RecoveryRegistry) -> RecordsToolsModel {
         RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
     }
+    func testBackupRequiresEverySelectedRevisionAndTheReviewedAttachment() async throws {
+        let (first, _) = try package()
+        let (second, _) = try package()
+        let root = try location()
+        let registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
+        var records = [first, second]
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await tools.refresh()
+        tools.selectAll()
+        tools.generateRecoveryKey()
+
+        // The other document can still be read, but that alone is not the requested backup.
+        records[1].revision = "edited"
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertNil(tools.beginFileSave())
+        XCTAssertEqual(tools.selectedIDs, [RecordsToolsModel.selectionID(first)])
+
+        let attachment = try XCTUnwrap(first.media?.first)
+        let mediaID = RecordsToolsModel.mediaSelectionID(attachment, record: first)
+        tools.selectAll()
+        tools.selectedMediaIDs.insert(mediaID)
+        // A replacement with the same capture ID must receive its own disclosure.
+        records[0].media = [ArchiveMediaAttachment(id: attachment.id, kind: attachment.kind, data: Data([0]))]
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertFalse(tools.selectedMediaIDs.contains(mediaID))
+
+        records[0].media = first.media
+        await tools.refresh()
+        tools.selectedMediaIDs.insert(mediaID)
+        records[0].media = nil
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertFalse(tools.selectedMediaIDs.contains(mediaID))
+        // After reviewing the updated choices, both healthy records can be backed up.
+        await tools.prepareExport(.encryptedRecovery)
+        let data = try XCTUnwrap(tools.preparedDocument).data
+        let result = try EncryptedArchive.open(data, key: tools.recoveryKey)
+        XCTAssertEqual(Set(result.payload.records.map(\.revision)), Set(records.map(\.revision)))
+        XCTAssertNil(result.mediaManifest)
+    }
+
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {
         let (record, source) = try package(), root = try location()
         let sourceRegistry = try RecoveryRegistry(url: root.appendingPathComponent("source.json"))

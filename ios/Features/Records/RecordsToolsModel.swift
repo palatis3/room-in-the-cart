@@ -204,6 +204,22 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             let authorize = try authorization()
             let generation = liveSharedGeneration
             let requested = selectedIDs
+            let mediaSelection = selectedMediaIDs
+            let selectedKey = recoveryKey
+            // Photo references can change independently of the ledger revision.
+            // Retain the disclosed attachment bytes until the fresh listing is checked.
+            func selectedAttachments(in records: [ArchiveRecord]) -> [RecordsMediaSelectionID: ArchiveMediaAttachment] {
+                guard choice == .encryptedRecovery else { return [:] }
+                var attachments: [RecordsMediaSelectionID: ArchiveMediaAttachment] = [:]
+                for record in records where requested.contains(Self.selectionID(record)) {
+                    for media in record.media ?? [] {
+                        let id = Self.mediaSelectionID(media, record: record)
+                        if mediaSelection.contains(id) { attachments[id] = media }
+                    }
+                }
+                return attachments
+            }
+            let disclosed = selectedAttachments(in: currentRecords)
             let previouslyLive = requested.intersection(sourceListing.liveSharedRecordIDs)
             let batch = try await snapshot()
             try requireAuthorization(authorize)
@@ -211,11 +227,18 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             guard !containsRetiredHistory(previouslyLive), !containsRetiredHistory(batch.liveSharedRecordIDs),
                   generation == liveSharedGeneration || (previouslyLive.isEmpty && !requestedLive) else { throw ArchiveError.staleReview }
             publishListing(batch, startedIn: generation)
-            let selected = requested.intersection(selectedIDs)
-            let liveIDs = selected.intersection(batch.liveSharedRecordIDs)
-            let records = batch.records.filter { selected.contains(Self.selectionID($0)) }.map { source -> ArchiveRecord in
+            let available = Set(batch.records.map(Self.selectionID))
+            let refreshedMedia = selectedAttachments(in: batch.records)
+            guard requested == selectedIDs, requested.isSubset(of: available), disclosed == refreshedMedia else {
+                selectedIDs.formIntersection(available)
+                let changedMedia = Set(disclosed.keys).union(refreshedMedia.keys).filter { disclosed[$0] != refreshedMedia[$0] }
+                selectedMediaIDs.subtract(changedMedia)
+                throw ArchiveError.exportSelectionChanged
+            }
+            let liveIDs = requested.intersection(batch.liveSharedRecordIDs)
+            let records = batch.records.filter { requested.contains(Self.selectionID($0)) }.map { source -> ArchiveRecord in
                 var record = source
-                record.media = choice == .encryptedRecovery ? source.media?.filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: source)) } : nil
+                record.media = choice == .encryptedRecovery ? source.media?.filter { disclosed[Self.mediaSelectionID($0, record: source)] != nil } : nil
                 if record.media?.isEmpty == true { record.media = nil }
                 return record
             }
@@ -231,7 +254,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
                 // Export identity depends on source revisions, not file creation time.
                 let revision = ArchiveCodec.digest(try ArchiveCodec.canonical(records.map { [$0.origin, $0.id, $0.revision] }.sorted { $0.lexicographicallyPrecedes($1) }))
                 let envelope = try ArchiveCodec.make(records: records, kind: kind, origin: "selected-local-records", revision: revision, shopID: kind == .helperShop ? records.first?.id : nil)
-                let data = choice == .encryptedRecovery ? try EncryptedArchive.seal(envelope, key: recoveryKey) : try ArchiveCodec.encode(envelope)
+                let data = choice == .encryptedRecovery ? try EncryptedArchive.seal(envelope, key: selectedKey) : try ArchiveCodec.encode(envelope)
                 document = RecordsFileDocument(data: data, kind: choice == .encryptedRecovery ? .recovery : .helper)
                 name = choice == .encryptedRecovery ? "Personal-recovery" : "Helper-copy"
                 if choice == .encryptedRecovery {
@@ -250,6 +273,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
             try requireAuthorization(authorize)
             guard !containsRetiredHistory(liveIDs), liveIDs.isEmpty || generation == liveSharedGeneration else { throw ArchiveError.staleReview }
+            guard selectedIDs == requested,
+                  choice != .encryptedRecovery || (selectedMediaIDs == mediaSelection && recoveryKey == selectedKey) else {
+                throw ArchiveError.exportSelectionChanged
+            }
             preparedLiveIDs = liveIDs
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
             preparedName = name

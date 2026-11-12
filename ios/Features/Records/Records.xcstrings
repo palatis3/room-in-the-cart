@@ -2601,6 +2601,22 @@
         }
       }
     },
+    "Your selection changed. Review the selected records and source references, then prepare the file again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your selection changed. Review the selected records and source references, then prepare the file again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu selección cambió. Revisa los registros y las referencias de origen seleccionados y vuelve a preparar el archivo."
+          }
+        }
+      }
+    },
     "Your notes": {
       "extractionState": "manual",
       "localizations": {

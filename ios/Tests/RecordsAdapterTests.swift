@@ -151,6 +151,25 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.preparedDocument?.data, helperBytes)
     }
 
+    @MainActor func testRecoveryKeyChangeDuringPreparationRequiresAReviewedRetry() async throws {
+        let record = try comparison()
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        var rotateDuringValidation: (() -> Void)?
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) },
+            validateNativePayload: { _ in rotateDuringValidation?() }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        model.generateRecoveryKey()
+        rotateDuringValidation = { [weak model] in model?.generateRecoveryKey() }
+        await model.prepareExport(.encryptedRecovery)
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertEqual(model.error, .exportSelectionChanged)
+
+        rotateDuringValidation = nil
+        await model.prepareExport(.encryptedRecovery)
+        let data = try XCTUnwrap(model.preparedDocument).data
+        XCTAssertEqual(try EncryptedArchive.open(data, key: model.recoveryKey).payload.records, [record])
+    }
     @MainActor func testOnlyCompletedEncryptedSaveMarksTheExportedRevisionAfterRelaunch() async throws {
         let record = try comparison()
         let date = Date(timeIntervalSince1970: 1_790_000_000)
@@ -537,7 +556,7 @@ final class RecordsAdapterTests: XCTestCase {
         sources = []
         await model.prepareExport(.ownerText)
         XCTAssertNil(model.preparedDocument)
-        XCTAssertEqual(model.error, .unavailable)
+        XCTAssertEqual(model.error, .exportSelectionChanged)
         XCTAssertTrue(model.currentRecords.isEmpty)
     }
     @MainActor func testDamagedBackupReportsMalformedAndPreservesLiveAndRecoveredRecords() async throws {
