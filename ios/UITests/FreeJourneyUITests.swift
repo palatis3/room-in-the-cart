@@ -341,6 +341,31 @@ import XCTest
 
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {
         try exerciseRetailerShareCancellation()
+
+        let picker = app.buttons["pickup.retailerRecipientLanguage"]
+        let preview = app.staticTexts["pickup.datedRetailerPreview"]
+        reveal(picker, initiallyUpward: false)
+        let english = preview.label
+        picker.tap()
+        app.buttons["Español (EE. UU.)"].tap()
+        XCTAssertTrue(preview.label.hasPrefix("Compra revisada"))
+        XCTAssertTrue(preview.label.contains("Wraps — 2 unidades"))
+        let spanish = preview.label
+        tap(app.buttons["Copy dated list"])
+        capture("Retailer-English-interface-Spanish-copy")
+
+        app.terminate()
+        launch(reset: false, spanish: true)
+        shopRoot()
+        tap(app.buttons["Recogida, ajustes y entregas"])
+        tap(app.collectionViews.buttons["Preparar envío a la tienda"])
+        reveal(preview)
+        XCTAssertEqual(preview.label, spanish)
+        tap(picker)
+        app.buttons["Inglés (EE. UU.)"].tap()
+        XCTAssertEqual(preview.label, english)
+        tap(app.buttons["Copiar lista con fecha"])
+        capture("Retailer-Spanish-interface-English-copy")
     }
 
     func testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced() async throws {

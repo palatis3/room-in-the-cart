@@ -565,6 +565,7 @@ private struct PickupPlacedOrderRecordView: View {
 
 private struct PickupPlacedOrderSections: View {
     let journey: PickupJourney
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var access: WorkspaceAccess
 
     var body: some View {
@@ -585,7 +586,7 @@ private struct PickupPlacedOrderSections: View {
                 }
             }
             Section(pTr("Dated snapshot")) {
-                Text(verbatim: PickupModel.datedRetailerText(snapshot))
+                Text(verbatim: HandoffCopy.retailer(snapshot, language: locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US").fullText)
                     .accessibilityIdentifier("pickup.placedSnapshot").textSelection(.enabled)
             }
             PickupHandoffHistory(actions: basket.handoffActions.filter { $0.snapshotID == snapshot.id })
@@ -611,8 +612,20 @@ struct PickupHandoffView: View {
     let shopID: UUID
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var access: WorkspaceAccess
-    @State private var sharing: HandoffSnapshot?
+    @Environment(\.locale) private var locale
+    @State private var selectedLanguage: String?
+    @State private var sharing: RetailerShare?
     @State private var retailerURL = ""
+
+    private struct RetailerShare: Identifiable {
+        let snapshot: HandoffSnapshot
+        let text: String
+        var id: UUID { snapshot.id }
+    }
+    private var recipientLanguage: String {
+        selectedLanguage ?? (locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+    }
+
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -628,9 +641,9 @@ struct PickupHandoffView: View {
             }
         }.navigationTitle(pTr("Retailer handoff"))
         .disabled(model.saving)
-        .sheet(item: $sharing) { snapshot in
-            PickupActivitySheet(text: PickupModel.datedRetailerText(snapshot)) { completed, destination in
-                Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: snapshot, destination: destination) }
+        .sheet(item: $sharing) { share in
+            PickupActivitySheet(text: share.text) { completed, destination in
+                Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: share.snapshot, destination: destination) }
             }
         }
     }
@@ -645,21 +658,27 @@ struct PickupHandoffView: View {
             }
         }.disabled(model.result == nil || model.frozenSnapshot != nil)
         if let snapshot = model.frozenSnapshot {
-            let text = PickupModel.datedRetailerText(snapshot)
-            Section(pTr("Dated snapshot")) { Text(text).textSelection(.enabled) }
+            let copy = HandoffCopy.retailer(snapshot, language: recipientLanguage)
+            Section(pTr("Dated snapshot")) {
+                Picker(pTr("Recipient language"), selection: Binding(get: { recipientLanguage }, set: { selectedLanguage = $0 })) {
+                    Text(pTr("English (US)")).tag("en-US")
+                    Text(pTr("Español (EE. UU.)")).tag("es-US")
+                }.pickerStyle(.menu).accessibilityIdentifier("pickup.retailerRecipientLanguage")
+                Text(verbatim: copy.fullText).textSelection(.enabled).accessibilityIdentifier("pickup.datedRetailerPreview")
+            }
             Button(pTr("Copy dated list")) { Task {
                 guard await model.recordHandoff(.copyAttempted, snapshot: snapshot), access.unlocked,
                       model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
-                UIPasteboard.general.string = text
+                UIPasteboard.general.string = copy.fullText
                 await model.recordHandoff(.copied, snapshot: snapshot)
             } }.disabled(!model.hasCurrentBasketStockBasis)
             Button(pTr("Share dated list")) { Task {
                 guard await model.recordHandoff(.shareOpened, snapshot: snapshot), access.unlocked,
                       model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
-                sharing = snapshot
+                sharing = RetailerShare(snapshot: snapshot, text: copy.fullText)
             } }.disabled(!model.hasCurrentBasketStockBasis)
             PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
-                                   language: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+                                   language: recipientLanguage)
                 .id(snapshot.id)
             TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
             Button(pTr("Open retailer website")) { Task {

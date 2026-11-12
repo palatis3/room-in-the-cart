@@ -594,9 +594,6 @@ struct PickupPersistenceLocation {
         }
         return current
     }
-    static func datedRetailerText(_ snapshot: HandoffSnapshot) -> String {
-        "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
-    }
     @discardableResult func recordHandoff(_ kind: HandoffActionKind, snapshot: HandoffSnapshot? = nil, destination: String? = nil) async -> Bool {
         guard let snapshot = snapshot ?? frozenSnapshot,
               var value = journeys.first(where: { $0.id == snapshot.basketID }),

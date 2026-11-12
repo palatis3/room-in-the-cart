@@ -93,7 +93,7 @@ final class PickupRecipientHandoffTests: XCTestCase {
         let placements = try XCTUnwrap(restored.journeys.first(where: { $0.id == other.basketID })?.basket?.placements)
         XCTAssertEqual(placements.map(\.reportedByLocalActorID), [actor])
         XCTAssertEqual(placements.map(\.snapshotID), [other.id])
-        let retailerText = PickupModel.datedRetailerText(other)
+        let retailerText = HandoffCopy.retailer(other, language: "en-US").fullText
         XCTAssertFalse(retailerText.contains(actor.uuidString))
         XCTAssertTrue(retailerText.contains("Beans"))
         let pickup = try XCTUnwrap(restored.journeys.first { $0.id == shopID })
@@ -147,6 +147,83 @@ final class PickupRecipientHandoffTests: XCTestCase {
         try await reopened.deleteArchived(id: shopID, expectedRevision: XCTUnwrap(listing.records.first?.revision), operationID: UUID())
         let afterErase = PickupModel(databaseURL: url); await afterErase.load()
         XCTAssertNil(afterErase.journey)
+    }
+
+    @MainActor func testOneFrozenRetailerVersionKeepsSeparateRecipientLanguagesAndAcknowledgments() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let at = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-12T17:00:00Z"))
+        let model = PickupModel(databaseURL: url, clock: { at })
+        let context = CheckoutContext(storeID: "Store", branchID: "Branch", mode: .pickup, slot: "Evening",
+            commitmentsID: shopID, observedAt: at, source: "Private checkout")
+        let beans = BasketLine(id: UUID(), name: "Frijoles — two 15 oz cans, no salt added",
+            quantity: Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2"), expectedCost: .exact(.zero))
+        let oats = BasketLine(id: UUID(), name: "Avena",
+            quantity: Quantity(amount: try Rational(3, 2), unit: .cup, originalLiteral: "1½"), expectedCost: .unknown(reason: "PRIVATE"))
+        let started = await model.start(from: [beans, oats], shopID: shopID, context: context)
+        let quoted = await model.setQuote(.init(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
+        let frozen = await model.freeze()
+        XCTAssertTrue(started && quoted && frozen)
+        let version = try XCTUnwrap(model.frozenSnapshot?.id)
+        let en = try XCTUnwrap(model.handoffCopy(channel: .retailer, versionID: version, language: "en-US"))
+        let es = try XCTUnwrap(model.handoffCopy(channel: .retailer, versionID: version, language: "es-US"))
+        for (copy, title, month, revision, units, cups) in [
+            (en, "Reviewed pickup", "November", "Revision", "2 units", "3/2 cups"),
+            (es, "Compra revisada", "noviembre", "Revisión", "2 unidades", "3/2 tazas")
+        ] {
+            XCTAssertTrue(copy.fullText.hasPrefix(title))
+            XCTAssertTrue(copy.fullText.contains(month))
+            XCTAssertTrue(copy.fullText.contains("\(revision) \(copy.revision)"))
+            for line in ["\(beans.name) — \(units)", "Avena — \(cups)"] {
+                XCTAssertTrue(copy.fullText.contains(line))
+                XCTAssertTrue(copy.pieces?.contains { $0.text == line } == true)
+            }
+            XCTAssertFalse(copy.fullText.contains("PRIVATE"))
+        }
+
+        func record(_ copy: HandoffCopy, for recipient: String = "Ana", acknowledge: Bool = false) async throws -> Bool {
+            let revision = try XCTUnwrap(model.journey?.revision)
+            return await model.markRecipient(copy, recipient: recipient, acknowledge: acknowledge, reviewedRevision: revision)
+        }
+        let sentEnglish = try await record(en)
+        let englishAcknowledged = try await record(en, acknowledge: true)
+        let benSent = try await record(en, for: "Ben")
+        XCTAssertTrue(sentEnglish && englishAcknowledged && benSent)
+        let englishSend = try XCTUnwrap(model.journey?.lastSend(.retailer, recipient: "Ana"))
+        XCTAssertNotNil(englishSend.acknowledgedAt)
+        let beforeSpanish = try XCTUnwrap(model.journey)
+        XCTAssertEqual(model.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: beforeSpanish.revision), .full(es.fullText))
+        let unsentAck = try await record(es, acknowledge: true)
+        XCTAssertFalse(unsentAck)
+        XCTAssertEqual(model.journey, beforeSpanish)
+
+        let sentSpanish = try await record(es)
+        XCTAssertTrue(sentSpanish)
+        let spanishSend = try XCTUnwrap(model.journey?.lastSend(.retailer, recipient: "Ana"))
+        XCTAssertEqual(spanishSend.language, "es-US")
+        XCTAssertNil(spanishSend.acknowledgedAt)
+        let markedRevision = try XCTUnwrap(model.journey?.revision)
+        let duplicate = try await record(es)
+        XCTAssertTrue(duplicate)
+        XCTAssertEqual(model.journey?.revision, markedRevision)
+        let spanishAck = try await record(es, acknowledge: true)
+        XCTAssertTrue(spanishAck)
+        let restored = PickupModel(databaseURL: url)
+        await restored.load()
+        let history = try XCTUnwrap(restored.journey)
+        XCTAssertEqual(history.recipientSends?.count, 3)
+        XCTAssertTrue(history.recipientSends?.contains(englishSend) == true)
+        XCTAssertEqual(history.lastSend(.retailer, recipient: "Ana")?.language, "es-US")
+        XCTAssertNotNil(history.lastSend(.retailer, recipient: "Ana")?.acknowledgedAt)
+        XCTAssertNil(history.lastSend(.retailer, recipient: "Ben")?.acknowledgedAt)
+        XCTAssertEqual(restored.reviewedCorrection(en, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: history.revision), .full(en.fullText))
+        XCTAssertEqual(restored.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: history.revision),
+            .changes(added: [], removed: [], unresolved: ["Avena · Confirmar el precio"]))
+        XCTAssertEqual(restored.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: false, reviewedRevision: history.revision), .full(es.fullText))
     }
 
     @MainActor func testSpanishCookUsesOnlyTheSelectedRecipientsLastExplicitVersionAndLiveSeat() async throws {
