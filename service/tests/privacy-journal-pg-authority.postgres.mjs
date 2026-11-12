@@ -667,6 +667,7 @@ test('deployed runtime entry points bind deletion to the registered source and r
 
   const requests=[];
   let providerDeleted=false;
+  let routeMissing=false;
   globalThis.fetch=async(input,init)=>{
    const url=String(input);
    if(url===jwks)return Response.json({keys:[signatureKey]});
@@ -675,6 +676,7 @@ test('deployed runtime entry points bind deletion to the registered source and r
    assert.equal(init.headers.apikey,key);
    assert.equal(init.headers.Authorization,undefined);
    requests.push(init.method);
+   if(routeMissing)return new Response('<h1>Not found</h1>', {status:404,headers:{'content-type':'text/html'}});
    if(init.method==='DELETE'){
     assert.deepEqual(JSON.parse(init.body),{should_soft_delete:false});
     providerDeleted=true;
@@ -749,16 +751,30 @@ test('deployed runtime entry points bind deletion to the registered source and r
   assert.deepEqual(requests,['GET']);
   await source.owner.query('UPDATE ritc.privacy_job SET issuer=$2,lease_until=NULL,lease_id=NULL WHERE job_id=$1',[jobId,issuer]);
 
+  // A routing 404 must leave the public receipt pending while the account still exists.
+  routeMissing=true;
+  const lostRoute=await operations.run();
+  assert.equal(lostRoute.privacy.retryScheduled,1);
+  assert.equal(lostRoute.privacy.completed,0);
+  const afterFailure=await originalFetch(base+'/v1/privacy/jobs/'+jobId,{headers:{'x-deletion-token':statusToken}});
+  assert.equal(afterFailure.status,200);
+  const pending=await afterFailure.json();
+  assert.equal(pending.status,'pending');
+  assert.equal(pending.providerAccountDeleted,false);
+  assert.equal(providerDeleted,false);
+  assert.equal((await source.owner.query('SELECT 1 FROM auth.sessions WHERE user_id=$1',[subject])).rowCount,1);
+  routeMissing=false;
+  await source.owner.query("UPDATE ritc.privacy_job SET next_at=clock_timestamp()-interval '1 second' WHERE job_id=$1",[jobId]);
   const done=await operations.run();
   assert.equal(done.privacy.completed,1);
-  assert.deepEqual(requests,['GET','GET','DELETE','GET']);
+  assert.deepEqual(requests,['GET','GET','GET','DELETE','GET']);
   const receiptResponse=await originalFetch(base+'/v1/privacy/jobs/'+jobId,{headers:{'x-deletion-token':statusToken}});
   assert.equal(receiptResponse.status,200);
   const completed=await receiptResponse.json();
   assert.equal(completed.status,'complete');
   assert.equal(completed.providerAccountDeleted,true);
   const healthy=await operations.run('status');
-  assert.equal(healthy.privacyJournal.capacity.usedRecords,3);
+  assert.equal(healthy.privacyJournal.capacity.usedRecords,4);
   assert.equal(healthy.privacyJournal.capacity.reservedRecords,0);
   for(const secret of [key,writerToken,statusToken,jobId,subject,sessionId,issuer]){
    assert.ok(!JSON.stringify(healthy).includes(secret));
