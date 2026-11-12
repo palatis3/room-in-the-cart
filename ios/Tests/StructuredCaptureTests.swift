@@ -235,6 +235,27 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertNil(CaptureGuestParser.proposal("no more guests"))
         XCTAssertNil(CaptureGuestParser.proposal("two guests and three lunches"))
     }
+    func testGuestWordingKeepsAnAdditionDistinctFromTheNewMealTotal() throws {
+        let four = try Rational(4)
+        let six = try Rational(6)
+        let two = try Rational(2)
+        for phrase in ["add two guests", "agrega dos invitados", "añade dos invitadas", "add two vegetarian guests"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), six, phrase)
+        }
+        for phrase in ["two guests in total", "dos invitados en total"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), two, phrase)
+        }
+        for phrase in ["remove two guests", "two fewer guests", "dos invitados menos"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), two, phrase)
+        }
+        XCTAssertThrowsError(try CaptureGuestParser.proposal("remove four guests")?.proposedTotal(current: four))
+        XCTAssertEqual(try CaptureGuestParser.proposal("add twenty one guests")?.proposedTotal(current: four), try Rational(25))
+        for phrase in ["two boxes for the guests", "dos cajas para los invitados", "no agregues dos invitados",
+                       "don't add two guests", "dos invitados menos el cocinero", "dos invitados menos, menos el cocinero",
+                       "more than two guests", "más de dos invitados", "add two guests in total"] {
+            XCTAssertNil(CaptureGuestParser.proposal(phrase), phrase)
+        }
+    }
     func testConflictingTotalAndPackEvidenceFailsAtomically() throws {
         var draft = try row("2 packs of 6 wraps")
         draft.amount = "10"; draft.confirmed = true

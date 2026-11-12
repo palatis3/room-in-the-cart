@@ -68,9 +68,11 @@ enum CaptureNumber {
 }
 
 enum StructuredCaptureParser {
+    static let guestNouns: Set<String> = ["guest", "guests", "invitado", "invitada", "invitados", "invitadas", "comensal", "comensales"]
+
     static func isGuestProposal(_ text: String) -> Bool {
         let words = Set(text.lowercased().split { !$0.isLetter }.map(String.init))
-        return !words.isDisjoint(with: ["guest", "guests", "invitado", "invitada", "invitados", "invitadas", "comensal", "comensales"])
+        return !words.isDisjoint(with: guestNouns)
     }
     static func lines(_ text: String, destination: String, explicitlyTreatAsItems: Bool = false) throws -> [CaptureLineDraft] {
         try CaptureLimits.validate(text)
