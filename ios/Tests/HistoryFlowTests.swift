@@ -6,6 +6,27 @@ import HouseholdClient
     private let household = "10000000-0000-4000-8000-000000000001"
     private let member = "10000000-0000-4000-8000-000000000002"
     private let shop = "10000000-0000-4000-8000-000000000003"
+
+    func testNewBudgetPeriodKeepsLocalClockTimeAcrossDaylightSavingChanges() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        for (start, end) in [
+            ("2026-03-01T04:30:00Z", "2026-03-15T03:30:00Z"),
+            ("2026-10-24T04:30:00Z", "2026-11-07T05:30:00Z")
+        ] {
+            let startDate = try XCTUnwrap(HistoryDate.date(start))
+            let endDate = try XCTUnwrap(HistoryDate.date(end))
+            var draft = HistoryPeriodDraft(start: startDate, calendar: calendar)
+            draft.title = "Two-week grocery budget"
+            draft.budget = "120"
+            let saved = try draft.dto()
+            let reopened = HistoryPeriodDraft(.init(periodId: saved.id, revision: 1, period: saved))
+            XCTAssertEqual(reopened.timeZoneID, calendar.timeZone.identifier)
+            XCTAssertEqual(reopened.startsAt, startDate)
+            XCTAssertEqual(reopened.endsAt, endDate)
+        }
+    }
+
     private func setup() async throws -> (HistoryFeatureModel, HistoryFixtureService, HistoryFixtureStore, HistoryScopeBox) {
         let service = try HistoryFixtureService()
         let store = HistoryFixtureStore()
