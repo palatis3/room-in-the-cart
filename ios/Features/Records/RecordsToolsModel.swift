@@ -52,6 +52,8 @@ struct RecordsMediaSelectionID: Hashable {
     private let cleanupRecovered: (() async throws -> Void)?
     private let willRemoveRecovered: () -> Void
     private var recoveredOpenGeneration = UUID()
+    private var liveSharedGeneration = UUID()
+    private var preparedUsesLiveSharedRecords = false
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
     private let beginAuthorization: () -> Authorization?
@@ -78,12 +80,29 @@ struct RecordsMediaSelectionID: Hashable {
         self.beginAuthorization = beginAuthorization
         self.willRemoveRecovered = willRemoveRecovered
     }
+    func liveSharedAccessEnded() {
+        liveSharedGeneration = UUID()
+        if preparedUsesLiveSharedRecords { dismissPreparedFile(); status = nil }
+        var listing = sourceListing
+        let retired = listing.liveSharedRecordIDs
+        guard !retired.isEmpty else { return }
+        listing.records.removeAll { retired.contains(Self.selectionID($0)) }
+        listing.liveSharedRecordIDs = []
+        sourceListing = listing
+        selectedIDs.subtract(retired)
+    }
+    private func publishListing(_ batch: RecordsSnapshotBatch, startedIn generation: UUID) {
+        // Independent recovered records can share an identity with a denied live record.
+        // Only a batch carrying an older live read is invalidated by that denial.
+        if generation == liveSharedGeneration || batch.liveSharedRecordIDs.isEmpty { sourceListing = batch }
+    }
     private func reloadListing(authorize: Authorization) async throws {
+        let generation = liveSharedGeneration
         let batch = try await snapshot()
         try requireAuthorization(authorize)
         let recovered = try await registry.refreshList()
         try requireAuthorization(authorize)
-        sourceListing = batch
+        publishListing(batch, startedIn: generation)
         recoveredRecords = recovered
     }
     func refresh() async {
@@ -99,14 +118,21 @@ struct RecordsMediaSelectionID: Hashable {
     enum ExportChoice { case encryptedRecovery, helperJSON, helperText, ownerText }
     func prepareExport(_ choice: ExportChoice) async {
         guard !busy else { return }
-        busy = true; error = nil; preparedDocument = nil
+        busy = true; error = nil; dismissPreparedFile()
         defer { busy = false }
         do {
             let authorize = try authorization()
+            let generation = liveSharedGeneration
+            let requested = selectedIDs
+            let previouslyLive = !requested.isDisjoint(with: sourceListing.liveSharedRecordIDs)
             let batch = try await snapshot()
             try requireAuthorization(authorize)
-            sourceListing = batch
-            let records = selectedSnapshot.map { source -> ArchiveRecord in
+            let requestedLive = !requested.isDisjoint(with: batch.liveSharedRecordIDs)
+            guard generation == liveSharedGeneration || !(previouslyLive || requestedLive) else { throw ArchiveError.staleReview }
+            publishListing(batch, startedIn: generation)
+            let selected = requested.intersection(selectedIDs)
+            let usesLive = !selected.isDisjoint(with: batch.liveSharedRecordIDs)
+            let records = batch.records.filter { selected.contains(Self.selectionID($0)) }.map { source -> ArchiveRecord in
                 var record = source
                 record.media = choice == .encryptedRecovery ? source.media?.filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: source)) } : nil
                 if record.media?.isEmpty == true { record.media = nil }
@@ -115,6 +141,8 @@ struct RecordsMediaSelectionID: Hashable {
             guard !records.isEmpty else { throw ArchiveError.unavailable }
             if choice == .helperJSON || choice == .helperText { guard records.count == 1 else { throw ArchiveError.unsupportedProjection } }
             for record in records { try await validateRecord(record); try requireAuthorization(authorize) }
+            let document: RecordsFileDocument
+            let name: String
             switch choice {
             case .encryptedRecovery, .helperJSON:
                 let kind: ArchiveKind = choice == .encryptedRecovery ? .personalRecovery : .helperShop
@@ -122,10 +150,8 @@ struct RecordsMediaSelectionID: Hashable {
                 let revision = ArchiveCodec.digest(try ArchiveCodec.canonical(records.map { [$0.origin, $0.id, $0.revision] }.sorted { $0.lexicographicallyPrecedes($1) }))
                 let envelope = try ArchiveCodec.make(records: records, kind: kind, origin: "selected-local-records", revision: revision, shopID: kind == .helperShop ? records.first?.id : nil)
                 let data = choice == .encryptedRecovery ? try EncryptedArchive.seal(envelope, key: recoveryKey) : try ArchiveCodec.encode(envelope)
-                try requireAuthorization(authorize)
-                preparedDocument = RecordsFileDocument(data: data, kind: choice == .encryptedRecovery ? .recovery : .helper)
-                preparedName = choice == .encryptedRecovery ? "Personal-recovery" : "Helper-copy"
-                preparedIsPrivate = choice == .encryptedRecovery
+                document = RecordsFileDocument(data: data, kind: choice == .encryptedRecovery ? .recovery : .helper)
+                name = choice == .encryptedRecovery ? "Personal-recovery" : "Helper-copy"
             case .helperText, .ownerText:
                 let bounded = try ArchiveCodec.make(records: records, kind: choice == .ownerText ? .personalRecovery : .helperShop,
                     origin: "selected-local-records", revision: "readable-preview")
@@ -135,11 +161,15 @@ struct RecordsMediaSelectionID: Hashable {
                     if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
                     return ReadableArchive.text([record], owner: choice == .ownerText)
                 }.joined(separator: "\n\n")
-                try requireAuthorization(authorize)
-                preparedDocument = RecordsFileDocument(data: Data(text.utf8), kind: .text)
-                preparedName = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
-                preparedIsPrivate = choice == .ownerText
+                document = RecordsFileDocument(data: Data(text.utf8), kind: .text)
+                name = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
             }
+            try requireAuthorization(authorize)
+            guard !usesLive || generation == liveSharedGeneration else { throw ArchiveError.staleReview }
+            preparedUsesLiveSharedRecords = usesLive
+            preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
+            preparedName = name
+            preparedDocument = document
             status = recordsText("Your file is ready to review and save.")
         } catch { fail(error, reveal: true) }
     }
@@ -318,11 +348,11 @@ struct RecordsMediaSelectionID: Hashable {
     /// snapshot can only repopulate them after composition rechecks tombstones.
     func invalidateForSourceErasure() {
         recoveredOpenGeneration = UUID()
-        preparedDocument = nil; recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
+        dismissPreparedFile(); recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
         sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; status = nil; actionOutcomeID = nil; error = nil
     }
-    func dismissPreparedFile() { preparedDocument = nil }
+    func dismissPreparedFile() { preparedDocument = nil; preparedUsesLiveSharedRecords = false }
     private func authorization() throws -> Authorization {
         guard let authorize = beginAuthorization(), authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
         return authorize

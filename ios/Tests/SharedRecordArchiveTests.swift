@@ -32,6 +32,82 @@ final class SharedRecordArchiveTests: XCTestCase {
         XCTAssertEqual(interrupted.unavailable.map(\.recordID), [live.id + "/history"])
     }
 
+    @MainActor func testLiveDenialClearsPreparedFileAndLeavesIndependentRecoveredExportUsable() async throws {
+        let live = try record(), shop = try XCTUnwrap(UUID(uuidString: live.id)), registry = try registry()
+        let archive = try ArchiveCodec.make(records: [live], kind: .personalRecovery, origin: "backup", revision: live.revision)
+        _ = try await registry.apply(registry.review(archive))
+        var denied = false
+        weak var activeModel: RecordsToolsModel?
+        let model = RecordsToolsModel(registry: registry, snapshot: {
+            var batch = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shop,
+                authorized: { true }, accessDenied: { activeModel?.liveSharedAccessEnded() }, current: { live }, history: {
+                    if denied { throw ClientError.accessEnded }
+                    throw ClientError.transport
+                })
+            let recovered = try await registry.refreshList().map(\.record)
+            batch.records = try RecordsSnapshotProjection.mergeForExport(batch.records + recovered)
+            return batch
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        activeModel = model
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        XCTAssertNotNil(model.preparedDocument)
+
+        denied = true
+        await model.refresh()
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertEqual(model.currentRecords, [live], "The independent recovered copy remains available")
+        XCTAssertTrue(model.sourceListing.liveSharedRecordIDs.isEmpty)
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        let localFile = try XCTUnwrap(model.preparedDocument)
+        await model.refresh()
+        XCTAssertEqual(model.preparedDocument?.data, localFile.data)
+    }
+
+    @MainActor func testConcurrentLiveDenialRejectsEarlierSharedReadAndOwnerExport() async throws {
+        let live = try record(), shop = try XCTUnwrap(UUID(uuidString: live.id))
+        for holdSnapshot in [true, false] {
+            var denied = false, hold = false
+            let suspended = expectation(description: holdSnapshot ? "Holding completed live read" : "Holding export validation")
+            var resume: CheckedContinuation<Void, Never>?
+            let pause: @MainActor () async -> Void = {
+                guard hold else { return }
+                hold = false
+                await withCheckedContinuation { continuation in resume = continuation; suspended.fulfill() }
+            }
+            weak var activeModel: RecordsToolsModel?
+            let model = RecordsToolsModel(registry: try registry(), snapshot: {
+                let batch = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shop,
+                    authorized: { true }, accessDenied: { activeModel?.liveSharedAccessEnded() }, current: { live }, history: {
+                        if denied { throw ClientError.accessEnded }
+                        throw ClientError.transport
+                    })
+                if holdSnapshot { await pause() }
+                return batch
+            }, validateNativePayload: {
+                try RecordsNativeCodec.validate($0)
+                if !holdSnapshot { await pause() }
+            }, openRecovered: { _ in })
+            activeModel = model
+            await model.refresh()
+            model.selectAll()
+            hold = true
+            let export = Task { await model.prepareExport(.ownerText) }
+            await fulfillment(of: [suspended], timeout: 2)
+            denied = true
+            await model.refresh()
+            XCTAssertTrue(model.currentRecords.isEmpty)
+            XCTAssertTrue(model.selectedIDs.isEmpty)
+            resume?.resume()
+            await export.value
+            XCTAssertTrue(model.currentRecords.isEmpty)
+            XCTAssertNil(model.preparedDocument)
+            XCTAssertEqual(model.error, .staleReview)
+        }
+    }
+
     @MainActor func testHistoricalArchiveIsEncryptedIndependentDeduplicatedAndNeverHelperData() async throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let legacyBytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-v1.json"))

@@ -492,16 +492,18 @@ private struct RecordsRecoveredDinnersView: View {
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
         var unavailableRecords: [RecordsUnavailableRecord] = []
+        var liveSharedRecordIDs: Set<RecordsSelectionID> = []
         // Refresh current permissions and privacy before every listing/export.
         // No previous shared snapshot is used as an offline authorization fallback.
         if let household, let scope = household.projection, scope.capabilities.contains("shopper_commands"),
            let shop = scope.shopId, let shopID = UUID(uuidString: shop), let service = household.service {
             let shared = try await RecordsSnapshotProjection.liveSharedRecords(householdID: scope.household.id, shopID: shopID,
-                authorized: authorize, current: {
+                authorized: authorize, accessDenied: { self.tools?.liveSharedAccessEnded() }, current: {
                     try await SharedRecordArchiveAdapter.make(service.sharedRecordSnapshot(shopID: shopID))
                 }, history: {
                     try await SharedHistoryArchiveAdapter.make(service.sharedRecordHistory(shopID: shopID))
                 })
+            liveSharedRecordIDs = shared.liveSharedRecordIDs
             result += shared.records
             unavailableRecords += shared.unavailable
         }
@@ -577,7 +579,8 @@ private struct RecordsRecoveredDinnersView: View {
         for index in result.indices {
             result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
         }
-        return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(result), unavailable: unavailableRecords)
+        return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(result), unavailable: unavailableRecords,
+                                    liveSharedRecordIDs: liveSharedRecordIDs)
     }
     private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil,
                               unavailableRecords: inout [RecordsUnavailableRecord]) async throws -> CaptureMediaArchiveListing {

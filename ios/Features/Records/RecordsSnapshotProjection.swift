@@ -18,10 +18,12 @@ struct RecordsUnavailableRecord: Equatable, Identifiable {
 struct RecordsSnapshotBatch {
     var records: [ArchiveRecord] = []
     var unavailable: [RecordsUnavailableRecord] = []
+    var liveSharedRecordIDs: Set<RecordsSelectionID> = []
 }
 
 @MainActor enum RecordsSnapshotProjection {
     static func liveSharedRecords(householdID: String, shopID: UUID, authorized: () -> Bool,
+                                  accessDenied: () -> Void = {},
                                   current: @escaping () async throws -> ArchiveRecord,
                                   history: @escaping () async throws -> ArchiveRecord) async throws -> RecordsSnapshotBatch {
         let shop = shopID.uuidString.lowercased()
@@ -42,6 +44,7 @@ struct RecordsSnapshotBatch {
                     case .accessEnded, .sessionNeeded, .cancelled,
                          .service(status: 404, code: "unavailable", correlationID: _, retryAfter: _):
                         // An authoritative denial applies to both live reads of the same shop.
+                        accessDenied()
                         return RecordsSnapshotBatch(records: [], unavailable: [currentWarning, historyWarning])
                     default: break
                     }
@@ -51,6 +54,7 @@ struct RecordsSnapshotBatch {
             }
         }
         guard authorized() else { throw ArchiveError.unavailable }
+        batch.liveSharedRecordIDs = Set(batch.records.map(RecordsToolsModel.selectionID))
         return batch
     }
 
