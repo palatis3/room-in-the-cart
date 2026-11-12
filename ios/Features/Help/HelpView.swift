@@ -59,7 +59,7 @@ private struct HelpArticleView: View {
         List {
             switch topic {
             case .comparison:
-                paragraph(helpText("Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs."))
+                paragraph(helpText("Open Compare packs in Shop. Enter the amount you need, the usable amount in each pack and the price. If the package uses a different kind of unit, enter two equivalent amounts from its label or your own measurement, such as 120 grams of this flour for 1 cup. Without that information, leave the conversion blank."))
                 paragraph(helpText("Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records."))
                 paragraph(helpText("A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs."))
             case .list:
@@ -68,6 +68,7 @@ private struct HelpArticleView: View {
                 paragraph(helpText("To compare stores, enter two quotes for the same needs. Include fees, extra travel cost and time, and check when each quote was observed. This is a manual comparison, not live retailer pricing."))
             case .dinners:
                 paragraph(helpText("In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps."))
+                paragraph(helpText("In Dinner library, open Import and use recipes to type a family recipe or choose a Recipe JSON-LD file from Files. Review and save the recipe. When you want to shop for it, open the saved recipe and review the ingredients for that pickup."))
                 paragraph(helpText("Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation."))
                 paragraph(helpText("Count pantry or freezer food only after confirming its usable quantity and matching it to the need. If food falls short, protect lunch reservations and review each affected dinner. Leave an unresolved need open until you choose a repair."))
             case .handoff:

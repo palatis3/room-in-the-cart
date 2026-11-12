@@ -45,8 +45,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs.",
-            "es": "Abre Comparar paquetes en Compras. Ingresa la cantidad que necesitas, la cantidad aprovechable de cada paquete y su precio. Usa la misma unidad para la cantidad necesaria y ambos paquetes."
+            "en": "Open Compare packs in Shop. Enter the amount you need, the usable amount in each pack and the price. If the package uses a different kind of unit, enter two equivalent amounts from its label or your own measurement, such as 120 grams of this flour for 1 cup. Without that information, leave the conversion blank.",
+            "es": "Abre Comparar paquetes en Compras. Ingresa la cantidad que necesitas, la cantidad aprovechable de cada paquete y su precio. Si el paquete usa otro tipo de unidad, ingresa dos cantidades equivalentes de la etiqueta o de una medición propia, por ejemplo, 120 gramos de esa harina por 1 taza. Si no tienes ese dato, deja la conversión en blanco."
           },
           {
             "en": "Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records.",
@@ -87,6 +87,10 @@ export const publicPages = {
           {
             "en": "In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps.",
             "es": "En Cenas, guarda una comida conocida con sus porciones, ingredientes, fuente, exclusiones y cualquier tiempo de preparación previo conocido. Revisa una idea antes de elegirla para esta compra. Elegir una idea y asignarle una noche son pasos separados."
+          },
+          {
+            "en": "In Dinner library, open Import and use recipes to type a family recipe or choose a Recipe JSON-LD file from Files. Review and save the recipe. When you want to shop for it, open the saved recipe and review the ingredients for that pickup.",
+            "es": "En Biblioteca de cenas, abre Importar y usar recetas para escribir una receta familiar o elegir un archivo Recipe JSON-LD desde Archivos. Revisa y guarda la receta. Cuando quieras comprar los ingredientes, abre la receta guardada y revísalos para esa recogida."
           },
           {
             "en": "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation.",
