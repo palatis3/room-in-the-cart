@@ -320,7 +320,7 @@ struct RecordsToolsView: View {
             } else if saved.record.nativePayload != nil {
                 Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
             } else {
-                Text(ReadableArchive.text([saved.record], owner: false)).textSelection(.enabled)
+                Text(ReadableArchive.text([saved.record], owner: false, locale: recordsInterfaceLocale)).textSelection(.enabled)
                 Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
             }
             ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }

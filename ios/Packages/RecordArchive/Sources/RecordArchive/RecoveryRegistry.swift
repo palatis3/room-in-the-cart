@@ -303,6 +303,21 @@ public enum ReadableArchive {
                 ? (spanish ? "Fecha de guardado no indicada" : "Saved date not supplied")
                 : (spanish ? "Guardado: " : "Saved: ") + Date(timeIntervalSince1970: Double(record.savedAtMilliseconds) / 1000).formatted(.iso8601)
             var lines = [record.title, (spanish ? "Fuente: " : "Source: ") + record.origin, (spanish ? "Revisión: " : "Revision: ") + record.revision, saved]
+            if owner, record.kind == .recipe, let payload = record.nativePayload,
+               let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: payload).validated() {
+                if !recipe.yieldText.isEmpty { lines.append((spanish ? "Rinde: " : "Yield: ") + recipe.yieldText) }
+                if !recipe.ingredients.isEmpty {
+                    lines.append(spanish ? "Ingredientes" : "Ingredients")
+                    lines += recipe.ingredients
+                }
+                if !recipe.steps.isEmpty {
+                    lines.append(spanish ? "Preparación" : "Instructions")
+                    lines += recipe.steps.enumerated().map { "\($0.offset + 1). \($0.element)" }
+                }
+                if !recipe.notes.isEmpty { lines.append((spanish ? "Notas: " : "Notes: ") + recipe.notes) }
+                if let url = recipe.sourceURL, !url.isEmpty { lines.append((spanish ? "Enlace de la receta: " : "Recipe link: ") + url) }
+                return lines.joined(separator: "\n")
+            }
             lines += record.helperLines.map { line in
                 [line.label, line.originalAmount, line.originalUnit, line.purpose, line.action, line.foodStatus].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
             }

@@ -80,7 +80,7 @@ struct RecordsMediaSelectionID: Hashable {
     func canDeleteSource(_ record: ArchiveRecord) -> Bool { deleteSource != nil && deletable(record) }
     var canReviewWholeLedgerDeletion: Bool { wholeLedgerDeletionAction != nil }
     var recoveredDeletionAllowsUndo: Bool { cleanupRecovered == nil }
-    var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count) }
+    var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count, locale: recordsInterfaceLocale) }
     nonisolated static func selectionID(_ record: ArchiveRecord) -> RecordsSelectionID {
         RecordsSelectionID(origin: record.origin, recordID: record.id, revision: record.revision)
     }
@@ -190,7 +190,7 @@ struct RecordsMediaSelectionID: Hashable {
                 let text = try records.map { record in
                     if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
                     if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
-                    return ReadableArchive.text([record], owner: choice == .ownerText)
+                    return ReadableArchive.text([record], owner: choice == .ownerText, locale: recordsInterfaceLocale)
                 }.joined(separator: "\n\n")
                 document = RecordsFileDocument(data: Data(text.utf8), kind: .text)
                 name = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
@@ -411,6 +411,7 @@ struct RecordsMediaSelectionID: Hashable {
     }
 }
 
+var recordsInterfaceLocale: Locale { Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en") }
 func recordsText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Records") }
 
 extension RecipeImportReport {

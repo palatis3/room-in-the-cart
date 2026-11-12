@@ -83,6 +83,26 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertTrue(readable.contains("Rice")); XCTAssertFalse(readable.contains("12.50"))
         XCTAssertTrue(ReadableArchive.text([record()], owner: true).contains("12.50"))
     }
+    func testPersonalRecipeTextKeepsOriginalIngredientsAndOrderedInstructionsInBothLanguages() throws {
+        let recipe = ImportedRecipe(title: "Sopa", yieldText: "2 platos", ingredients: ["½ taza de arroz", "salt to taste"],
+                                    steps: ["Añadir arroz.", "Cover and simmer."], sourceURL: "https://example.test/sopa", notes: "La nota familiar")
+        let record = try recipe.archiveRecord(origin: "recipes")
+        let en = ReadableArchive.text([record], owner: true, locale: Locale(identifier: "en_US"))
+        let es = ReadableArchive.text([record], owner: true, locale: Locale(identifier: "es_US"))
+        XCTAssertTrue(en.contains("Yield: 2 platos\nIngredients\n½ taza de arroz\nsalt to taste\nInstructions"))
+        XCTAssertTrue(es.contains("Rinde: 2 platos\nIngredientes\n½ taza de arroz\nsalt to taste\nPreparación"))
+        for text in [en, es] {
+            XCTAssertTrue(text.contains("1. Añadir arroz.\n2. Cover and simmer."))
+            XCTAssertTrue(text.contains("La nota familiar"))
+            XCTAssertTrue(text.contains("https://example.test/sopa"))
+            XCTAssertFalse(text.contains("\"yieldText\":"))
+        }
+        let helper = ReadableArchive.text([record], owner: false, locale: Locale(identifier: "es_US"))
+        XCTAssertTrue(helper.contains("½ taza de arroz"))
+        XCTAssertFalse(helper.contains("La nota familiar"))
+        XCTAssertFalse(helper.contains("https://example.test/sopa"))
+    }
+
     func testHelperThenOwnerKeepsProjectionsIndependent() async throws {
         let registry = try RecoveryRegistry(url: temporaryURL())
         _ = try await registry.apply(registry.review(envelope([record()], kind: .helperShop)))
