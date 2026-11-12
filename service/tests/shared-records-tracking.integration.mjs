@@ -94,7 +94,10 @@ test('Records history HTTP exports retained revisions and removed-meal markers o
  const other=await invited(f);assert.equal((await call(other,f.path+'/records/history/v1')).status,404);
  financial=ok(await call(f.owner,f.path+'/financial-evidence'));
  ok(await call(f.owner,f.path+'/history-retire','POST',{clientKey:randomUUID(),sourceVersion:financial.sourceVersion,confirm:true}));
- assert.equal((await call(f.owner,f.path+'/records/history/v1')).status,404);
+ const oldClient=await call(f.owner,f.path+'/records/history/v1');assert.equal(oldClient.status,404);assert.equal(oldClient.data.error.code,'unavailable');
+ const explicit=f.path+'/records/history/v1?includeRetirementStatus=true';
+ const retired=await call(f.owner,explicit);assert.equal(retired.status,404);assert.equal(retired.data.error.code,'shared_history_retired');
+ const denied=await call(other,explicit);assert.equal(denied.status,404);assert.equal(denied.data.error.code,'unavailable');
  assert.equal((await call(f.owner,f.path+'/records/snapshot/v2')).status,200);
 });
 

@@ -541,7 +541,8 @@ extension HouseholdService {
         let start = generation, context = try sharedDemandContext(shopID: shopID)
         try await authorizeShopper(shopID: shopID.uuidString.lowercased())
         guard generation == start, try sharedDemandContext(shopID: shopID) == context else { throw ClientError.cancelled }
-        let result: SharedRecordHistorySnapshot = try await perform("shops/\(shopID.uuidString.lowercased())/records/history/v1", method: "GET", maximumResponseBytes: SharedRecordHistoryWire.maximumResponseBytes)
+        let result: SharedRecordHistorySnapshot = try await perform("shops/\(shopID.uuidString.lowercased())/records/history/v1", method: "GET",
+            query: [URLQueryItem(name: "includeRetirementStatus", value: "true")], maximumResponseBytes: SharedRecordHistoryWire.maximumResponseBytes)
         guard generation == start, try sharedDemandContext(shopID: shopID) == context else { throw ClientError.cancelled }
         try demandRequire(result.record.origin.householdId.string == context.householdID.lowercased() && result.record.origin.shopId.uuid == shopID)
         return result

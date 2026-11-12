@@ -6,6 +6,7 @@ struct RecordsSelectionID: Hashable {
     let origin: String
     let recordID: String
     let revision: String
+    var source: ArchiveSourceIdentity { .init(origin: origin, recordID: recordID) }
 }
 
 struct RecordsMediaSelectionID: Hashable {
@@ -66,7 +67,8 @@ struct RecordsMediaSelectionID: Hashable {
     private let willRemoveRecovered: () -> Void
     private var recoveredOpenGeneration = UUID()
     private var liveSharedGeneration = UUID()
-    private var preparedUsesLiveSharedRecords = false
+    private var preparedLiveIDs: Set<RecordsSelectionID> = []
+    private var retiredHistories: Set<ArchiveSourceIdentity> = []
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
     private let beginAuthorization: () -> Authorization?
@@ -95,7 +97,7 @@ struct RecordsMediaSelectionID: Hashable {
     }
     func liveSharedAccessEnded() {
         liveSharedGeneration = UUID()
-        if preparedUsesLiveSharedRecords { dismissPreparedFile(); actionStatus = nil }
+        if !preparedLiveIDs.isEmpty { dismissPreparedFile(); actionStatus = nil }
         var listing = sourceListing
         let retired = listing.liveSharedRecordIDs
         guard !retired.isEmpty else { return }
@@ -104,9 +106,24 @@ struct RecordsMediaSelectionID: Hashable {
         sourceListing = listing
         selectedIDs.subtract(retired)
     }
+    func liveHistoryRetired(_ source: ArchiveSourceIdentity) {
+        retiredHistories.insert(source)
+        if preparedLiveIDs.contains(where: { $0.source == source }) { dismissPreparedFile(); actionStatus = nil }
+        var listing = sourceListing
+        let removed = listing.liveSharedRecordIDs.filter { $0.source == source }
+        guard !removed.isEmpty else { return }
+        listing.records.removeAll { removed.contains(Self.selectionID($0)) }
+        listing.liveSharedRecordIDs.subtract(removed)
+        sourceListing = listing
+        selectedIDs.subtract(removed)
+    }
+    private func containsRetiredHistory(_ liveIDs: Set<RecordsSelectionID>) -> Bool {
+        liveIDs.contains { retiredHistories.contains($0.source) }
+    }
     private func publishListing(_ batch: RecordsSnapshotBatch, startedIn generation: UUID) {
         // Independent recovered records can share an identity with a denied live record.
         // Only a batch carrying an older live read is invalidated by that denial.
+        guard !containsRetiredHistory(batch.liveSharedRecordIDs) else { return }
         if generation == liveSharedGeneration || batch.liveSharedRecordIDs.isEmpty { sourceListing = batch }
     }
     private func reloadListing(authorize: Authorization) async throws {
@@ -137,14 +154,15 @@ struct RecordsMediaSelectionID: Hashable {
             let authorize = try authorization()
             let generation = liveSharedGeneration
             let requested = selectedIDs
-            let previouslyLive = !requested.isDisjoint(with: sourceListing.liveSharedRecordIDs)
+            let previouslyLive = requested.intersection(sourceListing.liveSharedRecordIDs)
             let batch = try await snapshot()
             try requireAuthorization(authorize)
             let requestedLive = !requested.isDisjoint(with: batch.liveSharedRecordIDs)
-            guard generation == liveSharedGeneration || !(previouslyLive || requestedLive) else { throw ArchiveError.staleReview }
+            guard !containsRetiredHistory(previouslyLive), !containsRetiredHistory(batch.liveSharedRecordIDs),
+                  generation == liveSharedGeneration || (previouslyLive.isEmpty && !requestedLive) else { throw ArchiveError.staleReview }
             publishListing(batch, startedIn: generation)
             let selected = requested.intersection(selectedIDs)
-            let usesLive = !selected.isDisjoint(with: batch.liveSharedRecordIDs)
+            let liveIDs = selected.intersection(batch.liveSharedRecordIDs)
             let records = batch.records.filter { selected.contains(Self.selectionID($0)) }.map { source -> ArchiveRecord in
                 var record = source
                 record.media = choice == .encryptedRecovery ? source.media?.filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: source)) } : nil
@@ -178,8 +196,8 @@ struct RecordsMediaSelectionID: Hashable {
                 name = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
             }
             try requireAuthorization(authorize)
-            guard !usesLive || generation == liveSharedGeneration else { throw ArchiveError.staleReview }
-            preparedUsesLiveSharedRecords = usesLive
+            guard !containsRetiredHistory(liveIDs), liveIDs.isEmpty || generation == liveSharedGeneration else { throw ArchiveError.staleReview }
+            preparedLiveIDs = liveIDs
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
             preparedName = name
             preparedDocument = document
@@ -373,7 +391,7 @@ struct RecordsMediaSelectionID: Hashable {
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
         sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; actionStatus = nil; actionOutcomeID = nil; error = nil
     }
-    func dismissPreparedFile() { preparedDocument = nil; preparedUsesLiveSharedRecords = false }
+    func dismissPreparedFile() { preparedDocument = nil; preparedLiveIDs.removeAll() }
     private func authorization() throws -> Authorization {
         guard let authorize = beginAuthorization(), authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
         return authorize

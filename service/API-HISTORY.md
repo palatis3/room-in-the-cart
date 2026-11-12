@@ -22,6 +22,7 @@ All `{h}` paths are `/v1/households/{h}`. POST mutations require the existing br
 | `GET /shops/{s}/financial-evidence?cursor={entryId}` | — | `FinancialPage`, at most 50 entries and the current `SourceVersion`. Free/current budget reader. |
 | `POST /shops/{s}/financial-evidence` | `FinancialAppend` | `FinancialAppendReceipt`. Free/manual evidence. |
 | `POST /shops/{s}/financial-reviews` | `FinancialReview` | `FinancialReviewReceipt`. `allEvidenceEntered:true` requires paid tools; closing alone is Free. |
+| `GET /shops/{s}/records/history/v1` | Optional `includeRetirementStatus=true` | Returns retained history. With the option enabled, the current assigned shopper receives `404 shared_history_retired` for a retired history. Other callers receive the usual access response. Current pickup data remains independently scoped. |
 | `POST /shops/{s}/history-retire` | `{clientKey,sourceVersion,confirm:true}` | `{shopId,retired:true}`; removes this source from history analysis without pretending the source data was erased. |
 | `POST /price-observations` | `{clientKey,observation:PriceObservation}` | `{observationId,shopId,recorded:true}`. Free/manual record. |
 | `GET /price-observations/{id}` | — | `{observation:PriceObservation}`. Free/saved record with current source authority. |

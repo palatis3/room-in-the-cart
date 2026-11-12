@@ -2,6 +2,7 @@ import XCTest
 import CoreDomain
 import LocalStore
 import RecordArchive
+import HouseholdClient
 @testable import RoomInTheCart
 
 final class RecordsListingTests: XCTestCase {
@@ -48,5 +49,84 @@ final class RecordsListingTests: XCTestCase {
         await model.prepareExport(.helperJSON)
         XCTAssertNil(model.preparedDocument, "A database-level failure cannot become a successful partial export")
         XCTAssertNotNil(model.error)
+    }
+}
+
+extension RecordsListingTests {
+    @MainActor func testRetiredLiveHistoryWithdrawsItsPreviewAndKeepsCurrentPickupAndIndependentCopy() async throws {
+        let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("shared/fixtures/shared-records")
+        let current = try SharedRecordArchiveAdapter.make(SharedRecordWire.snapshot(from: Data(contentsOf: fixtures.appendingPathComponent("partial-v2.json"))))
+        let page = try SharedRecordHistoryWire.snapshot(from: Data(contentsOf: fixtures.appendingPathComponent("history-v1.json")))
+        let history = try SharedHistoryArchiveAdapter.make(page)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let saved = try ArchiveCodec.make(records: [history], kind: .personalRecovery, origin: "recovery", revision: "1")
+        _ = try await registry.apply(registry.review(saved))
+        var retired = false
+        var holdValidation = false
+        let validating = expectation(description: "Earlier export has read live history")
+        var resume: CheckedContinuation<Void, Never>?
+        weak var active: RecordsToolsModel?
+        func makeModel() -> RecordsToolsModel {
+            return RecordsToolsModel(registry: registry, snapshot: {
+                var batch = try await RecordsSnapshotProjection.liveSharedRecords(
+                    householdID: page.record.origin.householdId.string, shopID: page.record.origin.shopId.uuid,
+                    authorized: { true }, accessDenied: { XCTFail("The shopper still has access") },
+                    historyRetired: { active?.liveHistoryRetired($0) }, current: { current }, history: {
+                        guard !retired else { throw ClientError.service(status: 404, code: "shared_history_retired", correlationID: nil, retryAfter: nil) }
+                        return history
+                    })
+                let local = try await registry.refreshList().map(\.record)
+                batch.records = try RecordsSnapshotProjection.mergeForExport(batch.records + local)
+                return batch
+            }, validateNativePayload: { record in
+                try RecordsNativeCodec.validate(record)
+                if holdValidation {
+                    holdValidation = false
+                    await withCheckedContinuation { resume = $0; validating.fulfill() }
+                }
+            }, openRecovered: { _ in })
+        }
+        let model = makeModel()
+        active = model
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        XCTAssertNotNil(model.preparedDocument)
+        retired = true
+        await model.refresh()
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertEqual(model.selectedIDs, [RecordsToolsModel.selectionID(current)])
+        XCTAssertEqual(model.sourceListing.liveSharedRecordIDs, model.selectedIDs)
+        XCTAssertEqual(model.unavailableRecords.map(\.reason), [.retiredHistory])
+        XCTAssertTrue(model.currentRecords.contains(history), "The independent recovered copy remains available")
+        await model.prepareExport(.ownerText)
+        let currentFile = try XCTUnwrap(model.preparedDocument?.data)
+        await model.refresh()
+        XCTAssertEqual(model.preparedDocument?.data, currentFile)
+        model.selectedIDs = [RecordsToolsModel.selectionID(history)]
+        await model.prepareExport(.ownerText)
+        XCTAssertNotNil(model.preparedDocument, "The user can select the independent recovered history")
+
+        // A previously started read may complete after the retirement response.
+        // A fresh model simulates a second visit before either request has completed.
+        retired = false
+        let competing = makeModel()
+        active = competing
+        await competing.refresh()
+        competing.selectAll()
+        holdValidation = true
+        let export = Task { await competing.prepareExport(.ownerText) }
+        await fulfillment(of: [validating], timeout: 2)
+        retired = true
+        await competing.refresh()
+        resume?.resume()
+        await export.value
+        XCTAssertNil(competing.preparedDocument)
+        XCTAssertEqual(competing.error, .staleReview)
+        XCTAssertEqual(competing.sourceListing.liveSharedRecordIDs, [RecordsToolsModel.selectionID(current)])
     }
 }

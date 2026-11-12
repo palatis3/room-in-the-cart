@@ -4,7 +4,7 @@ import RecordArchive
 import HouseholdClient
 
 struct RecordsUnavailableRecord: Equatable, Identifiable {
-    enum Reason: Equatable { case unreadableStorage, unsupportedStorage, invalidNative }
+    enum Reason: Equatable { case unreadableStorage, unsupportedStorage, invalidNative, retiredHistory }
     let origin: String
     let recordID: String
     let title: String?
@@ -23,7 +23,7 @@ struct RecordsSnapshotBatch {
 
 @MainActor enum RecordsSnapshotProjection {
     static func liveSharedRecords(householdID: String, shopID: UUID, authorized: () -> Bool,
-                                  accessDenied: () -> Void = {},
+                                  accessDenied: () -> Void = {}, historyRetired: (ArchiveSourceIdentity) -> Void = { _ in },
                                   current: @escaping () async throws -> ArchiveRecord,
                                   history: @escaping () async throws -> ArchiveRecord) async throws -> RecordsSnapshotBatch {
         let shop = shopID.uuidString.lowercased()
@@ -41,6 +41,11 @@ struct RecordsSnapshotBatch {
                 guard authorized() else { throw ArchiveError.unavailable }
                 if let failure = error as? ClientError {
                     switch failure {
+                    case .service(status: 404, code: "shared_history_retired", correlationID: _, retryAfter: _) where warning == historyWarning:
+                        let source = SharedHistoryArchiveAdapter.source(householdID: householdID, shopID: shopID)
+                        historyRetired(source)
+                        batch.unavailable.append(.init(origin: source.origin, recordID: source.recordID, title: historyWarning.title, reason: .retiredHistory))
+                        continue
                     case .accessEnded, .sessionNeeded, .cancelled,
                          .service(status: 404, code: "unavailable", correlationID: _, retryAfter: _):
                         // An authoritative denial applies to both live reads of the same shop.

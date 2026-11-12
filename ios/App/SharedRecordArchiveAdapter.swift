@@ -114,7 +114,8 @@ extension SharedRecordArchiveAdapter {
 enum SharedHistoryArchiveAdapter {
     static func make(_ snapshot: SharedRecordHistorySnapshot) throws -> ArchiveRecord {
         let value = snapshot.record, bytes = try value.independentData()
-        return ArchiveRecord(id: value.origin.shopId.string + "/history", origin: origin(value),
+        let identity = source(householdID: value.origin.householdId.string, shopID: value.origin.shopId.uuid)
+        return ArchiveRecord(id: identity.recordID, origin: identity.origin,
             revision: ArchiveCodec.digest(bytes), kind: .sharedHistory, title: "Shared pickup history",
             savedAtMilliseconds: 0, nativePayload: bytes)
     }
@@ -125,13 +126,15 @@ enum SharedHistoryArchiveAdapter {
         let value: SharedRecordHistory
         do { value = try SharedRecordHistoryWire.independentRecord(from: bytes) }
         catch { throw ArchiveError.unsupportedRecord }
-        guard record.id == value.origin.shopId.string + "/history", record.origin == origin(value),
+        let identity = source(householdID: value.origin.householdId.string, shopID: value.origin.shopId.uuid)
+        guard record.id == identity.recordID, record.origin == identity.origin,
               record.revision == ArchiveCodec.digest(bytes), try value.independentData() == bytes
         else { throw ArchiveError.invalidIdentity }
         return value
     }
-    private static func origin(_ value: SharedRecordHistory) -> String {
-        "shared-history/" + value.origin.householdId.string + "/" + value.projection
+    static func source(householdID: String, shopID: UUID) -> ArchiveSourceIdentity {
+        ArchiveSourceIdentity(origin: "shared-history/" + householdID.lowercased() + "/assigned-shopper-history-v1",
+                              recordID: shopID.uuidString.lowercased() + "/history")
     }
 }
 

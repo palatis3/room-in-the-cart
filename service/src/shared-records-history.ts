@@ -153,11 +153,15 @@ export function projectSharedHistory(raw:unknown,asOf:Date){
 
 /** A safe read of retained history, not a reconstruction of erased payloads.
  * Any unavailable retained provenance or bound fails the whole export. */
-export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Context,shop:Shop){
+export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Context,shop:Shop,includeRetirementStatus=false){
  repo.requireShopper(ctx,shop);
  const scope=[ctx.householdId,shop.shop_id];
- const permitted=await ctx.db.query(`SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND history_retired_at IS NULL`,scope);
- if(!permitted.rowCount)throw unavailable();
+ const history=await ctx.db.query(`SELECT history_retired_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2`,scope);
+ if(!history.rowCount)throw unavailable();
+ if(history.rows[0].history_retired_at!==null){
+  if(includeRetirementStatus)throw new ServiceError(404,'shared_history_retired','The pickup history has been retired.');
+  throw unavailable();
+ }
  // An edited dated message is opaque: it cannot be safely redacted to a food
  // field allowlist. Require current full shopper scope on every recorded shop
  // behind that copy, as well as the retained actors checked below.

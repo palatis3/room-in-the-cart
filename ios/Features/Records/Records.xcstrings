@@ -2528,6 +2528,22 @@
         }
       }
     },
+    "This pickup’s history has been retired.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup’s history has been retired."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se retiró el historial de esta compra."
+          }
+        }
+      }
+    },
     "This saved format needs a compatible app version.": {
       "localizations": {
         "en": {

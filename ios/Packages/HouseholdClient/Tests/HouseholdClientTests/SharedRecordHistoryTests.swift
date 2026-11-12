@@ -298,6 +298,7 @@ extension HouseholdClientTests {
                 return (200, try JSONSerialization.data(withJSONObject: ["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper", "shopId": page.record.origin.shopId.string, "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]]))
             }
             XCTAssertTrue(path.hasSuffix("/records/history/v1")); XCTAssertEqual(request.httpMethod, "GET"); reads += 1
+            XCTAssertEqual(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems, [URLQueryItem(name: "includeRetirementStatus", value: "true")])
             return (200, reads == 1 ? bytes : foreignBytes)
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")

@@ -375,6 +375,7 @@ struct RecordsToolsView: View {
     }
     private func unavailableMessage(_ reason: RecordsUnavailableRecord.Reason) -> String {
         switch reason {
+        case .retiredHistory: return recordsText("This pickup’s history has been retired.")
         case .unreadableStorage: return recordsText("Saved record could not be read. Its bytes were not replaced.")
         case .unsupportedStorage: return recordsText("This saved format needs a compatible app version.")
         case .invalidNative: return recordsText("This record's content could not be validated. Other readable records are still available.")

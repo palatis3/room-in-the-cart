@@ -498,7 +498,8 @@ private struct RecordsRecoveredDinnersView: View {
         if let household, let scope = household.projection, scope.capabilities.contains("shopper_commands"),
            let shop = scope.shopId, let shopID = UUID(uuidString: shop), let service = household.service {
             let shared = try await RecordsSnapshotProjection.liveSharedRecords(householdID: scope.household.id, shopID: shopID,
-                authorized: authorize, accessDenied: { self.tools?.liveSharedAccessEnded() }, current: {
+                authorized: authorize, accessDenied: { self.tools?.liveSharedAccessEnded() },
+                historyRetired: { self.tools?.liveHistoryRetired($0) }, current: {
                     try await SharedRecordArchiveAdapter.make(service.sharedRecordSnapshot(shopID: shopID))
                 }, history: {
                     try await SharedHistoryArchiveAdapter.make(service.sharedRecordHistory(shopID: shopID))
