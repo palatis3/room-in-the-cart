@@ -332,13 +332,18 @@ jobs:
           }
           native_status=0
           run_storekit || native_status=$?
-          if [ "$native_status" -ne 65 ]; then exit "$native_status"; fi
+          if [ "$native_status" -ne 65 ] && [ "$native_status" -ne 70 ]; then exit "$native_status"; fi
           if xcrun xcresulttool get test-results tests --path "$output/StoreKit.xcresult" --compact > "$output/first-tests.json" &&
-             python3 scripts/is_storekit_launch_failure.py "$output/StoreKit.log" "$output/first-tests.json"; then
+             python3 scripts/is_storekit_launch_failure.py "$output/StoreKit.log" "$output/first-tests.json" "$native_status" "$SIMULATOR_ID"; then
             mkdir "$output/launch-failure"
             mv "$output/StoreKit.xcresult" "$output/StoreKit.log" "$output/first-tests.json" "$output/launch-failure/"
-            echo 'Retrying this StoreKit configuration after the simulator launch service died before any scenario started.'
-            python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"
+            if [ "$native_status" -eq 65 ]; then
+              echo 'Restarting the simulator after a pre-test StoreKit launch service death.'
+              python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"
+            else
+              echo 'Rechecking the same simulator after Xcode listed no concrete iOS Simulator destinations.'
+              python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+            fi
             run_storekit
           else
             exit "$native_status"

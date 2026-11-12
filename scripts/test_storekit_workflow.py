@@ -123,6 +123,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertNotIn('build-for-testing', command)
             self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
             self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
+            self.assertIn('"$output/first-tests.json" "$native_status" "$SIMULATOR_ID"', command)
             self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
             self.assertIn('-default-test-execution-time-allowance 120', command)
             self.assertIn('-maximum-test-execution-time-allowance 120', command)
@@ -194,6 +195,26 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertFalse(is_launch_failure(log, tests))
         with patch.dict(bundle, children=[suite, {'nodeType': 'Test Suite', 'name': 'StoreKitScenarioTests'}]):
             self.assertFalse(is_launch_failure(log, tests))
+
+    def test_only_the_selected_undiscovered_destination_with_zero_tests_can_retry(self):
+        simulator = '537CD1E8-8CC9-469A-A068-A966CAA1F02A'
+        log = f"""xcodebuild: error: Unable to find a device matching the provided destination specifier:
+            {{ platform:iOS Simulator, id:{simulator} }}
+            The requested device could not be found because no available devices matched the request.
+            Destinations compatible with the "RoomInTheCart-LocalStoreKit" scheme:
+            {{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }}"""
+        devices = [dict.fromkeys(('architecture', 'deviceId', 'deviceName', 'modelName', 'osVersion', 'platform'), '')]
+        tests = {'testNodes': [], 'testPlanConfigurations': [], 'devices': devices}
+        self.assertTrue(is_launch_failure(log, tests, 70, simulator))
+        self.assertFalse(is_launch_failure(log, tests, 65, simulator))
+        self.assertFalse(is_launch_failure(log, tests, 70, 'different-device'))
+        self.assertFalse(is_launch_failure(log + '\nxcodebuild: error: Other error', tests, 70, simulator))
+        self.assertFalse(is_launch_failure(log + '\n{ platform:iOS Simulator, id:another }', tests, 70, simulator))
+        self.assertFalse(is_launch_failure("Test Case 'purchase' started.\n" + log, tests, 70, simulator))
+        for field in tests:
+            with self.subTest(field=field):
+                self.assertFalse(is_launch_failure(log, {**tests, field: ['nonempty']}, 70, simulator))
+                self.assertFalse(is_launch_failure(log, {k: v for k, v in tests.items() if k != field}, 70, simulator))
 
     def test_locale_gate_rejects_every_failed_skipped_cancelled_or_missing_outcome(self):
         gate = self.step('storekit', identifier='storekit-locales-gate')
