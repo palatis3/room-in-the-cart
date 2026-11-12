@@ -612,6 +612,12 @@ jobs:
       EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        # Test products and selectors come from the build artifact. Keep UI
+        # sources available for mapping XCTest failures in the result reports.
+        with:
+          sparse-checkout: |
+            scripts
+            ios/UITests
       - name: Require the reviewed Xcode 27.1 toolchain
         run: |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
