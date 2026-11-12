@@ -423,7 +423,9 @@ jobs:
           build-mode: manual
           debug: true
       - name: Compile Release Swift sources for CodeQL
-        timeout-minutes: 45
+        # A successful traced compile took 44m12s. Reserve the rest of the
+        # 60-minute job for analysis and the compilation logs.
+        timeout-minutes: 50
         shell: bash
         run: |
           source .build/SwiftCodeQLBuildArgs.sh
