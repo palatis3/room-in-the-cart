@@ -28,6 +28,49 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testPickerCompletionAndManualRecipeStayWithTheirPresentingScope() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        var scope = UUID()
+        let tools = RecordsToolsModel(registry: registry, snapshot: { RecordsSnapshotBatch() },
+                                     validateNativePayload: { _ in }, openRecovered: { _ in },
+                                     beginAuthorization: {
+            let captured = scope
+            return { captured == scope }
+        })
+        let file = directory.appendingPathComponent("recipe.json")
+        try Data(#"{"@type":"Recipe","name":"Selected soup","recipeIngredient":["Beans"]}"#.utf8).write(to: file)
+        let first = try XCTUnwrap(tools.beginImport(.recipeFile))
+        scope = UUID()
+        await tools.finishFileImport(.success(file), from: first)
+        XCTAssertNil(tools.review)
+        XCTAssertNil(tools.importPresentation)
+
+        let oldManual = try XCTUnwrap(tools.beginImport(.manualRecipe))
+        tools.invalidateForSourceErasure()
+        XCTAssertNil(tools.importPresentation)
+        let next = try XCTUnwrap(tools.beginImport(.recipeFile))
+        let staleStaged = await tools.stageManualRecipe(ImportedRecipe(title: "Earlier handwritten recipe"), from: oldManual)
+        XCTAssertFalse(staleStaged)
+        await tools.finishFileImport(.failure(ArchiveError.malformed), from: first)
+        tools.dismissImport(oldManual)
+        XCTAssertEqual(tools.importPresentation?.id, next.id)
+        XCTAssertNil(tools.error)
+        XCTAssertNil(tools.review)
+        await tools.finishFileImport(.success(file), from: next)
+        XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Selected soup"])
+        await tools.finishFileImport(.success(file), from: first)
+        XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Selected soup"])
+        tools.cancelReview()
+
+        let manual = try XCTUnwrap(tools.beginImport(.manualRecipe))
+        let staged = await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
+        XCTAssertTrue(staged)
+        XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Current handwritten recipe"])
+        let saved = try await registry.refreshList()
+        XCTAssertTrue(saved.isEmpty)
+    }
+
     @MainActor func testImportComparesIndependentRevisionsBySourceAndClearsErasedReview() async throws {
         let directory = try temporaryDirectory(), registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
         let incoming = try comparison(), id = try XCTUnwrap(UUID(uuidString: incoming.id))

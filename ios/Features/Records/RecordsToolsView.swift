@@ -299,7 +299,7 @@ struct RecordsToolsView: View {
         }
     }
     private var manualRecipePresentation: Binding<RecordsToolsModel.ImportPresentation?> {
-        let presentation = model.importPresentation
+        let presentation = model.importPresentation.flatMap { $0.entry == .manualRecipe ? $0 : nil }
         return Binding(get: {
             model.importPresentation?.entry == .manualRecipe ? model.importPresentation : nil
         }, set: { value in
@@ -493,13 +493,7 @@ struct RecordsToolsView: View {
         Task { await model.finishFileSave(id, result: result, at: date) }
     }
     private func chooseImportFile(recipes: Bool) {
-        guard let presentation = model.beginImport(recipes ? .recipeFile : .recordsFile) else { return }
-        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
-        if let uiTestFiles {
-            if let url = uiTestFiles.selectedURL() { Task { await model.finishFileImport(.success(url), from: presentation) } }
-            else { model.dismissImport(presentation) }
-        }
-        #endif
+        model.beginImport(recipes ? .recipeFile : .recordsFile)
     }
     private func recordKindLabel(_ kind: ArchiveRecordKind) -> String {
         switch kind {
@@ -605,11 +599,18 @@ private struct RecordsImportFilePicker: View {
             .fileImporter(isPresented: $presented, allowedContentTypes: presentation.entry == .recipeFile
                           ? [.json, .data] : [.json, .roomRecovery, .roomHelper, .data], allowsMultipleSelection: false,
                           onCompletion: { result in
-                completion(result.flatMap { $0.first.map(Result.success) ?? .failure(CancellationError()) })
+                completion(result.flatMap { urls in
+                    guard let url = urls.first else { return .failure(CancellationError()) }
+                    return .success(url)
+                })
             }, onCancellation: { completion(.failure(CancellationError())) })
             .onAppear {
                 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
-                if uiTestFiles != nil { return }
+                if let uiTestFiles {
+                    if let url = uiTestFiles.selectedURL() { completion(.success(url)) }
+                    else { completion(.failure(CancellationError())) }
+                    return
+                }
                 #endif
                 presented = true
             }
