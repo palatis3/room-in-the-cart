@@ -364,12 +364,21 @@ import XCTest
         func assertFields(_ identifier: String, _ fields: [(String,String)], line: UInt = #line) {
             let row = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
             reveal(row, line: line)
+            let snapshot: XCUIElementSnapshot
+            do { snapshot = try row.snapshot() }
+            catch { XCTFail("Could not inspect \(identifier): \(error)", line: line); return }
+            var pending = snapshot.children
+            var facts: [[String: String]] = []
+            while let child = pending.popLast() {
+                facts.append(["label": child.label, "value": child.value as? String ?? ""])
+                pending.append(contentsOf: child.children)
+            }
             for (label, value) in fields {
                 let text = "(?s).*" + NSRegularExpression.escapedPattern(for: label) + "[\\s,:]+"
                     + NSRegularExpression.escapedPattern(for: value) + "(?:$|[^\\p{L}\\p{N}].*)"
                 let predicate = NSPredicate(format: "(label CONTAINS %@ AND value == %@) OR label MATCHES %@", label, value, text)
-                let fact = row.descendants(matching: .any).matching(predicate).firstMatch
-                XCTAssertTrue(fact.exists, "Missing \(label) \(value) in \(identifier)", line: line)
+                XCTAssertTrue(facts.contains { predicate.evaluate(with: $0) },
+                              "Missing \(label) \(value) in \(identifier)", line: line)
             }
         }
         func checkCoverage(dinnerCovered: String, dinnerMissing: String, checkCook: Bool = false) {
