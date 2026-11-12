@@ -59,7 +59,7 @@ import XCTest
         evidence(copies: 0, files: 0, encrypted: false)
 
         let recovery = app.buttons.matching(identifier: "records.encryptedRecovery").firstMatch
-        tap(recovery)
+        tap(recovery, upward: true)
         tap(element("records.generateKey"))
         enable(app.switches.matching(identifier: "records.savedKey").firstMatch)
         tap(element("records.prepareRecovery"))
