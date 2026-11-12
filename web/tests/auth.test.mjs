@@ -18,10 +18,39 @@ async function fixture(overrides={},language='en'){
 test('email login remains distinct from invitation acceptance and retains no credentials in browser storage',async()=>{
   const {dom,root,calls}=await fixture();assert.match(root.textContent,/Signing in does not join a household/);assert.equal(root.querySelector('#invitation'),null);
   input(dom,'login-email','adult@example.invalid');submit(dom);await tick();assert.match(root.textContent,/Check your email/);assert.equal(root.querySelector('#login-code').autocomplete,'one-time-code');
-  input(dom,'login-code','123456');submit(dom);await tick();assert.match(root.textContent,/Review your invitation/);assert.equal(root.querySelector('#invitation').value,'retained-invitation-secret');assert.equal(root.querySelector('#adult-attestation').checked,false);
+  input(dom,'login-code','123456');submit(dom);await tick();assert.match(root.textContent,/Review your invitation/);assert.equal(root.querySelector('input[type=password]'),null);assert.doesNotMatch(root.innerHTML,/retained-invitation-secret/);assert.equal(root.querySelector('#adult-attestation').checked,false);
   assert.deepEqual(calls,[{email:'adult@example.invalid',csrf:'challenge-csrf'},{code:'123456',csrf:'challenge-csrf'}]);
   assert.equal(dom.window.localStorage.length,0);assert.equal(dom.window.sessionStorage.length,0);assert.equal(dom.window.location.search,'');assert.equal(root.querySelector('#login-code'),null);
 });
+
+for(const replace of [false,true]){
+  test(`linked invitation submits the reviewed code (replace=${replace})`,async()=>{
+    const tokens=[];
+    const {root,dom}=await fixture({
+      authState:async()=>({available:true,authenticated:true,csrf:'fixture-csrf'}),
+      redeem:async token=>{tokens.push(token);throw new ApiError('unavailable',404);}
+    });
+    const confirmAge=()=>{
+      const adult=root.querySelector('#adult-attestation');
+      adult.checked=true;
+      adult.dispatchEvent(new dom.window.Event('change'));
+    };
+    confirmAge();
+    if(replace){
+      [...root.querySelectorAll('button')].find(b=>b.textContent==='Enter a different invitation code').click();
+      const field=root.querySelector('#invitation');
+      assert.equal(field,dom.window.document.activeElement);
+      assert.equal(field.type,'password');
+      assert.equal(field.value,'');
+      assert.equal(root.querySelector('#adult-attestation').checked,false);
+      input(dom,'invitation','replacement-code');
+      confirmAge();
+    }
+    assert.deepEqual(tokens,[]);
+    submit(dom);await tick();
+    assert.deepEqual(tokens,[replace?'replacement-code':'retained-invitation-secret']);
+  });
+}
 
 test('unconfigured email service is honest and cannot display a sent-code success',async()=>{
   const {root}=await fixture({authState:async()=>({available:false,authenticated:false,csrf:null})});

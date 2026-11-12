@@ -59,6 +59,8 @@ const es: Record<string, string> = {
   'Current instructions':'Instrucciones actuales', 'Language':'Idioma', 'English':'Inglés', 'Spanish':'Español',
   'Loading…':'Cargando…', 'Continue with your invitation':'Continuar con tu invitación',
   'Open an invitation from your household to join.':'Abre una invitación de tu familia para unirte.',
+  'Invitation code received.':'Código de invitación recibido.',
+  'Enter a different invitation code':'Ingresar otro código de invitación',
   'Join this household':'Unirme a esta familia', 'Invitation code':'Código de invitación',
   'An internet connection is needed to open an invitation.':'Necesitas conexión a internet para abrir una invitación.',
   'Item':'Artículo', 'Amount or pack count (optional)':'Cantidad o número de paquetes (opcional)',

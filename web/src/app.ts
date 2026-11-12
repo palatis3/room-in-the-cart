@@ -358,25 +358,50 @@ export class WebApp {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
     main.append(this.el('h1',this.t('Continue with your invitation')),this.el('p',this.t('Open an invitation from your household to join.')));
-    const form=this.el('form');const label=this.el('label',this.t('Invitation code'));label.htmlFor='invitation';
-    const input=this.el('input');input.id='invitation';input.type='password';input.autocomplete='off';input.required=true;input.value=this.invitation??'';
-    input.maxLength=4096;input.disabled=this.redemption!==null;
-    input.addEventListener('input',()=>{this.invitation=input.value;});form.append(label,input);
+    const form=this.el('form');
+    if(this.invitation?.trim()){
+      form.append(this.el('p',this.t('Invitation code received.')));
+      if(!this.redemption)form.append(this.button('Enter a different invitation code',()=>{
+        this.invitation='';
+        this.adultAttestation=false;
+        this.render();
+        this.root.querySelector<HTMLInputElement>('#invitation')?.focus();
+      }));
+    }else{
+      const label=this.el('label',this.t('Invitation code'));
+      label.htmlFor='invitation';
+      const input=this.el('input');
+      input.id='invitation';
+      input.type='password';
+      input.autocomplete='off';
+      input.required=true;
+      input.maxLength=4096;
+      input.addEventListener('input',()=>{this.invitation=input.value;});
+      form.append(label,input);
+    }
     this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
     const alias=form.querySelector<HTMLInputElement>('#invite-alias');if(alias){alias.maxLength=80;alias.disabled=this.redemption!==null;}
     const adultLabel=this.el('label');adultLabel.className='checkbox';const adult=this.el('input');adult.type='checkbox';adult.id='adult-attestation';adult.checked=this.adultAttestation;adult.required=true;adult.disabled=this.redemption!==null;
     adult.addEventListener('change',()=>{this.adultAttestation=adult.checked;});adultLabel.append(adult,this.el('span',this.t('I am 18 or older.')));form.append(adultLabel);
     form.append(this.el('p',this.t('An adult signs in before joining. Child access requires verified guardian setup.')));
     const submit=this.button('Join this household',()=>{},true);submit.type='submit';form.append(submit);
-    form.addEventListener('submit',e=>{e.preventDefault();if(!input.value.trim()||!this.adultAttestation)return;void this.run(async()=>{
-      this.redemption??=await this.api.redeem(input.value.trim(),this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
-      await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
-      const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
-      const opened=this.session as Session|null;
-      if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
-      if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
-      this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
-    });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const manualCode=form.querySelector<HTMLInputElement>('#invitation');
+      const token=(manualCode?.value??this.invitation)?.trim();
+      if(!token||!this.adultAttestation)return;
+      this.invitation=token;
+      void this.run(async()=>{
+        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
+        await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
+        const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
+        const opened=this.session as Session|null;
+        if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
+        if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
+        this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+      });
+    });
+    main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
