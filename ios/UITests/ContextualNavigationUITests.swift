@@ -657,7 +657,7 @@ import UIKit
                 (prefix + "source", "Customer entered quote"), (prefix + "itemSubtotal", items),
                 (prefix + "eligibilityTerms", terms), (prefix + "total", total)
             ])
-            enableSwitch(prefix + "allChargesIncluded")
+            enableSwitch(prefix + "allChargesIncluded", nativeThumb: slot == "second")
             enableSwitch(prefix + "quantitiesMatched")
             enableSwitch(prefix + "singleStore")
             tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
@@ -816,11 +816,19 @@ import UIKit
     private func restart() { app.terminate(); launch(reset: false) }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
-    private func enableSwitch(_ label: String) {
+    private func enableSwitch(_ label: String, nativeThumb: Bool = false) {
         let control = app.switches[label]
         revealContent(control)
         if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "before-tap") }
-        if control.value as? String == "0" {
+        if nativeThumb {
+            XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the quote row")
+            let native = control.switches.firstMatch
+            let coordinate = native.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            XCTAssertTrue(control.isEnabled && control.isHittable && native.isEnabled && native.isHittable)
+            XCTAssertTrue(scrollableArea().contains(coordinate.screenPoint), "The native thumb must be inside visible content")
+            if native.value as? String == "0" { coordinate.tap() }
+            XCTAssertEqual(native.value as? String, "1", label)
+        } else if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
