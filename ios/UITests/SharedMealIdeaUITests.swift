@@ -30,7 +30,7 @@ import XCTest
 
         tap(element("fixture.s26.open"))
         tap(app.buttons["Use editable household idea template"])
-        fill("Fractional chickpea supper", into: "Meal name", replacing: true)
+        enterValue("Fractional chickpea supper", into: "Meal name", replacing: true)
         fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
@@ -39,14 +39,17 @@ import XCTest
         fill("Chickpeas", into: "Ingredient name", replacing: true)
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ingredient unit")).firstMatch)
         tap(app.buttons["Cups"])
-        fill("1/2", into: "Required quantity", replacing: true)
-        fill("1/4", into: "Household stock in this unit", replacing: true)
-        tap(app.buttons["Add named reservation"])
-        fill("Protected lunch", into: "Named reservation", replacing: true)
-        fill("1/8", into: "Reserved quantity", replacing: true)
-        fill("1", into: "Whole package quantity", replacing: true)
-        fill("1", into: "Usable yield numerator", replacing: true)
-        fill("2", into: "Usable yield denominator", replacing: true)
+        enterValue("1/2", into: "Required quantity", replacing: true)
+        enterValue("1/4", into: "Household stock in this unit", replacing: true)
+        let addReservation = app.buttons["Add named reservation"]
+        reveal(addReservation, fullyVisible: true)
+        XCTAssertTrue(addReservation.isHittable)
+        addReservation.tap()
+        enterValue("Protected lunch", into: "Named reservation", replacing: true)
+        enterValue("1/8", into: "Reserved quantity", replacing: true)
+        enterValue("1", into: "Whole package quantity", replacing: true)
+        enterValue("1", into: "Usable yield numerator", replacing: true)
+        enterValue("2", into: "Usable yield denominator", replacing: true)
         fill("Household measured cup and reviewed drained yield", into: "household-idea-evidence", replacing: true)
         XCTAssertEqual(app.textFields["household-idea-evidence"].value as? String, "Household measured cup and reviewed drained yield")
         tap(element("household-idea-save"))
@@ -328,9 +331,13 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+    private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier: id).firstMatch
-        tap(field)
+        if app.keyboards.firstMatch.exists {
+            reveal(field, fullyVisible: true)
+            XCTAssertTrue(field.isHittable)
+            field.tap()
+        } else { tap(field) }
         if replacing, let old = field.value as? String, old != field.placeholderValue {
             if id == "household-idea-evidence", !old.isEmpty {
                 // This multiline TextField initially places the caret at the
@@ -347,8 +354,15 @@ import XCTest
             } else { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         }
         app.typeText(text)
+        XCTAssertEqual(field.value as? String, text, id)
+        if id == "Shared household exclusions, one per line" {
+            XCTAssertEqual(field.label, id)
+        }
+    }
+    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+        enterValue(text, into: id, replacing: replacing)
         if app.keyboards.firstMatch.exists {
-            let done = element("household-idea-keyboard-done")
+            let done = app.buttons["household-idea-keyboard-done"]
             XCTAssertTrue(done.waitForExistence(timeout: 5))
             tap(done)
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
