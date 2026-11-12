@@ -4,6 +4,14 @@ Updated November 12, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint
 
+The published [PR candidate](https://github.com/palatis3/room-in-the-cart/pull/1) is `4025b2af`. Its Release iPhone build, security, native wire, both sanitizers, both M4 fixture groups, and core UI02/UI03/UI09 passed. All six M4 workers ran simultaneously. The shared quote adoption case that previously timed out also passed. UI06 passed six of seven tests. Its freezer reservation case timed out during keyboard interaction before the freezer assertions. The first StoreKit worker lost its simulator runtime before any purchase test executed. A targeted retry uses the same compiled product artifact. The five workflow links and the exact head are in `.build/CombinedCandidateNov12/publication.json`.
+
+Local Xcode 27.1 Release measurements on an iPhone 17 simulator running iOS 27.0 produced five samples each for responsive launch (median 6.383 seconds) and scroll with deceleration (median 2.582 seconds). The 500-row case completed 20 searches and 20 checkoffs. The simulator reported no hitch measurements. Hosted measurements and baseline approval are still open. The measurement receipt is `.build/LocalPerformance4025Nov12/local-calibration.json`.
+
+Local companion-web changes through `25d34914` hide child pairing codes before history capture, preserve the same sign-in's code entry when switching to email, and clear invitation details and age confirmation when an identity or household grant changes. A revoked household session can reach identity sign-out. All 166 web tests and 14 browser checks passed. A separate local test revoked a real household cookie in PostgreSQL 17.11 and signed out through the compiled companion client and HTTP service. The identity provider was fictional. Two additional Chrome history traversals verified the withdrawn child and replacement adult cases with synthetic accounts. Results are under `.build/ChildPageHistoryNov12`. These changes await the next combined candidate and staging deployment.
+
+### Earlier November 12 qualification
+
 The predecessor finished on November 12. Its [core workflow](https://github.com/palatis3/room-in-the-cart/actions/runs/43145143128) passed 13 jobs. Five UI groups failed, which also failed the final gate. Security and native wire passed. The local Shop accessibility correction passed all five original viewport audits in 116 seconds. The saved substitution-offer journey passed in 222 seconds, including the original response, retailer update, copy and relaunch checks. Viewable form fields and exact price/source readbacks keep keyboard entry on its intended control. The original frozen-pickup share-cancellation journey passed in 166 seconds. On iOS 27 the observed system Reduce Motion setting was off before the test, on during it and off after restoration. The release app launched on an iPhone simulator with its existing saved comparison. Staging passed all six public API and authentication-boundary checks and all 21 web page and asset checks. The current evidence is under `.build/CombinedCandidateNov12` and `.build/UI03Candidate640Nov11/paired-pack-audit`.
 
 Recipe imports now preserve valid recipes alongside unrelated versioned JSON-LD nodes. The preview also reports omitted instruction fields and skips malformed recipe descriptions when they supply the notes. All 36 archive tests passed, including the regression that originally rejected the entire library.
@@ -29,8 +37,7 @@ lint pass; root and independent Astra review approve. Capacity and validation
 receipts are in `.build/BitriseM4Nov11/`; the isolated [M4 pilot](https://github.com/palatis3/room-in-the-cart/actions/runs/43151520545)
 passed. One M4 compiled the fixture and a second M4 executed the original lost-reply
 test in 234.232 seconds with zero runtime warnings. This first build reported
-0 hits in 264 cacheable tasks and uploaded 504.5 MB. Six-way concurrent execution
-and cache reuse on the next M4 build still need observation. Keep the isolated
+0 hits in 264 cacheable tasks and uploaded 504.5 MB. The successor subsequently exercised all six M4 workers at once. Consult its build logs for cache reuse. Keep the isolated
 pilot branch off the merge path and group the workflow changes into the next candidate.
 
 Two 640 fixture jobs hit the 720-second case limit after the keyboard Done action.
