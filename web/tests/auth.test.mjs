@@ -68,3 +68,65 @@ test('default API fetch preserves the browser global receiver instead of binding
   };
   try{assert.deepEqual(await new API().authState(),{available:false,authenticated:false,csrf:null});assert.equal(called,1);}finally{globalThis.fetch=original;}
 });
+
+test('a replacement sign-in challenge clears the previous email code on return', async () => {
+  let csrf = 'first-challenge';
+  const { app, dom, root, calls } = await fixture({
+    authState: async () => ({ available: true, authenticated: false, csrf })
+  });
+  input(dom, 'login-email', 'first@example.invalid');
+  submit(dom);
+  await tick();
+  input(dom, 'login-code', '123');
+  app.suspendForHistory();
+  app.resumeWithFreshAuthority();
+  await tick();
+  assert.equal(root.querySelector('#login-code')?.value, '123');
+  app.suspendForHistory();
+  csrf = 'replacement-challenge';
+  app.resumeWithFreshAuthority();
+  await tick();
+  assert.equal(root.querySelector('#login-code'), null);
+  assert.equal(root.querySelector('#login-email')?.value, '');
+  assert.doesNotMatch(root.textContent, /Check your email for a six-digit code/);
+  assert.equal(calls.length, 1);
+});
+
+test('a new browser identity must provide its own invitation, alias and age confirmation', async () => {
+  let csrf = 'adult-a';
+  const { app, dom, root, calls } = await fixture({
+    authState: async () => ({ available: true, authenticated: true, csrf })
+  });
+  input(dom, 'invite-alias', 'First person');
+  root.querySelector('#adult-attestation').click();
+  app.suspendForHistory();
+  csrf = 'adult-b';
+  app.resumeWithFreshAuthority();
+  await tick();
+  assert.equal(root.querySelector('#invitation')?.value, '');
+  assert.equal(root.querySelector('#invite-alias')?.value, '');
+  assert.equal(root.querySelector('#adult-attestation')?.checked, false);
+  assert.deepEqual(calls, []);
+});
+
+test('an invitation cannot be submitted with a newly active household when its identity check fails', async () => {
+  let activated = false;
+  const scope = { authenticated: true, role: 'contributor', memberId: 'new-member',
+    household: { id: 'new-household', label: 'New household' }, shopId: 'new-shop',
+    csrf: 'new-scope', replayWindow: { id: 'new-window', expiresAt: '2099-01-01' } };
+  const { app, dom, root, calls } = await fixture({
+    session: async () => activated ? scope : null,
+    authState: async () => {
+      if (activated) throw new Error('Offline');
+      return { available: true, authenticated: true, csrf: 'first-identity' };
+    },
+    requests: async () => []
+  });
+  input(dom, 'invite-alias', 'Previous adult');
+  root.querySelector('#adult-attestation').click();
+  activated = true;
+  await app.start();
+  assert.equal(root.querySelector('#invitation, #adult-attestation'), null);
+  assert.equal(root.textContent.includes('Previous adult'), false);
+  assert.deepEqual(calls, []);
+});

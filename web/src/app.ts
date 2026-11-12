@@ -103,6 +103,23 @@ export class WebApp {
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
+  private clearInvitationDraft():void {
+    this.loginEmail='';
+    this.loginCode='';
+    this.codeRequested=false;
+    this.invitation=null;
+    this.redemption=null;
+    this.adultAttestation=false;
+    this.inviteAlias='';
+  }
+  private adoptBrowserAuth(fresh:BrowserAuthState|null):void {
+    const previous=this.browserAuth;
+    if(previous&&(previous.csrf!==fresh?.csrf||previous.authenticated!==fresh?.authenticated)){
+      this.clearInvitationDraft();
+      this.notice='';
+    }
+    this.browserAuth=fresh;
+  }
   checkExpiry():void {
     if (this.session?.requestQueueUntil && Date.parse(this.session.requestQueueUntil) <= Date.now()) {
       const expiredScope=scopeFor(this.session);
@@ -123,16 +140,42 @@ export class WebApp {
     const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
-      this.clearPrivate();this.notice='';this.render();
+      this.clearPrivate();this.clearInvitationDraft();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     const previous=this.session;
+    if(!previous&&fresh&&this.browserAuth&&this.invitation!==null){
+      // A different tab can activate a household while this invitation is open.
+      try {
+        this.adoptBrowserAuth(await this.api.authState());
+      } catch(error) {
+        this.clearInvitationDraft();
+        this.browserAuth=null;
+        throw error;
+      }
+    }
     this.session=fresh;
+    if(!fresh){
+      this.requests=[];
+      this.view=null;
+      this.pending=[];
+      this.receivedSuggestions=[];
+      this.suggestionsState='unchecked';
+      this.consent=false;
+      if(previous){
+        this.clearInvitationDraft();
+        this.browserAuth=null;
+      }
+      this.render();
+    }
     if (previous?.requestQueueGrant && previous.requestQueueGrant !== fresh?.requestQueueGrant) {
       this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
       await this.outbox.clearScope(scopeFor(previous)).catch(()=>{this.queueState='unavailable';});
     }
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.render();this.browserAuth=await this.api.authState();return;}
+    if(!fresh){
+      this.adoptBrowserAuth(await this.api.authState());
+      return;
+    }
     if (fresh.role !== 'helper' && fresh.role !== 'editor' && !isContributorSession(fresh)) throw new ApiError('access_ended',403);
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
@@ -175,8 +218,7 @@ export class WebApp {
     this.session=fresh;return fresh;
   }
   private hideWhileSigningOut():void {
-    this.logoutPending=true;this.clearPrivate();this.browserAuth=null;this.loginEmail='';this.loginCode='';this.codeRequested=false;
-    this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+    this.logoutPending=true;this.clearPrivate();this.clearInvitationDraft();this.browserAuth=null;
     this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';
   }
   private async signOut(scope?:Session,identityCSRF?:string):Promise<void> {
@@ -226,7 +268,7 @@ export class WebApp {
       }
     }
     if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
-      this.clearPrivate();
+      this.clearPrivate();this.clearInvitationDraft();this.browserAuth=null;
       this.render();
       try {
         await this.outbox.clear();
@@ -245,7 +287,7 @@ export class WebApp {
       this.codeRequested=false;this.loginCode='';
       this.render();
       const historyGeneration=this.historyGeneration;
-      this.browserAuth=await this.api.authState().catch(()=>null);
+      this.adoptBrowserAuth(await this.api.authState().catch(()=>null));
       // An explicit identity denial has removed the private projection. Allow
       // sign-in recovery even when the retained household cookie keeps returning 401.
       if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
