@@ -144,6 +144,11 @@ final class RecordArchiveTests: XCTestCase {
         let preview = try RecipeImporter.stage(mixed)
         XCTAssertEqual(preview.recipes.map(\.title), ["Dinner"])
         XCTAssertEqual(preview.skippedRows, 1)
+        let recipeJSON = #"{"@type":"Recipe","name":"Dinner"}"#
+        for encoding: String.Encoding in [.utf16LittleEndian, .utf16BigEndian, .utf32LittleEndian, .utf32BigEndian] {
+            let bytes = try XCTUnwrap(recipeJSON.data(using: encoding))
+            XCTAssertThrowsError(try RecipeImporter.stage(bytes)) { XCTAssertEqual($0 as? ArchiveError, .malformed) }
+        }
         XCTAssertThrowsError(try ImportedRecipe(title: "Dinner", sourceURL: "javascript:alert(1)").validated())
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"@type":"Recipe""#.utf8)))
     }

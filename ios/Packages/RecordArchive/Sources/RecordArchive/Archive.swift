@@ -235,6 +235,8 @@ public enum ArchiveCodec {
         guard String(data: data, encoding: .utf8) != nil else { throw ArchiveError.malformed }
         var depth = 0, quoted = false, escaped = false
         for byte in data {
+            // Raw NUL is invalid in UTF-8 JSON. Foundation otherwise auto-detects UTF-16/32.
+            guard byte != 0 else { throw ArchiveError.malformed }
             if quoted {
                 if escaped { escaped = false } else if byte == 92 { escaped = true } else if byte == 34 { quoted = false }
             } else if byte == 34 { quoted = true }
