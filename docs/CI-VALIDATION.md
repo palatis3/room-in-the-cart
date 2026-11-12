@@ -117,13 +117,15 @@ The following jobs share the six M4 slots.
 | Core UI03 and UI10 | 0 | 3 and 0 |
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
 | Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
-| Delivery recovery/cook/closeout and core UI04 | 3 | 1 |
+| Delivery recovery/cook/closeout, core UI04 and core UI08 | 3 | 1, 1 and 3 |
 | Core UI02, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 4 and 2 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
 
 On `cd85377c`, the bilingual StoreKit job waited 38m22s for GitHub slot 2 after the build finished. The Spanish skipped-dinner Undo journey occupied that slot for the last 15m37s of the wait. On trusted builds its existing selector now uses M4 slot 4. Compare the StoreKit start, the M4 job duration and the last required check when judging subsequent runs.
 
 On `a807ecf9`, the moved journey waited 5m22s and ran in 5m36s on M4. The previous GitHub job waited 24m23s and ran in 15m37s. That reduced the time from queuing this job to its result by 29m02s. The bilingual StoreKit job passed after queueing for 20m42s and running for 19m08s. Previously it queued for 38m22s and ran for 26m50s. The deep-checks workflow passed all six jobs. Core and fixture jobs were still active at that point. [M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231482950/job/131230416661) · [StoreKit job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231482917/job/131230870466).
+
+The five workflows on `a807ecf9` finished in 1h16m30s, compared with 1h11m52s on `cd85377c`. Core UI08 was the last native group. It queued for 26m02s on GitHub, then its native step reached the 40-minute limit. In the preceding two batches this group had waited 26m48s and 32m03s. On each of those three batches M4 slot 3 finished its last assigned job before UI08 started on GitHub. The next combined build assigns UI08 to this M4 slot on trusted runs. Check the time to the last required result and the UI04 and UI08 results together on the next build. [UI08 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231483028/job/131231569606) · [UI04 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231483028/job/131231569792).
 
 In the November 12 combined run, the final M4 test finished at 06:32 UTC.
 UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.
