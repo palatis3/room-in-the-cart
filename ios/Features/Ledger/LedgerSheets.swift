@@ -416,7 +416,7 @@ private struct LedgerImportRowView: View {
                 if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
             } else {
             TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
-            TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
+            TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
                 .accessibilityIdentifier("ledgerImportAmount-\(number)")
             Picker(ledgerText("Unit"), selection: $unit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }

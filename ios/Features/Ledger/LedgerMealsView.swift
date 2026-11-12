@@ -179,7 +179,7 @@ struct LedgerMealEditor: View {
                 Section(ledgerText("Dinner")) {
                     TextField(ledgerText("Dinner title"), text: $title, axis: .vertical).focused($inputFocus, equals: "title")
                         .accessibilityIdentifier("ledgerDinnerTitle")
-                    TextField(ledgerText("Servings"), text: $servings).keyboardType(.decimalPad).focused($inputFocus, equals: "servings")
+                    TextField(ledgerText("Servings"), text: $servings).keyboardType(.numbersAndPunctuation).focused($inputFocus, equals: "servings")
                         .accessibilityIdentifier("ledgerDinnerServings")
                     TextField(ledgerText("Source URL, optional"), text: $source).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .focused($inputFocus, equals: "source")
@@ -209,7 +209,7 @@ struct LedgerMealEditor: View {
                         VStack(alignment: .leading, spacing: 8) {
                             TextField(ledgerText("Who or what this is for"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "portion.\(portion.id).name")
-                            TextField(ledgerText("Portions"), text: fields.amount).keyboardType(.decimalPad)
+                            TextField(ledgerText("Portions"), text: fields.amount).keyboardType(.numbersAndPunctuation)
                                 .focused($inputFocus, equals: "portion.\(portion.id).amount")
                             Toggle(ledgerText("Protect these portions"), isOn: fields.protected)
                             Button(ledgerText("Remove named portion"), role: .destructive) { portions.removeAll { $0.id == portion.id } }

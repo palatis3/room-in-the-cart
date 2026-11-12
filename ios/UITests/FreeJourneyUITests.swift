@@ -1262,7 +1262,7 @@ import XCTest
         XCTAssertTrue(commit.isEnabled)
         let earlierAmount = element("ledgerImportAmount-1")
         revealPreviewControl(earlierAmount, upward: false)
-        fill("4", into: "ledgerImportAmount-1", replacing: true)
+        fill("9/2", into: "ledgerImportAmount-1", replacing: true)
         XCTAssertFalse(commit.isEnabled, "Changing the earlier supply must invalidate the later same-need choice")
         openChoices(2)
         XCTAssertFalse(mergePreview.exists || mergeSaved.exists)
@@ -1287,7 +1287,7 @@ import XCTest
         tap(active.firstMatch)
         let total = element("ledgerIngredientTotal")
         XCTAssertTrue(total.waitForExistence(timeout: 8))
-        XCTAssertEqual(total.label, "7 items")
+        XCTAssertEqual(total.label, "15/2 items")
     }
 
     func testCancelledImportAndIngredientReturnPreserveLongFilteredListContext() {

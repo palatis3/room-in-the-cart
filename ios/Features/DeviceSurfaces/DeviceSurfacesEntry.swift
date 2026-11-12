@@ -179,7 +179,7 @@ private struct SurfaceImportedLineEditor: View {
     var body: some View {
         VStack(alignment: .leading) {
             TextField(SurfaceCopy.text("Item name"), text: $name)
-            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
+            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
             Picker(SurfaceCopy.text("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
             Button(SurfaceCopy.text("Apply line edits")) { apply(name, amount, unit) }
         }.disabled(locked)
