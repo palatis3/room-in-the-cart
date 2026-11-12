@@ -568,7 +568,7 @@ final class RoomInTheCartUITests: XCTestCase {
         reveal(row)
         XCTAssertTrue(row.label.contains(item), "Original item name should survive restart: \(row.label)")
         row.tap()
-        XCTAssertTrue(element("editComparison").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
     }
 
     private func type(_ text: String, into id: String) {
