@@ -4,78 +4,48 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint — November 11
 
-Published candidate **9b554506cfd4c9e59113e0792cf5646134f00773** is verified
-on both candidate refs and PR1. Its app/test/workflow source is **95eff350**,
-following the fully terminal0ee81b0c batch. All988 source controls pass in17.513s, with18 queue-node
-checks, the live Node22.23.5 guard, generated theme/project, localization and
-shard-shell validation. Existing affected native checks pass:13binding/recovery,
-4request-review,1AskToBuy approval and1complete Dinner journey. The additional
-helper-instruction binding compiles and reuses the unchanged helper contracts;
-its specific removal flow was not executed. Source and product evidence remain
-scoped to their recorded environments. No combined successor pass is claimed.
+Source **4cad300c23ad12cf98a7de75d87b206a7d08c51b** is frozen for the next
+combined qualification after the fully terminal9b554506 batch. All988 source
+controls pass17.425s, plus18queue-node/actionlint, the live Node22.23.5 guard,
+generated theme/project, localization and shard-shell checks. The source receipt
+is `.build/SourceContractsNov11/combined-4cad300c/receipt.json`.
 
-The unpublished combined source revision **5a8c6aac** passes all988 source controls
-in17.160s after the reminder, UI09-slot and request-pack changes. The UI09 change
-also passes18queue-node/actionlint and6selector checks. Earlier revisionee7ea15a
-passed the unchanged live Node22.23.5 guard, generated theme/project, localization
-and shard-shell checks. The first full preflight
-exposed one stale migration expectation for the routed core consumer; that
-expectation now uses the existing reviewed routed-job set and retains negative
-runtime-drift checks. Original failure and passing receipts remain under
-`.build/SourceContractsNov11`. Astra's combined read-only review finds no blocker
-to the next ordinary hosted qualification. UI05 onBitrise and the revised cook
-confirmation target still need execution; this is not a combined pass.
+The grouped changes cover synchronized shopper test fixtures, contributor viewport
+measurement, upward Records recovery navigation, typed reminder/arrival fields,
+request-pack query efficiency and specific native switch targets. Existing affected
+local checks pass with preserved assertions/deadlines and recorded source/product
+hashes: HouseholdClient242with3declared wire-only skips under ThreadSanitizer;
+contributor4/4; RecordsEN/ES2/2; reminder1/1; full Dinner1/1; request-pack2/2;
+entered-store-quotes1/1. The stale-quote case also passes, but its mixed quote/cook
+run remains failed at an earlier system Close. The cook target is unexercised and
+still requires its original combined case. UI05 now uses Bitrise0 for trusted
+events; UI09 uses GitHub3. Reverse-provider core execution and whole-batch savings
+remain unproven. Astra's combined review finds no code/workflow blocker.
 
-The single atomic push started automatic core43125120190, fixtures43125120150,
-deep43125120200, security43125120168 and native-wire43125120189. Exact ref/PR
-verification and workflow IDs are recorded in
-`.build/CombinedCandidate95effNov11/publication.json`. Security/source/web/service
-checks pass, and service/PostgreSQL passes1054unit/448database/15operations with
-zero failures/skips. AddressSanitizer passes580 with3declared wire-only skips.
-Normal Swift packages also pass580 with3declared wire-only skips; the main
-producer passes920/920 models, unsigned iPhone Release verification passes, and
-native-wire passes24Node/80Swift cases. Both Bitrise fixture producers and the
-StoreKit producer pass. Eight distinct native runners (5GitHub/3Bitrise) are
-verified at00:15UTC onNovember12. ThreadSanitizer finds a test-fixture race,
-corrected locally in its row below. The hosted stale/locked-quote fixture fails;
-its revised native-thumb target passes the full original journey locally.
-Contributor balanced02 finishes12/13 with a keyboard-frame observation race;
-the narrow helper correction passes all4affected cases locally. SharedRecords
-first-recovery navigation is also corrected and passes the originalEN/ES2cases.
-CoreUI05 finishes7/8; its cutoff DatePicker lookup is narrowed to the observed
-element type, and the full original reminder journey passes locally121.95s.
-Balanced03 hits cumulative duration limits; removing duplicate visibility checks
-passes the original cheapest-pack and interrupted checkout cases locally2/2.
-UI02 now passes the earlier field-entry section but fails later resolving SegmentID.
-Its native TextField override passes the full original journey locally345.41s.
-The hosted cook-copy group fails its confirmation-switch activation. Its reviewed
-local thumb target remains unexercised because an earlier system Close did not
-dismiss the share sheet; that mixed local run remains failed. Swift CodeQL is
-terminal with confirmed runner communication loss and unavailable compile output.
-StoreKit also ends with runner communication loss, with unavailable logs and no
-locale result artifacts; executed case counts remain unknown. The shared error
-wording does not establish a common cause. At01:40UTC, GitHub's official status
-API lists no active incident; this does not rule out an unreported provider issue.
-No cohort cancellation or duplicate run occurred.
-Preserve published9b while useful results arrive; do not launch another batch or
-push status-only changes. Local pending corrections do not change its result.
+Publication is one atomic push to the two existing candidate refs. The authoritative
+published SHA, PR head and five automatic workflow IDs belong in
+`.build/CombinedCandidate4cad300cNov11/publication.json`; check that record and live
+GitHub state before any dispatch. If the record exists, continue those runs rather
+than publishing or dispatching again. Documentation-only freeze changes must not
+alter the verified4cad300c source. No status-only push or unchanged native repeat.
 
-Previous0ee81b0c5270063988c156758ffb003fbf7522f8 is fully terminal: core68/69passes,
-with only the full Dinner journey's720s cumulative-work timeout. Fixtures
-attempt1 finishes24/26groups passing; the one unchanged SharedFallback recheck
-then passes2/2, leaving only balanced03 unqualified. Preserve its original toggle
-failure; the recheck supports intermittency, not a proven cause. Deep billing is
-EN14/15 andES15/15; the first pending response has a locally qualified correction.
-All920models, unsigned Release, packages/sanitizers, backend/database, security
-and native-wire pass. Original logs and terminal metadata remain under
-`.build/CombinedCandidate3b0fNov11`; raw RecordsMedia artifacts were not accessed.
+Predecessor **9b554506cfd4c9e59113e0792cf5646134f00773** is fully terminal:
+core66/69 UI cases and21/26 fixture groups pass. Source/web/service/security,
+all920native models, unsigned iPhone Release, normal packages, AddressSanitizer
+and native-wire checks pass. Service/PostgreSQL verifies1054unit/448database/
+15operations; packages and AddressSanitizer each pass580with3declared wire-only
+skips. Native-wire passes24Node/80Swift. The fixture race and observed UI failures
+remain preserved alongside their scoped corrections below. Swift CodeQL and
+StoreKit report hosted-runner communication loss; their logs are unavailable and
+StoreKit scenario counts are unknown. No common underlying cause is established.
+`.build/CombinedCandidate95effNov11/terminal-preflight.json` verifies all five
+terminal run identities. Raw hosted RecordsMedia artifacts were not accessed.
 
-PR1 remains draft and main remains1a2530a7. Full Foundation2.1/B11 acceptance,
-minimum-OS/performance qualification, authenticated household operation,
-physical-device/human review, owner-deferred SMTP/KWS/Apple distribution and
-final release authorization remain incomplete. Staging048 is unchanged.
-No local native process remains; owned A50 is shut down. Unchanged successful
-native checks must not be repeated.
+PR1 remains draft; main remains1a2530a7. Full52-requirement/27-screen Foundation2.1
+andB11 acceptance, minimum-iOS/performance qualification, authenticated deployed
+operation, physical-device/human review, owner-deferred SMTP/KWS/Apple distribution
+and final release authorization remain incomplete. Staging048 is unchanged.
+No local native process remains; owned A50 is shut down.
 
 ### Next actions — current queue
 
@@ -85,7 +55,8 @@ lagged the final delivery completion. Recheck live state before dispatching. Upd
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published9b554506 combined qualification | Both refs and draft PR1 identify9b554506cfd4c9e59113e0792cf5646134f00773; main remains1a2530a7. Source988checks/18queue controls, web/service and the three security-workflow checks pass. Service verifies1054unit/448database/15operations. AddressSanitizer and normal packages each pass580with3declared wire-only skips; models pass strict920/920, unsigned Release verification passes, native-wire passes24Node/80Swift. Fixture producers and StoreKit producer pass. At02:44UTC,fixtures are terminal21of26groups passing,5failing. SpanishFoodEditor130877076207 passes1/1 in461.48s,0runtime warnings/idle/restarts. CoreUI08 130883087665 passes strict8/8,UI01 130883087712 passes5/5,UI03 130883087851 passes6/6 UI07 130883087377 passes7/7,UI06 130883087706 passes7/7 andUI10 130883087840 passes7/7, all with0runtime warnings/idle/restarts. UI05 130883087716 finishes7/8; its one reminder lookup failure is locally corrected below. Core is terminal66/69: UI02,UI04 andUI05 each have one failure, all locally corrected below. UI09 130883087647 passes7/7 with0runtime warnings/idle/restarts. All five workflows are terminal on9b; exact heads/conclusions are retained in `.build/CombinedCandidate95effNov11/terminal-preflight.json`. Balanced03 ends with6passes,1timeout,1interrupted and1unstarted case; its locally qualified duration correction is below. Financial-fields130877075946 passes1/1 in189.05s,0runtime warnings/idle/restarts. StoreKit is terminal with runner communication loss and unknown scenario results. Strict collected passes include balanced01 4/4, balanced04 13/13, balanced05 15/15, SharedFallback2/2 and stock/purchase6/6. Stock/purchase has2retained animation-idle diagnostics,0runtime warnings/restarts; other reviewed current pass logs record0warnings/idle/restarts. RecordsMedia remains metadata-only. | Continue automatic core43125120190, fixtures43125120150, deep43125120200, security43125120168 and native-wire43125120189 on this frozenSHA. Failed ThreadSanitizer, balanced02, SharedRecords, stale-quote and cook-copy results are preserved in their rows below. Swift CodeQL is terminal with confirmed runner communication loss; compile output is unavailable. Evidence `.build/CombinedCandidate95effNov11` includes original logs, publication identity and00:15UTC8runner snapshot. Current Bitrise compile invocations take107.116s/113.916s,254/293task hits and227.7MB downloaded each, labeledLowreuse; no whole-batch speedup claim. Prepare corrections locally; no duplicate dispatch, status-only push or rawRecordsMedia access. |
+| 4cad300c combined qualification | All988 source checks and the complete cheap preflight pass. Affected native checks and final Astra review are recorded above and in the scoped rows below. CoreUI05→Bitrise0 andUI09→GitHub3 retain the five/three caps, selectors and strict gates. Cook target and reverse-provider UI05 execution remain open. | Read `.build/CombinedCandidate4cad300cNov11/publication.json` and live refs before acting. If absent, publish the frozen source and documentation in one atomic push; if present, monitor only its five automatic workflows. Do not dispatch duplicates, repeat unchanged passing native checks, suppress failures or claim a combined pass. |
+| Previous9b554506 combined qualification | All five workflows are terminal on9b: core43125120190, fixtures43125120150 anddeep43125120200 fail; security43125120168 andnative-wire43125120189 pass. Core66/69 andfixtures21/26 pass. All920models, unsigned Release, packages/AddressSanitizer580with3wire-only skips, service1054unit/448database/15operations andnative-wire24Node/80Swift pass. Core failures are UI02SegmentID, UI04second-quote switch andUI05reminder, each corrected locally below. | Preserve original logs and `.build/CombinedCandidate95effNov11/terminal-preflight.json`. Fixture failures and test-fixture race remain scoped to their reviewed local corrections; cook remains unexercised. Swift CodeQL/StoreKit lost their runners with unavailable original logs. No duplicate recheck or rawRecordsMedia access. This batch is not qualified; the prepared successor requires its own complete results. |
 | 9b carry-test fixture data race | Original ThreadSanitizer130875121186 reports two words of captured echoedRequest: the async test writes ShopperClientTests129 while the CFNetwork mock callback reads109. The ordinary case says passed, but sanitizer diagnostics and process signal6 correctly fail the job. This is test-fixture shared state; no production race is established. A bounded same-file audit identifies four sibling fixtures with the same unguarded callback/test access pattern; those are source-established exposures, not four additional observed runtime failures. | One NSLock per affected test now protects shared fixture values, including assertion snapshots and compound role/capability changes. Handler locking ends before protocol callbacks; no lock spans await. Astra approves both diffs with no blockers. The original focused case passes1/1 under ThreadSanitizer. After all five fixture corrections, the full existing HouseholdClient package44435 passes242with3declared wire-only skips,0sanitizer warnings and raw exit0. Compiled inventory, linked sanitizer and source/product hashes are verified in `.build/CarryFixtureThreadSanitizerNov11/sibling-state/validation.json`; earlier focused/full evidence remains in its parent. No suppression, production change, new helper or new test was added. Hold the reviewed corrections until the current cohort yields useful results; no unchanged native repeat. |
 | 9b second-quote switch activation | CoreUI04 130883087841 executes7/7:6pass and entered-store-quotes fails397.745s when the second all-charges switch stays0 after one right-track tap. No interruption/unstarted cases or recorded warnings/idle/restarts. Verified artifact13911040610 SHA256`238b9635b34778a359141ab91240fa1ef162bc32d7d8d57f0cf124955f307bfb` shows the switch OFF and fully visible after down/up(356.4,189.167). Pre-tap snapshot is root-only; no detailed native-child geometry or source-backed concurrent reset is established. | Opt only the second all-charges call into the existing native off-thumb target pattern: require one native child, current visible-point/enabled/hittable checks, at most one tap and native/outer state1. Existing revealContent bounds, other calls and first-quote diagnostics remain unchanged. Astra final diff/combined review finds no blocker. Normal build44626, exact1enumeration31683, native79424 and strict export pass the original229.49s,0runtime warnings/idle/restarts, with matching source/plan/app/UI-test hashes on A50/iPhone17/arm64/27.0/24A434. Evidence `.build/UI04Candidate9bNov11/native-thumb/validation.json`; A50 is shut down. This qualifies an alternative touch target, not the original nonapplication cause; hosted closure remains pending. |
 | 9b Dinner Segment ID query | CoreUI02 130883087635 executes7/7:6pass and the full Dinner journey fails656.513s on SegmentID matching-snapshot lookup, before a tap or typing; no interruption, unstarted case, runtime warning, idle diagnostic or restart. This is later than the earlier field-entry correction and below720s. Verified artifact13909901984 SHA256`824d45e485f98971d790e47b650fb1267a67ea77656eceefaf4f2a7b0b7ab8b5` includes a fully visible blank field screenshot and production declares the exact TextField. | Pass only this field through the existing fill control override as `app.textFields[...]`. Reveal, tap, typing, Done, complete arrival/repair/settlement/next-shop assertions and720s remain. Astra final diff review finds no blocker. Normal build86426, exact1enumeration52143, native81317 and strict export pass the full original journey345.41s,0runtime warnings/idle/restarts. Source/plan/app/UI-test hashes match actual A50/iPhone17/arm64/27.0/24A434. Evidence `.build/UI02Candidate9bNov11/typed-segment/validation.json`; A50 is shut down. Root-only pre-tap snapshot does not establish detailed AX geometry; screenshot/source support the target. No product-save defect or underlying query-latency cause is established. Hold for grouped hosted qualification; no unchanged native repeat. |
