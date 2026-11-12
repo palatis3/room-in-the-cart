@@ -1030,18 +1030,43 @@ import XCTest
         XCTAssertTrue(app.tabBars.buttons["Records"].isSelected)
     }
 
+    private func enterNeed(food: String, meal: String, required: String, available: String) {
+        // Enter a need in one editing session, then dismiss the keyboard for review.
+        for (label, value) in [("Food that is short", food), ("Meal or purpose", meal),
+                               ("Required amount", required), ("Usable amount available now", available)] {
+            let field = app.textFields[label]
+            tap(field)
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, "Review the entered value for \(label)")
+        }
+        let done = app.buttons.matching(NSPredicate(format: "identifier == %@", "Done")).firstMatch
+        tap(done)
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5), "End amount entry before confirming the need")
+    }
+
     func testCorrectFreezerBatchAndReadReservationsAfterRestart() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Wraps", into: "Food that is short")
-        fill("Dinner", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("0", into: "Usable amount available now")
+        enterNeed(food: "Wraps", meal: "Dinner", required: "4", available: "0")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
         choose("Reviewed matching food need", value: "Wraps")
         fill("Opened freezer wraps", into: "Actual food or freezer batch")
-        fill("3", into: "Confirmed usable amount")
+        let amount = app.textFields["Confirmed usable amount"]
+        tap(amount)
+        // Use the visible decimal pad. During synthesized text entry the Done bar
+        // moved to the same screen position as the pad's delete key.
+        let keyboard = app.keyboards.firstMatch
+        let three = keyboard.keys["3"]
+        XCTAssertTrue(three.waitForExistence(timeout: 5) && three.isHittable)
+        three.tap()
+        XCTAssertEqual(amount.value as? String, "3")
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.isHittable)
+        XCTAssertLessThanOrEqual(done.frame.maxY, keyboard.frame.minY)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+        XCTAssertEqual(amount.value as? String, "3")
         enableSwitch("Use this batch first")
         enableSwitch("I reviewed identity, exclusions and usable quantity")
         tap(app.buttons["Confirm this separate stock lot"])
@@ -1064,20 +1089,6 @@ import XCTest
     }
 
     func testUrgentRepairWithoutAnOrderPersistsAcrossRestart() throws {
-        func enterNeed(food: String, meal: String, required: String, available: String) {
-            // Enter a need in one editing session, then dismiss the keyboard for review.
-            for (label, value) in [("Food that is short", food), ("Meal or purpose", meal),
-                                   ("Required amount", required), ("Usable amount available now", available)] {
-                let field = app.textFields[label]
-                tap(field)
-                field.typeText(value)
-                XCTAssertEqual(field.value as? String, value, "Review the entered value for \(label)")
-            }
-            let done = app.buttons.matching(NSPredicate(format: "identifier == %@", "Done")).firstMatch
-            tap(done)
-            XCTAssertTrue(done.waitForNonExistence(timeout: 5), "End amount entry before confirming the need")
-        }
-
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
         enterNeed(food: "Tortillas", meal: "Wednesday supper", required: "6", available: "2")
