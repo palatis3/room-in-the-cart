@@ -341,7 +341,7 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Complete-repair-shortcut-before-audit")
         XCTAssertNoThrow(try auditAccessibility())
         openEmptyComparison()
-        enterComparison(item: "Audit wraps", firstQuantity: "8", cap: "30")
+        enterComparison(item: "Audit wraps", firstQuantity: "8", cap: "30", groupPackFields: true)
         compare()
         // Cover both the initial viewport and the lower results after scrolling.
         screenshot("Initial-result-before-audit")
@@ -493,14 +493,17 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(value.isEmpty || value == "Item name" || value == "Nombre del artículo", "Fresh form must not contain seeded food: \(value)")
     }
 
-    private func enterComparison(item: String, firstQuantity: String?, cap: String? = nil) {
-        type(item, into: "itemName")
-        type("12", into: "needed")
-        if let firstQuantity { type(firstQuantity, into: "aQuantity") }
-        type("3", into: "aPrice")
-        type("6", into: "bQuantity")
-        type("2", into: "bPrice")
-        if let cap { type(cap, into: "itemCap") }
+    private func enterComparison(item: String, firstQuantity: String?, cap: String? = nil, groupPackFields: Bool = false) {
+        type([("itemName", item)])
+        type([("needed", "12")])
+        for (prefix, quantity, price) in [("a", firstQuantity, "3"), ("b", "6", "2")] {
+            var fields: [(id: String, text: String)] = []
+            if let quantity { fields.append((prefix + "Quantity", quantity)) }
+            fields.append((prefix + "Price", price))
+            if groupPackFields { type(fields) }
+            else { for field in fields { type([field]) } }
+        }
+        if let cap { type([("itemCap", cap)]) }
     }
 
     private func compare() {
@@ -571,23 +574,25 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
     }
 
-    private func type(_ text: String, into id: String) {
-        let field = app.textFields[id]
-        tap(field)
-        // keyboardDoneAction uses the localized title as its identifier.
-        // Avoid a label-predicate snapshot and a redundant second readiness query.
+    private func type(_ fields: [(id: String, text: String)]) {
         let done = app.buttons[doneIdentifier]
-        // Form scrolling can recycle the row after the first tap. Reacquire it
-        // once before entering any text, and require the focus-driven Done control.
-        var focused = done.waitForExistence(timeout: 3)
-        if !focused { tap(field); focused = done.waitForExistence(timeout: 3) }
-        XCTAssertTrue(focused, "Input must expose its keyboard dismissal control before typing")
-        // Once focus is ready, typing through the app avoids querying a row
-        // that the keyboard may have scrolled out of the current snapshot.
-        app.typeText(text)
+        for (id, text) in fields {
+            let field = app.textFields[id]
+            tap(field)
+            // Form scrolling can recycle the row after the first tap. Reacquire it
+            // once before entering any text, and require the focus-driven Done control.
+            var focused = done.waitForExistence(timeout: 3)
+            if !focused { tap(field); focused = done.waitForExistence(timeout: 3) }
+            XCTAssertTrue(focused, "Input must expose its keyboard dismissal control before typing")
+            // Keyboard presentation can scroll the focused row out of the snapshot.
+            app.typeText(text)
+        }
         done.tap()
-        reveal(field)
-        XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
+        for (id, text) in fields {
+            let field = app.textFields[id]
+            reveal(field)
+            XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
+        }
     }
 
     private func element(_ id: String) -> XCUIElement {
