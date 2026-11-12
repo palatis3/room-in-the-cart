@@ -21,6 +21,11 @@ release requirements and known failures remain visible.
 - Select the app entry point before a native build: ordinary Shop journeys use
   the normal Debug app; dedicated household fixtures replace `@main`. Group tests
   by compatible build profile and reuse each completed build within that group.
+- When the test opens the Share extension from a different app, install the
+  containing app on the selected simulator before opening the share sheet.
+  Verify the installed extension implementation matches the build. In Debug,
+  compare the extension's debug dylib as well as the launcher. Starting an
+  external host alone can leave an older installed extension in use.
 - Keep separate local DerivedData directories for normal, StoreKit and fixture profiles.
   Switching `SWIFT_ACTIVE_COMPILATION_CONDITIONS` in the same directory invalidates
   dependency builds as well as the app. Use `.build/NativeNormal/dd` for the next
