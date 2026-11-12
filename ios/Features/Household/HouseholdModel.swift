@@ -505,16 +505,21 @@ struct DeviceReminderPersona: Equatable {
         onScopeChange?(); invalidateSessionActions(); locked = identity != nil
         clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
-    func unlock() async {
+    func unlock(context: LAContext = LAContext()) async {
         guard !guardianChildOnly, let auth, let service, !busy else { return }
         busy = true; defer { busy = false }; let start = generation
-        let context = LAContext(); var error: NSError?
+        var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             notice = ht("Sign in again to reopen household access on this device."); return
         }
+        let confirmed = try? await context.evaluatePolicy(.deviceOwnerAuthentication,
+            localizedReason: ht("Reopen your protected household account"))
+        guard start == generation else { return }
+        guard confirmed == true else {
+            notice = ht("Your household access is still protected. Try unlocking this iPhone again.")
+            return
+        }
         do {
-            guard try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: ht("Reopen your protected household account")) else { return }
-            guard start == generation else { return }
             let access = try await auth.access(); let list = try await service.workspaces()
             guard start == generation else { return }
             if let prior = suspendedReminderPersona, let householdID = prior.householdID {

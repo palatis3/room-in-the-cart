@@ -9753,6 +9753,22 @@
         }
       }
     },
+    "Your household access is still protected. Try unlocking this iPhone again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household access is still protected. Try unlocking this iPhone again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso a tu hogar sigue protegido. Vuelve a intentar desbloquear este iPhone."
+          }
+        }
+      }
+    },
     "Your request has not been sent. Unlock this phone so it can save a deletion receipt, then try again.": {
       "localizations": {
         "en": {

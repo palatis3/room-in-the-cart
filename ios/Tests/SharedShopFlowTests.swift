@@ -1,4 +1,5 @@
 import XCTest
+import LocalAuthentication
 @testable import HouseholdClient
 @testable import RoomInTheCart
 
@@ -13,6 +14,27 @@ import XCTest
         model.email = actor + "@example.test"; model.code = "123456"; await model.verifyCode()
         XCTAssertNotNil(model.identity); return model
     }
+    func testCancelledDeviceUnlockKeepsHouseholdProtectedWithoutRequestingTheService() async throws {
+        let fixture = SharedFlowService()
+        let household = try await model("mia", fixture: fixture)
+        household.lock()
+        XCTAssertTrue(household.locked)
+        let previousHandler = SharedFlowURLProtocol.handler
+        defer { SharedFlowURLProtocol.handler = previousHandler }
+        SharedFlowURLProtocol.handler = { _ in
+            XCTFail("Cancelling device authentication must finish before any household service request")
+            return (500, Data())
+        }
+
+        await household.unlock(context: CancelledHouseholdUnlock())
+
+        XCTAssertTrue(household.locked)
+        XCTAssertNil(household.projection)
+        XCTAssertTrue(household.workspaces.isEmpty)
+        XCTAssertFalse(household.busy)
+        XCTAssertEqual(household.notice, ht("Your household access is still protected. Try unlocking this iPhone again."))
+    }
+
     private func createdHousehold(_ fixture: SharedFlowService, queue: URL? = nil) async throws -> HouseholdModel {
         let model = try await model("mia", fixture: fixture, queue: queue)
         let lifecycle = try XCTUnwrap(model.lifecycle)
@@ -914,6 +936,13 @@ private final class SharedFlowHeldRead: @unchecked Sendable {
     }
     func release() { lock.lock(); let callback = resume; resume = nil; lock.unlock(); callback?() }
 }
+private final class CancelledHouseholdUnlock: LAContext {
+    override func canEvaluatePolicy(_ policy: LAPolicy, error: NSErrorPointer) -> Bool { true }
+    override func evaluatePolicy(_ policy: LAPolicy, localizedReason: String) async throws -> Bool {
+        throw LAError(.userCancel)
+    }
+}
+
 private final class SharedFlowURLProtocol: URLProtocol {
     static var handler: ((URLRequest) throws -> (Int,Data))!
     override class func canInit(with request: URLRequest) -> Bool { true }
