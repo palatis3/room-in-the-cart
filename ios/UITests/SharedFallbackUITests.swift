@@ -38,7 +38,7 @@ final class SharedFallbackUITests: XCTestCase {
     }
 
     private func reveal(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        if element.waitForExistence(timeout: 2), element.isHittable { return }
+        if element.exists || element.waitForExistence(timeout: 2), element.isHittable { return }
         for step in 0..<14 {
             if element.exists && element.isHittable { return }
             if element.exists && !element.frame.isEmpty {
@@ -153,9 +153,12 @@ final class SharedFallbackUITests: XCTestCase {
         tap(app.buttons["fallback.food." + larger])
         toggle(app.switches["Enter a reviewed pack offer"])
         enter("Two wraps","Pack name",done:"fallback.food.done")
-        enter("2","Usable food per pack",done:"fallback.food.done")
-        enter("2","Price per pack (USD)",done:"fallback.food.done")
-        enter("2","Packs available",done:"fallback.food.done")
+        for label in ["Usable food per pack", "Price per pack (USD)", "Packs available"] {
+            let field = app.textFields[label]
+            tap(field)
+            field.typeText("2")
+            XCTAssertEqual(field.value as? String, "2", label)
+        }
         back("Review ingredients, food and time")
         toggle(app.switches["fallback.select." + usual])
         tap(app.buttons["fallback.food." + usual]); toggle(try sourceToggle(for: 0)); back("Review ingredients, food and time")
