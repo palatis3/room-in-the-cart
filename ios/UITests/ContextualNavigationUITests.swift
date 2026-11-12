@@ -15,7 +15,7 @@ import UIKit
 
     func testMixedEnglishAndSpanishListMeasuresMergeAndSurviveRestart() {
         launch(reset: true)
-        tap(element("openPickupList"))
+        tap(app.buttons["openPickupList"])
         tap(element("ledgerImport"))
         let english = "1 1/2 cups of arroz"
         let spanish = "1 1/2 tazas de arroz"
@@ -38,7 +38,7 @@ import UIKit
         reveal(element(lineID))
         restart()
         let saved = element(lineID)
-        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
+        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(app.buttons["openPickupList"]) }
         tap(saved)
         assertText("3/2 US cups")
         assertText(english)
