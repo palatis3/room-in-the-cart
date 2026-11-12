@@ -303,6 +303,43 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(try ArchiveCodec.decode(ArchiveCodec.encode(archive)).payload.records.first?.helperLines, lines)
     }
 
+    @MainActor func testPersonalTextExportsSavedPickupAndShoppingListTogether() async throws {
+        let date = Date(timeIntervalSince1970: 1_790_000_000)
+        var shop = ShoppingLedger(title: "Saturday list")
+        let original = "1½ tazas de arroz"
+        let preview = try shop.stageImport(text: original, source: .paste)
+        let resolution = Dictionary(uniqueKeysWithValues: preview.lines.map { ($0.id, ImportResolution.addNew) })
+        _ = try shop.commitImport(preview, decisions: resolution, at: date)
+        let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
+        let shopBytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: workspace))
+        let shopRecord = ArchiveRecord(id: shop.id.uuidString, origin: "original-list", revision: ArchiveCodec.digest(shopBytes),
+            kind: .ledger, title: shop.title, savedAtMilliseconds: ArchiveCodec.milliseconds(date), nativePayload: shopBytes)
+
+        let quantity = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2 bolsas")
+        let beans = BasketLine(id: UUID(), name: "Frijoles", quantity: quantity, expectedCost: .unknown(reason: "Waiting for shelf price"))
+        var journey = PickupJourney(id: UUID(), savedAt: date)
+        journey.basket = try BasketPlan(id: journey.id, revisionID: UUID(), lines: [beans], createdAt: date)
+        let pickupBytes = try RecordsNativeCodec.canonical(journey)
+        let pickupRecord = ArchiveRecord(id: journey.id.uuidString, origin: "original-pickup", revision: ArchiveCodec.digest(pickupBytes),
+            kind: .pickup, title: "Saturday pickup", savedAtMilliseconds: ArchiveCodec.milliseconds(date), nativePayload: pickupBytes)
+
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let records = [pickupRecord, shopRecord]
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        let text = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        for expected in [pickupRecord.origin, shopRecord.origin, pickupRecord.revision, shopRecord.revision,
+                         "Frijoles", "2 bolsas", "Waiting for shelf price", shop.title, original] {
+            XCTAssertTrue(text.contains(expected), expected)
+        }
+        XCTAssertFalse(text.contains("\"nativePayload\""))
+        XCTAssertFalse(text.contains("\"selectedShopID\""))
+        XCTAssertFalse(text.contains("\"expectedCost\""))
+    }
+
     @MainActor func testComparisonTextDistinguishesMissingPriceNoPurchaseAndLegacyDraft() throws {
         func rendered(_ record: ArchiveRecord) throws -> String {
             try RecordsNativeCodec.comparison(XCTUnwrap(record.nativePayload)).readableText()

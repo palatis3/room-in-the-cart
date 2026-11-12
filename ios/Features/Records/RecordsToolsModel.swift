@@ -190,13 +190,7 @@ struct RecordsMediaSelectionID: Hashable {
                 _ = try ArchiveCodec.encode(bounded)
                 let readableRecords = choice == .helperText ? bounded.payload.records : records
                 let text = try readableRecords.map { record in
-                    if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
-                    if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
-                    if choice == .ownerText, record.kind == .comparison, let bytes = record.nativePayload {
-                        let comparison = try RecordsNativeCodec.comparison(bytes)
-                        return try ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + comparison.readableText()
-                    }
-                    return recordsReadableText(record, owner: choice == .ownerText)
+                    try exportText(record, owner: choice == .ownerText)
                 }.joined(separator: "\n\n")
                 document = RecordsFileDocument(data: Data(text.utf8), kind: .text)
                 name = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
@@ -210,6 +204,27 @@ struct RecordsMediaSelectionID: Hashable {
             actionStatus = ActionStatus(text: recordsText("Your file is ready to review and save."))
         } catch { fail(error, reveal: true) }
     }
+
+    private func exportText(_ record: ArchiveRecord, owner: Bool) throws -> String {
+        guard owner, let bytes = record.nativePayload else { return recordsReadableText(record, owner: owner) }
+        let body: String
+        switch record.kind {
+        case .comparison:
+            body = try RecordsNativeCodec.comparison(bytes).readableText()
+        case .pickup:
+            body = try PickupReadableRecord.text(RecordsNativeCodec.pickup(bytes), locale: recordsInterfaceLocale)
+        case .ledger:
+            body = try LedgerReadableRecord.text(bytes)
+        case .recipe:
+            return recordsReadableText(record, owner: true)
+        case .sharedShop:
+            return try SharedRecordArchiveAdapter.readable(record)
+        case .sharedHistory:
+            return try SharedHistoryArchiveAdapter.readable(record)
+        }
+        return ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + body
+    }
+
     func importFile(_ url: URL, recipes: Bool) async {
         guard !busy else { return }
         busy = true; review = nil; reviewAuthorization = nil; recipeReport = nil; error = nil
