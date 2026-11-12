@@ -134,11 +134,8 @@ struct MembershipConfiguration: Sendable {
                   !value.isEmpty, !value.contains("$(") else { return nil }
             return value
         }
-        func https(_ key: String) -> URL? {
-            guard let value = value(key), let url = URL(string: value), url.scheme == "https", url.host != nil else { return nil }
-            return url
-        }
-        return Self(productID: value("HouseholdSubscriptionProductID"), privacyURL: https("PrivacyPolicyURL"), termsURL: https("TermsOfUseURL"))
+        let pages = HelpConfiguration.fromBundle(bundle)
+        return Self(productID: value("HouseholdSubscriptionProductID"), privacyURL: pages.privacyURL, termsURL: pages.termsURL)
     }
     var isReady: Bool { productID != nil && privacyURL != nil && termsURL != nil }
 }

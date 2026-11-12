@@ -5,9 +5,9 @@ final class StagingHelpUITests: XCTestCase {
     private let app = XCUIApplication()
     private let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
 
-    override func setUpWithError() throws {
+    private func openSettings(language: String) {
         continueAfterFailure = false
-        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
         app.launch()
         let settings = app.buttons["settings"]
         XCTAssertTrue(settings.waitForExistence(timeout: 20))
@@ -15,12 +15,14 @@ final class StagingHelpUITests: XCTestCase {
     }
 
     func testOnlineHelpOpensItsPageInSafari() {
+        openSettings(language: "es")
         tapInList(app.buttons["settings.help"])
-        tapInList(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Online help")).firstMatch)
-        verifyPublicPage("Help")
+        tapInList(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Ayuda en línea")).firstMatch)
+        verifyPublicPage("Ayuda")
     }
 
     func testOnlineSupportOpensItsPageInSafari() {
+        openSettings(language: "en")
         tapInList(app.buttons["settings.support"])
         tapInList(app.descendants(matching: .any).matching(identifier: "help.support.open").firstMatch)
         verifyPublicPage("Support")
@@ -51,11 +53,11 @@ final class StagingHelpUITests: XCTestCase {
         let web = safari.webViews.firstMatch
         XCTAssertTrue(web.waitForExistence(timeout: 30), file: file, line: line)
         XCTAssertTrue(web.links["Room in the Cart"].firstMatch.waitForExistence(timeout: 20), file: file, line: line)
-        XCTAssertTrue(web.staticTexts[heading].firstMatch.exists, file: file, line: line)
         let capture = XCTAttachment(screenshot: safari.screenshot())
         capture.name = "Staging " + heading
         capture.lifetime = .keepAlways
         add(capture)
+        XCTAssertTrue(web.staticTexts[heading].firstMatch.exists, file: file, line: line)
     }
 }
 #endif

@@ -10,6 +10,23 @@ final class HelpConfigurationTests: XCTestCase {
         XCTAssertNil(HelpConfiguration.pageURL(nil))
     }
 
+    func testAppLanguageFollowsCompanionLinksAndPreservesOperatorDestinations() throws {
+        let bundle = try testBundle([
+            "HouseholdServiceURL": "https://grocery-app.com",
+            "HelpURL": "https://grocery-app.com:443/help#public-section-1",
+            "SupportURL": "https://support.grocery-app.com/support",
+            "PrivacyPolicyURL": "https://grocery-app.com/privacy?lang=en",
+            "TermsOfUseURL": "https://grocery-app.com:8443/terms"
+        ])
+        let spanish = HelpConfiguration.fromBundle(bundle, language: "es-US")
+        XCTAssertEqual(spanish.helpURL?.absoluteString, "https://grocery-app.com:443/help?lang=es#public-section-1")
+        XCTAssertEqual(spanish.supportURL?.absoluteString, "https://support.grocery-app.com/support")
+        XCTAssertEqual(spanish.privacyURL?.absoluteString, "https://grocery-app.com/privacy?lang=en")
+        XCTAssertEqual(spanish.termsURL?.absoluteString, "https://grocery-app.com:8443/terms")
+        XCTAssertEqual(HelpConfiguration.fromBundle(bundle, language: "en-US").helpURL?.query, "lang=en")
+        XCTAssertEqual(MembershipConfiguration.fromBundle(bundle).privacyURL, spanish.privacyURL)
+    }
+
     func testBareSupportEmailOpensOnlyAddressWithoutHeadersOrEncodedPayload() throws {
         let contact = try XCTUnwrap(HelpConfiguration.emailURL("hello@roominthecart.com"))
         XCTAssertEqual(contact.absoluteString, "mailto:hello@roominthecart.com")
