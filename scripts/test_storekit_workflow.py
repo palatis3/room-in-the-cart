@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from check_ci_workflows import parse_workflow
+from is_storekit_launch_failure import is_launch_failure
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = {
@@ -168,6 +169,30 @@ class StoreKitWorkflowTests(unittest.TestCase):
             export = self.step('storekit', identifier=f'storekit-{locale}-results')
             self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-" + locale + "-native.outcome != 'skipped' }}")
             self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
+
+    def test_only_an_unstarted_storekit_plan_with_the_launch_service_crash_can_retry(self):
+        reason = ('Failed to install or launch the test runner. (Underlying Error: '
+                  'The operation couldn’t be completed. (Mach error -308 - (ipc/mig) server died))')
+        failure = {'nodeType': 'Failure Message', 'name': reason}
+        runner = {'nodeType': 'Test Case', 'name': 'RoomInTheCart encountered an error',
+                  'result': 'Failed', 'children': [failure]}
+        suite = {'nodeType': 'Test Suite', 'name': 'System Failures', 'children': [runner]}
+        bundle = {'nodeType': 'Unit test bundle', 'name': 'RoomInTheCartTests', 'children': [suite]}
+        tests = {'testNodes': [{'nodeType': 'Test Plan', 'name': 'LocalStoreKit', 'children': [bundle]}]}
+        log = '\tRoomInTheCart encountered an error (' + reason + ')\n'
+        self.assertTrue(is_launch_failure(log, tests))
+        for marker in ("Test Suite 'Selected tests' started", "interleaved: Test Case '…' started.",
+                       'File.swift:2: error: -[Suite testPurchase]', 'Restarting after unexpected exit, crash, or test timeout;'):
+            with self.subTest(marker=marker):
+                self.assertFalse(is_launch_failure(marker + '\n' + log, tests))
+        self.assertFalse(is_launch_failure(log.replace('-308', '-309'), tests))
+        self.assertFalse(is_launch_failure(log, {'testNodes': []}))
+        with patch.dict(runner, nodeIdentifierURL='test://target/StoreKitScenarioTests/testPurchase()'):
+            self.assertFalse(is_launch_failure(log, tests))
+        with patch.dict(failure, name='StoreKit entitlement assertion failed'):
+            self.assertFalse(is_launch_failure(log, tests))
+        with patch.dict(bundle, children=[suite, {'nodeType': 'Test Suite', 'name': 'StoreKitScenarioTests'}]):
+            self.assertFalse(is_launch_failure(log, tests))
 
     def test_locale_gate_rejects_every_failed_skipped_cancelled_or_missing_outcome(self):
         gate = self.step('storekit', identifier='storekit-locales-gate')

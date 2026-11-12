@@ -20,6 +20,7 @@ on:
       - 'scripts/check_swift_syntax.py'
       - 'scripts/select_ci_iphone.py'
       - 'scripts/boot_ios_simulator.py'
+      - 'scripts/is_storekit_launch_failure.py'
       - 'scripts/test_storekit_workflow.py'
       - 'scripts/ci_yaml_requirements.txt'
       - 'shared/**'
@@ -315,17 +316,34 @@ jobs:
         shell: bash
         run: &storekit-native |
           set -o pipefail
-          mkdir -p ".build/storekit-$STOREKIT_LOCALE"
+          output=".build/storekit-$STOREKIT_LOCALE"
+          mkdir -p "$output"
           python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
-          xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
-            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 120 -collect-test-diagnostics on-failure \
-            -resultBundlePath ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" \
-            test-without-building 2>&1 | tee ".build/storekit-$STOREKIT_LOCALE/StoreKit.log"
+          run_storekit() {
+            xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+              -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
+              -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
+              -maximum-test-execution-time-allowance 120 -collect-test-diagnostics on-failure \
+              -resultBundlePath "$output/StoreKit.xcresult" \
+              test-without-building 2>&1 | tee "$output/StoreKit.log"
+          }
+          native_status=0
+          run_storekit || native_status=$?
+          if [ "$native_status" -ne 65 ]; then exit "$native_status"; fi
+          if xcrun xcresulttool get test-results tests --path "$output/StoreKit.xcresult" --compact > "$output/first-tests.json" &&
+             python3 scripts/is_storekit_launch_failure.py "$output/StoreKit.log" "$output/first-tests.json"; then
+            mkdir "$output/launch-failure"
+            mv "$output/StoreKit.xcresult" "$output/StoreKit.log" "$output/first-tests.json" "$output/launch-failure/"
+            echo 'Retrying this StoreKit configuration after the simulator launch service died before any scenario started.'
+            xcrun simctl shutdown "$SIMULATOR_ID"
+            python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+            run_storekit
+          else
+            exit "$native_status"
+          fi
       - name: Export StoreKit en results even after a failed scenario
         id: storekit-en-results
         if: ${{ !cancelled() && steps.storekit-en-native.outcome != 'skipped' }}
