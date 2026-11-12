@@ -3015,6 +3015,74 @@
           }
         }
       }
+    },
+    "Save cancelled. Your file is still ready.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save cancelled. Your file is still ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se canceló el guardado. Tu archivo sigue listo para guardar."
+          }
+        }
+      }
+    },
+    "File saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo guardado."
+          }
+        }
+      }
+    },
+    "Encrypted recovery file saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted recovery file saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el archivo de recuperación cifrado."
+          }
+        }
+      }
+    },
+    "File saved. Its backup date is unavailable on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File saved. Its backup date is unavailable on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el archivo. La fecha de esta copia de seguridad no está disponible en este iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

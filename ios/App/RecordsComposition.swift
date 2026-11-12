@@ -492,19 +492,19 @@ private struct RecordsRecoveredDinnersView: View {
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
         var unavailableRecords: [RecordsUnavailableRecord] = []
-        var liveSharedRecordIDs: Set<RecordsSelectionID> = []
+        var shared = RecordsSnapshotBatch()
+        var recoveredCopyIDsByRecord: [RecordsSelectionID: Set<String>] = [:]
         // Refresh current permissions and privacy before every listing/export.
         // No previous shared snapshot is used as an offline authorization fallback.
         if let household, let scope = household.projection, scope.capabilities.contains("shopper_commands"),
            let shop = scope.shopId, let shopID = UUID(uuidString: shop), let service = household.service {
-            let shared = try await RecordsSnapshotProjection.liveSharedRecords(householdID: scope.household.id, shopID: shopID,
+            shared = try await RecordsSnapshotProjection.liveSharedRecords(householdID: scope.household.id, shopID: shopID,
                 authorized: authorize, accessDenied: { self.tools?.liveSharedAccessEnded() },
                 historyRetired: { self.tools?.liveHistoryRetired($0) }, current: {
                     try await SharedRecordArchiveAdapter.make(service.sharedRecordSnapshot(shopID: shopID))
                 }, history: {
                     try await SharedHistoryArchiveAdapter.make(service.sharedRecordHistory(shopID: shopID))
                 })
-            liveSharedRecordIDs = shared.liveSharedRecordIDs
             result += shared.records
             unavailableRecords += shared.unavailable
         }
@@ -558,13 +558,18 @@ private struct RecordsRecoveredDinnersView: View {
         // its committed domain state, retaining the original source identity and parent.
         if let registry {
             let pendingOrigin = ledger.pendingLedgerDeletionReview.map { "ledger/" + $0.workspaceID.uuidString }
+            var copies: [(id: String, records: [ArchiveRecord])] = []
             for saved in try await registry.refreshList() where saved.record.origin != pendingOrigin {
-                do { result += try await recoveredSnapshot(saved, authorize: authorize, unavailableRecords: &unavailableRecords) }
+                do {
+                    let records = try await recoveredSnapshot(saved, authorize: authorize, unavailableRecords: &unavailableRecords)
+                    copies.append((saved.id, records))
+                }
                 catch {
                     guard authorize() else { throw ArchiveError.unavailable }
                     _ = omitRecovered(saved, reason: .unreadableStorage, unavailableRecords: &unavailableRecords)
                 }
             }
+            recoveredCopyIDsByRecord = RecordsSnapshotProjection.appendRecovered(copies, to: &result)
         }
         guard authorize() else { throw ArchiveError.unavailable }
         // Never scan a namespace supplied by a recovered file. Only live app stores
@@ -581,7 +586,9 @@ private struct RecordsRecoveredDinnersView: View {
             result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
         }
         return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(result), unavailable: unavailableRecords,
-                                    liveSharedRecordIDs: liveSharedRecordIDs)
+                                    liveSharedRecordIDs: shared.liveSharedRecordIDs,
+                                    householdFetchedAtMilliseconds: shared.householdFetchedAtMilliseconds,
+                                    recoveredCopyIDsByRecord: recoveredCopyIDsByRecord)
     }
     private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil,
                               unavailableRecords: inout [RecordsUnavailableRecord]) async throws -> CaptureMediaArchiveListing {

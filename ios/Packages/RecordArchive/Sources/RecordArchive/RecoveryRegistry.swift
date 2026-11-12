@@ -20,6 +20,8 @@ public struct RecoveredRecord: Codable, Equatable, Sendable, Identifiable {
     public let record: ArchiveRecord
     public let documentKind: ArchiveKind
     public let recoveredAtMilliseconds: Int64
+    // An explicit Undo reopens the same local ID, with a new lifetime for pending Files callbacks.
+    fileprivate var backupLifetime: UUID? = nil
 }
 public struct RecoveryCommit: Sendable {
     public let records: [RecoveredRecord]
@@ -30,6 +32,35 @@ public enum RecoveryDeleteScope: Sendable, Equatable {
     case copy(String), copies([String]), origin(String), allRecovered
 }
 public struct RecoveryUndoToken: Hashable, Sendable { public let id: UUID }
+
+/// The Files success date applies to the stable source. Only revisions in the caller's
+/// current owner projection appear here, even if the saved file also contained siblings.
+public struct EncryptedBackupStatus: Equatable, Sendable {
+    public let savedAtMilliseconds: Int64
+    public let revisions: Set<String>
+}
+
+public struct EncryptedBackupIntent: Sendable {
+    fileprivate struct Target: Sendable {
+        let source: ArchiveSourceIdentity
+        let revision: String
+        let mediaIDs: Set<String>
+        // No dependencies means this revision has an independent local or live source.
+        let copyLifetimes: [String: String]
+    }
+    fileprivate let registryID: String
+    fileprivate let targets: [Target]
+}
+
+fileprivate struct BackupMark: Codable {
+    struct Revision: Codable {
+        let revision: String
+        var dependentCopyIDs: Set<String>
+    }
+    let source: ArchiveSourceIdentity
+    let savedAtMilliseconds: Int64
+    var revisions: [Revision]
+}
 
 /// A single atomic manifest commits snapshots and canonical receipts together. Original
 /// live stores are never edited; restored records are independent sibling workspaces.
@@ -44,6 +75,7 @@ public actor RecoveryRegistry {
         var erasedSources: [ArchiveSourceIdentity]? = []
         var erasedOrigins: [String]? = []
         var erasedMediaSources: [ArchiveMediaSourceIdentity]? = []
+        var encryptedBackups: [BackupMark]?
     }
     private let url: URL
     private var manifest: Manifest
@@ -68,6 +100,121 @@ public actor RecoveryRegistry {
         defer { releaseLock(lock) }
         try refreshFromDisk()
         return list()
+    }
+    public func refreshList(includingBackupsFor records: [ArchiveRecord], recoveredCopyIDs: [ArchiveIdentity: Set<String>] = [:]) throws -> (recovered: [RecoveredRecord], backups: [ArchiveIdentity: EncryptedBackupStatus]) {
+        let recovered = try refreshList()
+        return (recovered, backupStatuses(for: records, recoveredCopyIDs: recoveredCopyIDs))
+    }
+    public func lastEncryptedBackups(for records: [ArchiveRecord], recoveredCopyIDs: [ArchiveIdentity: Set<String>] = [:]) throws -> [ArchiveIdentity: EncryptedBackupStatus] {
+        let lock = try acquireLock()
+        defer { releaseLock(lock) }
+        try refreshFromDisk()
+        return backupStatuses(for: records, recoveredCopyIDs: recoveredCopyIDs)
+    }
+    private func backupStatuses(for records: [ArchiveRecord], recoveredCopyIDs: [ArchiveIdentity: Set<String>]) -> [ArchiveIdentity: EncryptedBackupStatus] {
+        let marks = Dictionary(uniqueKeysWithValues: (manifest.encryptedBackups ?? []).map { ($0.source, $0) })
+        let projection = ArchiveCodec.projection(for: .personalRecovery)
+        var result: [ArchiveIdentity: EncryptedBackupStatus] = [:]
+        for record in records where record.nativePayload != nil {
+            let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
+            guard let mark = marks[source] else { continue }
+            let identity = ArchiveCodec.identity(record, projection: projection)
+            // An imported owner copy can outlive access to a live shop with the very
+            // same archive identity. Only a common backing source can disclose a date.
+            let copies = recoveredCopyIDs[identity]
+            let visible = mark.revisions.filter { saved in
+                if let copies { return !copies.isDisjoint(with: saved.dependentCopyIDs) }
+                return saved.dependentCopyIDs.isEmpty
+            }
+            if !visible.isEmpty {
+                result[identity] = .init(savedAtMilliseconds: mark.savedAtMilliseconds,
+                    revisions: visible.contains(where: { $0.revision == identity.revision }) ? [identity.revision] : [])
+            }
+        }
+        return result
+    }
+    /// Capture the selected owner metadata immediately before sealing the file. The caller
+    /// identifies recovered-only outputs, whose edited IDs/revisions can differ from the import.
+    public func prepareEncryptedBackup(_ records: [ArchiveRecord], recoveredCopyIDs: [ArchiveIdentity: Set<String>] = [:]) throws -> EncryptedBackupIntent {
+        guard records.count <= ArchiveCodec.maximumRecords else { throw ArchiveError.tooLarge }
+        let lock = try acquireLock()
+        defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let copies = Dictionary(uniqueKeysWithValues: manifest.records.map { ($0.id, $0) })
+        let erasedOrigins = Set(manifest.erasedOrigins ?? []), erasedSources = Set(manifest.erasedSources ?? [])
+        let erasedMedia = Set(manifest.erasedMediaSources ?? [])
+        let projection = ArchiveCodec.projection(for: .personalRecovery)
+        var targets: [EncryptedBackupIntent.Target] = []
+        var seen = Set<ArchiveIdentity>()
+        for record in records where record.nativePayload != nil {
+            let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
+            let identity = ArchiveCodec.identity(record, projection: projection)
+            guard ArchiveCodec.identifier(source.origin), ArchiveCodec.identifier(source.recordID),
+                  ArchiveCodec.identifier(identity.revision), seen.insert(identity).inserted else { throw ArchiveError.invalidIdentity }
+            let mediaIDs = Set((record.media ?? []).map(\.id))
+            guard !erasedOrigins.contains(source.origin), !erasedSources.contains(source),
+                  !mediaIDs.contains(where: { erasedMedia.contains(.init(origin: source.origin, mediaID: $0)) }) else { throw ArchiveError.conflict }
+            var lifetimes: [String: String] = [:]
+            if let ids = recoveredCopyIDs[identity] {
+                guard !ids.isEmpty else { throw ArchiveError.invalidIdentity }
+                for id in ids {
+                    guard let copy = copies[id], copy.documentKind == .personalRecovery, copy.record.nativePayload != nil,
+                          copy.record.origin == source.origin else { throw ArchiveError.staleReview }
+                    lifetimes[id] = copy.backupLifetime?.uuidString ?? id
+                }
+            }
+            targets.append(.init(source: source, revision: identity.revision, mediaIDs: mediaIDs, copyLifetimes: lifetimes))
+        }
+        return EncryptedBackupIntent(registryID: registryID, targets: targets)
+    }
+    private var registryID: String { ArchiveCodec.digest(Data(url.path.utf8)) }
+
+    /// Call only for a successful Files save. A retry uses the same completion timestamp.
+    /// A later save of an older revision is a real backup; source revision dates never order callbacks.
+    public func recordSuccessfulBackup(_ intent: EncryptedBackupIntent, savedAtMilliseconds: Int64) throws {
+        guard intent.registryID == registryID, savedAtMilliseconds > 0 else { throw ArchiveError.invalidIdentity }
+        guard !intent.targets.isEmpty else { return }
+        let lock = try acquireLock()
+        defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let erasedSources = Set(manifest.erasedSources ?? []), erasedOrigins = Set(manifest.erasedOrigins ?? [])
+        let erasedMedia = Set(manifest.erasedMediaSources ?? [])
+        let copies = Dictionary(uniqueKeysWithValues: manifest.records.map { ($0.id, $0.backupLifetime?.uuidString ?? $0.id) })
+        var marks = Dictionary(uniqueKeysWithValues: (manifest.encryptedBackups ?? []).map { ($0.source, $0) })
+        var changed = false
+        for (source, targets) in Dictionary(grouping: intent.targets, by: \.source) {
+            guard !erasedSources.contains(source), !erasedOrigins.contains(source.origin),
+                  savedAtMilliseconds > (marks[source]?.savedAtMilliseconds ?? 0) else { continue }
+            let revisions: [BackupMark.Revision] = targets.compactMap { target in
+                guard !target.mediaIDs.contains(where: { erasedMedia.contains(.init(origin: source.origin, mediaID: $0)) }) else { return nil }
+                let remaining = target.copyLifetimes.filter { copies[$0.key] == $0.value }
+                guard target.copyLifetimes.isEmpty || !remaining.isEmpty else { return nil }
+                return .init(revision: target.revision, dependentCopyIDs: Set(remaining.keys))
+            }
+            guard !revisions.isEmpty else { continue }
+            marks[source] = .init(source: source, savedAtMilliseconds: savedAtMilliseconds, revisions: revisions)
+            changed = true
+        }
+        if changed {
+            var next = manifest
+            next.encryptedBackups = Array(marks.values)
+            try persist(&next, recoveryChanged: false)
+        }
+    }
+
+    private func purgeBackups(_ next: inout Manifest, removedCopies: Set<String>) {
+        let sources = Set(next.erasedSources ?? []), origins = Set(next.erasedOrigins ?? [])
+        next.encryptedBackups = next.encryptedBackups?.compactMap { original in
+            var mark = original
+            guard !sources.contains(mark.source), !origins.contains(mark.source.origin) else { return nil }
+            mark.revisions = mark.revisions.compactMap { revision in
+                guard !revision.dependentCopyIDs.isEmpty else { return revision }
+                var remaining = revision
+                remaining.dependentCopyIDs.subtract(removedCopies)
+                return remaining.dependentCopyIDs.isEmpty ? nil : remaining
+            }
+            return mark.revisions.isEmpty ? nil : mark
+        }
     }
     public func review(_ envelope: ArchiveEnvelope) throws -> RecoveryReview {
         let lock = try acquireLock()
@@ -124,6 +271,7 @@ public actor RecoveryRegistry {
         var next = manifest
         next.records.removeAll { ids.contains($0.id) }
         next.erasedIdentities = Array(Set(next.erasedIdentities).union(removed.map(\.receipt.identity)))
+        purgeBackups(&next, removedCopies: ids)
         try persist(&next)
         let token = RecoveryUndoToken(id: UUID()); undo[token.id] = removed
         return token
@@ -139,7 +287,9 @@ public actor RecoveryRegistry {
         let erasedMedia = Set(next.erasedMediaSources ?? [])
         let restorable = try records.map { try scrubbing($0, erasedMedia: erasedMedia) }
         for record in restorable where !next.records.contains(where: { $0.receipt.identity == record.receipt.identity }) {
-            next.records.append(record)
+            var restored = record
+            restored.backupLifetime = UUID()
+            next.records.append(restored)
         }
         let identities = Set(restorable.map(\.receipt.identity))
         next.erasedIdentities.removeAll { identities.contains($0) }
@@ -157,7 +307,10 @@ public actor RecoveryRegistry {
         let all = known.union(incoming)
         var next = manifest
         next.erasedSources = Array(all)
-        next.records.removeAll { all.contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }
+        let removed = next.records.filter { all.contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }
+        let ids = Set(removed.map(\.id))
+        next.records.removeAll { ids.contains($0.id) }
+        purgeBackups(&next, removedCopies: ids)
         try persist(&next)
         undo = undo.filter { !$0.value.contains { all.contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) } }
     }
@@ -173,6 +326,7 @@ public actor RecoveryRegistry {
         var next = manifest
         next.erasedOrigins = Array(all)
         next.records.removeAll { all.contains($0.record.origin) }
+        purgeBackups(&next, removedCopies: [])
         try persist(&next)
         undo = undo.filter { !$0.value.contains { all.contains($0.record.origin) } }
     }
@@ -205,7 +359,7 @@ public actor RecoveryRegistry {
         // The former receipt distinguishes different original projections.
         record.revision = "media-erasure/" + ArchiveCodec.digest(try ArchiveCodec.canonical([saved.receipt.digest, ArchiveCodec.digest(try ArchiveCodec.canonical(record))]))
         let receipt = try ArchiveCodec.receipt(record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id)
-        return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds)
+        return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds, backupLifetime: saved.backupLifetime)
     }
     public func discardUndo() { undo.removeAll() }
     /// Roll back only snapshots inserted by this reviewed batch; identical pre-existing
@@ -217,6 +371,7 @@ public actor RecoveryRegistry {
         let ids = Set(insertedCopyIDs)
         var next = manifest
         next.records.removeAll { ids.contains($0.id) }
+        purgeBackups(&next, removedCopies: ids)
         try persist(&next)
     }
     private func acquireLock() throws -> Int32 {
@@ -230,7 +385,7 @@ public actor RecoveryRegistry {
         guard FileManager.default.fileExists(atPath: url.path) else {
             // A previously committed store disappearing is not a fresh installation.
             // Never recreate cached text or bypass erasure markers after external deletion.
-            guard manifest.generation == Self.emptyGeneration else { throw ArchiveError.unavailable }
+            guard manifest.generation == Self.emptyGeneration, manifest.encryptedBackups == nil else { throw ArchiveError.unavailable }
             return
         }
         manifest = try Self.readManifest(url)
@@ -264,10 +419,20 @@ public actor RecoveryRegistry {
             _ = try ArchiveCodec.make(records: [saved.record], kind: saved.documentKind, origin: saved.record.origin, revision: saved.record.revision)
             if saved.documentKind == .helperShop, saved.record.nativePayload != nil { throw ArchiveError.integrity }
         }
+        let ownerCopies = Dictionary(uniqueKeysWithValues: current.records.filter { $0.documentKind == .personalRecovery && $0.record.nativePayload != nil }.map { ($0.id, $0.record.origin) })
+        var marked = Set<ArchiveSourceIdentity>()
+        for mark in current.encryptedBackups ?? [] {
+            guard marked.insert(mark.source).inserted, !sources.contains(mark.source), !origins.contains(mark.source.origin),
+                  ArchiveCodec.identifier(mark.source.origin), ArchiveCodec.identifier(mark.source.recordID), mark.savedAtMilliseconds > 0,
+                  !mark.revisions.isEmpty, mark.revisions.count <= ArchiveCodec.maximumRecords,
+                  Set(mark.revisions.map(\.revision)).count == mark.revisions.count,
+                  mark.revisions.allSatisfy({ ArchiveCodec.identifier($0.revision) && $0.dependentCopyIDs.allSatisfy { ownerCopies[$0] == mark.source.origin } })
+            else { throw ArchiveError.integrity }
+        }
         return current
     }
-    private func persist(_ next: inout Manifest) throws {
-        next.generation = UUID()
+    private func persist(_ next: inout Manifest, recoveryChanged: Bool = true) throws {
+        if recoveryChanged { next.generation = UUID() }
         let bytes = try ArchiveCodec.canonical(next)
         guard bytes.count <= Self.maximumRegistryBytes else { throw ArchiveError.tooLarge }
         do {

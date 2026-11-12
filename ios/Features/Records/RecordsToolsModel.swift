@@ -8,6 +8,10 @@ struct RecordsSelectionID: Hashable {
     let recordID: String
     let revision: String
     var source: ArchiveSourceIdentity { .init(origin: origin, recordID: recordID) }
+    private static let personalProjection = ArchiveCodec.projection(for: .personalRecovery)
+    var personalArchiveIdentity: ArchiveIdentity {
+        .init(origin: origin, recordID: recordID, revision: revision, projection: Self.personalProjection)
+    }
 }
 
 struct RecordsMediaSelectionID: Hashable {
@@ -54,6 +58,7 @@ struct RecordsMediaSelectionID: Hashable {
         }
     }
     @Published private(set) var preparedDocument: RecordsFileDocument?
+    @Published private var backupStatuses: [ArchiveIdentity: EncryptedBackupStatus] = [:]
     @Published private(set) var preparedName = "Room-in-the-Cart"
     @Published private(set) var preparedIsPrivate = false
     @Published private(set) var lastImportIDs: [String] = []
@@ -69,6 +74,12 @@ struct RecordsMediaSelectionID: Hashable {
     private var recoveredOpenGeneration = UUID()
     private var liveSharedGeneration = UUID()
     private var preparedLiveIDs: Set<RecordsSelectionID> = []
+    private struct ExportContext {
+        let authorize: Authorization
+        let backup: EncryptedBackupIntent?
+    }
+    private var exportContext: ExportContext?
+    private var activeFileSave: (id: UUID, completing: Bool)?
     private var retiredHistories: Set<ArchiveSourceIdentity> = []
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
@@ -103,6 +114,8 @@ struct RecordsMediaSelectionID: Hashable {
         let retired = listing.liveSharedRecordIDs
         guard !retired.isEmpty else { return }
         listing.records.removeAll { retired.contains(Self.selectionID($0)) }
+        listing.householdFetchedAtMilliseconds.removeAll()
+        for id in retired { backupStatuses.removeValue(forKey: id.personalArchiveIdentity) }
         listing.liveSharedRecordIDs = []
         sourceListing = listing
         selectedIDs.subtract(retired)
@@ -114,6 +127,10 @@ struct RecordsMediaSelectionID: Hashable {
         let removed = listing.liveSharedRecordIDs.filter { $0.source == source }
         guard !removed.isEmpty else { return }
         listing.records.removeAll { removed.contains(Self.selectionID($0)) }
+        for id in removed {
+            listing.householdFetchedAtMilliseconds.removeValue(forKey: id)
+            backupStatuses.removeValue(forKey: id.personalArchiveIdentity)
+        }
         listing.liveSharedRecordIDs.subtract(removed)
         sourceListing = listing
         selectedIDs.subtract(removed)
@@ -121,20 +138,28 @@ struct RecordsMediaSelectionID: Hashable {
     private func containsRetiredHistory(_ liveIDs: Set<RecordsSelectionID>) -> Bool {
         liveIDs.contains { retiredHistories.contains($0.source) }
     }
-    private func publishListing(_ batch: RecordsSnapshotBatch, startedIn generation: UUID) {
+    private func publishListing(_ batch: RecordsSnapshotBatch, startedIn generation: UUID,
+                                backups: [ArchiveIdentity: EncryptedBackupStatus]? = nil) {
         // Independent recovered records can share an identity with a denied live record.
         // Only a batch carrying an older live read is invalidated by that denial.
         guard !containsRetiredHistory(batch.liveSharedRecordIDs) else { return }
-        if generation == liveSharedGeneration || batch.liveSharedRecordIDs.isEmpty { sourceListing = batch }
+        if generation == liveSharedGeneration || batch.liveSharedRecordIDs.isEmpty {
+            if let backups {
+                backupStatuses = backups
+            } else if sourceListing.recoveredCopyIDsByRecord != batch.recoveredCopyIDsByRecord {
+                backupStatuses = [:]
+            }
+            sourceListing = batch
+        }
     }
     private func reloadListing(authorize: Authorization) async throws {
         let generation = liveSharedGeneration
         let batch = try await snapshot()
         try requireAuthorization(authorize)
-        let recovered = try await registry.refreshList()
+        let listing = try await registry.refreshList(includingBackupsFor: batch.records, recoveredCopyIDs: batch.backupCopyIDs)
         try requireAuthorization(authorize)
-        publishListing(batch, startedIn: generation)
-        recoveredRecords = recovered
+        publishListing(batch, startedIn: generation, backups: listing.backups)
+        recoveredRecords = listing.recovered
     }
     func refresh() async {
         do {
@@ -175,6 +200,7 @@ struct RecordsMediaSelectionID: Hashable {
             for record in records { try await validateRecord(record); try requireAuthorization(authorize) }
             let document: RecordsFileDocument
             let name: String
+            var backup: EncryptedBackupIntent?
             switch choice {
             case .encryptedRecovery, .helperJSON:
                 let kind: ArchiveKind = choice == .encryptedRecovery ? .personalRecovery : .helperShop
@@ -184,6 +210,9 @@ struct RecordsMediaSelectionID: Hashable {
                 let data = choice == .encryptedRecovery ? try EncryptedArchive.seal(envelope, key: recoveryKey) : try ArchiveCodec.encode(envelope)
                 document = RecordsFileDocument(data: data, kind: choice == .encryptedRecovery ? .recovery : .helper)
                 name = choice == .encryptedRecovery ? "Personal-recovery" : "Helper-copy"
+                if choice == .encryptedRecovery {
+                    backup = try await registry.prepareEncryptedBackup(records, recoveredCopyIDs: batch.backupCopyIDs)
+                }
             case .helperText, .ownerText:
                 let bounded = try ArchiveCodec.make(records: records, kind: choice == .ownerText ? .personalRecovery : .helperShop,
                     origin: "selected-local-records", revision: "readable-preview")
@@ -200,6 +229,7 @@ struct RecordsMediaSelectionID: Hashable {
             preparedLiveIDs = liveIDs
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
             preparedName = name
+            exportContext = ExportContext(authorize: authorize, backup: backup)
             preparedDocument = document
             actionStatus = ActionStatus(text: recordsText("Your file is ready to review and save."))
         } catch { fail(error, reveal: true) }
@@ -410,9 +440,57 @@ struct RecordsMediaSelectionID: Hashable {
         recoveredOpenGeneration = UUID()
         dismissPreparedFile(); recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
-        sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; actionStatus = nil; actionOutcomeID = nil; error = nil
+        sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; backupStatuses = [:]; actionStatus = nil; actionOutcomeID = nil; error = nil
     }
-    func dismissPreparedFile() { preparedDocument = nil; preparedLiveIDs.removeAll() }
+    func dismissPreparedFile() {
+        activeFileSave = nil
+        exportContext = nil
+        preparedDocument = nil
+        preparedLiveIDs.removeAll()
+    }
+
+    func backupDateText(for record: ArchiveRecord) -> String? {
+        guard record.nativePayload != nil, let status = backupStatuses[Self.selectionID(record).personalArchiveIdentity] else { return nil }
+        return RecordsDatePresentation.encryptedBackupSavedAt(status.savedAtMilliseconds, currentRevision: status.revisions.contains(record.revision))
+    }
+
+    func beginFileSave() -> UUID? {
+        guard preparedDocument != nil, let context = exportContext else { return nil }
+        guard context.authorize() else { invalidateForSourceErasure(); return nil }
+        let id = UUID()
+        activeFileSave = (id, false)
+        return id
+    }
+
+    func finishFileSave(_ id: UUID, result: Result<Void, Error>, at date: Date = .now) async {
+        guard activeFileSave?.id == id, activeFileSave?.completing == false, let context = exportContext else { return }
+        activeFileSave?.completing = true
+        defer { if activeFileSave?.id == id { activeFileSave = nil } }
+        guard context.authorize() else { invalidateForSourceErasure(); return }
+        if case let .failure(error) = result {
+            if Self.fileSelectionCancelled(error) {
+                publishOutcome(recordsText("Save cancelled. Your file is still ready."))
+            } else { fail(error, reveal: true) }
+            return
+        }
+        guard let backup = context.backup else { publishOutcome(recordsText("File saved.")); return }
+        do {
+            try await registry.recordSuccessfulBackup(backup, savedAtMilliseconds: ArchiveCodec.milliseconds(date))
+            let generation = liveSharedGeneration
+            let updated = try await registry.lastEncryptedBackups(for: currentRecords, recoveredCopyIDs: sourceListing.backupCopyIDs)
+            guard context.authorize(), activeFileSave?.id == id, generation == liveSharedGeneration else { return }
+            backupStatuses = updated
+            publishOutcome(recordsText("Encrypted recovery file saved."))
+        } catch {
+            guard context.authorize(), activeFileSave?.id == id else { return }
+            publishOutcome(recordsText("File saved. Its backup date is unavailable on this iPhone."))
+        }
+    }
+
+    private static func fileSelectionCancelled(_ error: Error) -> Bool {
+        let underlying = error as NSError
+        return error is CancellationError || (underlying.domain == NSCocoaErrorDomain && underlying.code == NSUserCancelledError)
+    }
     private func authorization() throws -> Authorization {
         guard let authorize = beginAuthorization(), authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
         return authorize
@@ -420,7 +498,9 @@ struct RecordsMediaSelectionID: Hashable {
     private func requireAuthorization(_ authorize: Authorization) throws {
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
     }
-    func reportFileError(_ error: Error) { fail(error, reveal: true) }
+    func reportFileError(_ error: Error) {
+        if !Self.fileSelectionCancelled(error) { fail(error, reveal: true) }
+    }
     private func publishOutcome(_ text: String, reopenedCopyIDs: Set<String> = []) {
         error = nil
         actionStatus = ActionStatus(text: text, reopenedCopyIDs: reopenedCopyIDs)

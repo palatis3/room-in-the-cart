@@ -16,9 +16,15 @@ struct RecordsUnavailableRecord: Equatable, Identifiable {
     }
 }
 struct RecordsSnapshotBatch {
+    var backupCopyIDs: [ArchiveIdentity: Set<String>] {
+        Dictionary(uniqueKeysWithValues: recoveredCopyIDsByRecord.map { ($0.key.personalArchiveIdentity, $0.value) })
+    }
     var records: [ArchiveRecord] = []
     var unavailable: [RecordsUnavailableRecord] = []
     var liveSharedRecordIDs: Set<RecordsSelectionID> = []
+    var householdFetchedAtMilliseconds: [RecordsSelectionID: Int64] = [:]
+    // Omitted when an independent live or local owner supplies this revision.
+    var recoveredCopyIDsByRecord: [RecordsSelectionID: Set<String>] = [:]
 }
 
 @MainActor enum RecordsSnapshotProjection {
@@ -36,7 +42,9 @@ struct RecordsSnapshotBatch {
             guard authorized() else { throw ArchiveError.unavailable }
             do {
                 let record = try await read()
+                guard authorized() else { throw ArchiveError.unavailable }
                 batch.records.append(record)
+                batch.householdFetchedAtMilliseconds[RecordsToolsModel.selectionID(record)] = ArchiveCodec.milliseconds(Date())
             } catch {
                 guard authorized() else { throw ArchiveError.unavailable }
                 if let failure = error as? ClientError {
@@ -61,6 +69,25 @@ struct RecordsSnapshotBatch {
         guard authorized() else { throw ArchiveError.unavailable }
         batch.liveSharedRecordIDs = Set(batch.records.map(RecordsToolsModel.selectionID))
         return batch
+    }
+
+    /// Associate each emitted revision (including edited children) with the copies
+    /// that supply it. A helper copy cannot stand in for a complete owner record.
+    static func appendRecovered(_ copies: [(id: String, records: [ArchiveRecord])], to records: inout [ArchiveRecord]) -> [RecordsSelectionID: Set<String>] {
+        let independentOwners = Set(records.filter { $0.nativePayload != nil }.map(RecordsToolsModel.selectionID))
+        var owners: [RecordsSelectionID: Set<String>] = [:]
+        var helpers: [RecordsSelectionID: Set<String>] = [:]
+        for copy in copies {
+            for record in copy.records {
+                let id = RecordsToolsModel.selectionID(record)
+                if !independentOwners.contains(id) {
+                    if record.nativePayload != nil { owners[id, default: []].insert(copy.id) }
+                    else { helpers[id, default: []].insert(copy.id) }
+                }
+                records.append(record)
+            }
+        }
+        return owners.merging(helpers) { ownerIDs, _ in ownerIDs }
     }
 
     static func mergeForExport(_ records: [ArchiveRecord]) throws -> [ArchiveRecord] {

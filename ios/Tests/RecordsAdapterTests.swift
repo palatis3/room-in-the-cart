@@ -57,6 +57,82 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.preparedDocument?.data, helperBytes)
     }
 
+    @MainActor func testOnlyCompletedEncryptedSaveMarksTheExportedRevisionAfterRelaunch() async throws {
+        let record = try comparison()
+        let date = Date(timeIntervalSince1970: 1_790_000_000)
+        let path = try temporaryDirectory().appendingPathComponent("registry.json")
+        var visible = [record]
+        func open() throws -> RecordsToolsModel {
+            RecordsToolsModel(registry: try RecoveryRegistry(url: path), snapshot: { .init(records: visible) },
+                              validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        }
+        let model = try open()
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        let textSave = try XCTUnwrap(model.beginFileSave())
+        await model.finishFileSave(textSave, result: .success(()), at: date)
+        XCTAssertNil(model.backupDateText(for: record))
+        model.generateRecoveryKey()
+        await model.prepareExport(.encryptedRecovery)
+        let cancelled = try XCTUnwrap(model.beginFileSave())
+        await model.finishFileSave(cancelled, result: .failure(CancellationError()), at: date)
+        XCTAssertNil(model.error)
+        XCTAssertNil(model.backupDateText(for: record))
+        let failed = try XCTUnwrap(model.beginFileSave())
+        await model.finishFileSave(failed, result: .failure(ArchiveError.unavailable), at: date)
+        XCTAssertEqual(model.error, .unavailable)
+        XCTAssertNil(model.backupDateText(for: record))
+        let saved = try XCTUnwrap(model.beginFileSave())
+        await model.finishFileSave(cancelled, result: .success(()), at: date)
+        XCTAssertNil(model.backupDateText(for: record))
+        await model.finishFileSave(saved, result: .success(()), at: date)
+        let timestamp = ArchiveCodec.milliseconds(date)
+        let current = RecordsDatePresentation.encryptedBackupSavedAt(timestamp, currentRevision: true)
+        XCTAssertEqual(model.backupDateText(for: record), current)
+        let reopened = try open()
+        await reopened.refresh()
+        XCTAssertEqual(reopened.backupDateText(for: record), current)
+
+        let changed = try comparison { draft in draft.id = UUID(uuidString: record.id)!; draft.aPrice = "4.19" }
+        visible = [changed]
+        await reopened.refresh()
+        XCTAssertEqual(reopened.backupDateText(for: changed),
+                       RecordsDatePresentation.encryptedBackupSavedAt(timestamp, currentRevision: false))
+        var helper = changed
+        helper.nativePayload = nil
+        visible = [helper]
+        await reopened.refresh()
+        XCTAssertNil(reopened.backupDateText(for: helper))
+    }
+
+    @MainActor func testInvalidatedFilePickerCannotPublishAnotherOwnersBackupDate() async throws {
+        let record = try comparison()
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let session = CurrentValueSubject<UUID, Never>(UUID())
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) },
+                                     validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in },
+                                     beginAuthorization: {
+            let owner = session.value
+            return { owner == session.value }
+        })
+        await model.refresh()
+        model.selectAll()
+        model.generateRecoveryKey()
+        await model.prepareExport(.encryptedRecovery)
+        let oldSelection = try XCTUnwrap(model.beginFileSave())
+        model.dismissPreparedFile()
+        await model.finishFileSave(oldSelection, result: .success(()))
+        XCTAssertNil(model.backupDateText(for: record))
+        await model.prepareExport(.encryptedRecovery)
+        let oldSession = try XCTUnwrap(model.beginFileSave())
+        session.send(UUID())
+        await model.finishFileSave(oldSession, result: .success(()))
+        XCTAssertTrue(model.currentRecords.isEmpty)
+        let persisted = try await registry.lastEncryptedBackups(for: [record])
+        XCTAssertTrue(persisted.isEmpty)
+    }
+
     @MainActor func testRevokedReadNeverPublishesPrivateListingOrRecoveredCopies() async throws {
         let record = try comparison()
         let omitted = RecordsUnavailableRecord(origin: record.origin, recordID: "unreadable", title: "Private omitted title", reason: .invalidNative)

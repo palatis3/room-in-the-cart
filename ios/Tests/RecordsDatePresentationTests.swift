@@ -1,5 +1,6 @@
 import XCTest
 import RecordArchive
+import HouseholdClient
 @testable import RoomInTheCart
 
 final class RecordsDatePresentationTests: XCTestCase {
@@ -36,4 +37,64 @@ final class RecordsDatePresentationTests: XCTestCase {
         XCTAssertTrue(RecordsDatePresentation.recoveredAt(time, locale: .init(identifier: "es_US")).hasPrefix("Copia recuperada: "))
         XCTAssertTrue(RecordsDatePresentation.sourceSavedAt(time, locale: .init(identifier: "en_US")).hasPrefix("Source saved at: "))
     }
+    func testLocalSaveHouseholdReadAndSelectedEncryptedBackupHaveDistinctBilingualLabels() {
+        let time: Int64 = 1_799_884_800_000
+        for (localeID, local, household, current, earlier) in [
+            ("en_US", "Saved on this device: ", "Last read from household: ", "selected data from this version", "selected data from an earlier version"),
+            ("es_US", "Guardado en este dispositivo: ", "Última consulta al hogar: ", "datos seleccionados de esta versión", "datos seleccionados de una versión anterior")
+        ] {
+            let locale = Locale(identifier: localeID)
+            XCTAssertTrue(RecordsDatePresentation.localSavedAt(time, locale: locale).hasPrefix(local))
+            XCTAssertTrue(RecordsDatePresentation.householdFetchedAt(time, locale: locale).hasPrefix(household))
+            XCTAssertTrue(RecordsDatePresentation.encryptedBackupSavedAt(time, currentRevision: true, locale: locale).contains(current))
+            XCTAssertTrue(RecordsDatePresentation.encryptedBackupSavedAt(time, currentRevision: false, locale: locale).contains(earlier))
+            XCTAssertFalse(RecordsDatePresentation.localSavedAt(0, locale: locale).contains("1970"))
+        }
+    }
+
+    @MainActor func testOnlyCompletedAuthorizedHouseholdReadsCarryFetchDates() async throws {
+        let shop = UUID()
+        let current = ArchiveRecord(id: shop.uuidString.lowercased(), origin: "shared-shop/family", revision: "current",
+                                    kind: .sharedShop, title: "Current", savedAtMilliseconds: 0)
+        let history = ArchiveRecord(id: current.id + "/history", origin: "shared-history/family", revision: "history",
+                                    kind: .sharedHistory, title: "History", savedAtMilliseconds: 0)
+        let currentID = RecordsToolsModel.selectionID(current), historyID = RecordsToolsModel.selectionID(history)
+        let start = ArchiveCodec.milliseconds(Date())
+        let complete = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shop,
+            authorized: { true }, current: { current }, history: { history })
+        let finish = ArchiveCodec.milliseconds(Date())
+        XCTAssertEqual(Set(complete.householdFetchedAtMilliseconds.keys), [currentID, historyID])
+        for time in complete.householdFetchedAtMilliseconds.values {
+            XCTAssertGreaterThanOrEqual(time, start)
+            XCTAssertLessThanOrEqual(time, finish)
+        }
+        XCTAssertEqual(complete.records.map(\.savedAtMilliseconds), [0, 0])
+        let partial = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shop,
+            authorized: { true }, current: { throw ClientError.transport }, history: { history })
+        XCTAssertEqual(Set(partial.householdFetchedAtMilliseconds.keys), [historyID])
+        let denied = try await RecordsSnapshotProjection.liveSharedRecords(householdID: "family", shopID: shop,
+            authorized: { true }, current: { current }, history: { throw ClientError.accessEnded })
+        XCTAssertTrue(denied.householdFetchedAtMilliseconds.isEmpty)
+        XCTAssertTrue(RecordsSnapshotBatch(records: [current, history]).householdFetchedAtMilliseconds.isEmpty)
+    }
+
+    @MainActor func testRecoveredProvenanceUsesEmittedRevisionAndIndependentOwner() throws {
+        let live = ArchiveRecord(id: "record", origin: "source", revision: "first", kind: .comparison,
+                                 title: "Original", savedAtMilliseconds: 0, nativePayload: Data([1]))
+        var edited = live
+        edited.id = "child"; edited.revision = "edit"; edited.nativePayload = Data([2])
+        var helper = edited
+        helper.nativePayload = nil
+        var helperOnly = helper
+        helperOnly.id = "summary"
+        var records = [live]
+        let copies = RecordsSnapshotProjection.appendRecovered([
+            ("redacted", [helper, helperOnly]), ("one", [live, edited]), ("two", [edited])
+        ], to: &records)
+        XCTAssertNil(copies[RecordsToolsModel.selectionID(live)])
+        XCTAssertEqual(copies[RecordsToolsModel.selectionID(edited)], ["one", "two"])
+        XCTAssertEqual(copies[RecordsToolsModel.selectionID(helperOnly)], ["redacted"])
+        XCTAssertEqual(try RecordsSnapshotProjection.mergeForExport(records), [live, edited, helperOnly])
+    }
+
 }

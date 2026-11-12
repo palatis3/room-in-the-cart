@@ -7,6 +7,7 @@ struct RecordsToolsView: View {
     @State private var importing = false
     @State private var importingRecipes = false
     @State private var exporting = false
+    @State private var presentedSaveID: UUID?
     @State private var showManualRecipe = false
     @State private var acknowledgedPrivate = false
     @State private var savedKey = false
@@ -123,9 +124,13 @@ struct RecordsToolsView: View {
             case let .failure(error): model.reportFileError(error)
             }
         }
-        .fileExporter(isPresented: $exporting, document: model.preparedDocument, contentType: model.preparedDocument?.contentType ?? .json, defaultFilename: model.preparedName) { result in
-            if case let .failure(error) = result { model.reportFileError(error) }
-        }
+        .fileExporter(isPresented: $exporting, document: model.preparedDocument,
+                      contentTypes: [model.preparedDocument?.contentType ?? .json], defaultFilename: model.preparedName,
+                      onCompletion: { [presentedSaveID] result in
+                          finishFileSave(presentedSaveID, result.map { _ in () })
+                      }, onCancellation: { [presentedSaveID] in
+                          finishFileSave(presentedSaveID, .failure(CancellationError()))
+                      })
         .sheet(isPresented: $showManualRecipe) { ManualRecipeEntryView { recipe in
             showManualRecipe = false
             Task { await model.stageManualRecipe(recipe) }
@@ -161,9 +166,7 @@ struct RecordsToolsView: View {
                                 Text(recordsText(key)).font(.caption).foregroundStyle(.secondary)
                             }
                         }
-                        if record.kind == .sharedShop || record.kind == .sharedHistory {
-                            Text(RecordsDatePresentation.sourceSavedAt(record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.sourceDate." + record.id)
-                        }
+                        recordDates(record)
                         if model.canDeleteSource(record) {
                             Button(recordsText("Delete this source"), role: .destructive) {
                                 deletion = Deletion(title: recordsTitle(record), source: record, recovered: nil)
@@ -175,6 +178,23 @@ struct RecordsToolsView: View {
             if model.canUndoSourceDeletion { Button(recordsText("Undo source deletion")) { Task { await model.undoCurrentDeletion() } } }
         }
     }
+    @ViewBuilder private func recordDates(_ record: ArchiveRecord) -> some View {
+        let id = RecordsToolsModel.selectionID(record)
+        let hasSourceDate = record.kind == .sharedShop || record.kind == .sharedHistory || record.nativePayload == nil
+            || model.sourceListing.recoveredCopyIDsByRecord[id] != nil
+        Text(hasSourceDate
+             ? RecordsDatePresentation.sourceSavedAt(record.savedAtMilliseconds, locale: recordsInterfaceLocale)
+             : RecordsDatePresentation.localSavedAt(record.savedAtMilliseconds))
+            .font(.caption).accessibilityIdentifier("records.sourceDate." + record.id)
+        if let fetched = model.sourceListing.householdFetchedAtMilliseconds[id] {
+            Text(RecordsDatePresentation.householdFetchedAt(fetched))
+                .font(.caption).accessibilityIdentifier("records.householdFetchDate." + record.id)
+        }
+        if let backup = model.backupDateText(for: record) {
+            Text(backup).font(.caption).accessibilityIdentifier("records.backupDate." + record.id)
+        }
+    }
+
     private var exportSection: some View {
         Section(recordsText("Export selected records")) {
             Text(recordsText("Cook and helper copies include selected food labels, amounts, purposes and actions. They leave out native financial and private record data."))
@@ -332,13 +352,21 @@ struct RecordsToolsView: View {
             identifier: "records.recovered." + saved.record.title))
     }
     private func savePreparedFile() {
+        guard let id = model.beginFileSave() else { return }
         #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
         if let uiTestFiles, let document = model.preparedDocument {
-            do { try uiTestFiles.save(document) } catch { model.reportFileError(error) }
+            let result = Result { try uiTestFiles.save(document) }
+            finishFileSave(id, result)
             return
         }
         #endif
+        presentedSaveID = id
         exporting = true
+    }
+    private func finishFileSave(_ id: UUID?, _ result: Result<Void, Error>) {
+        guard let id else { return }
+        let date = Date.now
+        Task { await model.finishFileSave(id, result: result, at: date) }
     }
     private func chooseImportFile(recipes: Bool) {
         importingRecipes = recipes
