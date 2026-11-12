@@ -87,7 +87,10 @@ extension HouseholdClientTests {
         let sourceShop = UUID().uuidString.lowercased()
         var rowShop = sourceShop, echoedRequest = requestID, role = "shopper"
         var posts: [Data] = []
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
+            // The async test and CFNetwork callbacks share this fixture state.
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
@@ -120,20 +123,20 @@ extension HouseholdClientTests {
             body:["sourceShopId":.string(sourceShop),"sourceAuthorityEpoch":.integer(row.sourceAuthorityEpoch),"requestId":.string(requestID)])
         let operation = try await service.prepare(envelope:envelope, bootstrap:scope)
         XCTAssertFalse(operation.targetsShop(nil))
-        rowShop = shopID
+        stateLock.withLock { rowShop = shopID }
         do { _ = try await service.deferredRequests(shopID:shopID); XCTFail("A draft supplied its own row as a previous request") }
         catch ClientError.invalidResponse {}
-        echoedRequest = UUID().uuidString.lowercased()
+        stateLock.withLock { echoedRequest = UUID().uuidString.lowercased() }
         do { _ = try await service.executeShopper(operation); XCTFail("A receipt named a different source request") }
         catch ClientError.invalidResponse {}
-        echoedRequest = requestID
+        stateLock.withLock { echoedRequest = requestID }
         let receipt = try await service.executeShopper(operation)
         XCTAssertEqual(receipt.requestId,previewID)
-        XCTAssertEqual(posts,[operation.bytes,operation.bytes])
-        role = "contributor"
+        XCTAssertEqual(stateLock.withLock { posts },[operation.bytes,operation.bytes])
+        stateLock.withLock { role = "contributor" }
         do { _ = try await service.executeShopper(operation); XCTFail("Former shopper replayed") }
         catch ClientError.accessEnded {}
-        XCTAssertEqual(posts.count,2)
+        XCTAssertEqual(stateLock.withLock { posts.count },2)
     }
     func testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt() async throws {
         let auth = try auth()
