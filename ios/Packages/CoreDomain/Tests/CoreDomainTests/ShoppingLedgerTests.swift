@@ -109,6 +109,17 @@ final class ShoppingLedgerTests: XCTestCase {
         }
     }
 
+    func testPastedQuarterMeasuresPreserveProductsAndDoNotGuessMissingUnits() throws {
+        var shop = ShoppingLedger()
+        let text = "one and a quarter cups of rice\ntres cuartos de taza de leche\nuna taza y un cuarto de arroz\n3 quarters of milk\n2 Quarter Pounders\nOne Degree oats"
+        let preview = try shop.stageImport(text: text, source: .paste)
+        try shop.commitImport(preview)
+        XCTAssertEqual(preview.lines.map(\.name), ["rice", "leche", "arroz", "3 quarters of milk", "Quarter Pounders", "One Degree oats"])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.amount }, [try Rational(5, 4), try Rational(3, 4), try Rational(5, 4), nil, try Rational(2), nil])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.unit }, [.cup, .cup, .cup, nil, .count, nil])
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: "\n"))
+    }
+
     func testRangedImportsKeepUncertainAmountsOutOfSavedSupply() throws {
         var shop = ShoppingLedger()
         let examples = [

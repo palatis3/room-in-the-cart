@@ -32,6 +32,24 @@ public enum ListQuantityParser {
         return amount
     }
 
+    /// Ordinary lists keep number-like product names intact. A spoken pack count
+    /// or a complete quarter measure provides its own quantity context.
+    static func takeListAmount(from tokens: inout ArraySlice<String>) throws -> Rational {
+        let quarters = ["quarter", "quarters", "cuarto", "cuartos"]
+        if tokens.prefix(6).contains(where: { quarters.contains($0.lowercased()) }) {
+            var rest = tokens
+            let amount = try takeAmount(from: &rest, allowingWords: true)
+            var afterMeasure = rest
+            _ = takeMeasure(amount, from: &afterMeasure)
+            if tokens[..<afterMeasure.startIndex].contains(where: { quarters.contains($0.lowercased()) }) {
+                tokens = rest
+                return amount
+            }
+        }
+        let packFollows = isPackMarker(tokens.dropFirst().first ?? "")
+        return try takeAmount(from: &tokens, allowingWords: packFollows)
+    }
+
     public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
         var rest = tokens
         let amount = try takeNumberPart(from: &rest, allowingWords: allowingWords)
@@ -51,6 +69,7 @@ public enum ListQuantityParser {
         }
         let word = first.lowercased()
         if allowingWords, startsHalfAndHalf(tokens) { throw DomainError.invalidNumber }
+        if allowingWords, let quarter = try takeQuarters(from: &tokens) { return quarter }
         if allowingWords, ["a", "one"].contains(word), rest.first?.lowercased() == "half",
            !startsHalfAndHalf(rest) {
             tokens = rest.dropFirst()
@@ -64,8 +83,8 @@ public enum ListQuantityParser {
         if allowingWords, let tens = spokenTens(word, rest: &rest) { amount = try Rational(tens) }
         else { amount = try number(word, allowingWords: allowingWords) }
         let printedWhole = first.utf8.allSatisfy { (48...57).contains($0) }
-        if (allowingWords || printedWhole), amount.denominator == 1, takeAddedHalf(from: &rest) {
-            amount = try amount.adding(Rational(1, 2))
+        if (allowingWords || printedWhole), amount.denominator == 1, let fraction = try takeAddedFraction(from: &rest) {
+            amount = try amount.adding(fraction)
             tokens = rest
             return amount
         }
@@ -148,18 +167,62 @@ public enum ListQuantityParser {
             && tokens.dropFirst(2).first?.lowercased() == "half"
     }
 
-    private static func takeAddedHalf(from tokens: inout ArraySlice<String>) -> Bool {
+    /// A measured quarter is distinct from a product such as “2 Quarter Pounders”.
+    private static func takeQuarters(from tokens: inout ArraySlice<String>, inSum: Bool = false, afterUnit: Bool = false) throws -> Rational? {
+        var rest = tokens
+        let numerator: Int64
+        switch rest.first?.lowercased() {
+        case "one", "a", "un", "uno", "1": numerator = 1; rest = rest.dropFirst()
+        case "two", "dos", "2": numerator = 2; rest = rest.dropFirst()
+        case "three", "tres", "3": numerator = 3; rest = rest.dropFirst()
+        default: numerator = 1
+        }
+        guard let word = rest.first?.lowercased() else { return nil }
+        switch word {
+        case "quarter" where numerator == 1 || inSum, "cuarto" where numerator == 1: break
+        case "quarters" where numerator > 1, "cuartos" where numerator > 1: break
+        default: return nil
+        }
+
+        let tail = rest.dropFirst()
+        var measure = tail
+        let hasOf = ["of", "de"].contains(measure.first?.lowercased() ?? "")
+        if hasOf { measure = measure.dropFirst() }
+        let hasArticle = hasOf && ["a", "an", "un", "una"].contains(measure.first?.lowercased() ?? "")
+        if hasArticle { measure = measure.dropFirst() }
+        if let first = measure.first, units[unitKey(first)] != nil || needsUnitReview(first)
+            || fluidOunces.contains(measure.prefix(2).map(unitKey).joined(separator: " ")) {
+            tokens = measure
+        } else if afterUnit && (tail.isEmpty || hasOf) {
+            tokens = tail
+        } else if hasArticle && !measure.isEmpty {
+            tokens = measure
+        } else if hasOf {
+            // “Three quarters of milk” lacks the unit to which the fraction applies.
+            throw DomainError.invalidNumber
+        } else if (inSum && tail.isEmpty) || ["to", "through", "hasta", "and", "y", "or", "o", "a"].contains(tail.first?.lowercased() ?? "") {
+            tokens = tail
+        } else {
+            return nil
+        }
+        return try Rational(numerator, 4)
+    }
+
+    private static func takeAddedFraction(from tokens: inout ArraySlice<String>, afterUnit: Bool = false) throws -> Rational? {
+        guard let connector = tokens.first?.lowercased(), connector == "and" || connector == "y" else { return nil }
         var rest = tokens.dropFirst()
-        switch tokens.first?.lowercased() {
-        case "and":
+        if let quarter = try takeQuarters(from: &rest, inSum: true, afterUnit: afterUnit) {
+            tokens = rest
+            return quarter
+        }
+        if connector == "and" {
             if ["a", "one"].contains(rest.first?.lowercased() ?? "") { rest = rest.dropFirst() }
-            guard rest.first?.lowercased() == "half", !startsHalfAndHalf(rest) else { return false }
-        case "y":
-            guard ["media", "medio"].contains(rest.first?.lowercased() ?? "") else { return false }
-        default: return false
+            guard rest.first?.lowercased() == "half", !startsHalfAndHalf(rest) else { return nil }
+        } else {
+            guard ["media", "medio"].contains(rest.first?.lowercased() ?? "") else { return nil }
         }
         tokens = rest.dropFirst()
-        return true
+        return try Rational(1, 2)
     }
 
     private static let englishTens = ["twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
@@ -257,8 +320,8 @@ public enum ListQuantityParser {
             tokens = tokens.dropFirst()
         } else { return (amount, nil) }
         var measured = amount
-        if takeAddedHalf(from: &tokens) {
-            if let amount, amount.denominator == 1 { measured = try? amount.adding(Rational(1, 2)) }
+        if let fraction = try? takeAddedFraction(from: &tokens, afterUnit: true) {
+            if let amount, amount.denominator == 1 { measured = try? amount.adding(fraction) }
             else { measured = nil }
         }
         // Preserve capitalized product names such as De Cecco.

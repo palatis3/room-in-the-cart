@@ -1363,11 +1363,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         if text.hasPrefix("- ") || text.hasPrefix("• ") || text.hasPrefix("* ") { text.removeFirst(2) }
         var tokens = ListQuantityParser.itemTokens(text)
         guard tokens.count >= 2 else { return (text, nil, "Review the quantity and unit.", nil) }
-        // Spoken number words are explicit on a pack label ("dos cajas"). A
-        // single product name such as "Half and Half" must retain its wording.
-        let packFollows = ListQuantityParser.isPackMarker(tokens.dropFirst().first ?? "")
         let ranged = ListQuantityParser.takeRange(from: &tokens)
-        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: packFollows)
+        let number = ranged ? nil : try? ListQuantityParser.takeListAmount(from: &tokens)
         guard ranged || number != nil else {
             return (text, nil, "Review the quantity and unit.", nil)
         }
