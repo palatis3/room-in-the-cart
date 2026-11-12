@@ -40,9 +40,9 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
         self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise', 'bitrise-m4'})
-        # The three long groups and fallback move to Bitrise; other rows keep their lanes.
+        # Lock the provider and concurrency group for each planned fixture.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
-            ('bitrise', 1), ('bitrise-m4', 2), ('github', 2), ('bitrise-m4', 0),
+            ('bitrise', 1), ('bitrise-m4', 2), ('github', 3), ('bitrise-m4', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),

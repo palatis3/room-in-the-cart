@@ -167,6 +167,8 @@ def matrix(inventory=None):
     # The first combined run exhausted Bitrise's short rows while GitHub still
     # queued long contributor groups. Give each Bitrise lane one existing group.
     lane_overrides = {
+        # Let StoreKit start on slot 2 as soon as its products are ready.
+        "contributor-balanced-01": 3,
         "contributor-balanced-04": 5,
         "contributor-balanced-02": 6,
         "contributor-balanced-05": 7,
