@@ -294,7 +294,7 @@ jobs:
       queue: max
       cancel-in-progress: false
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 85
     permissions:
       contents: read
       security-events: write
@@ -423,9 +423,9 @@ jobs:
           build-mode: manual
           debug: true
       - name: Compile Release Swift sources for CodeQL
-        # A successful traced compile took 44m12s. Reserve the rest of the
-        # 60-minute job for analysis and the compilation logs.
-        timeout-minutes: 50
+        # The uncached Swift trace reached the previous 50-minute cutoff while
+        # compiling the app. Leave time after compilation for analysis and cleanup.
+        timeout-minutes: 70
         shell: bash
         run: |
           source .build/SwiftCodeQLBuildArgs.sh
