@@ -446,6 +446,24 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['request_queue_permission','own_requests','household_admin']);
 });
 
+test('invitation display names use the new member’s language and preserve existing names on blank joins',async()=>{
+  const f=await fixture(),guests=await fixture();
+  async function join(actor,review={},language){
+    const invite=await f.http('Mia','POST','/invites',{kind:'adult_contributor'});assert.equal(invite.status,200);
+    const body={token:invite.data.token,intent:'join',adultAttestation:true,...review};
+    const path='/v1/invites/redeem',headers=language?{'Accept-Language':language}:{};
+    const first=await f.http(actor,'POST',path,body,headers);assert.equal(first.status,200);
+    assert.deepEqual((await f.http(actor,'POST',path,body,headers)).data,first.data);
+    const members=await f.http('Mia','GET','/members');assert.equal(members.status,200);
+    return members.data.members.find(member=>member.memberId===first.data.memberId).alias;
+  }
+  assert.equal(await join(guests.actors.Mia,{}),'Household member');
+  assert.equal(await join(guests.actors.Mia,{},'es'),'Household member');
+  assert.equal(await join(guests.actors.Alex,{},'es'),'Miembro del hogar');
+  assert.equal(await join(guests.actors.Alex,{alias:'María José'},'es'),'María José');
+  assert.equal(await join(guests.actors.Alex,{},'en'),'María José');
+});
+
 test('single-use invitations serialize racing identities and permit only the original identity retry',async()=>{
   const f=await fixture(),a=await fixture(),b=await fixture();
   assert.equal((await f.http('Alex','POST','/invites',{kind:'adult_contributor'})).status,404);

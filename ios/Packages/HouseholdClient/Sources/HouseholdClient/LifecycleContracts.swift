@@ -7,17 +7,21 @@ public struct MembershipReceipt: Codable, Equatable, Sendable {
 public struct MembershipIntent: Codable, Equatable, Identifiable, Sendable {
     public enum Kind: String, Codable, Sendable { case create, redeem }
     public let id: String; public let subject: String; public let kind: Kind; public let bytes: Data
+    public let defaultAliasLanguage: String?
     public static func create(subject: String, label: String, alias: String, adultAttestation: Bool) throws -> Self {
         guard adultAttestation, validAlias(label), validAlias(alias) else { throw ClientError.configuration }
         let id = UUID().uuidString.lowercased()
         struct Input: Encodable { let clientKey: String; let label: String; let alias: String; let adultAttestation: Bool }
-        return Self(id: id, subject: subject, kind: .create, bytes: try encoded(Input(clientKey: id, label: label, alias: alias, adultAttestation: true)))
+        return Self(id: id, subject: subject, kind: .create, bytes: try encoded(Input(clientKey: id, label: label, alias: alias, adultAttestation: true)), defaultAliasLanguage: nil)
     }
-    public static func redeem(subject: String, token: String, alias: String?, adultAttestation: Bool) throws -> Self {
+    public static func redeem(subject: String, token: String, alias: String?, adultAttestation: Bool, defaultAliasLocale: Locale? = nil) throws -> Self {
         guard adultAttestation, token.range(of: "^[0-9a-f-]{36}\\.[A-Za-z0-9_-]{43}$", options: .regularExpression) != nil,
               UUID(uuidString: String(token.prefix(36))) != nil, alias.map(validAlias) ?? true else { throw ClientError.configuration }
         struct Input: Encodable { let token: String; let intent = "join"; let alias: String?; let adultAttestation = true }
-        return Self(id: UUID().uuidString.lowercased(), subject: subject, kind: .redeem, bytes: try encoded(Input(token: token, alias: alias)))
+        let language = defaultAliasLocale.map { $0.language.languageCode?.identifier == "es" ? "es" : "en" }
+        let input = Input(token: token, alias: alias)
+        return Self(id: UUID().uuidString.lowercased(), subject: subject, kind: .redeem, bytes: try encoded(input),
+                    defaultAliasLanguage: alias == nil ? language : nil)
     }
     private static func validAlias(_ value: String) -> Bool { !value.isEmpty && value.count <= 80 }
 }

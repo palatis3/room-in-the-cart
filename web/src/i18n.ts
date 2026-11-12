@@ -44,6 +44,7 @@ const es: Record<string, string> = {
   'Received; local cleanup pending':'Recibida; limpieza local pendiente',
   'Received by the shopper. Retry to clear the copy on this browser.':'Recibida por quien hace la compra. Vuelve a intentarlo para eliminar la copia de este navegador.',
   'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.':'Cerraste la sesión, pero no se pudo borrar el almacenamiento del navegador. Borra los datos del sitio antes de compartir este navegador.',
+  'Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.':'Deja en blanco tu nombre para mostrar si quieres conservar el que ya tienes en este hogar. Si te unes por primera vez, solicitamos el nombre «Miembro del hogar».',
   'Your display name (optional)':'Tu nombre para mostrar (opcional)',
   'I am 18 or older.':'Tengo 18 años o más.',
   'An adult signs in before joining. Child access requires verified guardian setup.':'Una persona adulta debe iniciar sesión antes de unirse. El acceso de menores requiere una configuración verificada de su tutor.',

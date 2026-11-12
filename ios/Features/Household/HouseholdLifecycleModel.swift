@@ -98,7 +98,8 @@ import HouseholdClient
         let name = alias.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
             let intent = try MembershipIntent.redeem(subject: subject, token: invitationCode.trimmingCharacters(in: .whitespacesAndNewlines),
-                alias: name.isEmpty ? nil : name, adultAttestation: adultAttestation)
+                alias: name.isEmpty ? nil : name, adultAttestation: adultAttestation,
+                defaultAliasLocale: Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en"))
             await saveAndSend(intent)
         } catch { notice = ht("Paste the complete invitation code and confirm the adult declaration. An alias can have up to 80 characters.") }
     }

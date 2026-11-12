@@ -381,6 +381,7 @@ export class WebApp {
     }
     this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
     const alias=form.querySelector<HTMLInputElement>('#invite-alias');if(alias){alias.maxLength=80;alias.disabled=this.redemption!==null;}
+    const aliasHint=this.el('p',this.t('Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.'));aliasHint.id='invite-alias-hint';form.append(aliasHint);alias?.setAttribute('aria-describedby',aliasHint.id);
     const adultLabel=this.el('label');adultLabel.className='checkbox';const adult=this.el('input');adult.type='checkbox';adult.id='adult-attestation';adult.checked=this.adultAttestation;adult.required=true;adult.disabled=this.redemption!==null;
     adult.addEventListener('change',()=>{this.adultAttestation=adult.checked;});adultLabel.append(adult,this.el('span',this.t('I am 18 or older.')));form.append(adultLabel);
     form.append(this.el('p',this.t('An adult signs in before joining. Child access requires verified guardian setup.')));
@@ -392,7 +393,7 @@ export class WebApp {
       if(!token||!this.adultAttestation)return;
       this.invitation=token;
       void this.run(async()=>{
-        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
+        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
         await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
         const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
         const opened=this.session as Session|null;

@@ -42,16 +42,39 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: false))
         XCTAssertThrowsError(try MembershipIntent.create(subject: "account", label: "Home", alias: "Mia", adultAttestation: false))
         let intent = try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: true)
+        let legacyBytes = try JSONEncoder().encode(intent)
+        XCTAssertFalse(String(decoding: legacyBytes, as: UTF8.self).contains("defaultAliasLanguage"))
+        XCTAssertEqual(try JSONDecoder().decode(MembershipIntent.self, from: legacyBytes), intent)
+        let spanish = Locale(identifier: "es_US")
+        let blank = try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: true, defaultAliasLocale: spanish)
+        let restored = try JSONDecoder().decode(MembershipIntent.self, from: JSONEncoder().encode(blank))
+        XCTAssertEqual(restored, blank)
+        let blankBody = try XCTUnwrap(JSONSerialization.jsonObject(with: restored.bytes) as? [String: Any])
+        XCTAssertEqual(restored.defaultAliasLanguage, "es")
+        XCTAssertNil(blankBody["defaultAliasLanguage"])
+        XCTAssertEqual(blank.bytes, intent.bytes)
+        XCTAssertNil(blankBody["alias"])
+        let named = try MembershipIntent.redeem(subject: "account", token: token, alias: "María José", adultAttestation: true, defaultAliasLocale: spanish)
+        let namedBody = try XCTUnwrap(JSONSerialization.jsonObject(with: named.bytes) as? [String: Any])
+        XCTAssertEqual(namedBody["alias"] as? String, "María José")
+        XCTAssertNil(named.defaultAliasLanguage)
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
             if let result = self.authResponse(request) { return result }
             XCTAssertEqual(request.url!.absoluteString, "https://service.test/v1/invites/redeem")
             let body = try XCTUnwrap(JSONSerialization.jsonObject(with: self.lifecycleBytes(request)) as? [String: Any])
-            XCTAssertEqual(body["token"] as? String, token); XCTAssertEqual(body["intent"] as? String, "join"); XCTAssertNil(body["alias"])
+            XCTAssertEqual(body["token"] as? String, token); XCTAssertEqual(body["intent"] as? String, "join"); XCTAssertNil(body["alias"]); XCTAssertNil(body["defaultAliasLanguage"])
             return (200, Data("{\"householdId\":\"\(self.household)\",\"memberId\":\"\(self.member)\",\"role\":\"editor\",\"grantId\":\"\(self.lifecycleGrant)\"}".utf8))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         let receipt = try await service.executeMembership(intent); XCTAssertEqual(receipt.grantId, lifecycleGrant)
+        MockURLProtocol.handler = { request in
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Accept-Language"), "es")
+            XCTAssertEqual(self.lifecycleBytes(request), intent.bytes)
+            return (200, try JSONEncoder().encode(receipt))
+        }
+        _ = try await service.executeMembership(restored)
+        _ = try await service.executeMembership(restored)
     }
     func testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes() async throws {
         let auth = try auth(); let vault = MemoryVault(); var registrations = 0; var broadCalls = 0

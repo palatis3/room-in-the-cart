@@ -629,8 +629,11 @@ test('unknown and adult routes do not fetch or display household data',async()=>
 test('invitation requires explicit adult review and validates the redemption receipt',async()=>{
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify({householdId:'household-b',memberId:'member-b',role:'contributor'}),{status:200});});
  await assert.rejects(api.redeem('invite-secret','csrf-test',{adultAttestation:false}),e=>e.status===422);assert.equal(calls.length,0);
- assert.deepEqual(await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'Mia'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
+ assert.deepEqual(await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'Mia',defaultAliasLanguage:'es'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
  assert.deepEqual(JSON.parse(calls[0].options.body),{token:'invite-secret',intent:'join',adultAttestation:true,alias:'Mia'});
+ await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'  ',defaultAliasLanguage:'es'});
+ assert.deepEqual(JSON.parse(calls[1].options.body),{token:'invite-secret',intent:'join',adultAttestation:true});
+ assert.equal(calls[1].options.headers['Accept-Language'],'es');
  const invalid=new API(async()=>new Response(JSON.stringify({ok:true}),{status:200}));
  await assert.rejects(invalid.redeem('invite-secret',undefined,{adultAttestation:true}),e=>e.code==='invalid_response');
 });

@@ -48,7 +48,7 @@ export class HouseholdLifecycle {
     await ctx.db.query('INSERT INTO ritc.invite(household_id,invite_id,token_hash,kind,created_by,grant_id,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,inviteId,tokenHash(secret),kind,ctx.member.member_id,grantId,expiresAt]);
     return{inviteId,token:ctx.householdId+'.'+secret,expiresAt:expiresAt.toISOString()};
   }
-  async redeem(identity:VerifiedIdentity,input:z.infer<typeof inviteRedeemSchema>){
+  async redeem(identity:VerifiedIdentity,input:z.infer<typeof inviteRedeemSchema>,language:'en'|'es'='en'){
     const [householdId,secret]=input.token.split('.');
     return this.repo.transaction(householdId!,async(db,now)=>{
       await this.repo.assertSession(db,identity,now);
@@ -66,7 +66,8 @@ export class HouseholdLifecycle {
         if(member){
           await db.query("UPDATE ritc.member SET state='active',organizer=CASE WHEN state='active' THEN organizer ELSE false END,can_contribute=$3 OR (state='active' AND can_contribute),alias=COALESCE($4,alias) WHERE household_id=$1 AND member_id=$2",[householdId,memberId,contribute,input.alias??null]);
         }else{
-          await db.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute) VALUES($1,$2,$3,$4,$5,'adult','active',false,$6)",[householdId,memberId,identity.issuer,identity.subject,input.alias??'Household member',contribute]);
+          const newAlias=input.alias??(language==='es'?'Miembro del hogar':'Household member');
+          await db.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute) VALUES($1,$2,$3,$4,$5,'adult','active',false,$6)",[householdId,memberId,identity.issuer,identity.subject,newAlias,contribute]);
         }
         member={member_id:memberId};
         await db.query('UPDATE ritc.invite SET redeemed_at=$3,redeemed_by=$4 WHERE household_id=$1 AND invite_id=$2',[householdId,invite.invite_id,now,memberId]);

@@ -1,3 +1,4 @@
+import type { Language } from './i18n.js';
 import type { OwnRequest, CommandEnvelope } from '../../shared/contracts/service-v1.js';
 export type { OwnRequest };
 export type Command = CommandEnvelope;
@@ -155,10 +156,9 @@ function parseBrowserAuth(value:unknown):BrowserAuthState {
 }
 export class API {
   constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
-  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string, requestQueueGrant?:string): Promise<unknown> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string, extraHeaders: Record<string,string> = {}): Promise<unknown> {
+    const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
-    if(requestQueueGrant)headers['X-Request-Queue-Grant']=requestQueueGrant;
     if (csrf) headers['X-CSRF-Token'] = csrf;
     let response: Response;
     try { response = await this.fetcher(path, { method, credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'no-referrer', headers, ...(body !== undefined ? { body: encodedBody ?? JSON.stringify(body) } : {}) }); }
@@ -188,10 +188,11 @@ export class API {
     const result=record(await this.call('/v1/auth/session','DELETE',undefined,csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:boolean(result.providerRevoked)};
   }
   async session(): Promise<Session | null> { return parseSession(await this.call('/v1/session')); }
-  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string}): Promise<InviteRedemption> {
+  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string; defaultAliasLanguage?: Language}): Promise<InviteRedemption> {
     if (!token.trim() || token.length > 4096 || !review.adultAttestation) throw new ApiError('invalid_entry', 422);
     const d = record(await this.call('/v1/invites/redeem', 'POST', {token, intent:'join', adultAttestation:true,
-      ...(review.alias?.trim() ? {alias:text(review.alias.trim(), 80)} : {})}, csrf));
+      ...(review.alias?.trim() ? {alias:text(review.alias.trim(), 80)} : {})}, csrf, undefined,
+      review.defaultAliasLanguage ? {'Accept-Language':review.defaultAliasLanguage} : {}));
     if (d.role !== 'contributor' && d.role !== 'helper' && d.role !== 'editor') return invalid();
     const grantId = d.grantId == null ? undefined : identity(d.grantId);
     if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
@@ -228,7 +229,7 @@ export class API {
   async command(session: Session, command: Command, requestQueueGrant?:string): Promise<void> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     validateOwnCommand(command);
-    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant));
+    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant ? {'X-Request-Queue-Grant':requestQueueGrant} : {}));
     identity(receipt.operationId);
     const request = ownRequest(receipt.request);
     if (receipt.kind !== command.kind || request.shopId !== command.shopId

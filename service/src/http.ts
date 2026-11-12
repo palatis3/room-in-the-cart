@@ -182,7 +182,11 @@ export function createHTTPServer(options:HTTPOptions) {
         }
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
-      if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
+      if(url.pathname==='/v1/invites/redeem'&&method==='POST'){
+        const review=inviteRedeemSchema.parse(await body(req));
+        const language=req.headers['accept-language']?.toLowerCase()==='es'?'es':'en';
+        send(200,await lifecycle.redeem(auth.identity,review,language));return;
+      }
       if(url.pathname==='/v1/child-invitations/native-auth/admit'&&method==='POST'){send(200,await guardian.nativeSigninAdmit(auth.identity,childNativeAdmitSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/claim'&&method==='POST'){send(200,await guardian.claim(auth.identity,childClaimSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){const result=await guardian.finish(auth.identity,childFinishSchema.parse(await body(req,4096)));if(browserIdentity){const scoped=await repository.startWebSession(result.householdId,auth.identity,undefined,true,undefined,result.deviceToken);res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);const {deviceToken:_,...receipt}=result;send(200,receipt);return;}send(200,result);return;}

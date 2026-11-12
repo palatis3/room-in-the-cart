@@ -29,6 +29,7 @@ struct HouseholdSetupSections: View {
                     Button(ht("Create household")) { Task { await model.createHousehold() } }.disabled(!canContinue)
                 }
                 Section(ht("Use an invitation")) {
+                    Text(ht("Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.")).font(.caption)
                     SecureField(ht("Invitation code"), text: $model.invitationCode).textInputAutocapitalization(.never).autocorrectionDisabled()
                     Text(ht("Paste the code shared by the organizer or shopper. The invitation determines your access."))
                     Button(ht("Join with invitation")) { Task { await model.redeemInvitation() } }.disabled(!canContinue)

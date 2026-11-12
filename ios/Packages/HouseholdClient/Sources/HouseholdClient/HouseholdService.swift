@@ -733,8 +733,12 @@ public actor HouseholdService {
             struct Key: Decodable { let clientKey: String }
             guard try JSONDecoder().decode(Key.self, from: intent.bytes).clientKey == intent.id else { throw ClientError.configuration }
         }
-        let value: MembershipReceipt = try await transport.json(request(base: configuration.baseURL,
-            path: intent.kind == .create ? "v1/households" : "v1/invites/redeem", method: "POST", token: access.accessToken, body: intent.bytes))
+        var membershipRequest = request(base: configuration.baseURL,
+            path: intent.kind == .create ? "v1/households" : "v1/invites/redeem", method: "POST", token: access.accessToken, body: intent.bytes)
+        if intent.kind == .redeem, let language = intent.defaultAliasLanguage, ["en", "es"].contains(language) {
+            membershipRequest.setValue(language, forHTTPHeaderField: "Accept-Language")
+        }
+        let value: MembershipReceipt = try await transport.json(membershipRequest)
         guard generation == start else { throw ClientError.cancelled }
         return value
     }

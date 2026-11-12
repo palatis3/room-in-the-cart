@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deja en blanco tu nombre para mostrar si quieres conservar el que ya tienes en este hogar. Si te unes por primera vez, solicitamos el nombre «Miembro del hogar»."
+          }
+        }
+      }
+    },
     "Amount for serving group": {
       "localizations": {
         "en": {
