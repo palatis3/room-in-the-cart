@@ -20,10 +20,33 @@ test('privileged account deletion is fixed-origin, exact-subject, hard delete an
  const provider=new SupabaseAccountDeletionProvider({url:'https://fixture.invalid',secretKey:key},async(url,init)=>{
   calls.push({url,init});assert.equal(url,'https://fixture.invalid/auth/v1/admin/users/'+subject);assert.equal(init.redirect,'error');assert.equal(init.headers.apikey,key);
   if(init.method==='DELETE'){assert.deepEqual(JSON.parse(init.body),{should_soft_delete:false});removed=true;return json({id:subject});}
-  return removed?new Response('',{status:404}):json({id:subject,identities:[{provider:'email'}]});
+  return removed?Response.json({code:404,error_code:'user_not_found'},{status:404}):json({id:subject,identities:[{provider:'email'}]});
  });
  await provider.assertAvailable(subject);await provider.deleteAccount(subject);await provider.deleteAccount(subject);assert.equal(calls.filter(c=>c.init.method==='DELETE').length,1);
  assert.throws(()=>new SupabaseAccountDeletionProvider({url:'http://fixture.invalid',secretKey:key}));assert.throws(()=>new SupabaseAccountDeletionProvider({url:'https://fixture.invalid',secretKey:'sb_publishable_not_privileged'}));
+});
+test('only an explicit missing user confirms an idempotent erasure or a completed delete',async()=>{
+ const config={url:'https://fixture.invalid',secretKey:key};
+ for(const unknown of [
+  ()=>new Response('Page not found',{status:404,headers:{'Content-Type':'text/html'}}),
+  ()=>Response.json({code:'unexpected_failure'},{status:404}),
+  ()=>Response.json({message:'Not found'},{status:404}),
+  ()=>Response.json({code:'user_not_found'},{status:404,headers:{'x-sb-error-code':'unexpected_failure'}})
+ ]){
+  const missingRoute=new SupabaseAccountDeletionProvider(config,async()=>unknown());
+  await assert.rejects(missingRoute.deleteAccount(subject),{code:'deletion_unavailable'});
+  let sent=false;
+  const missingConfirmation=new SupabaseAccountDeletionProvider(config,async(_url,init)=>{
+   if(init.method==='DELETE'){sent=true;return new Response(null,{status:204});}
+   return sent?unknown():json({id:subject,identities:[{provider:'email'}]});
+  });
+  await assert.rejects(missingConfirmation.deleteAccount(subject),{code:'deletion_unavailable'});
+  assert.equal(sent,true);
+ }
+ const missingUser=new SupabaseAccountDeletionProvider(config,async(_url,init)=>{
+  assert.equal(init.method,'GET');return Response.json({code:'user_not_found'},{status:404});
+ });
+ await missingUser.deleteAccount(subject);
 });
 test('missing Apple revocation or mismatched provider subjects never claim deletion',async()=>{
  let deleted=false;const provider=new SupabaseAccountDeletionProvider({url:'https://fixture.invalid',secretKey:key},async(_url,init)=>{if(init.method==='DELETE')deleted=true;return json({id:subject,identities:[{provider:'apple'}]});});

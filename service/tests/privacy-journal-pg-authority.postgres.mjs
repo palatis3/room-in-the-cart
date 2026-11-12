@@ -681,7 +681,7 @@ test('deployed runtime entry points bind deletion to the registered source and r
     await source.owner.query('DELETE FROM auth.sessions WHERE user_id=$1',[subject]);
     return new Response(null,{status:204});
    }
-   return providerDeleted?new Response(null,{status:404}):Response.json({id:subject,identities:[{provider:'email'}]});
+   return providerDeleted?Response.json({code:404,error_code:'user_not_found'},{status:404}):Response.json({id:subject,identities:[{provider:'email'}]});
   };
   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
   async function startApplication(overrides={}){
