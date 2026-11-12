@@ -3,6 +3,16 @@ import HouseholdClient
 @testable import RoomInTheCart
 
 final class SharedMealCivilDateTests: XCTestCase {
+    func testDefaultProposalDayFollowsLocalMidnightAtTheDSTBoundary() throws {
+        let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-02T02:30:00Z"))
+        for (zone, expected) in [("America/New_York", "2026-11-01"),
+                                 ("America/Los_Angeles", "2026-11-01"),
+                                 ("Pacific/Guam", "2026-11-02")] {
+            let local = try XCTUnwrap(TimeZone(identifier: zone))
+            XCTAssertEqual(sharedMealDay(sharedMealPickerToday(now: now, timeZone: local)), expected)
+        }
+    }
+
     func testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries() throws {
         let examples = [
             ("2026-03-07", "March 7, 2026", "7 de marzo de 2026"),

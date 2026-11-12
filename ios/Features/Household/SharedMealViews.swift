@@ -13,6 +13,12 @@ func sharedMealDay(_ date: Date) -> String {
     return String(format: "%04d-%02d-%02d", fields.year!, fields.month!, fields.day!)
 }
 
+/// The picker represents civil days in UTC. Start on the user's local calendar date.
+func sharedMealPickerToday(now: Date = Date(), timeZone: TimeZone = .current) -> Date {
+    let offset = TimeInterval(timeZone.secondsFromGMT(for: now))
+    return mealCalendar().startOfDay(for: now.addingTimeInterval(offset))
+}
+
 func sharedMealDate(_ day: String?) -> Date? {
     guard let day else { return nil }
     let parts = day.split(separator: "-").compactMap { Int($0) }
@@ -105,8 +111,7 @@ struct SharedMealEditor: View {
         }
         Toggle(ht("Assign a night"), isOn: Binding(get: { meal.day != nil }, set: { assigned in
             guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
-            let localDay = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: Date())
-            current.move(to: assigned ? sharedMealDay(mealCalendar().date(from: localDay) ?? Date()) : nil)
+            current.move(to: assigned ? sharedMealDay(sharedMealPickerToday()) : nil)
             start(id, current)
         })).accessibilityIdentifier("sharedMeal.assignNight")
         if let day = meal.day {
@@ -254,11 +259,12 @@ private struct SharedMealDayPicker: View {
 struct SharedMealMovesView: View {
     @ObservedObject var household: HouseholdModel
     var onReviewOpened: () -> Void = {}
+    @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     @State private var plan: SharedMealPlan?
     @State private var selectedAdult: UUID?
     @State private var occurrenceID: UUID?
-    @State private var day = Date()
+    @State private var day = sharedMealPickerToday()
     @State private var proposalID = UUID()
     @State private var busy = false
     @State private var notice: String?
@@ -313,7 +319,7 @@ struct SharedMealMovesView: View {
                     ForEach(plan.proposals) { move in
                         if let occurrence = plan.meals.first(where: { $0.id == move.occurrenceId }) {
                             SharedMealFacts(meal: occurrence.meal)
-                            LabeledContent(ht("Proposed day"), value: move.day)
+                            LabeledContent(ht("Proposed day"), value: sharedMealScheduleText(move.day, locale: locale))
                             if plan.shopper {
                                 Button(ht("Review move with shared packs")) { review(move, occurrence, plan) }
                                 Button(ht("Dismiss proposed move"), role: .destructive) { dismissingMove = move }
@@ -340,7 +346,7 @@ struct SharedMealMovesView: View {
             Button(ht("Dismiss proposed move"), role: .destructive) {
                 if let plan { Task { await run { try await $0.dismissMealMove(move, plan: plan) } } }
             }
-        } message: { move in Text(move.day) }
+        } message: { move in Text(verbatim: sharedMealScheduleText(move.day, locale: locale)) }
         .confirmationDialog(ht("Change meal planning access?"), isPresented: $confirmingAccess, titleVisibility: .visible) {
             Button(ht("Save planning access")) {
                 if let plan { Task { await run { try await $0.changeMealPlanner(selectedAdult, plan: plan) } } }

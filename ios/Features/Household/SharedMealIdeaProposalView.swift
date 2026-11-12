@@ -26,7 +26,7 @@ private struct SharedMealIdeaProposalContent: View {
     let idea: SharedMealIdeaPage.Idea
     let scope: SharedMealChangeScope
     @ObservedObject var model: SharedMealChangeModel
-    @State private var day = Date()
+    @State private var day = sharedMealPickerToday()
     @State private var assignNight = false
     @State private var showingShopperReview = false
     @State private var openSharedShop = false
