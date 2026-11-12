@@ -540,9 +540,11 @@ import XCTest
         XCTAssertFalse(shareCorrection.isEnabled)
         let confirmation = app.switches["delivery.cook.confirmDestination"]
         reveal(confirmation)
+        XCTAssertEqual(confirmation.switches.count, 1)
         let control = confirmation.switches.firstMatch
         XCTAssertTrue(control.exists && control.isHittable)
-        control.tap()
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        XCTAssertEqual(control.value as? String, "1")
         XCTAssertEqual(confirmation.value as? String, "1")
         tap(reviewCorrection)
         let correction = app.staticTexts["delivery.cook.correctionText"]

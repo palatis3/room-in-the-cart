@@ -223,17 +223,22 @@ import XCTest
                     // Resolve the current editable control only after its snapshot
                     // tap point is visible, then verify the actual touch coordinate.
                     let target = app.switches.matching(identifier:id).firstMatch
-                    let coordinate = target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5))
+                    XCTAssertEqual(target.switches.count,1,"Expected one native switch inside the quote row: "+id)
+                    let control = target.switches.firstMatch
+                    // Use the visible native off-position thumb, as in Records,
+                    // and require both the native control and owning row to agree.
+                    let coordinate = control.coordinate(withNormalizedOffset:CGVector(dx:0.25,dy:0.5))
                     let currentPoint = coordinate.screenPoint
                     if !area.contains(currentPoint) {
                         scrollContent(upward:currentPoint.y > area.midY,area:area)
                         continue
                     }
-                    guard target.isEnabled && target.isHittable else {
+                    guard target.isEnabled && target.isHittable && control.isEnabled && control.isHittable else {
                         XCTFail("Visible switch must be editable and hittable: "+id)
                         return
                     }
-                    if target.value as? String == "0" { coordinate.tap() }
+                    if control.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(control.value as? String,"1",id)
                     XCTAssertEqual(target.value as? String,"1",id)
                     return
                 }

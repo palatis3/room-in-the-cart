@@ -84,8 +84,12 @@ The existing Bitrise Build Hub pool `bitrise-runner-room in cart` adds three
 independent `ritc-bitrise-slot-0..2` queues beside the five
 `ritc-macos-slot-0..4` GitHub queues. Both fixture producers build on Bitrise;
 the existing fixture test rows are distributed across five GitHub and three
-Bitrise lanes without duplicating cases. Core, deep, wire, performance and
-CodeQL continue sharing the same five GitHub queues. Each Bitrise lane also gets
+Bitrise lanes without duplicating cases. Core groups except UI05, plus deep,
+wire, performance and CodeQL, share the five GitHub queues. UI05 uses Bitrise0
+for trusted events and its original GitHub0 slot for external/noncanonical events.
+The GitHub producer and complete compiled manifest stay intact; the next ordinary
+required UI05 execution must qualify GitHub-produced core products on Bitrise.
+The prior cross-provider pilot covered the opposite direction only. Each Bitrise lane also gets
 one existing long contributor group: balanced-04 on lane 0, balanced-02 on lane 1,
 and balanced-05 on lane 2. The first combined batch finished all nine initially
 assigned Bitrise consumers while GitHub still had fixture, core UI and billing
