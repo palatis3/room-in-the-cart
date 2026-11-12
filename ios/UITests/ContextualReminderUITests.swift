@@ -109,7 +109,7 @@ import XCTest
     }
 
     private func chooseFutureOfferCutoff() throws -> Date {
-        let picker = element("pickup.offer.cutoff"); reveal(picker)
+        let picker = app.datePickers.matching(identifier: "pickup.offer.cutoff").firstMatch; reveal(picker)
         // Compact native date controls expose the date and time as separate buttons.
         let dateButton = picker.buttons.firstMatch
         XCTAssertTrue(dateButton.exists, app.debugDescription)
