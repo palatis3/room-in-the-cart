@@ -63,7 +63,7 @@ Capture the remaining scenes with fictional data in the ordinary iPhone app. Kee
 | 2. Review the whole pickup | S24 cereal request with current/proposed inclusive total, overage and two protected lunches. | Promoted current S24 pass plus configured review household. |
 | 3. Plan dinners and keep lunch | Meal week with a named lunch reservation and a dated dinner. | Bilingual local List and Grid captures are available. Capture the additional unscheduled dinner if it is included in the final frame, then match the signed build. |
 | 4. Repair what came home | Actual usable amount, dependent shortage preview and current dated cook instruction. | Confirmed stock/arrival fixture; current allocation agrees with text. |
-| 5. Compare two entered trips | Quote comparison showing checkout and additional trip cash separately. | Exact equivalent commitments and known/unknown terms. |
+| 5. Compare two entered trips | For the same four dinner portions, the second pickup saves $3 at checkout, adds $4 and 18 minutes of travel, and costs $1 more overall. | [English and US Spanish Release captures](app-store/screenshots/two-store-trips-manifest.json) use saved whole-checkout quotes. Match the final signed build before submission. |
 | 6. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | The local bilingual Records captures are available. Check final system export and recovery on the distribution candidate. |
 | Optional 7. Household | Actual named-seat offer with real localized price/term, Restore and Manage. | Actual product/account configuration. A local `.storekit` price or unavailable offer is not a storefront screenshot. |
 
