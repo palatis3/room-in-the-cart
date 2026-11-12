@@ -19,13 +19,7 @@ import XCTest
     func testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack() {
         createListAndConfirmStock(amount: "8")
         tap(element("ledgerPackChoice"))
-        fill("Eight wraps", into: "First pack label")
-        fill("8", into: "First pack usable amount")
-        fill("3.00", into: "First pack price, USD")
-        fill("Six wraps", into: "Second pack label")
-        fill("6", into: "Second pack usable amount")
-        fill("2.50", into: "Second pack price, USD")
-        fill("Reviewed shelf", into: "Where you checked these packs and prices")
+        enterReviewedPacks()
         tap(element("ledgerReviewPacks"))
         let count = element("ledgerPackCount-a"); reveal(count)
         XCTAssertTrue(count.label.contains("1"), count.label)
@@ -92,13 +86,7 @@ import XCTest
         // The reservation must remain protected, not merely absorbed by the
         // unchanged imported total after its row disappears from the detail.
         XCTAssertTrue(app.staticTexts["Protected inside that amount, 2 items"].waitForExistence(timeout: 5))
-        fill("Eight wraps", into: "First pack label")
-        fill("8", into: "First pack usable amount")
-        fill("3.00", into: "First pack price, USD")
-        fill("Six wraps", into: "Second pack label")
-        fill("6", into: "Second pack usable amount")
-        fill("2.50", into: "Second pack price, USD")
-        fill("Reviewed shelf", into: "Where you checked these packs and prices")
+        enterReviewedPacks()
         tap(element("ledgerReviewPacks"))
         let packs = element("ledgerPackCount-a")
         reveal(packs)
@@ -166,6 +154,22 @@ import XCTest
         let done = app.buttons["Done"]
         if done.exists && done.isHittable { done.tap() }
     }
+    private func enterReviewedPacks() {
+        let fields = [
+            ("First pack label", "Eight wraps"), ("First pack usable amount", "8"), ("First pack price, USD", "3.00"),
+            ("Second pack label", "Six wraps"), ("Second pack usable amount", "6"), ("Second pack price, USD", "2.50"),
+            ("Where you checked these packs and prices", "Reviewed shelf")
+        ]
+        // These are consecutive fields on one form. Finish editing once after entering the evidence source.
+        for (label, value) in fields {
+            let field = editableElement(label)
+            reveal(field, keyboardDone: app.buttons["Done"])
+            field.tap()
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        dismissKeyboard()
+    }
     private func dismissKeyboard() {
         let done = app.buttons["Done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5))
@@ -177,15 +181,20 @@ import XCTest
         if control.value as? String == "0" { control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         XCTAssertEqual(control.value as? String, "1")
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, keyboardDone: XCUIElement? = nil) {
         for attempt in 0..<20 {
-            if target.exists && target.isHittable { return }
-            let upward = target.exists && !target.frame.isEmpty ? target.frame.midY > app.frame.midY : attempt < 13
-            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.78 : 0.28))
-            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.28 : 0.78))
+            let bounds = app.frame
+            let bottom = keyboardDone.flatMap { $0.exists ? $0.frame.minY : nil } ?? bounds.maxY
+            let height = bottom - bounds.minY
+            let frame = target.exists ? target.frame : .zero
+            if !frame.isEmpty && target.isHittable && frame.midY < bottom { return }
+            let upward = frame.isEmpty ? attempt < 13 : frame.midY > bounds.minY + height * 0.5
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: bounds.width * 0.5, dy: height * (upward ? 0.78 : 0.28)))
+            let end = origin.withOffset(CGVector(dx: bounds.width * 0.5, dy: height * (upward ? 0.28 : 0.78)))
             start.press(forDuration: 0.05, thenDragTo: end)
         }
-        XCTAssertTrue(target.exists && target.isHittable, target.debugDescription)
+        XCTFail("Could not reveal " + target.debugDescription)
     }
     private func shopRoot() {
         tap(app.tabBars.buttons["Shop"])
