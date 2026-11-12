@@ -89,6 +89,10 @@ release requirements and known failures remain visible.
 
 ## When to run hosted checks
 
+### Local simulator capacity
+
+On the 24 GB development Mac, let a failing PR journey take the next free simulator slot. During the November 12 run, several simultaneous simulator sessions coincided with memory pressure warnings, 17 GB of swap use and a current-runtime calibration that spent minutes in XCTest startup. When that happens, run the optional calibration after a repair finishes. Backend checks and hosted jobs can continue.
+
 ### GitHub and Bitrise capacity
 
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
@@ -117,7 +121,9 @@ The following jobs share the six M4 slots.
 | Core UI02, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 4 and 2 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
 
-On `cd85377c`, the bilingual StoreKit job waited 38m22s for GitHub slot 2 after the build finished. The Spanish skipped-dinner Undo journey occupied that slot for the last 15m37s of the wait. On trusted builds its existing selector now uses M4 slot 4. On the next full revision, compare the StoreKit start, the M4 jobs’ finish times and the last required check. The whole-batch gain has not yet been measured.
+On `cd85377c`, the bilingual StoreKit job waited 38m22s for GitHub slot 2 after the build finished. The Spanish skipped-dinner Undo journey occupied that slot for the last 15m37s of the wait. On trusted builds its existing selector now uses M4 slot 4. Compare the StoreKit start, the M4 job duration and the last required check when judging subsequent runs.
+
+On `a807ecf9`, the moved journey waited 5m22s and ran in 5m36s on M4. The previous GitHub job waited 24m23s and ran in 15m37s. That reduced the time from queuing this job to its result by 29m02s. The bilingual StoreKit job passed after queueing for 20m42s and running for 19m08s. Previously it queued for 38m22s and ran for 26m50s. The deep-checks workflow passed all six jobs. Core and fixture jobs were still active at that point. [M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231482950/job/131230416661) · [StoreKit job](https://github.com/palatis3/room-in-the-cart/actions/runs/43231482917/job/131230870466).
 
 In the November 12 combined run, the final M4 test finished at 06:32 UTC.
 UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.
@@ -1186,6 +1192,8 @@ binding fails the observer; a missing or different library remains an explicit
 diagnostic observation requiring investigation.
 
 ### Fresh-simulator performance pilot
+
+For the rendered and scrolling cases, the XCTest runner copies the bundled 500-item text to the simulator immediately before opening the import sheet. The Release app receives it through the system Paste button. The test compares the entire pasted string and the evidence checker verifies the saved import in SQLite. The cold-launch case skips clipboard setup. Version 1 setup receipts describe the earlier host clipboard command. Version 2 receipts verify the input file before XCTest starts.
 
 For one controlled comparison, manually select `case=scroll`,
 `fresh_performance_simulator=true`, `enforce_baselines=false`,
