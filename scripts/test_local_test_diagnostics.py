@@ -6,6 +6,12 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+BOOTSTRAP_STALL = (
+    '\tRoomInTheCartUITests-Runner (6919) encountered an error (Early unexpected exit, '
+    'operation never finished bootstrapping - no restart will be attempted. '
+    '(Underlying Error: The test runner crashed while preparing to run tests: '
+    'RoomInTheCartUITests-Runner at -[XCTWaiter(StallHandling) handleStalledWait:]))'
+)
 
 
 class LocalDiagnosticsTests(unittest.TestCase):
@@ -21,11 +27,16 @@ class LocalDiagnosticsTests(unittest.TestCase):
             binaries = root / 'bin'
             binaries.mkdir()
             for name, body in {
-                'xcodebuild': 'printf "%s\\n" "$@" >> "$TRACE"\nprintf "%s\\n" "${NATIVE_MESSAGE:-}"\nexit "${NATIVE_EXIT:-0}"',
+                'xcodebuild': 'printf "%s\\n" "$@" >> "$TRACE"\n'
+                              'if [[ " $* " = *" .build/Tests-retry.xcresult "* ]]; then\n'
+                              '    printf "%s\\n" "${RETRY_MESSAGE:-}"\n'
+                              '    exit "${RETRY_EXIT:-${NATIVE_EXIT:-0}}"\n'
+                              'fi\n'
+                              'printf "%s\\n" "${NATIVE_MESSAGE:-}"\nexit "${NATIVE_EXIT:-0}"',
                 'xcrun': 'printf "%s\\n" "$@" >> "$TRACE"\necho "{}"',
                 'python3': 'printf "%s\\n" "$@" >> "$TRACE"\n'
                            'if [[ "$1" = scripts/report_ios_test_timing.py ]]; then exit "${TIMING_EXIT:-0}"; fi\n'
-                           'exit "${STRICT_EXIT:-0}"',
+                           'if [[ "$1" = scripts/check_ios_test_results.py ]]; then exit "${STRICT_EXIT:-0}"; fi',
             }.items():
                 path = binaries / name
                 path.write_text('#!/bin/bash\n' + body + '\n')
@@ -87,6 +98,36 @@ class LocalDiagnosticsTests(unittest.TestCase):
         self.assertEqual(args.count('test-without-building'), 2)
         self.assertEqual(args.count('.build/test-run-timing.json'), 1)
         self.assertEqual(args.count('.build/test-run-timing-retry.json'), 1)
+
+    def test_preparation_stall_reboots_once_and_checks_the_unchanged_selector(self):
+        for retry, strict, expected in (('0', '0', 0), ('65', '0', 65), ('0', '7', 7)):
+            with self.subTest(retry=retry, strict=strict):
+                status, args = self.run_shard(
+                    NATIVE_EXIT='65', NATIVE_MESSAGE=BOOTSTRAP_STALL, RETRY_EXIT=retry,
+                    RETRY_MESSAGE=BOOTSTRAP_STALL if retry == '65' else '', STRICT_EXIT=strict)
+                self.assertEqual(status, expected)
+                self.assertEqual(args.count('test-without-building'), 2)
+                self.assertEqual(args.count('-only-testing:Suite/Case/testOriginal'), 2)
+                self.assertEqual(args.count('scripts/boot_ios_simulator.py'), 1)
+                self.assertEqual(args.count('.build/test-run-timing.json'), 1)
+                self.assertEqual(args.count('.build/test-run-timing-retry.json'), 1)
+                self.assertEqual(args[args.index('--result-bundle') + 1], '.build/Tests-retry.xcresult')
+                self.assertEqual(args[-2:], ['--test-log', '.build/Tests-retry.log'])
+
+    def test_started_suites_assertions_restarts_and_other_crash_sites_are_not_retryable(self):
+        for message in (
+            "Test Suite 'Selected tests' started\n" + BOOTSTRAP_STALL,
+            "interleaved: Test Case '-[Suite testOriginal]' started.\n" + BOOTSTRAP_STALL,
+            'Suite.swift:25: error: -[Suite testOriginal] : failed\n' + BOOTSTRAP_STALL,
+            'Restarting after unexpected exit, crash, or test timeout;\n' + BOOTSTRAP_STALL,
+            BOOTSTRAP_STALL.replace('handleStalledWait:', 'waitForExpectations:'),
+            BOOTSTRAP_STALL.replace('RoomInTheCartUITests-Runner', 'RoomInTheCart'),
+        ):
+            with self.subTest(message=message):
+                status, args = self.run_shard(NATIVE_EXIT='65', NATIVE_MESSAGE=message)
+                self.assertNotEqual(status, 0)
+                self.assertEqual(args.count('test-without-building'), 1)
+                self.assertIn('scripts/check_ios_test_results.py', args)
 
 
 if __name__ == '__main__':

@@ -41,13 +41,27 @@ run_tests() {
         echo 'Native timing observation unavailable; retained log remains authoritative.' >&2
     return "$native_status"
 }
+retryable_bootstrap_failure() {
+    local log="$1"
+    # Process output can interleave with the beginning of an XCTest record.
+    if grep -Eq 'Test (Case|Suite) |Restarting after unexpected exit, crash, or test timeout;|: error: -\[' "$log"; then
+        return 1
+    fi
+    if grep -Fq 'Test crashed with signal kill before establishing connection.' "$log"; then
+        return 0
+    fi
+    # Xcode 27.1 also reports a framework stall while preparing the UI runner.
+    local runner='RoomInTheCartUITests-Runner'
+    local early_exit='Early unexpected exit, operation never finished bootstrapping - no restart will be attempted\.'
+    local stalled_wait='-\[XCTWaiter\(StallHandling\) handleStalledWait:\]'
+    local cause="Underlying Error: The test runner crashed while preparing to run tests: $runner at $stalled_wait"
+    grep -Eq "^[[:blank:]]*$runner \([0-9]+\) encountered an error \($early_exit \($cause\)\)[[:blank:]]*$" "$log"
+}
 result=.build/Tests.xcresult
 log=.build/Tests.log
 test_status=0
 if ! run_tests "$result" "$log"; then
-    # Retry only an infrastructure kill before any test has started.
-    if ! grep -Fq 'Test crashed with signal kill before establishing connection.' "$log" ||
-       grep -Eq '^Test Case |^Restarting after unexpected exit, crash, or test timeout;' "$log"; then
+    if ! retryable_bootstrap_failure "$log"; then
         test_status=1
     else
         xcrun simctl shutdown "$SIMULATOR_ID" || true
