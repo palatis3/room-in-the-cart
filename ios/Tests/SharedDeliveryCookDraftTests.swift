@@ -129,6 +129,14 @@ final class SharedDeliveryCookDraftTests: XCTestCase {
                 currentIndex: firstIndex, previousIndex: firstIndex, destinationConfirmed: true) else { return XCTFail("Expected reviewed changes") }
             XCTAssertTrue(noAdd.isEmpty && noRemove.isEmpty)
             XCTAssertTrue(stillMissing.contains { $0.contains("Fresh herbs") })
+            let missingDeadline = language == "es" ? "Hora límite de la comida: Desconocido" : "Meal deadline: Unknown"
+            XCTAssertTrue(stillMissing.contains { $0.contains(missingDeadline) })
+            let legacy = try XCTUnwrap(SharedCookFactIndex(source: firstIndex.source, sections: firstIndex.sections.map {
+                $0.key == "preparation" ? .init(key: $0.key, bytes: $0.bytes, unresolved: false) : $0
+            }))
+            let legacyCorrection = try unchanged.correction(current: first, previous: first,
+                currentIndex: legacy, previousIndex: legacy, destinationConfirmed: true)
+            XCTAssertEqual(legacyCorrection, .changes(added: [], removed: [], unresolved: stillMissing))
             let change = try changed.correction(current: second, previous: first, currentIndex: secondIndex,
                                                 previousIndex: firstIndex, destinationConfirmed: true)
             guard case let .changes(added, removed, unresolved) = change else { return XCTFail("Expected reviewed changes") }
@@ -380,8 +388,14 @@ extension SharedDeliveryCookDraftTests {
         plan["deadline"]=["at":"2026-11-01T06:30:00Z","zone":"America/New_York"]
         edited["planning"]=plan
         p["meals"]=[["occurrenceId":occurrence.uuidString,"revision":4,"meal":edited] as Object]
+        let record = try decode(SharedDeliveryPage.self, p)
+        let selected = try XCTUnwrap(record.meals?.first)
+        let report = try decode(SharedDeliveryCoverage.self, coverage)
         for language in ["en-US","es-US"] {
-            let note=try XCTUnwrap(draft(p,coverage,language:language))
+            let instruction = try XCTUnwrap(SharedDeliveryCookDraft.instruction(page: record, report: .delivery(report),
+                                                                               occurrence: selected, language: language))
+            let note = instruction.text
+            XCTAssertFalse(try XCTUnwrap(instruction.sections.first { $0.key == "preparation" }).unresolved)
             XCTAssertTrue(note.contains("America/New_York (UTC−05:00)"))
             XCTAssertTrue(note.contains(language=="en-US" ? "Meal deadline:" : "Hora límite de la comida:"))
         }

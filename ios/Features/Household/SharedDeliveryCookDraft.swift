@@ -54,13 +54,19 @@ struct SharedCookInstruction {
     func correction(current: SharedCookCopy, previous: SharedCookCopy, currentIndex: SharedCookFactIndex,
                     previousIndex: SharedCookFactIndex, destinationConfirmed: Bool) throws -> HandoffCorrection {
         guard current.language == previous.language, current.occurrenceId == previous.occurrenceId,
-              let now = currentIndex.pieces(in: current.text), let old = previousIndex.pieces(in: previous.text) else {
+              var now = currentIndex.pieces(in: current.text), let old = previousIndex.pieces(in: previous.text) else {
             return .full(current.text)
         }
-        guard source == currentIndex.source, sections.dropLast().count == now.count,
-              zip(sections.dropLast(), now).allSatisfy({ actual, saved in
-                  actual.key == saved.section.key && actual.unresolved == saved.section.unresolved && actual.text.utf8.elementsEqual(saved.wording.utf8)
-              }) else { throw ClientError.cancelled }
+        guard source == currentIndex.source, sections.dropLast().count == now.count else { throw ClientError.cancelled }
+        for (index, actual) in sections.dropLast().enumerated() {
+            let saved = now[index]
+            guard actual.key == saved.section.key, actual.text.utf8.elementsEqual(saved.wording.utf8) else { throw ClientError.cancelled }
+            if actual.unresolved != saved.section.unresolved {
+                // Older copies marked preparation resolved when only the deadline was missing.
+                guard actual.key == "preparation", actual.unresolved else { throw ClientError.cancelled }
+                now[index].section = .init(key: actual.key, bytes: saved.section.bytes, unresolved: true)
+            }
+        }
         return HandoffCorrection.review(current: current.handoff(pieces: now), prior: previous.handoff(pieces: old), paid: true,
                                         destinationConfirmed: destinationConfirmed, privateWordingConfirmed: false) ?? .full(current.text)
     }
@@ -142,14 +148,15 @@ struct SharedDeliveryCookDraft {
 
         let restrictions = plan?.exclusions ?? []
         let steps = plan?.completedSteps ?? []
+        let deadline = plan?.deadline?.display(locale: Locale(identifier: language))
         let preparation = [
-            field("Meal deadline", plan?.deadline?.display(locale: Locale(identifier: language)) ?? label("Unknown"), table: "Recovery"),
+            field("Meal deadline", deadline ?? label("Unknown"), table: "Recovery"),
             field("Meal exclusions", restrictions.isEmpty ? noRecord : restrictions.joined(separator: ", ")),
             field("Preparation time in minutes", plan?.leadTimeMinutes.map(String.init) ?? label("Unknown")),
             field("Completed preparation steps", steps.isEmpty ? noRecord : "\n" + steps.joined(separator: "\n"))
         ]
         var sections = [SharedCookInstruction.Section(key: "meal", text: heading.joined(separator: "\n")),
-                        .init(key: "preparation", text: preparation.joined(separator: "\n"), unresolved: plan?.leadTimeMinutes == nil)]
+                        .init(key: "preparation", text: preparation.joined(separator: "\n"), unresolved: deadline == nil || plan?.leadTimeMinutes == nil)]
         let scope: String
         var footer: [String] = []
         let unplanned: Bool
