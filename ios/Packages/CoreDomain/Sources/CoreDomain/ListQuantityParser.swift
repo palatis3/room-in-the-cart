@@ -32,18 +32,28 @@ public enum ListQuantityParser {
         return amount
     }
 
-    /// Ordinary lists keep number-like product names intact. A spoken pack count
-    /// or a complete quarter measure provides its own quantity context.
+    /// A measured fraction supplies quantity context in a plain list. A number
+    /// inside a product name such as “Half Baked” does not supply a measure.
     static func takeListAmount(from tokens: inout ArraySlice<String>) throws -> Rational {
         let quarters = ["quarter", "quarters", "cuarto", "cuartos"]
-        if tokens.prefix(6).contains(where: { quarters.contains($0.lowercased()) }) {
+        let halves = ["half", "media", "medio"]
+        let prefix = tokens.prefix(6).map { $0.lowercased() }
+        let hasQuarter = prefix.contains(where: quarters.contains)
+        if hasQuarter || prefix.contains(where: halves.contains) {
             var rest = tokens
-            let amount = try takeAmount(from: &rest, allowingWords: true)
-            var afterMeasure = rest
-            _ = takeMeasure(amount, from: &afterMeasure)
-            if tokens[..<afterMeasure.startIndex].contains(where: { quarters.contains($0.lowercased()) }) {
-                tokens = rest
-                return amount
+            do {
+                let amount = try takeAmount(from: &rest, allowingWords: true)
+                var afterMeasure = rest
+                let measure = takeMeasure(amount, from: &afterMeasure)
+                let consumed = tokens[..<afterMeasure.startIndex].map { $0.lowercased() }
+                if consumed.contains(where: quarters.contains)
+                    || (measure.unit != nil && consumed.contains(where: halves.contains)) {
+                    tokens = rest
+                    return amount
+                }
+            } catch {
+                // “3 quarters of milk” must be reviewed instead of becoming three items.
+                if hasQuarter { throw error }
             }
         }
         let packFollows = isPackMarker(tokens.dropFirst().first ?? "")
@@ -190,11 +200,11 @@ public enum ListQuantityParser {
         if hasOf { measure = measure.dropFirst() }
         let hasArticle = hasOf && ["a", "an", "un", "una"].contains(measure.first?.lowercased() ?? "")
         if hasArticle { measure = measure.dropFirst() }
-        if let first = measure.first, units[unitKey(first)] != nil || needsUnitReview(first)
-            || fluidOunces.contains(measure.prefix(2).map(unitKey).joined(separator: " ")) {
-            tokens = measure
-        } else if afterUnit && (tail.isEmpty || hasOf) {
+        var unitProbe = measure
+        if afterUnit && (tail.isEmpty || hasOf) {
             tokens = tail
+        } else if takeUnitName(from: &unitProbe) != nil || needsUnitReview(measure.first) {
+            tokens = measure
         } else if hasArticle && !measure.isEmpty {
             tokens = measure
         } else if hasOf {
@@ -310,23 +320,54 @@ public enum ListQuantityParser {
 
     /// A mixed measure can put the unit before the fraction, as in "una taza y media de arroz".
     public static func takeMeasure(_ amount: Rational?, from tokens: inout ArraySlice<String>) -> (amount: Rational?, unit: UnitOfMeasure?) {
-        guard let first = tokens.first.map(unitKey) else { return (amount, nil) }
-        let unit: UnitOfMeasure
-        if fluidOunces.contains(tokens.prefix(2).map(unitKey).joined(separator: " ")) {
-            unit = .fluidOunce
-            tokens = tokens.dropFirst(2)
-        } else if let single = units[first] {
-            unit = single
-            tokens = tokens.dropFirst()
-        } else { return (amount, nil) }
+        guard let unit = takeUnitName(from: &tokens) else { return (amount, nil) }
         var measured = amount
         if let fraction = try? takeAddedFraction(from: &tokens, afterUnit: true) {
-            if let amount, amount.denominator == 1 { measured = try? amount.adding(fraction) }
-            else { measured = nil }
+            let extra = fractionInUnit(fraction, unit: unit, from: &tokens)
+            measured = nil
+            if let amount, let extra { measured = try? amount.adding(extra) }
         }
         // Preserve capitalized product names such as De Cecco.
         if let connector = tokens.first, connector == "de" || connector == "of" { tokens = tokens.dropFirst() }
         return (measured, unit)
+    }
+
+    private static func takeUnitName(from tokens: inout ArraySlice<String>) -> UnitOfMeasure? {
+        if fluidOunces.contains(tokens.prefix(2).map(unitKey).joined(separator: " ")) {
+            tokens = tokens.dropFirst(2)
+            return .fluidOunce
+        }
+        guard let first = tokens.first, let unit = units[unitKey(first)] else { return nil }
+        tokens = tokens.dropFirst()
+        return unit
+    }
+
+    /// In “one pound and a half ounce”, the second unit belongs to the fraction.
+    private static func fractionInUnit(_ fraction: Rational, unit: UnitOfMeasure, from tokens: inout ArraySlice<String>) -> Rational? {
+        var rest = tokens
+        let hasOf = rest.first == "of" || rest.first == "de"
+        if hasOf { rest = rest.dropFirst() }
+        let hasArticle = ["a", "an", "un", "una"].contains(rest.first?.lowercased() ?? "")
+        if hasArticle { rest = rest.dropFirst() }
+
+        let start = rest
+        if let otherUnit = takeUnitName(from: &rest) {
+            // “of Cup Noodles” starts the food name. “de taza de arroz” names a unit.
+            if hasOf && !hasArticle && !rest.isEmpty && rest.first != "of" && rest.first != "de" {
+                return fraction
+            }
+            tokens = rest
+            return try? Quantity(amount: fraction, unit: otherUnit, originalLiteral: fraction.description).converted(to: unit)
+        }
+        if needsUnitReview(start.first) || (hasArticle && ["of", "de"].contains(start.dropFirst().first ?? "")) {
+            tokens = start.dropFirst()
+            return nil
+        }
+        if hasArticle {
+            tokens = start
+            return nil
+        }
+        return fraction
     }
 
     public static func needsUnitReview(_ token: String?) -> Bool {

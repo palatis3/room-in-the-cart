@@ -120,6 +120,18 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: "\n"))
     }
 
+    func testPastedSecondMeasureUsesItsOwnUnitBeforeSaving() throws {
+        let text = "one pound and a half ounce of cheese\nuna taza y un cuarto de taza de arroz\n1 cup and a quarter of a pound of rice\nHalf Baked cookies"
+        var shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: text, source: .paste)
+        try shop.commitImport(preview)
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: "\n"))
+        XCTAssertEqual(preview.lines.map(\.name), ["cheese", "arroz", "rice", "Half Baked cookies"])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.amount }, [try Rational(33, 32), try Rational(5, 4), nil, nil])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.unit }, [.pound, .cup, nil, nil])
+        XCTAssertNotNil(preview.lines[2].unresolvedReason)
+    }
+
     func testRangedImportsKeepUncertainAmountsOutOfSavedSupply() throws {
         var shop = ShoppingLedger()
         let examples = [

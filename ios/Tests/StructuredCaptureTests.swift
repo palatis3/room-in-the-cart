@@ -56,6 +56,13 @@ final class StructuredCaptureTests: XCTestCase {
         let examples: [(String, String, Rational?, UnitOfMeasure?)] = [
             ("one and a half cups of rice", "rice", try Rational(3, 2), .cup),
             ("one and a quarter cups of rice", "rice", try Rational(5, 4), .cup),
+            ("one cup and a quarter of a cup of rice", "rice", try Rational(5, 4), .cup),
+            ("una taza y un cuarto de taza de arroz", "arroz", try Rational(5, 4), .cup),
+            ("one pound and a half ounce of cheese", "cheese", try Rational(33, 32), .pound),
+            ("one cup and a quarter of a fluid ounce of oil", "oil", try Rational(33, 32), .cup),
+            ("una taza y un cuarto de libra de arroz", "arroz", nil, nil),
+            ("one cup and a quarter of a pint of rice", "rice", nil, nil),
+            ("one cup and a half of Cup Noodles", "Cup Noodles", try Rational(3, 2), .cup),
             ("three quarters of a cup of milk", "milk", try Rational(3, 4), .cup),
             ("un cuarto de taza de leche", "leche", try Rational(1, 4), .cup),
             ("tres cuartos de taza de arroz", "arroz", try Rational(3, 4), .cup),
