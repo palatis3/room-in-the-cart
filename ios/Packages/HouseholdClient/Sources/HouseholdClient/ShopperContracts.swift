@@ -41,14 +41,28 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
     public let capScope: String; public let fee: Fee; public let taxesMinor: Int?
     public let depositsMinor: Int?; public let discountsMinor: Int?; public let observedAt: String; public let expiresAt: String
     public init(scope: String, complete: Bool, capMinor: Int?, capScope: String, fee: Fee,
-                taxesMinor: Int?, depositsMinor: Int?, discountsMinor: Int?, observedAt: Date, expiresAt: Date) throws {
+                taxesMinor: Int?, depositsMinor: Int?, discountsMinor: Int?, observedAt: Date, expiresAt: Date,
+                preservingTimestampsFrom original: ShopperQuote? = nil) throws {
         let amounts = [capMinor, fee.amountMinor, fee.thresholdMinor, fee.belowMinor, fee.aboveMinor, taxesMinor, depositsMinor, discountsMinor].compactMap { $0 }
         guard ["wholeCheckout", "item", "dinner"].contains(scope), ["wholeCheckout", "item", "dinner", "unknown"].contains(capScope),
               ["fixed", "threshold"].contains(fee.kind), amounts.allSatisfy({ (0...1_000_000_000).contains($0) }),
               observedAt.timeIntervalSince1970.isFinite, expiresAt.timeIntervalSince1970.isFinite, expiresAt > observedAt else { throw ClientError.configuration }
         currency = "USD"; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
         self.taxesMinor = taxesMinor; self.depositsMinor = depositsMinor; self.discountsMinor = discountsMinor
-        let formatter = ISO8601DateFormatter(); self.observedAt = formatter.string(from: observedAt); self.expiresAt = formatter.string(from: expiresAt)
+        self.observedAt = Self.timestamp(observedAt, original: original?.observedAt)
+        self.expiresAt = Self.timestamp(expiresAt, original: original?.expiresAt)
+        // The service compares the serialized instants at millisecond precision.
+        guard let observation = HistoryValidation.date(self.observedAt), let expiry = HistoryValidation.date(self.expiresAt),
+              expiry > observation else { throw ClientError.configuration }
+    }
+    private static func timestamp(_ date: Date, original: String?) -> String {
+        // Retain the service's exact offset and fractional digits when its field was untouched.
+        if let original, HistoryValidation.date(original) == date { return original }
+        let formatter = ISO8601DateFormatter()
+        if date.timeIntervalSince1970.rounded(.down) != date.timeIntervalSince1970 {
+            formatter.formatOptions.insert(.withFractionalSeconds)
+        }
+        return formatter.string(from: date)
     }
     private enum CodingKeys: String, CodingKey { case currency, scope, complete, capMinor, capScope, fee, taxesMinor, depositsMinor, discountsMinor, observedAt, expiresAt }
     public func encode(to encoder: Encoder) throws {

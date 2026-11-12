@@ -84,6 +84,18 @@ extension HouseholdClientTests {
         do { _ = try await service.executeSharedShop(operation); XCTFail("Contributor used organizer capability") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         XCTAssertEqual(commands.count, 2)
     }
+    func testNewQuoteRetainsSubsecondOrderingOnTheWire() throws {
+        let second = Date(timeIntervalSince1970: 1_800_000_000)
+        func quote(_ observed: Double, _ expires: Double) throws -> ShopperQuote {
+            try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: 3800, capScope: "wholeCheckout",
+                fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0,
+                observedAt: second.addingTimeInterval(observed), expiresAt: second.addingTimeInterval(expires))
+        }
+        let value = try quote(0.125, 0.875)
+        XCTAssertEqual(value.observedAt, "2027-01-15T08:00:00.125Z")
+        XCTAssertEqual(value.expiresAt, "2027-01-15T08:00:00.875Z")
+        XCTAssertThrowsError(try quote(0.1251, 0.1252))
+    }
     func testSharedCandidateRejectsDuplicateLinesAndInvalidQuoteTimes() throws {
         let now = Date(); let line = ShopperBasketLine(originalItem: "Wraps", packs: 1, unitPriceMinor: nil, feeEligible: true)
         let quote = try ShopperQuote(scope: "wholeCheckout", complete: false, capMinor: nil, capScope: "wholeCheckout", fee: .fixed(nil), taxesMinor: nil, depositsMinor: nil, discountsMinor: nil, observedAt: now, expiresAt: now.addingTimeInterval(60))

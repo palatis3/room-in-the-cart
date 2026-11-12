@@ -500,6 +500,34 @@ import XCTest
         XCTAssertNil(library.pending)
         XCTAssertFalse(library.canSuggest)
     }
+    func testDraftPreservesUntouchedQuoteTimestampsAcrossBasketAndDateEdits() throws {
+        let source = Data(#"""
+        {"shopId":"00000000-0000-4000-8000-000000000001","shopRevision":3,"authorityEpoch":1,"phase":"draft",
+         "lines":[],"quote":{"currency":"USD","scope":"wholeCheckout","complete":false,"capScope":"wholeCheckout",
+         "capMinor":3800,"fee":{"kind":"fixed","amountMinor":0},
+         "observedAt":"2026-11-12T08:25:54.358000+01:00","expiresAt":"2026-11-12T08:26:54.358000+01:00"}}
+        """#.utf8)
+        let shop = try JSONDecoder().decode(ShopperShop.self, from: source)
+        var draft = try SharedShopDraft(shop)
+        draft.lines = [.init(item: "Beans", price: "3.49")]
+        XCTAssertEqual(try draft.candidate().quote, shop.quote)
+
+        draft.cap = ""
+        draft.expiresAt = try XCTUnwrap(serviceDate("2026-11-12T07:25:54.850Z"))
+        let edited = try draft.candidate().quote
+        XCTAssertEqual(edited.observedAt, shop.quote.observedAt)
+        XCTAssertEqual(edited.expiresAt, "2026-11-12T07:25:54.850Z")
+        XCTAssertNil(edited.capMinor)
+        XCTAssertNil(edited.taxesMinor)
+
+        draft.expiresAt = try XCTUnwrap(serviceDate(shop.quote.expiresAt))
+        draft.observedAt = try XCTUnwrap(serviceDate("2026-11-12T07:26:54Z"))
+        let revised = try draft.candidate().quote
+        XCTAssertEqual(revised.observedAt, "2026-11-12T07:26:54Z")
+        XCTAssertEqual(revised.expiresAt, shop.quote.expiresAt)
+        draft.observedAt = draft.expiresAt
+        XCTAssertThrowsError(try draft.candidate())
+    }
     func testShopDraftRequiresExplicitReviewAndEditsInvalidateIt() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop)

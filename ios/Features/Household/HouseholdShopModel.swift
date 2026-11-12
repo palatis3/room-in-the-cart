@@ -11,6 +11,7 @@ struct SharedShopLineDraft: Identifiable, Equatable {
     }
 }
 struct SharedShopDraft: Equatable {
+    private let originalQuote: ShopperQuote?
     var lines: [SharedShopLineDraft] = []
     var mealEdit: SharedMealEdit?
     var scope = "wholeCheckout", capScope = "wholeCheckout"
@@ -21,8 +22,9 @@ struct SharedShopDraft: Equatable {
     static func amount(_ minor: Int?) -> String {
         guard let minor else { return "" }; return String(format: "%d.%02d", minor / 100, minor % 100)
     }
-    init() {}
+    init() { originalQuote = nil }
     init(_ shop: ShopperShop) throws {
+        originalQuote = shop.quote
         lines = try shop.lines.map {
             guard let id = UUID(uuidString: $0.id) else { throw ClientError.invalidResponse }
             return .init(id: id, item: $0.originalItem, packs: $0.packs, price: Self.amount($0.unitPriceMinor), feeEligible: $0.feeEligible)
@@ -42,7 +44,8 @@ struct SharedShopDraft: Equatable {
             feeValue = .threshold(value, below: try money(belowFee), above: try money(aboveFee))
         } else { feeValue = .fixed(try money(fee)) }
         let quote = try ShopperQuote(scope: scope, complete: complete, capMinor: money(cap), capScope: capScope, fee: feeValue,
-            taxesMinor: money(tax), depositsMinor: money(deposits), discountsMinor: money(discounts), observedAt: observedAt, expiresAt: expiresAt)
+            taxesMinor: money(tax), depositsMinor: money(deposits), discountsMinor: money(discounts), observedAt: observedAt, expiresAt: expiresAt,
+            preservingTimestampsFrom: originalQuote)
         return try .init(quote: quote, lines: lines.map { try .init(lineId: $0.id, originalItem: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
             packs: $0.packs, unitPriceMinor: money($0.price), feeEligible: $0.feeEligible) })
     }
