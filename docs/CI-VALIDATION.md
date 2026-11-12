@@ -125,8 +125,10 @@ The following jobs share the six M4 slots.
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
 | Contributor balanced-03, core UI07 and core UI10 | 2 | 4, 2 and 0 |
 | Delivery recovery/cook/closeout, core UI04 and core UI08 | 3 | 1, 1 and 3 |
-| Core UI02, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 4 and 2 |
+| Core UI02, English expired quote, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 3, 4 and 2 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
+
+The English expired-quote editor journey took 13m00s and 17m59s in its last two successful GitHub jobs. Its Spanish counterpart took 7m16s and 5m50s on Bitrise M4. M4 slot 4 finished its final job at least 27 minutes before the core gate in both batches. The English journey now uses that slot on trusted runs, freeing GitHub slot 3 for the wire test and Records fixture. Its selectors, assertions and GitHub fallback are unchanged. Compare the next English run's elapsed time and the other slot 4 jobs to measure the effect. [English GitHub job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240228) · [Spanish M4 job](https://github.com/palatis3/room-in-the-cart/actions/runs/43275488968/job/131386240529).
 
 UI01 finished last in two consecutive full builds. It waited 21m25s after the producer on `3977750b` and 26m09s on `099d6bf6`. M4 slot 0 took its first UI group after 51s and 53s on those builds. Full UI01 now shares slot 0 with UI03. UI10 moves to slot 2, whose last job finished 28m58s before UI01 in the latest run. The manual two-test Dinner dispatch continues on GitHub. Measure the next full build from producer completion to UI01 start and from workflow creation to the last required gate. The prior complete batches took 58m19s and 67m04s. [Previous UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43246467096/job/131285759950) · [Latest UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43259414250/job/131330863485)
 

@@ -180,6 +180,7 @@ def matrix(inventory=None):
         "SharedDeliveryUITests-recovery-cook-and-closeout": 3,
         # This journey otherwise queues directly ahead of the bilingual StoreKit run.
         "SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 4,
+        "SharedFoodEditorUITests-testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 4,
         "SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 1,
         "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
         "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,

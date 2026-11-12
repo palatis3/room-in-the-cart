@@ -44,7 +44,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
             ('bitrise', 1), ('bitrise-m4', 2), ('github', 2), ('bitrise-m4', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('github', 3),
+            ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
@@ -74,6 +74,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('contributor-balanced-04', 0, 1),
             ('contributor-balanced-03', 4, 2),
             ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3),
+            ('SharedFoodEditorUITests-testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 3, 4),
             ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
             ('SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple', 2, 4),
             ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
