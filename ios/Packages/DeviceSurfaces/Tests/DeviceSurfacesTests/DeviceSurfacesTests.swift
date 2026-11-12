@@ -1,5 +1,6 @@
 import XCTest
 import CryptoKit
+import UniformTypeIdentifiers
 @testable import DeviceSurfaces
 
 final class DeviceSurfacesTests: XCTestCase {
@@ -14,6 +15,49 @@ final class DeviceSurfacesTests: XCTestCase {
         try ReminderIntent(id: id, personaID: UUID(), targetID: UUID(), subject: subject, sourceRevision: 4, routeHandle: handle,
             localTime: CivilReminderTime(year: 2027, month: 1, day: day, hour: 13, minute: 0, timeZoneID: "America/New_York"),
             expiresAt: Date(timeIntervalSince1970: 1_810_000_000), cutoff: Date(timeIntervalSince1970: 1_810_000_000), language: .english, now: now)
+    }
+    private func loadTextFile(_ bytes: Data, type: UTType = .utf8PlainText) async throws -> Result<String, SurfaceError> {
+        let source = try file("shopping.txt")
+        try bytes.write(to: source)
+        let provider = NSItemProvider()
+        provider.registerFileRepresentation(forTypeIdentifier: type.identifier, fileOptions: [], visibility: .all) { receive in
+            receive(source, false, nil)
+            return nil
+        }
+        return await withCheckedContinuation { result in
+            SelectedTextInbox.loadPlainText(from: provider) { result.resume(returning: $0) }
+        }
+    }
+    func testSharedPlainTextFilesPreserveOriginalWordingAndLineBreaks() async throws {
+        let text = "2 tortillas\r\nFrijoles negros 🍚"
+        let utf8 = Data(text.utf8)
+        let samples: [(UTType, Data)] = [
+            (.utf8PlainText, utf8),
+            (.plainText, Data([0xEF, 0xBB, 0xBF]) + utf8),
+            (.utf16ExternalPlainText, try XCTUnwrap(text.data(using: .utf16))),
+            (.utf16PlainText, try XCTUnwrap(text.data(using: .utf16LittleEndian)))
+        ]
+        for (type, data) in samples {
+            let result = try await loadTextFile(data, type: type)
+            XCTAssertEqual(try result.get(), text, type.identifier)
+        }
+        let stringResult: Result<String, SurfaceError> = await withCheckedContinuation { result in
+            SelectedTextInbox.loadPlainText(from: NSItemProvider(object: text as NSString)) { result.resume(returning: $0) }
+        }
+        XCTAssertEqual(try stringResult.get(), text)
+    }
+    func testSharedPlainTextFilesRejectOversizedInvalidAndUnrelatedRepresentations() async throws {
+        let exact = Data(repeating: 65, count: SelectedTextInbox.maximumEntryBytes)
+        let valid = try await loadTextFile(exact)
+        XCTAssertEqual(try valid.get().utf8.count, exact.count)
+        let oversized = try await loadTextFile(exact + Data([65]))
+        XCTAssertEqual(oversized, .failure(.capacity))
+        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data()] {
+            let invalid = try await loadTextFile(bytes)
+            XCTAssertEqual(invalid, .failure(.invalid))
+        }
+        let unrelated = try await loadTextFile(Data("beans".utf8), type: .pdf)
+        XCTAssertEqual(unrelated, .failure(.unsupported))
     }
     func testSelectedTextExactReplayAfterReopenAndChangedReplayFails() async throws {
         let url = try file(), id = UUID(), inbox = try SelectedTextInbox(url: url)

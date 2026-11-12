@@ -25,17 +25,14 @@ final class ShareViewController: UIViewController {
         let providers = (items[0].attachments ?? []).filter { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }
         guard providers.count == 1 else { model.reject(); return }
         let expected = generation
-        providers[0].loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] item, error in
-            let tooLarge = (item as? Data).map { $0.count > SelectedTextInbox.maximumEntryBytes } ?? false
-            let text: String?
-            if let value = item as? String { text = value }
-            else if let data = item as? Data, data.count <= SelectedTextInbox.maximumEntryBytes { text = String(data: data, encoding: .utf8) }
-            else { text = nil }
+        SelectedTextInbox.loadPlainText(from: providers[0]) { [weak self] result in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == expected else { return }
-                if error == nil && tooLarge { self.model.rejectSize(); return }
-                guard error == nil, let text else { self.model.reject(); return }
-                self.model.accept(text)
+                switch result {
+                case .success(let text): self.model.accept(text)
+                case .failure(.capacity): self.model.rejectSize()
+                case .failure: self.model.reject()
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import UniformTypeIdentifiers
 
 public enum InboxDisposition: String, Codable, Sendable { case pending, consumed, discarded, expired }
 public struct InboxReceipt: Equatable, Sendable {
@@ -127,6 +128,50 @@ public actor SelectedTextInbox {
               edited == nil || !edited!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw SurfaceError.invalid }
         struct Body: Encodable { let original: String; let edited: String? }
         return SHA256.hash(data: try canonical(Body(original: original, edited: edited))).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+extension SelectedTextInbox {
+    /// Consume the system's temporary copy inside the provider callback.
+    public static func loadPlainText(from provider: NSItemProvider,
+                                     completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
+        guard let type = provider.registeredTypeIdentifiers.compactMap({ UTType($0) })
+            .first(where: { $0.conforms(to: .plainText) }) else {
+            completion(.failure(.unsupported))
+            return
+        }
+        provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
+            guard error == nil, let url, url.isFileURL else { completion(.failure(.unavailable)); return }
+            do { completion(.success(try readPlainText(at: url, type: type))) }
+            catch { completion(.failure(error as? SurfaceError ?? .unavailable)) }
+        }
+    }
+
+    private static func readPlainText(at url: URL, type: UTType) throws -> String {
+        let attributes = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard attributes.isRegularFile == true, attributes.isSymbolicLink != true,
+              let size = attributes.fileSize, size > 0 else { throw SurfaceError.invalid }
+        guard size <= maximumEntryBytes else { throw SurfaceError.capacity }
+        let file = try FileHandle(forReadingFrom: url)
+        defer { try? file.close() }
+        let bytes = try file.read(upToCount: maximumEntryBytes + 1) ?? Data()
+        guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
+        guard bytes.count == size else { throw SurfaceError.invalid }
+
+        let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
+        let text: String?
+        if hasUTF16Mark || type == .utf16ExternalPlainText || type == .utf16PlainText {
+            // Foundation can silently discard a trailing half of a UTF-16 code unit.
+            guard bytes.count.isMultiple(of: 2) else { throw SurfaceError.invalid }
+            let encoding: String.Encoding = !hasUTF16Mark && type == .utf16PlainText ? .utf16LittleEndian : .utf16
+            text = String(data: bytes, encoding: encoding)
+        } else {
+            let payload = bytes.starts(with: [0xEF, 0xBB, 0xBF]) ? bytes.dropFirst(3) : bytes[...]
+            text = String(data: payload, encoding: .utf8)
+        }
+        guard let text, !text.isEmpty, !text.contains("\0") else { throw SurfaceError.invalid }
+        guard fitsEnvelope(original: text) else { throw SurfaceError.capacity }
+        return text
     }
 }
 
