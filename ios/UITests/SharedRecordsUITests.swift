@@ -165,10 +165,12 @@ import XCTest
         let nativeSwitch = value.switches.firstMatch
         reveal(nativeSwitch, requiresFullFrame: true)
         if nativeSwitch.value as? String == "0" {
-            // The recorded track-center tap left this visible switch off on
-            // iOS 27. Target its visible off-position thumb, then verify both
-            // the native control and the owning SwiftUI row changed state.
-            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+            // A tap on the visible off thumb can leave the Records switch off.
+            // Move the thumb across the native track in one gesture.
+            XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable)
+            let off = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            let on = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+            off.press(forDuration: 0.1, thenDragTo: on)
         }
         let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             nativeSwitch.value as? String == "1" && value.value as? String == "1"
