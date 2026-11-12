@@ -1959,7 +1959,10 @@ import XCTest
             }
             trace.append("gesture=\(attempt + 1); upward=\(upward); exists=\(exists); frame=\(frame); area=\(area); unchanged=\(unchanged); reversed=\(reversed); visible=\(visible)")
             previous = visible; previousArea = area
-            scrollContent(upward: upward, area: area, bounds: snapshot?.frame)
+            // A full search drag can coast past both edges of a located row on
+            // a small screen. Once located, drag toward the viewport center.
+            let positioningDistance = entireRow && exists && !frame.isEmpty ? abs(frame.midY - viewport.midY) : nil
+            scrollContent(upward: upward, area: area, bounds: snapshot?.frame, positioningDistance: positioningDistance)
         }
         let viewport = dinnerAcceptanceViewport(for: scrollableArea())
         XCTAssertTrue(target.exists && target.isHittable && (!entireRow || viewport.contains(target.frame)),
@@ -2262,15 +2265,22 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil, bounds measuredBounds: CGRect? = nil) {
+    private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil, bounds measuredBounds: CGRect? = nil,
+                               positioningDistance: CGFloat? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = measuredArea ?? scrollableArea(), bounds = measuredBounds ?? app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let maximumDistance = area.height * 0.6
+        let distance = min(positioningDistance ?? maximumDistance, maximumDistance)
+        let high = area.midY - distance / 2, low = area.midY + distance / 2
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        if positioningDistance != nil {
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        } else {
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
