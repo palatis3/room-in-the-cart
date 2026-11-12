@@ -14,6 +14,8 @@ export const childInvitationCopy = {
   language:{en:'Language',es:'Idioma'},english:{en:'English',es:'Inglés'},spanish:{en:'Spanish',es:'Español'},help:{en:'Help',es:'Ayuda'},
   loading:{en:'Checking child setup…',es:'Consultando la configuración para menores…'},
   signin:{en:'Use the email your guardian approved. Their current permission is checked before requesting a sign-in code.',es:'Usa el correo que aprobó tu tutor. Su permiso actual se comprueba antes de solicitar un código de acceso.'},
+  tokenReceived:{en:'Invitation code received.',es:'Se recibió el código de invitación.'},
+  replaceToken:{en:'Enter a different invitation code',es:'Ingresar otro código de invitación'},
   token:{en:'Invitation code',es:'Código de invitación'},email:{en:'Guardian-approved child email',es:'Correo del menor aprobado por el tutor'},
   send:{en:'Request sign-in code',es:'Solicitar código de acceso'},code:{en:'Six-digit code',es:'Código de seis dígitos'},verify:{en:'Verify code',es:'Verificar código'},
   sent:{en:'Check your email for a six-digit code.',es:'Busca en tu correo un código de seis dígitos.'},
@@ -236,6 +238,19 @@ export class ChildInvitationPage {
     const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string):HTMLElementTagNameMap[K]=>{const item=document.createElement(tag);if(text!==undefined)item.textContent=text;return item;};
     const button=(key:CopyKey,action:()=>void)=>{const b=el('button',t(key));b.type='button';b.disabled=this.busy;b.addEventListener('click',action);return b;};
     const field=(form:HTMLElement,key:CopyKey,id:string,value:string,type:string,change:(value:string)=>void)=>{const label=el('label',t(key));label.htmlFor=id;const input=el('input');input.id=id;input.type=type;input.value=value;input.required=true;input.disabled=this.busy;input.autocomplete='off';input.addEventListener('input',()=>change(input.value));form.append(label,input);return input;};
+    const invitationField=(form:HTMLFormElement)=>{
+      if(this.token?.trim()){
+        form.append(el('p',t('tokenReceived')),button('replaceToken',()=>{
+          this.token=null;
+          this.intent=null;
+          this.render();
+          this.root.querySelector<HTMLInputElement>('#child-invitation')?.focus();
+        }));
+      }else{
+        const input=field(form,'token','child-invitation','','password',value=>{this.token=value;});
+        input.maxLength=4096;
+      }
+    };
     document.documentElement.lang=this.language;this.root.replaceChildren();const header=el('header');header.append(el('p','Room in the Cart'));
     const select=el('select');select.id='language';select.setAttribute('aria-label',t('language'));
     for(const value of ['en','es'] as const){const option=el('option',t(value==='en'?'english':'spanish'));option.value=value;option.selected=value===this.language;select.append(option);}
@@ -255,7 +270,7 @@ export class ChildInvitationPage {
     else if(this.phase==='unavailable'){status.textContent=t('unavailable');main.append(el('p',t('explanation')),el('p',t('account')),el('p',t('secret')));}
     else if(this.phase==='signin'){
       main.append(el('p',t('signin')),el('p',t('account')));const form=el('form');
-      const token=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});token.maxLength=4096;
+      invitationField(form);
       const email=field(form,'email','child-email',this.email,'email',value=>{this.email=value;});email.maxLength=254;email.autocomplete='email';
       const send=button('send',()=>{});send.type='submit';form.append(send);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.sendCode(generation));});main.append(form,el('p',t('secret')));
     }else if(this.phase==='code'){
@@ -264,7 +279,7 @@ export class ChildInvitationPage {
       const resend=button('resend',()=>void this.run(generation=>this.sendCode(generation)));resend.id='child-resend';resend.disabled=this.busy||Date.now()<this.nextSendAt;main.append(form,resend);
     }else if(this.phase==='claim'){
       main.append(el('p',t('claimExplanation')));const form=el('form');
-      if(!this.controller?.state.pairingCode){const input=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});input.maxLength=4096;}
+      if(!this.controller?.state.pairingCode)invitationField(form);
       const claim=button(this.controller?.state.pairingCode?'retryClaim':'claim',()=>{});claim.type='submit';form.append(claim);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.claim(generation));});main.append(form);
     }else if(this.phase==='pending'){
       const state=this.controller?.state;if(state?.pairingCode){main.append(el('h2',t('pairing')));const code=el('p',state.pairingCode);code.id='pairing-code';main.append(code);}

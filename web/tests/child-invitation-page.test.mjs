@@ -36,6 +36,26 @@ async function mountedInvitation(t) {
   return {fixture,dom,root,api,visibility};
 }
 
+test('a supplied child invitation stays out of sign-in and claim fields',async t=>{
+  const f=await mountedInvitation(t);
+  const assertHidden=()=>{
+    assert.equal(f.root.querySelector('input[type=password]'),null);
+    assert.equal(f.root.textContent.includes(fixtureInput.token),false);
+    assert.equal([...f.root.querySelectorAll('input')].some(field=>field.value===fixtureInput.token),false);
+  };
+  assertHidden();
+  input(f.dom,'child-email',fixtureInput.email);
+  await click(f.root,'Enter a different invitation code');
+  assert.equal(f.root.querySelector('#child-email').value,fixtureInput.email);
+  assert.equal(f.dom.window.document.activeElement.id,'child-invitation');
+  input(f.dom,'child-invitation',fixtureInput.token);
+  await signin(f);
+  assertHidden();
+  await click(f.root,'Claim this child invitation');
+  assert.ok(f.root.querySelector('#pairing-code'));
+  assert.equal(f.fixture.counts.claims,1);
+});
+
 test('history snapshots omit child pairing and a restored page rechecks withdrawn access',async t=>{
   const f=await mountedInvitation(t);await paired(f);
   const code=f.root.querySelector('#pairing-code').textContent;
@@ -134,6 +154,7 @@ test('an account change while the child is entering an email clears the invitati
 test('a child signing in elsewhere cannot inherit an earlier invitation on this tab', async t => {
   const f = await mountedInvitation(t);
   const anotherInvite = fixtureInput.token.replace('22222222-', '99999999-');
+  await click(f.root, 'Enter a different invitation code');
   input(f.dom, 'child-invitation', anotherInvite);
   input(f.dom, 'child-email', 'previous@example.invalid');
   f.visibility('hidden');
@@ -198,7 +219,7 @@ test('uncertain covered OTP send has explicit code checking and no automatic res
 test('lost verify response reconciles cookie-bound admission without another OTP or verification',async t=>{
   const f=await setup(t);input(f.dom,'child-email',fixtureInput.email);await submit(f.dom,f.root);f.fixture.control('lose-verify');input(f.dom,'child-code',fixtureInput.code);await submit(f.dom,f.root);
   assert.match(f.root.textContent,/Sign-in could not be confirmed/);await click(f.root,'Check current status');assert.match(f.root.textContent,/Claim this child invitation/);assert.equal(f.fixture.counts.starts,1);assert.equal(f.fixture.counts.verifies,1);
-  assert.equal(f.root.querySelector('#child-invitation')?.value,fixtureInput.token);
+  assert.equal(f.root.querySelector('#child-invitation'),null);
   await click(f.root,'Claim this child invitation');assert.ok(f.root.querySelector('#pairing-code'));
 });
 
