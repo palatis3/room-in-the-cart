@@ -1829,6 +1829,10 @@ import XCTest
         }
         launch(reset: true, spanish: spanish)
         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
+        tap(app.buttons["dinner.recipeFiles"])
+        XCTAssertTrue(app.buttons["records.addManualRecipe"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["records.chooseRecipeFile"].exists)
+        tap(app.navigationBars[copy("Import and use recipes", "Importar y usar recetas")].buttons.firstMatch)
         tap(element("dinnerStartPickup"))
         fill(copy("First dinner pickup", "Primera compra para la cena"), into: "ledgerShopName")
         tap(element("ledgerCreateShop"))

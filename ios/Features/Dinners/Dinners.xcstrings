@@ -6513,18 +6513,34 @@
         }
       }
     },
-    "Name your pickup to save dinner ideas and choose what to make.": {
+    "You can save a recipe now and choose it for a pickup later.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name your pickup to save dinner ideas and choose what to make."
+            "value": "You can save a recipe now and choose it for a pickup later."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ponle un nombre a tu recogida para guardar ideas y elegir qué preparar."
+            "value": "Puedes guardar una receta ahora y elegirla para una recogida más adelante."
+          }
+        }
+      }
+    },
+    "Start a pickup to plan dinners and review the groceries you’ll need.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a pickup to plan dinners and review the groceries you’ll need."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia una recogida para planificar las cenas y revisar qué alimentos necesitas."
           }
         }
       }

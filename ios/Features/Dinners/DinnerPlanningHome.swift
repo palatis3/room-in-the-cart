@@ -27,6 +27,7 @@ extension LedgerModel: DinnerWorkspaceStore {}
 
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
+    @Environment(\.pickupLedger) private var liveLedger
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
@@ -41,9 +42,16 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 }
                 if model.shop == nil {
                     Section {
-                        Text(dinnerText("Name your pickup to save dinner ideas and choose what to make."))
+                        Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
                         Button(ledgerText("Start pickup"), action: startPickup)
                             .accessibilityIdentifier("dinnerStartPickup")
+                    }
+                    if let liveLedger, liveLedger.ready, model.store === liveLedger {
+                        Section {
+                            RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model)
+                        } footer: {
+                            Text(dinnerText("You can save a recipe now and choose it for a pickup later."))
+                        }
                     }
                 } else if !model.accessAvailable {
                     Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }

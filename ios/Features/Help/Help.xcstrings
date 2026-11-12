@@ -1,19 +1,19 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "In Dinner library, open Import and use recipes to type a family recipe or choose a Recipe JSON-LD file from Files. Review and save the recipe. When you want to shop for it, open the saved recipe and review the ingredients for that pickup.": {
+    "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Dinner library, open Import and use recipes to type a family recipe or choose a Recipe JSON-LD file from Files. Review and save the recipe. When you want to shop for it, open the saved recipe and review the ingredients for that pickup."
+            "value": "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En Biblioteca de cenas, abre Importar y usar recetas para escribir una receta familiar o elegir un archivo Recipe JSON-LD desde Archivos. Revisa y guarda la receta. Cuando quieras comprar los ingredientes, abre la receta guardada y revísalos para esa recogida."
+            "value": "Antes de tu primera recogida, abre Cenas y luego Importar y usar recetas. Escribe una receta familiar o elige un archivo Recipe JSON-LD en Archivos. Revisa la receta y guárdala. Cuando tengas una recogida, abre la receta guardada desde Biblioteca de cenas para revisar los ingredientes que necesitas comprar."
           }
         }
       }

@@ -89,8 +89,8 @@ export const publicPages = {
             "es": "En Cenas, guarda una comida conocida con sus porciones, ingredientes, fuente, exclusiones y cualquier tiempo de preparación previo conocido. Revisa una idea antes de elegirla para esta compra. Elegir una idea y asignarle una noche son pasos separados."
           },
           {
-            "en": "In Dinner library, open Import and use recipes to type a family recipe or choose a Recipe JSON-LD file from Files. Review and save the recipe. When you want to shop for it, open the saved recipe and review the ingredients for that pickup.",
-            "es": "En Biblioteca de cenas, abre Importar y usar recetas para escribir una receta familiar o elegir un archivo Recipe JSON-LD desde Archivos. Revisa y guarda la receta. Cuando quieras comprar los ingredientes, abre la receta guardada y revísalos para esa recogida."
+            "en": "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup.",
+            "es": "Antes de tu primera recogida, abre Cenas y luego Importar y usar recetas. Escribe una receta familiar o elige un archivo Recipe JSON-LD en Archivos. Revisa la receta y guárdala. Cuando tengas una recogida, abre la receta guardada desde Biblioteca de cenas para revisar los ingredientes que necesitas comprar."
           },
           {
             "en": "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation.",
