@@ -36,10 +36,13 @@ import XCTest
             enter(value, field: app.textFields[label], replacing: true)
         }
         let inclusive = app.switches["Retailer total already includes all charges"]
-        reveal(inclusive)
+        let thumb = inclusive.switches.firstMatch
+        reveal(thumb, reserveKeyboardSpace: false)
+        XCTAssertEqual(inclusive.switches.count, 1)
         if inclusive.value as? String == "0" {
-            inclusive.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+            thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
         }
+        XCTAssertEqual(thumb.value as? String, "1")
         XCTAssertEqual(inclusive.value as? String, "1")
         enter("3.00", field: app.textFields["Inclusive total"])
         finishEditing()
@@ -107,20 +110,21 @@ import XCTest
         reveal(target)
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, reserveKeyboardSpace: Bool = true) {
         for attempt in 0..<48 {
-            let area = contentArea(), exists = target.exists
+            let area = contentArea(reserveKeyboardSpace: reserveKeyboardSpace), exists = target.exists
             if exists && target.isHittable && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)) { return }
             let frame = exists ? target.frame : .zero
             let upward = !frame.isEmpty ? frame.midY > area.midY : attempt < 24
             let bounds = app.frame, origin = app.coordinate(withNormalizedOffset: .zero)
             let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
             origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-                .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY)))
+                .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY)),
+                       withVelocity: .slow, thenHoldForDuration: 0.3)
         }
         XCTFail("Missing visible checkout control: " + target.debugDescription)
     }
-    private func contentArea() -> CGRect {
+    private func contentArea(reserveKeyboardSpace: Bool) -> CGRect {
         let snapshot = try? app.snapshot(), bounds = snapshot?.frame ?? app.frame
         var top = bounds.minY + 88, bottom = bounds.maxY - 30
         var elements = snapshot.map { [$0] } ?? []
@@ -133,7 +137,8 @@ import XCTest
             if value.elementType == .button && value.label == "Done" {
                 // XCTest can briefly hide the keyboard during typeText. While editing,
                 // reveal the next control above the space the keyboard will reclaim.
-                bottom = min(bottom, frame.minY, bounds.midY)
+                bottom = min(bottom, frame.minY)
+                if reserveKeyboardSpace { bottom = min(bottom, bounds.midY) }
             }
         }
         return CGRect(x: bounds.minX + 16, y: top + 8, width: bounds.width - 32, height: max(0, bottom - top - 16))
