@@ -6,11 +6,15 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 12, 2026.
 
-The November 10 Records component now includes permitted historical stock and
-food allocations, carried delivery ancestry, independent encrypted recovery and
-verified existing local erasure cleanup. Its remaining release work is actual
-authenticated/deployed lifecycle and final combined qualification; do not treat
-those as a request to build another backup or deletion framework.
+On November 12, the `099d6bf6` native Records adapters and real local service
+exported the shopper’s current shop and history. The named planner received 404
+for both exports. The encrypted file required the correct key. Restoring it
+created two independent copies, and retrying after reopening created zero.
+Removing history preserved the current copy. A separate registry-level source
+erasure check blocked reimport after reopening. Retiring history through the
+service left the current record readable. The local run used real email codes
+and a billing fixture for the planner seat. The deployed lifecycle and signed
+iPhone walkthrough remain open. See `.build/RealRecords099Nov12/qualification.json`.
 
 ## Candidate identity and evidence
 
@@ -33,7 +37,7 @@ in their approved private location; commit only redacted receipts and hashes.
 | Gate | Next action and environment | Completion evidence | Current state / dependency |
 | --- | --- | --- | --- |
 | Targeted regression | Finish product paths and fix observed defects using affected checks. Defer optional hosted diagnostic experiments; revisit minimum-iOS and required performance gaps for candidate/release qualification. Root coordinates one investigation per cause. | Original selectors/assertions and strict validation pass on the preserved candidate; complete measurements before performance baseline approval. | In progress; focused core success does not cover the combined candidate. |
-| Shared-food integration | Validate original-unit editing, planner proposals, shopper Apply and whole Undo across the iPhone screens and shared service. | Exact sources, quantities, authority, Cancel and durable retry. | On `3977750b` the Swift client and real local service passed a two-adult original-unit edit from four to five dinner portions while preserving the protected lunch. Cancel preserved both meals. Apply and whole Undo survived lost responses, recovered their saved receipts and restored the original food facts and basket. See `.build/RealFoodUndo397Nov12/qualification.json`. Separate iPhone evidence covers editing group amounts and Cancel, and the ordinary Release iPhone app covers a date proposal and approval. A single original-unit UI flow on the final distribution candidate remains open. |
+| Shared-food integration | Validate original-unit editing, planner proposals, shopper Apply and whole Undo across the iPhone screens and shared service. | Exact sources, quantities, authority, Cancel and durable retry. | On `3977750b` the Swift client and real local service passed a two-adult original-unit edit from four to five dinner portions while preserving the protected lunch. Cancel preserved both meals. Apply and whole Undo survived lost responses, recovered their saved receipts and restored the original food facts and basket. See `.build/RealFoodUndo397Nov12/qualification.json`. Two separately signed-in adults also completed the original-unit proposal, shopper approval and whole Undo on the ordinary Release iPhone simulator build. The protected half-cup lunch, original dinner, basket order and quote survived revisions 3, 4 and 5. See `.build/RealFoodIPhone397Nov12/qualification.json`. The signed distribution walkthrough remains open. |
 | Combined integration | Collect the existing frozen-candidate batch; fix observed failures with affected checks and batch any successor once. | Full gate and required security/dependency checks for that commit; no focused-scope substitution or skipped required cases. | In progress. [CURRENT-HANDOFF](CURRENT-HANDOFF.md#current-checkpoint) is the single current queue for the published SHA, live job IDs, qualified local fixes and unresolved failures. Read the actual GitHub runs before dispatching or replacing a batch. The bilingual StoreKit CI job passed on `a807ecf9`. The final combined regression, Release performance qualification and signed distribution billing checks remain open. Keep this release checklist focused on completion criteria rather than duplicating rapidly changing job status. |
 | Merge | Recheck current branch protection, base freshness and resolved conversations against the qualified PR head. | GitHub required checks and merge state for the exact head. | Pending combined qualification. |
 | Staging parity | Use the deployed invitation build for authenticated staging acceptance. | Deployment identity, migration checksums, public and protected smoke checks, and a verified recovery path. | Staging serves the browser privacy and email adapter fixes from `ce825f80` on `dpl_CDoknicyuuTy99d6AwWihDa8a8PJ`. The 211 reviewed files preserved schema 048. Both endpoints passed seven API and worker checks and thirteen exact route and asset checks. Chromium opened Help, adult invitations and child invitations in English and US Spanish. The public sign-in endpoint confirmed hosted email is disabled. The prior invitation and Help deployment `dpl_36U5PBKMtBwJiraM5v8xjhtCQzPv` is ready for rollback. The separate write-closing maintenance build is `dpl_72cBW5Biz5YKYjvPyqn4dNYEX4EH`. The local rollout receipt is `.build/CompanionSignInStagingNov12/deployment-receipt.json`. |
