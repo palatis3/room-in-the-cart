@@ -65,6 +65,10 @@ def main():
         consumers = [{**row, 'provider': 'bitrise' if row['shard'] == 'ui-05' else 'github',
                       'macos_slot': {'ui-04': 1, 'ui-09': 3}.get(row['shard'], row['macos_slot'])}
                      for row in selected['include'] if row['shard'] != 'models']
+        # Only these existing groups move to M4; macos_slot remains the fallback.
+        for row in consumers:
+            if row['shard'] in ('ui-02', 'ui-03', 'ui-06', 'ui-09'):
+                row.update(provider='bitrise-m4', m4_slot={'ui-02': 4, 'ui-03': 0, 'ui-06': 1, 'ui-09': 5}[row['shard']])
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
             print('matrix=' + json.dumps({'include': consumers}), file=output)

@@ -4,16 +4,28 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint — November 11
 
-Published640c0aef is actively running its five automatic workflows recorded in
-`.build/CombinedCandidate4cad300cNov11/publication.json`. A local successor moves
-only the main app/model producer to trusted Bitrise2 with the existing pinned
-compilation cache, retaining GitHub3 fallback and all original products, model
-gates and limits. Thirty affected workflow/toolchain/core-selection checks and
-18-node actionlint pass; root and independent Astra review find no blocker.
-Keep640 running and hold this change for the next grouped candidate. Do not
-push or dispatch a duplicate solely for this routing change. Main production
-and models on Bitrise, downstream consumption and timing gains require actual
-qualification. Details are in `.build/BitriseCoreProducerNov11/review.json`.
+Published640c0aef is actively running the workflows recorded in
+`.build/CombinedCandidate4cad300cNov11/publication.json`; security and native-wire
+are complete and passing. Local19613a32 added the main producer's M2 cache route.
+The prepared successor also uses the owner's verified `bitrise-runner-ci 2`
+pool: six M4 Large machines (5 vCPU/14 GB), alongside three M2 Pro and five
+GitHub slots. The other M4 pools share the same 30-vCPU allowance and stay unused.
+Main build/models remain on larger M2 slot2; Release and six existing groups use
+M4 slots0–5 with original GitHub fallback slots. All selectors, gates, artifacts,
+limits and exact platform checks remain. Fifty-one affected checks and18-node
+lint pass; root and independent Astra review approve. Capacity and validation
+receipts are in `.build/BitriseM4Nov11/`; actual M4 execution is not qualified.
+Keep640 running; use one bounded new-pool qualification and hold the combined
+changes for the next grouped candidate. No duplicate full dispatch or cache-warming run.
+
+640 has one preserved fractional-idea failure: fixture130942327542 executes1/1,
+with0passed and one720-second timeout,10animation-idle messages,1restart and
+0runtime warnings. Original artifact13913525151 is digest-verified in
+`.build/FractionalIdeaCandidate640Nov11`. The scoped first-fault chain shows
+XCTest missing animation-idle notifications after Done while the event loop
+responds and keyboard dismissal eventually passes. Root cause remains unresolved;
+no supported source fix, timeout increase, suppression or unchanged retry was made.
+Other hosted results continue; contributor-balanced02 is now passing.
 
 Both640 sanitizer jobs now pass580 cases each with3declared wire-only skips;
 all five corrected shopper fixtures execute once and pass with no sanitizer
@@ -73,7 +85,7 @@ lagged the final delivery completion. Recheck live state before dispatching. Upd
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Main producer and Bitrise cache | Locally prepared after640: trusted Bitrise2, original GitHub3 fallback, existing optional pinned cache and exact platform preflight. Thirty affected checks and18-node lint pass; independent Astra review approves. | Keep current640 workflows running. Hold for the next grouped candidate; then verify original full model/product/consumer results and measure compilation plus whole-batch timing. No extra cache-warming or duplicate run. Private review: `.build/BitriseCoreProducerNov11/review.json`. |
+| Bitrise capacity and cache | Locally prepared:5GitHub+3M2+6M4 slots; main producer M2/cache and Release plus six existing groups on ci2M4. Original fallback slots and all gates remain.51affected checks and18-node lint pass. | Keep640 running. Qualify the new M4 environment with bounded existing coverage, then publish the next grouped candidate after the current batch is terminal. Capacity is potential14, not observed14running. Private review: `.build/BitriseM4Nov11/final/review.json`. |
 | 4cad300c combined qualification | All988 source checks and the complete cheap preflight pass. Affected native checks and final Astra review are recorded above and in the scoped rows below. CoreUI05→Bitrise0 andUI09→GitHub3 retain the five/three caps, selectors and strict gates. Cook target and reverse-provider UI05 execution remain open. | Read `.build/CombinedCandidate4cad300cNov11/publication.json` and live refs before acting. If absent, publish the frozen source and documentation in one atomic push; if present, monitor only its five automatic workflows. Do not dispatch duplicates, repeat unchanged passing native checks, suppress failures or claim a combined pass. |
 | Previous9b554506 combined qualification | All five workflows are terminal on9b: core43125120190, fixtures43125120150 anddeep43125120200 fail; security43125120168 andnative-wire43125120189 pass. Core66/69 andfixtures21/26 pass. All920models, unsigned Release, packages/AddressSanitizer580with3wire-only skips, service1054unit/448database/15operations andnative-wire24Node/80Swift pass. Core failures are UI02SegmentID, UI04second-quote switch andUI05reminder, each corrected locally below. | Preserve original logs and `.build/CombinedCandidate95effNov11/terminal-preflight.json`. Fixture failures and test-fixture race remain scoped to their reviewed local corrections; cook remains unexercised. Swift CodeQL/StoreKit lost their runners with unavailable original logs. No duplicate recheck or rawRecordsMedia access. This batch is not qualified; the prepared successor requires its own complete results. |
 | 9b carry-test fixture data race | Original ThreadSanitizer130875121186 reports two words of captured echoedRequest: the async test writes ShopperClientTests129 while the CFNetwork mock callback reads109. The ordinary case says passed, but sanitizer diagnostics and process signal6 correctly fail the job. This is test-fixture shared state; no production race is established. A bounded same-file audit identifies four sibling fixtures with the same unguarded callback/test access pattern; those are source-established exposures, not four additional observed runtime failures. | One NSLock per affected test now protects shared fixture values, including assertion snapshots and compound role/capability changes. Handler locking ends before protocol callbacks; no lock spans await. Astra approves both diffs with no blockers. The original focused case passes1/1 under ThreadSanitizer. After all five fixture corrections, the full existing HouseholdClient package44435 passes242with3declared wire-only skips,0sanitizer warnings and raw exit0. Compiled inventory, linked sanitizer and source/product hashes are verified in `.build/CarryFixtureThreadSanitizerNov11/sibling-state/validation.json`; earlier focused/full evidence remains in its parent. No suppression, production change, new helper or new test was added. Hold the reviewed corrections until the current cohort yields useful results; no unchanged native repeat. |

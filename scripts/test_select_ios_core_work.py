@@ -115,9 +115,14 @@ class SelectCoreWorkTests(unittest.TestCase):
             next(row for row in expected_consumers if row['shard'] == 'ui-09')['macos_slot'] = 3
             for row in expected_consumers:
                 row['provider'] = 'bitrise' if row['shard'] == 'ui-05' else 'github'
+                if row['shard'] in ('ui-02', 'ui-03', 'ui-06', 'ui-09'):
+                    row.update(provider='bitrise-m4', m4_slot={'ui-02': 4, 'ui-03': 0, 'ui-06': 1, 'ui-09': 5}[row['shard']])
             self.assertEqual(json.loads(outputs['matrix'])['include'], expected_consumers)
             self.assertEqual([(r['shard'], r['macos_slot']) for r in expected_consumers
                               if r['provider'] == 'bitrise'], [('ui-05', 0)])
+            self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in expected_consumers
+                              if 'm4_slot' in r], [('ui-02', 2, 4), ('ui-03', 3, 0), ('ui-06', 1, 1), ('ui-09', 3, 5)])
+            self.assertEqual([r['provider'] for r in expected_consumers if 'm4_slot' in r], ['bitrise-m4'] * 4)
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):

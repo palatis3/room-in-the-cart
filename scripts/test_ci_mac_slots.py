@@ -39,12 +39,12 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual([r['shard'] for r in plan['include']], ['models', *[f'ui-{i:02d}' for i in range(1, 11)]])
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
-        self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise'})
+        self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise', 'bitrise-m4'})
         # The three long groups and fallback move to Bitrise; other rows keep their lanes.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
             ('bitrise', 1), ('bitrise', 2), ('github', 2), ('bitrise', 0),
-            ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('github', 1), ('bitrise', 2), ('github', 3),
+            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('github', 3),
             ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('github', 1), ('github', 2), ('github', 3),
             ('github', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
@@ -61,9 +61,16 @@ class MacSlotMetadataTests(unittest.TestCase):
         })
         for row in fixtures:
             self.assertIs(type(row['macos_slot']), int)
-            self.assertIn(row['macos_slot'], range(5 if row['provider'] == 'github' else 3))
+            self.assertIn(row['macos_slot'], range(3 if row['provider'] == 'bitrise' else 5))
+            if row['provider'] == 'bitrise-m4':
+                self.assertIs(type(row['m4_slot']), int)
+                self.assertIn(row['m4_slot'], range(6))
+            else:
+                self.assertNotIn('m4_slot', row)
         self.assertEqual(len({(row['profile'], row['shard']) for row in fixtures}), 26)
         self.assertEqual(len(fixtures), 26)
+        self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in fixtures if 'm4_slot' in r], [
+            ('contributor-balanced-03', 4, 2), ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3)])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
         self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'provider', 'macos_slot'})

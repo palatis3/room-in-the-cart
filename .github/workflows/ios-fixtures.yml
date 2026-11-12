@@ -195,16 +195,16 @@ jobs:
   contributor-tests:
     if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}${{ matrix.macos_slot }}
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor]
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
     timeout-minutes: 55
     strategy:
       fail-fast: false
-      # Fixture rows share five GitHub and three Bitrise slots with their
+      # Fixture rows share five GitHub, three M2 and six M4 slots with their
       # other jobs. Forks use only the existing GitHub queues; admit all rows.
       matrix: ${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}
     env:
@@ -338,12 +338,12 @@ jobs:
   dinner-tests:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}${{ matrix.macos_slot }}
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-dinner]
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && matrix.provider == 'bitrise' && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
     timeout-minutes: 55
     strategy:
       fail-fast: false

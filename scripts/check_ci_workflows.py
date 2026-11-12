@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate five GitHub and three Bitrise native-job slots and bridge only actionlint 1.7.12's queue-key gap."""
+"""Validate five GitHub, three M2 and six M4 Bitrise native-job slots and bridge only actionlint 1.7.12's queue-key gap."""
 import argparse
 import copy
 import hashlib
@@ -16,10 +16,14 @@ SLOT_PREFIX = 'ritc-macos-slot-'
 MATRIX_GROUP = SLOT_PREFIX + '${{ matrix.macos_slot }}'
 BITRISE_SLOT_PREFIX = 'ritc-bitrise-slot-'
 BITRISE_LABEL = 'bitrise-runner-room in cart'
+M4_SLOT_PREFIX = 'ritc-bitrise-m4-slot-'
+M4_LABEL = 'bitrise-runner-ci 2'
 FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
                 ('build-contributor', 'build-dinner', 'contributor-tests', 'dinner-tests')}
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
-ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB, ('ci.yml', 'ios-tests')}
+RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
+M4_BUILD_JOBS = {RELEASE_BUILD_JOB}
+ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB} | M4_BUILD_JOBS | {('ci.yml', 'ios-tests')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
@@ -28,12 +32,17 @@ FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
 FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
 FIXTURE_SLOT_PREFIX = "${{ " + FIXTURE_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
-# The main producer uses Bitrise slot 2 but retains its original GitHub slot 3.
+# Full queue names preserve the original GitHub fallback, including M4 slot zero.
+M4_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + M4_LABEL + "' || 'xcode-27' }}"
 CORE_BUILD_GROUP = "${{ " + FIXTURE_TRUSTED + " && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}"
-FIXTURE_CONSUMER_TRUSTED = FIXTURE_TRUSTED + " && matrix.provider == 'bitrise'"
-FIXTURE_CONSUMER_RUNNER = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_LABEL + "' || 'xcode-27' }}"
-FIXTURE_CONSUMER_SLOT_PREFIX = "${{ " + FIXTURE_CONSUMER_TRUSTED + " && '" + BITRISE_SLOT_PREFIX + "' || '" + SLOT_PREFIX + "' }}"
-FIXTURE_MATRIX_GROUP = FIXTURE_CONSUMER_SLOT_PREFIX + '${{ matrix.macos_slot }}'
+RELEASE_BUILD_GROUP = "${{ " + FIXTURE_TRUSTED + " && 'ritc-bitrise-m4-slot-1' || 'ritc-macos-slot-1' }}"
+FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
+    " && (matrix.provider == 'bitrise-m4' && '" + M4_LABEL +
+    "' || matrix.provider == 'bitrise' && '" + BITRISE_LABEL + "') || 'xcode-27' }}")
+FIXTURE_MATRIX_GROUP = ("${{ " + FIXTURE_TRUSTED +
+    " && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
+    " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))" +
+    " || format('ritc-macos-slot-{0}', matrix.macos_slot) }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
 POLICY = {
@@ -126,7 +135,7 @@ def parse_workflow(path):
 
 def native_job(job):
     labels = job.get('runs-on', [])
-    if labels in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER):
+    if labels in (FIXTURE_RUNNER, M4_RUNNER, FIXTURE_CONSUMER_RUNNER):
         return True
     if isinstance(labels, str):
         labels = [labels]
@@ -145,10 +154,10 @@ def nonleaf_group_is_disjoint(group):
     if not isinstance(group, str) or not group:
         return False
     folded = group.casefold()
-    if any(prefix in folded for prefix in (SLOT_PREFIX, BITRISE_SLOT_PREFIX)):
+    if any(prefix in folded for prefix in (SLOT_PREFIX, BITRISE_SLOT_PREFIX, M4_SLOT_PREFIX)):
         return False
     prefix = folded.split('${{', 1)[0]
-    reserved = [pool + str(slot) for pool, count in ((SLOT_PREFIX, 5), (BITRISE_SLOT_PREFIX, 3))
+    reserved = [pool + str(slot) for pool, count in ((SLOT_PREFIX, 5), (BITRISE_SLOT_PREFIX, 3), (M4_SLOT_PREFIX, 6))
                 for slot in range(count)]
     return bool(prefix) and all(not name.startswith(prefix) for name in reserved)
 
@@ -202,12 +211,12 @@ def validate_workflows(paths, policy=POLICY):
             expected = policy[identity]
             routed = identity in ROUTED_NATIVE_JOBS
             if routed:
-                runner = FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+                runner = M4_RUNNER if identity in M4_BUILD_JOBS else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
                 require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             else:
                 labels = job.get('runs-on', [])
                 labels = [labels] if isinstance(labels, str) else labels
-                require(job.get('runs-on') not in (FIXTURE_RUNNER, FIXTURE_CONSUMER_RUNNER) and
+                require(job.get('runs-on') not in (FIXTURE_RUNNER, M4_RUNNER, FIXTURE_CONSUMER_RUNNER) and
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
                         f'Bitrise routing is restricted to reviewed native jobs: {identity}')
             slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
@@ -217,6 +226,9 @@ def validate_workflows(paths, policy=POLICY):
                 if identity == CORE_BUILD_JOB:
                     require(expected == 3 and concurrency['group'] == CORE_BUILD_GROUP,
                             f'Wrong main producer dual-provider slots: {identity}')
+                elif identity == RELEASE_BUILD_JOB:
+                    require(expected == 1 and concurrency['group'] == RELEASE_BUILD_GROUP,
+                            f'Wrong Release producer dual-provider slots: {identity}')
                 else:
                     require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
                 require('strategy' not in job or 'matrix' not in job['strategy'],

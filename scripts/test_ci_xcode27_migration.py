@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, M4_BUILD_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['build-mode'], 'manual')
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
-                    runner = (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
+                    runner = M4_RUNNER if key in M4_BUILD_JOBS else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
                     self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):
@@ -65,9 +65,9 @@ class Xcode27MigrationTests(unittest.TestCase):
             self.assertIn('if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then', command)
             self.assertIn('bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer', command)
             self.assertIn('Build version 27A9275', command)
-            if (workflow, name) == ('ci.yml', 'ios-build'):
+            if (workflow, name) in M4_BUILD_JOBS | {('ci.yml', 'ios-build')}:
                 producer = jobs[name]
-                self.assertEqual(producer['timeout-minutes'], 75)
+                self.assertEqual(producer['timeout-minutes'], 75 if name == 'ios-build' else 45)
                 steps = producer['steps']
                 cache = next(s for s in steps if s.get('id') == 'compilation-cache')
                 self.assertEqual(cache['run'], 'bash scripts/activate_bitrise_xcode_cache.sh')
@@ -77,14 +77,23 @@ class Xcode27MigrationTests(unittest.TestCase):
                 warning = next(s for s in steps if s.get('name') == 'Report unavailable optional compilation cache')
                 self.assertEqual(warning['if'], "steps.compilation-cache.outcome == 'failure'")
                 self.assertIn('::warning::', warning['run'])
-                build = next(s for s in steps if s.get('id') == 'build')
+                build = next(s for s in steps if s.get('id') == 'build' or s.get('name') == 'Compile unsigned Release for iPhone')
                 self.assertLess(steps.index(step), steps.index(cache))
                 self.assertLess(steps.index(cache), steps.index(warning))
                 self.assertLess(steps.index(warning), steps.index(build))
                 self.assertNotIn('continue-on-error', build)
                 self.assertNotIn('if', build)
-                self.assertIn('set -o pipefail', build['run'])
-                self.assertIn('build-for-testing', build['run'])
+                if name == 'ios-build':
+                    self.assertIn('set -o pipefail', build['run'])
+                    self.assertIn('build-for-testing', build['run'])
+                else:
+                    self.assertEqual(build['shell'], 'bash')  # GitHub's explicit bash shell retains -eo pipefail.
+                    self.assertEqual(build['timeout-minutes'], 30)
+                    self.assertIn('CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build', build['run'])
+                    verify = next(s for s in steps if s.get('name') == 'Verify the compiled iPhone app and embedded extensions')
+                    self.assertLess(steps.index(build), steps.index(verify))
+                    self.assertNotIn('if', verify)
+                    self.assertIn('scripts/check_built_app.py', verify['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
             code = command.split("python3 - <<'PYCODE'\n", 1)[1].rsplit('\nPYCODE', 1)[0]

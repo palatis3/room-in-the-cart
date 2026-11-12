@@ -162,7 +162,7 @@ def matrix(inventory=None):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
     rows = [{"profile": profile, "shard": shard}
             for profile in PROFILES for shard in shard_members(profile, inventory)]
-    # Five existing GitHub slots plus three Bitrise slots serve the fixture tail.
+    # Five GitHub, three M2 and six M4 slots serve the reviewed fixture tail.
     # Keep row identity/order and exact selections; only admission metadata changes.
     # The first combined run exhausted Bitrise's short rows while GitHub still
     # queued long contributor groups. Give each Bitrise lane one existing group.
@@ -177,6 +177,9 @@ def matrix(inventory=None):
         lane = lane_overrides.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
+        # Keep the original GitHub slot for untrusted/noncanonical events.
+        if row["shard"] in ("SharedDeliveryUITests-recovery-cook-and-closeout", "contributor-balanced-03"):
+            row.update(provider="bitrise-m4", m4_slot=3 if row["shard"].startswith("SharedDeliveryUITests-") else 2)
     return {"include": rows}
 
 
