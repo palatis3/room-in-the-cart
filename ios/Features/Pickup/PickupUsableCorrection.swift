@@ -125,7 +125,11 @@ struct PickupUsableCorrectionView: View {
                         Section {
                             Text(pTr("Review dependent meals")).font(.headline).accessibilityAddTraits(.isHeader)
                                 .accessibilityFocused($reviewFocused)
-                            Text("\(pTr("Confirmed usable amount")): \(pQuantity(review.observation.usable))")
+                            VStack(alignment: .leading, spacing: 6) {
+                                let saved = review.head.previous.map { pQuantity($0.usable) } ?? pTr("Not yet verified")
+                                Text("\(pTr("Saved usable amount")): \(saved)")
+                                Text("\(pTr("Proposed usable amount")): \(pQuantity(review.observation.usable))")
+                            }
                             if !review.observation.confirmedMatchToOrderLine { Text(pTr("identityMatchUnconfirmed")) }
                             if review.meals.isEmpty { Text(pTr("No reviewed meal depends on this batch.")) }
                             ForEach(review.meals) { effect in
