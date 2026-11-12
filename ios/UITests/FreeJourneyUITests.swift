@@ -794,9 +794,13 @@ import XCTest
         let source = "https://vanished-recipe.invalid/lentil-wraps"
         let notes = "Warm the wraps and serve the lentils separately."
         func field(_ name: String) -> XCUIElement {
-            app.descendants(matching: .any).matching(identifier: name)
-                .matching(NSPredicate(format: "elementType IN %@",
-                    [XCUIElement.ElementType.textField.rawValue, XCUIElement.ElementType.textView.rawValue])).firstMatch
+            if #available(iOS 27, *) {
+                return app.textFields.matching(identifier: name).firstMatch
+            }
+            // Older SwiftUI versions expose vertical TextFields as TextViews.
+            let types: [XCUIElement.ElementType] = [.textField, .textView]
+            return app.descendants(matching: .any).matching(identifier: name)
+                .matching(NSPredicate(format: "elementType IN %@", types.map { $0.rawValue })).firstMatch
         }
         func assertField(_ name: String, _ expected: String) {
             let target = field(name)
@@ -824,11 +828,33 @@ import XCTest
             }
         }
         func enter(_ value: String, _ name: String, replacing: Bool = false) {
-            fill(value, into: name, replacing: replacing)
+            let target = field(name)
+            reveal(target)
+            if #unavailable(iOS 27), target.elementType == .textView {
+                target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            } else {
+                target.tap()
+            }
+            if replacing, let old = target.value as? String, old != target.placeholderValue {
+                target.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            target.typeText(value)
+            let done = app.buttons["Done"]
+            if done.exists && done.isHittable {
+                // Synthesized typing briefly hides the keyboard. Its Return key can
+                // occupy the former position of Done as the keyboard slides back.
+                let keyboard = app.keyboards.firstMatch
+                let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                    guard keyboard.exists, done.exists else { return false }
+                    let pad = keyboard.frame, bar = done.frame
+                    return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+                }, object: nil)
+                XCTAssertEqual(XCTWaiter.wait(for: [aboveKeyboard], timeout: 5), .completed)
+                done.tap()
+            }
             assertField(name, value)
         }
         func openChosen(expectedID: String? = nil) -> String {
-            dinnerRoot()
             tap(app.buttons["All chosen dinners, including earlier dates"])
             XCTAssertTrue(app.navigationBars["All chosen dinners"].waitForExistence(timeout: 8))
             let matches = app.buttons.matching(NSPredicate(format:
@@ -843,7 +869,7 @@ import XCTest
             return identifier
         }
         func openBindings() {
-            tap(element("dinnerGuests"))
+            tap(app.buttons["dinnerGuests"])
             XCTAssertTrue(app.navigationBars["Guests and protected portions"].waitForExistence(timeout: 8))
         }
         func saveBindings() {
@@ -858,11 +884,11 @@ import XCTest
 
         launch(reset: true)
         tap(app.tabBars.buttons["Dinners"])
-        tap(element("dinnerStartPickup"))
+        tap(app.buttons["dinnerStartPickup"])
         enter("Unavailable-source pickup", "ledgerShopName")
-        tap(element("ledgerCreateShop"))
-        tap(element("dinnerLibrary"))
-        tap(element("ledgerNewTemplate"))
+        tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["dinnerLibrary"])
+        tap(app.buttons["ledgerNewTemplate"])
         enter(title, "ledgerDinnerTitle")
         enter("3", "ledgerDinnerServings")
         enter(notes, "Notes")
@@ -873,10 +899,10 @@ import XCTest
         enter("Dinner", "Group name")
         enter("3", "Group servings")
         capture("S14-unavailable-source-remains-editable")
-        tap(element("ledgerReviewDinner"))
-        tap(element("ledgerSaveDinner"))
+        tap(app.buttons["ledgerReviewDinner"])
+        tap(app.buttons["ledgerSaveDinner"])
         tap(app.buttons["Done"])
-        tap(element("ledgerChooseTemplate"))
+        tap(app.buttons["ledgerChooseTemplate"])
         XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 8))
         let previewMeals = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewMeal-"))
         let previewNeeds = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewNeed-"))
@@ -886,6 +912,7 @@ import XCTest
         XCTAssertTrue(apply.isEnabled)
         tap(apply)
         XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+        dinnerRoot()
         let occurrenceID = openChosen()
         assertText("Servings: 3")
         openBindings()
@@ -902,8 +929,9 @@ import XCTest
         enter("4", "Group servings", replacing: true)
         enter("8", "Amount, optional", replacing: true)
         tap(app.buttons["Review"])
-        tap(element("dinnerApply"))
-        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 8))
+        tap(apply)
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
         XCTAssertFalse(element("dinnerError").exists)
         app.navigationBars["Manual quantities"].buttons.firstMatch.tap()
         assertText("Servings: 4")
@@ -938,7 +966,7 @@ import XCTest
         // Inspect the original reusable dinner without saving a new version.
         // Weekly edits must not rewrite its original servings, recipe or source.
         dinnerRoot()
-        tap(element("dinnerLibrary"))
+        tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["Review as a new dinner version"])
         assertField("ledgerDinnerTitle", title)
         assertField("ledgerDinnerServings", "3")
