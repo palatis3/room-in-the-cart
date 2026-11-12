@@ -165,7 +165,9 @@ struct DinnerStoreDraft {
     private static func amount(_ money: Money?) -> String {
         money.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
     }
-    private static func slotDate(_ text: String) -> Date? {
+    var savedSlotZone: String? { saved?.adoptionBasis?.timeZoneIdentifier }
+
+    static func slotDate(_ text: String) -> Date? {
         let formatter = ISO8601DateFormatter()
         if let date = formatter.date(from: text) { return date }
         formatter.formatOptions.insert(.withFractionalSeconds)

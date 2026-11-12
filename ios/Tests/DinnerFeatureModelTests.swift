@@ -424,6 +424,17 @@ import CoreDomain
         let saved = await model.saveRotation(rotation); XCTAssertFalse(saved); XCTAssertTrue(model.state.rotations.isEmpty)
         XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))]))
     }
+    func testStoreSlotReviewUsesTheRecordedBranchZoneAcrossMidnight() throws {
+        let date = try XCTUnwrap(DinnerStoreDraft.slotDate("2026-11-13T01:30:00.358Z"))
+        XCTAssertEqual(date, DinnerStoreDraft.slotDate("2026-11-12T17:30:00.358-08:00"))
+        XCTAssertNil(DinnerStoreDraft.slotDate("Thursday evening"))
+        let locale = Locale(identifier: "en_US")
+        let west = dinnerStoreSlot(date, zoneID: "America/Los_Angeles", locale: locale)
+        let utc = dinnerStoreSlot(date, zoneID: "UTC", locale: locale)
+        XCTAssertTrue(west.contains("Nov 12") && west.contains("5:30") && west.contains("Los_Angeles"), west)
+        XCTAssertTrue(utc.contains("Nov 13") && utc.contains("1:30"), utc)
+    }
+
     func testSavedQuoteEditPreservesImportedEvidenceAndSeparateCommitmentsOnTheCurrentBasis() throws {
         let shop = ShoppingLedger(title: "Pickup", basis: ShopBasis(cap: Money(minorUnits: 3800)))
         let day = try MealDay(year: 2026, month: 11, day: 8, timeZoneIdentifier: "America/Los_Angeles")

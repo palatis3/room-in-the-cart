@@ -347,10 +347,11 @@ struct DinnerPreviewView: View {
                         Section(dinnerText("Reviewed store basis")) {
                             Text(basis.branch)
                             if let slot = basis.slot {
-                                Text(dinnerFormat("Store slot: %@",slot.formatted(date: .abbreviated,time: .shortened)))
+                                Text(dinnerFormat("Store slot: %@",dinnerStoreSlot(slot, zoneID: basis.timeZoneIdentifier)))
                                     .accessibilityIdentifier("quoteAdoptionSlot")
+                            } else {
+                                Text(basis.timeZoneIdentifier)
                             }
-                            Text(basis.timeZoneIdentifier)
                             Text(dinnerText("Changing store facts invalidates the current quote. The reviewed comparison remains in history."))
                         }
                     }

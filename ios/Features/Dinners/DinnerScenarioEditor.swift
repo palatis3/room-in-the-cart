@@ -244,7 +244,10 @@ private struct DinnerScenarioContextFields: View {
                 Text(dinnerText("Delivery")).tag(ShoppingMode.delivery)
                 Text(dinnerText("In store")).tag(ShoppingMode.inStore)
             }
+            let zone = TimeZone(identifier: draft.zone) ?? .current
             DatePicker(dinnerText("Store slot"), selection: $draft.slot)
+                .environment(\.timeZone, zone)
+            if zone != .current { Text(verbatim: zone.identifier) }
             TextField(dinnerText("Evidence source"), text: $draft.source)
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
         }

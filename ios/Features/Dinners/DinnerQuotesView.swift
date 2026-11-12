@@ -49,8 +49,8 @@ struct DinnerQuotesView: View {
                 } else {
                     commitmentFields(dinnerText("Same commitments at both stores"), rows: $draft.commitments)
                 }
-                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus)
-                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus)
+                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier)
+                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier)
                 Section {
                     Button(dinnerText("Review two complete trips")) {
                         do {
@@ -133,7 +133,7 @@ struct DinnerQuotesView: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(option.label).font(.headline)
             Text(dinnerFormat("Store and branch: %@ · %@", option.quote.context.storeID, option.quote.context.branchID))
-            Text(dinnerFormat("Store slot: %@", ISO8601DateFormatter().date(from: option.quote.context.slot)?.formatted(date: .abbreviated, time: .shortened) ?? option.quote.context.slot))
+            Text(dinnerFormat("Store slot: %@", DinnerStoreDraft.slotDate(option.quote.context.slot).map { dinnerStoreSlot($0, zoneID: option.adoptionBasis?.timeZoneIdentifier) } ?? option.quote.context.slot))
             if let terms = option.eligibilityTerms { Text(dinnerFormat("Price conditions: %@", terms)) }
             Text(dinnerFormat("Items before fees and discounts: %@", dinnerMoney(try? TwoStoreQuoteEngine.itemSubtotal(option))))
             Text(option.quote.context.source)
@@ -165,6 +165,7 @@ struct DinnerStoreFields: View {
     let prefix: String
     @Binding var draft: DinnerStoreDraft
     let focus: FocusState<String?>.Binding
+    var shopZone: String? = nil
     var body: some View {
         Section(title) {
             textField(dinnerText("Store label"), value: $draft.label, key: "label")
@@ -178,7 +179,10 @@ struct DinnerStoreFields: View {
             if let slot = Binding($draft.writtenSlot) {
                 textField(dinnerText("Store slot"), value: slot, key: "slot")
             } else {
+                let zone = (draft.savedSlotZone ?? shopZone).flatMap(TimeZone.init(identifier:)) ?? .current
                 DatePicker(dinnerText("Store slot"), selection: $draft.slot)
+                    .environment(\.timeZone, zone)
+                if zone != .current { Text(verbatim: zone.identifier) }
             }
             textField(dinnerText("Evidence source"), value: $draft.source, key: "source")
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
