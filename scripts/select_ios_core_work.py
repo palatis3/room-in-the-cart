@@ -55,20 +55,24 @@ def main():
             for path in args.plan_dir.glob('*.txt'):
                 path.unlink()
             write_plan(selected, args.plan_dir)
-        # The producer has just booted this simulator and discovered its tests.
-        # Keep the complete plan, but run models there instead of starting a
-        # second cold consumer. UI04 moves to slot 1; UI09 moves to slot 3,
-        # whose work finished while slot 4 still had two fixtures ahead of it.
-        # UI05 also waited behind GitHub0 after the prior
-        # Bitrise fixture tail finished. Change admission, not the full plan;
-        # untrusted events retain UI05's original GitHub0 fallback.
-        consumers = [{**row, 'provider': 'bitrise' if row['shard'] == 'ui-05' else 'github',
-                      'macos_slot': {'ui-04': 1, 'ui-09': 3}.get(row['shard'], row['macos_slot'])}
-                     for row in selected['include'] if row['shard'] != 'models']
-        # Only these existing groups move to M4; macos_slot remains the fallback.
-        for row in consumers:
-            if row['shard'] in ('ui-02', 'ui-03', 'ui-06', 'ui-09'):
-                row.update(provider='bitrise-m4', m4_slot={'ui-02': 4, 'ui-03': 0, 'ui-06': 1, 'ui-09': 5}[row['shard']])
+        # The producer already has the simulator and compiled model tests.
+        # Route UI jobs independently while keeping the fallback for every row.
+        m4_slots = {
+            'ui-02': 4, 'ui-03': 0, 'ui-04': 3, 'ui-06': 1,
+            'ui-07': 2, 'ui-09': 5, 'ui-10': 0,
+        }
+        consumers = []
+        for planned in selected['include']:
+            shard = planned['shard']
+            if shard == 'models':
+                continue
+            row = dict(planned)
+            row['macos_slot'] = {'ui-04': 1, 'ui-09': 3}.get(shard, row['macos_slot'])
+            if shard in m4_slots:
+                row.update(provider='bitrise-m4', m4_slot=m4_slots[shard])
+            else:
+                row['provider'] = 'bitrise' if shard == 'ui-05' else 'github'
+            consumers.append(row)
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
             print('matrix=' + json.dumps({'include': consumers}), file=output)

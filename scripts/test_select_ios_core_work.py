@@ -110,19 +110,19 @@ class SelectCoreWorkTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
-            expected_consumers = [copy.deepcopy(row) for row in full['include'] if row['shard'] != 'models']
-            next(row for row in expected_consumers if row['shard'] == 'ui-04')['macos_slot'] = 1
-            next(row for row in expected_consumers if row['shard'] == 'ui-09')['macos_slot'] = 3
-            for row in expected_consumers:
-                row['provider'] = 'bitrise' if row['shard'] == 'ui-05' else 'github'
-                if row['shard'] in ('ui-02', 'ui-03', 'ui-06', 'ui-09'):
-                    row.update(provider='bitrise-m4', m4_slot={'ui-02': 4, 'ui-03': 0, 'ui-06': 1, 'ui-09': 5}[row['shard']])
-            self.assertEqual(json.loads(outputs['matrix'])['include'], expected_consumers)
-            self.assertEqual([(r['shard'], r['macos_slot']) for r in expected_consumers
-                              if r['provider'] == 'bitrise'], [('ui-05', 0)])
-            self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in expected_consumers
-                              if 'm4_slot' in r], [('ui-02', 2, 4), ('ui-03', 3, 0), ('ui-06', 1, 1), ('ui-09', 3, 5)])
-            self.assertEqual([r['provider'] for r in expected_consumers if 'm4_slot' in r], ['bitrise-m4'] * 4)
+            consumers = json.loads(outputs['matrix'])['include']
+            original_ui = [row for row in full['include'] if row['shard'] != 'models']
+            def test_selection(row):
+                return {k: v for k, v in row.items() if k not in ('provider', 'macos_slot', 'm4_slot')}
+            self.assertEqual([test_selection(row) for row in consumers],
+                             [test_selection(row) for row in original_ui])
+            self.assertEqual([(r['shard'], r['provider'], r['macos_slot'], r.get('m4_slot')) for r in consumers], [
+                ('ui-01', 'github', 1, None), ('ui-02', 'bitrise-m4', 2, 4),
+                ('ui-03', 'bitrise-m4', 3, 0), ('ui-04', 'bitrise-m4', 1, 3),
+                ('ui-05', 'bitrise', 0, None), ('ui-06', 'bitrise-m4', 1, 1),
+                ('ui-07', 'bitrise-m4', 2, 2), ('ui-08', 'github', 3, None),
+                ('ui-09', 'bitrise-m4', 3, 5), ('ui-10', 'bitrise-m4', 0, 0),
+            ])
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):

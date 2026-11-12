@@ -95,16 +95,21 @@ The native queues stay independent: `ritc-macos-slot-0..4`,
 `ritc-bitrise-slot-0..2` and `ritc-bitrise-m4-slot-0..5`. The main app/model
 producer uses the larger M2 slot 2 with its original GitHub 3 fallback. Both
 fixture producers remain on M2 slots 0/1, and UI05 remains on M2 slot 0.
-Only these existing jobs move to M4:
+The following jobs share the six M4 slots.
 
 | Job or group | M4 slot | Original GitHub fallback |
 | --- | --- | --- |
-| Core UI03 | 0 | 3 |
+| Core UI03 and UI10 | 0 | 3 and 0 |
 | Unsigned Release and core UI06 | 1, serialized | 1 |
-| Contributor balanced-03 | 2 | 4 |
-| Delivery recovery/cook/closeout | 3 | 1 |
+| Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
+| Delivery recovery/cook/closeout and core UI04 | 3 | 1 |
 | Core UI02 | 4 | 2 |
 | Core UI09 | 5 | 3 |
+
+In the November 12 combined run, the final M4 test finished at 06:32 UTC.
+UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.
+The revised routing lets those three groups reuse M4 slots. Queue order and
+the final elapsed-time change depend on the hosted run.
 
 Each consumer keeps its original `macos_slot` for GitHub fallback and adds a
 separate `m4_slot` only when assigned to M4. Canonical trusted events select
