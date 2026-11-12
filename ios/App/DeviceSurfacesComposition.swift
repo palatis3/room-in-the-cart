@@ -40,22 +40,28 @@ import DeviceSurfaces
     private var active = true
     private var reconciling = false
     private var reconcileAgain = false
-    private var pendingURL: URL?
+    private enum Shortcut {
+        case capture, current(RouteHandle)
+    }
+    private var pendingShortcut: Shortcut?
     private var pendingHandle: RouteHandle?
     private var pendingReminderTap: RouteHandle?
     private let directory: URL
     private let runtime: SurfaceRuntimeIsolation
     private let bundle: Bundle
+    private let captureRequests: SurfaceCaptureRequests
     private let clock: () -> Date
     private let reminderScheduler: (any NotificationScheduling)?
 
     init(directory: URL? = nil, bundle: Bundle = .main, clock: @escaping () -> Date = Date.init,
-         launchArguments: [String] = ProcessInfo.processInfo.arguments, reminderScheduler: (any NotificationScheduling)? = nil) {
+         launchArguments: [String] = ProcessInfo.processInfo.arguments, reminderScheduler: (any NotificationScheduling)? = nil,
+         captureRequests: SurfaceCaptureRequests? = nil) {
         let runtime = SurfaceRuntimeIsolation(directory: directory, launchArguments: launchArguments,
             applicationSupport: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0])
         self.runtime = runtime; self.directory = runtime.directory
         self.bundle = bundle; self.clock = clock
         self.reminderScheduler = reminderScheduler
+        self.captureRequests = captureRequests ?? .shared
     }
     var privateAuthorized: Bool { active && hasAdultAuthority }
     private var hasAdultAuthority: Bool {
@@ -96,7 +102,16 @@ import DeviceSurfaces
         for publisher in [ledgerChanges, pickup.objectWillChange.eraseToAnyPublisher(), household.objectWillChange.eraseToAnyPublisher(), access.objectWillChange.eraseToAnyPublisher()] {
             publisher.receive(on: RunLoop.main).sink { [weak self] in Task { @MainActor in await self?.sourceDidChange() } }.store(in: &subscriptions)
         }
-        SurfaceCaptureRequests.shared.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in self?.openCapture() }.store(in: &subscriptions)
+        captureRequests.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in
+            guard let self, self.captureRequests.takePending() else { return }
+            self.receive(.capture)
+        }.store(in: &subscriptions)
+        // Adult links drain after store reconciliation. An invited contributor
+        // can open their own request without opening the adult stores.
+        if let pendingShortcut, !hasAdultAuthority {
+            self.pendingShortcut = nil
+            receive(pendingShortcut)
+        }
         Task { await sourceDidChange() }
     }
     private func configure() throws {
@@ -127,8 +142,9 @@ import DeviceSurfaces
     }
     func foreground() async { active = true; await sourceDidChange() }
     func background() {
-        active = false; nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        active = false; nonce = UUID(); entries = []; draft = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
+        if ledger != nil { captureRequests.takePending() }
         // A cold child/locked launch may never open the adult stores. Resolve
         // only the widget file so a prior process's shortcut is still cleared.
         if projection == nil {
@@ -142,14 +158,15 @@ import DeviceSurfaces
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
     func scopeChanged() {
-        nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        nonce = UUID(); entries = []; draft = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
+        if ledger != nil { captureRequests.takePending() }
         pendingReminderTap = nil; authorityKey = nil; reminderSaveGeneration = UUID()
         Task { await sourceDidChange() }
     }
     func receiveReminderTap(_ handle: RouteHandle) {
         pendingReminderTap = handle
-        pendingURL = nil; pendingHandle = nil
+        pendingShortcut = nil; pendingHandle = nil
         Task { await sourceDidChange() }
     }
     private func sourceSnapshot() -> SurfaceSourceSnapshot {
@@ -184,7 +201,7 @@ import DeviceSurfaces
             pendingReminderCancellation = false
         }
         guard privateAuthorized else {
-            if !hasAdultAuthority { pendingURL = nil }
+            if !hasAdultAuthority { pendingShortcut = nil }
             entries = []; draft = nil
             if !preservesOwnRequest { destination = nil; ownRequestPersona = nil }
             try? projection?.clear(now: clock()); return
@@ -245,7 +262,7 @@ import DeviceSurfaces
                 destination = resolved ?? .unavailable(UUID())
             }
             try publishWidget()
-            if let pendingURL { self.pendingURL = nil; handle(url: pendingURL) }
+            if let pendingShortcut { self.pendingShortcut = nil; receive(pendingShortcut) }
             if let pendingHandle { self.pendingHandle = nil; Task { await open(pendingHandle) } }
         } catch { guard generation == start else { return }; entries = []; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again.") }
     }
@@ -339,35 +356,34 @@ import DeviceSurfaces
             // Parsing its public scheme must not require private stores to open.
             if urls == nil { urls = try IOSSurfaceContainers.urls(bundle: bundle) }
             guard let urls else { throw SurfaceError.unconfigured }
-            let handle = try urls.parse(url)
-            // Keep an adult URL only until activation and model readiness. Its
-            // destination still resolves against current authority and sources.
-            if hasAdultAuthority, !active || ledger?.ready != true || pickup?.ready != true {
-                pendingURL = url; return
-            }
-            guard let handle else {
-                openCapture()
-                return
-            }
+            receive(try urls.parse(url).map(Shortcut.current) ?? .capture)
+        } catch { destination = .unavailable(UUID()) }
+    }
+    private func receive(_ shortcut: Shortcut) {
+        // URL and App Intent delivery may precede persona binding or scene activation.
+        if ledger == nil || (hasAdultAuthority && (!active || authorityKey == nil || ledger?.ready != true || pickup?.ready != true)) {
+            pendingShortcut = shortcut
+            return
+        }
+        switch shortcut {
+        case .capture:
+            openCapture()
+        case .current(let handle):
             guard privateAuthorized else { destination = .unavailable(UUID()); return }
-            guard ledger?.ready == true, pickup?.ready == true else { pendingURL = url; return }
             let start = nonce
             Task {
-                // Background cancels this entry even if a later foreground
-                // restores private authority before the task executes.
                 guard nonce == start, privateAuthorized else { return }
                 await open(handle)
             }
-        } catch { destination = .unavailable(UUID()) }
+        }
     }
-    func openCapture() {
+    private func openCapture() {
         ownRequestPersona = nil
         if privateAuthorized { destination = .capture(UUID()) }
         else if let persona = currentOwnRequestPersona {
             ownRequestPersona = persona; destination = .ownRequest(UUID())
         }
         else { destination = .unavailable(UUID()) }
-        SurfaceCaptureRequests.shared.consumeAfterRouting()
     }
     func open(_ handle: RouteHandle) async {
         guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingHandle = handle; return }

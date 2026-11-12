@@ -440,9 +440,10 @@ import DeviceSurfaces
         let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("unopened-ledger.sqlite"))
         let pickup = PickupModel(databaseURL: directory.appendingPathComponent("unopened-pickup.sqlite"))
         let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), bundle: bundle, launchArguments: ["--ui-testing"])
-        surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access, sceneActive: false)
         let codec = try SurfaceURLCodec(scheme: "roominthecart-fixture")
         surfaces.handle(url: codec.url(handle: nil))
+        XCTAssertNil(surfaces.destination)
+        surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access, sceneActive: false)
         try await Task.sleep(for: .milliseconds(100))
         for _ in 0..<100 {
             if case .ownRequest = surfaces.destination { break }

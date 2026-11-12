@@ -76,6 +76,50 @@ import CoreDomain
         XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
 
+    func testWidgetURLsDeliveredBeforeBindingUseTheCurrentWorkspace() async throws {
+        let f = try await coldURLFixture()
+        for handle in [nil, Optional(f.handle)] {
+            let cold = DeviceSurfacesComposition(directory: f.base.appendingPathComponent("surfaces"),
+                bundle: f.bundle, launchArguments: ["--ui-testing"])
+            f.cleanup.track(cold)
+            cold.handle(url: f.codec.url(handle: handle))
+            XCTAssertNil(cold.destination, "The shortcut must wait for a persona")
+            cold.bind(ledger: f.ledger, pickup: f.pickup, household: f.household, access: f.access)
+            await waitForSurfaceDestination(cold)
+            switch (handle, cold.destination) {
+            case (nil, .capture): break
+            case (.some, .shop(let id)): XCTAssertEqual(id, f.ledger.shop?.id)
+            default: XCTFail("The cold shortcut did not reach its authorized destination")
+            }
+        }
+    }
+
+    func testGroceryEntryShortcutWaitsForTheAppToEnterForeground() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        f.composition.background()
+        requests.requestCapture()
+        for _ in 0..<100 where requests.pending {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertNil(f.composition.destination)
+        await f.composition.foreground()
+        await waitForSurfaceDestination(f.composition)
+        guard case .capture = f.composition.destination else {
+            return XCTFail("The grocery entry shortcut should open capture after the app becomes active")
+        }
+    }
+
+    func testBackgroundCancelsShortcutBeforePublishedRequestIsDelivered() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        requests.requestCapture()
+        f.composition.background()
+        await f.composition.foreground()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertFalse(requests.pending)
+        XCTAssertNil(f.composition.destination)
+    }
     func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
         let f = try await coldURLFixture()
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
@@ -363,7 +407,7 @@ import CoreDomain
         let ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess
         let composition: DeviceSurfacesComposition, codec: SurfaceURLCodec, handle: RouteHandle
     }
-    private func coldURLFixture(ledgerClock: @escaping () -> Date = Date.init) async throws -> ColdURLFixture {
+    private func coldURLFixture(ledgerClock: @escaping () -> Date = Date.init, captureRequests: SurfaceCaptureRequests? = nil) async throws -> ColdURLFixture {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let cleanup = SQLiteFixtureDirectory(base, test: self)
         let bundleURL = base.appendingPathComponent("Surface.bundle")
@@ -377,7 +421,7 @@ import CoreDomain
         let suite = "ColdSurface." + UUID().uuidString, now = Date(timeIntervalSince1970: 1_793_664_000)
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite)), access = WorkspaceAccess(defaults: defaults)
         addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
-        let composition = DeviceSurfacesComposition(directory: base.appendingPathComponent("surfaces"), bundle: bundle, clock: { now }, launchArguments: ["--ui-testing"])
+        let composition = DeviceSurfacesComposition(directory: base.appendingPathComponent("surfaces"), bundle: bundle, clock: { now }, launchArguments: ["--ui-testing"], captureRequests: captureRequests)
         cleanup.track(composition)
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let widget = try WidgetProjectionFile(directory: base.appendingPathComponent("surfaces/TestWidget"))
