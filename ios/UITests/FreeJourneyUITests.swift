@@ -534,11 +534,10 @@ import XCTest
                 // Hosted app resolution and snapshot acquisition exceeded five
                 // seconds even after UIKit had dismissed the keyboard.
                 XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
-                let entered = XCTNSPredicateExpectation(
-                    predicate: NSPredicate(format: "value == %@", value), object: readback)
-                XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
+                // Input and keyboard dismissal have finished. Read the field once
+                // so a slow snapshot cannot exhaust a separate predicate timer.
+                XCTAssertEqual(try readback.snapshot().value as? String, value,
                                "Exact entered value must survive Done for \(name)")
-                XCTAssertEqual(readback.value as? String, value, name)
             }
         }
 
