@@ -157,22 +157,24 @@ import XCTest
         tap(app.buttons["Review a store offer"])
         tap(app.buttons["pickup.offer.new"])
         choose("Original line", value: "wraps")
-        fill("Large wrap pack", into: "pickup.offer.replacement")
-        fill("2", into: "pickup.offer.required")
-        fill("0", into: "pickup.offer.remaining")
-        fill("4.00", into: "pickup.offer.price")
-        fill("3.00", into: "pickup.offer.ceiling")
-        fill("1", into: "pickup.offer.usable")
-        tap(app.buttons["pickup.offer.retained.kind"]); tap(app.buttons["Exact price"])
-        fill("0.00", into: "pickup.offer.retained.lower")
-        fill("3.00", into: "pickup.offer.lineAllowance")
+        enterOfferField("Large wrap pack", into: "pickup.offer.replacement")
+        enterOfferField("2", into: "pickup.offer.required")
+        enterOfferField("0", into: "pickup.offer.remaining")
+        enterOfferField("4.00", into: "pickup.offer.price")
+        enterOfferField("3.00", into: "pickup.offer.ceiling")
+        enterOfferField("1", into: "pickup.offer.usable")
+        tapOfferControl(app.buttons["pickup.offer.retained.kind"]); tap(app.buttons["Exact price"])
+        enterOfferField("0.00", into: "pickup.offer.retained.lower")
+        enterOfferField("3.00", into: "pickup.offer.lineAllowance")
         let dish = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pickup.offer.dish.")).firstMatch
-        tap(dish); tap(app.buttons["Approved for this dish"])
-        tap(app.buttons["pickup.offer.otherCost.kind"]); tap(app.buttons["Exact price"])
-        fill("3.00", into: "pickup.offer.otherCost.lower")
-        fill("6.00", into: "pickup.offer.wholeCap")
-        fill("Reviewed retained checkout charges excluding replacement", into: "pickup.offer.checkoutSource", replacing: true)
-        fill("Please leave unresolved", into: "pickup.offer.preference")
+        tapOfferControl(dish); tap(app.buttons["Approved for this dish"])
+        tapOfferControl(app.buttons["pickup.offer.otherCost.kind"]); tap(app.buttons["Exact price"])
+        enterOfferField("3.00", into: "pickup.offer.otherCost.lower")
+        enterOfferField("6.00", into: "pickup.offer.wholeCap")
+        enterOfferField("Reviewed retained checkout charges excluding replacement", into: "pickup.offer.checkoutSource", replacing: true)
+        enterOfferField("Please leave unresolved", into: "pickup.offer.preference")
+        app.textFields["pickup.offer.preference"].typeText(XCUIKeyboardKey.return.rawValue)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         tap(app.buttons["pickup.offer.review"])
         assertElementContains("pickup.offer.forecast.combined", "$7.00")
         assertElementContains("pickup.offer.forecast.checkout", "exceeds")
@@ -192,7 +194,10 @@ import XCTest
         restart()
         // Current app snapshots expose the saved deadline on the normal Shop route.
         // The untouched editor cutoff is past by restart; arrival remains a separate review.
-        assertElementContains("shop.resumeOfferStatus", "Await pickup")
+        let savedStatus = app.staticTexts["shop.resumeOfferStatus"]
+        XCTAssertTrue(savedStatus.waitForExistence(timeout: 15), "The saved offer must reappear on Shop after relaunch")
+        reveal(savedStatus)
+        XCTAssertEqual(savedStatus.label, "Await pickup · fill still unknown")
         assertText("Large wrap pack")
         assertText("Cutoff:", hasPrefix: true)
         capture("Offer-expired-resume-card-after-restart")
@@ -285,14 +290,38 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
-        for attempt in 0..<64 {
+    private func enterOfferField(_ text: String, into id: String, replacing: Bool = false) {
+        let field = app.textFields[id]
+        tapOfferControl(field)
+        if replacing, let old = field.value as? String, old != field.placeholderValue, !old.isEmpty {
+            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+        }
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String, text, id)
+    }
+    private func tapOfferControl(_ target: XCUIElement) {
+        // The keyboard can cover the Form row even when XCTest reports it as hittable.
+        reveal(target, requireVisibleCenter: true)
+        target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+    private func reveal(_ target: XCUIElement, requireVisibleCenter: Bool = false) {
+        for attempt in 0...64 {
             // A lazy Form may not expose an offscreen row yet. Asking for
             // isHittable first makes XCTest retry a missing element before
             // every scroll. Resolve existence once, then test real visibility.
             let exists = target.exists
-            if exists && target.isHittable { return }
-            let area = scrollableArea()
+            if exists && target.isHittable && !requireVisibleCenter { return }
+            var area = scrollableArea()
+            if requireVisibleCenter {
+                // XCTest briefly hides the software keyboard during typeText. It can
+                // rise over a lower field between a successful query and the tap.
+                area.size.height = min(area.height, app.frame.midY - area.minY)
+                if exists && target.isHittable {
+                    let frame = target.frame
+                    if area.contains(CGPoint(x: frame.midX, y: frame.midY)) { return }
+                }
+            }
+            if attempt == 64 { break }
             let upward: Bool
             if exists {
                 let frame = target.frame
@@ -300,7 +329,7 @@ import XCTest
             } else { upward = attempt < 32 }
             scrollContent(upward: upward, area: area)
         }
-        XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        XCTFail("Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         // Navigation and sheet transitions can replace a bar between separate
