@@ -77,6 +77,14 @@ import XCTest
         reveal(exportDate, requiresHitTarget: false)
         XCTAssertTrue(exportDate.label.hasPrefix(text("File exported at: ", "Archivo exportado: ")))
         XCTAssertFalse(exportDate.label.contains("1970")); XCTAssertNotEqual(exportDate.label, unknown)
+        let compare = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "records.importVersions.")).firstMatch
+        tap(compare)
+        let current = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "records.importCurrentVersion.")).firstMatch
+        reveal(current, requiresHitTarget: false)
+        XCTAssertTrue(current.label.contains(text("Current work", "Trabajo actual")))
+        XCTAssertTrue(current.label.contains("shop-8-privacy-2"))
+        XCTAssertTrue(current.label.contains(unknown))
         capture("S20 \(language) import review separates real export time from unknown source save")
         tap(element("records.cancelImport"))
         evidence(copies: 0, files: 1, encrypted: true)
