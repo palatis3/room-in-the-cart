@@ -4,6 +4,8 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint — November 11
 
+Local Records updates through `84e5d569` preserve owner prices across helper imports, distinguish record identifiers containing slashes, withdraw live-shop exports on observed access loss, and invalidate an encrypted file when its key changes. Undo also respects media erasure recorded by another registry. On Xcode 27.1, all 52 affected model cases passed on both iOS 17.0 (iPhone SE) and iOS 27.0 (iPhone 17), with zero recorded runtime warnings. The archive package passed 35 tests. The English and Spanish shared Records UI journeys passed on the earlier request-local listing fix, and the original dinner carryover journey passed in 127 seconds. The controlled results and original failures are in `.build/RecordsScopeAndUI08Nov12`.
+
 Published640c0aef is actively running the workflows recorded in
 `.build/CombinedCandidate4cad300cNov11/publication.json`; security and native-wire
 are complete and passing. Local19613a32 added the main producer's M2 cache route.
