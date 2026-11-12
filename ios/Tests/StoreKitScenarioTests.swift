@@ -147,7 +147,8 @@ import StoreKitTest
         let purchased = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
         do {
             try await eventually("The app-scoped StoreKit observer attempts delivery") {
-                model.notice == .failed(.notConfigured)
+                model.deliveryOutcomes[String(purchased.id)] == .failed(.notConfigured)
+                    && model.notice == .failed(.notConfigured)
             }
         } catch {
             // Capture the failed boundary before another await. Keep the original
@@ -645,10 +646,10 @@ import StoreKitTest
             defer { trace("storefront.unfinished.end") }
             return await base.unfinishedTransactions()
         }
-        func updates() -> AsyncStream<MembershipPurchaseOutcome> {
+        func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome> {
             trace("storefront.updates.begin")
             defer { trace("storefront.updates.end") }
-            return base.updates()
+            return base.updates(for: productID)
         }
         func finish(transactionID: String) async {
             trace("storefront.finish.begin")

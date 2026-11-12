@@ -172,10 +172,9 @@ import SwiftUI
         guard !started, !isStopped else { return }
         started = true
         let session = generation
-        await loadOffer()
-        guard session == generation else { return }
-        if context?.appAccountToken != nil {
-            let stream = storefront.updates()
+        // An off-device purchase can arrive while StoreKit is still loading the offer.
+        if context?.appAccountToken != nil, let productID = configuration.productID {
+            let stream = storefront.updates(for: productID)
             updatesTask = Task { [weak self] in
                 for await outcome in stream {
                     guard !Task.isCancelled, let self, session == self.generation else { break }
@@ -183,6 +182,8 @@ import SwiftUI
                 }
             }
         }
+        await loadOffer()
+        guard session == generation else { return }
         await refresh()
     }
 

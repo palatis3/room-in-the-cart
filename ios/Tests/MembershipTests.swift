@@ -23,6 +23,23 @@ import Combine
             context: context, service: service, storefront: store, clock: { self.now })
     }
 
+    func testOffDeviceTransactionArrivingDuringOfferLoadAttemptsDelivery() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.submissionError = .deliveryPending
+        let store = FakeMembershipStorefront()
+        store.keepsUpdatesOpen = true
+        let purchase = transaction(token: context.appAccountToken)
+        store.onLoad = { [weak store] in store?.emit(.verified(purchase)) }
+        let model = makeModel(service, store)
+        defer { model.stop() }
+
+        await model.start()
+        await settle { model.deliveryOutcomes[purchase.transactionID] == .failed(.deliveryPending) }
+        XCTAssertEqual(service.submissions, 1)
+        XCTAssertTrue(store.finished.isEmpty)
+        XCTAssertFalse(model.hasPaidAccess)
+    }
+
     func testLatePendingAndVerifiedDeliveryFailureRemainSimultaneouslyVisible() async {
         for issue: MembershipFailure in [.notConfigured, .deliveryPending] {
             let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.error = issue
@@ -1362,12 +1379,14 @@ import Combine
     }
     var onFinish: (() -> Void)?
     var keepsUpdatesOpen = false
+    var onLoad: (() -> Void)?
     var observerStarts = 0
     var activeObservers: Int { continuations.count }
     private var continuations: [UUID: AsyncStream<MembershipPurchaseOutcome>.Continuation] = [:]
     func emit(_ outcome: MembershipPurchaseOutcome) { for continuation in continuations.values { continuation.yield(outcome) } }
     func load(productID: String) async throws -> MembershipOffer {
-        .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
+        onLoad?()
+        return .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
     }
     func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
         purchaseCount += 1
@@ -1384,7 +1403,7 @@ import Combine
         if pauseUnfinishedRead { await withCheckedContinuation { unfinishedContinuation = $0 } }
         return snapshot
     }
-    func updates() -> AsyncStream<MembershipPurchaseOutcome> {
+    func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome> {
         observerStarts += 1
         guard keepsUpdatesOpen else { return AsyncStream { $0.finish() } }
         let id = UUID()
