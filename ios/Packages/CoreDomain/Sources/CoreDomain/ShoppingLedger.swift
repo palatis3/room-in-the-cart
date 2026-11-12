@@ -1377,15 +1377,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let quantity = label.total
             return (name, quantity, quantity == nil ? "Review the pack count and usable amount in each pack." : nil, label)
         }
-        let parsedUnit = ranged ? nil : ListQuantityParser.takeUnit(from: &tokens)
+        let measure = number.map { ListQuantityParser.takeMeasure($0, from: &tokens) }
         let name = tokens.joined(separator: " ")
-        guard let number else { return (name.isEmpty ? text : name, nil, "Review the quantity and unit.", nil) }
-        if parsedUnit == nil && ListQuantityParser.needsUnitReview(tokens.first) {
+        guard let measure, let amount = measure.amount else { return (name.isEmpty ? text : name, nil, "Review the quantity and unit.", nil) }
+        if measure.unit == nil && ListQuantityParser.needsUnitReview(tokens.first) {
             return (name, nil, "Review the unsupported or approximate unit.", nil)
         }
-        let unit = parsedUnit ?? .count
+        let unit = measure.unit ?? .count
         guard !name.isEmpty else { return (text, nil, "Add the item name.", nil) }
-        return (name, Quantity(amount: number, unit: unit, originalLiteral: original), nil, nil)
+        return (name, Quantity(amount: amount, unit: unit, originalLiteral: original), nil, nil)
     }
 
 }

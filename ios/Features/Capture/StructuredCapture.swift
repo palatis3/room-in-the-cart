@@ -111,9 +111,11 @@ enum StructuredCaptureParser {
                 }
                 if label.count == nil || perPack.isEmpty { warnings.append(.packUnknown) }
             } else if let number {
-                amount = number.description
-                if let known = ListQuantityParser.takeUnit(from: &tokens) { unit = known }
-                else if ListQuantityParser.needsUnitReview(tokens.first) { amount = ""; warnings.append(.ambiguous) }
+                let measure = ListQuantityParser.takeMeasure(number, from: &tokens)
+                unit = measure.unit ?? .count
+                if let exact = measure.amount, measure.unit != nil || !ListQuantityParser.needsUnitReview(tokens.first) {
+                    amount = exact.description
+                } else { warnings.append(.ambiguous) }
             } else { warnings.append(.quantityUnknown) }
         } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
         if tokens.contains(where: ListQuantityParser.isPackMarker) {

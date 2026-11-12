@@ -21,6 +21,15 @@ public enum ListQuantityParser {
     }
 
     public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
+        var rest = tokens
+        let amount = try takeNumberPart(from: &rest, allowingWords: allowingWords)
+        // A recognized prefix of a larger number is not an exact purchase quantity.
+        if allowingWords, let next = rest.first, scales.contains(next) { throw DomainError.invalidNumber }
+        tokens = rest
+        return amount
+    }
+
+    private static func takeNumberPart(from tokens: inout ArraySlice<String>, allowingWords: Bool) throws -> Rational {
         guard let first = tokens.first else { throw DomainError.invalidNumber }
         var rest = tokens.dropFirst()
         if let measured = separatingUnit(first) {
@@ -28,8 +37,27 @@ public enum ListQuantityParser {
             tokens[tokens.startIndex] = measured.unit
             return amount
         }
-        var amount = try number(first.lowercased(), allowingWords: allowingWords)
-        if let next = rest.first, first.utf8.allSatisfy({ (48...57).contains($0) }) {
+        let word = first.lowercased()
+        if allowingWords, startsHalfAndHalf(tokens) { throw DomainError.invalidNumber }
+        if allowingWords, ["a", "one"].contains(word), rest.first?.lowercased() == "half",
+           !startsHalfAndHalf(rest) {
+            tokens = rest.dropFirst()
+            return try Rational(1, 2)
+        }
+        if allowingWords, word == "half", ["a", "an"].contains(rest.first?.lowercased() ?? "") {
+            var measure = rest.dropFirst()
+            if takeUnit(from: &measure) != nil || needsUnitReview(measure.first) { rest = rest.dropFirst() }
+        }
+        var amount: Rational
+        if allowingWords, let tens = spokenTens(word, rest: &rest) { amount = try Rational(tens) }
+        else { amount = try number(word, allowingWords: allowingWords) }
+        let printedWhole = first.utf8.allSatisfy { (48...57).contains($0) }
+        if (allowingWords || printedWhole), amount.denominator == 1, takeAddedHalf(from: &rest) {
+            amount = try amount.adding(Rational(1, 2))
+            tokens = rest
+            return amount
+        }
+        if let next = rest.first, printedWhole {
             let measured = separatingUnit(next)
             let literal = measured?.amount ?? next
             if isFractionToken(literal) {
@@ -53,7 +81,7 @@ public enum ListQuantityParser {
         if between || prefix == "from" || prefix == "de" { rest = rest.dropFirst() }
         guard let first = rest.first else { return false }
         let dashes = "-–—"
-        if !isHyphenatedTens(first.lowercased()),
+        if hyphenatedTens(first.lowercased()) == nil,
            let dash = first.firstIndex(where: dashes.contains), dash != first.startIndex {
             var low = [String(first[..<dash])][...]
             if takeRangeEndpoint(from: &low) {
@@ -71,8 +99,20 @@ public enum ListQuantityParser {
                 }
             }
         }
+        let lowerStart = rest.startIndex
         guard takeRangeEndpoint(from: &rest, allowingAnd: !between) else { return false }
         _ = takeUnit(from: &rest)
+        // In "between one and a half cup", the conjunction separates two endpoints.
+        // In "between one and a half and two cups", it belongs to the first number.
+        if between, !["and", "y"].contains(rest.first?.lowercased() ?? "") {
+            let consumed = tokens[lowerStart..<rest.startIndex]
+            guard let split = consumed.lastIndex(where: { ["and", "y"].contains($0.lowercased()) }) else { return false }
+            var lower = consumed[..<split]
+            guard takeRangeEndpoint(from: &lower) else { return false }
+            _ = takeUnit(from: &lower)
+            guard lower.isEmpty else { return false }
+            rest = tokens[split...]
+        }
         guard let connector = rest.first?.lowercased() else { return false }
         if between {
             guard connector == "and" || connector == "y" else { return false }
@@ -90,21 +130,59 @@ public enum ListQuantityParser {
         return true
     }
 
-    // These words establish a range without assigning a numeric value to either end.
-    // Standalone exact number parsing keeps its existing vocabulary.
-    private static let englishTens: Set<String> = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
-    private static let spanishTens: Set<String> = ["treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]
-    private static let spanishTwenties: Set<String> = ["veintiuno", "veintiuna", "veintiún", "veintiun", "veintidós", "veintidos",
-        "veintitrés", "veintitres", "veinticuatro", "veinticinco", "veintiséis", "veintiseis", "veintisiete", "veintiocho", "veintinueve"]
-
-    private static func singleDigitWord(_ word: String) -> Bool {
-        guard let digit = words[word], (1...9).contains(digit) else { return false }
-        return word != "a" && word != "an"
+    private static func startsHalfAndHalf(_ tokens: ArraySlice<String>) -> Bool {
+        tokens.first?.lowercased() == "half"
+            && ["and", "&"].contains(tokens.dropFirst().first?.lowercased() ?? "")
+            && tokens.dropFirst(2).first?.lowercased() == "half"
     }
 
-    private static func isHyphenatedTens(_ word: String) -> Bool {
-        let parts = word.split(separator: "-", maxSplits: 1)
-        return parts.count == 2 && englishTens.contains(String(parts[0])) && singleDigitWord(String(parts[1]))
+    private static func takeAddedHalf(from tokens: inout ArraySlice<String>) -> Bool {
+        var rest = tokens.dropFirst()
+        switch tokens.first?.lowercased() {
+        case "and":
+            if ["a", "one"].contains(rest.first?.lowercased() ?? "") { rest = rest.dropFirst() }
+            guard rest.first?.lowercased() == "half", !startsHalfAndHalf(rest) else { return false }
+        case "y":
+            guard ["media", "medio"].contains(rest.first?.lowercased() ?? "") else { return false }
+        default: return false
+        }
+        tokens = rest.dropFirst()
+        return true
+    }
+
+    private static let englishTens = ["twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+                                      "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90]
+    private static let spanishTens = ["treinta": 30, "cuarenta": 40, "cincuenta": 50, "sesenta": 60,
+                                      "setenta": 70, "ochenta": 80, "noventa": 90]
+
+    private static let englishDigits: Set<String> = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    private static let spanishDigits: Set<String> = ["un", "una", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"]
+
+    private static func digit(_ word: String?, in allowed: Set<String>) -> Int64? {
+        guard let word, allowed.contains(word) else { return nil }
+        return words[word]
+    }
+
+    private static func hyphenatedTens(_ word: String) -> Int64? {
+        guard word.contains("-") else { return nil }
+        let parts = word.components(separatedBy: "-")
+        guard parts.count == 2, let tens = englishTens[parts[0]], let ones = digit(parts[1], in: englishDigits) else { return nil }
+        return Int64(tens) + ones
+    }
+
+    private static func spokenTens(_ word: String, rest: inout ArraySlice<String>) -> Int64? {
+        if let tens = englishTens[word] {
+            guard let ones = digit(rest.first?.lowercased(), in: englishDigits) else { return Int64(tens) }
+            rest = rest.dropFirst()
+            return Int64(tens) + ones
+        }
+        if let tens = spanishTens[word] {
+            guard rest.first?.lowercased() == "y", let ones = digit(rest.dropFirst().first?.lowercased(), in: spanishDigits)
+            else { return Int64(tens) }
+            rest = rest.dropFirst(2)
+            return Int64(tens) + ones
+        }
+        return hyphenatedTens(word)
     }
 
     private static let scales: Set<String> = [
@@ -129,19 +207,7 @@ public enum ListQuantityParser {
     }
 
     private static func takeNumberPart(from tokens: inout ArraySlice<String>) -> Bool {
-        guard let word = tokens.first?.lowercased() else { return false }
-        var rest = tokens.dropFirst()
-        if englishTens.contains(word) {
-            if rest.first.map({ singleDigitWord($0.lowercased()) }) == true { rest = rest.dropFirst() }
-        } else if spanishTens.contains(word) {
-            if rest.first?.lowercased() == "y", rest.dropFirst().first.map({ singleDigitWord($0.lowercased()) }) == true {
-                rest = rest.dropFirst(2)
-            }
-        } else if !spanishTwenties.contains(word) && !isHyphenatedTens(word) {
-            return (try? takeAmount(from: &tokens, allowingWords: true)) != nil
-        }
-        tokens = rest
-        return true
+        (try? takeNumberPart(from: &tokens, allowingWords: true)) != nil
     }
 
     /// Count initial "to" markers consumed by an amount or its pack label.
@@ -164,7 +230,12 @@ public enum ListQuantityParser {
     /// Consume a unit before interpreting a bare number as an item count.
     /// In "onzas líquidas" the two words are one volume unit, distinct from "onzas".
     public static func takeUnit(from tokens: inout ArraySlice<String>) -> UnitOfMeasure? {
-        guard let first = tokens.first.map(unitKey) else { return nil }
+        takeMeasure(nil, from: &tokens).unit
+    }
+
+    /// A mixed measure can put the unit before the fraction, as in "una taza y media de arroz".
+    public static func takeMeasure(_ amount: Rational?, from tokens: inout ArraySlice<String>) -> (amount: Rational?, unit: UnitOfMeasure?) {
+        guard let first = tokens.first.map(unitKey) else { return (amount, nil) }
         let unit: UnitOfMeasure
         if fluidOunces.contains(tokens.prefix(2).map(unitKey).joined(separator: " ")) {
             unit = .fluidOunce
@@ -172,10 +243,15 @@ public enum ListQuantityParser {
         } else if let single = units[first] {
             unit = single
             tokens = tokens.dropFirst()
-        } else { return nil }
+        } else { return (amount, nil) }
+        var measured = amount
+        if takeAddedHalf(from: &tokens) {
+            if let amount, amount.denominator == 1 { measured = try? amount.adding(Rational(1, 2)) }
+            else { measured = nil }
+        }
         // Preserve capitalized product names such as De Cecco.
         if let connector = tokens.first, connector == "de" || connector == "of" { tokens = tokens.dropFirst() }
-        return unit
+        return (measured, unit)
     }
 
     public static func needsUnitReview(_ token: String?) -> Bool {
@@ -217,8 +293,10 @@ public enum ListQuantityParser {
             let size: Quantity?
             if takeRange(from: &rest) { size = nil }
             else {
-                guard let amount = try? takeAmount(from: &rest), let unit = takeUnit(from: &rest) else { return nil }
-                size = Quantity(amount: amount, unit: unit, originalLiteral: original)
+                guard let number = try? takeAmount(from: &rest) else { return nil }
+                let measure = takeMeasure(number, from: &rest)
+                guard let unit = measure.unit else { return nil }
+                size = measure.amount.map { Quantity(amount: $0, unit: unit, originalLiteral: original) }
             }
             guard rest.first.map({ containers.contains($0.lowercased()) }) == true,
                   consumePackMarker(from: &rest) else { return nil }
@@ -237,11 +315,12 @@ public enum ListQuantityParser {
                 else { multiplier = nil }
                 continue
             }
-            let measure = amount == nil ? nil : takeUnit(from: &tokens)
-            guard let amount, let multiplier, !(measure == nil && needsUnitReview(tokens.first)), !tokens.isEmpty,
-                  !tokens.contains(where: isPackMarker), let contents = try? multiplier.multiplied(by: amount)
+            guard let amount else { return unresolved }
+            let measure = takeMeasure(amount, from: &tokens)
+            guard let perPack = measure.amount, let multiplier, !(measure.unit == nil && needsUnitReview(tokens.first)), !tokens.isEmpty,
+                  !tokens.contains(where: isPackMarker), let contents = try? multiplier.multiplied(by: perPack)
             else { return unresolved }
-            return PackLabel(count: count, amountPerPack: Quantity(amount: contents, unit: measure ?? .count,
+            return PackLabel(count: count, amountPerPack: Quantity(amount: contents, unit: measure.unit ?? .count,
                                                                     originalLiteral: original))
         }
         return unresolved
@@ -264,8 +343,10 @@ public enum ListQuantityParser {
             let size: Quantity?
             if takeRange(from: &suffix) { size = nil }
             else {
-                guard let amount = try? takeAmount(from: &suffix), let unit = takeUnit(from: &suffix) else { continue }
-                size = Quantity(amount: amount, unit: unit, originalLiteral: original)
+                guard let number = try? takeAmount(from: &suffix) else { continue }
+                let measure = takeMeasure(number, from: &suffix)
+                guard let unit = measure.unit else { continue }
+                size = measure.amount.map { Quantity(amount: $0, unit: unit, originalLiteral: original) }
             }
             guard suffix.isEmpty else { continue }
             var name = body[..<position]
@@ -346,7 +427,10 @@ public enum ListQuantityParser {
         "a": 1, "an": 1, "un": 1, "una": 1, "uno": 1, "dos": 2, "tres": 3, "cuatro": 4,
         "cinco": 5, "seis": 6, "siete": 7, "ocho": 8, "nueve": 9, "diez": 10, "once": 11,
         "doce": 12, "trece": 13, "catorce": 14, "quince": 15, "dieciséis": 16, "dieciseis": 16,
-        "diecisiete": 17, "dieciocho": 18, "diecinueve": 19, "veinte": 20
+        "diecisiete": 17, "dieciocho": 18, "diecinueve": 19, "veinte": 20,
+        "veintiuno": 21, "veintiuna": 21, "veintiún": 21, "veintiun": 21, "veintidós": 22, "veintidos": 22,
+        "veintitrés": 23, "veintitres": 23, "veinticuatro": 24, "veinticinco": 25, "veintiséis": 26,
+        "veintiseis": 26, "veintisiete": 27, "veintiocho": 28, "veintinueve": 29
     ]
     private static let fluidOunces: Set<String> = [
         "fl oz", "fl ounce", "fl ounces", "fluid ounce", "fluid ounces", "onza líquida", "onzas líquidas",

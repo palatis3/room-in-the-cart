@@ -52,6 +52,51 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(english.name, "rice"); XCTAssertEqual(spanish.name, "arroz")
         XCTAssertEqual(spanish.purpose, "la cena"); XCTAssertEqual(spanish.destination, destination)
     }
+    func testSpokenHalfMeasuresAndCompoundCountsReachTheReviewedGroceryList() throws {
+        let examples: [(String, String, Rational?, UnitOfMeasure?)] = [
+            ("one and a half cups of rice", "rice", try Rational(3, 2), .cup),
+            ("dos y media tazas de arroz", "arroz", try Rational(5, 2), .cup),
+            ("una taza y media de arroz", "arroz", try Rational(3, 2), .cup),
+            ("a cup and a half of milk", "milk", try Rational(3, 2), .cup),
+            ("veintidós tortillas", "tortillas", try Rational(22), .count),
+            ("half a cup of milk", "milk", try Rational(1, 2), .cup),
+            ("twenty Dos Equis", "Dos Equis", try Rational(20), .count),
+            ("thirty thousand grains", "thirty thousand grains", nil, nil),
+            ("a half cup of milk", "milk", try Rational(1, 2), .cup),
+            ("twenty one tortillas", "tortillas", try Rational(21), .count),
+            ("twenty-one tortillas", "tortillas", try Rational(21), .count),
+            ("treinta y dos tortillas", "tortillas", try Rational(32), .count),
+            ("half and half", "half and half", nil, nil),
+            ("2 cups of Half and Half", "Half and Half", try Rational(2), .cup),
+            ("two packs of one and a half cups of rice", "rice", try Rational(3), .cup),
+            ("between one and a half and two cups of rice", "rice", nil, nil),
+            ("entre una y media taza de arroz", "arroz", nil, nil),
+            ("between one cup and half a cup of rice", "rice", nil, nil)
+        ]
+        for (text, name, amount, unit) in examples {
+            var draft = try row(text)
+            XCTAssertThrowsError(try draft.reviewed(expectedDestination: destination), text)
+            draft.confirmed = true
+            let line = try XCTUnwrap(draft.reviewed(expectedDestination: destination), text)
+            var shop = ShoppingLedger()
+            let preview = try shop.stageCaptureImport(id: UUID(), originalText: text, source: .voice, lines: [line])
+            try shop.commitImport(preview)
+            let saved = try XCTUnwrap(shop.contributions.first)
+            XCTAssertEqual(preview.lines.first?.name, name, text)
+            XCTAssertEqual(saved.quantity?.amount, amount, text)
+            XCTAssertEqual(saved.quantity?.unit, unit, text)
+            XCTAssertEqual(saved.originalText, text)
+        }
+        let purchased = try ShoppingLedger().stageImport(text: "2 Hundred Grand bars\n2 and a half cups of Half and Half", source: .paste)
+        XCTAssertEqual(purchased.lines.map(\.name), ["Hundred Grand bars", "Half and Half"])
+        XCTAssertEqual(purchased.lines.map { $0.quantity?.amount }, [try Rational(2), try Rational(5, 2)])
+        XCTAssertEqual(purchased.lines.map { $0.quantity?.unit }, [.count, .cup])
+        for name in ["Half and Half", "One Degree oats", "Seven Seas dressing"] {
+            let pasted = try XCTUnwrap(ShoppingLedger().stageImport(text: name).lines.first)
+            XCTAssertEqual(pasted.name, name)
+            XCTAssertNil(pasted.quantity)
+        }
+    }
     func testMixedMeasuresAndSpanishPackEvidenceReachTheSameReviewedList() throws {
         for label in ["2 × 12 fl. oz. seltzer", "dos latas de 12 oz. líq. seltzer"] {
             var draft = try row(label)
