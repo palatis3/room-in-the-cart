@@ -134,6 +134,16 @@ final class RecordArchiveTests: XCTestCase {
     func testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail() throws {
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"formatVersion":2,"@type":"Recipe","name":"Dinner"}"#.utf8))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"[{"formatVersion":2,"@type":"Recipe","name":"Dinner"}]"#.utf8)))
+        for json in [#"{"formatVersion":true,"@graph":[{"@type":"Recipe","name":"Dinner"}]}"#,
+                     #"[{"@type":"Recipe","name":"Dinner","formatVersion":true}]"#] {
+            XCTAssertThrowsError(try RecipeImporter.stage(Data(json.utf8))) {
+                XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion)
+            }
+        }
+        let mixed = Data(#"[{"@type":"Recipe","name":"Bad source","url":"https:///recipe"},{"@type":"Recipe","name":"Dinner","url":"https://example.org/recipe"}]"#.utf8)
+        let preview = try RecipeImporter.stage(mixed)
+        XCTAssertEqual(preview.recipes.map(\.title), ["Dinner"])
+        XCTAssertEqual(preview.skippedRows, 1)
         XCTAssertThrowsError(try ImportedRecipe(title: "Dinner", sourceURL: "javascript:alert(1)").validated())
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"@type":"Recipe""#.utf8)))
     }

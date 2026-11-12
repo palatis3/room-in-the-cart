@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 
 public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
@@ -20,7 +21,7 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
               (ingredients + steps).allSatisfy({ $0.utf8.count <= 32768 && !$0.contains("\0") }) else { throw ArchiveError.invalidRecipe }
         if let sourceURL, !sourceURL.isEmpty {
             guard sourceURL.utf8.count <= 4096, let components = URLComponents(string: sourceURL),
-                  ["http", "https"].contains(components.scheme?.lowercased() ?? ""), components.host != nil,
+                  ["http", "https"].contains(components.scheme?.lowercased() ?? ""), let host = components.host, !host.isEmpty,
                   components.user == nil, components.password == nil else { throw ArchiveError.invalidRecipe }
         }
         return self
@@ -41,15 +42,20 @@ public struct RecipeImportReport: Sendable {
 
 /// Documented Recipe JSON-LD profile. Context URLs are inert text, never fetched.
 public enum RecipeImporter {
+    private static func validateVersion(_ version: Any?) throws {
+        guard let version else { return }
+        // JSONSerialization bridges true and 1 to NSNumber.
+        guard let number = version as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number == NSNumber(value: 1) else { throw ArchiveError.unsupportedVersion }
+    }
+
     public static func stage(_ data: Data, existing: [ImportedRecipe] = []) throws -> RecipeImportReport {
         try ArchiveCodec.preflight(data)
         let root: Any
         do { root = try JSONSerialization.jsonObject(with: data) } catch { throw ArchiveError.malformed }
         let nodes: [Any]
         if let dictionary = root as? [String: Any] {
-            if let version = dictionary["formatVersion"] {
-                guard let value = version as? Int, value == 1 else { throw ArchiveError.unsupportedVersion }
-            }
+            try validateVersion(dictionary["formatVersion"])
             if let graph = dictionary["@graph"] as? [Any] { nodes = graph } else { nodes = [dictionary] }
         } else if let array = root as? [Any] { nodes = array }
         else { throw ArchiveError.invalidRecipe }
@@ -59,9 +65,7 @@ public enum RecipeImporter {
         let allowed: Set<String> = ["@context", "@type", "@id", "formatVersion", "name", "recipeYield", "recipeIngredient", "recipeInstructions", "url", "notes", "description"]
         for node in nodes {
             guard let object = node as? [String: Any] else { skipped += 1; continue }
-            if let version = object["formatVersion"] {
-                guard let value = version as? Int, value == 1 else { throw ArchiveError.unsupportedVersion }
-            }
+            try validateVersion(object["formatVersion"])
             let types = (object["@type"] as? [String]) ?? (object["@type"] as? String).map { [$0] } ?? []
             guard types.contains(where: { $0 == "Recipe" || $0 == "https://schema.org/Recipe" || $0 == "http://schema.org/Recipe" }) else { skipped += 1; continue }
             unsupported.formUnion(object.keys.filter { !allowed.contains($0) }.map { String($0.prefix(80)) })
