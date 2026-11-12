@@ -112,11 +112,19 @@ import StoreKitTest
     func testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery() async throws {
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
+        // A fresh purchase requires the session reset to have reached StoreKit, too.
+        // An unfinished purchase would exercise account reconciliation instead.
+        try await eventually("The reset customer has no StoreKit history, entitlement or unfinished purchase") {
+            guard self.session.allTransactions().isEmpty else { return false }
+            guard await storefront.currentTransactions().isEmpty else { return false }
+            return await storefront.unfinishedTransactions().isEmpty
+        }
         await model.purchase()
         XCTAssertEqual(model.notice, .failed(.notConfigured))
         let purchases = await storefront.currentTransactions()
         let transaction = try verified(try XCTUnwrap(purchases.first))
-        XCTAssertEqual(transaction.appAccountToken, accountToken)
+        XCTAssertEqual(model.purchaseReport, .verified(transactionID: transaction.transactionID))
+        XCTAssertTrue(transaction.appAccountToken == accountToken, "The purchase must belong to this fixture account")
         XCTAssertEqual(transaction.productID, productID)
         XCTAssertFalse(transaction.signedTransactionInfo.isEmpty)
         assertFree(model)
