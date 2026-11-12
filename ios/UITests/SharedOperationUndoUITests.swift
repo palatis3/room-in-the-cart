@@ -211,11 +211,21 @@ import XCTest
     }
     private func setSwitch(_ id: String, on: Bool) {
         let toggle = app.switches[id]; reveal(toggle)
-        if toggle.value as? String != (on ? "1" : "0") {
-            // SwiftUI includes the label in this frame; operate the trailing switch.
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let expected = on ? "1" : "0"
+        if toggle.value as? String != expected {
+            // Drag the native thumb along its track. The enclosing SwiftUI
+            // switch also contains the label and spans the entire form row.
+            XCTAssertEqual(toggle.switches.count, 1, id)
+            let control = toggle.switches.firstMatch
+            XCTAssertTrue(control.isEnabled && control.isHittable, id)
+            XCTAssertEqual(control.value as? String, on ? "0" : "1", id)
+            let left = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            let right = control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+            (on ? left : right).press(forDuration: 0.1, thenDragTo: on ? right : left)
+            let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: control)
+            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed, id)
         }
-        XCTAssertEqual(toggle.value as? String, on ? "1" : "0", id)
+        XCTAssertEqual(toggle.value as? String, expected, id)
     }
     private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd
