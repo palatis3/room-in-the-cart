@@ -673,16 +673,16 @@ final class RoomInTheCartUITests: XCTestCase {
             }
             focusComparisonInput(field)
             let fieldDone = app.buttons["comparison.done." + id]
-            if !fieldDone.waitForExistence(timeout: 3) {
+            if !fieldDone.exists && !fieldDone.waitForExistence(timeout: 3) {
                 if done.exists { dismissComparisonKeyboard(done) }
                 focusComparisonInput(field)
-                guard fieldDone.waitForExistence(timeout: 3) else {
+                guard fieldDone.exists || fieldDone.waitForExistence(timeout: 3) else {
                     XCTFail("The comparison field must own keyboard focus before typing: " + id)
                     return
                 }
             }
             let keyboard = app.keyboards.firstMatch
-            XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+            XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5))
             if field.exists {
                 field.typeText(text)
             } else {
@@ -693,7 +693,8 @@ final class RoomInTheCartUITests: XCTestCase {
         dismissComparisonKeyboard(done)
         for (id, text) in fields {
             let field = comparisonInput(id)
-            reveal(field)
+            // UIKit exposes the value of an offscreen row while it is still in the hierarchy.
+            if !field.exists { reveal(field) }
             XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
         }
     }
@@ -716,6 +717,14 @@ final class RoomInTheCartUITests: XCTestCase {
         else if app.tables.firstMatch.exists { scroll = app.tables.firstMatch }
         else if app.scrollViews.firstMatch.exists { scroll = app.scrollViews.firstMatch }
         else { scroll = app }
+        // After keyboard dismissal, a previous row can sit above the visible form.
+        if target.exists {
+            let frame = target.frame
+            if !frame.isEmpty && frame.midY < scroll.frame.midY {
+                scroll.swipeDown(velocity: .slow)
+                if target.exists && target.isHittable { return }
+            }
+        }
         for _ in 0..<18 {
             scroll.swipeUp(velocity: .slow)
             if target.exists && target.isHittable { return }
