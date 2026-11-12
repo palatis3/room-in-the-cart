@@ -74,14 +74,13 @@ jobs:
       - name: Install PostgreSQL 17 tools for the backup and restore tests
         timeout-minutes: 5
         run: |
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl --fail --silent --show-error --location \
-            https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-            --output /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
-          echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends postgresql-client-17
+          # Match the service version without refreshing a moving PGDG package index.
+          package=postgresql-client-17_17.11-1.pgdg24.04+2_amd64.deb
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-17/$package" --output "$package"
+          echo "b3b071b67a814a382516d6f6241b529c52f909672457e2f48083acce047b634f  $package" | sha256sum -c -
+          sudo apt-get install --yes --no-install-recommends "./$package"
           "$RITC_TEST_PG_BIN/pg_dump" --version
           "$RITC_TEST_PG_BIN/pg_restore" --version
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
