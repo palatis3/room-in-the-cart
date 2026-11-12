@@ -535,19 +535,33 @@ import UIKit
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer quote", into: "Source of these prices", replacing: true)
-        fill("38", into: "Spending cap", replacing: true)
-        // Enter charges in Form order, then dismiss the keyboard once.
-        var charges = [("rice", "34"), ("Fee below threshold or fixed fee", "0"), ("Eligible discount", "0")]
-        if knownTax { charges.append(("Tax", "0")) }
-        charges.append(("Deposits and other charges", "0"))
         let done = app.buttons["Done"]
+        let terms = [("Store", "Family market"), ("Branch", "Main branch"),
+                     ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
+                     ("Spending cap", "38")]
+        let charges: [(String, String?)] = [("rice", "34"), ("Fee below threshold or fixed fee", "0"),
+                                            ("Eligible discount", "0"), ("Tax", knownTax ? "0" : nil),
+                                            ("Deposits and other charges", "0")]
+        // Move focus between checkout fields in Form order, then dismiss once.
+        for (id, value) in terms {
+            let field = app.textFields[id]
+            revealContent(field, above: done)
+            field.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            app.typeText(value)
+            XCTAssertEqual(field.value as? String, value, id)
+        }
         for (id, value) in charges {
             let field = app.textFields[id]
             revealContent(field, above: done)
+            guard let value else {
+                let displayed = field.value as? String ?? ""
+                XCTAssertTrue(displayed.isEmpty || displayed == field.placeholderValue, "Tax should remain unknown: \(displayed)")
+                continue
+            }
             field.tap()
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The field must have keyboard focus: \(id)")
             field.typeText(value)
@@ -559,9 +573,39 @@ import UIKit
         tap(app.buttons["Save and evaluate checkout"])
         tap(element("checkout.weightReview"))
         tap(element("checkout.weightLine")); tap(app.buttons["apples"])
-        fill("2", into: "checkout.weightRate"); fill("0.01", into: "checkout.weightIncrement")
+        func enterWeightTerms(rate: String, increment: String, replacing: Bool = false) {
+            let price = app.textFields["checkout.weightRate"]
+            let step = app.textFields["checkout.weightIncrement"]
+            revealContent(price, above: done)
+            price.tap()
+            if replacing {
+                XCTAssertEqual(price.value as? String, "2")
+                price.typeText(XCUIKeyboardKey.delete.rawValue)
+            }
+            // The live result can move the decimal pad. Enter the rate on its visible key.
+            let digit = app.keyboards.firstMatch.keys[rate]
+            XCTAssertTrue(digit.waitForExistence(timeout: 5) && digit.isHittable)
+            digit.tap()
+            XCTAssertEqual(price.value as? String, rate)
+            revealContent(step, above: done)
+            step.tap()
+            if replacing {
+                XCTAssertEqual(step.value as? String, "0.01")
+                step.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
+            }
+            step.typeText(increment)
+            XCTAssertEqual(step.value as? String, increment)
+            XCTAssertTrue(done.isHittable)
+            done.tap()
+            XCTAssertTrue(done.waitForNonExistence(timeout: 5))
+            XCTAssertEqual(price.value as? String, rate)
+            XCTAssertEqual(step.value as? String, increment)
+        }
+        enterWeightTerms(rate: "2", increment: "0.01")
         if !knownTax {
             reveal(element("checkout.weightUnresolved"))
+            XCTAssertFalse(element("checkout.maximumWeight").exists)
+            XCTAssertFalse(element("checkout.maximumTotal").exists)
             capture("S05-unknown-tax-keeps-weight-conditional")
             return
         }
@@ -574,8 +618,7 @@ import UIKit
             XCTAssertTrue(row.label.contains(amount) || (row.value as? String)?.contains(amount) == true, row.debugDescription)
         }
         capture("S05-billed-weight-under-saved-cap")
-        fill("3", into: "checkout.weightRate", replacing: true)
-        fill("1/3", into: "checkout.weightIncrement", replacing: true)
+        enterWeightTerms(rate: "3", increment: "1/3", replacing: true)
         reveal(result)
         XCTAssertTrue(result.label.contains("4/3 pounds") || (result.value as? String)?.contains("4/3 pounds") == true, result.debugDescription)
         for (id, amount) in [("checkout.maximumLineCharge", "$4.00"), ("checkout.maximumTotal", "$38.00")] {
