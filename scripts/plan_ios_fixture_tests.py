@@ -175,6 +175,8 @@ def matrix(inventory=None):
     }
     m4_slots = {
         "contributor-balanced-03": 2,
+        "contributor-balanced-04": 1,
+        "contributor-balanced-05": 5,
         "SharedDeliveryUITests-recovery-cook-and-closeout": 3,
         "SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney": 1,
         "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,

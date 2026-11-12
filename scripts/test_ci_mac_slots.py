@@ -42,7 +42,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise', 'bitrise-m4'})
         # The three long groups and fallback move to Bitrise; other rows keep their lanes.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
-            ('bitrise', 1), ('bitrise', 2), ('github', 2), ('bitrise', 0),
+            ('bitrise', 1), ('bitrise-m4', 2), ('github', 2), ('bitrise-m4', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('github', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
@@ -54,9 +54,9 @@ class MacSlotMetadataTests(unittest.TestCase):
                           for row in fixtures if row['shard'] in {
                               'contributor-balanced-04', 'contributor-balanced-02', 'contributor-balanced-05',
                               'SharedFallbackUITests'}}, {
-            'contributor-balanced-04': ('bitrise', 0),
+            'contributor-balanced-04': ('bitrise-m4', 0),
             'contributor-balanced-02': ('bitrise', 1),
-            'contributor-balanced-05': ('bitrise', 2),
+            'contributor-balanced-05': ('bitrise-m4', 2),
             'SharedFallbackUITests': ('bitrise', 2),
         })
         for row in fixtures:
@@ -70,6 +70,8 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual(len({(row['profile'], row['shard']) for row in fixtures}), 26)
         self.assertEqual(len(fixtures), 26)
         self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in fixtures if 'm4_slot' in r], [
+            ('contributor-balanced-05', 2, 5),
+            ('contributor-balanced-04', 0, 1),
             ('contributor-balanced-03', 4, 2),
             ('SharedDeliveryUITests-recovery-cook-and-closeout', 1, 3),
             ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),

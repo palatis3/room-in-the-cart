@@ -100,11 +100,11 @@ The following jobs share the six M4 slots.
 | Job or group | M4 slot | Original GitHub fallback |
 | --- | --- | --- |
 | Core UI03 and UI10 | 0 | 3 and 0 |
-| Unsigned Release, core UI06 and the Spanish expired-quote fixture | 1 | 1, 1 and 4 |
+| Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
 | Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
 | Delivery recovery/cook/closeout and core UI04 | 3 | 1 |
 | Core UI02 and the filled financial fields fixture | 4 | 2 and 4 |
-| Core UI09 and the stale quote save fixture | 5 | 3 and 0 |
+| Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
 
 In the November 12 combined run, the final M4 test finished at 06:32 UTC.
 UI04, UI07 and UI10 were still waiting for GitHub workers at 06:46 UTC.
@@ -129,16 +129,13 @@ remain unchanged. CodeQL keeps its existing supported GitHub toolchain.
 Keep GitHub's external-contributor approval controls enabled; workflow expressions
 alone are not a security boundary against changes in an untrusted PR.
 
-Published640c0aef continues its existing eight-slot qualification. The prepared
-14-slot successor passes 51 affected source controls and 18-node actionlint;
-root and independent Astra review find no blocker. The M4 image, simulator,
-Release compilation, downstream consumption and actual concurrency still require
-hosted qualification. Six smaller machines may run individual jobs differently
-from three larger machines; neither speed nor simulator reliability is implied
-by the machine count. Use a bounded, useful new-environment qualification, then
-the next ordinary combined candidate; do not cancel640 or repeat passing tests
-solely to fill runners. The exact main/model and complete consumer results remain
-required. Retain raw failures and measure whole-batch time before claiming gains.
+On `37c34724`, all 14 native runners overlapped at 10:56:43 UTC.
+The last M4 job finished at 11:26:56 UTC, and core UI05 started on M2
+at 11:39:58 UTC. Two passing contributor groups had used the M2 queues for
+17m26s (balanced-04) and 22m48s (balanced-05). Routing those groups to M4
+slots 1 and 5 frees their former M2 slots for jobs such as UI05 and the
+Spanish created-dinner Undo check. Measure the effect on the next combined run.
+[Core jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604405) · [Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43203604221)
 
 The two M2 fixture producers, main producer and M4 unsigned Release producer
 activate Xcode compilation caching before their build in a separate step.
