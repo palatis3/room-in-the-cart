@@ -112,7 +112,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(app.buttons["newComparison"].label, "Compare packs")
         XCTAssertFalse(element("savedComparison").exists)
         openEmptyComparison()
-        enterComparison(item: "Family wraps", firstQuantity: "8", cap: "30")
+        enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30")
         compare()
         assertScope("Item-only comparison")
         assertContains("whole pickup fits your budget")
@@ -131,6 +131,10 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
         XCTAssertFalse(element("saveComparison").exists)
         screenshot("English-reopened-same-result")
+        tap(app.buttons["editComparison"])
+        let savedYield = app.textFields["aQuantity"]
+        reveal(savedYield)
+        XCTAssertEqual(savedYield.value as? String, "7 1/2")
     }
 
     func testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart() throws {
@@ -166,8 +170,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(app.buttons["newComparison"].label, "Comparar paquetes")
         openEmptyComparison()
         type([("itemName", "Abuela’s tortillas")])
-        type([("needed", "12"), ("aQuantity", "8"), ("aPrice", "3"),
-              ("bQuantity", "6"), ("bPrice", "2")])
+        type([("needed", "12")])
+        type([("aQuantity", "8"), ("aPrice", "3")])
+        type([("bQuantity", "6"), ("bPrice", "2")])
         compare()
         assertScope("Comparación de un solo artículo")
         assertContains("Abuela’s tortillas")
@@ -584,16 +589,31 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func type(_ fields: [(id: String, text: String)]) {
         let done = app.buttons[doneIdentifier]
-        for (id, text) in fields {
+        for (index, entry) in fields.enumerated() {
+            let (id, text) = entry
             let field = comparisonInput(id)
+            // A partially exposed row can be hittable underneath the keyboard accessory.
+            if index > 0, done.exists,
+               !field.exists || !field.isHittable || field.frame.midY >= done.frame.minY {
+                done.tap()
+            }
             tap(field)
-            // Form scrolling can recycle the row after the first tap. Reacquire it
-            // once before entering any text, and require the focus-driven Done control.
-            var focused = done.waitForExistence(timeout: 3)
-            if !focused { tap(field); focused = done.waitForExistence(timeout: 3) }
-            XCTAssertTrue(focused, "Input must expose its keyboard dismissal control before typing")
-            // Keyboard presentation can scroll the focused row out of the snapshot.
-            app.typeText(text)
+            let fieldDone = app.buttons["comparison.done." + id]
+            if !fieldDone.waitForExistence(timeout: 3) {
+                if done.exists { done.tap() }
+                tap(field)
+                guard fieldDone.waitForExistence(timeout: 3) else {
+                    XCTFail("The comparison field must own keyboard focus before typing: " + id)
+                    return
+                }
+            }
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if field.exists {
+                field.typeText(text)
+            } else {
+                // At accessibility sizes the focused row can scroll out of the snapshot.
+                app.typeText(text)
+            }
         }
         done.tap()
         for (id, text) in fields {
