@@ -853,11 +853,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     @discardableResult
-    public mutating func chooseMeal(_ template: MealTemplate, on: Date? = nil, at: Date = Date()) throws -> UUID {
+    public mutating func chooseMeal(_ template: MealTemplate, on: Date? = nil, at: Date = Date(), occurrenceID: UUID = UUID()) throws -> UUID {
         try template.validate()
         let scheduledDay = try on.map { try MealDay(date: $0, timeZoneIdentifier: basis.timeZoneIdentifier) }
         return try mutate("chooseMeal", at: at) { next in
-            let occurrenceID = UUID()
             var ingredientIDs: [UUID] = []
             for ingredient in template.ingredients {
                 let lineID = next.appendLine(name: ingredient.name, notes: ingredient.notes)

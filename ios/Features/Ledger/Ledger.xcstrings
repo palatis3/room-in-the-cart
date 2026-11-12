@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The pickup or workspace changed. Reopen the dinner for the pickup you want.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pickup or workspace changed. Reopen the dinner for the pickup you want."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la recogida o el espacio de trabajo. Vuelve a abrir la cena para la recogida que quieres usar."
+          }
+        }
+      }
+    },
+    "Your reusable dinner changed. Reopen it to review the current version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your reusable dinner changed. Reopen it to review the current version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cena reutilizable cambió. Vuelve a abrirla para revisar la versión actual."
+          }
+        }
+      }
+    },
     "Food match saved. Available quantity in this record is unknown.": {
       "localizations": {
         "en": {

@@ -130,8 +130,8 @@ private struct PortionDraft: Identifiable {
 
 struct LedgerMealEditor: View {
     @ObservedObject var model: LedgerModel
-    let template: MealTemplate?
-    let chooseNow: Bool
+    @State private var context: LedgerMealEditContext
+    private var chooseNow: Bool { context.chooseNow }
     @Environment(\.dismiss) private var dismiss
     @State private var title: String
     @State private var servings: String
@@ -143,10 +143,11 @@ struct LedgerMealEditor: View {
     @State private var ingredients: [IngredientDraft]
     @State private var portions: [PortionDraft]
     @State private var validation: String?
-    @State private var reviewed: MealTemplate?
+    @State private var reviewToSave: LedgerMealSaveReview?
     @FocusState private var inputFocus: String?
     init(model: LedgerModel, template: MealTemplate?, chooseNow: Bool, servingsUnknown: Bool = false) {
-        self.model = model; self.template = template; self.chooseNow = chooseNow
+        self.model = model
+        _context = State(initialValue: model.mealEditContext(template: template, chooseNow: chooseNow))
         _title = State(initialValue: template?.title ?? "")
         _servings = State(initialValue: servingsUnknown ? "" : template.map { ledgerAmountInput($0.servings) } ?? "")
         _notes = State(initialValue: template?.notes ?? "")
@@ -159,7 +160,8 @@ struct LedgerMealEditor: View {
     }
     var body: some View {
         Form {
-            if let reviewed {
+            if let reviewToSave {
+                let reviewed = reviewToSave.candidate
                 Section(ledgerText("Review dinner")) {
                     Text(reviewed.title).font(.headline)
                     Text(ledgerFormat("Servings: %@", amountText(reviewed.servings)))
@@ -170,10 +172,12 @@ struct LedgerMealEditor: View {
                         }
                     }
                     Text(ledgerText(chooseNow ? "Choosing creates one undated dinner and its grocery needs. You can link them within existing list quantities afterward." : "Saving a usual dinner does not add groceries. Choosing it for a pickup creates a separate copy."))
-                    Button(ledgerText(chooseNow ? "Choose for this pickup" : "Save usual dinner")) { save(reviewed) }
+                    Button(ledgerText(chooseNow ? "Choose for this pickup" : "Save usual dinner")) {
+                        Task { if await model.saveReviewedMeal(reviewToSave) { dismiss() } }
+                    }
                         .buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                         .accessibilityIdentifier("ledgerSaveDinner")
-                    Button(ledgerText("Keep editing")) { self.reviewed = nil }.disabled(model.saving || model.hasPendingSave)
+                    Button(ledgerText("Keep editing")) { self.reviewToSave = nil }.disabled(model.saving || model.hasPendingSave)
                 }
             } else {
                 Section(ledgerText("Dinner")) {
@@ -252,29 +256,16 @@ struct LedgerMealEditor: View {
             }
             let minutes = leadTime.isEmpty ? nil : Int(leadTime)
             if !leadTime.isEmpty && minutes == nil { throw EntryError.invalidNumber }
+            let template = context.template
             let candidate = MealTemplate(id: template?.id ?? UUID(), title: title, servings: count, ingredients: needs, notes: notes,
                                          sourceURL: source.isEmpty ? nil : source, exclusions: separated(exclusions),
                                          revision: (template?.revision ?? -1) + 1, servingGroups: groups, leadTimeMinutes: minutes,
                                          completedSteps: completed.split(separator: "\n").map(String.init))
             try candidate.validate()
-            reviewed = candidate
+            reviewToSave = LedgerMealSaveReview(context: context, candidate: candidate)
             validation = nil
             inputFocus = nil
         } catch { validation = ledgerText("Enter a title, positive servings, and valid ingredient amounts. Check that ingredients respect your exclusions.") }
-    }
-    private func save(_ candidate: MealTemplate) {
-        Task {
-            let success: Bool
-            if chooseNow, let shop = model.shop {
-                success = await model.editShop(key: "manual-meal-\(candidate.id)", shopID: shop.id) { _ = try $0.chooseMeal(candidate) }
-            } else if !chooseNow {
-                success = await model.change(key: "template-\(candidate.id)") { workspace in
-                    if let index = workspace.mealTemplates.firstIndex(where: { $0.id == candidate.id }) { workspace.mealTemplates[index] = candidate }
-                    else { workspace.mealTemplates.append(candidate) }
-                }
-            } else { success = false }
-            if success { dismiss() }
-        }
     }
 }
 
