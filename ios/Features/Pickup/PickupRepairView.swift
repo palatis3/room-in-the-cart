@@ -22,8 +22,8 @@ struct UrgentRepairView: View {
             Text(pTr("Make a private meal need from food you have checked. This does not create an order, delivery or charge."))
             TextField(pTr("Food that is short"), text: $food).focused($field, equals: .food)
             TextField(pTr("Meal or purpose"), text: $meal).focused($field, equals: .meal)
-            TextField(pTr("Required amount"), text: $required).focused($field, equals: .required).keyboardType(.decimalPad)
-            TextField(pTr("Usable amount available now"), text: $available).focused($field, equals: .available).keyboardType(.decimalPad)
+            TextField(pTr("Required amount"), text: $required).focused($field, equals: .required).keyboardType(.numbersAndPunctuation)
+            TextField(pTr("Usable amount available now"), text: $available).focused($field, equals: .available).keyboardType(.numbersAndPunctuation)
             Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Toggle(pTr("I checked this food’s identity and usable amount"), isOn: Binding(
                 get: { confirmedAt != nil }, set: { confirmedAt = $0 ? Date() : nil }
@@ -121,7 +121,7 @@ struct PickupRepairView: View {
                         ForEach(pickup.orderLines) { Text($0.name).tag(Optional($0.id)) }
                     }
                     TextField(pTr("Meal or protected purpose"), text: $purpose).focused($field, equals: .purpose)
-                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.decimalPad).focused($field, equals: .amount)
+                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.numbersAndPunctuation).focused($field, equals: .amount)
                     Picker(pTr("Priority"), selection: $priority) {
                         Text(pTr("Protected")) .tag(AllocationPriority.protected)
                         Text(pTr("Required")).tag(AllocationPriority.required)

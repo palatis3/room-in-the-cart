@@ -64,6 +64,20 @@ final class AppModelTests: XCTestCase {
         }
     }
 
+    func testFractionalFoodAmountsRetainOriginalInputAndDoNotBecomePrices() throws {
+        let cases: [(String, Rational)] = [("1/3", try Rational(1, 3)),
+            ("1 1/2", try Rational(3, 2)), ("2⅔", try Rational(8, 3)), (" ½ ", try Rational(1, 2))]
+        for (literal, expected) in cases {
+            let quantity = try XCTUnwrap(ComparisonModel.quantity(literal, .cup))
+            XCTAssertEqual(quantity.amount, expected)
+            XCTAssertEqual(quantity.originalLiteral, literal)
+            XCTAssertThrowsError(try ComparisonModel.money(literal))
+        }
+        for invalid in ["1/0", "1/2-3/4", "1/2 cup", "+1/2", "1 2", "1.0000001", "1 1/2 1/2"] {
+            XCTAssertThrowsError(try ComparisonModel.quantity(invalid, .cup), invalid)
+        }
+    }
+
     @MainActor
     func testUSDParserUsesExactCentsAndRejectsMoreThanTwoDecimalPlaces() throws {
         let cases: [(String, Int64)] = [("0", 0), ("0.01", 1), ("0.10", 10), ("3.49", 349), (" 003.40 ", 340)]

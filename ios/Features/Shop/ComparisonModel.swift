@@ -59,6 +59,17 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     }
 
     nonisolated static func quantity(_ literal: String, _ unit: UnitOfMeasure) throws -> Quantity? {
+        let text = literal.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasFraction = text.contains("/") || text.contains { $0.isNumber && !$0.isASCII }
+        if hasFraction {
+            guard text.utf8.count <= 64, text.allSatisfy({ $0.isNumber || $0 == "/" || ($0.isWhitespace && !$0.isNewline) }) else {
+                throw EntryError.invalidNumber
+            }
+            var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+            let amount = try ListQuantityParser.takeAmount(from: &tokens)
+            guard tokens.isEmpty else { throw EntryError.invalidNumber }
+            return Quantity(amount: amount, unit: unit, originalLiteral: literal)
+        }
         guard let amount = try rational(literal) else { return nil }
         return Quantity(amount: amount, unit: unit, originalLiteral: literal)
     }
@@ -86,7 +97,7 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         result = nil
         error = nil
         do { result = try PackComparison.evaluate(request()) }
-        catch { self.error = tr("Check your amounts. Use nonnegative numbers, up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
+        catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
     }
 
     func save(in store: ComparisonStore?) async {

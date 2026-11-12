@@ -33,8 +33,8 @@ struct PickupArrivalView: View {
                     Text(pTr("Late arrival")).tag(ReceiptDisposition.late)
                 }
                 TextField(pTr("Actual item name"), text: $item)
-                TextField(pTr("Physical amount received"), text: $received).keyboardType(.decimalPad)
-                TextField(pTr("Confirmed usable amount (optional)"), text: $usable).keyboardType(.decimalPad)
+                TextField(pTr("Physical amount received"), text: $received).keyboardType(.numbersAndPunctuation)
+                TextField(pTr("Confirmed usable amount (optional)"), text: $usable).keyboardType(.numbersAndPunctuation)
                 Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
                 TextField(pTr("Delivery or receipt evidence ID"), text: $eventID)

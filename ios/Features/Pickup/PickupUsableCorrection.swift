@@ -115,7 +115,7 @@ struct PickupUsableCorrectionView: View {
                 } else {
                     Section {
                         TextField(pTr("Correct confirmed usable amount"), text: $amount)
-                            .keyboardType(.decimalPad).focused($amountFocused)
+                            .keyboardType(.numbersAndPunctuation).focused($amountFocused)
                         Text(pTr(receipt.received.unit.rawValue))
                         Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
                         Button(pTr("Preview corrected usable amount")) { preview(head) }

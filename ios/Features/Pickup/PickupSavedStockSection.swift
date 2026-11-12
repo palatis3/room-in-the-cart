@@ -105,7 +105,7 @@ private struct PickupBatchReview: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(pTr("Confirmed usable amount"))
                         TextField(pTr("Confirmed usable amount"), text: $amount)
-                            .keyboardType(.decimalPad).focused($amountFocused)
+                            .keyboardType(.numbersAndPunctuation).focused($amountFocused)
                             .accessibilityIdentifier("stockReview.amount")
                     }
                     Text(pTr(lot.usable.unit.rawValue))
@@ -283,7 +283,7 @@ struct PickupNewStockSection: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(pTr("Confirmed usable amount"))
                 TextField(pTr("Confirmed usable amount"), text: $stockAmount)
-                    .keyboardType(.decimalPad).focused(field, equals: .stockAmount)
+                    .keyboardType(.numbersAndPunctuation).focused(field, equals: .stockAmount)
             }
             Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Picker(pTr("Stock source"), selection: $stockSource) {

@@ -39,7 +39,8 @@ struct ComparisonView: View {
                 }
             }
         }
-        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done")) { inputFocused = nil }
+        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
+                            identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
@@ -91,7 +92,7 @@ struct ComparisonView: View {
             offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, prefix: "a")
             offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, prefix: "b")
             Section {
-                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap")
+                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
             } footer: { Text(tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) }
             if let error = model.error { errorRow(error) }
             Section {
@@ -107,11 +108,11 @@ struct ComparisonView: View {
         }
     }
 
-    private func entry(_ label: String, text: Binding<String>, id: String) -> some View {
+    private func entry(_ label: String, text: Binding<String>, id: String, keyboard: UIKeyboardType = .numbersAndPunctuation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
             TextField(tr("Unknown if blank"), text: text)
-                .keyboardType(.decimalPad).focused($inputFocused, equals: id)
+                .keyboardType(keyboard).focused($inputFocused, equals: id)
                 .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
@@ -129,7 +130,7 @@ struct ComparisonView: View {
                 .focused($inputFocused, equals: prefix + "Label").accessibilityIdentifier(prefix + "Label")
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
             unitPicker("Pack unit", selection: unit)
-            entry("Price for one pack (USD)", text: price, id: prefix + "Price")
+            entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
         } header: { Text(tr(title)) } footer: {
             Text(tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."))
         }

@@ -87,13 +87,13 @@ struct LedgerPackChoiceView: View {
                 } else {
                 Section(ledgerText("First pack")) {
                     TextField(ledgerText("First pack label"), text: $firstLabel).focused($field, equals: .firstLabel)
-                    TextField(ledgerText("First pack usable amount"), text: $firstAmount).keyboardType(.decimalPad).focused($field, equals: .firstAmount)
+                    TextField(ledgerText("First pack usable amount"), text: $firstAmount).keyboardType(.numbersAndPunctuation).focused($field, equals: .firstAmount)
                     unitPicker($firstUnit)
                     TextField(ledgerText("First pack price, USD"), text: $firstPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
                 }
                 Section(ledgerText("Second pack")) {
                     TextField(ledgerText("Second pack label"), text: $secondLabel).focused($field, equals: .secondLabel)
-                    TextField(ledgerText("Second pack usable amount"), text: $secondAmount).keyboardType(.decimalPad).focused($field, equals: .secondAmount)
+                    TextField(ledgerText("Second pack usable amount"), text: $secondAmount).keyboardType(.numbersAndPunctuation).focused($field, equals: .secondAmount)
                     unitPicker($secondUnit)
                     TextField(ledgerText("Second pack price, USD"), text: $secondPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
                 }

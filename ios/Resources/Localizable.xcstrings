@@ -171,20 +171,20 @@
         }
       }
     },
-    "Check your amounts. Use nonnegative numbers, up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.": {
+    "Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check your amounts. Use nonnegative numbers, up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need."
+            "value": "Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisa las cantidades. Usa números no negativos, con un máximo de seis decimales para las cantidades y dos para los precios. Las porciones reservadas no pueden superar la cantidad total necesaria."
+            "value": "Ingresa las cantidades como decimales o fracciones no negativos, por ejemplo, 1/3. Usa hasta seis decimales para las cantidades y dos para los precios. Las porciones reservadas no pueden superar la cantidad total necesaria."
           }
         }
       }
