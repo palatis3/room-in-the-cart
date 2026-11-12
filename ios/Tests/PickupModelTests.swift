@@ -340,7 +340,15 @@ extension PickupModelTests {
 
         instant = future
         let confirmed = await model.confirmUsable(laterUsable)
+        let beforeReplay = try XCTUnwrap(model.journey)
+        let otherKey = ReceiptKey(sourceEventID: key.sourceEventID, orderLineID: food, branchID: key.branchID, segmentID: "other")
+        let otherSegment = ReceiptFragment(key: otherKey, itemName: actual.itemName, received: actual.received,
+                                           disposition: actual.disposition, receivedAt: actual.receivedAt)
+        let mismatched = await model.receive(otherSegment, usable: laterUsable)
+        XCTAssertFalse(mismatched)
+        XCTAssertEqual(model.journey, beforeReplay, "The other segment cannot reuse this observation")
         let replay = await model.receive(actual, usable: laterUsable)
+        XCTAssertEqual(model.journey, beforeReplay, "An exact replay must preserve the revision and saved evidence")
         XCTAssertTrue(confirmed && replay)
         XCTAssertEqual(model.journey?.pickup?.receipts.count, 1)
         XCTAssertEqual(model.journey?.pickup?.usableObservations.count, 1)

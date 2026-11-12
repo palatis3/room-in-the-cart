@@ -12,10 +12,10 @@ import XCTest
         app.terminate()
     }
 
-    private func freezeReviewedPickup() {
+    private func freezeReviewedPickup(groceries: String = "2 wraps") {
         launch(reset: true)
         tap(app.buttons["openPickupList"])
-        tap(app.buttons["ledgerImport"]); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
+        tap(app.buttons["ledgerImport"]); fill(groceries, into: "ledgerImportText", fieldType: .textView)
         tap(app.buttons["ledgerReviewImport"]); tap(app.buttons["ledgerCommitImport"])
         shopRoot()
         tap(app.buttons["Review checkout"])
@@ -61,6 +61,117 @@ import XCTest
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
+    }
+
+    func testArrivalSeparatesOriginalLinesAndSplitDeliveries() throws {
+        freezeReviewedPickup(groceries: "2 wraps\n4 apples")
+        let place = app.buttons["I placed this order"]
+        reveal(place)
+        for _ in 0..<12 {
+            let area = scrollableArea(), frame = place.frame
+            if place.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY { break }
+            scrollContent(upward: frame.midY > area.midY)
+        }
+        let area = scrollableArea()
+        XCTAssertTrue(place.isHittable && place.frame.minY >= area.minY && place.frame.maxY <= area.maxY)
+        place.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let handoff = app.navigationBars["Retailer handoff"]
+        if handoff.exists { handoff.buttons.element(boundBy: 0).tap() }
+        XCTAssertTrue(app.navigationBars["Pickup"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Placement reported · original order locked"].waitForExistence(timeout: 10))
+        tap(app.buttons["Record what came home"])
+
+        let name = "Actual item name", received = "Physical amount received"
+        let usable = "Confirmed usable amount (optional)", match = "I checked the identity, units and meal constraints"
+        let segment = "Segment ID (distinct for each split delivery)", event = "Delivery or receipt evidence ID"
+        let save = app.buttons["Save observed arrival"]
+        func returnToLinePicker() {
+            let picker = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Original order line")).firstMatch
+            for _ in 0..<12 {
+                if picker.exists && picker.isHittable { return }
+                scrollContent(upward: false)
+            }
+            XCTAssertTrue(picker.exists && picker.isHittable)
+        }
+        func requireEmpty(_ fieldName: String) {
+            let field = app.textFields[fieldName]
+            reveal(field)
+            XCTAssertTrue(field.value == nil || (field.value as? String) == "" || (field.value as? String) == field.placeholderValue, fieldName)
+        }
+        func checkSavedRows(_ count: Int) {
+            let correction = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Correct usable amount"))
+            reveal(correction.element(boundBy: count - 1))
+            XCTAssertEqual(correction.count, count)
+            XCTAssertFalse(app.staticTexts["pickup-save-error"].exists)
+        }
+
+        choose("Original order line", value: "wraps")
+        choose("What happened", value: "Wrong item")
+        fill("1", into: received)
+        fill("1", into: usable)
+        fill("first bag", into: segment)
+        let deliveryID = try XCTUnwrap(app.textFields[event].value as? String)
+        enableSwitch(match)
+
+        choose("Original order line", value: "apples")
+        requireEmpty(received)
+        requireEmpty(usable)
+        XCTAssertEqual(app.textFields[name].value as? String, "apples")
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+        XCTAssertEqual(app.textFields[event].value as? String, deliveryID)
+        XCTAssertEqual(app.textFields[segment].value as? String, "first bag")
+        fill("4", into: received)
+        fill("3", into: usable)
+        enableSwitch(match)
+        tap(save)
+        checkSavedRows(1)
+        tap(save)
+        checkSavedRows(1)
+
+        returnToLinePicker()
+        choose("Original order line", value: "wraps")
+        fill("2", into: received)
+        fill("1", into: usable)
+        enableSwitch(match)
+        tap(save)
+        checkSavedRows(2)
+
+        returnToLinePicker()
+        choose("What happened", value: "Wrong item")
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+        fill("other food", into: name, replacing: true)
+        enableSwitch(match)
+        fill("different food", into: name, replacing: true)
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+        enableSwitch(match)
+        choose("Unit", value: "gram")
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+        tap(app.buttons["Start another actual delivery segment"])
+        returnToLinePicker()
+        let disposition = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "What happened")).firstMatch
+        XCTAssertTrue(disposition.label == "What happened, Received" || disposition.value as? String == "Received")
+        XCTAssertEqual(app.textFields[name].value as? String, "wraps")
+        requireEmpty(received)
+        requireEmpty(usable)
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+        requireEmpty(segment)
+        XCTAssertNotEqual(app.textFields[event].value as? String, deliveryID)
+        fill("second bag", into: segment)
+        fill("1", into: received)
+        fill("1", into: usable)
+        enableSwitch(match)
+        tap(save)
+        checkSavedRows(3)
+        fill("different bag", into: segment, replacing: true)
+        returnToLinePicker()
+        requireEmpty(received)
+        requireEmpty(usable)
+        XCTAssertEqual(app.switches[match].value as? String, "0")
+
+        restart()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Record what came home"])
+        checkSavedRows(3)
     }
 
     func testStillCheckingOutAndReportedOrderKeepTheReviewedSnapshotAfterRestart() {

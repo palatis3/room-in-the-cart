@@ -677,13 +677,19 @@ struct PickupPersistenceLocation {
     }
 
     @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
-        let observedAt = clock()
+        guard ready, !saving, pending == nil else { return false }
+        if let usable, usable.receipt != fragment.key {
+            error = pTr("Check the amounts and units. Your saved pickup has not changed.")
+            return false
+        }
         let receiptExists = journey?.pickup?.receipts.contains(fragment) == true
-        let observationAllowed = usable.map {
-            journey?.pickup?.usableObservations.contains($0) == true ||
-                ($0.receipt == fragment.key && fragment.receivedAt <= observedAt && $0.confirmedAt <= observedAt)
-        } ?? true
-        guard (receiptExists || fragment.receivedAt <= observedAt), observationAllowed else {
+        let observationExists = usable.map { journey?.pickup?.usableObservations.contains($0) == true } ?? true
+        if receiptExists && observationExists {
+            error = nil
+            return true
+        }
+        let observedAt = clock()
+        guard fragment.receivedAt <= observedAt, usable.map({ $0.confirmedAt <= observedAt }) ?? true else {
             error = pTr("Record an arrival or usable confirmation only after it has happened.")
             return false
         }
