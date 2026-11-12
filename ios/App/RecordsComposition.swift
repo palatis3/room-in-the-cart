@@ -579,19 +579,7 @@ private struct RecordsRecoveredDinnersView: View {
         for index in result.indices {
             result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
         }
-        var merged: [ArchiveRecord] = [], indices: [String: Int] = [:]
-        for record in result {
-            let key = RecordsToolsModel.selectionID(record)
-            guard let index = indices[key] else { indices[key] = merged.count; merged.append(record); continue }
-            var attachments = merged[index].media ?? []
-            for attachment in record.media ?? [] {
-                if let existing = attachments.first(where: { $0.id == attachment.id }) {
-                    guard existing == attachment else { throw ArchiveError.conflict }
-                } else { attachments.append(attachment) }
-            }
-            merged[index].media = attachments.isEmpty ? nil : attachments.sorted { $0.id < $1.id }
-        }
-        return merged
+        return try RecordsSnapshotProjection.mergeForExport(result)
     }
     private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil) async throws -> CaptureMediaArchiveListing {
         if let liveScope, liveScope.workspaceID != workspaceID { throw ArchiveError.invalidIdentity }

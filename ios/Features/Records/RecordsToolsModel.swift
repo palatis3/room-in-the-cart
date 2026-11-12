@@ -2,6 +2,17 @@ import Foundation
 import SwiftUI
 import RecordArchive
 
+struct RecordsSelectionID: Hashable {
+    let origin: String
+    let recordID: String
+    let revision: String
+}
+
+struct RecordsMediaSelectionID: Hashable {
+    let record: RecordsSelectionID
+    let attachmentID: String
+}
+
 /// Native export/validation/open/delete are provided by the composition root. Validation
 /// must decode and re-encode an allowlisted domain payload, never raw database/account data.
 @MainActor final class RecordsToolsModel: ObservableObject {
@@ -22,9 +33,9 @@ import RecordArchive
     /// announce success before the underlying operation has finished.
     @Published private(set) var actionOutcomeID: UUID?
     @Published private(set) var error: ArchiveError?
-    @Published var selectedIDs: Set<String> = []
+    @Published var selectedIDs: Set<RecordsSelectionID> = []
     /// Attachment disclosure is separate from record selection and defaults off.
-    @Published var selectedMediaIDs: Set<String> = []
+    @Published var selectedMediaIDs: Set<RecordsMediaSelectionID> = []
     @Published var recoveryKey = ""
     @Published private(set) var preparedDocument: RecordsFileDocument?
     @Published private(set) var preparedName = "Room-in-the-Cart"
@@ -53,8 +64,12 @@ import RecordArchive
     var canReviewWholeLedgerDeletion: Bool { wholeLedgerDeletionAction != nil }
     var recoveredDeletionAllowsUndo: Bool { cleanupRecovered == nil }
     var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count) }
-    static func selectionID(_ record: ArchiveRecord) -> String { record.origin + "/" + record.id + "/" + record.revision }
-    static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> String { selectionID(record) + "/media/" + media.id }
+    nonisolated static func selectionID(_ record: ArchiveRecord) -> RecordsSelectionID {
+        RecordsSelectionID(origin: record.origin, recordID: record.id, revision: record.revision)
+    }
+    static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> RecordsMediaSelectionID {
+        RecordsMediaSelectionID(record: selectionID(record), attachmentID: media.id)
+    }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
          openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {

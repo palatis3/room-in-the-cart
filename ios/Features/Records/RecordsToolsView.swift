@@ -429,7 +429,7 @@ struct RecordsToolsView: View {
 }
 
 private extension ArchiveRecord {
-    var selfSelectionID: String { origin + "/" + id + "/" + revision }
+    var selfSelectionID: RecordsSelectionID { RecordsToolsModel.selectionID(self) }
 }
 
 private struct ManualRecipeEntryView: View {

@@ -26,6 +26,56 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testEncryptedBackupRetainsOwnerComparisonWhenRedactedCopyIsImported() async throws {
+        let record = try comparison()
+        let owner = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "saved")
+        let helper = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: "share", revision: "saved", shopID: record.id)
+        for order in [[owner, helper], [helper, owner]] {
+            let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("manifest.json"))
+            for (index, envelope) in order.enumerated() {
+                _ = try await registry.apply(registry.review(envelope), now: Date(timeIntervalSince1970: Double(index + 1)))
+            }
+            let model = RecordsToolsModel(registry: registry, snapshot: {
+                try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record))
+            }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+            await model.refresh()
+            XCTAssertEqual(model.recoveredRecords.count, 2)
+            XCTAssertEqual(model.currentRecords.count, 1)
+            model.selectAll()
+            model.generateRecoveryKey()
+            await model.prepareExport(.encryptedRecovery)
+            let backup = try EncryptedArchive.open(XCTUnwrap(model.preparedDocument).data, key: model.recoveryKey)
+            XCTAssertEqual(backup.payload.records, [record])
+            await model.prepareExport(.helperJSON)
+            let redacted = try ArchiveCodec.decode(XCTUnwrap(model.preparedDocument).data)
+            XCTAssertEqual(redacted.payload.records, helper.payload.records)
+        }
+    }
+
+    @MainActor func testExportSelectionDistinguishesSlashesInOriginAndRevision() async throws {
+        var first = try comparison()
+        var second = try comparison()
+        first.origin = "family"
+        first.revision = second.id + "/archived"
+        second.origin = "family/" + first.id
+        second.revision = "archived"
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("manifest.json"))
+        let file = try ArchiveCodec.make(records: [first, second], kind: .personalRecovery,
+                                         origin: "backup", revision: "saved")
+        _ = try await registry.apply(registry.review(ArchiveCodec.decode(ArchiveCodec.encode(file))))
+        let model = RecordsToolsModel(registry: registry, snapshot: {
+            try await RecordsSnapshotProjection.mergeForExport(registry.refreshList().map(\.record))
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+
+        model.selectedIDs = [RecordsToolsModel.selectionID(second)]
+        XCTAssertEqual(model.selectedCount, 1)
+        await model.prepareExport(.helperJSON)
+        let helper = try ArchiveCodec.decode(XCTUnwrap(model.preparedDocument?.data))
+        XCTAssertEqual(helper.payload.records.map(\.id), [second.id])
+        XCTAssertEqual(helper.payload.records.first?.origin, second.origin)
+    }
+
     @MainActor func testComparisonNativeRoundTripAndNestedAuthorityFieldRejection() throws {
         let record = try comparison()
         XCTAssertNoThrow(try RecordsNativeCodec.validate(record))
