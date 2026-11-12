@@ -789,6 +789,7 @@ import XCTest
     /// S14.01: the source URL is evidence, not a prerequisite for local planning.
     /// Uses ordinary UI and an empty isolated workspace; no seeded dinner fixture.
     func testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart() {
+        let decisionCancel = app.buttons["dinnerDecisionCancel"]
         let title = "Unavailable-source lentil wraps"
         let source = "https://vanished-recipe.invalid/lentil-wraps"
         let notes = "Warm the wraps and serve the lentils separately."
@@ -851,8 +852,8 @@ import XCTest
             let idle = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: save)
             XCTAssertEqual(XCTWaiter.wait(for: [idle], timeout: 8), .completed)
             XCTAssertFalse(element("dinnerError").exists)
-            tap(element("dinnerDecisionCancel"))
-            XCTAssertTrue(element("dinnerDecisionCancel").waitForNonExistence(timeout: 8))
+            tap(decisionCancel)
+            XCTAssertTrue(decisionCancel.waitForNonExistence(timeout: 8))
         }
 
         launch(reset: true)
@@ -892,8 +893,8 @@ import XCTest
         saveBindings()
         openBindings()
         assertField("Current amount for this group", "6")
-        tap(element("dinnerDecisionCancel"))
-        XCTAssertTrue(element("dinnerDecisionCancel").waitForNonExistence(timeout: 8))
+        tap(decisionCancel)
+        XCTAssertTrue(decisionCancel.waitForNonExistence(timeout: 8))
 
         tap(app.buttons["Edit quantities manually"])
         XCTAssertTrue(app.navigationBars["Manual quantities"].waitForExistence(timeout: 8))
@@ -914,8 +915,8 @@ import XCTest
         openBindings()
         assertField("Current amount for this group", "8")
         capture("S14-edited-serving-allocation-before-restart")
-        tap(element("dinnerDecisionCancel"))
-        XCTAssertTrue(element("dinnerDecisionCancel").waitForNonExistence(timeout: 8))
+        tap(decisionCancel)
+        XCTAssertTrue(decisionCancel.waitForNonExistence(timeout: 8))
 
         restart()
         tap(app.tabBars.buttons["Dinners"])
@@ -925,8 +926,8 @@ import XCTest
         openBindings()
         assertField("Current amount for this group", "8")
         capture("S14-allocation-persisted-after-restart")
-        tap(element("dinnerDecisionCancel"))
-        XCTAssertTrue(element("dinnerDecisionCancel").waitForNonExistence(timeout: 8))
+        tap(decisionCancel)
+        XCTAssertTrue(decisionCancel.waitForNonExistence(timeout: 8))
         tap(app.buttons["Edit quantities manually"])
         assertField("Total servings", "4")
         assertField("Group name", "Dinner")
