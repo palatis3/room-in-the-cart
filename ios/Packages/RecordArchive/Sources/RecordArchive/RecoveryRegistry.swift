@@ -296,13 +296,19 @@ public actor RecoveryRegistry {
 }
 
 public enum ReadableArchive {
+    public static func heading(_ record: ArchiveRecord, locale: Locale) -> String {
+        let spanish = locale.language.languageCode?.identifier == "es"
+        let saved = record.savedAtMilliseconds == 0
+            ? (spanish ? "Fecha de guardado no indicada" : "Saved date not supplied")
+            : (spanish ? "Guardado: " : "Saved: ") + Date(timeIntervalSince1970: Double(record.savedAtMilliseconds) / 1000).formatted(.iso8601)
+        return [record.title, (spanish ? "Fuente: " : "Source: ") + record.origin,
+                (spanish ? "Revisión: " : "Revision: ") + record.revision, saved].joined(separator: "\n")
+    }
+
     public static func text(_ records: [ArchiveRecord], owner: Bool, locale: Locale = .current) -> String {
         let spanish = locale.language.languageCode?.identifier == "es"
         return records.map { record in
-            let saved = record.savedAtMilliseconds == 0
-                ? (spanish ? "Fecha de guardado no indicada" : "Saved date not supplied")
-                : (spanish ? "Guardado: " : "Saved: ") + Date(timeIntervalSince1970: Double(record.savedAtMilliseconds) / 1000).formatted(.iso8601)
-            var lines = [record.title, (spanish ? "Fuente: " : "Source: ") + record.origin, (spanish ? "Revisión: " : "Revision: ") + record.revision, saved]
+            var lines = [heading(record, locale: locale)]
             if owner, record.kind == .recipe, let payload = record.nativePayload,
                let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: payload).validated() {
                 if !recipe.yieldText.isEmpty { lines.append((spanish ? "Rinde: " : "Yield: ") + recipe.yieldText) }

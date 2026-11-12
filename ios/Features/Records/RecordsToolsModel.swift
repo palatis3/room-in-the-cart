@@ -190,6 +190,10 @@ struct RecordsMediaSelectionID: Hashable {
                 let text = try records.map { record in
                     if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
                     if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
+                    if choice == .ownerText, record.kind == .comparison, let bytes = record.nativePayload {
+                        let comparison = try RecordsNativeCodec.comparison(bytes)
+                        return try ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + comparison.readableText()
+                    }
                     return ReadableArchive.text([record], owner: choice == .ownerText, locale: recordsInterfaceLocale)
                 }.joined(separator: "\n\n")
                 document = RecordsFileDocument(data: Data(text.utf8), kind: .text)

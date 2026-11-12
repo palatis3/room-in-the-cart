@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "No result was saved with this draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No result was saved with this draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardó ningún resultado con este borrador."
+          }
+        }
+      }
+    },
+    "Not entered": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not entered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin indicar"
+          }
+        }
+      }
+    },
     "%lld shopping lists · %lld reusable dinners": {
       "extractionState": "manual",
       "localizations": {

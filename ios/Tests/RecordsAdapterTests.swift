@@ -14,13 +14,14 @@ final class RecordsAdapterTests: XCTestCase {
         addTeardownBlock { try? FileManager.default.removeItem(at: url) }
         return url
     }
-    @MainActor private func comparison() throws -> ArchiveRecord {
+    @MainActor private func comparison(legacy: Bool = false, edit: (inout ComparisonDraft) -> Void = { _ in }) throws -> ArchiveRecord {
         var draft = ComparisonDraft()
         draft.item = "Arroz"; draft.needed = "2"; draft.unit = .count
         draft.aLabel = "Original A"; draft.aQuantity = "1"; draft.aPrice = "3.49"
         draft.bLabel = "Original B"; draft.bQuantity = "2"; draft.bPrice = "5.00"
+        edit(&draft)
         let request = try ComparisonModel(draft: draft).request()
-        let payload = SavedPayload(draft: draft, calculationVersion: SavedPayload.currentCalculationVersion,
+        let payload = legacy ? SavedPayload(draft: draft) : SavedPayload(draft: draft, calculationVersion: SavedPayload.currentCalculationVersion,
             normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.currentRoundingPolicy)
         let data = try RecordsNativeCodec.canonical(payload)
         return ArchiveRecord(id: draft.id.uuidString, origin: "comparisons/fixture", revision: ArchiveCodec.digest(data),
@@ -241,6 +242,60 @@ final class RecordsAdapterTests: XCTestCase {
         await model.prepareExport(.encryptedRecovery)
         let encrypted = try XCTUnwrap(model.preparedDocument).data
         XCTAssertEqual(try EncryptedArchive.open(encrypted, key: model.recoveryKey).payload.records, [record])
+    }
+    @MainActor func testOwnerComparisonTextRetainsBothOffersAndStoredOutcomeWhileHelperOmitsPrices() async throws {
+        let record = try comparison { $0.cap = "6.00"; $0.aQuantity = "1.00" }
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) },
+                                     validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        let owner = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        for label in [record.revision, record.origin, "Arroz", tr("Item-only comparison"),
+                      tr("Pack A") + " · Original A", tr("Pack B") + " · Original B",
+                      "1.00", "3.49", "5.00", "6.00",
+                      message("Item cost to buy enough: %@", moneyText(Money(minorUnits: 698))),
+                      message("Whole packs to buy: %@", "2"),
+                      message("Over the item limit: %@", moneyText(Money(minorUnits: 98))),
+                      message("Room within the item limit: %@", moneyText(Money(minorUnits: 100)))] {
+            XCTAssertTrue(owner.contains(label), label)
+        }
+        let offers = owner.components(separatedBy: tr("Pack B") + " · Original B")
+        XCTAssertEqual(offers.count, 2)
+        XCTAssertFalse(offers.first?.contains(tr("Lower cost to buy enough for this item")) == true)
+        XCTAssertTrue(offers.last?.contains(tr("Lower cost to buy enough for this item")) == true)
+        XCTAssertFalse(owner.contains("normalizedRequest"))
+        await model.prepareExport(.helperText)
+        let helper = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        XCTAssertTrue(helper.contains("Arroz"))
+        for privateValue in ["Original A", "Original B", "6.00", "5.00", "3.49", "6.98"] {
+            XCTAssertFalse(helper.contains(privateValue), privateValue)
+        }
+        model.generateRecoveryKey()
+        await model.prepareExport(.encryptedRecovery)
+        let restored = try EncryptedArchive.open(XCTUnwrap(model.preparedDocument).data, key: model.recoveryKey)
+        XCTAssertEqual(restored.payload.records, [record])
+    }
+
+    @MainActor func testComparisonTextDistinguishesMissingPriceNoPurchaseAndLegacyDraft() throws {
+        func rendered(_ record: ArchiveRecord) throws -> String {
+            try RecordsNativeCodec.comparison(XCTUnwrap(record.nativePayload)).readableText()
+        }
+        let unknown = try rendered(comparison { $0.bPrice = "" })
+        XCTAssertTrue(unknown.contains(tr("Cost unresolved")))
+        XCTAssertTrue(unknown.contains(ComparisonIssue.priceUnknown.explanation))
+        XCTAssertFalse(unknown.contains(tr("Lower cost to buy enough for this item")))
+        let noPurchase = try rendered(comparison { $0.stock = "2"; $0.bPrice = "" })
+        XCTAssertTrue(noPurchase.contains(message("Whole packs to buy: %@", "0")))
+        XCTAssertTrue(noPurchase.contains(message("Item cost to buy enough: %@", moneyText(.zero))))
+        XCTAssertTrue(noPurchase.contains(tr("Both options cost the same for this need.")))
+        XCTAssertFalse(noPurchase.contains(tr("Cost unresolved")))
+        let old = try rendered(comparison(legacy: true))
+        XCTAssertTrue(old.contains(recordsText("No result was saved with this draft.")))
+        XCTAssertTrue(old.contains("Original B"))
+        XCTAssertFalse(old.contains(message("Whole packs to buy: %@", "2")))
+        XCTAssertFalse(old.contains(tr("Lower cost to buy enough for this item")))
     }
     @MainActor func testSourceErasureBetweenSelectionAndExportCannotExportCachedPrivateData() async throws {
         let record = try comparison(), registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("manifest.json"))

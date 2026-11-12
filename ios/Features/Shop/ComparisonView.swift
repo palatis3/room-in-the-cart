@@ -216,25 +216,12 @@ struct ComparisonView: View {
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
             if preferred { ComparisonMetric(tr("Lower cost to buy enough for this item"), style: .headline) }
-            if let packs = result.packsToBuy {
-                ComparisonMetric(message("Whole packs to buy: %@", packs.formatted()), id: result.offerID + "Packs")
-            }
-            if let purchased = result.purchasedAmount {
-                ComparisonMetric(message("Usable amount to buy: %@ %@", amountText(purchased), model.draft.unit.displayName))
-            }
-            if let shortage = result.remainingNeed, shortage > .zero {
-                ComparisonMetric(message("Still needed: %@ %@", amountText(shortage), model.draft.unit.displayName), style: .headline)
-            }
-            if let leftover = result.leftover {
-                ComparisonMetric(message("Left after the total need: %@ %@", amountText(leftover), model.draft.unit.displayName))
-            }
-            if let headroom = result.itemHeadroom {
-                ComparisonMetric(message(headroom.minorUnits < 0 ? "Over the item limit: %@" : "Room within the item limit: %@",
-                             moneyText(Money(minorUnits: headroom.minorUnits < 0 ? -headroom.minorUnits : headroom.minorUnits))), style: .headline)
-            }
-            if let ceiling = result.unitCeiling {
-                ComparisonMetric(message("Maximum per pack for this item limit: %@", moneyText(ceiling)))
-            }
+            if let packs = result.wholePacksText { ComparisonMetric(packs, id: result.offerID + "Packs") }
+            if let purchased = result.purchasedText(in: model.draft.unit) { ComparisonMetric(purchased) }
+            if let shortage = result.shortageText(in: model.draft.unit) { ComparisonMetric(shortage, style: .headline) }
+            if let leftover = result.leftoverText(in: model.draft.unit) { ComparisonMetric(leftover) }
+            if let limitText = result.itemLimitText { ComparisonMetric(limitText, style: .headline) }
+            if let ceiling = result.unitCeilingText { ComparisonMetric(ceiling) }
             ForEach(result.issues, id: \.self) { issue in
                 Label(issue.explanation, systemImage: "questionmark.circle")
                     .foregroundStyle(Theme.warning)

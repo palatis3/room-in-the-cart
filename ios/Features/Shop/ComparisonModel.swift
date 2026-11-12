@@ -34,6 +34,72 @@ struct SavedPayload: Codable {
     static let currentRoundingPolicy = "whole-packs-ceiling; USD-cents-exact; per-pack-ceiling-floor"
 }
 
+extension SavedPayload {
+    /// Render the entered literals and the answer that was stored at save time.
+    @MainActor func readableText() throws -> String {
+        let inputs = try normalizedRequest ?? ComparisonModel(draft: draft).request()
+        let language = recordsInterfaceLocale.language.languageCode?.identifier
+        let missing = recordsText("Not entered")
+        func original(_ quantity: Quantity?) -> String {
+            guard let quantity else { return missing }
+            return pQuantity(quantity.originalLiteral, unit: quantity.unit, singular: quantity.amount == .one, language: language)
+        }
+        var lines = [tr("Item-only comparison"),
+                     tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."),
+                     tr("Total amount needed") + ": " + original(inputs.needed),
+                     tr("Confirmed usable amount at home") + ": " + original(inputs.confirmedAtHome),
+                     tr("Protected portions within the total") + ": " + original(inputs.protectedAmount)]
+        if inputs.itemCap != nil { lines.append(tr("Item spending limit (USD, optional)") + ": " + draft.cap) }
+        for (heading, offer, price, result) in [(tr("Pack A"), inputs.offerA, draft.aPrice, answer?.offerA),
+                                                (tr("Pack B"), inputs.offerB, draft.bPrice, answer?.offerB)] {
+            lines += ["", offer.label.isEmpty ? heading : heading + " · " + offer.label,
+                      tr("Usable amount in one pack") + ": " + original(offer.usableQuantity),
+                      tr("Price for one pack (USD)") + ": " + (offer.price == nil ? missing : price)]
+            guard let result else { continue }
+            lines.append(result.totalCost.map { message("Item cost to buy enough: %@", moneyText($0)) } ?? tr("Cost unresolved"))
+            lines += [result.wholePacksText, result.purchasedText(in: draft.unit), result.shortageText(in: draft.unit),
+                      result.leftoverText(in: draft.unit), result.itemLimitText, result.unitCeilingText].compactMap { $0 }
+            lines += result.issues.map(\.explanation)
+            if answer?.preferredOfferID == offer.id { lines.append(tr("Lower cost to buy enough for this item")) }
+        }
+        if let answer {
+            if answer.offerA.isResolved && answer.offerB.isResolved && answer.preferredOfferID == nil {
+                lines.append(tr("Both options cost the same for this need."))
+            }
+        } else {
+            lines.append(recordsText("No result was saved with this draft."))
+        }
+        lines.append(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
+        return lines.joined(separator: "\n")
+    }
+}
+
+extension OfferResult {
+    var wholePacksText: String? {
+        packsToBuy.map { message("Whole packs to buy: %@", $0.formatted()) }
+    }
+    func purchasedText(in unit: UnitOfMeasure) -> String? {
+        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.displayName) }
+    }
+    func shortageText(in unit: UnitOfMeasure) -> String? {
+        guard let remainingNeed, remainingNeed > .zero else { return nil }
+        return message("Still needed: %@ %@", amountText(remainingNeed), unit.displayName)
+    }
+    func leftoverText(in unit: UnitOfMeasure) -> String? {
+        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.displayName) }
+    }
+    var unitCeilingText: String? {
+        unitCeiling.map { message("Maximum per pack for this item limit: %@", moneyText($0)) }
+    }
+    var itemLimitText: String? {
+        guard let headroom = itemHeadroom else { return nil }
+        if headroom.minorUnits < 0 {
+            return message("Over the item limit: %@", moneyText(Money(minorUnits: -headroom.minorUnits)))
+        }
+        return message("Room within the item limit: %@", moneyText(headroom))
+    }
+}
+
 enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 
 @MainActor final class ComparisonModel: ObservableObject {
