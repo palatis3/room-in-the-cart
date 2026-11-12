@@ -418,14 +418,16 @@ import StoreKitTest
         XCTAssertTrue(afterCancel.isEmpty)
         assertFree(model)
         try await session.setSimulatedError(nil, forAPI: .purchase)
-        try await declineNewPurchase(storefront: storefront, model: model)
+        // StoreKit can queue the new payment behind the cancelled repurchase before marking it pending.
+        try await declineNewPurchase(storefront: storefront, model: model, pendingTimeout: .seconds(30))
     }
 
-    private func declineNewPurchase(storefront: StoreKitMembershipStorefront, model: MembershipModel) async throws {
+    private func declineNewPurchase(storefront: StoreKitMembershipStorefront, model: MembershipModel,
+                                    pendingTimeout: Duration = .seconds(10)) async throws {
         session.askToBuyEnabled = true
         let purchase = beginPurchase(model)
         defer { purchase.task?.cancel() }
-        try await eventually("A real Ask to Buy request reaches pending approval") {
+        try await eventually("A real Ask to Buy request reaches pending approval", timeout: pendingTimeout) {
             self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
