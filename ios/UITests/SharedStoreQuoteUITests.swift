@@ -169,13 +169,17 @@ import XCTest
         enterValue(label+" branch",into:prefix+"branch")
         enterValue("Entered retailer checkout",into:prefix+"source")
         enterValue(checkout,into:prefix+"itemSubtotal")
-        fill(checkout,into:prefix+"total",requireDone:true)
+        enterValue(checkout,into:prefix+"total")
+        enterValue(trip,into:prefix+"tripCash")
+        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
+
+        let total = app.textFields.matching(identifier:prefix+"total").firstMatch
+        reveal(total, fullyVisible:true)
+        assertFieldValue(total,text:checkout)
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
-        enterValue(trip,into:prefix+"tripCash")
-        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
         let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
