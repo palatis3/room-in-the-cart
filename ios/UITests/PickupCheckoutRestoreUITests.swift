@@ -18,7 +18,8 @@ import XCTest
     func testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave() {
         launch(reset: true)
         tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerImport"])
-        fill("2 wraps", field: app.textViews["ledgerImportText"])
+        enter("2 wraps", field: app.textViews["ledgerImportText"])
+        finishEditing()
         tap(app.buttons["ledgerReviewImport"])
         let addReviewedList = app.buttons["ledgerCommitImport"]
         XCTAssertTrue(addReviewedList.waitForExistence(timeout: 8))
@@ -27,18 +28,21 @@ import XCTest
         shopRoot()
         tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
-        fill("Hydration market", field: app.textFields["Store"], replacing: true)
-        fill("Main branch", field: app.textFields["Branch"], replacing: true)
-        fill("Tuesday 5 PM", field: app.textFields["Pickup or delivery slot"], replacing: true)
-        fill("Reviewed checkout snapshot", field: app.textFields["Source of these prices"], replacing: true)
-        fill("10.00", field: app.textFields["Spending cap"], replacing: true)
+        // Move between checkout fields in one editing session. Repeatedly dismissing
+        // and reopening the keyboard left XCTest waiting for keyboard animations.
+        for (label, value) in [("Store", "Hydration market"), ("Branch", "Main branch"),
+                               ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Reviewed checkout snapshot"),
+                               ("Spending cap", "10.00")] {
+            enter(value, field: app.textFields[label], replacing: true)
+        }
         let inclusive = app.switches["Retailer total already includes all charges"]
         reveal(inclusive)
         if inclusive.value as? String == "0" {
             inclusive.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
         XCTAssertEqual(inclusive.value as? String, "1")
-        fill("3.00", field: app.textFields["Inclusive total"])
+        enter("3.00", field: app.textFields["Inclusive total"])
+        finishEditing()
         saveCheckout()
         restartAndOpenCheckout()
         assertRestoredCheckout()
@@ -85,14 +89,19 @@ import XCTest
         app.launch()
         XCTAssertTrue(app.buttons["newComparison"].waitForExistence(timeout: 15))
     }
-    private func fill(_ text: String, field: XCUIElement, replacing: Bool = false) {
+    private func enter(_ text: String, field: XCUIElement, replacing: Bool = false) {
         tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue {
-            app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
         }
-        app.typeText(text)
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+    }
+    private func finishEditing() {
         let done = app.buttons["Done"]
-        if done.exists && done.isHittable { done.tap() }
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
     }
     private func tap(_ target: XCUIElement) {
         reveal(target)
@@ -121,6 +130,11 @@ import XCTest
             guard !frame.isEmpty, frame.intersects(bounds) else { continue }
             if value.elementType == .navigationBar { top = max(top, frame.maxY) }
             if value.elementType == .keyboard || value.elementType == .tabBar { bottom = min(bottom, frame.minY) }
+            if value.elementType == .button && value.label == "Done" {
+                // XCTest can briefly hide the keyboard during typeText. While editing,
+                // reveal the next control above the space the keyboard will reclaim.
+                bottom = min(bottom, frame.minY, bounds.midY)
+            }
         }
         return CGRect(x: bounds.minX + 16, y: top + 8, width: bounds.width - 32, height: max(0, bottom - top - 16))
     }
