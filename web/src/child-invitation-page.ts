@@ -213,7 +213,11 @@ export class ChildInvitationPage {
   }
   checkExpiry():void {
     if(this.controller?.checkExpiry()||this.child&&this.child.status!=='active'&&this.child.expiresAt&&Date.parse(this.child.expiresAt)<=Date.now()) {this.clear();this.phase='blocked';this.notice='ended';this.render();}
-    else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){this.nextSendAt=0;this.render();}
+    else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){
+      this.nextSendAt=0;
+      const resend=this.root.querySelector<HTMLButtonElement>('#child-resend');
+      if(resend)resend.disabled=this.busy;
+    }
   }
   private fail(error:unknown):void {
     if(this.logoutPending){this.notice='signoutFailed';return;}
@@ -257,7 +261,7 @@ export class ChildInvitationPage {
     }else if(this.phase==='code'){
       const form=el('form');const input=field(form,'code','child-code',this.code,'text',value=>{this.code=value;});input.inputMode='numeric';input.pattern='[0-9]{6}';input.maxLength=6;input.autocomplete='one-time-code';
       const verify=button('verify',()=>{});verify.type='submit';form.append(verify);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.verify(generation));});
-      const resend=button('resend',()=>void this.run(generation=>this.sendCode(generation)));resend.disabled=this.busy||Date.now()<this.nextSendAt;main.append(form,resend);
+      const resend=button('resend',()=>void this.run(generation=>this.sendCode(generation)));resend.id='child-resend';resend.disabled=this.busy||Date.now()<this.nextSendAt;main.append(form,resend);
     }else if(this.phase==='claim'){
       main.append(el('p',t('claimExplanation')));const form=el('form');
       if(!this.controller?.state.pairingCode){const input=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});input.maxLength=4096;}

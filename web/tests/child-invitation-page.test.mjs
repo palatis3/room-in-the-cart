@@ -256,3 +256,22 @@ test('availability and child session parsers reject invented authority and narro
   const generic=new ChildInvitationAPI(async()=>Response.json({available:true,authenticated:true,admitted:true,scope:null,householdId:null,inviteId:null,claimId:null,status:'none',expiresAt:null}));await assert.rejects(generic.childSession(),error=>error.code==='invalid_response');
   const f=createChildFixture({configured:true}),api=new ChildInvitationAPI(f.fetcher);const auth=await api.authState();await api.startSignin(fixtureInput,auth.csrf);await api.verifySignin(fixtureInput.code,auth.csrf);const child=await api.childSession();assert.equal(child.scope,'own_requests');assert.equal(child.admitted,true);assert.deepEqual(Object.keys(child).sort(),['admitted','authenticated','available','claimId','expiresAt','householdId','inviteId','scope','status']);
 });
+
+test('resend becoming available preserves the focused code field and partial entry', async t => {
+  const f = await setup(t);
+  input(f.dom, 'child-email', fixtureInput.email);
+  await submit(f.dom, f.root);
+  const field = f.root.querySelector('#child-code');
+  const resend = () => [...f.root.querySelectorAll('button')].find(b => b.textContent === 'Request another code');
+  assert.equal(resend().disabled, true);
+  field.focus();
+  input(f.dom, 'child-code', '123');
+  field.setSelectionRange(2, 2);
+  t.mock.method(Date, 'now', () => new Date().getTime() + 61_000);
+  f.page.checkExpiry();
+  assert.equal(f.dom.window.document.activeElement, field);
+  assert.equal(field.selectionStart, 2);
+  assert.equal(field.value, '123');
+  assert.equal(resend().disabled, false);
+  assert.equal(f.fixture.counts.starts, 1);
+});
