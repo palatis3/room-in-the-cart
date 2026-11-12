@@ -126,7 +126,7 @@ struct LedgerImportView: View {
                     NavigationStack {
                         CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.localeIdentifier,
                             destination: presentation.destination, existingCapture: presentation.reviewed,
-                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.localeIdentifier),
+                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: CaptureCorrectionScope.appLanguage()),
                             authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                     }
                 }

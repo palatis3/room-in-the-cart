@@ -51,7 +51,7 @@ import SwiftUI
             } else if capture {
                 CaptureReviewView(initialText: scope.quantity.isEmpty ? scope.item : scope.quantity + " " + scope.item,
                     localeIdentifier: captureLanguage, destination: scope.destination, requestMode: true, dismissOnReview: false,
-                    correctionScope: household.contributorCorrectionScope(for: scope, localeIdentifier: captureLanguage),
+                    correctionScope: household.contributorCorrectionScope(for: scope, localeIdentifier: CaptureCorrectionScope.appLanguage()),
                     authorize: { authorized }) { value in
                         guard authorized else { return }
                         do { review = try ContributorRequestReview.captured(value, scope: scope); approved = false }
