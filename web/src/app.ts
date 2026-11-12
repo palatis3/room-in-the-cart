@@ -6,6 +6,11 @@ import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} fro
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
+const proposalNotices:Record<OwnProposal['status'],string> = {
+  pending:'Proposal received. The shopper must review it before anything changes.',
+  reviewed:'Suggestion reviewed',
+  dismissed:'Suggestion dismissed',
+};
 // A reviewed draft is valid only for the exact actor, role and destination that displayed it.
 function reviewScope(session: Session): string {
   return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
@@ -188,7 +193,12 @@ export class WebApp {
       if(generation!==this.proposalGeneration)return;
       this.view=view;
       if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
-      await this.readReceivedSuggestions(fresh,null);
+      const proposal=await this.readReceivedSuggestions(fresh,null);
+      if(generation!==this.proposalGeneration)return;
+      if(this.proposalReceipt){
+        this.notice=proposal?proposalNotices[proposal.status]:'Received suggestions checked.';
+        this.failurePurpose=null;
+      }
     } else {this.view=null;this.requests=await this.api.requests(fresh);}
     this.queueState='ready';
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
@@ -564,7 +574,7 @@ export class WebApp {
       const receipt=await this.api.sendProposal(fresh,intent);
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
       this.proposalReceipt=receipt;this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===receipt.proposalId)??null;this.proposalConflict=false;
-      this.notice='Proposal received. The shopper must review it before anything changes.';
+      this.notice=proposalNotices[this.proposalStatus?.status??receipt.status];
     }catch(error){
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
       this.proposalConflict=error instanceof ApiError&&error.status===409&&error.code==='stale_base';
@@ -578,9 +588,9 @@ export class WebApp {
     if(generation!==this.proposalGeneration)return;
     const status=await this.api.ownProposal(fresh,intent,receipt);
     if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
-    this.proposalStatus=status;this.receivedSuggestions=this.receivedSuggestions.map(p=>p.proposalId===status.proposalId?status:p);this.notice='Suggestion status checked.';
+    this.proposalStatus=status;this.receivedSuggestions=this.receivedSuggestions.map(p=>p.proposalId===status.proposalId?status:p);this.notice=proposalNotices[status.status];
   }
-  private async readReceivedSuggestions(fresh:Session,cursor:string|null):Promise<void> {
+  private async readReceivedSuggestions(fresh:Session,cursor:string|null):Promise<OwnProposal|undefined> {
     const view=this.view,generation=this.proposalGeneration;
     if(!view)return;
     try {
@@ -592,15 +602,17 @@ export class WebApp {
       if(cursor&&page.proposals.some(p=>this.receivedSuggestions.some(old=>old.proposalId===p.proposalId)))throw new ApiError('invalid_response',502);
       this.receivedSuggestions=cursor?[...this.receivedSuggestions,...page.proposals]:page.proposals;
       this.suggestionsCursor=page.nextCursor;this.suggestionsState='ready';
-      if(this.proposalReceipt)this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===this.proposalReceipt?.proposalId)??this.proposalStatus;
+      const proposal=page.proposals.find(p=>p.proposalId===this.proposalReceipt?.proposalId);
+      if(proposal)this.proposalStatus=proposal;
+      return proposal;
     }catch(error){if(generation!==this.proposalGeneration)return;this.suggestionsState='unavailable';throw error;}
   }
   private async recoverSuggestions(more=false):Promise<void> {
     const generation=this.proposalGeneration,fresh=await this.api.session();
     if(generation!==this.proposalGeneration)return;
     if(!fresh||!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope||!['helper','editor'].includes(fresh.role))throw new ApiError('access_ended',403);
-    await this.readReceivedSuggestions(fresh,more?this.suggestionsCursor:null);
-    if(generation===this.proposalGeneration&&this.suggestionsState==='ready')this.notice='Received suggestions checked.';
+    const proposal=await this.readReceivedSuggestions(fresh,more?this.suggestionsCursor:null);
+    if(generation===this.proposalGeneration&&this.suggestionsState==='ready')this.notice=proposal?proposalNotices[proposal.status]:'Received suggestions checked.';
   }
   private renderReceivedSuggestions(main:HTMLElement):void {
     const section=this.el('section');section.append(this.el('h2',this.t('Suggestions received by the service')),

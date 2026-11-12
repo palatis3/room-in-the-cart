@@ -20,7 +20,7 @@ const es: Record<string, string> = {
   'Receipt unconfirmed; the shopper may already have received this suggestion.':'Recepción sin confirmar; es posible que quien hace la compra ya haya recibido esta sugerencia.',
   'Retry original suggestion':'Reintentar sugerencia original', 'Check suggestion status':'Consultar estado de la sugerencia',
   'Write another suggestion':'Escribir otra sugerencia', 'Suggestion received for shopper review':'Sugerencia recibida para revisión de quien hace la compra',
-  'Suggestion reviewed':'Sugerencia revisada', 'Suggestion dismissed':'Sugerencia descartada', 'Suggestion status checked.':'Estado de la sugerencia consultado.',
+  'Suggestion reviewed':'Sugerencia revisada', 'Suggestion dismissed':'Sugerencia descartada',
   'The original suggestion was not accepted because its reviewed instructions changed. Review the current instructions before starting a new suggestion.':'No se aceptó la sugerencia original porque cambiaron las instrucciones consultadas. Revisa las instrucciones actuales antes de iniciar otra sugerencia.',
   'Review current instructions':'Revisar instrucciones actuales', 'Review the current instructions before sending again.':'Revisa las instrucciones actuales antes de volver a enviar.',
 

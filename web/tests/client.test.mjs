@@ -850,6 +850,44 @@ test('own status matches server whitespace normalization while retries retain ex
 
 const receivedSuggestion=(overrides={})=>({proposalId:'proposal-a',grantId:'grant-a',baseRevision:7,proposalRevision:1,correction:'Previously received private suggestion',status:'pending',createdAt:'2026-01-01T00:00:00Z',resolution:null,...overrides});
 
+for (const [language,refresh,pending,reviewed,dismissed,checked,unavailable] of [
+ ['en','Refresh','Proposal received. The shopper must review it before anything changes.','Suggestion reviewed','Suggestion dismissed','Received suggestions checked.','Received suggestions could not be checked. Retry recovery before sending another suggestion.'],
+ ['es-US','Actualizar','Propuesta recibida. Quien hace la compra debe revisarla antes de que cambie algo.','Sugerencia revisada','Sugerencia descartada','Sugerencias recibidas consultadas.','No se pudieron consultar las sugerencias recibidas. Reintenta la recuperación antes de enviar otra sugerencia.'],
+]) {
+ for (const [decision,announcement] of [['reviewed',reviewed],['dismissed',dismissed]]) {
+  test(`cook refresh announces a ${decision} proposal in ${language}`,async()=>{
+   let received=null,failed=false,posts=0;
+   const {root,dom}=await setup(fakeAPI({
+    session:async()=>editorSession(),view:async()=>cookView(received?.status==='reviewed'?8:7),
+    sendProposal:async(_,intent)=>{
+     posts++;
+     const receipt=suggestionReceipt(intent);
+     received=receivedSuggestion({...receipt,correction:intent.correction});
+     return receipt;
+    },
+    receivedProposals:async()=>{
+     if(failed)throw new ApiError('network',0);
+     return {proposals:received?[received]:[],nextCursor:null};
+    },
+   }),language);
+   type(dom,'correction','Keep two');submit(root,dom);await waitForIdle(root);
+   const expectRefresh=async(text)=>{
+    click(root,refresh);await waitForIdle(root);
+    assert.equal(root.querySelector('[role="status"]').textContent,text);
+   };
+   await expectRefresh(pending);
+   received={...received,status:decision,proposalRevision:2,resolution:{mutationId:'mutation-a',
+    decision:decision==='reviewed'?'replaced':'dismissed',revision:8,resolvedAt:'2026-01-02T00:00:00Z'}};
+   await expectRefresh(announcement);
+   failed=true;await expectRefresh(unavailable);
+   failed=false;await expectRefresh(announcement);
+   received={...received,proposalId:'other-proposal'};
+   await expectRefresh(checked);
+   assert.equal(posts,1);
+  });
+ }
+}
+
 test('full app recreation recovers received suggestions from the service without a local intent or submission',async()=>{
  let posts=0;const api=fakeAPI({session:async()=>editorSession(),view:async()=>cookView(8),receivedProposals:async()=>({proposals:[receivedSuggestion()],nextCursor:null}),sendProposal:async()=>{posts++;}});
  const first=await setup(api);assert.match(first.root.textContent,/Previously received private suggestion/);
