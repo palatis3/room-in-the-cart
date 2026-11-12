@@ -31,6 +31,22 @@ class FixtureDependencyTests(unittest.TestCase):
                          {"fixture-plan", "build-contributor", "build-dinner", "contributor-tests", "dinner-tests"})
         self.assertEqual(jobs["fixture-gate"]["if"], "always()")
 
+    def test_failed_result_upload_retries_only_the_same_non_media_files(self):
+        workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /
+                                       ".github/workflows/ios-fixtures.yml")
+        steps = workflow["jobs"]["contributor-tests"]["steps"]
+        upload = next(step for step in steps if step.get("id") == "fixture_results_upload")
+        retry = next(step for step in steps if step.get("name") == "Retry fixture result upload")
+        self.assertIn("matrix.shard != 'RecordsMediaUITests'", upload["if"])
+        self.assertEqual(retry["if"], "${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && "
+                                    "steps.fixture_results_upload.outcome == 'failure' }}")
+        self.assertTrue(upload["continue-on-error"])
+        self.assertFalse(retry.get("continue-on-error", False))
+        self.assertEqual(retry["uses"], upload["uses"])
+        self.assertEqual(retry["with"]["path"], upload["with"]["path"])
+        self.assertEqual(retry["with"]["name"], upload["with"]["name"] + "-retry")
+        self.assertEqual(retry["with"]["if-no-files-found"], "error")
+
 
 if __name__ == "__main__":
     unittest.main()

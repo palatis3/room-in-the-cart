@@ -308,12 +308,14 @@ jobs:
         timeout-minutes: 2
         run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
       - name: Retain fixture results and timing
+        id: fixture_results_upload
+        continue-on-error: true
         if: always() && matrix.shard != 'RecordsMediaUITests'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
           include-hidden-files: true
-          path: |
+          path: &fixture_result_paths |
             .build/Tests*.xcresult
             .build/Tests*.log
             .build/test-*.json
@@ -322,6 +324,16 @@ jobs:
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
+      # Retry only the transfer while this runner still holds the XCTest result.
+      - name: Retry fixture result upload
+        if: ${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && steps.fixture_results_upload.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}-retry
+          include-hidden-files: true
+          path: *fixture_result_paths
+          retention-days: 7
+          if-no-files-found: error
       - name: Retain Records media result counts and timing
         if: always() && matrix.shard == 'RecordsMediaUITests'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
