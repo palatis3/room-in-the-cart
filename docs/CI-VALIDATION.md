@@ -977,7 +977,7 @@ The pre-release workflow launches the Staging scheme on an iPhone simulator. It 
 
 The Linux source check runs the Foundation 2.1 verifier with Python 3.13. It checks the 52 launch requirements, 27 screen contracts, source checksums, SQLite constraints and reference grocery scenarios. The PostgreSQL job separately executes all twenty grocery inbox scenarios against the service.
 
-After changing service code, run `npm test` in `service/` before pushing the combined candidate. On GitHub, `typescript (service)` runs those unit tests. The independent `service-postgres` job runs the database integration suite (including billing and browser retries), followed by the maintenance and restore checks on a separate database. Both jobs feed the CI gate.
+After changing service code, run `npm test` in `service/` before pushing the combined candidate. On GitHub, `typescript (service)` runs those unit tests. The independent `service-postgres` job discovers `service/tests/*.integration.mjs` and also runs the PostgreSQL billing suite. It exercises browser retries, then runs maintenance and restore checks on a separate database. Both jobs feed the CI gate.
 
 The workflow validator uses actionlint 1.7.12 plus the hash-pinned PyYAML requirements. Use an isolated environment; CI creates one before running the full Python suite. The lock currently covers CPython 3.12 on Linux x86_64 (Ubuntu 24.04) and CPython 3.9 on macOS arm64 (this Mac). Other interpreter/platform combinations require a reviewed wheel hash; source builds and unpinned fallback installs are disabled.
 
