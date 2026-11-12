@@ -65,7 +65,7 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [loadedFirstPage], timeout: 5), .completed)
         tap(app.buttons["Load more requests"])
         XCTAssertEqual(element("fixture.s23.loaded").label, "Fixture loaded requests: 4")
-        let lee = element("household.request.a4444444-4444-4444-8444-444444444443")
+        let lee = app.buttons["household.request.a4444444-4444-4444-8444-444444444443"]
         XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 0")
         openRequest(lee, step: "Lee-originally-on-page-two")
         assertComparisonValue("selection", request: "lee", value: "Deciding this request")
@@ -76,7 +76,7 @@ import XCTest
                                                 object: cancelButton)
         XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
         expectsDecisionSheet = false
-        let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444443")
+        let outcome = app.staticTexts["household.request.outcome.a4444444-4444-4444-8444-444444444443"]
         // No reveal, tap or scrolling after Apply may make these assertions pass.
         // Sheet disappearance can precede the inbox's onDismiss scroll/layout.
         let returnedOutcome = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
