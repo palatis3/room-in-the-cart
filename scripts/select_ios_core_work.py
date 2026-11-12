@@ -41,10 +41,11 @@ def main():
     parser.add_argument('--github-output', type=Path, required=True)
     args = parser.parse_args()
     try:
+        scope = os.environ.get('REQUESTED_IOS_SCOPE', 'full')
         full, selected = select_work(
             json.loads((args.plan_dir / 'test-enumeration.json').read_text()),
             json.loads(DURATIONS_PATH.read_text()), os.environ.get('GITHUB_EVENT_NAME', ''),
-            os.environ.get('REQUESTED_IOS_SCOPE', 'full'))
+            scope)
         if json.loads((args.plan_dir / 'manifest.json').read_text()) != full:
             raise ValueError('The discovered full plan changed before scope selection')
         if selected != full:
@@ -59,8 +60,12 @@ def main():
         # Route UI jobs independently while keeping the fallback for every row.
         m4_slots = {
             'ui-02': 4, 'ui-03': 0, 'ui-04': 3, 'ui-06': 1,
-            'ui-07': 2, 'ui-08': 3, 'ui-09': 5, 'ui-10': 0,
+            'ui-07': 2, 'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
         }
+        # The full UI01 group finished last on two combined builds. Its shorter
+        # manual Dinner diagnostic retains its original GitHub runner.
+        if scope == 'full':
+            m4_slots['ui-01'] = 0
         consumers = []
         for planned in selected['include']:
             shard = planned['shard']

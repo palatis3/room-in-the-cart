@@ -119,12 +119,14 @@ The following jobs share the six M4 slots.
 
 | Job or group | M4 slot | Original GitHub fallback |
 | --- | --- | --- |
-| Core UI03 and UI10 | 0 | 3 and 0 |
+| Full core UI01 and UI03 | 0 | 1 and 3 |
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
-| Contributor balanced-03 and core UI07 | 2 | 4 and 2 |
+| Contributor balanced-03, core UI07 and core UI10 | 2 | 4, 2 and 0 |
 | Delivery recovery/cook/closeout, core UI04 and core UI08 | 3 | 1, 1 and 3 |
 | Core UI02, filled financial fields and Spanish skipped-dinner Undo | 4 | 2, 4 and 2 |
 | Core UI09, stale quote save and contributor balanced-05 | 5 | 3, 0 and 2 |
+
+UI01 finished last in two consecutive full builds. It waited 21m25s after the producer on `3977750b` and 26m09s on `099d6bf6`. M4 slot 0 took its first UI group after 51s and 53s on those builds. Full UI01 now shares slot 0 with UI03. UI10 moves to slot 2, whose last job finished 28m58s before UI01 in the latest run. The manual two-test Dinner dispatch continues on GitHub. Measure the next full build from producer completion to UI01 start and from workflow creation to the last required gate. The prior complete batches took 58m19s and 67m04s. [Previous UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43246467096/job/131285759950) · [Latest UI01](https://github.com/palatis3/room-in-the-cart/actions/runs/43259414250/job/131330863485)
 
 On `cd85377c`, the bilingual StoreKit job waited 38m22s for GitHub slot 2 after the build finished. The Spanish skipped-dinner Undo journey occupied that slot for the last 15m37s of the wait. On trusted builds its existing selector now uses M4 slot 4. Compare the StoreKit start, the M4 job duration and the last required check when judging subsequent runs.
 
