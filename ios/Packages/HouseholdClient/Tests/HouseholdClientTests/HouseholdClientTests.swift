@@ -173,6 +173,90 @@ final class HouseholdClientTests: XCTestCase {
         _ = try await recreated.enroll(householdID: household)
         XCTAssertEqual(registrations, 1)
     }
+    private final class EnrollmentServer {
+        let household: String, member: String
+        var subject = "first-adult", session = UUID().uuidString
+        struct Binding: Equatable { let subject: String; let session: String }
+        var deviceSessions: [String: Binding] = [:]
+        var binding: Binding { .init(subject: subject, session: session) }
+        var revoked = false
+        init(household: String, member: String) { self.household = household; self.member = member }
+
+        func response(_ request: URLRequest) -> (Int, Data) {
+            let path = request.url!.path
+            let user = ["id": subject, "email": "adult@example.test", "email_confirmed_at": "2026-01-01T00:00:00Z"]
+            func ok(_ body: [String: Any]) -> (Int, Data) { (200, try! JSONSerialization.data(withJSONObject: body)) }
+            if path == "/auth/v1/user" { return ok(user) }
+            if path == "/auth/v1/verify" || path == "/auth/v1/token" {
+                let claims = ["iss": "https://identity.test/auth/v1", "sub": subject, "session_id": session]
+                let payload = GuardianSecret.canonical(try! JSONEncoder().encode(claims))
+                return ok(["access_token": "header." + payload + ".signature", "refresh_token": "rotated", "expires_in": 3600, "user": user])
+            }
+            if path.hasSuffix("/devices") {
+                let token = "device-token-" + String(deviceSessions.count + 1)
+                deviceSessions[token] = binding
+                return ok(["deviceId": UUID().uuidString, "deviceToken": token])
+            }
+            if path.hasSuffix("/bootstrap") {
+                let token = request.value(forHTTPHeaderField: "X-Device-Token") ?? ""
+                guard !revoked, deviceSessions[token] == binding else { return (401, Data()) }
+                return ok(["household": ["id": household, "label": "Home"], "memberId": member,
+                           "role": "contributor", "enrolled": true, "queueConsent": false, "capabilities": ["own_requests"]])
+            }
+            XCTFail("Unexpected request at " + path); return (400, Data())
+        }
+    }
+
+    func testFreshLoginReenrollsWithoutReplayingAnotherSessionOrAdultsQueue() async throws {
+        let server = EnrollmentServer(household: household, member: member)
+        MockURLProtocol.handler = server.response
+        let auth = try auth(), vault = MemoryVault()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: vault, transport: transport())
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        let original = try await service.enroll(householdID: household)
+        let envelope = CommandEnvelope(replayWindow: "original", shopId: "shop", kind: "request.send",
+                                       base: .init(shopRevision: 1, authorityEpoch: 1), body: ["originalItem": .string("Rice")])
+        var pending = try await service.prepare(envelope: envelope, bootstrap: original)
+        let newSession = UUID().uuidString
+        for subject in [server.subject, "other-adult"] {
+            // Change the session first, then the subject alone to exercise both boundaries.
+            server.subject = subject; server.session = newSession
+            _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "654321")
+            let next = try await service.enroll(householdID: household)
+            do { _ = try await service.execute(pending); XCTFail("A different enrollment replayed the old queue") }
+            catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+            pending = try await service.prepare(envelope: envelope, bootstrap: next)
+        }
+        XCTAssertEqual(server.deviceSessions.count, 3)
+    }
+
+    func testLegacyEnrollmentResumesOnRefreshAndRevocationCannotRegisterAnotherDevice() async throws {
+        let server = EnrollmentServer(household: household, member: member)
+        MockURLProtocol.handler = server.response
+        let refresh = MemoryVault(), devices = MemoryVault()
+        let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
+        let firstAuth = try auth(refresh)
+        _ = try await firstAuth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        let first = HouseholdService(configuration: config, auth: firstAuth, deviceVault: devices, transport: transport())
+        _ = try await first.enroll(householdID: household)
+        let raw = Data(try XCTUnwrap(devices.read()).utf8)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        legacy.removeValue(forKey: "sessionID")
+        let legacyRecord = String(decoding: try JSONSerialization.data(withJSONObject: legacy), as: UTF8.self)
+        try devices.write(legacyRecord)
+        let restored = HouseholdService(configuration: config, auth: try auth(refresh), deviceVault: devices, transport: transport())
+        _ = try await restored.enroll(householdID: household)
+        XCTAssertEqual(server.deviceSessions.count, 1)
+        let migrated = try XCTUnwrap(devices.read())
+        XCTAssertEqual(try (JSONSerialization.jsonObject(with: Data(migrated.utf8)) as? [String: Any])?["sessionID"] as? String, server.session)
+        server.revoked = true
+        for record in [migrated, legacyRecord] {
+            try devices.write(record)
+            do { _ = try await restored.enroll(householdID: household); XCTFail("Revoked enrollment was accepted") }
+            catch { XCTAssertEqual(error as? ClientError, .sessionNeeded) }
+            XCTAssertEqual(server.deviceSessions.count, 1)
+        }
+    }
     func testRejectsInsecureOrPrivilegedAuthConfiguration() throws {
         XCTAssertThrowsError(try ServiceConfiguration(baseURL: URL(string: "http://example.test")!))
         XCTAssertThrowsError(try AdultAuthConfiguration(projectURL: URL(string: "https://example.test")!, publishableKey: "sb_secret_forbidden"))

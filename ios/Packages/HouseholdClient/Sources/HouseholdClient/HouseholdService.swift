@@ -8,6 +8,7 @@ public actor HouseholdService {
     private let auth: AdultAuth
     private let deviceVault: any RefreshTokenVault
     private var enrollment: DeviceEnrollment?
+    private var enrollmentSessionID: String?
     private var householdID: String?
     private var subject: String?
     private var memberID: String?
@@ -22,15 +23,17 @@ public actor HouseholdService {
     public func enroll(householdID: String, grantID: String? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
-        generation = UUID(); enrollment = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
+        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
         selectedGrantID = grantID; selectedShopID = nil
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
-        // Reuse the same enrolled device after a crash. The service validates current identity/session binding.
+        enrollmentSessionID = access.providerSessionID
+        // A restored session must present its saved device to the server, including after revocation.
         if let saved = try deviceVault.read(), let bytes = saved.data(using: .utf8),
            let record = try? JSONDecoder().decode(StoredEnrollment.self, from: bytes),
-           record.householdID == householdID, record.subject == access.identity.subject {
+           record.householdID == householdID, record.subject == access.identity.subject, record.matchesSession(access) {
+            enrollmentSessionID = access.providerSessionID ?? record.sessionID
             enrollment = record.device; self.householdID = householdID; subject = access.identity.subject
             selectedGrantID = grantID ?? record.grantID
             selectedShopID = selectedGrantID == nil ? record.shopID : nil
@@ -39,7 +42,7 @@ public actor HouseholdService {
         let device: DeviceEnrollment = try await transport.json(request(base: configuration.baseURL,
             path: "v1/households/\(householdID)/devices", method: "POST", token: access.accessToken, body: Data("{}".utf8)))
         guard generation == start else { throw ClientError.cancelled }
-        let stored = StoredEnrollment(householdID: householdID, subject: access.identity.subject, device: device, grantID: selectedGrantID, shopID: selectedShopID)
+        let stored = StoredEnrollment(householdID: householdID, subject: access.identity.subject, device: device, grantID: selectedGrantID, shopID: selectedShopID, sessionID: enrollmentSessionID)
         try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         enrollment = device; self.householdID = householdID; subject = access.identity.subject
         return try await bootstrap()
@@ -129,7 +132,7 @@ public actor HouseholdService {
         memberID = value.memberId
         if let enrollment, let householdID, let subject {
             let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID,
-                                          childMemberID: childAdoptionBinding == nil ? nil : memberID, childBinding: childAdoptionBinding)
+                                          childMemberID: childAdoptionBinding == nil ? nil : memberID, childBinding: childAdoptionBinding, sessionID: enrollmentSessionID)
             try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         }
         return value
@@ -224,9 +227,10 @@ public actor HouseholdService {
         guard try deviceVault.read() == saved else { throw ClientError.cancelled }
         let device = DeviceEnrollment(deviceId: receipt.deviceId, deviceToken: receipt.deviceToken)
         let stored = StoredEnrollment(householdID: receipt.householdId, subject: fresh.subject, device: device, grantID: nil, shopID: nil,
-                                      childMemberID: receipt.memberId, childBinding: fresh.binding)
+                                      childMemberID: receipt.memberId, childBinding: fresh.binding, sessionID: fresh.sessionID)
         try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         enrollment = device; householdID = receipt.householdId; subject = fresh.subject; memberID = receipt.memberId
+        enrollmentSessionID = fresh.sessionID
         childAdoptionBinding = fresh.binding
         return value
     }
@@ -1140,7 +1144,7 @@ public actor HouseholdService {
     /// Synchronous within the actor so a server denial can prove which new
     /// cleared generation it created before any re-enrollment can interleave.
     private func clearLocalScope() -> UUID {
-        generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
+        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
         return generation
     }
@@ -1228,6 +1232,15 @@ private struct StoredEnrollment: Codable {
     let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String?; let shopID: UUID?
     var childMemberID: String? = nil
     var childBinding: ChildInvitationBinding? = nil
+    var sessionID: String? = nil
+
+    func matchesSession(_ access: AdultAccess) -> Bool {
+        guard let current = access.providerSessionID else { return true }
+        if let previous = sessionID ?? childBinding?.sessionID { return previous == current }
+        // Legacy records have no session ID. A refresh can resume that device;
+        // a newly verified OTP starts a different provider session.
+        return !access.verifiedWithCode
+    }
 }
 
 extension HouseholdService {

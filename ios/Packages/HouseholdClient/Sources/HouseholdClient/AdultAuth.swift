@@ -17,6 +17,8 @@ public struct AdultAccess: Sendable {
     public let identity: VerifiedAdultIdentity
     public let accessToken: String
     public let expiresAt: Date
+    var providerSessionID: String?
+    var verifiedWithCode = false
 }
 /// Managed login proves an account identity only. All household roles and object grants come from the service.
 public actor AdultAuth {
@@ -49,7 +51,7 @@ public actor AdultAuth {
         try vault.clear()
         let start = generation
         let session: TokenResponse = try await transport.json(authRequest("verify", body: try encoded(Body(email: email, token: code))))
-        return try await accept(session, generation: start)
+        return try await accept(session, generation: start, verifiedWithCode: true)
     }
     /// Coalesces rotating-token refreshes; a sign-out invalidates all in-flight completions.
     public func access() async throws -> AdultAccess {
@@ -83,7 +85,7 @@ public actor AdultAuth {
             throw error
         }
     }
-    private func accept(_ session: TokenResponse, generation start: UUID) async throws -> AdultAccess {
+    private func accept(_ session: TokenResponse, generation start: UUID, verifiedWithCode: Bool = false) async throws -> AdultAccess {
         guard generation == start else { throw ClientError.cancelled }
         guard !session.access_token.isEmpty, !session.refresh_token.isEmpty, session.expires_in > 0,
               !session.user.id.isEmpty else { throw ClientError.sessionNeeded }
@@ -94,8 +96,10 @@ public actor AdultAuth {
             let user: UserResponse = try await transport.json(authRequest("user", method: "GET", token: session.access_token))
             guard generation == start else { throw ClientError.cancelled }
             guard user.id == session.user.id, user.email_confirmed_at != nil else { throw ClientError.sessionNeeded }
-            let value = AdultAccess(identity: .init(subject: user.id, email: user.email), accessToken: session.access_token,
+            var value = AdultAccess(identity: .init(subject: user.id, email: user.email), accessToken: session.access_token,
                                     expiresAt: now().addingTimeInterval(session.expires_in))
+            value.providerSessionID = try? value.verifiedSessionID(expectedIssuer: config.projectURL.appendingPathComponent("auth/v1").absoluteString)
+            value.verifiedWithCode = verifiedWithCode || current?.verifiedWithCode == true
             current = value
             return value
         } catch {
@@ -126,3 +130,19 @@ public actor AdultAuth {
 }
 private struct TokenResponse: Decodable, Sendable { let access_token: String; let refresh_token: String; let expires_in: TimeInterval; let user: UserResponse }
 private struct UserResponse: Decodable, Sendable { let id: String; let email: String?; let email_confirmed_at: String? }
+
+extension AdultAccess {
+    /// A continuity hint after the authenticated provider /user check. Only the service grants access.
+    func verifiedSessionID(expectedIssuer: String) throws -> String {
+        let parts = accessToken.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 3, parts.allSatisfy({ !$0.isEmpty }), parts[1].utf8.count <= 32_768,
+              parts[1].range(of: "^[A-Za-z0-9_-]+$", options: .regularExpression) != nil else { throw ClientError.sessionNeeded }
+        let payload = String(parts[1]); let padding = String(repeating: "=", count: (4 - payload.utf8.count % 4) % 4)
+        guard let data = Data(base64Encoded: payload.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/") + padding),
+              GuardianSecret.canonical(data) == payload else { throw ClientError.sessionNeeded }
+        struct Claims: Decodable { let iss: String; let sub: String; let session_id: String }
+        guard let claims = try? JSONDecoder().decode(Claims.self, from: data), claims.iss == expectedIssuer,
+              claims.sub == identity.subject, UUID(uuidString: claims.session_id) != nil else { throw ClientError.sessionNeeded }
+        return claims.session_id
+    }
+}
