@@ -486,7 +486,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func openEmptyComparison() {
         tap(element("newComparison"))
-        let name = element("itemName")
+        let name = comparisonInput("itemName")
         reveal(name)
         XCTAssertTrue(name.exists)
         let value = name.value as? String ?? ""
@@ -523,10 +523,11 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func assertMoney(_ id: String, amount: String) {
-        let total = element(id)
+        let total = app.staticTexts[id]
         reveal(total)
-        XCTAssertTrue(total.label.contains(amount), "Expected \(amount) in accessible cost: \(total.label)")
-        XCTAssertTrue(total.label.contains("$") || total.label.contains("USD"))
+        let label = total.label
+        XCTAssertTrue(label.contains(amount), "Expected \(amount) in accessible cost: \(label)")
+        XCTAssertTrue(label.contains("$") || label.contains("USD"))
         screenshot("Visible-\(id)-\(amount.replacingOccurrences(of: ".", with: "-"))")
     }
 
@@ -574,10 +575,15 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
     }
 
+    private func comparisonInput(_ id: String) -> XCUIElement {
+        // SwiftUI's vertical item-name field is a TextView on iOS 17 and a TextField on iOS 27.
+        id == "itemName" ? element(id) : app.textFields[id]
+    }
+
     private func type(_ fields: [(id: String, text: String)]) {
         let done = app.buttons[doneIdentifier]
         for (id, text) in fields {
-            let field = app.textFields[id]
+            let field = comparisonInput(id)
             tap(field)
             // Form scrolling can recycle the row after the first tap. Reacquire it
             // once before entering any text, and require the focus-driven Done control.
@@ -589,7 +595,7 @@ final class RoomInTheCartUITests: XCTestCase {
         }
         done.tap()
         for (id, text) in fields {
-            let field = app.textFields[id]
+            let field = comparisonInput(id)
             reveal(field)
             XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
         }
