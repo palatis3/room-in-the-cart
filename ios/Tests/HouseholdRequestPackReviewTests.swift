@@ -104,6 +104,35 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         model.select(try XCTUnwrap(model.requests.first)); model.choice = .add
         return(model,server,url)
     }
+    @MainActor func testManualPackQuantitiesKeepExactFractionsAndOriginalDecimalPrecision() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let need = try XCTUnwrap(requestPackQuantity(" 1 ⅓ ", unit: .cup))
+        var offer = pack("A")
+        offer.usable = try requestPackQuantity("2/3", unit: .cup)
+        let compared = try HouseholdRequestPackReview.calculate(needed: need, candidates: [offer])
+        let selection = try HouseholdRequestPackReview.select(compared.results[0], needed: need, scope: XCTUnwrap(model.packReviewScope))
+        XCTAssertTrue(model.usePackSelection(selection))
+        XCTAssertEqual(model.packs, 2)
+        await model.review()
+        let decision = try XCTUnwrap(server.previewBody?["decision"] as? [String: Any])
+        let evidence = try XCTUnwrap(decision["reviewedPackEvidence"] as? [String: Any])
+        XCTAssertEqual(evidence["needed"] as? [String: String], ["originalLiteral": " 1 ⅓ ", "numerator": "4", "denominator": "3", "unit": "cup"])
+        XCTAssertEqual(evidence["usablePerPack"] as? [String: String], ["originalLiteral": "2/3", "numerator": "2", "denominator": "3", "unit": "cup"])
+        XCTAssertEqual(server.commandCount, 0)
+
+        for input in ["0.000000000000000001", "0,000000000000000001"] {
+            let value = try XCTUnwrap(requestPackQuantity(input, unit: .gram))
+            XCTAssertEqual(value.amount, try Rational(1, 1_000_000_000_000_000_000))
+            XCTAssertEqual(value.originalLiteral, input)
+        }
+        XCTAssertNil(try requestPackQuantity(" ", unit: .count))
+        for invalid in ["-1/3", "-0/1", "1/-3", "+1/3", "1/0", "1/3 cup", "2/3 1/4", "1.2,3", "0.0000000000000000001"] {
+            XCTAssertThrowsError(try requestPackQuantity(invalid, unit: .count), invalid)
+        }
+        XCTAssertEqual(try HouseholdInboxModel.priceMinor("3,49"), 349)
+        XCTAssertThrowsError(try HouseholdInboxModel.priceMinor("1/3"))
+    }
     @MainActor func testReviewedSelectionFeedsActualPreviewAndRequiresExplicitOverageBeforeAtomicApply() async throws {
         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
         let scope=try XCTUnwrap(model.packReviewScope)

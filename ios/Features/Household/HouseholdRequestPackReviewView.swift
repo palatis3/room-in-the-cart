@@ -24,10 +24,17 @@ private struct RequestPackDraft: Equatable {
             feeEligible: feeEligible, source: source, observedAt: observedAt)
     }
 }
-private func requestPackQuantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
+func requestPackQuantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
     let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleaned.isEmpty else { return nil }
-    return Quantity(amount: try Rational(decimal: cleaned.replacingOccurrences(of: ",", with: ".")), unit: unit, originalLiteral: text)
+    let number = cleaned.replacingOccurrences(of: ",", with: ".")
+    guard number.utf8.count <= 64, number.allSatisfy({
+        $0.isNumber || $0 == "." || $0 == "/" || ($0.isWhitespace && !$0.isNewline)
+    }) else { throw RequestPackError.invalid }
+    var tokens = number.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+    let amount = try ListQuantityParser.takeAmount(from: &tokens)
+    guard tokens.isEmpty else { throw RequestPackError.invalid }
+    return Quantity(amount: amount, unit: unit, originalLiteral: text)
 }
 
 struct HouseholdRequestPackReviewView: View {
@@ -44,7 +51,7 @@ struct HouseholdRequestPackReviewView: View {
         DisclosureGroup(ht("Compare available packs for this request"), isExpanded: $expanded) {
             Text(ht("Enter the usable amount needed for this request. Matching names do not prove that a product or yield is suitable."))
             Text(ht("Reviewed usable amount needed")).font(.caption)
-            TextField(ht("Reviewed usable amount needed"), text: $needed).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.need")
+            TextField(ht("Reviewed usable amount needed"), text: $needed).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("household.pack.need")
             Picker(ht("Need unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
             candidateFields($first, index: "a")
             candidateFields($second, index: "b")
@@ -104,7 +111,7 @@ struct HouseholdRequestPackReviewView: View {
         Text(ht("Reviewed pack label")).font(.caption)
         TextField(ht("Reviewed pack label"), text: draft.label).accessibilityIdentifier("household.pack.\(index).label")
         Text(ht("Usable amount in one pack, blank if unknown")).font(.caption)
-        TextField(ht("Usable amount in one pack, blank if unknown"), text: draft.usable).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).usable")
+        TextField(ht("Usable amount in one pack, blank if unknown"), text: draft.usable).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("household.pack.\(index).usable")
         Picker(ht("Pack usable unit"), selection: draft.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
         Text(ht("Price per pack in USD, blank if unknown")).font(.caption)
         TextField(ht("Price per pack in USD, blank if unknown"), text: draft.price).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).price")

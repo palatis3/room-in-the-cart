@@ -755,8 +755,8 @@ import XCTest
         XCTAssertGreaterThan(comparePacks.frame.width, app.frame.width / 2)
         comparePacks.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
         XCTAssertEqual(comparePacks.value as? String, "Expanded")
-        fill("8", into: "household.pack.need", replacing: true)
-        for (id, yield, price) in [("a", "4", "3.00"), ("b", "6", "4.00")] {
+        fill("2/3", into: "household.pack.need", replacing: true)
+        for (id, yield, price) in [("a", "1/3", "3.00"), ("b", "0,5", "4.00")] {
             fill("Reviewed pack " + id, into: "household.pack.\(id).label", replacing: true)
             fill(yield, into: "household.pack.\(id).usable", replacing: true)
             fill(price, into: "household.pack.\(id).price", replacing: true)
@@ -765,6 +765,8 @@ import XCTest
             enableSwitch("household.pack.\(id).matched")
         }
         tap(element("household.pack.compare"))
+        assertText("Reviewed need: 2/3 units")
+        assertText("Usable per pack: 1/3 units")
         assertText("Cheapest sufficient option among reviewed available packs with known prices")
         capture("S24-reviewed-available-pack-result")
         let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled)
