@@ -259,9 +259,24 @@ import XCTest
             "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        // Review can dismiss the keyboard between separate live exists/frame queries.
+        // Measure the keyboard and navigation bars from the same immutable tree.
+        guard let snapshot = try? app.snapshot() else {
+            XCTFail("Could not snapshot the app while measuring the content viewport")
+            return .zero
+        }
+        let bounds = snapshot.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY + 88
+        var elements = [snapshot]
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if !frame.isEmpty && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
+            }
+            elements.append(contentsOf: element.children)
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
