@@ -137,6 +137,23 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(report.recipes[0].ingredients[0], "2 cans (15 oz) tomatoes")
         XCTAssertEqual(report.recipes[0].yieldText, "three plates + lunch")
     }
+    func testRecipePreviewSkipsUnrelatedNodesAndIdentifiesOmittedInstructionFields() throws {
+        let data = Data(#"""
+        {"formatVersion":1,"@graph":[
+          {"@type":"Person","formatVersion":7,"name":"Author"},
+          {"@type":"Recipe","name":"Bad notes","description":{"text":"Do not silently discard me"}},
+          {"@type":"Recipe","name":"Rice","description":"Family recipe",
+           "recipeInstructions":[{"@type":"HowToStep","text":"Simmer","image":"pot.jpg"}]},
+          {"@type":"Recipe","name":"Soup","notes":"Original notes","description":{"text":"Other metadata"}}
+        ]}
+        """#.utf8)
+        let report = try RecipeImporter.stage(data)
+        XCTAssertEqual(report.skippedRows, 2)
+        XCTAssertEqual(report.recipes.map(\.title), ["Rice", "Soup"])
+        XCTAssertEqual(report.recipes.map(\.notes), ["Family recipe", "Original notes"])
+        XCTAssertEqual(report.recipes.first?.steps, ["Simmer"])
+        XCTAssertEqual(report.unsupportedFields, ["recipeInstructions.image"])
+    }
     func testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail() throws {
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"formatVersion":2,"@type":"Recipe","name":"Dinner"}"#.utf8))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"[{"formatVersion":2,"@type":"Recipe","name":"Dinner"}]"#.utf8)))

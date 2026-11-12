@@ -65,22 +65,28 @@ public enum RecipeImporter {
         let allowed: Set<String> = ["@context", "@type", "@id", "formatVersion", "name", "recipeYield", "recipeIngredient", "recipeInstructions", "url", "notes", "description"]
         for node in nodes {
             guard let object = node as? [String: Any] else { skipped += 1; continue }
-            try validateVersion(object["formatVersion"])
             let types = (object["@type"] as? [String]) ?? (object["@type"] as? String).map { [$0] } ?? []
             guard types.contains(where: { $0 == "Recipe" || $0 == "https://schema.org/Recipe" || $0 == "http://schema.org/Recipe" }) else { skipped += 1; continue }
+            try validateVersion(object["formatVersion"])
             unsupported.formUnion(object.keys.filter { !allowed.contains($0) }.map { String($0.prefix(80)) })
             guard let title = object["name"] as? String else { skipped += 1; continue }
             guard object["recipeIngredient"] == nil || object["recipeIngredient"] is [String],
                   object["recipeYield"] == nil || object["recipeYield"] is String,
                   object["url"] == nil || object["url"] is String,
-                  object["notes"] == nil || object["notes"] is String else { skipped += 1; continue }
+                  object["notes"] == nil || object["notes"] is String,
+                  object["notes"] != nil || object["description"] == nil || object["description"] is String else { skipped += 1; continue }
             var steps: [String] = []
             if let text = object["recipeInstructions"] as? String { steps = [text] }
             else if let array = object["recipeInstructions"] as? [Any] {
                 var valid = true
                 for step in array {
                     if let text = step as? String { steps.append(text) }
-                    else if let object = step as? [String: Any], object["@type"] as? String == "HowToStep", let text = object["text"] as? String { steps.append(text) }
+                    else if let object = step as? [String: Any], object["@type"] as? String == "HowToStep", let text = object["text"] as? String {
+                        steps.append(text)
+                        for key in object.keys where key != "@type" && key != "text" {
+                            unsupported.insert("recipeInstructions." + key.prefix(80))
+                        }
+                    }
                     else { valid = false }
                 }
                 if !valid { skipped += 1; continue }
