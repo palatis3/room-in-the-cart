@@ -80,10 +80,34 @@ test('aborted acknowledgement connection acquisition never dispatches SQL even a
 });
 test('issued fsync can finish after abort/deadline, but cannot dispatch checkpoint/COMMIT or permit a fresh writer',async t=>{
  for(const ending of ['abort','deadline'])await t.test(ending,async t=>{
-  const f=await fixture(t),writer=await f.writer(),event=f.event(),gate=f.gate(),context=call(ending==='deadline'?50:2000),probe=await open(f.root+'/probe','w'),prototype=Object.getPrototypeOf(probe),sync=prototype.sync,write=prototype.writeFile;await probe.close();let syncs=0,commits=0,observedSignal;
+  const f=await fixture(t),writer=await f.writer(),event=f.event(),gate=f.gate(),probe=await open(f.root+'/probe','w'),prototype=Object.getPrototypeOf(probe),sync=prototype.sync,write=prototype.writeFile;await probe.close();let syncs=0,commits=0,observedSignal;
   const syncMock=t.mock.method(prototype,'sync',async function(...args){const value=await sync.apply(this,args);if(++syncs===1)await gate.wait();return value;});
   const writeMock=t.mock.method(prototype,'writeFile',async function(data,options){observedSignal??=options?.signal;return write.call(this,data,options);});
-  try{const pending=writer.port.beforeCommit(event,context).then(()=>{commits++;});await gate.reached;if(ending==='abort')context.controller.abort(Error('append caller cancelled'));await assert.rejects(pending,cancelled);assert.ok(observedSignal instanceof AbortSignal);assert.equal(observedSignal.aborted,true);assert.equal(commits,0);assert.equal(JSON.parse(await readFile(f.checkpointPath,'utf8')).seq,0);gate.release();await assert.rejects(writer.port.beforeCommit(f.event(),call()),/explicit fenced recovery/);assert.equal(syncs,1);assert.equal(commits,0);assert.equal(f.acks.size,0);assert.equal(await optional(f.checkpointPath+'.pending'),null);}finally{gate.release();syncMock.mock.restore();writeMock.mock.restore();}
+  // Keep real fsync and the journal timer. Advance the deadline clock only after fsync is held.
+  let now=Date.now();
+  const clock=ending==='deadline'?t.mock.method(Date,'now',()=>now):null;
+  const context=call(ending==='deadline'?50:2000);
+  try{
+   const rejected=assert.rejects(writer.port.beforeCommit(event,context).then(()=>{commits++;}),
+    ending==='deadline'?/Journal deadline exceeded/:/append caller cancelled/);
+   await gate.reached;
+   assert.ok(observedSignal instanceof AbortSignal);
+   assert.equal(observedSignal.aborted,false);
+   if(ending==='abort')context.controller.abort(Error('append caller cancelled'));
+   else now=context.deadlineUnixMs;
+   await rejected;
+   clock?.mock.restore();
+
+   assert.equal(observedSignal.aborted,true);
+   assert.equal(commits,0);
+   assert.equal(JSON.parse(await readFile(f.checkpointPath,'utf8')).seq,0);
+   gate.release();
+   await assert.rejects(writer.port.beforeCommit(f.event(),call()),/explicit fenced recovery/);
+   assert.equal(syncs,1);
+   assert.equal(commits,0);
+   assert.equal(f.acks.size,0);
+   assert.equal(await optional(f.checkpointPath+'.pending'),null);
+  }finally{gate.release();syncMock.mock.restore();writeMock.mock.restore();}
   await f.close(writer);await assert.rejects(f.writer(),/Uncheckpointed tail/);f.source.origin.fenced=true;const recovery=await f.writer({mode:'recover_fenced'}),head=await recovery.fence();assert.equal(verifyPrivacyJournal(await readFile(f.file),{...f.pins,publicKey:recovery.publicKey,head}).events.length,0);
  });
 });
