@@ -106,14 +106,17 @@ final class SharedFallbackUITests: XCTestCase {
         reveal(has("Portions","4"))
         tap(app.buttons["Cancel"])
         tap(app.buttons["fallback.disclose"])
-        enter("Bean bowl for four","fallback.recipe.title",done:"fallback.recipe.done")
-        enter("4","fallback.recipe.portions",done:"fallback.recipe.done")
-        let ingredient = app.textFields["fallback.recipe.ingredient"]
-        tap(ingredient)
-        ingredient.typeText("Kidney beans")
-        XCTAssertEqual(ingredient.value as? String, "Kidney beans")
-        enter("4","fallback.recipe.quantity",done:"fallback.recipe.done")
-        XCTAssertEqual(ingredient.value as? String, "Kidney beans")
+        for (id, value) in [("fallback.recipe.title", "Bean bowl for four"),
+                            ("fallback.recipe.portions", "4"),
+                            ("fallback.recipe.ingredient", "Kidney beans"),
+                            ("fallback.recipe.quantity", "4")] {
+            let field = app.textFields[id]
+            tap(field)
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, id)
+        }
+        tap(app.buttons["fallback.recipe.done"])
+        XCTAssertEqual(app.textFields["fallback.recipe.ingredient"].value as? String, "Kidney beans")
         XCTAssertEqual(app.textFields["fallback.recipe.quantity"].value as? String, "4")
         tap(app.buttons["fallback.recipe.review"])
         reveal(app.staticTexts["Bean bowl for four"])
