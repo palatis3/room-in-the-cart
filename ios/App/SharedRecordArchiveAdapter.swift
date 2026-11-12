@@ -1,3 +1,4 @@
+import CoreDomain
 import Foundation
 import HouseholdClient
 import RecordArchive
@@ -31,21 +32,68 @@ enum SharedRecordArchiveAdapter {
     }
 }
 
+private struct SharedRecordText {
+    let language: String
+    let bundle: Bundle
+
+    init(_ locale: Locale) {
+        language = locale.language.languageCode?.identifier == "es" ? "es" : "en"
+        bundle = Bundle.main.url(forResource: language, withExtension: "lproj").flatMap(Bundle.init(url:)) ?? .main
+    }
+
+    func word(_ english: String, _ spanish: String) -> String { language == "es" ? spanish : english }
+    var unknown: String { word("Unknown", "Sin determinar") }
+
+    func amount(_ text: String, unit: String, singular: Bool) -> String {
+        guard let measure = UnitOfMeasure(rawValue: unit) else { return text + " " + unit }
+        return pQuantity(text, unit: measure, singular: singular, language: language)
+    }
+
+    func fraction<N: BinaryInteger>(_ numerator: N, _ denominator: N, unit: String) -> String {
+        amount("\(numerator)/\(denominator)", unit: unit, singular: numerator == denominator)
+    }
+
+    func demandQuantity(_ quantity: SharedDemandQuantity?) -> String {
+        guard let quantity else { return unknown }
+        let normalized = fraction(quantity.amount.numerator, quantity.amount.denominator, unit: quantity.unit.rawValue)
+        var text = quantity.originalLiteral + " (" + normalized + ")"
+        if let conversion = quantity.confirmedConversion {
+            let rate = conversion.targetAmountPerSourceUnit
+            let target = fraction(rate.numerator, rate.denominator, unit: conversion.targetUnit.rawValue)
+            let source = amount("1", unit: conversion.sourceUnit.rawValue, singular: true)
+            text += " · " + conversion.sourceNote + " · " + target + " / " + source + " · " + conversion.confirmedAt
+        }
+        return text
+    }
+
+    func quoteScope(_ scope: String) -> String {
+        switch scope {
+        case "wholeCheckout": word("whole checkout", "compra completa")
+        case "item": word("one item", "un artículo")
+        case "dinner": word("one dinner", "una cena")
+        default: unknown
+        }
+    }
+
+    func basketPurpose(_ purpose: String) -> String {
+        switch purpose {
+        case "create": word("Basket created", "Cesta creada")
+        case "patch": word("Basket updated", "Cesta actualizada")
+        case "decision": word("Request decision", "Decisión sobre una solicitud")
+        case "freeze": word("Basket frozen", "Cesta fijada")
+        case "reopen": word("Basket reopened", "Cesta reabierta")
+        case "placed": word("Order placed", "Pedido realizado")
+        default: unknown
+        }
+    }
+}
+
 extension SharedRecordArchiveAdapter {
     /// A readable owner copy preserves uncertainty and source wording. It never
     /// claims complete food coverage, a verified checkout or restored access.
-    static func readable(_ record: ArchiveRecord, locale: Locale = .current) throws -> String {
-        let value = try validate(record), es = locale.language.languageCode?.identifier == "es"
-        func word(_ en: String, _ spanish: String) -> String { es ? spanish : en }
-        let unknown = word("Unknown", "Sin determinar")
-        func quantity(_ q: SharedDemandQuantity?) -> String {
-            guard let q else { return unknown }
-            var result = "\(q.originalLiteral) (\(q.amount.numerator)/\(q.amount.denominator) \(q.unit.rawValue))"
-            if let conversion = q.confirmedConversion {
-                result += " · \(conversion.sourceNote) · \(conversion.targetAmountPerSourceUnit.numerator)/\(conversion.targetAmountPerSourceUnit.denominator) \(conversion.targetUnit.rawValue)/\(conversion.sourceUnit.rawValue) · \(conversion.confirmedAt)"
-            }
-            return result
-        }
+    static func readable(_ record: ArchiveRecord, locale: Locale = recordsInterfaceLocale) throws -> String {
+        let value = try validate(record), copy = SharedRecordText(locale)
+        let word = copy.word, unknown = copy.unknown, quantity = copy.demandQuantity
         func restriction(_ item: SharedDemandSourceExclusion) -> String {
             switch item.resolution {
             case .unresolved: return item.label + " · " + word("unresolved restriction", "restricción sin resolver")
@@ -80,8 +128,9 @@ extension SharedRecordArchiveAdapter {
         }
         for total in value.food.coverage?.trackedSubtotals ?? [] {
             let name = value.food.basket.first { $0.id == total.lineId }?.name ?? total.lineId.string
-            let amount = total.quantity.map { "\($0.numerator)/\($0.denominator)" } ?? unknown
-            lines.append(word("Tracked subtotal: ", "Subtotal registrado: ") + name + " · " + amount + " " + total.unit.rawValue)
+            let amount = total.quantity.map { copy.fraction($0.numerator, $0.denominator, unit: total.unit.rawValue) }
+                ?? copy.amount(unknown, unit: total.unit.rawValue, singular: false)
+            lines.append(word("Tracked subtotal: ", "Subtotal registrado: ") + name + " · " + amount)
         }
         lines.append(word("Tracked food commitments", "Compromisos de alimentos registrados"))
         for row in value.food.graph.contributions where row.removedAt == nil {
@@ -98,9 +147,7 @@ extension SharedRecordArchiveAdapter {
         lines.append(word("Entered quote, not posted spending", "Cotización ingresada, no gasto contabilizado"))
         if !value.quote.complete { lines.append(word("The quote is incomplete; remaining items or charges may be missing.", "La cotización está incompleta; pueden faltar artículos o cargos.")) }
         if value.storeReviewRequired { lines.append(word("Review prices for the selected store before relying on this quote.", "Revise los precios de la tienda seleccionada antes de usar esta cotización.")) }
-        let quoteScope = value.quote.scope == "wholeCheckout" ? word("whole checkout", "compra completa") : value.quote.scope == "item" ? word("one item", "un artículo") : word("one dinner", "una cena")
-        let capScope = value.quote.capScope == "wholeCheckout" ? word("whole checkout", "compra completa") : value.quote.capScope == "item" ? word("one item", "un artículo") : value.quote.capScope == "dinner" ? word("one dinner", "una cena") : unknown
-        lines.append(word("Scope: ", "Alcance: ") + quoteScope + " · " + word("cap: ", "límite: ") + money(value.quote.capMinor) + " · " + capScope)
+        lines.append(word("Scope: ", "Alcance: ") + copy.quoteScope(value.quote.scope) + " · " + word("cap: ", "límite: ") + money(value.quote.capMinor) + " · " + copy.quoteScope(value.quote.capScope))
         lines.append(word("Observed: ", "Observada: ") + value.quote.observedAt + " · " + word("expires: ", "vence: ") + value.quote.expiresAt)
         if value.quote.fee.kind == "fixed" { lines.append(word("Fee: ", "Cargo: ") + money(value.quote.fee.amountMinor)) }
         else { lines.append(word("Fee threshold: ", "Umbral del cargo: ") + money(value.quote.fee.thresholdMinor) + " · " + money(value.quote.fee.belowMinor) + " / " + money(value.quote.fee.aboveMinor)) }
@@ -148,15 +195,14 @@ extension SharedHistoryArchiveAdapter {
         ]
     }
 
-    static func readable(_ record: ArchiveRecord, locale: Locale = .current) throws -> String {
-        let value = try validate(record), es = locale.language.languageCode?.identifier == "es"
-        func w(_ en: String, _ esText: String) -> String { es ? esText : en }
-        let unknown = w("Unknown", "Sin determinar")
+    static func readable(_ record: ArchiveRecord, locale: Locale = recordsInterfaceLocale) throws -> String {
+        let value = try validate(record), copy = SharedRecordText(locale)
+        let w = copy.word, unknown = copy.unknown
         func id(_ value: UUID) -> String { value.uuidString.lowercased() }
         func money(_ amount: Int?) -> String { amount.map { "USD \($0 / 100)." + String(format: "%02d", $0 % 100) } ?? unknown }
         func quantity(_ q: SharedMealQuantity?) -> String {
             guard let q else { return unknown }
-            return "\(q.originalLiteral) (\(q.amount.numerator)/\(q.amount.denominator) \(q.unit))"
+            return q.originalLiteral + " (" + copy.fraction(q.amount.numerator, q.amount.denominator, unit: q.unit) + ")"
         }
         var lines = [w("Shared pickup history", "Historial de compra compartida"),
             w("Read-only copy. Household access and checkout authority are not restored.", "Copia de solo lectura. No restablece acceso al hogar ni permisos de compra."),
@@ -169,13 +215,13 @@ extension SharedHistoryArchiveAdapter {
         }
         section("Basket revisions", "Revisiones de la cesta", value.basketRevisions.count)
         for basket in value.basketRevisions {
-            lines.append("#\(basket.revision) · \(basket.recordedAt) · \(basket.phase) · \(basket.purpose)")
+            lines.append("#\(basket.revision) · \(basket.recordedAt) · \(HistoryCopy.phase(basket.phase, bundle: copy.bundle)) · \(copy.basketPurpose(basket.purpose))")
             for item in basket.basketLines {
                 lines.append(item.originalItem + " · \(item.packs) " + w("packs", "paquetes") + " · " + money(item.unitPriceMinor))
             }
             let q = basket.quote
             lines.append(w("Entered quote; not posted spending", "Cotización ingresada; no gasto contabilizado"))
-            lines.append(w("Scope / cap: ", "Alcance / límite: ") + q.scope + " / " + money(q.capMinor) + " · " + q.capScope)
+            lines.append(w("Scope / cap: ", "Alcance / límite: ") + copy.quoteScope(q.scope) + " / " + money(q.capMinor) + " · " + copy.quoteScope(q.capScope))
             lines.append(w("Observed / expires: ", "Observada / vence: ") + q.observedAt + " / " + q.expiresAt)
             if !q.complete { lines.append(w("Quote incomplete.", "Cotización incompleta.")) }
             if q.fee.kind == "fixed" { lines.append(w("Fee: ", "Cargo: ") + money(q.fee.amountMinor)) }
@@ -239,14 +285,7 @@ extension SharedHistoryArchiveAdapter {
         for reservation in value.deliveries.reservations {
             lines.append(id(reservation.sourceId) + " → " + id(reservation.occurrenceId) + " / " + id(reservation.ingredientId) + " / " + id(reservation.groupId) + " · #\(reservation.supplyRevision) · " + (reservation.quantity.map { quantity($0) } ?? w("Reservation released", "Reserva liberada")))
         }
-        func demandQuantity(_ q: SharedDemandQuantity?) -> String {
-            guard let q else { return unknown }
-            var result = "\(q.originalLiteral) (\(q.amount.numerator)/\(q.amount.denominator) \(q.unit.rawValue))"
-            if let conversion = q.confirmedConversion {
-                result += " · \(conversion.sourceNote) · \(conversion.targetAmountPerSourceUnit.numerator)/\(conversion.targetAmountPerSourceUnit.denominator) \(conversion.targetUnit.rawValue)/\(conversion.sourceUnit.rawValue) · \(conversion.confirmedAt)"
-            }
-            return result
-        }
+        let demandQuantity = copy.demandQuantity
         func graphLines(_ graph: SharedDemandGraph, packs: [SharedDemandPackReview]) -> [String] {
             var result = [w("Food revision: ", "Revisión de alimentos: ") + String(graph.revision)]
             for contribution in graph.contributions {
@@ -361,8 +400,10 @@ extension SharedHistoryArchiveAdapter {
             case let .bounded(low, high, reason): lines.append(money(low) + " – " + money(high) + " · " + reason)
             case let .unknown(reason): lines.append(unknown + " · " + reason)
             }
-            lines.append([price.store, price.branch, price.channel.rawValue, price.mode.rawValue, price.eligibility].joined(separator: " · "))
-            if let pack = price.usablePack { lines.append(pack.originalLiteral + " · \(pack.amount.numerator)/\(pack.amount.denominator) \(pack.unit.rawValue)") }
+            let channel = HistoryCopy.channel(price.channel.rawValue, bundle: copy.bundle)
+            let mode = HistoryCopy.mode(price.mode.rawValue, bundle: copy.bundle)
+            lines.append([price.store, price.branch, channel, mode, price.eligibility].joined(separator: " · "))
+            if let pack = price.usablePack { lines.append(pack.originalLiteral + " · " + copy.fraction(pack.amount.numerator, pack.amount.denominator, unit: pack.unit.rawValue)) }
             lines.append(price.sourceText + " · " + price.sourceLocale)
         }
         return lines.joined(separator: "\n")

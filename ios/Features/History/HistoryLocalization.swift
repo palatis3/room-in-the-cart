@@ -23,31 +23,34 @@ enum HistoryCopy {
     static func shop(_ value: HistoryOwnedShop) -> String {
         HistoryCopy.text("Assigned shop") + " · " + date(value.createdAt) + " · " + phase(value.phase) + " · " + String(value.shopId.suffix(8))
     }
-    static func phase(_ value: String) -> String {
-        switch value {
-        case "draft": return HistoryCopy.text("Draft")
-        case "frozen": return HistoryCopy.text("Frozen")
-        case "closed": return HistoryCopy.text("Closed")
-        case "placed": return HistoryCopy.text("Placed")
-        default: return HistoryCopy.text("Assigned shop")
+    static func phase(_ value: String, bundle: Bundle = .main) -> String {
+        let key = switch value {
+        case "draft": "Draft"
+        case "frozen": "Frozen"
+        case "closed": "Closed"
+        case "placed": "Placed"
+        default: "Assigned shop"
         }
+        return bundle.localizedString(forKey: key, value: key, table: "History")
     }
-    static func channel(_ value: String) -> String {
-        switch value {
-        case "storeShelf": return HistoryCopy.text("Store shelf")
-        case "warehouse": return HistoryCopy.text("Warehouse")
-        case "retailerWebsite": return HistoryCopy.text("Retailer website")
-        case "retailerApp": return HistoryCopy.text("Retailer app")
-        case "other": return HistoryCopy.text("Other channel")
-        default: return HistoryCopy.text("Unspecified channel")
+    static func channel(_ value: String, bundle: Bundle = .main) -> String {
+        let key = switch value {
+        case "storeShelf": "Store shelf"
+        case "warehouse": "Warehouse"
+        case "retailerWebsite": "Retailer website"
+        case "retailerApp": "Retailer app"
+        case "other": "Other channel"
+        default: "Unspecified channel"
         }
+        return bundle.localizedString(forKey: key, value: key, table: "History")
     }
-    static func mode(_ value: String) -> String {
-        switch value {
-        case "pickup": return HistoryCopy.text("Pickup")
-        case "delivery": return HistoryCopy.text("Delivery")
-        default: return HistoryCopy.text("In store")
+    static func mode(_ value: String, bundle: Bundle = .main) -> String {
+        let key = switch value {
+        case "pickup": "Pickup"
+        case "delivery": "Delivery"
+        default: "In store"
         }
+        return bundle.localizedString(forKey: key, value: key, table: "History")
     }
     static func unit(_ value: String) -> String {
         switch value {

@@ -140,8 +140,19 @@ final class SharedRecordArchiveTests: XCTestCase {
         XCTAssertEqual(first.insertedCount, 1); XCTAssertEqual(second.insertedCount, 0)
         XCTAssertEqual(first.records.first?.id, second.records.first?.id)
         XCTAssertEqual(try SharedHistoryArchiveAdapter.validate(record), source.record)
+        let appLocale = Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en")
+        XCTAssertEqual(try SharedHistoryArchiveAdapter.readable(record), try SharedHistoryArchiveAdapter.readable(record, locale: appLocale))
         for locale in ["en_US", "es_US"] {
             let text = try SharedHistoryArchiveAdapter.readable(record, locale: Locale(identifier: locale))
+            let spanish = locale == "es_US"
+            XCTAssertTrue(text.contains(spanish ? "Borrador · Cesta creada" : "Draft · Basket created"))
+            XCTAssertTrue(text.contains(spanish ? "Fijada · Cesta fijada" : "Frozen · Basket frozen"))
+            XCTAssertTrue(text.contains(spanish ? "Realizada · Pedido realizado" : "Placed · Order placed"))
+            XCTAssertTrue(text.contains(spanish ? "Alcance / límite: compra completa / USD 38.00 · compra completa" : "Scope / cap: whole checkout / USD 38.00 · whole checkout"))
+            XCTAssertTrue(text.contains(spanish ? "Fictional market · Main · Estante de la tienda · Recogida" : "Fictional market · Main · Store shelf · Pickup"))
+            XCTAssertTrue(text.contains(spanish ? "8 wraps · 8/1 unidades" : "8 wraps · 8/1 units"))
+            XCTAssertTrue(text.contains(spanish ? "10 earlier-pickup wraps (10/1 unidades)" : "10 earlier-pickup wraps (10/1 units)"))
+            XCTAssertEqual(record.nativePayload, try source.record.independentData())
             XCTAssertTrue(text.contains(source.record.cookCopies[0].text))
             XCTAssertTrue(text.contains(source.record.decisions[0].decision))
             for lot in stock.lots { XCTAssertTrue(text.contains(lot.foodName)) }
@@ -270,10 +281,46 @@ final class SharedRecordArchiveTests: XCTestCase {
         let value = try record()
         let english = try SharedRecordArchiveAdapter.readable(value, locale: Locale(identifier: "en_US"))
         let spanish = try SharedRecordArchiveAdapter.readable(value, locale: Locale(identifier: "es_US"))
+        let appLocale = Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en")
+        XCTAssertEqual(try SharedRecordArchiveAdapter.readable(value), try SharedRecordArchiveAdapter.readable(value, locale: appLocale))
         XCTAssertTrue(english.contains("Unknown lunch wraps")); XCTAssertTrue(english.contains("Unbound; not available as free supply"))
         XCTAssertTrue(spanish.contains("Unknown lunch wraps")); XCTAssertTrue(spanish.contains("Sin determinar"))
         XCTAssertTrue(spanish.contains("Exact family restriction"))
         XCTAssertFalse(english.contains("authorityEpoch")); XCTAssertFalse(spanish.contains("previewId"))
+    }
+
+    @MainActor func testReadableExportLocalizesRecordedConversionButPreservesSourceWords() throws {
+        var archive = try record()
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(archive.nativePayload)) as? [String: Any])
+        var food = try XCTUnwrap(object["food"] as? [String: Any])
+        var review = try XCTUnwrap(food["packReview"] as? [String: Any])
+        var packs = try XCTUnwrap(review["values"] as? [[String: Any]])
+        var quantity = try XCTUnwrap(packs[0]["usablePerPack"] as? [String: Any])
+        for (unit, literal, enUnits, esUnits, enUnit, esUnit) in [
+            ("cup", "3 cups as entered", "cups", "tazas", "cup", "taza"),
+            ("fluidOunce", "3 fl oz as entered", "fl oz", "onzas líquidas", "fl oz", "onza líquida")
+        ] {
+            quantity["unit"] = unit
+            quantity["originalLiteral"] = literal
+            quantity["confirmedConversion"] = [
+                "sourceUnit": unit, "targetUnit": "gram",
+                "targetAmountPerSourceUnit": ["numerator": "120", "denominator": "1"],
+                "sourceNote": "weighed at home", "confirmedAt": "2026-11-10T12:00:00.000Z"
+            ]
+            packs[0]["usablePerPack"] = quantity
+            review["values"] = packs
+            food["packReview"] = review
+            object["food"] = food
+            let source = try SharedRecordWire.independentRecord(from: JSONSerialization.data(withJSONObject: object))
+            archive.nativePayload = try source.independentData()
+            let en = try SharedRecordArchiveAdapter.readable(archive, locale: Locale(identifier: "en_US"))
+            let es = try SharedRecordArchiveAdapter.readable(archive, locale: Locale(identifier: "es_US"))
+            XCTAssertTrue(en.contains("\(literal) (3/1 \(enUnits)) · weighed at home · 120/1 grams / 1 \(enUnit) · 2026-11-10T12:00:00.000Z"))
+            XCTAssertTrue(es.contains("\(literal) (3/1 \(esUnits)) · weighed at home · 120/1 gramos / 1 \(esUnit) · 2026-11-10T12:00:00.000Z"))
+            XCTAssertTrue(en.contains("Tracked subtotal: Apples · 3/1 units"))
+            XCTAssertTrue(es.contains("Subtotal registrado: Apples · 3/1 unidades"))
+            XCTAssertEqual(archive.nativePayload, try source.independentData())
+        }
     }
 
 }
