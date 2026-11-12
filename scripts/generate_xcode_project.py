@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 IOS = ROOT / "ios"
 PROJECT = IOS / "RoomInTheCart.xcodeproj"
 OBJECTS = {}
+STAGING_SUITES = {"unit": "StagingServiceTests", "ui": "StagingHelpUITests"}
 
 
 def ident(key):
@@ -56,6 +57,11 @@ def config_list(key, base, is_project=False):
             settings["RITC_SURFACE_URL_SCHEME"] = "roominthecart" + ("-" + name.lower() if name != "Release" else "")
         if is_project:
             settings.update(ONLY_ACTIVE_ARCH="YES" if name != "Release" else "NO", SWIFT_OPTIMIZATION_LEVEL="-Onone" if name != "Release" else "-O", DEBUG_INFORMATION_FORMAT="dwarf" if name != "Release" else "dwarf-with-dsym", ENABLE_TESTABILITY="YES" if name != "Release" else "NO", SWIFT_ACTIVE_COMPILATION_CONDITIONS="$(inherited) " + {"Debug": "DEBUG", "Staging": "STAGING", "Release": "RELEASE"}[name])
+        elif name == "Staging" and key in STAGING_SUITES:
+            # The staging scheme runs its live service and Safari smoke suites.
+            # Debug-only package fixtures require modules compiled for testing.
+            settings["EXCLUDED_SOURCE_FILE_NAMES"] = "*.swift"
+            settings["INCLUDED_SOURCE_FILE_NAMES"] = STAGING_SUITES[key] + ".swift"
         elif key == "app":
             settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.roominthecart.app" + {"Debug": ".debug", "Staging": ".staging", "Release": ""}[name]
             settings["INFOPLIST_KEY_CFBundleDisplayName"] = "Room in the Cart"
@@ -121,10 +127,9 @@ def scheme(name, config, target_ids, local_storekit=False, performance=False):
     distribution_build = "Staging" if config == "Staging" else "Release"
     test_attributes = f'buildConfiguration="{test_build}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"'
     if config == "Staging":
-        smoke_suites = {"unit": "StagingServiceTests", "ui": "StagingHelpUITests"}
         test_configuration = '<Testables>' + "".join(
             '<TestableReference skipped="NO">' + ref(key, product) +
-            f'<SelectedTests><Test Identifier="{smoke_suites[key]}"/></SelectedTests></TestableReference>'
+            f'<SelectedTests><Test Identifier="{STAGING_SUITES[key]}"/></SelectedTests></TestableReference>'
             for key, product in target_ids
         ) + '</Testables>'
     if performance:
