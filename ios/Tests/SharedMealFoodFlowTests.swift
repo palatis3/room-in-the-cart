@@ -112,6 +112,14 @@ import HouseholdClient
         XCTAssertEqual(actual.confirmedConversion?.sourceNote, "New measurement: one cup is 120 grams")
         XCTAssertTrue(request.change.edges.isEmpty); XCTAssertTrue(request.change.removeEdgeIds.isEmpty)
         XCTAssertEqual(draft.mealRelationships[0].edge, page.graph?.edges[0]); XCTAssertEqual(draft.mealRelationships[0].decision, .keep)
+        draft.sources[0].fixedConversion.rate = "361/3"
+        draft.sources[0].fixedConversion.note = "Three cups weighed 361 grams"
+        let fractional = try draft.request(page: page, shop: shop, at: at, mealContext: context)
+        let converted = try XCTUnwrap(fractional.change.contributions[0].quantity)
+        XCTAssertEqual(converted.confirmedConversion?.targetAmountPerSourceUnit, try .init(numerator: 361, denominator: 3))
+        XCTAssertEqual(converted.confirmedConversion?.sourceNote, "Three cups weighed 361 grams")
+        XCTAssertEqual(converted.originalLiteral, actual.originalLiteral)
+        XCTAssertEqual(draft.sources[0].fixedQuantity, authoritative)
     }
     func testFixedConversionRejectsInvalidBasisAndNeverUnlocksOtherFixedFacts() throws {
         let (page, shop, context, original) = try conversionFixture()

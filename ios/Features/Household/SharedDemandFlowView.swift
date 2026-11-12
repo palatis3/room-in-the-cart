@@ -298,7 +298,7 @@ private struct SharedDemandFlowContent: View {
             Toggle(sd("Use a confirmed conversion between different kinds of units"), isOn: value.useConversion)
             if value.wrappedValue.useConversion {
                 unitPicker(sd("Conversion target unit"), selection: value.conversionUnit)
-                workingTextField(sd("Target amount for one source unit"), text: value.conversionRate).focused($editingText, equals: prefix + ".conversionRate").keyboardType(.decimalPad)
+                workingTextField(sd("Target amount for one source unit"), text: value.conversionRate).focused($editingText, equals: prefix + ".conversionRate").keyboardType(.numbersAndPunctuation)
                 workingTextField(sd("Conversion evidence"), text: value.conversionNote, axis: .vertical).focused($editingText, equals: prefix + ".conversionNote")
                 Text(sd("Only use a conversion you have confirmed for this food. No density is assumed."))
             }
@@ -308,7 +308,7 @@ private struct SharedDemandFlowContent: View {
         Toggle(sd("Use a confirmed conversion between different kinds of units"), isOn: value.enabled).accessibilityIdentifier("sharedFood." + prefix + ".enabled")
         if value.wrappedValue.enabled {
             unitPicker(sd("Conversion target unit"), selection: value.targetUnit)
-            workingTextField(sd("Target amount for one source unit"), text: value.rate).focused($editingText, equals: prefix + ".rate").keyboardType(.decimalPad).accessibilityIdentifier("sharedFood." + prefix + ".rate")
+            workingTextField(sd("Target amount for one source unit"), text: value.rate).focused($editingText, equals: prefix + ".rate").keyboardType(.numbersAndPunctuation).accessibilityIdentifier("sharedFood." + prefix + ".rate")
             workingTextField(sd("Conversion evidence"), text: value.note, axis: .vertical).focused($editingText, equals: prefix + ".note").accessibilityIdentifier("sharedFood." + prefix + ".note")
             Text(sd("Only use a conversion you have confirmed for this food. No density is assumed."))
         }

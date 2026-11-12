@@ -215,6 +215,13 @@ import HouseholdClient
         let quantity = try XCTUnwrap(value.quantity())
         XCTAssertEqual(quantity.originalLiteral, "2")
         XCTAssertEqual(quantity.confirmedConversion?.targetAmountPerSourceUnit.numerator, 120)
+        value.conversionRate = "1/3"
+        let measured = try XCTUnwrap(value.quantity())
+        XCTAssertEqual(measured.confirmedConversion?.targetAmountPerSourceUnit, try .init(numerator: 1, denominator: 3))
+        XCTAssertEqual(measured.originalLiteral, quantity.originalLiteral)
+        value.conversionRate = "1/0"
+        XCTAssertThrowsError(try value.quantity())
+        value.conversionRate = "120"
         value.conversionUnit = .liter
         XCTAssertThrowsError(try value.quantity(), "Same-dimension conversions belong to the canonical table")
         value.conversionUnit = .gram; value.conversionNote = ""

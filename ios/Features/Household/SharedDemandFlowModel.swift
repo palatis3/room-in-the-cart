@@ -23,7 +23,7 @@ struct SharedFoodAmountDraft: Equatable {
         } else { rational = try Rational(decimal: text.replacingOccurrences(of: ",", with: ".")) }
         var conversion: SharedDemandConversion?
         if useConversion {
-            let rate = try Rational(decimal: conversionRate.replacingOccurrences(of: ",", with: "."))
+            let rate = try DinnerEntry.rational(conversionRate)
             conversion = .init(sourceUnit: unit, targetUnit: conversionUnit,
                 targetAmountPerSourceUnit: try .init(numerator: rate.numerator, denominator: rate.denominator),
                 sourceNote: conversionNote, confirmedAt: ISO8601DateFormatter().string(from: Date()))
@@ -58,7 +58,7 @@ struct SharedFoodFixedConversionDraft: Equatable {
               let from = UnitOfMeasure(rawValue: quantity.unit.rawValue), let line = UnitOfMeasure(rawValue: lineUnit.rawValue),
               let target = UnitOfMeasure(rawValue: targetUnit.rawValue), from.dimension != line.dimension,
               target.dimension == line.dimension, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
-        let ratio = try Rational(decimal: rate.replacingOccurrences(of: ",", with: "."))
+        let ratio = try DinnerEntry.rational(rate)
         quantity.confirmedConversion = .init(sourceUnit: quantity.unit, targetUnit: targetUnit,
             targetAmountPerSourceUnit: try .init(numerator: ratio.numerator, denominator: ratio.denominator), sourceNote: note, confirmedAt: at)
         try quantity.validate(); return quantity
