@@ -5,11 +5,8 @@ import RecordArchive
 struct RecordsToolsView: View {
     @ObservedObject var model: RecordsToolsModel
     var recipeLibraryOnly = false
-    @State private var importing = false
-    @State private var importingRecipes = false
     @State private var exporting = false
     @State private var presentedSaveID: UUID?
-    @State private var showManualRecipe = false
     @State private var acknowledgedPrivate = false
     @State private var savedKey = false
     @State private var acknowledgedMedia = false
@@ -75,7 +72,10 @@ struct RecordsToolsView: View {
                 }
             }
             if recipeLibraryOnly {
-                Section { recipeFileButton }
+                Section {
+                    manualRecipeButton
+                    recipeFileButton
+                }
             } else {
                 currentSources
                 exportSection
@@ -143,10 +143,12 @@ struct RecordsToolsView: View {
         .onChange(of: model.selectedIDs) { _, _ in acknowledgedPrivate = false; acknowledgedMedia = false; savedKey = false; model.dismissPreparedFile() }
         .onChange(of: model.selectedMediaIDs) { _, _ in acknowledgedMedia = false; model.dismissPreparedFile() }
         .onChange(of: model.recoveryKey) { _, _ in savedKey = false }
-        .fileImporter(isPresented: $importing, allowedContentTypes: importingRecipes ? [.json, .data] : [.json, .roomRecovery, .roomHelper, .data], allowsMultipleSelection: false) { result in
-            switch result {
-            case let .success(urls): if let url = urls.first { Task { await model.importFile(url, recipes: importingRecipes) } }
-            case let .failure(error): model.reportFileError(error)
+        .background {
+            if let presentation = model.importPresentation, presentation.entry != .manualRecipe {
+                RecordsImportFilePicker(presentation: presentation) { result in
+                    Task { await model.finishFileImport(result, from: presentation) }
+                }
+                .id(presentation.id)
             }
         }
         .fileExporter(isPresented: $exporting, document: model.preparedDocument,
@@ -156,10 +158,16 @@ struct RecordsToolsView: View {
                       }, onCancellation: { [presentedSaveID] in
                           finishFileSave(presentedSaveID, .failure(CancellationError()))
                       })
-        .sheet(isPresented: $showManualRecipe) { ManualRecipeEntryView { recipe in
-            showManualRecipe = false
-            Task { await model.stageManualRecipe(recipe) }
-        } }
+        .sheet(item: manualRecipePresentation) { presentation in
+            ManualRecipeEntryView { recipe in
+                let staged = await model.stageManualRecipe(recipe, from: presentation)
+                if staged { return nil }
+                if model.error == .invalidRecipe {
+                    return recordsText("Check the recipe text. The optional source must be an http or https web address without a username or password.")
+                }
+                return errorMessage(model.error ?? .unavailable)
+            }
+        }
         .alert(deletion?.title ?? "", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), presenting: deletion) { deletion in
             Button(recordsText("Cancel"), role: .cancel) { self.deletion = nil }
             Button(recordsText("Delete from this iPhone"), role: .destructive) {
@@ -290,6 +298,18 @@ struct RecordsToolsView: View {
             }
         }
     }
+    private var manualRecipePresentation: Binding<RecordsToolsModel.ImportPresentation?> {
+        let presentation = model.importPresentation
+        return Binding(get: {
+            model.importPresentation?.entry == .manualRecipe ? model.importPresentation : nil
+        }, set: { value in
+            if value == nil, let presentation { model.dismissImport(presentation) }
+        })
+    }
+    private var manualRecipeButton: some View {
+        Button(recordsText("Add recipe and source manually")) { model.beginImport(.manualRecipe) }
+            .accessibilityIdentifier("records.addManualRecipe")
+    }
     private var recipeFileButton: some View {
         Button(recordsText("Choose Recipe JSON-LD file…")) { chooseImportFile(recipes: true) }
             .accessibilityIdentifier("records.chooseRecipeFile")
@@ -300,7 +320,7 @@ struct RecordsToolsView: View {
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
             Button(recordsText("Choose recovery or helper file…")) { chooseImportFile(recipes: false) }.accessibilityIdentifier("records.chooseFile")
             recipeFileButton
-            Button(recordsText("Add recipe and source manually")) { showManualRecipe = true }
+            manualRecipeButton
             Text(recordsText("Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved. Source links are attribution only; this app does not fetch the website."))
                 .font(.footnote).foregroundStyle(.secondary)
         }
@@ -473,14 +493,13 @@ struct RecordsToolsView: View {
         Task { await model.finishFileSave(id, result: result, at: date) }
     }
     private func chooseImportFile(recipes: Bool) {
-        importingRecipes = recipes
+        guard let presentation = model.beginImport(recipes ? .recipeFile : .recordsFile) else { return }
         #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
         if let uiTestFiles {
-            if let url = uiTestFiles.selectedURL() { Task { await model.importFile(url, recipes: recipes) } }
-            return
+            if let url = uiTestFiles.selectedURL() { Task { await model.finishFileImport(.success(url), from: presentation) } }
+            else { model.dismissImport(presentation) }
         }
         #endif
-        importing = true
     }
     private func recordKindLabel(_ kind: ArchiveRecordKind) -> String {
         switch kind {
@@ -573,9 +592,36 @@ private extension ArchiveRecord {
     var selfSelectionID: RecordsSelectionID { RecordsToolsModel.selectionID(self) }
 }
 
+private struct RecordsImportFilePicker: View {
+    let presentation: RecordsToolsModel.ImportPresentation
+    let completion: (Result<URL, Error>) -> Void
+    @State private var presented = false
+    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    @Environment(\.recordsMediaUITestFiles) private var uiTestFiles
+    #endif
+
+    var body: some View {
+        Color.clear
+            .fileImporter(isPresented: $presented, allowedContentTypes: presentation.entry == .recipeFile
+                          ? [.json, .data] : [.json, .roomRecovery, .roomHelper, .data], allowsMultipleSelection: false,
+                          onCompletion: { result in
+                completion(result.flatMap { $0.first.map(Result.success) ?? .failure(CancellationError()) })
+            }, onCancellation: { completion(.failure(CancellationError())) })
+            .onAppear {
+                #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+                if uiTestFiles != nil { return }
+                #endif
+                presented = true
+            }
+    }
+}
+
 private struct ManualRecipeEntryView: View {
     @Environment(\.dismiss) private var dismiss
-    let submit: (ImportedRecipe) -> Void
+    let submit: (ImportedRecipe) async -> String?
+    @State private var submitting = false
+    @State private var submissionError: String?
+    @AccessibilityFocusState private var errorFocused: Bool
     @State private var title = ""
     @State private var servings = ""
     @State private var ingredients = ""
@@ -593,12 +639,31 @@ private struct ManualRecipeEntryView: View {
                 TextField(recordsText("Your notes"), text: $notes, axis: .vertical).lineLimit(3...12)
                 Text(recordsText("Your meal remains editable even if its source website disappears. The URL does not fetch or import a web page."))
                     .font(.footnote)
+                if let submissionError {
+                    Text(submissionError)
+                        .foregroundStyle(.red)
+                        .accessibilityFocused($errorFocused)
+                        .accessibilityIdentifier("records.manualRecipeError")
+                }
                 Button(recordsText("Review recipe")) {
-                    submit(ImportedRecipe(title: title, yieldText: servings, ingredients: ingredients.components(separatedBy: .newlines).filter { !$0.isEmpty }, steps: steps.components(separatedBy: .newlines).filter { !$0.isEmpty }, sourceURL: source.isEmpty ? nil : source, notes: notes))
+                    guard !submitting else { return }
+                    submitting = true
+                    let recipe = ImportedRecipe(title: title, yieldText: servings,
+                        ingredients: ingredients.components(separatedBy: .newlines).filter { !$0.isEmpty },
+                        steps: steps.components(separatedBy: .newlines).filter { !$0.isEmpty },
+                        sourceURL: source.isEmpty ? nil : source, notes: notes)
+                    Task {
+                        submissionError = await submit(recipe)
+                        submitting = false
+                        if submissionError == nil { dismiss() }
+                        else { errorFocused = true }
+                    }
                 }.disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .navigationTitle(recordsText("Save a recipe"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Cancel")) { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Cancel")) { dismiss() }.disabled(submitting) } }
+            .disabled(submitting)
         }
+        .interactiveDismissDisabled(submitting)
     }
 }

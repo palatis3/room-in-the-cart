@@ -279,12 +279,50 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         return ReadableArchive.heading(record, locale: recordsInterfaceLocale) + "\n" + body
     }
 
+    enum ImportEntry { case recordsFile, recipeFile, manualRecipe }
+    struct ImportPresentation: Identifiable {
+        let id = UUID()
+        let entry: ImportEntry
+        fileprivate let authorize: Authorization
+    }
+    @Published private(set) var importPresentation: ImportPresentation?
+
+    @discardableResult func beginImport(_ entry: ImportEntry) -> ImportPresentation? {
+        guard !busy else { return nil }
+        do {
+            let presentation = ImportPresentation(entry: entry, authorize: try authorization())
+            importPresentation = presentation
+            return presentation
+        } catch { fail(error); return nil }
+    }
+    func dismissImport(_ presentation: ImportPresentation) {
+        if importPresentation?.id == presentation.id { importPresentation = nil }
+    }
+    private func accepts(_ presentation: ImportPresentation) -> Bool {
+        guard importPresentation?.id == presentation.id else { return false }
+        guard presentation.authorize() else { invalidateForSourceErasure(); return false }
+        return true
+    }
+    func finishFileImport(_ result: Result<URL, Error>, from presentation: ImportPresentation) async {
+        guard presentation.entry != .manualRecipe, accepts(presentation) else { return }
+        dismissImport(presentation)
+        switch result {
+        case .success(let url):
+            await importFile(url, recipes: presentation.entry == .recipeFile, authorize: presentation.authorize)
+        case .failure(let error):
+            if !Self.fileSelectionCancelled(error) { fail(error, reveal: true) }
+        }
+    }
+
     func importFile(_ url: URL, recipes: Bool) async {
+        guard let presentation = beginImport(recipes ? .recipeFile : .recordsFile) else { return }
+        await finishFileImport(.success(url), from: presentation)
+    }
+    private func importFile(_ url: URL, recipes: Bool, authorize: @escaping Authorization) async {
         guard !busy else { return }
         busy = true; review = nil; reviewAuthorization = nil; recipeReport = nil; error = nil
         defer { busy = false }
         do {
-            let authorize = try authorization()
             let data = try await RecordsFileDocument.readPickedBytes(at: url)
             try Task.checkCancellation()
             try requireAuthorization(authorize)
@@ -316,15 +354,19 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         } catch { fail(error, reveal: true) }
     }
-    func stageManualRecipe(_ recipe: ImportedRecipe) async {
-        guard !busy else { return }
+    func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async -> Bool {
+        guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { return false }
         busy = true; error = nil; review = nil; recipeReport = nil
         defer { busy = false }
         do {
-            let authorize = try authorization()
+            let authorize = presentation.authorize
             let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
             try await stage(ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: recipe.id), authorize: authorize)
-        } catch { fail(error) }
+            return true
+        } catch {
+            fail(error)
+            return false
+        }
     }
     private var reviewAuthorization: Authorization?
     private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
@@ -477,6 +519,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     /// Clear cached disclosures and pending imports before retiring a source. A new
     /// snapshot can only repopulate them after composition rechecks tombstones.
     func invalidateForSourceErasure() {
+        importPresentation = nil
         recoveredOpenGeneration = UUID()
         dismissPreparedFile(); recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
@@ -537,9 +580,6 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     }
     private func requireAuthorization(_ authorize: Authorization) throws {
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
-    }
-    func reportFileError(_ error: Error) {
-        if !Self.fileSelectionCancelled(error) { fail(error, reveal: true) }
     }
     private func publishOutcome(_ text: String, reopenedCopyIDs: Set<String> = []) {
         error = nil

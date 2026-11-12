@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check the recipe text. The optional source must be an http or https web address without a username or password.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the recipe text. The optional source must be an http or https web address without a username or password."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto de la receta. La fuente opcional debe ser una dirección web que empiece por http o https, sin nombre de usuario ni contraseña."
+          }
+        }
+      }
+    },
     "Saved recipes": {
       "extractionState": "manual",
       "localizations": {
