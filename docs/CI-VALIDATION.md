@@ -63,6 +63,12 @@ release requirements and known failures remain visible.
   that same system evidence again. Routine assertion failures
   should not trigger a ten-minute simulator diagnostic collection. Hosted CI
   keeps its existing failure diagnostics.
+- For a UI timeout, find the first long wait in the test's activity log and
+  inspect its screenshot. In the November 12 checkout and recipe cases, typing
+  into the next visible field before dismissing the keyboard avoided repeated
+  minute-long animation waits. Verify the entered values and the saved result.
+  When checking that a sheet closed, query its identified toolbar button and
+  verify the underlying screen. Keep its existing deadline and assertions.
 - Batch related fixes before one integration run. Run broad regression on the
   combined merge candidate and applicable release checks before distribution;
   do not require that full batch for every intermediate commit.
