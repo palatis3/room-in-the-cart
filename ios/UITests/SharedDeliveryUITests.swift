@@ -49,7 +49,7 @@ import XCTest
             tap(app.buttons[spanishLargestText ? "Editar Entered soup packs" : "Edit Entered soup packs"])
             let packs=app.textFields["sharedOrder.packs"]
             tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
-            tap(app.buttons[done])
+            XCTAssertEqual(packs.value as? String, "3")
             tap(app.buttons["sharedOrder.keepLine"])
             let reference=app.textFields["sharedOrder.reference"]
             tap(reference); reference.typeText("Native market ABC-51")
