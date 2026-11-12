@@ -318,6 +318,51 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(saved.isEmpty)
     }
 
+    @MainActor func testIdenticalBatchReopensOnlyItsExistingCopyIDsAmongMatchingTitles() async throws {
+        let directory = try temporaryDirectory()
+        let registryURL = directory.appendingPathComponent("registry.json")
+        let registry = try RecoveryRegistry(url: registryURL)
+        let first = try comparison(), second = try comparison(), unrelated = try comparison()
+        XCTAssertEqual(first.title, second.title)
+        XCTAssertEqual(first.title, unrelated.title)
+        let existing = try ArchiveCodec.make(records: [first, unrelated], kind: .helperShop, origin: "fixture", revision: "initial")
+        _ = try await registry.apply(registry.review(existing))
+        let file = directory.appendingPathComponent("batch.json")
+        let batch = try ArchiveCodec.make(records: [first, second], kind: .helperShop, origin: "fixture", revision: "batch")
+        try ArchiveCodec.encode(batch).write(to: file)
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in },
+                                    openRecovered: { _ in XCTFail("Helper copies open in the disclosure") })
+
+        await model.importFile(file, recipes: false)
+        await model.applyReviewedImport()
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.lastImportIDs.count, 1)
+        XCTAssertTrue(model.reopenedCopyIDs.isEmpty)
+        let saved = try await registry.refreshList()
+        let expected = Set(saved.filter { $0.record.id == first.id || $0.record.id == second.id }.map(\.id))
+        XCTAssertEqual(saved.count, 3)
+        XCTAssertEqual(expected.count, 2)
+        let before = try Data(contentsOf: registryURL)
+
+        await model.importFile(file, recipes: false)
+        await model.applyReviewedImport()
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.reopenedCopyIDs, expected)
+        XCTAssertTrue(model.lastImportIDs.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: registryURL), before)
+        model.invalidateForSourceErasure()
+        XCTAssertTrue(model.reopenedCopyIDs.isEmpty)
+        XCTAssertTrue(model.recoveredRecords.isEmpty)
+
+        let empty = try ArchiveCodec.make(records: [], kind: .helperShop, origin: "fixture", revision: "empty")
+        try ArchiveCodec.encode(empty).write(to: file)
+        await model.importFile(file, recipes: false)
+        await model.applyReviewedImport()
+        XCTAssertEqual(model.status, recordsText("This file contains no records to recover."))
+        XCTAssertTrue(model.reopenedCopyIDs.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: registryURL), before)
+    }
+
     @MainActor func testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome() async throws {
         let directory = try temporaryDirectory()
         let registryURL = directory.appendingPathComponent("manifest.json")

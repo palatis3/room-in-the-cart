@@ -29,7 +29,13 @@ struct RecordsMediaSelectionID: Hashable {
     @Published private(set) var review: RecoveryReview?
     @Published private(set) var recipeReport: RecipeImportReport?
     @Published private(set) var busy = false
-    @Published private(set) var status: String?
+    private struct ActionStatus {
+        let text: String
+        var reopenedCopyIDs: Set<String> = []
+    }
+    @Published private var actionStatus: ActionStatus?
+    var status: String? { actionStatus?.text }
+    var reopenedCopyIDs: Set<String> { actionStatus?.reopenedCopyIDs ?? [] }
     /// A completed model action supplies a new focus target; view state cannot
     /// announce success before the underlying operation has finished.
     @Published private(set) var actionOutcomeID: UUID?
@@ -41,7 +47,7 @@ struct RecordsMediaSelectionID: Hashable {
         didSet {
             if recoveryKey != oldValue, preparedDocument?.kind == .recovery {
                 dismissPreparedFile()
-                status = nil
+                actionStatus = nil
             }
         }
     }
@@ -89,7 +95,7 @@ struct RecordsMediaSelectionID: Hashable {
     }
     func liveSharedAccessEnded() {
         liveSharedGeneration = UUID()
-        if preparedUsesLiveSharedRecords { dismissPreparedFile(); status = nil }
+        if preparedUsesLiveSharedRecords { dismissPreparedFile(); actionStatus = nil }
         var listing = sourceListing
         let retired = listing.liveSharedRecordIDs
         guard !retired.isEmpty else { return }
@@ -177,7 +183,7 @@ struct RecordsMediaSelectionID: Hashable {
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
             preparedName = name
             preparedDocument = document
-            status = recordsText("Your file is ready to review and save.")
+            actionStatus = ActionStatus(text: recordsText("Your file is ready to review and save."))
         } catch { fail(error, reveal: true) }
     }
     func importFile(_ url: URL, recipes: Bool) async {
@@ -234,7 +240,7 @@ struct RecordsMediaSelectionID: Hashable {
         try requireAuthorization(authorize)
         reviewAuthorization = authorize
         review = staged
-        status = nil
+        actionStatus = nil
     }
     private func validateRecord(_ record: ArchiveRecord) async throws {
         try RecordsMediaCodec.validate(record)
@@ -268,7 +274,15 @@ struct RecordsMediaSelectionID: Hashable {
             lastImportIDs = result.insertedCopyIDs
             self.review = nil; reviewAuthorization = nil; recipeReport = nil
             try await reloadListing(authorize: authorize)
-            publishOutcome(result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged."))
+            if result.records.isEmpty {
+                publishOutcome(recordsText("This file contains no records to recover."))
+            } else if result.insertedCount == 0 {
+                let copyIDs = Set(result.records.map(\.id))
+                guard copyIDs.isSubset(of: recoveredRecords.map(\.id)) else { throw ArchiveError.staleReview }
+                publishOutcome(recordsText("Opened the existing recovered copies. Nothing was duplicated."), reopenedCopyIDs: copyIDs)
+            } else {
+                publishOutcome(recordsText("Saved separate recovered copies. Your current work is unchanged."))
+            }
         } catch { fail(error) }
     }
     func undoImport() async {
@@ -348,7 +362,7 @@ struct RecordsMediaSelectionID: Hashable {
         busy = true; defer { busy = false }
         do { try await wholeLedgerDeletionAction() }
         catch LedgerDeletionError.pendingSave {
-            error = nil; status = recordsText("Retry or discard the pending shopping-list save before reviewing ledger deletion.")
+            error = nil; actionStatus = ActionStatus(text: recordsText("Retry or discard the pending shopping-list save before reviewing ledger deletion."))
         } catch { fail(error) }
     }
     /// Clear cached disclosures and pending imports before retiring a source. A new
@@ -357,7 +371,7 @@ struct RecordsMediaSelectionID: Hashable {
         recoveredOpenGeneration = UUID()
         dismissPreparedFile(); recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
-        sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; status = nil; actionOutcomeID = nil; error = nil
+        sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; actionStatus = nil; actionOutcomeID = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil; preparedUsesLiveSharedRecords = false }
     private func authorization() throws -> Authorization {
@@ -368,12 +382,14 @@ struct RecordsMediaSelectionID: Hashable {
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
     }
     func reportFileError(_ error: Error) { fail(error, reveal: true) }
-    private func publishOutcome(_ text: String) {
-        error = nil; status = text; actionOutcomeID = UUID()
+    private func publishOutcome(_ text: String, reopenedCopyIDs: Set<String> = []) {
+        error = nil
+        actionStatus = ActionStatus(text: text, reopenedCopyIDs: reopenedCopyIDs)
+        actionOutcomeID = UUID()
     }
     private func fail(_ error: Error, reveal: Bool = false) {
         self.error = error as? ArchiveError ?? .unavailable
-        status = nil; actionOutcomeID = reveal ? UUID() : nil
+        actionStatus = nil; actionOutcomeID = reveal ? UUID() : nil
     }
 }
 

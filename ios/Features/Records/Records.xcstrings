@@ -1989,6 +1989,23 @@
         }
       }
     },
+    "This file contains no records to recover.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file contains no records to recover."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo no contiene registros para recuperar."
+          }
+        }
+      }
+    },
     "This file exceeds the supported size or complexity. Your records are unchanged.": {
       "extractionState": "manual",
       "localizations": {

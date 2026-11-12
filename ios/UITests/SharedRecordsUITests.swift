@@ -102,7 +102,10 @@ import XCTest
         XCTAssertEqual(element("fixture.sharedRecords.copyID").label, recoveredID)
         capture("S20 \(language) repeated import preserves one exact recovered copy")
 
-        tap(app.buttons.matching(identifier: "records.recovered.Shared pickup").firstMatch)
+        let reopened = app.buttons.matching(identifier: "records.recovered.Shared pickup").firstMatch
+        XCTAssertTrue(reopened.waitForExistence(timeout: 12))
+        XCTAssertTrue(reopened.isHittable, "The identical retry must present its copy beside the result")
+        XCTAssertEqual(reopened.value as? String, text("Expanded", "Expandido"))
         assertLabel("records.recoveredSourceDate." + shop, equals: unknown)
         let recoveredDate = element("records.recoveryDate." + shop)
         reveal(recoveredDate, requiresHitTarget: false)

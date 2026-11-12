@@ -61,6 +61,9 @@ struct RecordsToolsView: View {
                     .accessibilityAddTraits(.updatesFrequently)
                     .accessibilityFocused($actionResultFocused)
                     .id("records.actionResult")
+                    ForEach(model.recoveredRecords.filter { model.reopenedCopyIDs.contains($0.id) }) { saved in
+                        recoveredCopy(saved)
+                    }
                 }
             }
             currentSources
@@ -97,6 +100,7 @@ struct RecordsToolsView: View {
         }
         .task(id: model.actionOutcomeID) {
             guard let outcomeID = model.actionOutcomeID else { return }
+            recoveredExpandedIDs.formUnion(model.reopenedCopyIDs)
             actionResultFocused = false
             await Task.yield()
             guard !Task.isCancelled, model.actionOutcomeID == outcomeID else { return }
@@ -285,43 +289,47 @@ struct RecordsToolsView: View {
                 .accessibilityFocused($importReviewFocused)
         }
     }
-    private var recoveredSection: some View {
-        Section(recordsText("Recovered copies and saved recipes")) {
-            if model.recoveredRecords.isEmpty { Text(recordsText("No recovered copies yet.")) }
-            ForEach(model.recoveredRecords) { saved in
-                DisclosureGroup(recordsTitle(saved.record),
-                    isExpanded: Binding(get: { recoveredExpandedIDs.contains(saved.id) }, set: { expanded in
-                        if expanded { recoveredExpandedIDs.insert(saved.id) } else { recoveredExpandedIDs.remove(saved.id) }
-                    })) {
-                    Text(saved.record.origin).font(.caption).textSelection(.enabled)
-                    if saved.record.kind == .sharedShop || saved.record.kind == .sharedHistory {
-                        Text(RecordsDatePresentation.sourceSavedAt(saved.record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveredSourceDate." + saved.record.id)
-                        Text(RecordsDatePresentation.recoveredAt(saved.recoveredAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveryDate." + saved.record.id)
-                    }
-                    Text(recordsText("Revision: ") + saved.record.revision).font(.caption).textSelection(.enabled)
-                    if let recipe = recipe(saved.record) {
-                        Text(recipe.yieldText)
-                        ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, text in Text(text) }
-                        ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, text in Text(text) }
-                        if !recipe.notes.isEmpty { Text(recipe.notes) }
-                        if let source = recipe.sourceURL { Text(source).textSelection(.enabled).font(.caption) }
-                        Button(recordsText("Open saved recipe")) { Task { await model.openRecovered(saved) } }
-                    } else if saved.record.nativePayload != nil {
-                        Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
-                    } else {
-                        Text(ReadableArchive.text([saved.record], owner: false)).textSelection(.enabled)
-                        Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
-                    }
-                    ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
-                    Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: recordsTitle(saved.record), source: nil, recovered: .copy(saved.id)) }
-                    Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
-                }
-                .disclosureGroupStyle(LabeledFormDisclosureStyle(
-                    label: recordsText("Recovered copy") + ": " + (recordsTitle(saved.record)),
-                    identifier: "records.recovered." + saved.record.title))
+    @ViewBuilder private var recoveredSection: some View {
+        let remaining = model.recoveredRecords.filter { !model.reopenedCopyIDs.contains($0.id) }
+        if model.recoveredRecords.isEmpty || !remaining.isEmpty || model.deleteUndo != nil {
+            Section(recordsText("Recovered copies and saved recipes")) {
+                if model.recoveredRecords.isEmpty { Text(recordsText("No recovered copies yet.")) }
+                ForEach(remaining) { saved in recoveredCopy(saved) }
+                if model.deleteUndo != nil { Button(recordsText("Undo recovered-copy deletion")) { Task { await model.undoRecoveredDeletion() } } }
             }
-            if model.deleteUndo != nil { Button(recordsText("Undo recovered-copy deletion")) { Task { await model.undoRecoveredDeletion() } } }
         }
+    }
+    private func recoveredCopy(_ saved: RecoveredRecord) -> some View {
+        DisclosureGroup(recordsTitle(saved.record),
+            isExpanded: Binding(get: { recoveredExpandedIDs.contains(saved.id) }, set: { expanded in
+                if expanded { recoveredExpandedIDs.insert(saved.id) } else { recoveredExpandedIDs.remove(saved.id) }
+            })) {
+            Text(saved.record.origin).font(.caption).textSelection(.enabled)
+            if saved.record.kind == .sharedShop || saved.record.kind == .sharedHistory {
+                Text(RecordsDatePresentation.sourceSavedAt(saved.record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveredSourceDate." + saved.record.id)
+                Text(RecordsDatePresentation.recoveredAt(saved.recoveredAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveryDate." + saved.record.id)
+            }
+            Text(recordsText("Revision: ") + saved.record.revision).font(.caption).textSelection(.enabled)
+            if let recipe = recipe(saved.record) {
+                Text(recipe.yieldText)
+                ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, text in Text(text) }
+                ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, text in Text(text) }
+                if !recipe.notes.isEmpty { Text(recipe.notes) }
+                if let source = recipe.sourceURL { Text(source).textSelection(.enabled).font(.caption) }
+                Button(recordsText("Open saved recipe")) { Task { await model.openRecovered(saved) } }
+            } else if saved.record.nativePayload != nil {
+                Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
+            } else {
+                Text(ReadableArchive.text([saved.record], owner: false)).textSelection(.enabled)
+                Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
+            }
+            ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
+            Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: recordsTitle(saved.record), source: nil, recovered: .copy(saved.id)) }
+            Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
+        }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(
+            label: recordsText("Recovered copy") + ": " + (recordsTitle(saved.record)),
+            identifier: "records.recovered." + saved.record.title))
     }
     private func savePreparedFile() {
         #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
