@@ -81,9 +81,7 @@ import CoreDomain
         try shop.handle(lineID: shop.lines[1].id, by: "Private helper")
         for i in 1...35 { _ = try shop.addManualLine(name: "Package number \(i)", quantity: nil) }
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
-        let formatter = UISimpleTextPrintFormatter(attributedText: listing.printText())
-        let renderer = LetterPageRenderer()
-        renderer.addPrintFormatter(formatter,startingAtPageAt:0)
+        let renderer = LetterPageRenderer(list: listing.printText())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
             let count = renderer.numberOfPages
             renderer.prepare(forDrawingPages:NSRange(location:0,length:count))
@@ -91,13 +89,26 @@ import CoreDomain
         }
         let pdf = try XCTUnwrap(PDFDocument(data:data))
         XCTAssertGreaterThan(pdf.pageCount,1)
+        for index in 0..<pdf.pageCount {
+            let page = try XCTUnwrap(pdf.page(at: index))
+            let lines = page.selection(for: page.bounds(for: .mediaBox))?.selectionsByLine() ?? []
+            let footers = lines.filter { $0.string == "Room in the Cart" }
+            XCTAssertEqual(footers.count, 1, "Page \(index + 1)")
+            let footer = try XCTUnwrap(footers.first).bounds(for: page)
+            XCTAssertLessThan(footer.maxY, 70)
+            let body = lines.filter { $0.string != "Room in the Cart" }
+            XCTAssertFalse(body.isEmpty, "A footer must not create a blank page")
+            XCTAssertTrue(body.allSatisfy { $0.bounds(for: page).minY > footer.maxY })
+        }
         let text = try XCTUnwrap(pdf.string)
         for wanted in ["Corner Market","Apples","Soap","Package number 35"] { XCTAssertTrue(text.contains(wanted),wanted) }
+        let numberedItems = text.components(separatedBy: .newlines).filter { $0.hasPrefix("Package number ") }
+        XCTAssertEqual(numberedItems, (1...35).map { "Package number \($0)" })
         for hidden in ["Private note","Private helper","Milk"] { XCTAssertFalse(text.contains(hidden),hidden) }
     }
 }
 
-private final class LetterPageRenderer: UIPrintPageRenderer {
+private final class LetterPageRenderer: ShoppingListPageRenderer {
     override var paperRect: CGRect { CGRect(x:0,y:0,width:612,height:792) }
     override var printableRect: CGRect { paperRect.insetBy(dx:36,dy:36) }
 }

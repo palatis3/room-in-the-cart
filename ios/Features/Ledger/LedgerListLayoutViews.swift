@@ -178,12 +178,29 @@ struct LargePrintList: View {
         let controller = UIPrintInteractionController.shared
         let info = UIPrintInfo(dictionary:nil); info.jobName = shop.title; info.outputType = .grayscale
         controller.printInfo = info
-        let formatter = UISimpleTextPrintFormatter(attributedText: printText())
-        formatter.perPageContentInsets = UIEdgeInsets(top:32,left:32,bottom:32,right:32)
-        controller.printFormatter = formatter
+        controller.printPageRenderer = ShoppingListPageRenderer(list: printText())
         let presented = controller.present(animated: true) { _, _, error in
             if error != nil { printError = true }
         }
         if !presented { printError = true }
+    }
+}
+
+class ShoppingListPageRenderer: UIPrintPageRenderer {
+    init(list: NSAttributedString) {
+        super.init()
+        footerHeight = 30
+        let formatter = UISimpleTextPrintFormatter(attributedText: list)
+        formatter.perPageContentInsets = UIEdgeInsets(top: 32, left: 32, bottom: 32, right: 32)
+        addPrintFormatter(formatter, startingAtPageAt: 0)
+    }
+
+    override func drawFooterForPage(at pageIndex: Int, in footerRect: CGRect) {
+        let name = NSAttributedString(string: "Room in the Cart", attributes: [
+            .font: UIFont.systemFont(ofSize: 16),
+            .foregroundColor: UIColor.black
+        ])
+        let size = name.size()
+        name.draw(at: CGPoint(x: footerRect.midX - size.width / 2, y: footerRect.midY - size.height / 2))
     }
 }
