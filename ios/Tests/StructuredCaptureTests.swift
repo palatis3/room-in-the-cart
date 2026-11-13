@@ -276,6 +276,18 @@ final class StructuredCaptureTests: XCTestCase {
             XCTAssertNil(CaptureGuestParser.proposal(phrase), phrase)
         }
     }
+    func testUncertainGuestCountsNeedAnExplicitTotalInBothLanguages() throws {
+        for phrase in ["about two more guests", "two guests or more", "maybe add two guests",
+                       "approximately two guests", "up to two more guests", "two guests at most",
+                       "unos dos invitados más", "dos invitados o más", "quizá dos invitados",
+                       "alrededor de dos invitados", "hasta dos invitados", "dos invitados como máximo"] {
+            XCTAssertNil(CaptureGuestParser.proposal(phrase), phrase)
+        }
+        let four = try Rational(4)
+        for phrase in ["two more guests for dinner", "dos invitados más para cenar"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), try Rational(6), phrase)
+        }
+    }
     func testConflictingTotalAndPackEvidenceFailsAtomically() throws {
         var draft = try row("2 packs of 6 wraps")
         draft.amount = "10"; draft.confirmed = true

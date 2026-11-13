@@ -46,6 +46,18 @@ enum CaptureGuestParser {
     private static let add: Set<String> = ["add", "agrega", "agregar", "agregue", "añade", "añadir", "añada", "suma"]
     private static let remove: Set<String> = ["remove", "subtract", "quita", "quitar", "quite", "resta"]
 
+    // A bounded or tentative count still needs a total from the shopper.
+    private static let uncertainWords: Set<String> = [
+        "about", "around", "approximately", "roughly", "maybe", "perhaps", "possibly", "probably",
+        "aproximadamente", "alrededor", "quizá", "quizás", "quiza", "quizas", "talvez",
+        "posiblemente", "probablemente", "hasta", "unos", "unas"
+    ]
+    private static let uncertainPhrases = [
+        "more than", "less than", "fewer than", "at least", "at most", "up to", "or more", "or fewer", "or less",
+        "más de", "mas de", "menos de", "al menos", "por lo menos", "a lo sumo", "como máximo", "como maximo",
+        "como mínimo", "como minimo", "o más", "o mas", "o menos", "tal vez", "puede que"
+    ]
+
     static func proposal(_ text: String) -> CaptureGuestProposal? {
         guard (try? CaptureLimits.validate(text)) != nil else { return nil }
         let words = text.lowercased().split { $0.isWhitespace || ",.!?;:¿¡".contains($0) }.map(String.init)
@@ -62,9 +74,9 @@ enum CaptureGuestParser {
         let end = max(guest + 1, count.range.upperBound)
         let before = words[..<start].last ?? ""
         let after = words[end...].first ?? ""
-        let lowerBoundWords = words[..<start].suffix(2)
-        let bounds = ["more than", "less than", "fewer than", "at least", "at most", "up to", "más de", "mas de", "menos de", "al menos"]
-        guard !bounds.contains(lowerBoundWords.joined(separator: " ")) else { return nil }
+        let wording = " " + words.joined(separator: " ") + " "
+        guard uncertainWords.isDisjoint(with: words),
+              !uncertainPhrases.contains(where: { wording.contains(" " + $0 + " ") }) else { return nil }
         let nearby = Set(between).union([before, after])
         let increases = add.contains(before) || !more.isDisjoint(with: nearby)
         let decreases = remove.contains(before) || !fewer.isDisjoint(with: nearby)
