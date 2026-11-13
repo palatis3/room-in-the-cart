@@ -39,6 +39,17 @@ struct DeviceSurfacesEntry: View {
                     if let message = composition.message { Text(message) }
                     Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
                 }.disabled(composition.busy)
+                .confirmationDialog(SurfaceCopy.text("Start a new review for this pickup?"), isPresented: Binding(
+                    get: { composition.destinationChange != nil },
+                    set: { if !$0 { composition.destinationChange = nil } }
+                ), titleVisibility: .visible, presenting: composition.destinationChange) { change in
+                    Button(SurfaceCopy.text("Start new review")) {
+                        Task { await composition.review(change.entry, shopID: change.shopID, replacing: change.previous) }
+                    }
+                    Button(ledgerText("Cancel"), role: .cancel) {}
+                } message: { _ in
+                    Text(SurfaceCopy.text("Your original shared text will be kept. Choices saved for the other pickup will be cleared."))
+                }
                 .sheet(isPresented: $startingPickup, onDismiss: {
                     if composition.privateAuthorized, let shop = ledger.shop { selectedShop = shop.id }
                 }) {

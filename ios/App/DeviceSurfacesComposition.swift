@@ -11,6 +11,12 @@ import DeviceSurfaces
     @Published var draft: SurfaceImportDraft? {
         didSet { if draft == nil { reviewBaseline = nil } }
     }
+    struct DestinationChange {
+        let entry: SelectedTextEntry
+        let shopID: UUID
+        let previous: SurfaceImportDraft
+    }
+    @Published var destinationChange: DestinationChange?
     private var reviewBaseline: SurfaceImportDraft?
     @Published var destination: SurfacePresentedDestination?
     @Published private(set) var busy = false
@@ -142,7 +148,7 @@ import DeviceSurfaces
     }
     func foreground() async { active = true; await sourceDidChange() }
     func background() {
-        active = false; nonce = UUID(); entries = []; draft = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
+        active = false; nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
         if ledger != nil { captureRequests.takePending() }
         // A cold child/locked launch may never open the adult stores. Resolve
@@ -158,7 +164,7 @@ import DeviceSurfaces
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
     func scopeChanged() {
-        nonce = UUID(); entries = []; draft = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
+        nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
         if ledger != nil { captureRequests.takePending() }
         pendingReminderTap = nil; authorityKey = nil; reminderSaveGeneration = UUID()
@@ -182,7 +188,7 @@ import DeviceSurfaces
         defer { reconciling = false; if reconcileAgain { reconcileAgain = false; Task { await sourceDidChange() } } }
         let key = [String(privateAuthorized), household?.identity?.subject ?? "", household?.projection?.memberId ?? "", household?.projection?.role ?? "", ledger?.sourceWorkspaceID?.uuidString ?? ""].joined(separator: "|")
         if key != authorityKey {
-            authorityKey = key; nonce = UUID(); entries = []; draft = nil
+            authorityKey = key; nonce = UUID(); entries = []; draft = nil; destinationChange = nil
             // Initial binding must not erase an explicit entry for the same
             // live contributor. Identity or authority loss still clears it.
             if !preservesOwnRequest { destination = nil; ownRequestPersona = nil }
@@ -266,11 +272,19 @@ import DeviceSurfaces
             if let pendingHandle { self.pendingHandle = nil; Task { await open(pendingHandle) } }
         } catch { guard generation == start else { return }; entries = []; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again.") }
     }
-    func review(_ entry: SelectedTextEntry, shopID: UUID) async {
+    func review(_ entry: SelectedTextEntry, shopID: UUID, replacing previous: SurfaceImportDraft? = nil) async {
         guard !busy, let bridge else { message = SurfaceCopy.text("Selected text is unavailable on this installation."); return }
         busy = true; defer { busy = false }
         let start = nonce
-        do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; reviewBaseline = result; await sourceDidChange() }
+        do { let result = try await bridge.open(entry, shopID: shopID, replacing: previous); guard nonce == start else { return }; draft = result; reviewBaseline = result; await sourceDidChange() }
+        catch SurfaceImportDestinationConflict.replaceReview(let saved) {
+            guard nonce == start else { return }
+            destinationChange = DestinationChange(entry: entry, shopID: shopID, previous: saved)
+        }
+        catch SurfaceImportDestinationConflict.recoverOriginalPickup {
+            guard nonce == start else { return }
+            message = SurfaceCopy.text("Choose the original pickup to finish the interrupted import.")
+        }
         catch let limit as ImportTextLimit { message = ledgerImportLimitMessage(limit) }
         catch SurfaceError.capacity { message = SurfaceCopy.text("Share a smaller selection, or finish another selected-text review and try again.") }
         catch { message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
@@ -465,7 +479,11 @@ import DeviceSurfaces
         // Replayed by foreground tombstone reconciliation and Records deletion.
         try await CaptureMediaStore.shared.eraseWorkspace(id)
         try configure()
-        if draft?.scope.workspaceID == id { draft = nil; nonce = UUID() }
+        if draft?.scope.workspaceID == id || destinationChange?.previous.scope.workspaceID == id {
+            draft = nil
+            destinationChange = nil
+            nonce = UUID()
+        }
         if case .shop(let shopID) = destination, ledger?.workspace.shops.contains(where: { $0.id == shopID }) != true { destination = nil }
         for review in try journal?.entries(workspaceID: id) ?? [] {
             guard let inbox else { throw SurfaceError.unconfigured }

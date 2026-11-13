@@ -141,6 +141,11 @@ final class SurfaceImportJournal {
     func reload() async throws
 }
 
+enum SurfaceImportDestinationConflict: Error {
+    case replaceReview(SurfaceImportDraft)
+    case recoverOriginalPickup
+}
+
 @MainActor final class SurfaceImportBridge {
     private let inbox: SelectedTextInbox
     private let journal: SurfaceImportJournal
@@ -149,19 +154,24 @@ final class SurfaceImportJournal {
     init(inbox: SelectedTextInbox, journal: SurfaceImportJournal, port: any SurfaceLedgerPort, clock: @escaping () -> Date = Date.init) {
         self.inbox = inbox; self.journal = journal; self.port = port; self.clock = clock
     }
-    func open(_ entry: SelectedTextEntry, shopID: UUID) async throws -> SurfaceImportDraft? {
+    func open(_ entry: SelectedTextEntry, shopID: UUID, replacing reviewToReplace: SurfaceImportDraft? = nil) async throws -> SurfaceImportDraft? {
         guard let scope = port.scope, let generation = port.generation else { throw SurfaceError.unavailable }
         let current = try await inbox.pending(now: clock()).first { $0.id == entry.id }
         guard current == entry, port.scope == scope, port.generation == generation else { throw SurfaceError.stale }
-        if let saved = try journal.read(entry.id) {
-            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, saved.expiresAt == entry.receipt.expiresAt, saved.preview.shopID == shopID else { throw SurfaceError.stale }
-            if let receipt = port.shop(shopID)?.importBatches.first(where: { $0.id == entry.id }) {
+        let previous = try journal.read(entry.id)
+        if let reviewToReplace, previous != reviewToReplace { throw SurfaceError.stale }
+        if let saved = previous {
+            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, saved.expiresAt == entry.receipt.expiresAt else { throw SurfaceError.stale }
+            if let receipt = port.shop(saved.preview.shopID)?.importBatches.first(where: { $0.id == entry.id }) {
                 try validate(receipt, draft: saved)
                 _ = try await inbox.acknowledgeCommitted(operationID: entry.id, digest: saved.inboxDigest, now: clock())
                 try journal.remove(saved.id, expected: saved)
                 return nil
             }
-            return saved
+            if saved.preview.shopID == shopID { return saved }
+            // An attempt that might have reached the ledger must recover against its original pickup.
+            guard saved.phase == .review, saved.confirmedAttempts.isEmpty else { throw SurfaceImportDestinationConflict.recoverOriginalPickup }
+            guard reviewToReplace != nil else { throw SurfaceImportDestinationConflict.replaceReview(saved) }
         }
         // A receipt without its matching private journal cannot establish the inbox digest.
         guard port.shop(shopID)?.importBatches.contains(where: { $0.id == entry.id }) == false, !port.hasPendingSave else { throw SurfaceError.stale }
@@ -170,7 +180,7 @@ final class SurfaceImportJournal {
         let draft = SurfaceImportDraft(operationID: entry.id, inboxDigest: entry.receipt.digest, scope: scope,
             originalText: entry.originalText, editedText: entry.editedText, expiresAt: entry.receipt.expiresAt, preview: preview,
             decisions: Dictionary(uniqueKeysWithValues: preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) }), phase: .review)
-        try journal.save(draft, replacing: nil)
+        try journal.save(draft, replacing: previous)
         return draft
     }
     func saveReview(_ draft: SurfaceImportDraft, replacing previous: SurfaceImportDraft) throws {
