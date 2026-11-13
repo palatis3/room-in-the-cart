@@ -234,7 +234,7 @@ import StoreKitTest
         session.askToBuyEnabled = true
         let (storefront, model) = try await loadedModel()
         let purchase = beginPurchase(model)
-        defer { purchase.task?.cancel(); model.stop() }
+        defer { model.stop() }
         do {
             // A fresh hosted StoreKit session took 15s to return its pending result.
             // Keep the complete pending boundary while allowing that first response.
@@ -427,7 +427,6 @@ import StoreKitTest
                                     pendingTimeout: Duration = .seconds(10)) async throws {
         session.askToBuyEnabled = true
         let purchase = beginPurchase(model)
-        defer { purchase.task?.cancel() }
         try await eventually("A real Ask to Buy request reaches pending approval", timeout: pendingTimeout) {
             self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
         }
@@ -665,13 +664,23 @@ import StoreKitTest
 
     private final class PurchaseProbe {
         var finished = false
-        var task: Task<Void, Never>?
     }
     private func beginPurchase(_ model: MembershipModel) -> PurchaseProbe {
         let probe = PurchaseProbe()
-        probe.task = Task { @MainActor [weak probe] in
+        let completion = XCTestExpectation(description: "This case's StoreKit purchase returned")
+        let task = Task { @MainActor in
             await model.purchase()
-            probe?.finished = true
+            probe.finished = true
+            completion.fulfill()
+        }
+        addTeardownBlock { @MainActor in
+            guard !probe.finished else { return }
+            // A timed-out Ask to Buy call held the hosted payment queue for another 40s.
+            // Keep this session's settings until its call returns, before tearDown resets them.
+            if await XCTWaiter.fulfillment(of: [completion], timeout: 45) != .completed {
+                task.cancel()
+                XCTFail("The StoreKit purchase was still open at teardown. Payment queue cleanup is unconfirmed.")
+            }
         }
         return probe
     }
