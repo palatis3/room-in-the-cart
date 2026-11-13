@@ -214,10 +214,10 @@ jobs:
   ios-release:
     needs: source-checks
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-m4-slot-1' || 'ritc-macos-slot-1' }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-m4-slot-1' || 'ritc-macos-slot-1' }}
       queue: max
       cancel-in-progress: false
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-ci 2' || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-ci 2' || 'xcode-27' }}
     timeout-minutes: 45
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
@@ -451,10 +451,10 @@ jobs:
   ios-build:
     needs: source-checks
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}
       queue: max
       cancel-in-progress: false
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
     # Includes the existing 40-minute model execution step on the prepared
     # producer. This composite cap replaces separate build/model jobs.
     timeout-minutes: 75
@@ -601,11 +601,11 @@ jobs:
   ios-tests:
     name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
       queue: max
       cancel-in-progress: false
     needs: ios-build
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
     timeout-minutes: 55
     strategy:
       fail-fast: false

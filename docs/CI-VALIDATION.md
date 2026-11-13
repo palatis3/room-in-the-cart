@@ -279,6 +279,12 @@ On the 24 GB development Mac, let a failing PR journey take the next free simula
 
 ### GitHub and Bitrise capacity
 
+If Bitrise is unavailable, set the repository Actions variable
+`RITC_GITHUB_MAC_ONLY` to `true` before starting a candidate. Workflows containing
+this switch use the five GitHub macOS queues with the same tests, Xcode and
+artifact checks. Already assigned jobs keep their runner labels. Clear the
+variable to restore the usual routing for subsequent runs.
+
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
 M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready.
 The existing M2 pool is `bitrise-runner-room in cart`; the new M4 pool is

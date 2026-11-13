@@ -48,14 +48,21 @@ class WorkflowGuardTests(unittest.TestCase):
         self.assertEqual(data['concurrency'], {'group': 'original-pr-${{ github.ref }}', 'cancel-in-progress': True})
 
     def test_fixture_provider_route_keeps_external_forks_and_other_repositories_on_github(self):
-        def evaluate(expression, repository, event, head='', provider='github', m4_slot=0):
+        def evaluate(expression, repository, event, head='', provider='github', m4_slot=0, github_only=''):
             value = expression.removeprefix('${{ ').removesuffix(' }}')
             for token, replacement in [('github.event.pull_request.head.repo.full_name', head),
-                                       ('github.event_name', event), ('github.repository', repository), ('matrix.provider', provider),
+                                       ('vars.RITC_GITHUB_MAC_ONLY', github_only), ('github.event_name', event), ('github.repository', repository), ('matrix.provider', provider),
                                        ('matrix.macos_slot', 4), ('matrix.m4_slot', m4_slot)]:
                 value = value.replace(token, repr(replacement))
             return eval(value.replace('&&', 'and').replace('||', 'or'), {'__builtins__': {}}, {'format': lambda pattern, value: pattern.format(value)})
         canonical = 'palatis3/room-in-the-cart'
+        # Both runner and concurrency group must switch together during a provider outage.
+        for route, fallback in [(FIXTURE_RUNNER, 'xcode-27'), (M4_RUNNER, 'xcode-27'),
+                                (FIXTURE_SLOT_PREFIX, 'ritc-macos-slot-'),
+                                (CORE_BUILD_GROUP, 'ritc-macos-slot-3'), (RELEASE_BUILD_GROUP, 'ritc-macos-slot-1'),
+                                (FIXTURE_CONSUMER_RUNNER, 'xcode-27'), (FIXTURE_MATRIX_GROUP, 'ritc-macos-slot-4')]:
+            for provider in ('github', 'bitrise', 'bitrise-m4'):
+                self.assertEqual(evaluate(route, canonical, 'pull_request', canonical, provider, github_only='true'), fallback)
         for event in ('push', 'schedule', 'workflow_dispatch', 'workflow_call', 'pull_request'):
             for repository in (canonical, 'outside/fork'):
                 for head in (canonical, 'outside/fork', ''):
