@@ -228,7 +228,7 @@ private struct PickupNextShopSelection: View {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
             ForEach(source.deferred.filter { $0.status == "review" }) { need in
-                Section(need.line.name) {
+                Section(header: Text(need.line.name).foregroundStyle(Theme.secondary)) {
                     Text(pQuantity(need.line.quantity))
                     Picker(pTr("For this trip"), selection: Binding(get: { choices[need.id] ?? .keep }, set: { choices[need.id] = $0 })) {
                         Text(pTr("Keep deferred")).tag(NextShopDisposition.keep)
@@ -244,7 +244,7 @@ private struct PickupNextShopSelection: View {
                 }
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: source.id) }
-            Section(pTr("Open meal needs")) {
+            Section(header: Text(pTr("Open meal needs")).foregroundStyle(Theme.secondary)) {
                 if let remaining {
                     ForEach(remaining.urgent) { need in
                         Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
