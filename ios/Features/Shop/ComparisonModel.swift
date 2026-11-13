@@ -198,6 +198,8 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         return Money(minorUnits: scaled / value.denominator, currency: .usd)
     }
 
+    var confirmedStock: Quantity? { try? Self.quantity(draft.stock, draft.unit) }
+
     func request() throws -> ComparisonRequest {
         func confirmedBasis(_ conversion: ComparisonConversion?, sourceUnit: UnitOfMeasure) throws -> UnitBasis? {
             guard let conversion else { return nil }

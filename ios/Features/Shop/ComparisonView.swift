@@ -168,6 +168,14 @@ struct ComparisonView: View {
                 if !model.draft.needed.isEmpty {
                     ComparisonMetric(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
                 }
+                let stock = model.confirmedStock
+                let stockText = stock.map { pQuantity($0.originalLiteral, unit: $0.unit, singular: $0.amount == .one, language: nil) }
+                ComparisonMetric(ledgerFormat("Confirmed at home for this need: %@", stockText ?? recordsText("Not entered")),
+                                 id: "comparisonConfirmedStock")
+                if stock != nil, let remaining = result.offerA.amountToBuy {
+                    ComparisonMetric(message("Needed after confirmed stock: %@", remainingQuantity(remaining)),
+                                     id: "comparisonNeedAfterStock")
+                }
                 if !model.draft.protected.isEmpty {
                     ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
                 }
@@ -207,6 +215,12 @@ struct ComparisonView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.canvas)
         .accessibilityIdentifier("comparisonResultsScroll")
+    }
+
+    private func remainingQuantity(_ amount: Rational) -> String {
+        let (whole, remainder) = amount.numerator.quotientAndRemainder(dividingBy: amount.denominator)
+        let text = whole > 0 && remainder > 0 ? "\(whole) \(remainder)/\(amount.denominator)" : amountText(amount)
+        return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
     }
 
     private func resultSection(_ result: OfferResult, name: String, conversion: ComparisonConversion?, preferred: Bool) -> some View {
