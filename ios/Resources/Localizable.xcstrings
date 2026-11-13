@@ -1035,6 +1035,22 @@
         }
       }
     },
+    "No packs needed for this item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No packs needed for this item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No necesitas comprar paquetes de este artículo."
+          }
+        }
+      }
+    },
     "Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",

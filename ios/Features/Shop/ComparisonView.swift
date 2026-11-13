@@ -179,12 +179,12 @@ struct ComparisonView: View {
                 if !model.draft.protected.isEmpty {
                     ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
                 }
+                if let summary = result.purchaseSummary {
+                    ComparisonMetric(summary, style: .headline, id: "comparisonPurchaseSummary")
+                }
             }
             resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
             resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
-            if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
-                Section { Text(tr("Both options cost the same for this need.")) }
-            }
             Section {
                 ComparisonMetric(tr("Source: prices and usable amounts you entered. Estimates for this item only."), id: "comparisonSourceNote")
                 if let date = model.savedAt {

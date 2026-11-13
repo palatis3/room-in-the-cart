@@ -97,8 +97,9 @@ final class RoomInTheCartUITests: XCTestCase {
     func testConfirmedComparisonDeletionSurvivesRestart() throws {
         launch()
         openEmptyComparison()
-        enterComparison(item: "Fictional record to delete", firstQuantity: "8")
+        type([("itemName", "Fictional record to delete"), ("needed", "2"), ("stock", "3")])
         compare()
+        assertContains("No packs needed for this item.")
         saveAndAssertDurableStatus()
         tap(app.tabBars.buttons["Records"])
         tap(app.buttons["Recovery, exports and saved records"])

@@ -112,14 +112,22 @@ extension SavedPayload {
             if answer?.preferredOfferID == offer.id { lines.append(tr("Lower cost to buy enough for this item")) }
         }
         if let answer {
-            if answer.offerA.isResolved && answer.offerB.isResolved && answer.preferredOfferID == nil {
-                lines.append(tr("Both options cost the same for this need."))
-            }
+            if let summary = answer.purchaseSummary { lines.append(summary) }
         } else {
             lines.append(recordsText("No result was saved with this draft."))
         }
         lines.append(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
         return lines.joined(separator: "\n")
+    }
+}
+
+extension CoreDomain.ComparisonResult {
+    var purchaseSummary: String? {
+        guard offerA.isResolved, offerB.isResolved, preferredOfferID == nil else { return nil }
+        if offerA.packsToBuy == 0 && offerB.packsToBuy == 0 {
+            return tr("No packs needed for this item.")
+        }
+        return tr("Both options cost the same for this need.")
     }
 }
 
