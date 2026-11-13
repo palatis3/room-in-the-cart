@@ -149,9 +149,7 @@ jobs:
             --enumeration .build/test-enumeration.json --output-dir .build/test-plan \
             2>&1 | tee .build/test-planning.log
           cp .build/test-enumeration.json .build/test-plan/
-          set -o pipefail
-          tar -cf - -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan |
-            /usr/bin/compression_tool -encode -A lzfse -t 2 -o "$RUNNER_TEMP/iphone-fixture-products.tar.lzfse"
+          bash scripts/package_ios_simulator_tests.sh "$RUNNER_TEMP/iphone-fixture-products.tar.lzfse"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:

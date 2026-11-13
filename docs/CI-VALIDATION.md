@@ -1,5 +1,24 @@
 # Local CI validation
 
+## November 13 simulator test downloads
+
+The core and fixture producers omit top-level object files and Swift compiler
+modules from the archives used by `test-without-building`. Apps, extensions,
+frameworks, symbols, test plans and test bundles travel with the runner. Repacking
+the three hosted products reduced the compressed payloads (decimal MB):
+
+| Archive | Previous | Repacked | Downloads in this run |
+| --- | ---: | ---: | ---: |
+| Core | 66.68 | 52.13 | 10 |
+| Contributor fixtures | 69.06 | 54.22 | 25 |
+| Dinner fixtures | 66.66 | 52.09 | 1 |
+
+This removes about 531 MB across the same 36 downloads. One contributor job
+spent 5m32s downloading the original archive. Compare the download and restore
+step durations on the next full run to measure wall-clock savings.
+[Fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43383423697) ·
+[Core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43383423696)
+
 ## November 13 contributor fixture queue
 
 The contributor build finished at 06:12:05 UTC. Group 02 started at 06:34:32
