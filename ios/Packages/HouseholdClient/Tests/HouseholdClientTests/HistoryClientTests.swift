@@ -107,8 +107,11 @@ extension HouseholdClientTests {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let observation = try historyObservation()
         var paths: [String] = []
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             let path = request.url!.path; paths.append(path)
             if path.hasSuffix("/price-observations") { return (403, Data(#"{"error":{"code":"membership_inactive","correlationId":"paid-lapse"}}"#.utf8)) }
             if path.hasSuffix("/price-observations/\(observation.id)") { return (200, try JSONSerialization.data(withJSONObject: ["observation": self.historyObject(observation)])) }
@@ -124,14 +127,17 @@ extension HouseholdClientTests {
         let periods = try await service.budgetPeriods(); XCTAssertEqual(periods.periods.first?.periodId, historyPeriod)
         let raw = try await service.savedBudgetPeriod(periodID: historyPeriod); XCTAssertEqual(raw.period, try historyPlan())
         let shops = try await service.historyOwnedShops(); XCTAssertEqual(shops.shops.first?.phase, "closed")
-        XCTAssertEqual(paths.count, 5)
+        XCTAssertEqual(stateLock.withLock { paths.count }, 5)
     }
     func testReadableHistoryShopDiscoveryUsesContributorSessionAndValidatesSeparateCursor() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let ids = (1...50).map { String(format: "00000000-0000-4000-9000-%012d", $0) }
         var malformed = false
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             XCTAssertTrue(request.url!.path.hasSuffix("/history-readable-shops"))
             if malformed { return (200, try encoded(HistoryReadableShopPage(shopIds: [self.historyShop, self.historyShop], nextCursor: nil))) }
             let cursor = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "cursor" })?.value
@@ -141,15 +147,18 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let first = try await service.historyReadableShops(); XCTAssertEqual(first.shopIds, ids)
         let second = try await service.historyReadableShops(cursor: first.nextCursor); XCTAssertEqual(second.shopIds, [historyShop]); XCTAssertNil(second.nextCursor)
-        malformed = true
+        stateLock.withLock { malformed = true }
         do { _ = try await service.historyReadableShops(); XCTFail("Duplicate read scopes accepted") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
     }
     func testHistoryObservationRetryKeepsOriginalBytesAndStopsAfterSourceAuthorityLoss() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let observation = try historyObservation(); var bodies: [Data] = []; var denied = false
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             if request.url!.path.hasSuffix("/financial-evidence") { return (200, try self.historySourceBytes()) }
             if request.url!.path.hasSuffix("/shops") { return (200, try self.historyOwnedBytes(denied ? [] : [self.historyShop])) }
             XCTAssertEqual(request.url!.path, "/v1/households/\(self.household)/price-observations")
@@ -161,17 +170,20 @@ extension HouseholdClientTests {
         let intent = try await service.preparePriceObservation(observation)
         do { _ = try await service.executePriceObservation(intent); XCTFail("Lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
         let receipt = try await service.executePriceObservation(intent); XCTAssertTrue(receipt.recorded)
-        XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
-        denied = true
+        XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
+        stateLock.withLock { denied = true }
         do { try await service.authorizePriceObservation(intent); XCTFail("Restored revoked private record") } catch {}
         do { _ = try await service.executePriceObservation(intent); XCTFail("Sent after source transfer") } catch {}
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
     }
     func testHistoryPeriodRetryDoesNotRebaseAfterLostReceiptAndPaidScopeLossStopsSend() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var bodies: [Data] = []; var revision = 1; var denied = false; var partial = false; var ownsShop = true
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             let path = request.url!.path
             if path.hasSuffix("/shops") { return (200, try self.historyOwnedBytes(ownsShop ? [self.historyShop] : [])) }
             if path.hasSuffix("/budget-history") {
@@ -187,19 +199,25 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let intent = try await service.prepareBudgetPeriod(historyPlan(), baseRevision: 1)
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("Lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
-        let receipt = try await service.executeBudgetPeriod(intent); XCTAssertEqual(receipt.revision, 2); XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
-        partial = true
+        let receipt = try await service.executeBudgetPeriod(intent); XCTAssertEqual(receipt.revision, 2); XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
+        stateLock.withLock { partial = true }
         do { try await service.authorizeBudgetPeriod(intent); XCTFail("Partial current scope restored cached envelope") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
-        XCTAssertEqual(bodies.count, 2)
-        partial = false; ownsShop = false
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
+        stateLock.withLock {
+            partial = false
+            ownsShop = false
+        }
         do { try await service.authorizeBudgetPeriod(intent); XCTFail("A read grant exposed a pending write") }
         catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("A read grant sent a pending write") } catch {}
-        XCTAssertEqual(bodies.count, 2)
-        ownsShop = true
-        partial = false; denied = true
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
+        stateLock.withLock {
+            ownsShop = true
+            partial = false
+            denied = true
+        }
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("Paid lapse sent") } catch {}
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
     }
     func testPeriodRetryChecksOwnedSourcesOnLaterPagesIncludingRemovedSources() async throws {
         let auth = try auth()
@@ -208,8 +226,11 @@ extension HouseholdClientTests {
         let cursor = try XCTUnwrap(earlier.last)
         var ownsSavedSource = true
         var lastPageReads = 0
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             let path = request.url!.path
             if path.hasSuffix("/shops") {
                 let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
@@ -233,25 +254,28 @@ extension HouseholdClientTests {
         replacement.shopIds = []
         let intent = try await service.prepareBudgetPeriod(replacement, baseRevision: 1)
         try await service.authorizeBudgetPeriod(intent)
-        XCTAssertEqual(lastPageReads, 2)
-        ownsSavedSource = false
+        XCTAssertEqual(stateLock.withLock { lastPageReads }, 2)
+        stateLock.withLock { ownsSavedSource = false }
         do { try await service.authorizeBudgetPeriod(intent); XCTFail("Omitting a transferred source restored a private retry") }
         catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         do { _ = try await service.prepareBudgetPeriod(replacement, baseRevision: 1); XCTFail("Prepared a replacement after source transfer") }
         catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
-        XCTAssertEqual(lastPageReads, 4)
+        XCTAssertEqual(stateLock.withLock { lastPageReads }, 4)
     }
     func testHistoryPagesRejectDuplicateIdentityAndInvalidCursorWithoutBroadeningQuery() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let cursor = UUID().uuidString.lowercased(); let observation = try historyObservation(); var duplicate = false
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             XCTAssertEqual(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems, [.init(name: "cursor", value: cursor)])
             return (200, try encoded(HistoryPriceObservationPage(observations: duplicate ? [observation, observation] : [observation], nextCursor: nil)))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let page = try await service.priceObservations(cursor: cursor); XCTAssertEqual(page.observations, [observation])
-        duplicate = true
+        stateLock.withLock { duplicate = true }
         do { _ = try await service.priceObservations(cursor: cursor); XCTFail("Duplicate source identity") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
         do { _ = try await service.priceObservations(cursor: "../budget-periods"); XCTFail("Invalid cursor") } catch { XCTAssertEqual(error as? ClientError, .configuration) }
     }
@@ -260,13 +284,16 @@ extension HouseholdClientTests {
         let observation = try PriceObservationIntent(subject: "another-account", householdID: household, memberID: member, deviceID: "device", observation: historyObservation())
         let period = try BudgetPeriodIntent(subject: "account", householdID: household, memberID: member, deviceID: "another-device", baseRevision: 0, period: historyPlan())
         var calls = 0
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
+            stateLock.lock()
+            defer { stateLock.unlock() }
             calls += 1; return (500, Data())
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         do { try await service.authorizePriceObservation(observation); XCTFail("Wrong account restored") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         do { _ = try await service.executeBudgetPeriod(period); XCTFail("Wrong device sent") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(calls, 0)
+        XCTAssertEqual(stateLock.withLock { calls }, 0)
     }
 }
