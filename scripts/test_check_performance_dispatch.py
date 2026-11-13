@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 import yaml
-from check_performance_dispatch import FLAGS, WORKFLOW, profile
+from check_performance_dispatch import FLAGS, WORKFLOW, STEP, profile
 
 
 class DispatchProfileTests(unittest.TestCase):
@@ -70,7 +70,7 @@ class DispatchProfileTests(unittest.TestCase):
                 job = document['jobs']['performance-plan']
                 if change == 'runner': job['runs-on'] = 'macos-latest'
                 elif change == 'environment': job['env'] = {'EXTRA': 'true'}
-                else: job['steps'].append(copy.deepcopy(job['steps'][1]))
+                else: job['steps'].append(copy.deepcopy(next(step for step in job['steps'] if step.get('name') == STEP)))
                 with self.assertRaises(ValueError): profile(document, 'workflow_dispatch', 'scroll', self.off)
 
     def test_inputs_are_typed_and_choices_are_bounded(self):

@@ -1,6 +1,7 @@
 name: iOS Release performance
 run-name: iOS performance${{ inputs.simulator_signpost_control && ' · standalone helper (diagnostic only)' || '' }}${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
 
+# Isolated M4 scroll qualification branch; keep this workflow change off app CI.
 on:
   # Run deliberately during development; release-checks always calls this workflow.
   workflow_dispatch:
@@ -71,6 +72,19 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require isolated M4 scroll qualification
+        run: |
+          test "$GITHUB_REPOSITORY" = palatis3/room-in-the-cart
+          test "$GITHUB_REF" = refs/heads/codex/performance-m4-qualification-20261112
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$REQUESTED_PERFORMANCE_CASE" = scroll
+          test "$ENFORCE_BASELINES" = false
+          test "$FRESH_PERFORMANCE_SIMULATOR" = false
+          test "$OBSERVE_APP_SCROLL_SIGNPOSTS" = false
+          test "$CAPTURE_SCROLL_SIGNPOSTS" = false
+          test "$CAPTURE_PREFLIGHT_ONLY" = false
+          test "$ENABLE_PERFORMANCE_DIAGNOSTICS" = false
+          test "$SIMULATOR_SIGNPOST_CONTROL" = false
       - name: Validate performance selection before allocating macOS
         run: |
           python3 scripts/test_plan_ios_performance_tests.py
@@ -228,12 +242,12 @@ jobs:
   performance-tests:
     if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}
     concurrency:
-      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && format('ritc-bitrise-m4-slot-{0}', matrix.macos_slot) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
       queue: max
       cancel-in-progress: false
     name: Release performance (${{ matrix.case }})
     needs: performance-build
-    runs-on: xcode-27
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-ci 2' || 'xcode-27' }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -247,7 +261,28 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
-        run: bash scripts/check_ci_xcode27.sh
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected Performance consumer runtime: {runtime}")
+          print(f"Performance consumer runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.performance-build.outputs.artifact }}

@@ -23,7 +23,8 @@ FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
 M4_BUILD_JOBS = {RELEASE_BUILD_JOB}
-ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB} | M4_BUILD_JOBS | {('ci.yml', 'ios-tests')}
+PERFORMANCE_JOB = ('ios-performance.yml', 'performance-tests')
+ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB} | M4_BUILD_JOBS | {('ci.yml', 'ios-tests'), PERFORMANCE_JOB}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
@@ -43,6 +44,21 @@ FIXTURE_MATRIX_GROUP = ("${{ " + FIXTURE_TRUSTED +
     " && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot)" +
     " || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot))" +
     " || format('ritc-macos-slot-{0}', matrix.macos_slot) }}")
+PERFORMANCE_MATRIX_GROUP = ("${{ " + FIXTURE_TRUSTED +
+    " && format('ritc-bitrise-m4-slot-{0}', matrix.macos_slot)" +
+    " || format('ritc-macos-slot-{0}', matrix.macos_slot) }}")
+PERFORMANCE_QUALIFICATION_GUARD = '''test "$GITHUB_REPOSITORY" = palatis3/room-in-the-cart
+test "$GITHUB_REF" = refs/heads/codex/performance-m4-qualification-20261112
+test "$GITHUB_EVENT_NAME" = workflow_dispatch
+test "$REQUESTED_PERFORMANCE_CASE" = scroll
+test "$ENFORCE_BASELINES" = false
+test "$FRESH_PERFORMANCE_SIMULATOR" = false
+test "$OBSERVE_APP_SCROLL_SIGNPOSTS" = false
+test "$CAPTURE_SCROLL_SIGNPOSTS" = false
+test "$CAPTURE_PREFLIGHT_ONLY" = false
+test "$ENABLE_PERFORMANCE_DIAGNOSTICS" = false
+test "$SIMULATOR_SIGNPOST_CONTROL" = false
+'''
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
 POLICY = {
@@ -211,7 +227,7 @@ def validate_workflows(paths, policy=POLICY):
             expected = policy[identity]
             routed = identity in ROUTED_NATIVE_JOBS
             if routed:
-                runner = M4_RUNNER if identity in M4_BUILD_JOBS else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
+                runner = M4_RUNNER if identity in M4_BUILD_JOBS | {PERFORMANCE_JOB} else FIXTURE_RUNNER if type(expected) is int else FIXTURE_CONSUMER_RUNNER
                 require(job.get('runs-on') == runner, f'Unreviewed native provider routing: {identity}')
             else:
                 labels = job.get('runs-on', [])
@@ -219,8 +235,19 @@ def validate_workflows(paths, policy=POLICY):
                 require(job.get('runs-on') not in (FIXTURE_RUNNER, M4_RUNNER, FIXTURE_CONSUMER_RUNNER) and
                         not any(label.lower().startswith('bitrise-runner-') for label in labels),
                         f'Bitrise routing is restricted to reviewed native jobs: {identity}')
+            if identity == PERFORMANCE_JOB:
+                plan = data['jobs'].get('performance-plan', {})
+                steps = plan.get('steps', [])
+                require(plan.get('runs-on') == 'ubuntu-24.04' and len(steps) >= 3 and
+                        steps[1] == {'name': 'Require isolated M4 scroll qualification',
+                                     'run': PERFORMANCE_QUALIFICATION_GUARD},
+                        'M4 calibration requires the exact early request guard')
+                require('if' not in plan and 'continue-on-error' not in plan and
+                        data['jobs']['performance-build'].get('needs') == 'performance-plan' and
+                        job.get('needs') == 'performance-build',
+                        'M4 calibration must depend on guarded same-run products')
             slot_prefix = FIXTURE_SLOT_PREFIX if routed else SLOT_PREFIX
-            matrix_group = FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
+            matrix_group = PERFORMANCE_MATRIX_GROUP if identity == PERFORMANCE_JOB else FIXTURE_MATRIX_GROUP if routed else MATRIX_GROUP
             slot_count = 3 if routed else 5
             if type(expected) is int:
                 if identity == CORE_BUILD_JOB:

@@ -1,4 +1,6 @@
 import json
+import os
+import copy
 from pathlib import Path
 import subprocess
 import tempfile
@@ -7,7 +9,7 @@ from unittest.mock import patch
 from check_ci_workflows import (BITRISE_LABEL, M4_LABEL, M4_RUNNER, CORE_BUILD_GROUP, CORE_BUILD_JOB,
                                 RELEASE_BUILD_GROUP, RELEASE_BUILD_JOB, FIXTURE_CONSUMER_RUNNER, FIXTURE_MATRIX_GROUP,
                                 FIXTURE_JOBS, FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX,
-                                MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
+                                MATRIX_GROUP, PERFORMANCE_JOB, PERFORMANCE_MATRIX_GROUP, PERFORMANCE_QUALIFICATION_GUARD, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows)
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT = '''name: Safe fixture
@@ -70,6 +72,8 @@ class WorkflowGuardTests(unittest.TestCase):
                                          'ritc-bitrise-slot-2' if trusted else 'ritc-macos-slot-3')
                         self.assertEqual(evaluate(RELEASE_BUILD_GROUP, repository, event, head),
                                          'ritc-bitrise-m4-slot-1' if trusted else 'ritc-macos-slot-1')
+                        self.assertEqual(evaluate(PERFORMANCE_MATRIX_GROUP, repository, event, head),
+                                         'ritc-bitrise-m4-slot-4' if trusted else 'ritc-macos-slot-4')
                         for provider in ('github', 'bitrise', 'bitrise-m4', 'unknown', 'bitrise-runner-more ci'):
                             expected_runner = {'bitrise': BITRISE_LABEL, 'bitrise-m4': M4_LABEL}.get(provider, 'xcode-27') if trusted else 'xcode-27'
                             self.assertEqual(evaluate(FIXTURE_CONSUMER_RUNNER, repository, event, head, provider), expected_runner)
@@ -80,6 +84,7 @@ class WorkflowGuardTests(unittest.TestCase):
                                 self.assertEqual(evaluate(FIXTURE_MATRIX_GROUP, repository, event, head, provider, slot), expected_group)
         for event in ('pull_request_target', 'repository_dispatch', ''):
             self.assertEqual(evaluate(FIXTURE_RUNNER, canonical, event, canonical), 'xcode-27')
+            self.assertEqual(evaluate(PERFORMANCE_MATRIX_GROUP, canonical, event, canonical), 'ritc-macos-slot-4')
             self.assertEqual(evaluate(CORE_BUILD_GROUP, canonical, event, canonical), 'ritc-macos-slot-3')
             self.assertEqual(evaluate(RELEASE_BUILD_GROUP, canonical, event, canonical), 'ritc-macos-slot-1')
             self.assertEqual(evaluate(M4_RUNNER, canonical, event, canonical), 'xcode-27')
@@ -146,6 +151,56 @@ class WorkflowGuardTests(unittest.TestCase):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: ' + BITRISE_LABEL))
         with self.assertRaisesRegex(ValueError, 'Unreviewed native job'):
             self.validate(TEXT.replace('runs-on: macos-15', 'runs-on: bitrise-runner-unreviewed'), {})
+
+    def test_isolated_performance_route_requires_guard_and_same_run_producer(self):
+        import yaml
+        document, _, _ = parse_workflow(ROOT / '.github/workflows/ios-performance.yml')
+        self.path = Path(self.temp.name) / 'ios-performance.yml'
+        policy = {key: value for key, value in POLICY.items() if key[0] == self.path.name}
+        jobs = document['jobs']
+        self.assertEqual(jobs['performance-tests']['runs-on'], M4_RUNNER)
+        self.assertEqual(jobs['performance-tests']['concurrency']['group'], PERFORMANCE_MATRIX_GROUP)
+        self.assertEqual(jobs['performance-build']['runs-on'], 'xcode-27')
+        self.assertEqual(jobs['performance-build']['concurrency']['group'], 'ritc-macos-slot-2')
+        self.assertEqual(len(self.validate(yaml.safe_dump(document, sort_keys=False), policy)), 3)
+        for key, value in [('runs-on', M4_LABEL), ('runs-on', FIXTURE_CONSUMER_RUNNER),
+                           ('needs', 'performance-plan')]:
+            changed = copy.deepcopy(document)
+            changed['jobs']['performance-tests'][key] = value
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                self.validate(yaml.safe_dump(changed, sort_keys=False), policy)
+        for group in [MATRIX_GROUP, FIXTURE_MATRIX_GROUP,
+                      PERFORMANCE_MATRIX_GROUP.replace('matrix.macos_slot', 'matrix.m4_slot'),
+                      PERFORMANCE_MATRIX_GROUP.replace('ritc-bitrise-m4-slot-', 'ritc-bitrise-slot-')]:
+            changed = copy.deepcopy(document)
+            changed['jobs']['performance-tests']['concurrency']['group'] = group
+            with self.subTest(group=group), self.assertRaises(ValueError):
+                self.validate(yaml.safe_dump(changed, sort_keys=False), policy)
+        for mutation in ['guard-removed', 'guard-skipped', 'guard-allowed-failure', 'guard-wrong-ref',
+                         'unguarded-producer', 'm4-producer']:
+            changed = copy.deepcopy(document)
+            jobs = changed['jobs']
+            guard = jobs['performance-plan']['steps'][1]
+            if mutation == 'guard-removed': del jobs['performance-plan']['steps'][1]
+            elif mutation == 'guard-skipped': guard['if'] = False
+            elif mutation == 'guard-allowed-failure': guard['continue-on-error'] = True
+            elif mutation == 'guard-wrong-ref': guard['run'] = guard['run'].replace('20261112', 'other')
+            elif mutation == 'unguarded-producer': jobs['performance-build'].pop('needs')
+            else: jobs['performance-build']['runs-on'] = M4_RUNNER
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.validate(yaml.safe_dump(changed, sort_keys=False), policy)
+
+    def test_isolated_performance_request_guard_rejects_every_out_of_scope_input(self):
+        environment = dict(line.removeprefix('test "$').split('" = ', 1)
+                           for line in PERFORMANCE_QUALIFICATION_GUARD.splitlines())
+        def execute(values):
+            return subprocess.run(['bash', '-e', '-c', PERFORMANCE_QUALIFICATION_GUARD],
+                                  env={**os.environ, **values}, capture_output=True).returncode
+        self.assertEqual(execute(environment), 0)
+        for name in environment:
+            for invalid in ('', 'true', 'different'):
+                with self.subTest(name=name, invalid=invalid):
+                    self.assertNotEqual(execute({**environment, name: invalid}), 0)
 
     def test_duplicate_yaml_at_any_depth(self):
         for text in (TEXT.replace('name: Safe fixture', 'name: Safe fixture\nname: shadow'),
