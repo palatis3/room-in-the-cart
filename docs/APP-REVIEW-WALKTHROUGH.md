@@ -43,6 +43,8 @@ Launch the candidate from the Home Screen. Open the comparison in Records and ch
 
 On November 13, the Release build at `717185e1` passed an in-place update on the iOS 17.0 iPhone SE simulator. The saved comparison reopened with its original revision byte-for-byte intact. After the shopper edited the stock and relaunched, the same record contained both revisions and passed the database integrity check. The local results are in `.build/Upgrade717Nov13`.
 
+The iOS 17.0 iPhone SE simulator also updated an existing Release installation to `fcc16ee1` with two units of rice and a package reference. Both existing ledger revisions and the package reference remained byte-for-byte intact. The shopper added a second reference, corrected its wording, and reopened both after relaunch. The new reference retained the original and corrected wording. Local results are in `.build/SourceUpgradeNov13`.
+
 The pre-release simulator check also exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
 
 ## Connected review, after the real environment is configured
