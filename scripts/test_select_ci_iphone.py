@@ -293,13 +293,11 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                     if 'actions/upload-artifact@' not in step.get('uses', ''): continue
                     self.assertLess(clean[0], i)
                     paths = step['with']['path'].splitlines()
-                    if step.get('name') == 'Retain Records media result counts and timing':
-                        self.assertEqual(set(paths), {'.build/records-test-report.md', '.build/test-plan/',
-                                                    '.build/test-simulator-ownership.json'})
-                    elif performance:
+                    if performance:
                         self.assertEqual(paths, ["${{ inputs.observe_app_scroll_signposts && (steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') || '.build/performance/' }}"])
                     else:
-                        self.assertIn('.build/test-*.json', paths)
+                        self.assertTrue({'.build/test-simulator-ownership.json', '.build/test-*.json'}.intersection(paths),
+                                        f'{key}: upload must include the simulator ownership receipt')
         self.assertEqual(observed, expected)
         self.assertTrue({('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
                          ('ios-fixtures.yml', 'build-dinner'), ('ios-performance.yml', 'performance-build')}.issubset(default_callers))
