@@ -1077,10 +1077,15 @@ import XCTest
     func testNextShopCanCancelThenOpenOneFreshShoppingList() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Rice", into: "Food that is short")
-        fill("Dinner", into: "Meal or purpose")
-        fill("3", into: "Required amount")
-        fill("1", into: "Usable amount available now")
+        tap(app.textFields["Food that is short"])
+        for (label, value) in [("Food that is short", "Rice"), ("Meal or purpose", "Dinner"),
+                               ("Required amount", "3"), ("Usable amount available now", "1")] {
+            let field = app.textFields[label]
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value)
+            app.typeText("\n")
+        }
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
         assertText("Open meal need")

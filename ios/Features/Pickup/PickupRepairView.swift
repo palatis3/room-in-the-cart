@@ -20,10 +20,26 @@ struct UrgentRepairView: View {
         Form {
             PickupSaveStatus(model: model)
             Text(pTr("Make a private meal need from food you have checked. This does not create an order, delivery or charge."))
-            TextField(pTr("Food that is short"), text: $food).focused($field, equals: .food)
-            TextField(pTr("Meal or purpose"), text: $meal).focused($field, equals: .meal)
-            TextField(pTr("Required amount"), text: $required).focused($field, equals: .required).keyboardType(.numbersAndPunctuation)
-            TextField(pTr("Usable amount available now"), text: $available).focused($field, equals: .available).keyboardType(.numbersAndPunctuation)
+            TextField(pTr("Food that is short"), text: $food)
+                .focused($field, equals: .food)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .onSubmit { field = .meal }
+            TextField(pTr("Meal or purpose"), text: $meal)
+                .focused($field, equals: .meal)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .onSubmit { field = .required }
+            TextField(pTr("Required amount"), text: $required)
+                .focused($field, equals: .required)
+                .keyboardType(.numbersAndPunctuation)
+                .submitLabel(.next)
+                .onSubmit { field = .available }
+            TextField(pTr("Usable amount available now"), text: $available)
+                .focused($field, equals: .available)
+                .keyboardType(.numbersAndPunctuation)
+                .submitLabel(.done)
+                .onSubmit { field = nil }
             Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Toggle(pTr("I checked this food’s identity and usable amount"), isOn: Binding(
                 get: { confirmedAt != nil }, set: { confirmedAt = $0 ? Date() : nil }
