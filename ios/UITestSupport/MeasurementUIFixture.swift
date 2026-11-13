@@ -20,6 +20,7 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
     private let lock = NSRecursiveLock()
     private let url: URL
     private var state: [String: Any]
+    private var statusReadsUntilFailure = ProcessInfo.processInfo.environment["RITC_MEASUREMENT_FAIL_SECOND_STATUS_READ"] == "1" ? 2 : 0
     var changed: (@Sendable (Int, Int, Int, Int) -> Void)?
     init(url: URL) throws {
         self.url = url
@@ -64,7 +65,13 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
         }
         let version = MeasurementNotice.currentVersion
         func status() -> [String: Any] { ["noticeVersion": version, "consent": state["consent"] ?? NSNull()] }
-        if path.hasSuffix("/measurement/status"), method == "GET" { return try json(status()) }
+        if path.hasSuffix("/measurement/status"), method == "GET" {
+            if statusReadsUntilFailure > 0 {
+                statusReadsUntilFailure -= 1
+                if statusReadsUntilFailure == 0 { throw URLError(.notConnectedToInternet) }
+            }
+            return try json(status())
+        }
         if path.hasSuffix("/measurement/consent"), method == "POST" {
             guard Set(input.keys) == ["noticeVersion"], input["noticeVersion"] as? String == version else { return try denied("invalid_command", 422) }
             if state["consent"] == nil {

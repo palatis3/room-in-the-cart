@@ -196,14 +196,22 @@ struct MeasurementSettingsView: View {
               projection.grantId == nil else { return nil }
         return identity.subject + "/" + projection.household.id + "/" + projection.memberId
     }
+    private var statusMessage: String? {
+        if let actionResult { return actionResult.text }
+        guard let status else { return nil }
+        return status.consent == nil ? pTr("Household measurement is off") : pTr("Household measurement is enabled")
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
         Form {
             if scope != nil {
-                Text(actionResult?.text ?? (status?.consent != nil ? pTr("Household measurement is enabled") : pTr("Household measurement is off")))
-                    .id("measurement-consent-result")
-                    .accessibilityIdentifier("measurement.consent.result")
-                    .accessibilityFocused($resultFocused)
+                if let result = statusMessage {
+                    Text(result)
+                        .id("measurement-consent-result")
+                        .accessibilityIdentifier("measurement.consent.result")
+                        .accessibilityFocused($resultFocused)
+                }
                 Section(pTr("Optional household measurement")) {
                     Text(pTr("If you choose to participate, the household service stores your response codes, shop identity, eligible week and this notice version. It can match verified membership status once per household to study purchase retention. Grocery text, prices, member names and existing local responses are not sent."))
                     Text(pTr("Participation is optional. You can keep using the entire pickup without sending feedback. Withdrawal removes responses sent under that consent and stops counting your participation."))
@@ -242,7 +250,7 @@ struct MeasurementSettingsView: View {
     }
     private func perform(successText: String? = nil, _ operation: @escaping (HouseholdService) async throws -> MeasurementStatus) {
         guard !busy, let expected = scope, let service = household.service else { return }
-        busy = true; failed = false; actionResult = nil; resultFocused = false
+        status = nil; busy = true; failed = false; actionResult = nil; resultFocused = false
         Task {
             defer { busy = false }
             do {
@@ -321,7 +329,11 @@ struct SharedMeasurementFeedbackView: View {
             } else { Text(pTr("Return to the current authenticated adult household.")) }
         }.navigationTitle(pTr("Optional pickup feedback"))
             .disabled(busy)
-            .task(id: scope) { status = nil; page = nil; actionResult = nil; resultFocused = false; if scope != nil { run { _ in } } }
+            .task(id: scope) {
+                clearDraft()
+                status = nil; page = nil; actionResult = nil; resultFocused = false
+                if scope != nil { run { _ in } }
+            }
             .onChange(of: actionResult?.id) { _, id in
                 resultFocused = false
                 guard let id, let expected = scope, actionResult?.scope == expected else { return }
@@ -344,10 +356,18 @@ struct SharedMeasurementFeedbackView: View {
                 let currentStatus = try await service.measurementStatus()
                 let currentPage = try await service.measurementFeedback(shopID: shopID)
                 guard scope == expected else { status = nil; page = nil; return }
+                // Keep unsent choices on an ordinary refresh of the same live
+                // consent. A recorded answer or changed consent ends that draft.
+                if currentPage.feedback != nil || currentStatus.consent?.consentId != status?.consent?.consentId {
+                    clearDraft()
+                }
                 status = currentStatus; page = currentPage
                 if let successText { actionResult = MeasurementActionResult(scope: expected, text: successText) }
             } catch { guard scope == expected else { status = nil; page = nil; return }; failed = true }
         }
+    }
+    private func clearDraft() {
+        decision = nil; baseline = nil; comparison = nil
     }
     private func localDecision(_ value: MeasurementAnswer.Outcome) -> PickupDecision {
         value == .late ? .tooLate : value == .alreadyKnew ? .alreadyKnew : PickupDecision(rawValue: value.rawValue)!
