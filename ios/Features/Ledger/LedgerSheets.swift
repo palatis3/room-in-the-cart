@@ -124,9 +124,9 @@ struct LedgerImportView: View {
                 .sheet(item: $capturePresentation) { presentation in
                     let binding = presentation.binding
                     NavigationStack {
-                        CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.localeIdentifier,
+                        CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.captureLanguage,
                             destination: presentation.destination, existingCapture: presentation.reviewed,
-                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: CaptureCorrectionScope.appLanguage()),
+                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.captureLanguage),
                             authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                     }
                 }
@@ -189,7 +189,7 @@ struct LedgerImportView: View {
         return LedgerCaptureBinding(workspaceID: workspaceID, shopID: shopID, revision: shop.revision,
             actorID: access.localActorID, subject: household.identity?.subject,
             householdID: household.projection?.household.id, memberID: household.projection?.memberId,
-            role: household.projection?.role, localeIdentifier: locale.identifier)
+            role: household.projection?.role, localeIdentifier: locale.identifier, captureLanguage: CaptureCorrectionScope.appLanguage())
     }
     private var captureAuthorized: Bool { captureBinding != nil && liveCaptureBinding == captureBinding }
     private func beginCapture() {
@@ -270,6 +270,7 @@ private struct LedgerCaptureBinding: Equatable {
     let memberID: String?
     let role: String?
     let localeIdentifier: String
+    let captureLanguage: String
 }
 
 private struct LedgerCapturePresentation: Identifiable {

@@ -59,6 +59,17 @@ import UniformTypeIdentifiers
         XCTAssertFalse(speech.active)
         XCTAssertEqual(model.text, "12 wraps")
     }
+    func testDictationUsesTheInterfaceLanguageForRecognitionAndReview() async {
+        let speech = FakeSpeech()
+        let model = CaptureModel(initialText: "Arroz", speech: speech, ocr: FakeOCR())
+        model.startSpeech()
+        await settle { model.listening }
+        let expected = CaptureCorrectionScope.appLanguage()
+        XCTAssertEqual(speech.locale, expected)
+        model.stopSpeech()
+        model.confirmed = true
+        XCTAssertEqual(model.reviewed()?.localeIdentifier, expected)
+    }
     func testRepeatedSpeechCallbackDoesNotAppendOrApply() async {
         let speech = FakeSpeech(); let model = make(speech); model.startSpeech()
         await settle { model.listening }
@@ -170,6 +181,7 @@ import UniformTypeIdentifiers
 
 @MainActor private final class FakeSpeech: CaptureSpeechService {
     var failure: CaptureFailure?
+    var locale: String?
     var onBegin: (() -> Void)?
     var begins = 0; var stops = 0; var active = false
     var pausePermission = false
@@ -177,6 +189,7 @@ import UniformTypeIdentifiers
     private var stream: AsyncThrowingStream<SpeechCaptureUpdate, Error>.Continuation?
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         begins += 1
+        locale = localeIdentifier
         onBegin?()
         if pausePermission { await withCheckedContinuation { permission = $0 } }
         if let failure { throw failure }

@@ -34,9 +34,11 @@ try await CaptureCorrectionStore.shared.eraseProfile(scope)
 
 The locale argument does not limit erasure: all locale files for that profile are removed. A content-free hashed retirement marker prevents late recreation across restart. A storage failure throws so the Records erasure journal remains retryable. Normal default directory: `Application Support/RoomInTheCart/CaptureCorrections`; DEBUG `--ui-testing`: `Application Support/UITestWorkspace/CaptureCorrections`. An injected directory is preserved. There is no automatic reset of development profiles.
 
-## Guest proposal port
+## Dinner guest review
 
-`GuestCaptureReviewView(meals:localeIdentifier:authorize:onPreview:)` is a separate reusable review sheet. It requires explicit meal and nonprotected group selection, a reviewed new total and confirmation. `ReviewedGuestCapture` contains `id`, `originalText`, `occurrenceID`, `groupID`, `baselineServings` and `total: Rational`. The host must re-fetch the current meal/group, verify the baseline and protected status, replace only the selected group’s total, and call `DinnerFeatureModel.previewGuests(occurrenceID:servings:isolated:)`. Only the existing planner’s later Apply may commit. This sheet does not call Apply. The Dinners entry wiring is a separate pending integration; grocery capture never changes guest counts implicitly.
+In Dinners, **Review guest change** opens `GuestCaptureReviewView`. The shopper selects a meal and an unprotected serving group, then enters a total or accepts a suggestion from the wording. Editing the wording clears a total copied from a suggestion. A manually entered total stays editable, and the shopper must confirm it again. List, contributor and guest dictation use the app’s US English or US Spanish language.
+
+`DinnerFeatureModel.previewGuestTotal` checks the reviewed revision, meal and group before sending the new total through the dinner planner. The shopper can cancel that preview or apply it to the draft.
 
 ## Permissions and device behavior
 
@@ -52,7 +54,7 @@ The isolated combined suite has 43 passing tests, including actual local Vision 
 
 The [native microphone refusal probe](../../../docs/evidence/native/microphone-refusal-20261104.json) passed on a fresh US-English iPhone 17e simulator. Run the probe in Debug on a fresh iOS 27 simulator by adding `SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG NATIVE_MICROPHONE_PERMISSION_PROBE'` to `xcodebuild test` and selecting `-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable`. Both system permissions must start undetermined. The probe requires both native prompts and verifies the typed item after relaunch.
 
-Still required: root native/runtime integration checks; physical microphone and permission refusal tests; airplane-mode recognition availability; noisy speech and low-light bilingual photo review; large text/VoiceOver and human US-Spanish review; shared contributor request-only capture routing; actual Dinners guest entry; physical camera/barcode/manual product matching; native runtime verification of persistent package attachments and receipt/recipe-specific review. Optional widgets/share/reminders and print/aisle work have separate owners and device gates. B09 is not complete.
+Still required: root native/runtime integration checks; physical microphone and permission refusal tests; airplane-mode recognition availability; noisy speech and low-light bilingual photo review; large text/VoiceOver and human US-Spanish review; physical camera/barcode/manual product matching; native runtime verification of persistent package attachments and receipt/recipe-specific review. Optional widgets/share/reminders and print/aisle work have separate owners and device gates. B09 is not complete.
 
 
 ## Integrated scan and reviewed recipe routes (2026-11-03)

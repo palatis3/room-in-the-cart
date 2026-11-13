@@ -12,11 +12,12 @@ import CoreDomain
     @State private var mealID: UUID?
     @State private var groupID: UUID?
     @State private var total = ""
+    @State private var usedSuggestion = false
     @State private var confirmed = false
     @State private var delivered = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
-    init(meals: [CaptureGuestMealChoice], localeIdentifier: String = Locale.current.identifier,
+    init(meals: [CaptureGuestMealChoice], localeIdentifier: String = CaptureCorrectionScope.appLanguage(),
          dismissAfterPreview: Bool = true, cancelDecision: (() -> Void)? = nil,
          authorize: @escaping () -> Bool, onPreview: @escaping (ReviewedGuestCapture) -> Void) {
         self.dismissAfterPreview = dismissAfterPreview; self.cancelDecision = cancelDecision
@@ -61,9 +62,16 @@ import CoreDomain
                 if let group { Text(captureText("Current servings") + ": " + group.currentServings.description) }
                 if let proposedTotal {
                     Text(captureText("Possible new total to review") + ": " + proposedTotal.description)
-                    Button(captureText("Use this proposed total")) { total = proposedTotal.description; confirmed = false }
+                    Button(captureText("Use this proposed total")) {
+                        total = proposedTotal.description
+                        usedSuggestion = true
+                        confirmed = false
+                    }
                 }
-                TextField(captureText("Reviewed new total servings"), text: $total).keyboardType(.numbersAndPunctuation)
+                TextField(captureText("Reviewed new total servings"), text: Binding(
+                    get: { total },
+                    set: { value in total = value; usedSuggestion = false }
+                )).keyboardType(.numbersAndPunctuation)
                 Text(captureText("Protected groups stay unchanged. Ambiguous wording needs a typed total. The dinner planner will show pack, lunch and checkout effects before any Apply."))
                 Toggle(captureText("I checked the original wording, chosen meal, group and new total."), isOn: $confirmed)
             }
@@ -82,10 +90,13 @@ import CoreDomain
         }
         .navigationTitle(captureText("Review guest change"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { capture.close(); if let cancelDecision { cancelDecision() } else { dismiss() } } } }
-        .onChange(of: capture.text) { _, _ in confirmed = false }
+        .onChange(of: capture.text) { _, _ in
+            if usedSuggestion { total = ""; usedSuggestion = false }
+            confirmed = false
+        }
         .onChange(of: total) { _, _ in confirmed = false }
-        .onChange(of: mealID) { _, _ in groupID = nil; total = ""; confirmed = false }
-        .onChange(of: groupID) { _, _ in total = ""; confirmed = false }
+        .onChange(of: mealID) { _, _ in groupID = nil; total = ""; usedSuggestion = false; confirmed = false }
+        .onChange(of: groupID) { _, _ in total = ""; usedSuggestion = false; confirmed = false }
         .onChange(of: meals) { _, _ in capture.close(); dismiss() }
         .onChange(of: scenePhase) { _, phase in if phase == .background { capture.close(); dismiss() } }
         .task {

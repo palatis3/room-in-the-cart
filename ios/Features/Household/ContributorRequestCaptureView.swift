@@ -11,10 +11,8 @@ import SwiftUI
     @State private var sending = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
-    @Environment(\.locale) private var locale
 
     private var authorized: Bool { !sending && household.contributorRequestScope == scope }
-    private var captureLanguage: String { locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US" }
     var body: some View {
         Group {
             if let review {
@@ -49,9 +47,10 @@ import SwiftUI
                 }.navigationTitle(ht("Review your request"))
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
             } else if capture {
+                let captureLanguage = CaptureCorrectionScope.appLanguage()
                 CaptureReviewView(initialText: scope.quantity.isEmpty ? scope.item : scope.quantity + " " + scope.item,
                     localeIdentifier: captureLanguage, destination: scope.destination, requestMode: true, dismissOnReview: false,
-                    correctionScope: household.contributorCorrectionScope(for: scope, localeIdentifier: CaptureCorrectionScope.appLanguage()),
+                    correctionScope: household.contributorCorrectionScope(for: scope, localeIdentifier: captureLanguage),
                     authorize: { authorized }) { value in
                         guard authorized else { return }
                         do { review = try ContributorRequestReview.captured(value, scope: scope); approved = false }

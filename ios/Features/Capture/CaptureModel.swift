@@ -20,7 +20,7 @@ import Combine
     let id: UUID
     let localeIdentifier: String
 
-    init(initialText: String = "", localeIdentifier: String = Locale.current.identifier, id: UUID = UUID(),
+    init(initialText: String = "", localeIdentifier: String = CaptureCorrectionScope.appLanguage(), id: UUID = UUID(),
          speech: any CaptureSpeechService, ocr: any CaptureOCRService, initialEvidence: CaptureEvidence? = nil) {
         text = initialText; self.localeIdentifier = localeIdentifier; self.id = id
         self.speech = speech; self.ocr = ocr; self.acceptedEvidence = initialEvidence

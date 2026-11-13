@@ -28,7 +28,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @FocusState private var sourceTextFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
 
-    init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
+    init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = CaptureCorrectionScope.appLanguage(),
          destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
          authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
         let evidence = existingCapture.map { CaptureEvidence(text: $0.originalText, source: $0.source,
