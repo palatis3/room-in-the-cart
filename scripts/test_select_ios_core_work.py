@@ -118,7 +118,7 @@ class SelectCoreWorkTests(unittest.TestCase):
                              [test_selection(row) for row in original_ui])
             self.assertEqual([(r['shard'], r['provider'], r['macos_slot'], r.get('m4_slot')) for r in consumers], [
                 ('ui-01', 'bitrise-m4', 1, 0), ('ui-02', 'bitrise-m4', 2, 4),
-                ('ui-03', 'bitrise-m4', 3, 0), ('ui-04', 'bitrise-m4', 1, 3),
+                ('ui-03', 'bitrise-m4', 3, 0), ('ui-04', 'bitrise', 1, None),
                 ('ui-05', 'bitrise', 0, None), ('ui-06', 'bitrise-m4', 1, 1),
                 ('ui-07', 'bitrise-m4', 2, 2), ('ui-08', 'bitrise-m4', 3, 3),
                 ('ui-09', 'bitrise-m4', 3, 5), ('ui-10', 'bitrise-m4', 0, 2),

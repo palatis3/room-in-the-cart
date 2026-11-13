@@ -59,7 +59,7 @@ def main():
         # The producer already has the simulator and compiled model tests.
         # Route UI jobs independently while keeping the fallback for every row.
         m4_slots = {
-            'ui-02': 4, 'ui-03': 0, 'ui-04': 3, 'ui-06': 1,
+            'ui-02': 4, 'ui-03': 0, 'ui-06': 1,
             'ui-07': 2, 'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
         }
         # The full UI01 group finished last on two combined builds. Its shorter
@@ -76,7 +76,8 @@ def main():
             if shard in m4_slots:
                 row.update(provider='bitrise-m4', m4_slot=m4_slots[shard])
             else:
-                row['provider'] = 'bitrise' if shard == 'ui-05' else 'github'
+                # UI04 and UI08 formerly queued behind each other on M4 slot 3.
+                row['provider'] = 'bitrise' if shard in ('ui-04', 'ui-05') else 'github'
             consumers.append(row)
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
