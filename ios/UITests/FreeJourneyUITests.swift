@@ -1774,14 +1774,28 @@ import XCTest
 
         let start = element("dinner.beginRecipeReview")
         let review = app.navigationBars["Photo and scan review"]
-        for _ in 0..<2 {
+        for attempt in 0..<2 {
             tap(start)
             XCTAssertTrue(review.waitForExistence(timeout: 8))
             let picker = app.buttons["Choose one photo for review"]
             reveal(picker)
             XCTAssertFalse(picker.isEnabled)
-            enableSwitch("Allow on-device photo processing for this review")
-            XCTAssertTrue(picker.isEnabled)
+            if attempt == 0 {
+                enableSwitch("Allow on-device photo processing for this review")
+                XCTAssertTrue(picker.isEnabled)
+            } else {
+                fill("Guiso\nRinde: 2 1/2 porciones\nIngredientes\n2 papas\nPreparación\nServings: 1",
+                     into: "scan.sourceEditor", requireDone: true)
+                tap(app.buttons["Review recipe fields"])
+                let servings = app.textFields["Reviewed servings"]
+                reveal(servings, initiallyUpward: false)
+                XCTAssertEqual(servings.value as? String, "2 1/2")
+                fill("3", into: "Reviewed servings", replacing: true, requireDone: true, control: servings)
+                XCTAssertEqual(servings.value as? String, "3")
+                let notes = app.descendants(matching: .any).matching(NSPredicate(format: "value == %@", "Servings: 1")).firstMatch
+                reveal(notes)
+                XCTAssertTrue(notes.exists)
+            }
             tap(app.buttons["Cancel"])
             XCTAssertTrue(review.waitForNonExistence(timeout: 8))
         }

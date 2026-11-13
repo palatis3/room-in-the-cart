@@ -3,7 +3,11 @@ import PhotosUI
 import CoreDomain
 
 @MainActor struct ScanReviewView: View {
-    private enum InputField: Hashable { case sourceText, manualCode }
+    private enum InputField: Hashable {
+        case sourceText, manualCode, sourceLabel
+        case recipeTitle, servings, sourceURL, instructions, ingredients
+        case receiptWording(UUID), receiptQuantity(UUID), receiptPrice(UUID)
+    }
 
     let kind: ScanKind
     let target: CaptureTarget
@@ -163,6 +167,7 @@ import CoreDomain
     private var packageFields: some View {
         Section(captureText("Manual product match")) {
             TextField(captureText("Product label you checked"), text: $label)
+                .focused($focusedField, equals: .sourceLabel)
             if let codes = model.accepted?.barcodes, !codes.isEmpty {
                 Picker(captureText("Choose a code to inspect"), selection: $barcodeID) {
                     Text(captureText("Choose explicitly")).tag(nil as String?)
@@ -189,6 +194,7 @@ import CoreDomain
         Section(captureText("Receipt lines are evidence only")) {
             Text(captureText("Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable."))
             TextField(captureText("Source reference label"), text: $label)
+                .focused($focusedField, equals: .sourceLabel)
             if receiptLines == nil {
                 Button(captureText("Review printed lines")) {
                     do { receiptLines = try ScanLimits.receiptLines(model.text); error = nil }
@@ -200,8 +206,11 @@ import CoreDomain
                     VStack(alignment: .leading) {
                         Text(row.wrappedValue.originalText).font(.footnote).textSelection(.enabled)
                         TextField(captureText("Reviewed line wording"), text: row.reviewedText, axis: .vertical)
+                            .focused($focusedField, equals: .receiptWording(snapshot.id))
                         TextField(captureText("Quantity wording, unknown if blank"), text: row.quantityNote)
+                            .focused($focusedField, equals: .receiptQuantity(snapshot.id))
                         TextField(captureText("Printed amount wording, unknown if blank"), text: row.priceNote)
+                            .focused($focusedField, equals: .receiptPrice(snapshot.id))
                     }
                 }
                 Toggle(captureText("I reviewed these lines as source evidence only."), isOn: $model.confirmed)
@@ -215,12 +224,17 @@ import CoreDomain
         Section(captureText("Editable recipe review")) {
             Text(captureText("Review the title, servings and ingredients. Accepting this draft does not choose a dinner or add groceries."))
             TextField(captureText("Recipe title"), text: recipeField(\.title))
+                .focused($focusedField, equals: .recipeTitle)
             TextField(captureText("Reviewed servings"), text: recipeField(\.servings)).keyboardType(.numbersAndPunctuation)
+                .focused($focusedField, equals: .servings)
             TextField(captureText("Source URL, attribution only"), text: recipeField(\.sourceURL)).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .focused($focusedField, equals: .sourceURL)
             Text(captureText("The source URL is saved as attribution. It is never fetched, and the recipe stays editable if the page disappears."))
             TextField(captureText("Recipe notes and instructions"), text: recipeField(\.notes), axis: .vertical)
+                .focused($focusedField, equals: .instructions)
             Text(captureText("Ingredient wording, one per line"))
             TextEditor(text: recipeField(\.ingredientText)).frame(minHeight: 140).accessibilityLabel(captureText("Ingredient wording, one per line"))
+                .focused($focusedField, equals: .ingredients)
             if let text = recipe?.unclassifiedText, !text.isEmpty {
                 Text(captureText("Unclassified source wording — copy only what belongs in the recipe"))
                 Text(text).textSelection(.enabled)
