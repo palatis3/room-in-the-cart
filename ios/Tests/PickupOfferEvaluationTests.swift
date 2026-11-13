@@ -211,6 +211,118 @@ final class PickupOfferEvaluationTests: XCTestCase {
         XCTAssertNil(legacy.evaluation); XCTAssertEqual(legacy.id, raw.id)
     }
 
+    @MainActor func testConfirmedForecastConversionKeepsOriginalMeasurementThroughSaveAndReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let model = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        cleanup.track(model)
+        await model.load()
+        let (template, raw) = try fixture(), line = try XCTUnwrap(template.pickup?.orderLines.first)
+        let started = await model.start(from: [BasketLine(id: line.id, name: line.name, quantity: line.ordered, expectedCost: .exact(money(1_000)))],
+            shopID: template.id, context: try XCTUnwrap(template.context), plannedNeeds: template.needs)
+        XCTAssertTrue(started)
+        let quoted = await model.setQuote(try XCTUnwrap(template.quote), cap: nil); XCTAssertTrue(quoted)
+        let frozen = await model.freeze(); XCTAssertTrue(frozen)
+        let placed = await model.reportPlaced(); XCTAssertTrue(placed)
+        let journey = try XCTUnwrap(model.journey)
+        var draft = PickupOfferForecastDraft(original: nil, journey: journey)
+        draft.updateConversionScope(.init(lineID: raw.lineID, replacement: raw.replacement, journey: journey))
+        draft.usable = "60.00"; draft.usableUnit = .gram
+        for need in journey.needs { draft.decisions[need.id] = need.priority == .protected ? .declined : .accepted }
+        let unknown = try reviewed(raw, draft.inputs(offer: raw, journey: journey), journey)
+        XCTAssertTrue(try PickupOfferEvaluation.evaluate(offer: unknown, journey: journey, at: now).issues.contains(.conversionUnknown))
+        draft.conversion = ComparisonConversion(sourceLiteral: "20.00", targetLiteral: "2", sourceUnit: .gram, targetUnit: .count,
+                                                sourceNote: "Measured two replacement wraps")
+        let approved = inputs(offer: raw, journey: journey)
+        draft.retained = PickupOfferCostDraft(approved.retainedOriginalCharge)
+        draft.otherCost = PickupOfferCostDraft(approved.otherCheckoutCost)
+        draft.wholeCap = "10.00"; draft.lineAllowance = "5.00"
+        draft.source = approved.checkoutSource; draft.observedAt = now
+        for need in journey.needs { draft.decisions[need.id] = need.priority == .protected ? .declined : .accepted }
+        let offer = try reviewed(raw, draft.inputs(offer: raw, journey: journey), journey)
+        let result = try PickupOfferEvaluation.evaluate(offer: offer, journey: journey, at: now)
+        XCTAssertFalse(result.issues.contains(.conversionUnknown))
+        XCTAssertTrue(result.dishes.allSatisfy { $0.shortfall == .zero })
+        XCTAssertEqual(result.dishes.first { $0.priority == .protected }?.originalAllocated, try Rational(2))
+        XCTAssertEqual(result.dishes.first { $0.priority == .required }?.replacementAllocated, try Rational(6))
+        XCTAssertEqual(result.combinedCost, .exact(money(1_000)))
+        let storedQuantity = try XCTUnwrap(offer.evaluation?.inputs.offeredUsable)
+        XCTAssertEqual(storedQuantity.originalLiteral, "60.00")
+        XCTAssertEqual(storedQuantity.confirmedConversion?.sourceLiteral, "20.00")
+        XCTAssertEqual(storedQuantity.confirmedConversion?.targetLiteral, "2")
+        XCTAssertEqual(storedQuantity.confirmedConversion?.sourceNote, "Measured two replacement wraps")
+        let saved = await model.saveReviewedOffer(offer, journeyID: journey.id, original: nil); XCTAssertTrue(saved)
+        let reopened = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        cleanup.track(reopened)
+        await reopened.load()
+        let restoredJourney = try XCTUnwrap(reopened.journey)
+        let restored = try XCTUnwrap(restoredJourney.offers.first)
+        XCTAssertEqual(restored, offer)
+        var edit = PickupOfferForecastDraft(original: restored, journey: restoredJourney)
+        XCTAssertEqual(try edit.inputs(offer: restored, journey: restoredJourney), restored.evaluation?.inputs)
+        edit.conversion = nil
+        XCTAssertTrue(edit.decisions.isEmpty)
+        for need in restoredJourney.needs { edit.decisions[need.id] = need.priority == .protected ? .declined : .accepted }
+        let removed = try reviewed(restored, edit.inputs(offer: restored, journey: restoredJourney), restoredJourney)
+        XCTAssertNil(removed.evaluation?.inputs.offeredUsable?.confirmedConversion)
+        XCTAssertTrue(try PickupOfferEvaluation.evaluate(offer: removed, journey: restoredJourney, at: now).issues.contains(.conversionUnknown))
+        XCTAssertEqual(reopened.journey, restoredJourney, "A cancelled edit leaves the saved measured offer intact")
+    }
+
+    @MainActor func testForecastConversionCannotFollowAnotherIngredientOrUnitAndPreservesLegacyBasis() throws {
+        let (journey, raw) = try fixture()
+        let legacyBasis = UnitBasis(sourceUnit: .count, targetUnit: .gram, targetAmountPerSourceUnit: try Rational(10), sourceNote: "Original measured wraps")
+        var input = inputs(offer: raw, journey: journey)
+        input.offeredUsable = Quantity(amount: try Rational(60), unit: .gram, originalLiteral: "60 grams measured", confirmedConversion: legacyBasis)
+        let original = try reviewed(raw, input, journey)
+        let baseline = PickupOfferForecastDraft(original: original, journey: journey)
+        let unchanged = try baseline.inputs(offer: original, journey: journey)
+        XCTAssertEqual(unchanged, input, "An inverse legacy basis and its missing original-literal fields stay byte-compatible")
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        XCTAssertEqual(try encoder.encode(unchanged.offeredUsable), try encoder.encode(input.offeredUsable))
+        func editedOffer(replacement: String, price: CostEvidence) -> PickupOffer {
+            PickupOffer(id: original.id, lineID: original.lineID, replacement: replacement,
+                        required: original.required, remainingOriginal: original.remainingOriginal,
+                        price: price, ceiling: original.ceiling, deadline: original.deadline,
+                        fallback: original.fallback, householdPreference: original.householdPreference,
+                        retailerResponse: original.retailerResponse, evaluation: original.evaluation)
+        }
+        let priceOnly = editedOffer(replacement: original.replacement, price: .exact(money(200)))
+        XCTAssertEqual(try baseline.inputs(offer: priceOnly, journey: journey).offeredUsable, input.offeredUsable)
+        let another = editedOffer(replacement: "Different replacement", price: original.price)
+        XCTAssertNil(try baseline.inputs(offer: another, journey: journey).offeredUsable?.confirmedConversion,
+                     "Review checks the actual offer even before SwiftUI delivers its change callback")
+        var changed = baseline
+        changed.updateConversionScope(.init(lineID: another.lineID, replacement: another.replacement, journey: journey))
+        changed.updateConversionScope(.init(lineID: original.lineID, replacement: original.replacement, journey: journey))
+        XCTAssertNil(changed.conversion, "Switching back cannot reactivate a previously reviewed measurement")
+        XCTAssertNil(try changed.inputs(offer: original, journey: journey).offeredUsable?.confirmedConversion)
+        changed = baseline
+        changed.usableUnit = .cup; changed.usableUnit = .gram
+        XCTAssertNil(try changed.inputs(offer: original, journey: journey).offeredUsable?.confirmedConversion)
+        changed = baseline
+        changed.updateConversionScope(.init(lineID: UUID(), replacement: original.replacement, journey: journey))
+        XCTAssertNil(changed.conversion)
+        var differentUnit = journey
+        let line = try XCTUnwrap(journey.pickup?.orderLines.first)
+        differentUnit.pickup = try PickupLedger(orderID: UUID(), orderLines: [
+            PickupOrderLine(id: line.id, branchID: line.branchID, name: line.name, ordered: q(8, .cup))])
+        XCTAssertNil(try baseline.inputs(offer: original, journey: differentUnit).offeredUsable?.confirmedConversion)
+        var renamedLine = journey
+        renamedLine.pickup = try PickupLedger(orderID: UUID(), orderLines: [
+            PickupOrderLine(id: line.id, branchID: line.branchID, name: "Another ingredient", ordered: line.ordered)])
+        XCTAssertNil(try baseline.inputs(offer: original, journey: renamedLine).offeredUsable?.confirmedConversion)
+        changed = baseline
+        changed.conversion = ComparisonConversion(sourceLiteral: "1", targetLiteral: "120", sourceUnit: .cup, targetUnit: .gram)
+        XCTAssertNil(try changed.inputs(offer: original, journey: journey).offeredUsable?.confirmedConversion)
+        var withoutBasis = input
+        withoutBasis.offeredUsable = q(60, .gram)
+        let unknown = try reviewed(raw, withoutBasis, journey)
+        XCTAssertNil(try PickupOfferForecastDraft(original: unknown, journey: journey).inputs(offer: unknown, journey: journey).offeredUsable?.confirmedConversion)
+    }
+
     @MainActor func testSavedForecastAndEffectiveNoteCeilingSurviveSQLiteAndRejectStaleSaveAndCopy() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }

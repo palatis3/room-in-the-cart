@@ -180,7 +180,7 @@ struct PickupOfferEditorView: View {
             TextField(pTr("Reviewed offer-specific maximum price"), text: $draft.ceiling).keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.ceiling")
             Text(pTr("A line ceiling does not establish that the whole checkout fits. Review combined charges separately."))
         }
-        PickupOfferForecastEditor(draft: $forecast, journey: journey, lineID: draft.lineID, offerID: offerID)
+        PickupOfferForecastEditor(draft: $forecast, journey: journey, lineID: draft.lineID, offerID: offerID, replacement: draft.replacement)
     }
 
     private var reviewChangesButton: some View {
