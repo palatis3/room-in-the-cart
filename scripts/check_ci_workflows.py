@@ -23,7 +23,7 @@ FIXTURE_JOBS = {('ios-fixtures.yml', name) for name in
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
 M4_BUILD_JOBS = {RELEASE_BUILD_JOB}
-ROUTED_NATIVE_JOBS = FIXTURE_JOBS | {CORE_BUILD_JOB} | M4_BUILD_JOBS | {('ci.yml', 'ios-tests')}
+ROUTED_NATIVE_JOBS = FIXTURE_JOBS | M4_BUILD_JOBS | {CORE_BUILD_JOB, ('ci.yml', 'ios-tests'), ('ios-deep.yml', 'storekit')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
 FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "

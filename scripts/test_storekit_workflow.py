@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import parse_workflow
+from check_ci_workflows import FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX, parse_workflow
 from is_storekit_launch_failure import is_launch_failure
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,7 +102,8 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertEqual(build['needs'], 'storekit-plan')
         self.assertEqual(tests['needs'], 'storekit-build')
         self.assertEqual(build['concurrency'], {'group': 'ritc-macos-slot-2', 'queue': 'max', 'cancel-in-progress': False})
-        self.assertEqual(tests['concurrency'], {'group': 'ritc-macos-slot-2', 'queue': 'max', 'cancel-in-progress': False})
+        self.assertEqual(tests['runs-on'], FIXTURE_RUNNER)
+        self.assertEqual(tests['concurrency'], {'group': FIXTURE_SLOT_PREFIX + '2', 'queue': 'max', 'cancel-in-progress': False})
         commands = '\n'.join(step.get('run', '') for step in build['steps'])
         self.assertEqual(commands.count('build-for-testing'), 1)
         self.assertIn('-scheme RoomInTheCart-LocalStoreKit', commands)

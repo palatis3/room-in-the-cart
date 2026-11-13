@@ -96,6 +96,11 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertIn('scripts/check_built_app.py', verify['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
+            if (workflow, name) == ('ios-deep.yml', 'storekit'):
+                # Billing checks its policy-selected OS after loading the shared products.
+                setup = next(s for s in jobs[name]['steps'] if s.get('id') == 'storekit-runtime')
+                self.assertIn('actual["buildversion"] == build', setup['run'])
+                continue
             code = command.split("python3 - <<'PYCODE'\n", 1)[1].rsplit('\nPYCODE', 1)[0]
             for version, build, passes in [('27.0', '24A434', True), ('27.0', '24A435', False), ('27.1', '24A434', False)]:
                 with self.subTest(job=name, version=version, build=build), \
