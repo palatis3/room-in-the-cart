@@ -1,0 +1,19 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "branch": "codex/parallel-ios-ci",
+  "publishedAt": "2026-11-06T18:37:34.789037+00:00",
+  "previousRemoteCommit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "publication": "single ordinary push; no manual dispatch or retry",
+  "purpose": "Reviewed five-slot macOS admission and independent performance/persisted-pickup evidence collection; app/test bodies and acceptance limits unchanged.",
+  "runIDs": [
+    42272379461,
+    42272379767,
+    42272379454,
+    42272379472,
+    42272379477,
+    42272379490
+  ],
+  "priorCandidateRemainsUnaccepted": true,
+  "qualificationRun": 42261730525,
+  "releaseAcceptance": false
+}

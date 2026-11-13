@@ -1,0 +1,20 @@
+{
+  "id": 13597036999,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5NzAzNjk5OQ==",
+  "name": "iphone-fixture-products-contributor-1",
+  "size_in_bytes": 64912155,
+  "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13597036999",
+  "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13597036999/zip",
+  "expired": false,
+  "digest": "sha256:812d621bb514c5f0bd1bccda4faf0a8fcc6ef45ed2589459d2c9e3f5b4d8183f",
+  "created_at": "2026-11-08T00:24:48Z",
+  "updated_at": "2026-11-08T00:24:48Z",
+  "expires_at": "2026-11-15T00:24:46Z",
+  "workflow_run": {
+    "id": 42428215965,
+    "repository_id": 1445928007,
+    "head_repository_id": 1445928007,
+    "head_branch": "codex/parallel-ios-ci",
+    "head_sha": "f90ad75a2e561891b2014ecb234d19639bcaed4c"
+  }
+}

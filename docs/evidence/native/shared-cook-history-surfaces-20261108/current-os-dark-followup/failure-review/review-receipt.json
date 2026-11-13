@@ -1,0 +1,30 @@
+{
+  "conclusion": "System share sheet remains visible at failure after the recorded Close tap; recipient lookup is obscured, not proven missing or wrong role.",
+  "productDefectLocated": false,
+  "closeTapFailureMechanismEstablished": false,
+  "patchType": "Additional strict post-Close dismissal assertion and failure evidence only; not a repair claim.",
+  "canonicalPatchApplied": false,
+  "canonicalTestSHA256": "fb8b1bd2015bf314dc700257cc8bee615345ca95dd1c0cda557dc0d18cf169a1",
+  "evidence": {
+    "closeTapSeconds": 35.56,
+    "recipientExistenceCheckSeconds": 37.26,
+    "failureScreenshot": "screens/C4D0D7B6-74B4-4997-B733-6111BA5F8DDD.png",
+    "failureScreenshotTimestamp": 1794135515.921,
+    "failureScreenshotObservation": "Fully populated system share sheet remains onscreen, with Close X at upper right; recipient cannot be visually reached.",
+    "beforeShareScreenshot": "screens/00617AED-DAD3-46D5-8DA3-03A579F312CC.png",
+    "hierarchyLimitation": "Both exported textual hierarchies predate share presentation; no retained text proves Close enabled state, actual tap point, post-tap delivery, disappearance/reappearance, or exact recipient frame."
+  },
+  "export": {
+    "actualNodeIdentifierURLUsed": true,
+    "filters": [
+      "*.txt",
+      "*.debug",
+      "*.png"
+    ],
+    "videoExported": false,
+    "unfilteredExport": false,
+    "allCommandsExitZero": true,
+    "originalUnchanged": true
+  },
+  "nextEvidence": "Observe the close-tap boundary directly: Close enabled/hittable/frame and tap point, then post-tap screen/hierarchy and actual disappearance. Prefer retained narrowly exported snapshots/events if separately approved, else the explicit no-retry dismissal boundary patch preserves a failure there."
+}

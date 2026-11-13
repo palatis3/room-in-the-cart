@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "AF0BDFCB-AD9E-44D1-B38C-BE60F845C84F.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_73EFC0AB-9851-4ABF-BAA5-0FB3221485AB.txt",
+        "timestamp" : 1794192880.511
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "276CDF78-C19B-48C7-A1A9-D55FC031E48E.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_5358DD52-968C-40A6-BD1E-EDBF8A6BF188.txt",
+        "timestamp" : 1794192877.534
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "53EB8DAA-F75F-401B-874D-02F46C7313EC.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_7AEDEA0D-F112-4467-A21F-5D72F363AD4B.txt",
+        "timestamp" : 1794192868.768
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testRetainedSpanishDinnerApprovalRootRecoveryDiagnostic()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testRetainedSpanishDinnerApprovalRootRecoveryDiagnostic"
+  }
+]

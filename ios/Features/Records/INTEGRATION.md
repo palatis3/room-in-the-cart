@@ -24,3 +24,63 @@ The protected `capture-scope-v1.json` journal binds the recovery-copy ID, kind a
 ## Dedicated native screen acceptance
 
 `RecordsMediaUITests` uses the actual Records entry and screens with isolated native stores and a real normalized JPEG. `RecordsMediaUIFixture` is compiled only under `DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE` and requires both `--ui-testing` and `--records-media-fixture`. It seeds a private local source and a newer independent related copy. Its guarded file adapter replaces only the system save destination and selected-file URL; production encryption, scope validation, staged review, cancellation and import remain in place. It checks default-off selection, size/private-content disclosure, preparation gates, ciphertext output, cancelled sibling review with unchanged source/registry, confirmed recovery and readable recovered-photo presentation. The final combined model/screen bundle passed **50/50** in `.build/F07-Recovered-UIFinal.xcresult`; the screen journey took 205.989 seconds. All seven manually attached screenshots were visually inspected. The prepared-file image/AX remains only in ignored local build evidence because it contains an ephemeral fixture recovery key. Passive review rows are scrolled into view before inspection; automatic completed-action status checks do not scroll.
+
+
+## Shared historical entry points (November 10)
+
+Records now includes **Shared pickup records**: find a past shared pickup, open
+its existing household-shop screen, or open placement reports directly. The
+history picker defaults to **Shops assigned to me**, whose existing service query
+includes closed pickups. Other callers retain the active-shop default. Selection
+uses the existing household selection/authorization path. The selected shop's
+existing routes expose confirmed orders, deliveries, saved cook copies and
+financial evidence subject to their current permissions; no new data store or
+permission was introduced. Original saved placement evidence retains its existing
+unlock path when household access has ended.
+
+The separate Records entries for family decisions and price/period history remain
+in place. Browsing these records does not establish that all their historical
+content is included in the current shared snapshot backup; that export gap remains
+explicit follow-up work.
+
+Validation: app build passed (`.build/SharedRecordsNov10/history-navigation/build.log`),
+changed Swift syntax passed, and localization checks passed30catalogs/4,745entries.
+No new end-to-end walkthrough or broad regression was run for this navigation edit.
+
+
+## Selected shared historical backup (November 10)
+
+Data and recovery now lists a separate **Shared pickup history** for the selected
+assigned-shopper scope. It reads `/records/history/v1` afresh and includes saved
+basket/meal revisions, dated cook text and marked sends, deliveries and food
+reservations, family decisions, financial evidence and saved price observations.
+Optional `foodHistory` and `stockHistory` now retain exact demand graph ancestry,
+pack reviews, tracked/unbound quantities, selected-shop stock lots and observation,
+selection, match and reservation chronology. A released reservation is labeled as
+released; unknown stock remains distinct from confirmed zero. Older archives keep
+their original bytes and explicitly disclose sections that were not captured.
+Normal removed-meal revisions retain an explicit null marker. A historical file
+is an independent encrypted/readable record; it never supplies household access,
+consent, commands, replay receipts or live financial authority. Helper export of
+this private history is denied. Reimport reopens the same content once; known local
+erasure markers still prevent recovery.
+
+The existing server transaction rechecks current shopper scope and contributing
+members/consent before reading payloads. `stockHistory.carriedDeliveries` adds
+selected physical source ancestry from other pickups and its complete arrival/
+usable correction chain, with no foreign budget, basket or meal list. Older stock
+archives without the field retain their bytes and explicit missing-capture status.
+Physical-stock scope survives source-shop authority transfer. Opaque edited cook
+text instead requires current assigned-shopper scope on every recorded source
+shop. Retired/erased/missing sources or bounds make the affected history export
+unavailable; current snapshots remain a separate option.
+
+Focused server checks pass12/12 and Swift decoder/client checks pass11/11. The
+actual PostgreSQL suite passes444 with3separate browser skips, including carryover,
+known/unknown/zero corrections, source authority loss and retirement. Logs:
+`.build/SharedRecordsNov10/carried-history-database`; disposable cluster stopped
+and removed. App build and11archive/erasure checks pass with0skips/0runtime warnings
+in `.build/SharedRecordsNov10/carried-history-native`. Those include four existing
+local cleanup/restore checks, not a new recovery subsystem. Known local erasure
+markers continue to prevent import; household reattachment never derives access
+from files. Actual authenticated lifecycle and human/device walkthroughs remain.

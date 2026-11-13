@@ -1,0 +1,24 @@
+{
+  "status": "terminal",
+  "startedAtUTC": "2026-11-08T09:28:48.792210+00:00",
+  "endedAtUTC": "2026-11-08T09:40:48.603137+00:00",
+  "nativeStartedAtUTC": "2026-11-08T09:28:57.080355+00:00",
+  "expectedCount": 5,
+  "retries": 0,
+  "automaticNextRun": false,
+  "preparationSHA256": "967958393dfa0bd13a13c2fad5a786874b0dd882d8cfaeefef40a037a56ff0f7",
+  "sourceManifestSHA256": "8d24f5e7cce1b19527e29516a149e46a606fc2e3c9773f843faa118b923ae6ee",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runtimeEnvironment": {
+    "SIMULATOR_ROOT": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+    "SIMULATOR_RUNTIME_VERSION": "26.2",
+    "SIMULATOR_RUNTIME_BUILD_VERSION": "23C54"
+  },
+  "settings": {
+    "appearance": "light",
+    "increase_contrast": "disabled",
+    "content_size": "large"
+  },
+  "exitCode": 0,
+  "sourcePinsAfterRun": true
+}

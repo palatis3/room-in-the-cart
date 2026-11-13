@@ -1,0 +1,80 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "01135E0E-6835-403B-9ABE-F49264C9B216.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-date-ink-UICTContentSizeCategoryL_0_AF81C7CB-88DD-4CD7-8D40-473F93A0D41D.png",
+        "timestamp" : 1794170527.739
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "34EA8E22-CEE9-4943-B6FF-2EDF3CAE35F4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-date-UICTContentSizeCategoryL_0_B4E74565-298C-48CF-98EB-26DFCECD1936.png",
+        "timestamp" : 1794170527.523
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "1E62E260-B859-4EB1-B7AB-913E8E7178BB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-title-ink-UICTContentSizeCategoryL_0_7FC13842-EE89-4C1C-9084-DDEEFA866866.png",
+        "timestamp" : 1794170524.725
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "00A0BE41-8CA4-4160-B440-DA5E451887CB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-title-UICTContentSizeCategoryL_0_EC854473-CE7D-4488-9B85-1C83E46CA441.png",
+        "timestamp" : 1794170524.497
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C8C28711-8D2A-487F-9094-9D0120484572.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-protected-heading-ink-UICTContentSizeCategoryL_0_BA529807-55B7-4339-B883-1B76924B3EE8.png",
+        "timestamp" : 1794170519.895
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "1F083455-0D7F-47F7-9DD4-B9CD89421CB0.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-protected-heading-UICTContentSizeCategoryL_0_3C140CF1-702D-41F7-94CA-9F203147D176.png",
+        "timestamp" : 1794170519.734
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "B5C1F884-1290-4574-A8D4-71D30C890072.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-review-ink-UICTContentSizeCategoryL_0_6AC4300A-15DE-4C5D-83A1-DA298738FF68.png",
+        "timestamp" : 1794170512.567
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "311010CF-98C2-4A8A-861C-48A61E84C65B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-visible-review-UICTContentSizeCategoryL_0_426D0E8A-DC50-4080-9875-673189E8A5CC.png",
+        "timestamp" : 1794170512.396
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testAuditNamedTargetsAtStandardText()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testAuditNamedTargetsAtStandardText"
+  }
+]

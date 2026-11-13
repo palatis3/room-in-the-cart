@@ -1,0 +1,74 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "run": 42184704871,
+  "attempt": 1,
+  "job": 127786281734,
+  "artifact": 13492539382,
+  "archiveSHA256": "34c27d465f96bdb962f0d94b289bb05225f019dde73c1bf400cb892117b58c57",
+  "test": "LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+  "durationSeconds": 59.39,
+  "group": {
+    "selected": 6,
+    "passed": 5,
+    "failed": 1,
+    "strictExit": 1,
+    "warnings": 2,
+    "warningNote": "Two allowed Menu warnings in different passing test; failed stock case0warnings"
+  },
+  "source": "source-LedgerConfirmedStockPackUITests.swift",
+  "sourceSHA256": "e317be1e4049a9d54f60a7addc727d8edc4536bb10573a8cb23a910d40548ed5",
+  "sourceLocations": {
+    "call": 80,
+    "anyFirstSelector": 98,
+    "fillTapAndType": 101
+  },
+  "lastCompletedBusinessCheck": "Imported12wraps input readback then reviewed checkout applied; Confirm pantry or freezer food opened before46.892s target lookup",
+  "firstUnexpectedAction": "At49.146s tap resolves Actual food or freezer batch as StaticText instead of TextField",
+  "actualTapPoint": [
+    138.33333333333331,
+    233.5
+  ],
+  "tapEvent": "ui10-stock-attachments/22BA9543-CF1B-4F17-AB60-D99B1FA71C5A",
+  "tapSnapshot": "ui10-stock-attachments/D4006002-C180-4B1F-9F48-5980643861FE",
+  "failureAX": "ui10-stock-attachments/11D2AE6A-996A-43E7-B6C9-178279F5E3EB.txt",
+  "failureAXFrames": {
+    "labelStaticText": [
+      32,
+      223.3,
+      212.7,
+      20.3
+    ],
+    "editableTextField": [
+      32,
+      249.7,
+      338,
+      22
+    ],
+    "tabBar": [
+      0,
+      791,
+      402,
+      83
+    ],
+    "app": [
+      0,
+      0,
+      402,
+      874
+    ]
+  },
+  "frameInterpretation": "Actual tap matches center of static label, above editable field. Failure AX has empty text field with placeholder; no keyboard focus. No occlusion or offscreen tap evidence. Tap snapshot itself contains root only; detailed frames are from failure AX after typing attempts.",
+  "failureChronology": [
+    "app.typeText50.054s",
+    "first no-focus error50.969s",
+    "XCTest internal event retries52.060s and54.743s repeat same failure within one original test invocation",
+    "final failure56.253s"
+  ],
+  "idleAnimationTimeoutCount": 0,
+  "recording": "ui10-stock-attachments/DFA0E7DE-7DF6-4CAA-9D5A-2F28C21D22BA.mp4",
+  "limits": [
+    "No product assertion about confirmed stock quantities or pack result was reached.",
+    "No retained PNG; screenshot-named failure attachment is textual AX hierarchy. Video retained but not decoded for this proof.",
+    "Original strict failure preserved; no source changes, native test actions or CI retry."
+  ]
+}

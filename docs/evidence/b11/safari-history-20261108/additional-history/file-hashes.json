@@ -1,0 +1,15 @@
+{
+  "README.md": "8ca5beebe0be888e91a6fe8951ef2a25a936305c3dcedb42e80f651ee0855a23",
+  "copy-origins.json": "588e64019a7e06e3363fba9df6a580d5bef48d9fb39a87eadb881722eda44763",
+  "history-changed-receipt.json": "6f26edf41830643110f004ef1b7d48cb36c2adfe400ac87adc574bd011d6a1f9",
+  "history-changed-verification.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "history-changed-verification.stdout.txt": "3d65b4f0fe094556f31cbd4a2c0850ece22938fe518112b5c585ded039171697",
+  "history-offline-receipt.json": "aa0248a179dd4f1808dc6a6fee0fbbbeabbca4250665bb405061700c709cf951",
+  "history-offline-verification.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "history-offline-verification.stdout.txt": "a71244a19385dbbd88cf940921c842392311036fd1d1b2354d5e713c813d4908",
+  "history-revoked-receipt.json": "84116928548e808ec46f6df47afe855b42cea2d7009c218f3cfe8b7780fb28a9",
+  "history-revoked-verification.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "history-revoked-verification.stdout.txt": "529c40476aef486f381e087ba35bacbe9063aa56fcd667caf44d43714dcac8d7",
+  "original-proof-preservation.json": "c794a0ce8e05ff2a47b47da093e62c09390546fae471a7d3020da8338a47f205",
+  "verification.json": "9406f05e00f19a3e5a4e9707c2bcdc0f85871932b4a54a49380ce96e3811b7b6"
+}

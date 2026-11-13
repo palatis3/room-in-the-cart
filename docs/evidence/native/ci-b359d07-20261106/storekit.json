@@ -1,0 +1,36 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184704881,
+  "locales": {
+    "en": {
+      "artifactID": 13487951233,
+      "sha256": "6ccf9404116e5df866815ddb108046f4f4566010aa9f7a4a44322219c3765d72",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US English \u2014 local StoreKit"
+      ],
+      "failures": [],
+      "hostedJSONExportsPresent": true
+    },
+    "es": {
+      "artifactID": 13487927225,
+      "sha256": "7424d28f028bda67beb9b7ae6faff45b48dd38eaa6ff85df71da5cdd2fa2e72d",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+      ],
+      "failures": [],
+      "hostedJSONExportsPresent": true
+    }
+  }
+}

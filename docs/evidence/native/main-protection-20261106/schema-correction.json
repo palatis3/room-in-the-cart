@@ -1,0 +1,9 @@
+{
+  "reason": "Live API422 reports overlapping oneOf schemas for checks plus contexts. Use checks-only to preserve app binding.",
+  "removedOnly": {
+    "required_status_checks.contexts": []
+  },
+  "previousSHA256": "9edfb83ae60df16d6f88fb5408c7349b94d0dd6912f974a8a0fb1b46ed67a7e3",
+  "newSHA256": "7dbd589cb139a8c9c2ef60ac5138c73872bc023bce89948826a3b9d133855013",
+  "requiredChecksUnchanged": true
+}

@@ -1,0 +1,42 @@
+{
+  "baselineHostedCandidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+  "changes": "Typed element queries, exact visible fact labels instead of saved-facts ancestor, and fewer redundant accessibility queries. Full original create/save/restart/response/copy/restart/cancel assertions remain.",
+  "sourceSHA256": "fff3233bdaa17d3d56eb3daddcef578b072075019eb984decd0411d3efcaf46f",
+  "testResult": "Passed",
+  "durationSeconds": 536.623,
+  "rawExecutionGuardExit": 0,
+  "runtimeWarnings": 0,
+  "defaultExecutionAllowanceSeconds": 720,
+  "maximumExecutionAllowanceSeconds": 900,
+  "deviceAndConfiguration": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3DD8B7CF-812D-4483-B539-126EC029212E",
+        "deviceName": "RITC CI fixes 20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "evidenceHashes": {
+    "Tests.log": "067307de04bab5d4dc76f3df1ae4d16a369698ebe78d4966d5b48be89433146d",
+    "test-summary.json": "405bf9b4130f5df7853a900cf19181cc039abd33aacc66b57252d411ad5359c8",
+    "test-details.json": "687b5a32220263b6c3c3245797ae07e1636b5a6c00809478d2b5e9ab8a81cdd1",
+    "verification.txt": "1dc90f6b4307c765a657bf0b0e5171bddcc060353ccdc82e825cd1b395c9ecda"
+  },
+  "ownedSimulatorState": "Shutdown",
+  "previewSimulatorPreserved": true,
+  "limits": "Local Xcode27.1/iOS26.2build23C52 differs from hosted26.3/23C54. Original720-second hosted timeout remains failed. Fresh hosted validation required."
+}

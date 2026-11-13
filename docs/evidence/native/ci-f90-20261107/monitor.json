@@ -1,0 +1,267 @@
+{
+  "observedAtUtc": "2026-11-08T01:00:10Z",
+  "ref": "codex/parallel-ios-ci",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "runs": [
+    {
+      "runId": 42428216003,
+      "name": "iOS deep checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428216003",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 3,
+        "failure": 1
+      },
+      "jobs": {
+        "success": [
+          "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+          "sanitizers (thread)",
+          "sanitizers (address)"
+        ],
+        "failure": [
+          "storekit (en, US English — local StoreKit)"
+        ]
+      }
+    },
+    {
+      "runId": 42428215952,
+      "name": "iOS Release performance",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215952",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 3,
+        "pending": 1
+      },
+      "jobs": {
+        "success": [
+          "Build optimized iPhone test products",
+          "Release performance (launch)",
+          "Release performance (rendered)"
+        ],
+        "pending": [
+          "Release performance (scroll)"
+        ]
+      }
+    },
+    {
+      "runId": 42428215965,
+      "name": "iOS fixture checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 4,
+        "in_progress": 1,
+        "pending": 4
+      },
+      "jobs": {
+        "success": [
+          "fixture-plan",
+          "Build contributor, stock and carryover fixtures",
+          "Build dinner decision fixture",
+          "Fixture (contributor-balanced-02)"
+        ],
+        "in_progress": [
+          "Fixture (contributor-balanced-05)"
+        ],
+        "pending": [
+          "Fixture (contributor-balanced-03)",
+          "Fixture (contributor-balanced-01)",
+          "Fixture (contributor-balanced-04)",
+          "Fixture (RecordsMediaUITests)"
+        ]
+      }
+    },
+    {
+      "runId": 42428215935,
+      "name": "Build and test",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 8,
+        "failure": 2,
+        "in_progress": 4,
+        "pending": 1
+      },
+      "jobs": {
+        "success": [
+          "service-postgres",
+          "typescript (service)",
+          "ios-release",
+          "source-checks",
+          "typescript (web)",
+          "swift-packages",
+          "ios-build",
+          "ios-tests (models, 684)"
+        ],
+        "failure": [
+          "ios-swift-codeql",
+          "ios-tests (ui-01, 5)"
+        ],
+        "in_progress": [
+          "ios-tests (ui-02, 6)",
+          "ios-tests (ui-03, 6)",
+          "ios-tests (ui-04, 6)",
+          "ios-tests (ui-05, 6)"
+        ],
+        "pending": [
+          "ios-tests (ui-06, 8)"
+        ]
+      }
+    },
+    {
+      "runId": 42428215958,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215958",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleJobCounts": {
+        "success": 1
+      },
+      "jobs": {
+        "success": [
+          "native-wire"
+        ]
+      }
+    },
+    {
+      "runId": 42428215928,
+      "name": "Security checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215928",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleJobCounts": {
+        "success": 3
+      },
+      "jobs": {
+        "success": [
+          "Dependency review",
+          "CodeQL (actions)",
+          "CodeQL (javascript-typescript)"
+        ]
+      }
+    }
+  ],
+  "failures": [
+    {
+      "runId": 42428216003,
+      "jobId": 128571030378,
+      "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428216003/job/128571030378",
+      "failedStep": "Verify exact StoreKit configuration and all scenario results",
+      "classification": "Console verification failure caused by interleaved XCTest and simulator diagnostic output",
+      "nativeResult": {
+        "selected": 15,
+        "passed": 15,
+        "failed": 0,
+        "runtimeWarnings": 0
+      },
+      "selector": "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+      "detail": "The xcodebuild command succeeded and the raw console log contains a complete passing record embedded within a split StoreKit diagnostic. The hosted verifier matched only the start record because the passing record did not begin the line.",
+      "source": [
+        {
+          "path": ".github/workflows/ios-deep.yml",
+          "line": 100
+        },
+        {
+          "path": "scripts/check_ios_test_results.py",
+          "line": 41
+        }
+      ],
+      "artifact": {
+        "id": 13597590941,
+        "name": "storekit-en-1",
+        "directory": ".build/CIF90Nov07/storekit-en",
+        "evidence": [
+          {
+            "path": "StoreKit.log",
+            "lines": [
+              4422,
+              4423,
+              4424,
+              4440
+            ]
+          },
+          {
+            "path": "storekit-summary.json"
+          },
+          {
+            "path": "storekit-verification.txt"
+          },
+          {
+            "path": "test-runtime-warnings.json"
+          }
+        ]
+      }
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128573980752,
+      "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128573980752",
+      "failedStep": "Run selected tests and verify complete execution",
+      "classification": "Native XCTest setup failure and runner restart",
+      "nativeResult": {
+        "selected": 5,
+        "passed": 4,
+        "failed": 1,
+        "runtimeWarnings": 0
+      },
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+      "detail": "Failed to launch com.apple.Preferences: Timed out attempting to launch app. XCTest attached to Settings after the timeout, failed to reach the Motion control, and restarted. The share assertions did not run.",
+      "source": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "line": 470
+        },
+        {
+          "path": "ios/UITests/FreeJourneyUITests.swift",
+          "line": 354
+        }
+      ],
+      "artifact": {
+        "id": 13597417339,
+        "name": "iphone-results-ui-01-1",
+        "directory": ".build/CIF90Nov07/ui-01",
+        "evidence": [
+          {
+            "path": "Tests.log",
+            "lines": [
+              1175,
+              1231,
+              1238,
+              2631
+            ]
+          },
+          {
+            "path": "test-summary.json"
+          },
+          {
+            "path": "test-runtime-warnings.json"
+          }
+        ]
+      }
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128571030283,
+      "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128571030283",
+      "failedStep": "Compile Release Swift sources for CodeQL",
+      "classification": "GitHub-hosted runner lost communication",
+      "detail": "GitHub Checks reports a lost runner connection. The analysis and log-upload steps were skipped, the per-job log endpoint returned HTTP 404, and no CodeQL artifact was listed. The underlying reason the runner lost communication is unknown. The separate unsigned iOS Release build passed.",
+      "source": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "line": 353
+        }
+      ],
+      "checksAnnotation": {
+        "endpoint": "https://api.github.com/repos/palatis3/room-in-the-cart/check-runs/128571030283/annotations",
+        "message": "The hosted runner lost communication with the server. Anything in your workflow that terminates the runner process, starves it for CPU/Memory, or blocks its network access can cause this error."
+      },
+      "artifact": null
+    }
+  ],
+  "scope": "One point-in-time GitHub Actions snapshot. Visible job counts may increase as dependent matrices are created. No workflows were dispatched, retried or cancelled."
+}

@@ -1,0 +1,13 @@
+{
+  "publishedHead": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "analyzedPRMerge": "98e819cf55d79eab3b99a8af563fc91902f4bbb6",
+  "ref": "refs/pull/1/merge",
+  "analysisIDs": [
+    2100782807,
+    2100677648,
+    2100676765
+  ],
+  "openAlerts": 0,
+  "result": "All three CodeQL categories present with no analysis errors and no open alerts on queried PR ref.",
+  "scope": "PR merge analysis only; does not replace release branch identity gate."
+}

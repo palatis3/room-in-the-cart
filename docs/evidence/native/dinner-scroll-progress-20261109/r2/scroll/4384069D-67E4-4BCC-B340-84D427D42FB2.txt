@@ -1,0 +1,1 @@
+found after 0 gestures; target=; frame=(32.0, 462.6666666666665, 338.0, 65.0)

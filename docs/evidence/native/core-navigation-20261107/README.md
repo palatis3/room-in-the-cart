@@ -1,0 +1,9 @@
+# Complete original navigation journeys pass locally
+
+Both selected ordinary Debug cases passed on iPhone17/iOS26.2, Xcode27.1, with the unchanged720second default/900second maximum limits. Strict verification confirms exactly two starts and two passes, no skips or runner restarts, and zero recorded runtime warnings. [Receipt](strict.txt) · [Source and artifact hashes](verification.json).
+
+The complete store-quote case passed in336.617seconds. It keeps the original unknown trip-cash boundary, every reviewed source/price/availability predicate, cancellation, adoption, both restarts, corrected successor and immutable original proof. Only the two checks of the known top branch header use its existing identifier and search toward the top when its lazy row is absent. The original hosted run spent85.89seconds making16wrong-direction drags before reversing. The local corrected search takes two topward gestures; different toolchains prevent attributing the entire timing difference to this change. [Original failure and correction](../ci-f90-20261107/ui06-header-review/README.md).
+
+The Spanish comparison passed in80.915seconds, including the original food name, scope, totals, durable save and reopen after restart. Before its original single Save tap, the existing full-visibility helper now requires the entire button inside the results viewport. The observed ready button spansy696–748 within the viewporty116–783. Root inspected that screenshot and the reopened Spanish saved status. The original clipped tap does not prove a storage defect. [Original failure and limits](../ci-f90-20261107/ui07-save-review/README.md).
+
+Application sources, shared gesture helpers, inventories, retries, assertions and limits are unchanged. This local success does not relabel either original f90 failure or establish acceptance on hosted Xcode26.3. The separate balanced03 switch failure remains unresolved.

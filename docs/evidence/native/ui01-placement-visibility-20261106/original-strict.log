@@ -1,0 +1,19 @@
+Executed 4 of 4 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop | Failed | 331.42 |
+| RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint | Passed | 148.51 |
+| RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList | Passed | 139.51 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens | Passed | 29.97 |
+
+The XCTest test export recorded 2 runtime warning occurrences across 4 examined tests.
+The XCTest summary does not expose a runtime warnings field.
+- `RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint` recorded 2 warning(s), with 2 allowed. Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest logged a failure for RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop at log line 1352.
+XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

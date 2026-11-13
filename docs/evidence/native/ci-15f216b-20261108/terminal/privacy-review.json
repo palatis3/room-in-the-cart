@@ -1,0 +1,9 @@
+{
+  "scope": "Bounded original receipts, diagnostic structural stacks and synthetic-test log excerpts; no large stdout/binaries/media.",
+  "patternFindings": [],
+  "URLDomains": [
+    "api.github.com",
+    "github.com"
+  ],
+  "limits": "Pattern scan is not a universal secret detector. Reviewed URLs are provenance/API/documentation endpoints; no signed artifact URL or credential is retained. Test wording and IDs are synthetic."
+}

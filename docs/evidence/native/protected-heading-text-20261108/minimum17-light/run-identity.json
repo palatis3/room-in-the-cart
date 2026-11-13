@@ -1,0 +1,40 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T21:26:51.199644+00:00",
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "expectedCount": 2,
+  "cwd": "/Users/palatis/Room in the Cart",
+  "scope": "Native text protected heading with original standard simultaneous checkout/lunch journey and enhanced existing AX5 heading/expiry bounds, contrast and cancellation regression. Same selectors and limits; incremental cached build.",
+  "device": {
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-17-0",
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/D420C2CA-0E73-4213-9B96-1EB62EB061F6/data",
+    "dataPathSize": 3581423616,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+    "udid": "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+    "lastUsedAt": "2026-11-08T10:27:27Z",
+    "isAvailable": true,
+    "logPathSize": 356352,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation",
+    "state": "Booted",
+    "name": "RITC Cook Voice Minimum OS Nov08"
+  },
+  "bootedRuntimeRoot": "/Library/Developer/CoreSimulator/Volumes/iOS_21A328/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 17.0.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "C789FCDA-4AAB-11EE-AE48-7EDEE72CB155",
+    "ProductBuildVersion": "21A328",
+    "ProductCopyright": "1983-2023 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "17.0"
+  },
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "pid": 38241,
+  "nativeExit": 0,
+  "finishedAtUTC": "2026-11-08T21:30:30.782046+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "privateRunReceiptSHA256": "8fb0b3200620fd940274afd0918d664b43e942c58a71c8b9d351018752525409"
+}

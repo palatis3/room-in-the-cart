@@ -1,0 +1,17 @@
+{
+  "ownedSimulator": "789A7C41-16B3-4C42-AC3E-B65EC5423104",
+  "steps": [
+    {
+      "action": "shutdown",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "action": "delete",
+      "exit": 0,
+      "stderr": ""
+    }
+  ],
+  "absentAfterCleanup": true,
+  "protectedPreviewUntouched": "5FDE1E82-1FF7-4556-9C14-0746F6295944"
+}

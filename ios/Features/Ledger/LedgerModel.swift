@@ -9,7 +9,21 @@ private struct LedgerDocument: Codable {
     let workspace: LedgerWorkspace
 }
 
-private enum LedgerModelError: Error { case unsupportedDocument, noShop, notReady, pendingChange }
+private enum LedgerModelError: Error { case unsupportedDocument, noShop, notReady, pendingChange, mealScopeChanged, mealTemplateChanged }
+
+/// Captured when an editor opens; a SwiftUI redraw must not replace its original scope.
+struct LedgerMealEditContext {
+    let workspaceID: UUID?
+    let shopID: UUID?
+    let template: MealTemplate?
+    let chooseNow: Bool
+}
+
+struct LedgerMealSaveReview {
+    let id = UUID()
+    let context: LedgerMealEditContext
+    let candidate: MealTemplate
+}
 
 struct WholeLedgerDeletionReview: Codable, Equatable {
     let workspaceID: UUID
@@ -199,6 +213,12 @@ private enum LedgerDeletionJournal {
                                   operationID: UUID(), savedAt: clock())
             hasPendingSave = true
             return await retrySave()
+        } catch LedgerModelError.mealScopeChanged {
+            error = ledgerText("The pickup or workspace changed. Reopen the dinner for the pickup you want.")
+            return false
+        } catch LedgerModelError.mealTemplateChanged {
+            error = ledgerText("Your reusable dinner changed. Reopen it to review the current version.")
+            return false
         } catch LedgerError.stalePreview {
             error = ledgerText("This pickup changed after your preview. Return to the original text and review it again before adding it.")
             return false
@@ -211,6 +231,37 @@ private enum LedgerDeletionJournal {
         } catch {
             self.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
             return false
+        }
+    }
+
+    func mealEditContext(template: MealTemplate?, chooseNow: Bool) -> LedgerMealEditContext {
+        LedgerMealEditContext(workspaceID: sourceWorkspaceID, shopID: workspace.selectedShopID,
+                              template: template, chooseNow: chooseNow)
+    }
+
+    func saveReviewedMeal(_ review: LedgerMealSaveReview) async -> Bool {
+        let context = review.context, candidate = review.candidate
+        return await change(key: "meal-editor-\(review.id)") { workspace in
+            guard let workspaceID = context.workspaceID, sourceWorkspaceID == workspaceID,
+                  workspace.selectedShopID == context.shopID else { throw LedgerModelError.mealScopeChanged }
+
+            if context.chooseNow {
+                guard let shopID = context.shopID,
+                      let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw LedgerModelError.mealScopeChanged }
+                // The original occurrence can have been edited or removed since a lost reply.
+                if workspace.shops[index].mealOccurrences.contains(where: { $0.id == review.id }) { return }
+                try workspace.shops[index].chooseMeal(candidate, occurrenceID: review.id)
+            } else if let original = context.template {
+                guard candidate.id == original.id,
+                      let index = workspace.mealTemplates.firstIndex(where: { $0.id == original.id }) else { throw LedgerModelError.mealTemplateChanged }
+                if workspace.mealTemplates[index] == candidate { return }
+                guard workspace.mealTemplates[index] == original else { throw LedgerModelError.mealTemplateChanged }
+                workspace.mealTemplates[index] = candidate
+            } else {
+                if workspace.mealTemplates.contains(candidate) { return }
+                guard workspace.mealTemplates.isEmpty else { throw LedgerModelError.mealTemplateChanged }
+                workspace.mealTemplates.append(candidate)
+            }
         }
     }
 

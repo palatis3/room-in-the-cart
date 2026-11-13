@@ -1,0 +1,309 @@
+{
+  "source": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-ordinary-run/captures/png-0-7/A1E67644-F321-479B-90E6-4E39D3493806.png",
+  "PNG": {
+    "sRGBIntent": 0,
+    "width": 554,
+    "height": 96,
+    "bitDepth": 8,
+    "colorType": 2,
+    "channels": 3,
+    "allPixelsOpaque": true,
+    "chunkCRCsVerified": true,
+    "sha256": "ce3f9c1894f382cfa57e0d5e1256c03ec0d34315e8c3776933e16e562c7ce433"
+  },
+  "roiExclusive": [
+    0,
+    0,
+    554,
+    96
+  ],
+  "backgroundRGB": [
+    25,
+    88,
+    72
+  ],
+  "backgroundPixels": 50769,
+  "roiPixels": 53184,
+  "foregroundMaskRule": "maximum RGB distance from dominant background >= 8",
+  "components": [
+    {
+      "boxExclusive": [
+        312,
+        34,
+        317,
+        39
+      ],
+      "pixelCount": 24,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        320,
+        34,
+        338,
+        61
+      ],
+      "pixelCount": 281,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        178,
+        36,
+        200,
+        60
+      ],
+      "pixelCount": 262,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        257,
+        37,
+        269,
+        61
+      ],
+      "pixelCount": 163,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        200,
+        41,
+        218,
+        61
+      ],
+      "pixelCount": 191,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        219,
+        41,
+        237,
+        61
+      ],
+      "pixelCount": 229,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        239,
+        41,
+        257,
+        66
+      ],
+      "pixelCount": 283,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        271,
+        41,
+        288,
+        61
+      ],
+      "pixelCount": 231,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        291,
+        41,
+        303,
+        60
+      ],
+      "pixelCount": 130,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        312,
+        41,
+        317,
+        60
+      ],
+      "pixelCount": 95,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        340,
+        41,
+        358,
+        61
+      ],
+      "pixelCount": 229,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        360,
+        41,
+        377,
+        61
+      ],
+      "pixelCount": 231,
+      "excludedReason": null
+    }
+  ],
+  "retainedComponents": 12,
+  "dominantCoreCandidate": {
+    "RGB": [
+      255,
+      255,
+      255
+    ],
+    "pixels": 1321,
+    "contrast": 8.297771630528558,
+    "componentsWithColor": 12,
+    "componentsWhereColorIsMode": 12
+  },
+  "coreCandidates": [
+    {
+      "RGB": [
+        255,
+        255,
+        255
+      ],
+      "pixels": 1321,
+      "contrast": 8.297771630528558,
+      "componentsWithColor": 12,
+      "componentsWhereColorIsMode": 12
+    },
+    {
+      "RGB": [
+        135,
+        168,
+        160
+      ],
+      "pixels": 43,
+      "contrast": 3.215918009976079,
+      "componentsWithColor": 3,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        248,
+        250,
+        249
+      ],
+      "pixels": 32,
+      "contrast": 7.915854916823349,
+      "componentsWithColor": 8,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        60,
+        114,
+        100
+      ],
+      "pixels": 27,
+      "contrast": 1.4948148141428217,
+      "componentsWithColor": 5,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        175,
+        197,
+        191
+      ],
+      "pixels": 23,
+      "contrast": 4.568362089568746,
+      "componentsWithColor": 3,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        186,
+        205,
+        200
+      ],
+      "pixels": 21,
+      "contrast": 5.000148459396235,
+      "componentsWithColor": 4,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        210,
+        222,
+        219
+      ],
+      "pixels": 20,
+      "contrast": 6.010642081838966,
+      "componentsWithColor": 4,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        125,
+        161,
+        152
+      ],
+      "pixels": 19,
+      "contrast": 2.933199900246916,
+      "componentsWithColor": 2,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        241,
+        245,
+        244
+      ],
+      "pixels": 18,
+      "contrast": 7.549963918642366,
+      "componentsWithColor": 5,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        39,
+        98,
+        83
+      ],
+      "pixels": 17,
+      "contrast": 1.1688978574404307,
+      "componentsWithColor": 10,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        250,
+        252,
+        251
+      ],
+      "pixels": 17,
+      "contrast": 8.053567055220514,
+      "componentsWithColor": 5,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        252,
+        253,
+        253
+      ],
+      "pixels": 16,
+      "contrast": 8.142710398171264,
+      "componentsWithColor": 10,
+      "componentsWhereColorIsMode": 0
+    }
+  ],
+  "distributedColorSupport": true,
+  "sRGBProfileEstablished": true,
+  "requiredContrast": 4.5,
+  "assessment": "candidate meets 4.5:1; visual text-only and component review required",
+  "limits": [
+    "No automatic accessibility pass; verify crop contains the intended empty prompt, not entered text or another label.",
+    "No OCR. Component filters can exclude narrow letters and cannot prove a component is text.",
+    "Maximum/darkest pixel is deliberately not a passing criterion; caret/edges cannot qualify alone.",
+    "Candidate is the exact most frequent retained foreground RGB, requiring repeated component modes.",
+    "Antialiasing can bias the mode toward background; inspect candidate histogram before interpreting a failure.",
+    "No profile conversion; without explicit sRGB and absent ICC, numerical ratio is conditional on sRGB.",
+    "No image scaling, editing, native execution, or claims about other appearance/text-size states."
+  ]
+}

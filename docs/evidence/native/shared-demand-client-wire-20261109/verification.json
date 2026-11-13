@@ -1,0 +1,267 @@
+{
+  "scope": "Typed native service/outbox and focused real HTTPS/PostgreSQL boundary; not UI or full combined candidate acceptance",
+  "finalOwnedSources": {
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/Contracts.swift": {
+      "baseSHA256": "f0eb6e8523c126e9a3dbe05a31725d951b8d98adb042fa7d4228441e679d27e2",
+      "bytes": 6705,
+      "mode": "0o644",
+      "sha256": "335c0519c2c7b5b538985c78208c4328d9092ab022fb5e29cdf3ed0ecff942dc"
+    },
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift": {
+      "baseSHA256": "75ff566923d5c280d32c2d711be72bebd964c41879544b2be617dc5f8bc37141",
+      "bytes": 95330,
+      "mode": "0o644",
+      "sha256": "bd0871f0783475332d3844639ba66a527f49c40e5cdbb37b742da4135e8bd0ba"
+    },
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdSharedDemandService.swift": {
+      "baseSHA256": null,
+      "bytes": 4469,
+      "mode": "0o644",
+      "sha256": "7cf3b53aefc75e9f0c940deaaa6fc283b3397615607bf55fe521cb8144ec96dc"
+    },
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedDemandContracts.swift": {
+      "baseSHA256": null,
+      "bytes": 21742,
+      "mode": "0o644",
+      "sha256": "123f679973820f41e4aae669be6cf4f6ec72d7539a76ec23339f9bf69ce003ca"
+    },
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedDemandValidation.swift": {
+      "baseSHA256": null,
+      "bytes": 16729,
+      "mode": "0o644",
+      "sha256": "143f4dd00a4641bf646170779c50ddc3734f6ab2912007e3cc19e523ffe1a409"
+    },
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedDemandClientTests.swift": {
+      "baseSHA256": null,
+      "bytes": 17422,
+      "mode": "0o644",
+      "sha256": "378d84183beb0b802e85e2931d7e1de764016a55d0cdb93acb5b80b3bec8b737"
+    },
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedDemandNativeWire.swift": {
+      "baseSHA256": null,
+      "bytes": 10350,
+      "mode": "0o644",
+      "sha256": "4600419902c1d268c0ace9ec34f6196080dfbe4689ed29adf1d1833778e1339f"
+    },
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift": {
+      "baseSHA256": "bf1625bdff34c78262bf92e865bc7c53de7e4cbdf1a78c4d9fdf8f919a6464c2",
+      "bytes": 64730,
+      "mode": "0o644",
+      "sha256": "60b3cd04a66ed7ccbf978980ed8c3a674c6434849658f519e83b7594a19ea48b"
+    },
+    "service/scripts/test-native-wire.mjs": {
+      "baseSHA256": "16ba061586502956c49cf5943c11b254d196a81060bbbc85e3903eaa5bf7e75c",
+      "bytes": 6709,
+      "mode": "0o644",
+      "sha256": "8f3a66bd7dd2fa8d7525a63df2dedfb7315415e8c299ada127ac7b5ef2c42bb8"
+    },
+    "service/tests/shared-demand-native-wire.mjs": {
+      "baseSHA256": null,
+      "bytes": 4003,
+      "mode": "0o644",
+      "sha256": "dd2d55c7c2596ea4acce5687c49f827036a73f962fa7f24853ac9296171a0193"
+    },
+    "service/tests/shared-demand-native-wire.test.mjs": {
+      "baseSHA256": null,
+      "bytes": 1627,
+      "mode": "0o644",
+      "sha256": "597fc3f4ff471435d9e1b1ccccb1e905d4e77bc61cdef4b3dff1bac14221637e"
+    },
+    "service/tests/shared-demand.integration.mjs": {
+      "baseSHA256": "a6924eb5edaa47b0adb52ce182beb7613987d9bfc5b97d72696e92fda99622be",
+      "bytes": 52326,
+      "mode": "0o644",
+      "sha256": "7deb90ff6dc1d072e7b97b8ce9440eb03476823b7a48762f71892c647e615038"
+    }
+  },
+  "sourceManifestSHA256": "0f600cc06e7d4ce13d82f1bd74831591c50137970628d275d7e29299fd41b763",
+  "package": {
+    "tests": 117,
+    "passed": 114,
+    "expectedDatabaseSkips": 3,
+    "failed": 0,
+    "newFocusedTests": 6,
+    "swiftBuildSeconds": 50.34
+  },
+  "r1Wire": {
+    "nodePassed": 8,
+    "nodeFailed": 1,
+    "existingSwiftScenariosPassed": 15,
+    "newCancelPassed": true,
+    "failure": "Command-observation fixture consumed request bytes before authenticated API reader."
+  },
+  "fixtureCorrection": {
+    "productionSwiftChanged": false,
+    "offlineControlsPassed": 2,
+    "schemaProofSHA256": "6373b03f5ee5c2db0fe48d5bba1081b55c7fabd63a6b7c3965e534311cb77254",
+    "controlLogSHA256": "ba4bd7de9ae3965fe418197b4bac687639e39960915fd676e64894409b7436cf"
+  },
+  "r2Setup": {
+    "status": "stopped",
+    "reason": "Root focused adapter left unrelated test files selected; new demand Swift phases were never reached. Matching-file selection corrected for r3.",
+    "receiptSHA256": "5215b6969f2f60b44dc251ad01cdefe67b5df564e774af2ebf5d68cea9d720ff"
+  },
+  "r3FocusedWire": {
+    "nodePassed": 1,
+    "swiftScenariosPassed": 8,
+    "failed": 0,
+    "seconds": 19.518,
+    "recompiled": false,
+    "reusedExecutableHashesVerified": 1,
+    "originalBuildUnchanged": true,
+    "databaseStoppedAndPrivateStateRemoved": true
+  },
+  "attempts": {
+    "root-wire-r1": {
+      "receiptSHA256": "f17d826913da58ee230b49bdca0c5b2aaae58c4a3d9a10f23a9bd4adbeba53ec",
+      "cleanupSHA256": "5079d20b5a194d9b250ab6c68fa8716e06846c4799178f6f6545f1c1b09e5cb9",
+      "postgresStopped": true,
+      "privateStateRetained": true,
+      "scenarios": [
+        {
+          "scenario": "deferred-request",
+          "status": "passed",
+          "receiptSHA256": "715b48ef723c22403be07484625946fa25d68ce5f0ca2ade5a8822ef34433c67"
+        },
+        {
+          "scenario": "demand-adopt-apply",
+          "status": "failed",
+          "receiptSHA256": "479d48646fd327e61b11958b3731e15bd6ee9b1da3a0873db633ea2133d42367"
+        },
+        {
+          "scenario": "demand-adopt-cancel",
+          "status": "passed",
+          "receiptSHA256": "3f10b03aa51921dec8e33f4a35c740efee88d447b747ff6d78a2a447db625706"
+        },
+        {
+          "scenario": "history-free",
+          "status": "passed",
+          "receiptSHA256": "fb1f261eee4e703bff25b88b76c88963a98fc2713d8719bfeba02d2a7efc45ef"
+        },
+        {
+          "scenario": "history-paid",
+          "status": "passed",
+          "receiptSHA256": "3486698ccd42e915f0be26d3090b437e32277b5f7be0222221ca013f473ac281"
+        },
+        {
+          "scenario": "meal-fallback",
+          "status": "passed",
+          "receiptSHA256": "8f1f53a8e80519d25193dfb34b6485919664d8d41e19a7cc6fc1041add50466f"
+        },
+        {
+          "scenario": "meal-planner",
+          "status": "passed",
+          "receiptSHA256": "e84b13f560cc3b09ed7421f9510c957b59c60070e35551af646c0892f44d9f95"
+        },
+        {
+          "scenario": "meal-removal-cancel",
+          "status": "passed",
+          "receiptSHA256": "d7ef15db8f4a606d270336e03564d378873cd5d0d6a591e389b614f538193049"
+        },
+        {
+          "scenario": "meal-removal-read",
+          "status": "passed",
+          "receiptSHA256": "44663bc5b7b8720a064d59bd4574f8e19d8bccf067ed79006923e0e6d18eca67"
+        },
+        {
+          "scenario": "meal-removal-remove",
+          "status": "passed",
+          "receiptSHA256": "ec4556c5033f950a8c6fb19556a780bbbb8264db533f37f35f9ffdca2e516c26"
+        },
+        {
+          "scenario": "meal-shopper",
+          "status": "passed",
+          "receiptSHA256": "780c9742c3b7111d42007926c7aebb48b89fc7758b91e71c197e229e48a208d4"
+        },
+        {
+          "scenario": "meal-undated-schedule",
+          "status": "passed",
+          "receiptSHA256": "daabce792816706bb094342e506e5da4cecf2304050997ca9a497fab9a8ed7a3"
+        },
+        {
+          "scenario": "meal-undated-select",
+          "status": "passed",
+          "receiptSHA256": "c3b9abf9224c2d78ab9c1b50fe78c69dc070222818ccbe0d30b8a00a7018154e"
+        },
+        {
+          "scenario": "purchase-author",
+          "status": "passed",
+          "receiptSHA256": "81d9a70362dc1a7c9e49346721ca6350186bcb536bfeeb4430aea1ffc8492b58"
+        },
+        {
+          "scenario": "quote-adult",
+          "status": "passed",
+          "receiptSHA256": "4e232ef25fba694776f22c489f35d87a255ee9fd5f94f6094c7040479f467f3a"
+        },
+        {
+          "scenario": "quote-shopper",
+          "status": "passed",
+          "receiptSHA256": "ad1b889c5ab1c944e0c78205eb2eaba845491baee8e3cbf830b94ced24a73af5"
+        },
+        {
+          "scenario": "request-purchase",
+          "status": "passed",
+          "receiptSHA256": "b9d7cb72bdfd8dd3126d6f105220b726497bd66cc4499e812679783ab5965976"
+        }
+      ]
+    },
+    "root-wire-r2": {
+      "receiptSHA256": "538de79a0543f2f196772e350308d2ffa2ad30f8ad72d42408dd48c1b922165e",
+      "cleanupSHA256": "a67950244ac3c6ab50b2a22b96d25484829c8e4791dfaa64c35f40cf3b7f903e",
+      "postgresStopped": true,
+      "privateStateRetained": true,
+      "scenarios": []
+    },
+    "root-wire-r3": {
+      "receiptSHA256": "5b76ca73efadb1fefdd870e979bac4efd146f2277822b1c1c7e72102e3b45351",
+      "cleanupSHA256": "00572b3727d8faf83ed057f2fc355ee5fe23550e4e1f1e6f9257f5cda9f621dd",
+      "postgresStopped": true,
+      "privateStateRetained": false,
+      "scenarios": [
+        {
+          "scenario": "demand-adopt-apply",
+          "status": "passed",
+          "receiptSHA256": "1466185522d7985aa6998d8bef06b10e4ec0c20ed6bd888fb428b9d3e99f1b04"
+        },
+        {
+          "scenario": "demand-adopt-cancel",
+          "status": "passed",
+          "receiptSHA256": "b669d4fece03dd25cea6fdd209591cf62791af3812c66bfc806ad0d374ebb887"
+        },
+        {
+          "scenario": "demand-denied",
+          "status": "passed",
+          "receiptSHA256": "addcd48d8896d22b4add77f5556f2ce3c6d3d9ed6cfcd3d88610db6cc0804b4f"
+        },
+        {
+          "scenario": "demand-privacy",
+          "status": "passed",
+          "receiptSHA256": "14d9759b8088ca0cd22ba3506e42c66685027313a0e8adaddfad54871bd201ee"
+        },
+        {
+          "scenario": "demand-remove",
+          "status": "passed",
+          "receiptSHA256": "f9fa09da4fa17d291e9fbdc06110559d946e0ab13744a70866df90846d8a4c89"
+        },
+        {
+          "scenario": "demand-request",
+          "status": "passed",
+          "receiptSHA256": "eec13f965ef8e0b4f19e376f1d2cb29bf97a158e4d239b044aba2b122a5fd81f"
+        },
+        {
+          "scenario": "demand-stale-device",
+          "status": "passed",
+          "receiptSHA256": "1de41b09cd7cfea04eea3e2dec54ccf697ad92fb557484e6a6e845693e981574"
+        },
+        {
+          "scenario": "demand-undo",
+          "status": "passed",
+          "receiptSHA256": "5d794e95334547b7a6391ac0b1bbd37d87ec18c3495e443a341ced05b840a568"
+        }
+      ]
+    }
+  },
+  "finalCombinedCandidateQualified": false,
+  "nativeUIAccepted": false,
+  "deploymentPerformed": false
+}

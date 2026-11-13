@@ -1,0 +1,27 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705113,
+  "artifactID": 13487887181,
+  "archiveSHA256": "6068ff37ba1fff3f91c11752941e2bc7cfe1da3a55045b2312b0e3ed1f94d71a",
+  "digestVerified": true,
+  "binarySHA256": "c97dc281c9e0b175f126f76a4340624f27f856bcdbdd84ecfc9dd5cf0e3858a8",
+  "compiledMatrix": {
+    "include": [
+      {
+        "case": "launch",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance"
+      },
+      {
+        "case": "rendered",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup"
+      },
+      {
+        "case": "scroll",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+      }
+    ]
+  },
+  "scope": "Read-only symbol inspection of optimized test bundle using pinned candidate planner; no binary execution.",
+  "archiveMembers": 298,
+  "archiveDeclaredBytes": 357441247
+}

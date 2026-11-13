@@ -1,0 +1,14 @@
+{
+  "runID": 42309239002,
+  "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+  "verifiedFrozenFiles": 493,
+  "mismatches": [],
+  "collectionManifestSHA256": "4f6fb88485ad55fcc3e6348c32874802e8acbd5b9284ff08c5c4f0dd0f514162",
+  "terminalProofSHA256": "bac7265389da1bbe70bd4689deb2208e629a2c17373dee8032e6ea2429e3322c",
+  "summaryCountsVerified": true,
+  "exactOriginalSixInOrder": true,
+  "runtimeAndCleanupVerified": true,
+  "captureIncomplete": true,
+  "original804FailureResolved": false,
+  "releaseAcceptance": false
+}

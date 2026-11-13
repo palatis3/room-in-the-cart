@@ -1,0 +1,96 @@
+{
+  "deployment": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+  "checks": [
+    {
+      "path": "/internal/maintenance",
+      "method": "GET",
+      "authenticated": false,
+      "expected": 401,
+      "status": 401,
+      "pass": true,
+      "result": {
+        "error": "unauthorized"
+      }
+    },
+    {
+      "path": "/api/maintenance",
+      "method": "GET",
+      "authenticated": false,
+      "expected": 401,
+      "status": 401,
+      "pass": true,
+      "result": {
+        "error": "unauthorized"
+      }
+    },
+    {
+      "path": "/internal/maintenance",
+      "method": "GET",
+      "authenticated": false,
+      "expected": 401,
+      "status": 401,
+      "pass": true,
+      "result": {
+        "error": "unauthorized"
+      }
+    },
+    {
+      "path": "/internal/maintenance",
+      "method": "POST",
+      "authenticated": true,
+      "expected": 405,
+      "status": 405,
+      "pass": true,
+      "result": {
+        "error": "method_not_allowed"
+      }
+    },
+    {
+      "path": "/internal/maintenance",
+      "method": "GET",
+      "authenticated": true,
+      "expected": 200,
+      "status": 200,
+      "pass": true,
+      "result": {
+        "event": "operations_result",
+        "mode": "run",
+        "durationMs": 123,
+        "batchSize": 25,
+        "logoutProviderConfigured": false,
+        "privacyJobProcessingEnabled": false,
+        "privacyJournal": {
+          "state": "disabled",
+          "capacity": null
+        },
+        "auth": {
+          "expiredQueued": 0,
+          "emailsCleared": 0,
+          "authPurged": 0,
+          "rateBucketsPurged": 0,
+          "logoutCompleted": 0,
+          "logoutRetryScheduled": 0,
+          "logoutExpiredUnconfirmed": 0,
+          "leaseLost": 0
+        },
+        "privacy": {
+          "receiptsCleared": 0,
+          "jobsPurged": 0
+        },
+        "guardian": {
+          "expired": 0,
+          "purged": 0,
+          "retentionConfigured": false
+        },
+        "health": {
+          "authDue": 0,
+          "authRetryPending": 0,
+          "authExpiredUnconfirmed": 0,
+          "privacyPending": 0,
+          "privacyDue": 0
+        },
+        "attentionRequired": false
+      }
+    }
+  ]
+}

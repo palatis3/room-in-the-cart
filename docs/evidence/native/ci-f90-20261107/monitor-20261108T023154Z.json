@@ -1,0 +1,569 @@
+{
+  "observedAtUtc": "2026-11-08T02:31:54Z",
+  "previousSnapshot": "monitor-20261108T022046Z.json",
+  "previousObservedAtUtc": "2026-11-08T02:20:46Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 7
+      },
+      "remainingJobs": []
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 2,
+        "in_progress": 4,
+        "pending": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128599384101,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128600647338,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128601563444,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128603089001,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "status": "in_progress"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215935,
+      "jobId": 128588297174,
+      "name": "ios-tests (ui-09, 8)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128588297174",
+      "from": "in_progress",
+      "to": "failure",
+      "time": "2026-11-08T02:27:01Z"
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128602753103,
+      "name": "CI gate",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128602753103",
+      "from": "not_listed",
+      "to": "failure",
+      "time": "2026-11-08T02:27:07Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128591114527,
+      "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128591114527",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T02:27:04Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128595775547,
+      "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128595775547",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:21:49Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128600385824,
+      "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128600385824",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:28:34Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128601563444,
+      "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128601563444",
+      "from": "not_listed",
+      "to": "in_progress",
+      "time": "2026-11-08T02:21:52Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128603089001,
+      "name": "Fixture (DinnerDecisionSheetUITests)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128603089001",
+      "from": "not_listed",
+      "to": "in_progress",
+      "time": "2026-11-08T02:28:38Z"
+    }
+  ],
+  "newFailures": [
+    {
+      "runId": 42428215935,
+      "jobId": 128588297174,
+      "failedStep": "Run selected tests and verify complete execution",
+      "classification": "Native XCTest timeout after repeated animation-idle waits and runner restart",
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence",
+      "nativeResult": {
+        "selected": 8,
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1,
+        "failedTestDurationSeconds": 720
+      },
+      "detail": "The first animation-completion notice was missing after the Done tap following branch entry. Nine such waits were reported before the 720-second deadline, which expired during the initial 40.90 entry. Two more occurred after the deadline. The test did not reach the save and reopen assertions.",
+      "source": [
+        {
+          "path": "ios/UITests/ContextualNavigationUITests.swift",
+          "line": 48
+        },
+        {
+          "path": "ios/UITests/ContextualNavigationUITests.swift",
+          "line": 59
+        }
+      ],
+      "animationNotificationMisses": [
+        {
+          "logLine": 151,
+          "elapsedSeconds": 165.52
+        },
+        {
+          "logLine": 167,
+          "elapsedSeconds": 229.2
+        },
+        {
+          "logLine": 172,
+          "elapsedSeconds": 291.35
+        },
+        {
+          "logLine": 178,
+          "elapsedSeconds": 352.69
+        },
+        {
+          "logLine": 184,
+          "elapsedSeconds": 414.03
+        },
+        {
+          "logLine": 189,
+          "elapsedSeconds": 474.86
+        },
+        {
+          "logLine": 194,
+          "elapsedSeconds": 536.27
+        },
+        {
+          "logLine": 210,
+          "elapsedSeconds": 600.14
+        },
+        {
+          "logLine": 215,
+          "elapsedSeconds": 661.71
+        },
+        {
+          "logLine": 222,
+          "elapsedSeconds": 723.03
+        },
+        {
+          "logLine": 228,
+          "elapsedSeconds": 785.13
+        }
+      ],
+      "artifact": {
+        "id": 13600243874,
+        "name": "iphone-results-ui-09-1",
+        "apiSize": 24337702,
+        "apiDigest": "sha256:8147db2595fee5d0dcf7f0aaa012f4138ae5e8c8ad22e8ba2100a8daa4191c45",
+        "localReceipt": ".build/CIF90Nov07/ui-09/range-receipt.json",
+        "receiptSHA256": "3dfea9a839a232e80033e7b08f17b511c519fbbec984d09338db58330888f901",
+        "transferredBytes": 47907,
+        "fullArchiveDownloaded": false,
+        "fullArchiveDigestVerified": false,
+        "verifiedMembers": [
+          {
+            "file": "Tests.log",
+            "bytes": 236152,
+            "sha256": "50d7f70ea215c59c7ab7de37e237e0d4e6582e27ec4c49fe10c896bbc1f9f64a",
+            "zipCRC": 1134084051,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-details.json",
+            "bytes": 5039,
+            "sha256": "67a7aa258c9419ed997de551089a1fdca8efbfc97e8bf7d6826100a564637a0a",
+            "zipCRC": 2788613811,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-plan/ui-09.txt",
+            "bytes": 866,
+            "sha256": "1cc8c1b2334a336c1070e8e8ecd3e4140be4fbea2fdc6aa7a52e7f400f353968",
+            "zipCRC": 698388198,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-runtime-warnings.json",
+            "bytes": 182,
+            "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+            "zipCRC": 2083576931,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-summary.json",
+            "bytes": 1222,
+            "sha256": "b5c977e6717617af091b69cc418c444daa677812ade86f08863fa9081a33056f",
+            "zipCRC": 4091647180,
+            "CRCVerified": true
+          }
+        ],
+        "consoleEvidenceLines": [
+          151,
+          221,
+          241
+        ]
+      },
+      "offlineConsoleReplayFailures": [
+        "XCTest restarted its runner at log line 241.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    }
+  ],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "completed",
+    "conclusion": "failure",
+    "artifactState": "collected",
+    "originalEvidence": "speech-runtime-original/proof.json",
+    "causalEvidence": "speech-causal-review/proof.json"
+  },
+  "coreTerminalInventory": {
+    "runId": 42428215935,
+    "conclusion": "failure",
+    "ciGate": {
+      "jobId": 128602753103,
+      "reason": "ios-swift-codeql and ios-tests prerequisites failed"
+    },
+    "ordinaryUI": {
+      "selected": 67,
+      "executed": 67,
+      "passed": 62,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 3
+    },
+    "model": {
+      "jobId": 128573980749,
+      "name": "ios-tests (models, 684)",
+      "selected": 684,
+      "executed": 684,
+      "passed": 684,
+      "failedSelectors": [],
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0
+    },
+    "allNativeShards": [
+      {
+        "jobId": 128573980585,
+        "name": "ios-tests (ui-02, 6)",
+        "selected": 6,
+        "executed": 6,
+        "passed": 6,
+        "failedSelectors": [],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128573980743,
+        "name": "ios-tests (ui-03, 6)",
+        "selected": 6,
+        "executed": 6,
+        "passed": 6,
+        "failedSelectors": [],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128573980752,
+        "name": "ios-tests (ui-01, 5)",
+        "selected": 5,
+        "executed": 5,
+        "passed": 4,
+        "failedSelectors": [
+          "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced"
+        ],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1
+      },
+      {
+        "jobId": 128573980815,
+        "name": "ios-tests (ui-04, 6)",
+        "selected": 6,
+        "executed": 6,
+        "passed": 5,
+        "failedSelectors": [
+          "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop"
+        ],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128577195007,
+        "name": "ios-tests (ui-05, 6)",
+        "selected": 6,
+        "executed": 6,
+        "passed": 6,
+        "failedSelectors": [],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128579225683,
+        "name": "ios-tests (ui-06, 8)",
+        "selected": 8,
+        "executed": 8,
+        "passed": 7,
+        "failedSelectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof"
+        ],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1
+      },
+      {
+        "jobId": 128583797613,
+        "name": "ios-tests (ui-07, 8)",
+        "selected": 8,
+        "executed": 8,
+        "passed": 7,
+        "failedSelectors": [
+          "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+        ],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128585259808,
+        "name": "ios-tests (ui-08, 7)",
+        "selected": 7,
+        "executed": 7,
+        "passed": 7,
+        "failedSelectors": [],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      },
+      {
+        "jobId": 128588297174,
+        "name": "ios-tests (ui-09, 8)",
+        "selected": 8,
+        "executed": 8,
+        "passed": 7,
+        "failedSelectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence"
+        ],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1
+      },
+      {
+        "jobId": 128588387968,
+        "name": "ios-tests (ui-10, 7)",
+        "selected": 7,
+        "executed": 7,
+        "passed": 7,
+        "failedSelectors": [],
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0
+      }
+    ]
+  },
+  "fixtureMatrix": {
+    "workflowPlanJobId": 128571029497,
+    "scope": "Planned source selectors from the pinned workflow planner. Hosted fixture job names are reconciled to every planned row.",
+    "selectedFromPinnedSource": 67,
+    "pinnedInputCount": 35,
+    "localPlannerReceipt": ".build/CIF90Nov07/fixture-matrix/receipt.json",
+    "localPlannerReceiptSHA256": "317e7764b6f78f30f77ca6a6610a74ae690b201ce5c7ad16ec82d2ca9a3d548a",
+    "plannedRows": 17,
+    "listedRows": 17,
+    "notListedRows": [],
+    "rows": [
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-02",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 11,
+        "jobId": 128575557547,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-05",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 14,
+        "jobId": 128575557670,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-01",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 3,
+        "jobId": 128575557741,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-04",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128575557772,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-03",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 10,
+        "jobId": 128575557708,
+        "jobState": "completed",
+        "conclusion": "failure"
+      },
+      {
+        "profile": "contributor",
+        "shard": "RecordsMediaUITests",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128582738305,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-stock-and-purchase",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 4,
+        "jobId": 128588917127,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128589072389,
+        "jobState": "completed",
+        "conclusion": "failure"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedFallbackUITests",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 2,
+        "jobId": 128590839245,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128591114527,
+        "jobState": "in_progress",
+        "conclusion": null
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128594978722,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128595775547,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128599384101,
+        "jobState": "in_progress",
+        "conclusion": null
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128600385824,
+        "jobState": "completed",
+        "conclusion": "success"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128600647338,
+        "jobState": "pending",
+        "conclusion": null
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128601563444,
+        "jobState": "in_progress",
+        "conclusion": null
+      },
+      {
+        "profile": "dinner",
+        "shard": "DinnerDecisionSheetUITests",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128603089001,
+        "jobState": "in_progress",
+        "conclusion": null
+      }
+    ]
+  }
+}

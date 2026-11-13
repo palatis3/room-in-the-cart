@@ -1,0 +1,21 @@
+--- a/ios/Features/Capture/LocalCookSpeech.swift
++++ b/ios/Features/Capture/LocalCookSpeech.swift
+@@ -253,8 +253,8 @@
+     private let center: NotificationCenter
+     private let token: NSObjectProtocol
+     init(center: NotificationCenter = .default,
+-         previousOutputs: @escaping @Sendable (Notification) -> Set<String>? = CookSpeechRouteObservation.decodePrevious,
+-         currentOutputs: @escaping @Sendable () -> Set<String>? = CookSpeechRouteObservation.readCurrent,
++         previousOutputs: @escaping @Sendable (Notification) -> Set<String>? = { @Sendable note in CookSpeechRouteObservation.decodePrevious(note) },
++         currentOutputs: @escaping @Sendable () -> Set<String>? = { @Sendable in CookSpeechRouteObservation.readCurrent() },
+          onStop: @escaping @MainActor @Sendable () -> Void) {
+         self.center = center
+         token = center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { note in
+--- a/ios/Tests/CookReadbackTests.swift
++++ b/ios/Tests/CookReadbackTests.swift
+@@ -1,4 +1,5 @@
+ import XCTest
++import AVFoundation
+ @testable import RoomInTheCart
+ 
+ @MainActor final class CookReadbackTests: XCTestCase {

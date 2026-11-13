@@ -1,0 +1,173 @@
+{
+  "observedAtUtc": "2026-11-08T04:55:57+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    },
+    "strictCheckerSHA256": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa"
+  },
+  "runId": 42440464721,
+  "job": {
+    "completedAt": "2026-11-08T04:54:57Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected tests and verify complete execution"
+    ],
+    "id": 128624830058,
+    "name": "ios-tests (ui-10, 7)",
+    "startedAt": "2026-11-08T04:25:11Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604622717,
+    "name": "iphone-results-ui-10-1",
+    "digest": "sha256:9a5808705bc77796e49e080427e37117eae6bbc249843ed3f823456a45789d2a",
+    "size_in_bytes": 26375936,
+    "workflow_run": {
+      "id": 42440464721,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 50643,
+    "rangeReceiptSHA256": "60bedae1885aa58a3317386df9985c4ca01db973734a038550f847cb73298f6e",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 219276,
+        "sha256": "f2c6656a5c086e2162ccb2bfb6a218a7cd42cc77f00c0aba9937690725dd863d",
+        "zipCRC": 1957311935,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 4192,
+        "sha256": "a95dd22e9b37e91eee2f29f8d812021888679e1fead8b37ccab53165aa7f2c1d",
+        "zipCRC": 3355546921,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/ui-10.txt",
+        "bytes": 761,
+        "sha256": "244f57325c0435df0a474eb11ba43d7d9a07dc1db0b03d63c5a61803762afe10",
+        "zipCRC": 492155989,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "4107607ed15883a828fbfc791bee13719675f20183898631eb7e6e2e032f6dbd",
+        "zipCRC": 418889846,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 1226,
+        "sha256": "1cab5d765fac5ecc4d0957ce91617d02041ab6b2b38f0a5141afaba79ad556aa",
+        "zipCRC": 3191280653,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false
+  },
+  "nativeResult": {
+    "result": "Failed",
+    "totalTestCount": 7,
+    "passedTests": 6,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "testFailures": [
+      {
+        "failureText": "Test exceeded execution time allowance of 12 minutes",
+        "targetName": "RoomInTheCartUITests",
+        "testIdentifier": 2,
+        "testIdentifierString": "ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote",
+        "testName": "testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote()"
+      }
+    ]
+  },
+  "observedResultCounts": {
+    "Passed": 6,
+    "Failed": 1
+  },
+  "plannedSelectors": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch",
+    "RoomInTheCartUITests/ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote",
+    "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+    "RoomInTheCartUITests/ContextualNavigationUITests/testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently",
+    "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+    "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges"
+  ],
+  "missingSelectors": [],
+  "extraSelectors": [],
+  "executedSelectors": [
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch",
+      "result": "Passed",
+      "durationSeconds": 168.9967030286789
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote",
+      "result": "Failed",
+      "durationSeconds": 720
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+      "result": "Passed",
+      "durationSeconds": 96.94355189800262
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently",
+      "result": "Passed",
+      "durationSeconds": 52.25739598274231
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+      "result": "Passed",
+      "durationSeconds": 162.29784607887268
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+      "result": "Passed",
+      "durationSeconds": 157.26531898975372
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+      "result": "Passed",
+      "durationSeconds": 61.89678394794464
+    }
+  ],
+  "hostedWarningReceipt": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 7,
+    "detailExportCount": 7,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "resultTreeWarningNames": [],
+  "console": {
+    "restartLines": [
+      1105
+    ],
+    "failureRows": [],
+    "strictReplayFailures": [
+      "XCTest restarted its runner at log line 1105.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote; found ['start', 'timeout'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  }
+}

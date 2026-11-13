@@ -1,0 +1,16 @@
+{
+  "version": "158.0.8127.18",
+  "path": "/Users/palatis/Room in the Cart/.build/WebHistoryPrivacy20261106/browser/chromium-1254/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "sha256": "6ac929cf1af41969ed0de43ac88a015ae4b70f92dcc1bfb60871bfa7f141e96d",
+  "playwright": "1.65.0",
+  "node": "v22.23.4",
+  "origin": "http://127.0.0.1:58767",
+  "lane": "fixed",
+  "cacheMode": "private-max-age-zero",
+  "launch": {
+    "headless": true,
+    "ignoreDefaultArgs": [
+      "--disable-back-forward-cache"
+    ]
+  }
+}

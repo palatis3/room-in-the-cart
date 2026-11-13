@@ -1,0 +1,366 @@
+{
+  "conclusion": "Final Price source field is visually complete and inside viewport, with no keyboard occlusion. Helper no-keyboard exclusion rejects its last12points; recorded24whole-area drags alternate directions. Evidence supports conservative reveal geometry and scroll oscillation, not demonstrated product inaccessibility.",
+  "caseDurationSeconds": 210.55224096775055,
+  "hierarchy": {
+    "path": "txt/CD875378-272D-4821-B9E7-A02CA4DE9B1B.txt",
+    "sha256": "d6fbc93a7a21d500606852d99f04da922186ba9bcfc30764859e14bd519acb3e",
+    "fieldLine": 183,
+    "fieldRole": "TextField",
+    "fieldID": "household.pack.a.source",
+    "fieldFrame": [
+      16,
+      535,
+      343,
+      44
+    ],
+    "windowFrame": [
+      0,
+      0,
+      375,
+      667
+    ],
+    "activeReviewNavigationLine": 67,
+    "activeReviewNavigationFrame": [
+      0,
+      40,
+      375,
+      56
+    ],
+    "coveredUnderlyingNavigationLine": 15,
+    "coveredUnderlyingNavigationFrame": [
+      16,
+      127,
+      343,
+      87.8
+    ],
+    "keyboardNodePresent": false,
+    "offscreenInputWindowOther": [
+      0,
+      667,
+      375,
+      216
+    ]
+  },
+  "visual": {
+    "path": "png/EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E.png",
+    "sha256": "e9a4d54ba89235ea108177aaa3ceee5823a5796474af5061e1909e8073809650",
+    "reviewedVia": "view_image of already-exported local file",
+    "observed": [
+      "Price source label and entire empty field are visible above the date row.",
+      "No visible software keyboard overlays field.",
+      "Review request navigation is above field."
+    ],
+    "limits": "Static failure screenshot; does not independently prove hittability or touch reception."
+  },
+  "helper": {
+    "source": "ios/UITests/HouseholdRequestPackUITests.swift",
+    "sourceMatchesExecutedManifest": true,
+    "noKeyboardBottomFormula": "min(bounds.maxY-100,keyboardTop-16)",
+    "noKeyboardBottom": 567,
+    "targetBottom": 579,
+    "rejectedByPoints": 12,
+    "observedDragAreaTop": 108,
+    "observedDragAreaBottom": 567,
+    "dragSize": 275.4,
+    "fixedDragFraction": 0.6,
+    "dragCount": 24,
+    "directionsAlternate": true,
+    "drags": [
+      {
+        "lineLF": 928,
+        "seconds": 83.72,
+        "start": [
+          187.5,
+          369.6
+        ],
+        "end": [
+          187.5,
+          173.4
+        ]
+      },
+      {
+        "lineLF": 962,
+        "seconds": 88.46,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 997,
+        "seconds": 93.84,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1031,
+        "seconds": 98.95,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1066,
+        "seconds": 104.38,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1100,
+        "seconds": 109.5,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1135,
+        "seconds": 114.86,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1169,
+        "seconds": 119.75,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1204,
+        "seconds": 125.22,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1238,
+        "seconds": 130.25,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1273,
+        "seconds": 135.55,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1307,
+        "seconds": 140.55,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1342,
+        "seconds": 145.98,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1376,
+        "seconds": 151.85,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1411,
+        "seconds": 157.6,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1445,
+        "seconds": 162.87,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1480,
+        "seconds": 168.01,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1514,
+        "seconds": 172.97,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1549,
+        "seconds": 178.09,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1583,
+        "seconds": 183.03,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1618,
+        "seconds": 188.31,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1652,
+        "seconds": 193.24,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      },
+      {
+        "lineLF": 1687,
+        "seconds": 198.45,
+        "start": [
+          187.5,
+          475.2
+        ],
+        "end": [
+          187.5,
+          199.8
+        ]
+      },
+      {
+        "lineLF": 1721,
+        "seconds": 203.44,
+        "start": [
+          187.5,
+          199.8
+        ],
+        "end": [
+          187.5,
+          475.2
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "No field tap or keyboard-focus test at final Price source state occurred because reveal failed first.",
+    "Intermediate target frames not captured on every drag; alternating gesture directions are directly logged, exact intermediate row-position cycle is not reconstructed.",
+    "No inference that removing all visibility guards is safe; earlier partially clipped need-field failure remains separate.",
+    "No product/test/docs change or native build/test/simulator action performed."
+  ],
+  "originalUnchanged": true
+}

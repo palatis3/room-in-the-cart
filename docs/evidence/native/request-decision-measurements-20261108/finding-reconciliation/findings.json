@@ -1,0 +1,930 @@
+{
+  "reviewedHead": "97c9ef9828d840f81b2065594e6ab4d0b621833d",
+  "scope": "Read-only original36 target reconciliation. Evidence sufficiency is not audit closure. No native command or product edit.",
+  "counts": {
+    "prior-exact-target-wrapping-test": 4,
+    "attributed-context-not-isolated": 16,
+    "current-exact-target-rendering": 9,
+    "unattributed": 4,
+    "prior-exact-heading-visual": 1,
+    "current-exact-target-contrast-open": 2
+  },
+  "findings": [
+    {
+      "finding": 1,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Sam’s wrap lunch",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10b90de00, {{32.0, 510.0}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/1.txt",
+        "sha256": "87176a73bafa94223e6321b1c385d31d7d4bd020e407da647398710dd4028947",
+        "bytes": 2182
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 82
+        }
+      ],
+      "status": "prior-exact-target-wrapping-test",
+      "captureRefs": [],
+      "evidenceDisposition": "Exact Sam title has passing unchanged AX5 required-wrapping/frame assertion and retained visible meal screenshot; not a three-category isolated glyph capture.",
+      "remainingAcceptance": "Exact title/date clipping repair is already tested; current audit classification still needs rerun. No new name/date test needed before it.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 2,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "After this decision",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10bb08e00, {{32.0, 255.0}, {144.3, 20.3}}, label: 'After this decision'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/2.txt",
+        "sha256": "033b0892ff96f1b605c9ecd3967ff054a130973ee55ffb6d10ade3ab3fd3e902",
+        "bytes": 1952
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 180
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Headline appears in current full screens; the separate After heading was not one of the ten isolated targets. Stock counterpart does not waive audit.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 3,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "$38.00",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10b955dd0, {{314.0, 425.0}, {56.0, 20.3}}, label: '$38.00'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/3.txt",
+        "sha256": "61e7418e5885fd6b8fec359685a73ba600658d807940add6aa831ae7ac3143c6",
+        "bytes": 2001
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 196
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:cap",
+        "original:large:cap",
+        "original:ax5:cap"
+      ],
+      "evidenceDisposition": "Exact Cap amount, not Cap label, captured at all three sizes; original label/combined-row ancestry pinned.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 4,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "$3.49",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10bb642b0, {{324.0, 396.7}, {46.0, 20.3}}, label: '$3.49'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/4.txt",
+        "sha256": "1c6fd9cc3fb75a45f7a8c554cd8e046e748c77857cdd1248c30f196fcb708130",
+        "bytes": 2004
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 195
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:change",
+        "original:large:change",
+        "original:ax5:change"
+      ],
+      "evidenceDisposition": "Exact Cost change amount, not label, captured at all three sizes.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 5,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Lunch · November 5, 2026",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10b98f4e0, {{32.0, 588.7}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/5.txt",
+        "sha256": "31d89257f85af813a224083e98c8f7067bc2f1ca476d6c53a128813d11db28f6",
+        "bytes": 2210
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 84
+        }
+      ],
+      "status": "prior-exact-target-wrapping-test",
+      "captureRefs": [],
+      "evidenceDisposition": "Exact Mia November5 date has passing unchanged AX5 required-wrapping/frame assertion; not a three-category isolated glyph capture.",
+      "remainingAcceptance": "Exact title/date clipping repair is already tested; current audit classification still needs rerun. No new name/date test needed before it.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 6,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": null,
+      "originalTargetAttributes": null,
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/6.txt",
+        "sha256": "f080ee13977314f246e9e481db43085ab6f83c95bc0b6193915eb7f6668f8b5a",
+        "bytes": 80
+      },
+      "currentSources": [],
+      "status": "unattributed",
+      "captureRefs": [],
+      "evidenceDisposition": "Original description has no element, label, identifier or frame; cannot assign to a source view.",
+      "remainingAcceptance": "Fresh unfiltered audit must retain this class; if still element=nil, capture issue-time hierarchy/screenshot under separate reviewed attribution-only overlay. No guessed source or waiver.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 7,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Before this decision",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10b9b4bf0, {{32.0, 368.3}, {150.0, 20.3}}, label: 'Before this decision'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/7.txt",
+        "sha256": "004acf2248822ebd1deadb0bf5083a719c309c5bf53dc614c1e48b02a0b808ce",
+        "bytes": 2121
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 192
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Before label is in the captured amount owner ancestry and full screens; amount glyph measurements do not measure this label.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 8,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "$40.69",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10baf6200, {{314.0, 283.3}, {56.0, 20.3}}, label: '$40.69'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/8.txt",
+        "sha256": "7e33a324f4a442e41359d76cf5a1c38ec95148d6578960fe08e1a300ead0954b",
+        "bytes": 2058
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 181
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:after",
+        "original:large:after",
+        "original:ax5:after"
+      ],
+      "evidenceDisposition": "Exact Expected total amount captured at all three sizes; separate normal-test rendered contrast assertion also passes.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 9,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "$37.20",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10bcf0910, {{314.0, 368.3}, {56.0, 20.3}}, label: '$37.20'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/9.txt",
+        "sha256": "4f4bc13c6b931ff9acbae65fe86f7af6f69f20b0a68bb9a50654d3bde81d7057",
+        "bytes": 2065
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 192
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:before",
+        "original:large:before",
+        "original:ax5:before"
+      ],
+      "evidenceDisposition": "Exact Before total amount captured at all three sizes; do not substitute this for finding7 label.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 10,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Checkout calculation details",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10c035490, {{32.0, 688.5}, {213.7, 20.3}}, label: 'Checkout calculation details'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/10.txt",
+        "sha256": "a97485ab6f16573cb317619fa3b0f947ffb7b4a2f0cddc6900137b55b09e2e83",
+        "bytes": 2098
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 201
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "additional:small:checkout-details",
+        "additional:large:checkout-details",
+        "additional:ax5:checkout-details"
+      ],
+      "evidenceDisposition": "Current semantic counterpart captured at three sizes, AX5 complete three lines. Retained audit-source snapshot predates the explicit44pt LabeledFormDisclosureStyle/current identifier; old raw node is not byte-identical current control.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 11,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Cancel",
+      "originalTargetAttributes": "Attributes: Button, 0x10be76320, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/11.txt",
+        "sha256": "99bc50a1898e791cf1d03cb103bd957195d6f5500fbc5babf12cf92095754027",
+        "bytes": 1699
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 252
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "additional:small:navigation-cancel",
+        "additional:large:navigation-cancel",
+        "additional:ax5:navigation-cancel"
+      ],
+      "evidenceDisposition": "Exact navigation Cancel captured at three sizes and performed once per case. Complete labels; small/large crop appearance is effectively unchanged and AX5 wider. Framework scaling curve/physical hit area not established.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 12,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "$2.69",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10c07aa30, {{324.0, 311.7}, {46.0, 20.3}}, label: '$2.69'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/12.txt",
+        "sha256": "1dea767c39fd4f1d8b02c1108552367030078da3ead933bf5e7d4bffb709ba06",
+        "bytes": 2044
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 185
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:over",
+        "original:large:over",
+        "original:ax5:over"
+      ],
+      "evidenceDisposition": "Exact over-cap amount captured at three sizes; distinct from finding24 label.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 13,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Mia’s wrap lunch",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10bf8b2a0, {{32.0, 568.7}, {120.0, 18.0}}, label: 'Mia’s wrap lunch'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/13.txt",
+        "sha256": "f85f3f6aacda1e46601c9c75b6cbb5b2bab25aa90d3848c2469fc8c16b706060",
+        "bytes": 2182
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 82
+        }
+      ],
+      "status": "prior-exact-target-wrapping-test",
+      "captureRefs": [],
+      "evidenceDisposition": "Exact Mia title has passing unchanged AX5 wrapping/frame assertion and retained visible screenshot; no isolated three-category metrics.",
+      "remainingAcceptance": "Exact title/date clipping repair is already tested; current audit classification still needs rerun. No new name/date test needed before it.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 14,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Cap scope",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10c0e75a0, {{32.0, 453.3}, {81.7, 20.3}}, label: 'Cap scope'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/14.txt",
+        "sha256": "bf39360278d57effd4881905719aedb3b57813cf5f5e98a060e28e71be238339",
+        "bytes": 2023
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 197
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Cap scope label is attributed by original combined parent; visible context/current native LabeledContent source only, no isolated label measurement.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 15,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Protected portions",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10bef8650, {{32.0, 605.0}, {106.0, 14.3}}, label: 'Protected portions'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/15.txt",
+        "sha256": "c96bcb1ef73a00c9bea48e248b1b992346ff076cdb0b505f7358f148e2b105de",
+        "bytes": 2294
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 87
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Mia Protected portions label: original ancestor meal9999, not Sam. Grouped meal assertion/visible row context; no dedicated label glyph measurement.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 16,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Cap",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10c33d8b0, {{32.0, 425.0}, {30.7, 20.3}}, label: 'Cap'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/16.txt",
+        "sha256": "3c6cbe768746a0c83ab4021c0c6fe000d770b59dcfacae943b3e57986528433c",
+        "bytes": 1985
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 196
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Cap label is distinct from captured Cap amount; owner context/source only.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 17,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Scope",
+      "originalTargetAttributes": "Attributes: StaticText, 0x118047720, {{32.0, 340.0}, {48.3, 20.3}}, label: 'Scope'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/17.txt",
+        "sha256": "518b1de7ba3f209e12b88e2bb4176fb829dadbaaa0792ee3130c227cb581029e",
+        "bytes": 2003
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 191
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Scope label belongs to Scope,Whole checkout row; source/context only.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 18,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Whole checkout",
+      "originalTargetAttributes": "Attributes: StaticText, 0x10c393f30, {{247.0, 453.3}, {123.0, 20.3}}, label: 'Whole checkout'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/18.txt",
+        "sha256": "ff98abd3b5dc671df96f50c340cd9896ed1fc2be14079faf6a9acaa4b18284b6",
+        "bytes": 2051
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 197
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Whole checkout value of Cap scope row, established by original ancestry. Not finding25 Scope value; no isolated target capture.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 19,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "1",
+      "originalTargetAttributes": "Attributes: StaticText, 0x118167be0, {{362.3, 546.3}, {7.7, 14.3}}, label: '1'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/19.txt",
+        "sha256": "749a174a2870bd72ffa99a00f2dca632afab579a608d841e90a31338e3381a2e",
+        "bytes": 2222
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 87
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Sam protected-portion value1 under meal8888. Do not attribute by global1 match; row assertion/context only.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 20,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "1",
+      "originalTargetAttributes": "Attributes: StaticText, 0x118161920, {{362.3, 605.0}, {7.7, 14.3}}, label: '1'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/20.txt",
+        "sha256": "b2b91518bd22fe53b4d9a48f78614ee3bfe8229ab2b8c7284e805844b1d039f4",
+        "bytes": 2222
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 87
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Mia protected-portion value1 under meal9999. Distinct from Sam; row assertion/context only.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 21,
+      "issue": "Dynamic Type font sizes are unsupported",
+      "label": null,
+      "originalTargetAttributes": null,
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/21.txt",
+        "sha256": "f080ee13977314f246e9e481db43085ab6f83c95bc0b6193915eb7f6668f8b5a",
+        "bytes": 80
+      },
+      "currentSources": [],
+      "status": "unattributed",
+      "captureRefs": [],
+      "evidenceDisposition": "Only generic unsupported-font description, no public element. Keep unattributed; do not guess icon/navigation/footer.",
+      "remainingAcceptance": "Fresh unfiltered audit must retain this class; if still element=nil, capture issue-time hierarchy/screenshot under separate reviewed attribution-only overlay. No guessed source or waiver.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 22,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Add packs to this shop",
+      "originalTargetAttributes": "Attributes: StaticText, 0x11831b3f0, {{16.0, 188.0}, {370.0, 52.0}}, label: 'Add packs to this shop'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/22.txt",
+        "sha256": "8aa5f8eba06d198c9f58a324252fe6cd26b241f8e48f66c5796f6865396a9223",
+        "bytes": 1960
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 177
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "additional:small:preview-outcome",
+        "additional:large:preview-outcome",
+        "additional:ax5:preview-outcome"
+      ],
+      "evidenceDisposition": "Exact preview StaticText captured after r2 structural disambiguation of picker child. Three-size captures complete; AX5 two lines. Original r1 ambiguity remains failed.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 23,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Lunch · November 4, 2026",
+      "originalTargetAttributes": "Attributes: StaticText, 0x1181f18e0, {{32.0, 530.0}, {151.3, 14.3}}, label: 'Lunch · November 4, 2026'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/23.txt",
+        "sha256": "e55f4ff4255f7d55b968a1553b9474dbb63c99a6223402e9b10bb8ca8ac28943",
+        "bytes": 2210
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 84
+        }
+      ],
+      "status": "prior-exact-target-wrapping-test",
+      "captureRefs": [],
+      "evidenceDisposition": "Exact Sam November4 date has passing unchanged AX5 wrapping/frame assertion and retained visible screenshot.",
+      "remainingAcceptance": "Exact title/date clipping repair is already tested; current audit classification still needs rerun. No new name/date test needed before it.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 24,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Over cap",
+      "originalTargetAttributes": "Attributes: StaticText, 0x1181f0050, {{32.0, 311.7}, {69.0, 20.3}}, label: 'Over cap'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/24.txt",
+        "sha256": "24585f0a26771a5b91d0ea90158d2b3ee06486314371d41360a48d1bc395a4df",
+        "bytes": 2052
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 185
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Over cap label is in amount parent/full screens; the amount crop does not measure label glyphs.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 25,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Whole checkout",
+      "originalTargetAttributes": "Attributes: StaticText, 0x1185476a0, {{247.0, 340.0}, {123.0, 20.3}}, label: 'Whole checkout'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/25.txt",
+        "sha256": "96324bb4bbf6b4650b16ccc441a7f089d2cd87aa87a862c0735d262cd7d932f2",
+        "bytes": 2047
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 191
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Whole checkout value of Scope row, established by original ancestry. Distinct from finding18 Cap scope value.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 26,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Cost change",
+      "originalTargetAttributes": "Attributes: StaticText, 0x118452790, {{32.0, 396.7}, {96.3, 20.3}}, label: 'Cost change'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/26.txt",
+        "sha256": "1abda50ef390b24cbefc236cebff0a9f5fd02273b842fbb09f38083a0969dfe5",
+        "bytes": 2024
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 195
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Cost change label has combined-row ancestry/context only, distinct from isolated$3.49 amount.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 27,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Review before applying",
+      "originalTargetAttributes": "Attributes: StaticText, 0x118596d30, {{16.0, 147.7}, {370.0, 40.3}}, label: 'Review before applying'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/27.txt",
+        "sha256": "2d5e04ac346ed2b7e225919cc71f12eaf373b6a088908e5fbd7e3d3d3b0f4f1d",
+        "bytes": 1960
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 176
+        }
+      ],
+      "status": "current-exact-target-rendering",
+      "captureRefs": [
+        "original:small:review-heading",
+        "original:large:review-heading",
+        "original:ax5:review-heading"
+      ],
+      "evidenceDisposition": "Exact review section heading isolated at three sizes; AX5 complete two lines. Same element also appears in contrast finding35.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 28,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Protected portions",
+      "originalTargetAttributes": "Attributes: StaticText, 0x11a824c20, {{32.0, 546.3}, {106.0, 14.3}}, label: 'Protected portions'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/28.txt",
+        "sha256": "e27be2e67b526007f2a1b46b662e583bb7bdd10337cca8b797fd64e91c31b251",
+        "bytes": 2294
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 87
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Sam Protected portions label under meal8888. Original ancestry separates it from finding15 Mia label; grouped test/context only.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 29,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Protected meal commitments",
+      "originalTargetAttributes": "Attributes: StaticText, 0x1185e5640, {{36.3, 481.0}, {270.3, 21.7}}, label: 'Protected meal commitments'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/29.txt",
+        "sha256": "3d37a2afcb3bad79ec5e47ff692ccb359886283d0c60af5f5f12284f4077518d",
+        "bytes": 1980
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 40
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Heading has prior small/AX5 hierarchy growth and visual evidence, current semantic headline/unlimited-wrap source; no isolated current three-size glyph capture.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 30,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Check usable food separately; this review does not confirm meal coverage.",
+      "originalTargetAttributes": "Attributes: StaticText, 0x1187883d0, {{32.0, 627.3}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/30.txt",
+        "sha256": "2c5affb20c7dc8b5bd392cfc460fe7a94b9c4281cf30d1505f9bf84433c6c462",
+        "bytes": 2168
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 61
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Exact guidance has passing normal-test contrast assertion and complete enlarged text in current AX5 details screen; this supports visible scaling context but is not isolated three-category glyph measurement or resolution of DynamicType audit.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 31,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": null,
+      "originalTargetAttributes": null,
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/31.txt",
+        "sha256": "f080ee13977314f246e9e481db43085ab6f83c95bc0b6193915eb7f6668f8b5a",
+        "bytes": 80
+      },
+      "currentSources": [],
+      "status": "unattributed",
+      "captureRefs": [],
+      "evidenceDisposition": "Generic partial-font description with no public target; retain unattributed.",
+      "remainingAcceptance": "Fresh unfiltered audit must retain this class; if still element=nil, capture issue-time hierarchy/screenshot under separate reviewed attribution-only overlay. No guessed source or waiver.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 32,
+      "issue": "Dynamic Type font sizes are partially unsupported",
+      "label": "Expected total",
+      "originalTargetAttributes": "Attributes: StaticText, 0x11a8aebf0, {{32.0, 283.3}, {110.0, 20.3}}, label: 'Expected total'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/32.txt",
+        "sha256": "a98937bc5ea4909264131f7c65080cf104055b66c11cef4e2978431a2873c642",
+        "bytes": 2090
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 181
+        }
+      ],
+      "status": "attributed-context-not-isolated",
+      "captureRefs": [],
+      "evidenceDisposition": "Expected total label appears in combined owner and legacy small/AX5 hierarchy; current isolated crop is$40.69, not this label.",
+      "remainingAcceptance": "Already has exact source/ancestry; no attribution experiment needed. Re-audit first; if this target remains flagged, measure its own child under its exact parent rather than reuse money/meal sibling metrics.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 33,
+      "issue": "Text clipped",
+      "label": "Protected meal commitments",
+      "originalTargetAttributes": "Attributes: StaticText, 0x11a954f00, {{36.3, 481.0}, {270.3, 21.7}}, label: 'Protected meal commitments'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/33.txt",
+        "sha256": "05ba2ec715918db27e3c453156ac99f6ad48352598f55f56a8e0eebc9c6d92f8",
+        "bytes": 1984
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+          "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+          "bytes": 4734,
+          "line": 40
+        }
+      ],
+      "status": "prior-exact-heading-visual",
+      "captureRefs": [],
+      "evidenceDisposition": "Prior exact heading visual review reports complete AX5 wrapping; current source explicitly permits wrapping. This counters observed truncation in that viewport only, not the audit clipping result or all sizes.",
+      "remainingAcceptance": "Retain prior complete-heading evidence; rerun current unfiltered clipping audit before inferring framework false positive.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 34,
+      "issue": "Contrast failed",
+      "label": "Review decision",
+      "originalTargetAttributes": "Attributes: Button, 0x11a8f03f0, {{16.0, 78.3}, {370.0, 52.0}}, identifier: 'household.decision.review', label: 'Review decision'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/34.txt",
+        "sha256": "24a1e5e064aeeaa4c5505b790446cfc5c80e581f8feb8d6a2f122c3c0ffa02b4",
+        "bytes": 2038
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 172
+        }
+      ],
+      "status": "current-exact-target-contrast-open",
+      "captureRefs": [
+        "original:small:review-decision",
+        "original:large:review-decision",
+        "original:ax5:review-decision"
+      ],
+      "evidenceDisposition": "New exact button crops repair the old audit screenshot attribution gap (old crop had navbar but no button glyphs). Raw percentile contrast approximately8.3:1 is not an audit pass; mask includes button decoration.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 35,
+      "issue": "Contrast failed",
+      "label": "Review before applying",
+      "originalTargetAttributes": "Attributes: StaticText, 0x11a9b2340, {{16.0, 147.7}, {370.0, 40.3}}, label: 'Review before applying'",
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/35.txt",
+        "sha256": "77c004ab3abb790cf0b6f46129bea0bdc6c4143632ebcc04e63ae2e707703e69",
+        "bytes": 1926
+      },
+      "currentSources": [
+        {
+          "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+          "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+          "bytes": 24074,
+          "line": 176
+        }
+      ],
+      "status": "current-exact-target-contrast-open",
+      "captureRefs": [
+        "original:small:review-heading",
+        "original:large:review-heading",
+        "original:ax5:review-heading"
+      ],
+      "evidenceDisposition": "Exact section-heading crops available at all three sizes; raw percentile estimates about6.35–6.40:1 remain supporting evidence, not a resolution of XCTest contrast failure.",
+      "remainingAcceptance": "Sufficient exact-target rendered evidence for bounded visual reconciliation; fresh current-product unfiltered audit required to resolve audit outcome. Do not add another screenshot-only experiment first.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    },
+    {
+      "finding": 36,
+      "issue": "Potentially inaccessible text",
+      "label": null,
+      "originalTargetAttributes": null,
+      "originalReport": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-unfiltered-reports/36.txt",
+        "sha256": "0c07f8c606d617d0b1e0d1bcb90d9b29f6542ae361c69196ebccaba356e7b0f8",
+        "bytes": 93
+      },
+      "currentSources": [],
+      "status": "unattributed",
+      "captureRefs": [],
+      "evidenceDisposition": "Description says text may lack accessibility representation, but no element/label/identifier/frame was supplied. Cannot map to pictured text or close from other labels.",
+      "remainingAcceptance": "Fresh unfiltered audit must retain this class; if still element=nil, capture issue-time hierarchy/screenshot under separate reviewed attribution-only overlay. No guessed source or waiver.",
+      "auditClosed": false,
+      "provenCurrentProductDefect": false
+    }
+  ]
+}

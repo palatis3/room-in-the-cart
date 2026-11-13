@@ -1,0 +1,122 @@
+{
+  "phase": "current-light",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "caseSeconds": 85.7,
+  "runtime": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "device": "RITC S24 Current Audit Nov08",
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "stateOrder": [
+    "Collapsed",
+    "Expanded",
+    "Expanded",
+    "Collapsed"
+  ],
+  "captures": [
+    {
+      "file": "00-S24-other-meals-Collapsed.png",
+      "sha256": "6ab3bf4c56af6738bd79a660517f69c6860c552a34dd1aefb7defe5271711953",
+      "sequence": 0,
+      "timestamp": 1794167078.06
+    },
+    {
+      "file": "01-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "45a48ea70c23082ca838eda454d1926d3d0d8500c2363602fd45b50d9327831b",
+      "sequence": 1,
+      "timestamp": 1794167078.266
+    },
+    {
+      "file": "02-S24-other-meals-Collapsed-control.txt",
+      "sha256": "8e80a493021ac30a233f2ea563f15a69cab3da331eb585bc5d49e99d14ca11ab",
+      "sequence": 2,
+      "timestamp": 1794167078.382
+    },
+    {
+      "file": "03-S24-other-meals-Expanded.png",
+      "sha256": "bb4c09bc53a6a2d2fce8a0fa3ac8d6fcba9d3a6f08641db898a354e3c8cea240",
+      "sequence": 3,
+      "timestamp": 1794167082.079
+    },
+    {
+      "file": "04-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "6903a224e38b703821148cac939b3caf49c6df841583f13a80bd89575ad3dc8f",
+      "sequence": 4,
+      "timestamp": 1794167082.283
+    },
+    {
+      "file": "05-S24-other-meals-Expanded-control.txt",
+      "sha256": "1495db2b88124c20538e02f104b274ff4abcd74ccd25f61907ff128ff931213d",
+      "sequence": 5,
+      "timestamp": 1794167082.388
+    },
+    {
+      "file": "06-S24-other-meals-expanded-ordinary-facts.png",
+      "sha256": "bb4c09bc53a6a2d2fce8a0fa3ac8d6fcba9d3a6f08641db898a354e3c8cea240",
+      "sequence": 6,
+      "timestamp": 1794167084.406
+    },
+    {
+      "file": "07-S24-other-meals-Expanded.png",
+      "sha256": "bb4c09bc53a6a2d2fce8a0fa3ac8d6fcba9d3a6f08641db898a354e3c8cea240",
+      "sequence": 7,
+      "timestamp": 1794167099.08
+    },
+    {
+      "file": "08-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "6903a224e38b703821148cac939b3caf49c6df841583f13a80bd89575ad3dc8f",
+      "sequence": 8,
+      "timestamp": 1794167099.278
+    },
+    {
+      "file": "09-S24-other-meals-Expanded-control.txt",
+      "sha256": "1495db2b88124c20538e02f104b274ff4abcd74ccd25f61907ff128ff931213d",
+      "sequence": 9,
+      "timestamp": 1794167099.384
+    },
+    {
+      "file": "10-S24-other-meals-Collapsed.png",
+      "sha256": "63598dcd96d6a08eded517ec68dc1ff3fb10d1c33dd2e3f487567cd17e06c6eb",
+      "sequence": 10,
+      "timestamp": 1794167102.646
+    },
+    {
+      "file": "11-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "45a48ea70c23082ca838eda454d1926d3d0d8500c2363602fd45b50d9327831b",
+      "sequence": 11,
+      "timestamp": 1794167102.866
+    },
+    {
+      "file": "12-S24-other-meals-Collapsed-control.txt",
+      "sha256": "8e80a493021ac30a233f2ea563f15a69cab3da331eb585bc5d49e99d14ca11ab",
+      "sequence": 12,
+      "timestamp": 1794167102.976
+    }
+  ],
+  "rootReview": {
+    "reviewedAtUTC": "2026-11-08T19:46:11.898316+00:00",
+    "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+    "status": "scoped pass reviewed",
+    "screenshotsReviewed": 5,
+    "textAttachmentsReviewed": 8,
+    "observations": [
+      "C/E/E/C named338x44button and full text in frame.",
+      "Ordinary dinner complete name/date/fourportions shown onlyexpanded; protectedlunchfacts retained.",
+      "All assertions inclamounts disabledApply andnoWrites passed.",
+      "No physicalVoiceOver or globalaccessibility claim."
+    ]
+  }
+}

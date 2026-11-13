@@ -1,0 +1,35 @@
+{
+  "kind": "pure CoreDomain first increment; not full S09 acceptance",
+  "main_head_at_freeze": "1e1f71390cef723bad9854fe1a5405aaf2a8d108",
+  "package_path": "/Users/palatis/Room in the Cart/.build/RecoveryHandoffAcceptance20261107/domain-v1/workspace/ios/Packages/CoreDomain",
+  "command": "swift test --package-path /Users/palatis/Room in the Cart/.build/RecoveryHandoffAcceptance20261107/domain-v1/workspace/ios/Packages/CoreDomain --jobs 1",
+  "exit_code": 0,
+  "executed": 180,
+  "failures": 0,
+  "new_test_count": 9,
+  "new_tests": [
+    "testDecodedHistoryRejectsDuplicateOperationBrokenLineageAndForgedWholeTarget",
+    "testFutureArrivalEvidenceStaysUnusableUntilInstantAndStalesAnExistingReview",
+    "testOutsideAllocationComparisonUsesExactUnitsAndStillRejectsTakingItsFood",
+    "testPreparationLeadAndClockBoundaryRemainConditionalWithoutChangingSavedDeadline",
+    "testRepeatedReplacementUsesCurrentWholeTargetAndRejectsSameOperationDifferentContent",
+    "testReplacementCannotConsumeAnotherNeedAndFivePortionsDoNotCoverFourPlusTwoProtected",
+    "testSixFourTwoWrapRecoveryReplacesOnlyWednesdayAndPreservesHistoryCancelReplayAndRestart",
+    "testTopUpAndRepeatConsentNeverInventFoodOrAcknowledgedCoverage",
+    "testWholeTargetProtectedGroupsDueAndExclusionsCannotBeDroppedOrBorrowIdentities"
+  ],
+  "new_files": {
+    "ios/Packages/CoreDomain/Sources/CoreDomain/MealRecovery.swift": "c3808eb22a921728a0b34f192919e470eb3133332c551678ec8fee52ed4cf6cd",
+    "ios/Packages/CoreDomain/Tests/CoreDomainTests/MealRecoveryTests.swift": "10859dfdf2c1044367115cec6fdad3fe069f15d0df2fcd17d415e9ccc7ed89a5"
+  },
+  "unchanged_source_mismatches": [],
+  "patch_sha256": "f659a3d02e8b91281a5aa1a9324c275e1d75b1549b22bc8eb85dd0cb85fba1e8",
+  "log_sha256": "22c33acc0e2f416cf3ec137cb86e37a987f4b9221232f8c57237841e06554f11",
+  "earlier_attempts": [
+    "initial-build.log: compile succeeded; no test matching before test file installed",
+    "focused-tests.log: 8 tests /1 test-only unordered JSON byte comparison failure; sorted-key encoder corrected in test",
+    "focused-tests-v2.log: 8 tests /0 failures",
+    "all-tests.log:179 tests /2 missing shared JSON fixtures due isolated package path; existing tests unchanged",
+    "all-tests-v2.log: corrected repository-relative copy plus ninth exact-unit regression;180 tests /0 failures"
+  ]
+}

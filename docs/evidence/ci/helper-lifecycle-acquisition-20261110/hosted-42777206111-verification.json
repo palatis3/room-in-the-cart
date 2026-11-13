@@ -1,0 +1,138 @@
+{
+  "status": "verified_failure",
+  "runID": 42777206111,
+  "sourceCommit": "da8c893c3f092f9f90204c1443cf98d93c6bd417",
+  "artifact": {
+    "artifactID": 13744776966,
+    "zipSHA256": "fe19617b8447d2c400b3bbc8b621ca9b450cd9ed06ef0fdaaa1bf7ad761a1f57",
+    "zipBytes": 69369,
+    "zipMembers": 19,
+    "tarSHA256": "7aff363afc140045cb6c4d1feed56da8d3381d0c7215e3063b5c186759e303c7",
+    "tarBytes": 491520,
+    "tarMembers": 24,
+    "sourcePins": 50,
+    "contractSHA256": "27ea412dcfa3710462b6f76abe5a80fd7120575f85a6859f161531080eb507f5",
+    "memberVerification": {
+      "bytes": 17195,
+      "sha256": "cf881ab28b2c579b350d33e2cf3100aa542cb23621b4ffd075a5810217feb922"
+    }
+  },
+  "independentArchiveReadback": {
+    "zipMembers": 19,
+    "tarMembers": 24,
+    "committedSourceContents": 50,
+    "extractedCodeExecuted": false
+  },
+  "firstFailure": {
+    "stage": "boot",
+    "firstCause": "ValueError: helper_lifecycle_deadline",
+    "label": "booted-runtimes",
+    "argvTail": [
+      "list",
+      "-j",
+      "runtimes"
+    ],
+    "commandBudgetSeconds": 30,
+    "effectiveBudgetSeconds": 29.918868,
+    "identityAcquisitionSeconds": 14.0802,
+    "totalSeconds": 30.327185,
+    "lastVerifiedLiveSeconds": 29.335152,
+    "streams": {
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "process": {
+      "label": "booted-runtimes",
+      "pid": 2382,
+      "exitCode": -2,
+      "signals": [
+        "SIGINT"
+      ],
+      "terminalVerified": true
+    }
+  },
+  "bootstatusExitCode": 0,
+  "captureStarted": false,
+  "readinessProbeExecuted": false,
+  "cleanup": {
+    "status": "passed",
+    "ownedDeviceDeleted": true,
+    "ownedDeviceUUID": "1AE50B82-426C-47F3-A9A6-28AF53F895F7",
+    "stateSequence": [
+      "Booted",
+      "Shutdown",
+      "absent"
+    ],
+    "processes": [
+      {
+        "label": "before-runtimes",
+        "pid": 2946,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "before-device",
+        "pid": 3124,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "shutdown",
+        "pid": 3158,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "shutdown-verified-runtimes",
+        "pid": 3175,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "shutdown-verified-device",
+        "pid": 3365,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "delete",
+        "pid": 3582,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "deleted-runtimes",
+        "pid": 3738,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      },
+      {
+        "label": "deleted-device",
+        "pid": 3766,
+        "exitCode": 0,
+        "signals": [],
+        "terminalVerified": true
+      }
+    ],
+    "allKnownChildrenTerminal": true
+  },
+  "linuxControlsPassed": 585,
+  "appOrPerformanceAcceptance": false,
+  "retainedEvidence": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/hosted-helper-42777206111",
+  "originalReceiptSHA256": "d08d9964bcd58966eac505b391c2671d6537100bb0b1c559673520594ecd31a7",
+  "monitoringReceiptSHA256": "46122ba78380055e307955ba5e8a4deb4dd024bc51d12e3bd70f3737faa49080",
+  "artifactReadbackSHA256": "b871def6cc4dc7cf5f3ec3fa6807cc647972423290cd5b8bbeaf72bda5744e48"
+}

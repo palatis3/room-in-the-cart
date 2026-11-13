@@ -1,0 +1,21 @@
+{
+  "originalPath": ".build/S24OtherMealsNov08/failure-collector-r1/capture/attachment-2/76E461FA-691C-415B-8DC4-DDB1E2466211.txt",
+  "originalSHA256": "11297838ea60c84c1e33beec5c450451c28e50187d55ec2b7a89bf153daaa5bf",
+  "originalBytes": 20887,
+  "originalLineCount": 214,
+  "selection": "Only adjacent disclosure label/button and explanatory text; complete hierarchy remains private",
+  "lines": [
+    {
+      "line": 122,
+      "text": "                                      StaticText, 0x1194716b0, {{32.0, 131.5}, {184.5, 20.5}}, label: 'Other meals in this shop'"
+    },
+    {
+      "line": 123,
+      "text": "                                      Button, 0x1194717d0, {{332.5, 135.0}, {10.5, 13.5}}, identifier: 'collapsed'"
+    },
+    {
+      "line": 124,
+      "text": "                                      StaticText, 0x1194718f0, {{32.0, 160.0}, {292.0, 30.5}}, label: 'Check usable food separately; this review does not confirm meal coverage.'"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# Pinned compatibility qualification · November 6, 2026
+
+The qualification is terminal failure. The corrected diagnostic build passed, and all 10 selected native cases passed, but the original required scroll-duration series is absent again. Urgent-repair restart also retains a 60.04-second missing-animation-completion wait. No root-cause fix, new approved baseline, release acceptance or toolchain adoption follows from these results. [Final audit](FINAL-AUDIT.json) · [Summary](SUMMARY.md) · [Root 507-file verification](root-final-qualification-review.json).
+
+The exact environment was Xcode 26.4.1/17E202 on macOS 26.6.2/25G83, iPhone 17 arm64/iOS 26.4.1/23E254a. The runtime identifier discovered from exact metadata was `com.apple.CoreSimulator.SimRuntime.iOS-26-4`. App and test bodies, required metrics, time allowances, warnings and release thresholds stayed unchanged. Source, inventory, product manifests and all four cleanup reports passed their retained checks. Products were not independently downloaded; raw cleanup inventory truncation limits independent replay.
+
+The first diagnostic commit `c34a473f2b0d62678da3a6eebb1bcbd2900cbdc6` ran once as [42259468210](https://github.com/palatis3/room-in-the-cart/actions/runs/42259468210). All57 validators and environment checks passed, but Bash rejected an empty array before Debug compilation. Zero native cases executed. [Dispatch](dispatch.json) · [Frozen first attempt](first-attempt-audit.json).
+
+The minimal command-array correction on `5376a01227d9ccf2cba53123b7887c83531088de` preserves exact compiler arguments and failure propagation. [Old/fixed smoke proof](bash-fix-smoke-proof.json). Its single new [dispatch](corrected-dispatch.json) ran as [42261730525](https://github.com/palatis3/room-in-the-cart/actions/runs/42261730525), with both builds and 60 validators passing. [Build proof](build-evidence-summary.json) · [Root source review](root-build-review.json).
+
+The original UI06 five-case order and Spanish four-case order each pass with zero strict runtime warnings. The large-type/dark comparison passes 174.585 seconds; urgent-repair retains the separate60.04-second synchronization symptom. Spanish's saved-offer case passes 694.714 seconds without an explicit timeout message. [UI06 log review](ui06-synchronization-log-review.json) · [Spanish log review](spanish-synchronization-log-review.json).
+
+The unwrapped scroll interaction passes 453.087 seconds with zero runtime warnings. JSON, console and the original archived XCTest result database contain only three memory series, each with five samples. The unchanged checker stops before app-ledger SQLite readback. That database validity is unestablished by this run, distinct from the original XCTest result database inspected read-only. [Failure proof](scroll-failure-proof.json) · [Original result database review](root-scroll-review.json).
+
+Original candidate 8f remains unaccepted. KnownTrip was outside this sample. No fallback, relaxed gate, additional native dispatch or automatic baseline change was used. The diagnostic four-file overlay remains isolated and must not be merged into the release branch.

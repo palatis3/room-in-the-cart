@@ -1,0 +1,114 @@
+{
+  "artifactID": 13599975417,
+  "transferredBytes": 917420,
+  "requests": [
+    {
+      "file": "0001.bin",
+      "start": 29920399,
+      "end": 29920420,
+      "bytes": 22,
+      "sha256": "3b1f1d7b481a31ef34995162b1c270f420ba07a90fa759cfbade2592c0569db9"
+    },
+    {
+      "file": "0002.bin",
+      "start": 29920379,
+      "end": 29920398,
+      "bytes": 20,
+      "sha256": "186ea7d503b83def40d74bbccb0abd6821d5043baedba65b4d119bb6923a21bc"
+    },
+    {
+      "file": "0003.bin",
+      "start": 29877276,
+      "end": 29920398,
+      "bytes": 43123,
+      "sha256": "8f35ed4b7a69cc50ae8683f05e9dd769d82cf6a1e954d6d8a7df0cdc9b2787a9"
+    },
+    {
+      "file": "0004.bin",
+      "start": 34950,
+      "end": 34979,
+      "bytes": 30,
+      "sha256": "e0eb1ee6b156f1d197af697a05427b3bcb8d5c6d2e192196fb9b3797a2b1f15f"
+    },
+    {
+      "file": "0005.bin",
+      "start": 34980,
+      "end": 35094,
+      "bytes": 115,
+      "sha256": "5c9ee75794c97f7cd0eb51606a585fce39ada26e86c53dffbb707afa33624159"
+    },
+    {
+      "file": "0006.bin",
+      "start": 35095,
+      "end": 446341,
+      "bytes": 411247,
+      "sha256": "d68f0845f868274bce783e1a57e160ead74ed3a9fec207eb2f0902fc295df372"
+    },
+    {
+      "file": "0007.bin",
+      "start": 29489376,
+      "end": 29489405,
+      "bytes": 30,
+      "sha256": "e0eb1ee6b156f1d197af697a05427b3bcb8d5c6d2e192196fb9b3797a2b1f15f"
+    },
+    {
+      "file": "0008.bin",
+      "start": 29489406,
+      "end": 29489520,
+      "bytes": 115,
+      "sha256": "c81b8bde81f32510b208716de5d134f5470fa63b6e6d90d7eea045847ce0b77e"
+    },
+    {
+      "file": "0009.bin",
+      "start": 29489521,
+      "end": 29489523,
+      "bytes": 3,
+      "sha256": "e9238ddb2b450e586127f0c74344099c6803b19375718f54f3f2056089002fc8"
+    },
+    {
+      "file": "0010.bin",
+      "start": 1153008,
+      "end": 1153037,
+      "bytes": 30,
+      "sha256": "e0eb1ee6b156f1d197af697a05427b3bcb8d5c6d2e192196fb9b3797a2b1f15f"
+    },
+    {
+      "file": "0011.bin",
+      "start": 1153038,
+      "end": 1153152,
+      "bytes": 115,
+      "sha256": "ec578f25be3d6bdcfe52f383968693708d2b3431889a506437fc2b780e617075"
+    },
+    {
+      "file": "0012.bin",
+      "start": 1153153,
+      "end": 1615574,
+      "bytes": 462422,
+      "sha256": "acd8aaa3a81bdfe02e60846947f1f2c6a961d68d441f59d2b27509dc9d96a8c4"
+    },
+    {
+      "file": "0013.bin",
+      "start": 29494534,
+      "end": 29494563,
+      "bytes": 30,
+      "sha256": "e0eb1ee6b156f1d197af697a05427b3bcb8d5c6d2e192196fb9b3797a2b1f15f"
+    },
+    {
+      "file": "0014.bin",
+      "start": 29494564,
+      "end": 29494678,
+      "bytes": 115,
+      "sha256": "9ea3fdbc575aa01c09d1c1a93fa575ed9f8dd3530c47e6390e935512fe7d8dd6"
+    },
+    {
+      "file": "0015.bin",
+      "start": 29494679,
+      "end": 29494681,
+      "bytes": 3,
+      "sha256": "e9238ddb2b450e586127f0c74344099c6803b19375718f54f3f2056089002fc8"
+    }
+  ],
+  "fullArchiveDownloaded": false,
+  "fullArchiveAPIHashVerified": false,
+  "scope": "Only two retained pre-timeout S27 milestone screenshots; post-timeout final screenshot absent from SQLite; no video or other-case payload."
+}

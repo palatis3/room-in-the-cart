@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "NodeCases": 15,
+  "SwiftScenarioInvocations": 45,
+  "failures": 0,
+  "skipped": 0,
+  "sourceFiles": 335,
+  "equalBackendCompilerInputs": 77,
+  "productionCommit": "23f88a52a733a30bd45143befa330317321847d6",
+  "testCorrectionCommit": "f5e79d7d9bfa71df8e4a78b5214614a33a74b75e",
+  "output": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-same-store-operation-undo-wire-r2",
+  "preparationManifestSHA256": "6a8ca738f1aff7970851a5a23683f697dbe4d62509e5ac80bb6cd590d84180b9",
+  "receiptSHA256": "a1cea73c9c9414a3587e8357c3f011e1728003ffd24f39b56665d334ac88509c",
+  "logSHA256": "9374677c00d7df232f54b361b22e646e2ff84818e39bb396a87403186aec5798",
+  "sourceManifestSHA256": "8fc65d689c327ce6f0cc5359dd3e0387392d8ef5fbae8e3fea3942358a7d83fa",
+  "cleanup": {
+    "schemaVersion": 1,
+    "attempt": "attempt.5lLBkr",
+    "exitCode": 0,
+    "postgresStopped": true,
+    "privateStateRetained": false,
+    "retention": "Private state is local only; ephemeral CI runner teardown removes it. No private state is uploaded."
+  },
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "limits": [
+    "Real Swift HTTPS/PostgreSQL boundary; not authenticated multi-device UI or production-provider acceptance.",
+    "Local042\u2013045 migrations are not deployed."
+  ],
+  "originalFailure": {
+    "output": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-same-store-operation-undo-wire-r1",
+    "reason": "Object identity compared separate request Buffers with equal bytes. Three assertions now compare exact bytes using deepEqual. Original14Node/40Swift prefix retained.",
+    "correctionSHA256": "a98af0878edc36e0b787795be6d4eed630721655c299e3d723d336f00df22f32"
+  }
+}

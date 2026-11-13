@@ -20,7 +20,7 @@ import Combine
     let id: UUID
     let localeIdentifier: String
 
-    init(initialText: String = "", localeIdentifier: String = Locale.current.identifier, id: UUID = UUID(),
+    init(initialText: String = "", localeIdentifier: String = CaptureCorrectionScope.appLanguage(), id: UUID = UUID(),
          speech: any CaptureSpeechService, ocr: any CaptureOCRService, initialEvidence: CaptureEvidence? = nil) {
         text = initialText; self.localeIdentifier = localeIdentifier; self.id = id
         self.speech = speech; self.ocr = ocr; self.acceptedEvidence = initialEvidence
@@ -58,8 +58,9 @@ import Combine
         generation += 1; let current = generation
         busy = true; failure = nil; candidate = nil
         task = Task { [weak self, speech] in
+            guard !Task.isCancelled, self?.generation == current, let locale = self?.localeIdentifier else { return }
             do {
-                let stream = try await speech.begin(localeIdentifier: self?.localeIdentifier ?? "en-US")
+                let stream = try await speech.begin(localeIdentifier: locale)
                 guard let self, self.generation == current, !self.closed else { speech.stop(); return }
                 self.listening = true
                 self.timeout = Task { [weak self] in

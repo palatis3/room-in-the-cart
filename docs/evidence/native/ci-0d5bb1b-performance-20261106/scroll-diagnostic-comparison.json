@@ -1,0 +1,125 @@
+{
+  "runs": [
+    {
+      "candidate": "0d5bb1b",
+      "diagnosticSHA256": "fa681ea00cb2ce968824881416713e7483a2fe81132e49c0a440f6c8ec05bddc",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ],
+      "requiredDurationSeriesPresent": false,
+      "measurementOutcomeBasis": "Retained independently verified performance/SQLite proofs, not signpost pair counts."
+    },
+    {
+      "candidate": "807aa3c",
+      "diagnosticSHA256": "1d7be830f3858bca6b671ddfd74213063c850063950fe6cf8ee4c69eabe3e267",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 1,
+          "pairCount": 0
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 1,
+          "pairCount": 0
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ],
+      "requiredDurationSeriesPresent": false,
+      "measurementOutcomeBasis": "Retained independently verified performance/SQLite proofs, not signpost pair counts."
+    },
+    {
+      "candidate": "f117439",
+      "diagnosticSHA256": "18f731a106a6a4d09e0dbb5518f750759a023fc57e226e849e4eee787010a853",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ],
+      "requiredDurationSeriesPresent": true,
+      "measurementOutcomeBasis": "Retained independently verified performance/SQLite proofs, not signpost pair counts."
+    }
+  ],
+  "currentFullPerformanceTestSourceByteIdenticalTo807": true,
+  "sourceSHA256": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+  "limits": [
+    "Activity windows are not XCTest measurement boundaries. Endpoint pairs do not substitute for duration series or establish delivery/causation.",
+    "Current missing duration coexists with six complete pairs;807 missing duration had only four complete pairs. Earlier f117 passing duration also had six pairs.",
+    "No new execution or instrumentation performed."
+  ]
+}

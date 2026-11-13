@@ -1,0 +1,85 @@
+{
+  "scope": "Artificial timeout validates diagnostic evidence survival only; original hosted English timeout remains unresolved",
+  "auditedAtUTC": "2026-11-07T05:09:41.093921+00:00",
+  "baseCandidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "negativeChange": "Single 180-second sleep (plus identifying comment) in test-only forwarding purchase before the real adapter call",
+  "sourceComparison": {
+    "filesCompared": 459,
+    "changedFiles": [
+      "ios/Tests/StoreKitScenarioTests.swift"
+    ],
+    "exactExpectedChangeOnly": true,
+    "allRecordedHashesMatch": true
+  },
+  "rehashCounts": {
+    "negativeSource": 459,
+    "positiveSource": 459,
+    "negativeProducts": 167
+  },
+  "deadlineSeconds": 120,
+  "initialSelection": {
+    "exit": 70,
+    "testCasesStarted": 0,
+    "cause": "Nonexistent target not in plan/scheme; not a test outcome",
+    "supervisorExpired": false
+  },
+  "correctedSelection": {
+    "exit": 65,
+    "strictExit": 1,
+    "testCasesStarted": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "timeoutSeconds": 120,
+    "runnerRestarts": 1,
+    "supervisorExpired": false,
+    "firstActualExecution": true,
+    "commandDifferences": [
+      {
+        "index": 18,
+        "wrong": "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/StoreKit.xcresult",
+        "corrected": "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/corrected-selection/StoreKit.xcresult"
+      },
+      {
+        "index": 19,
+        "wrong": "-only-testing:RoomInTheCartStoreKitTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+        "corrected": "-only-testing:RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing"
+      }
+    ]
+  },
+  "retainedTrace": {
+    "stderrLines": 25,
+    "stagePayloads": 25,
+    "allPayloadsExactlyMatchStderr": true,
+    "lastStage": "storefront.purchase.begin",
+    "lastElapsedSeconds": 0.818443709,
+    "openStages": [
+      "body",
+      "model.purchase",
+      "storefront.purchase"
+    ],
+    "postpurchaseAndTeardownMarkersAbsent": true
+  },
+  "originalBundleMembersUnchanged": 93,
+  "rootOwnedCleanup": {
+    "simulator": "A9582E86-7A3B-4A26-977C-A2A27C51C4AC",
+    "shutdownExit": 0,
+    "deleteExit": 0,
+    "receiptSHA256": "55830d07844c68c810aa52ebc98d48b9bb3fc2cce62f4021dcbd35300a768c4c"
+  },
+  "positiveEvidenceFreezeSHA256": "76e6fffdab7cf10c01c6ecd26ac99cc98bce4a19d0c4063a554f25914390e1a4",
+  "originalHostedRun": 42337977943,
+  "originalHostedArtifact": 13560692753,
+  "limitations": [
+    "Injected suspension occurs before the real adapter purchase call; this does not reproduce a StoreKit defect.",
+    "This proves retention across this local XCTest timeout/restart, not arbitrary process-crash or hosted-toolchain behavior.",
+    "Local Xcode27.1 differs from original hosted26.3; iOS26.2/23C54 matches.",
+    "Original hosted await/cause remains unknown.",
+    "Initial execution-complete expected text describes supervisor intent; exit70 was a selection failure, not a timeout."
+  ],
+  "integrationRecommendation": "Promote only diagnostic.patch from the positive package plus explicitly scoped evidence; never the 180-second sleep. Preserve timeout/failure strict gates and original failure. No additional local repetition needed for logger-survival claim.",
+  "nativeCommandsByInvestigator": false,
+  "otherMediaExported": false,
+  "productFixEstablished": false,
+  "releaseAcceptance": false
+}

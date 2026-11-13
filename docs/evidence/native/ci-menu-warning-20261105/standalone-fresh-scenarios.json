@@ -1,0 +1,85 @@
+{
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41963524126",
+  "commit": "d5f28479b052edc5f0478e18e9a6cc42cb4b5c97",
+  "producerArtifact": 13386666696,
+  "producerArtifactSHA256": "5a816dd2aa3ceb7299cbbb000c40aec136348e9ecd57a678e459762f611510bc",
+  "productsTarSHA256": "c315fe409b4f1fe0d9c8a831d872920562a317616e4a8216f58463091a9324d7",
+  "sourceTarSHA256": "fb4eb9cc07bd1d726b26bef9f9cd6810de6751f8c428b26c42d69b83f5b4cd58",
+  "binaryAndPlanHashes": [
+    "079f15673b7fe1314a4d35d4e3f0c2d9e54a0684bd63e53d8c9208b3f76c0bc8",
+    "b79acb554c00a1cf511a65daff828f14a7a99353df121c6ac68c60c315dbd279",
+    "61a1dc55232af80c3cfdcfd4fd268c6e0d6772324f2202cee9c72be281829eea",
+    "8e5ccfe024f45f1bab7a56a38b158548a048247e7358ccf1d599e85e0b4a8a0c",
+    "2cb8f16ccddf8ce50c86a614af4227b7e6836fd717630830d99b1e45b58f3e99"
+  ],
+  "scenarios": {
+    "pickup-open": {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelSinglePickupMenu",
+      "result": "Passed",
+      "seconds": 24.167452096939087,
+      "exactReparentingWarnings": 2,
+      "warningPaths": [
+        [
+          "Open pickup Menu",
+          "Tap \"probe.pickupMenu\" Button[0.50, 0.50]",
+          "Wait for org.roominthecart.diagnostics.menu to idle",
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+        ],
+        [
+          "Open pickup Menu",
+          "Tap \"probe.pickupMenu\" Button[0.50, 0.50]",
+          "Wait for org.roominthecart.diagnostics.menu to idle",
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+        ]
+      ],
+      "executionLogSHA256": "8c60e08df8919bce4b853fc6677157d850ff5e59ee828913e303ca1683890791",
+      "artifactSHA256": "16273d1a2c3488c75380ca5dd50a95099cdaccccaac14fae30fce21010bb040d",
+      "hostedDetailSHA256": "2fd8a36c2b92f3736c5d73ed8f541ac3234b9fac1223d0626b13258a2856ac58"
+    },
+    "fixture-open": {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelFixtureControlsMenu",
+      "result": "Passed",
+      "seconds": 36.99858200550079,
+      "exactReparentingWarnings": 2,
+      "warningPaths": [
+        [
+          "Open fixture Menu",
+          "Tap \"probe.fixtureMenu\" Button[0.50, 0.50]",
+          "Wait for org.roominthecart.diagnostics.menu to idle",
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+        ],
+        [
+          "Open fixture Menu",
+          "Tap \"probe.fixtureMenu\" Button[0.50, 0.50]",
+          "Wait for org.roominthecart.diagnostics.menu to idle",
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+        ]
+      ],
+      "executionLogSHA256": "66d7d1385f0ed35d0ff910a8de00994f902683c2e3f774a4fbf5f788387b2171",
+      "artifactSHA256": "26c11f683254d7a062b4912065be2bdf2c3c9582feee6f205a3229f18bd50fc4",
+      "hostedDetailSHA256": "d185b8fdd9796c5237aa68cb4eca702f1c1e027d1df5f0e2efc1226bc392bc01"
+    },
+    "pickup-control": {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testPickupControlWithoutOpeningMenu",
+      "result": "Passed",
+      "seconds": 22.330185055732727,
+      "exactReparentingWarnings": 0,
+      "warningPaths": [],
+      "executionLogSHA256": "42bc58428573aa97b2c137b8f33309302ef3f67f03d1c5310f5bc0d4f2dbf665",
+      "artifactSHA256": "397f3ee4bcedb38dd9b7aa69cc278d30e1f6c49a201b468a62fa03cfc4b070c3",
+      "hostedDetailSHA256": "ffc42f1e37b22236117b93411dce5ec3db2d431ca48ee7c6d1ddfb6179472bad"
+    },
+    "fixture-control": {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testFixtureControlWithoutOpeningMenu",
+      "result": "Passed",
+      "seconds": 16.955597043037415,
+      "exactReparentingWarnings": 0,
+      "warningPaths": [],
+      "executionLogSHA256": "b3817fb1eb4213a6ea9d3d281ef89234fe87c38d5fc35739a00c338a292becc2",
+      "artifactSHA256": "da068f731a00dccbf1424fbca3257506175e6765c67a4aec5ac38c507067b8de",
+      "hostedDetailSHA256": "cfafb98f0829b5b6dbc95f0c87886e3396c0df77c6c6679eefcf31323e6646a2"
+    }
+  },
+  "hostedWorkflowResult": "Failed in report step: Xcode26.3 omits optional nodeIdentifierURL on detailed configuration node. Native test commands all exited0. Root replay of original hosted exports with corrected optional-field handling passed all four exact-once cases. Wrong URL, device and configuration mutations rejected.",
+  "interpretation": "Standard SwiftUI Menu layouts reproduce the exact warning when opened; no-open controls record none. No production app code or app-side view insertion is present. This does not establish blanket harmlessness or permit unrelated warnings. No product warning allowance changed."
+}

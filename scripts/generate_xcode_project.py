@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 IOS = ROOT / "ios"
 PROJECT = IOS / "RoomInTheCart.xcodeproj"
 OBJECTS = {}
+STAGING_SUITES = {"unit": "StagingServiceTests", "ui": "StagingHelpUITests"}
 
 
 def ident(key):
@@ -56,6 +57,11 @@ def config_list(key, base, is_project=False):
             settings["RITC_SURFACE_URL_SCHEME"] = "roominthecart" + ("-" + name.lower() if name != "Release" else "")
         if is_project:
             settings.update(ONLY_ACTIVE_ARCH="YES" if name != "Release" else "NO", SWIFT_OPTIMIZATION_LEVEL="-Onone" if name != "Release" else "-O", DEBUG_INFORMATION_FORMAT="dwarf" if name != "Release" else "dwarf-with-dsym", ENABLE_TESTABILITY="YES" if name != "Release" else "NO", SWIFT_ACTIVE_COMPILATION_CONDITIONS="$(inherited) " + {"Debug": "DEBUG", "Staging": "STAGING", "Release": "RELEASE"}[name])
+        elif name == "Staging" and key in STAGING_SUITES:
+            # The staging scheme runs its live service and Safari smoke suites.
+            # Debug-only package fixtures require modules compiled for testing.
+            settings["EXCLUDED_SOURCE_FILE_NAMES"] = "*.swift"
+            settings["INCLUDED_SOURCE_FILE_NAMES"] = STAGING_SUITES[key] + ".swift"
         elif key == "app":
             settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.roominthecart.app" + {"Debug": ".debug", "Staging": ".staging", "Release": ""}[name]
             settings["INFOPLIST_KEY_CFBundleDisplayName"] = "Room in the Cart"
@@ -85,6 +91,13 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
         storekit = IOS / "Features/Membership/HouseholdLocalTesting.storekit"
         if storekit.exists():
             resources.append(build_file(str(storekit.relative_to(IOS)), "text.json"))
+    elif key == "ui":
+        snapshot = IOS / "UITests/Fixtures/SharedFallbackShop.json"
+        if snapshot.exists():
+            resources.append(build_file(str(snapshot.relative_to(IOS)), "text.json"))
+        fixture = IOS / "UITests/Fixtures/ReleaseLedger500.txt"
+        if fixture.exists():
+            resources.append(build_file(str(fixture.relative_to(IOS)), "text"))
     resources_phase = obj(key + ":resources", "PBXResourcesBuildPhase", buildActionMask="2147483647", files=resources, runOnlyForDeploymentPostprocessing="0")
     product = obj(key + ":output", "PBXFileReference", explicitFileType="wrapper.application" if key == "app" else "wrapper.app-extension" if extension_folder else "wrapper.cfbundle", includeInIndex="0", path=name + (".app" if key == "app" else ".appex" if extension_folder else ".xctest"), sourceTree="BUILT_PRODUCTS_DIR")
     settings = dict(PRODUCT_NAME="$(TARGET_NAME)", PRODUCT_BUNDLE_IDENTIFIER=bundle, GENERATE_INFOPLIST_FILE="YES", CODE_SIGN_STYLE="Automatic", SWIFT_EMIT_LOC_STRINGS="YES")
@@ -104,20 +117,41 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
     return obj("target:" + key, "PBXNativeTarget", buildConfigurationList=config_list(key, settings), buildPhases=phases, buildRules=[], dependencies=list(dependencies), name=name, packageProductDependencies=[ident("product:" + p) for p in packages], productName=name, productReference=product, productType=product_type)
 
 
-def scheme(name, config, target_ids, local_storekit=False):
+def scheme(name, config, target_ids, local_storekit=False, performance=False):
     def ref(key, product):
         return f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{ident("target:" + key)}" BuildableName="{product}" BlueprintName="{product.rsplit(".", 1)[0]}" ReferencedContainer="container:RoomInTheCart.xcodeproj"/>'
     app = ref("app", "RoomInTheCart.app")
     tests = "".join('<TestableReference skipped="NO">' + ref(key, product) + ('<SkippedTests><Test Identifier="StoreKitScenarioTests"/></SkippedTests>' if key == "unit" else '') + '</TestableReference>' for key, product in target_ids)
     test_configuration = '<TestPlans><TestPlanReference reference="container:Tests/LocalStoreKit.xctestplan" default="YES"/></TestPlans>' if local_storekit else '<Testables>' + tests + '</Testables>'
+    test_build = "Staging" if config == "Staging" else "Debug"
+    distribution_build = "Staging" if config == "Staging" else "Release"
+    test_attributes = f'buildConfiguration="{test_build}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"'
+    if config == "Staging":
+        test_configuration = '<Testables>' + "".join(
+            '<TestableReference skipped="NO">' + ref(key, product) +
+            f'<SelectedTests><Test Identifier="{STAGING_SUITES[key]}"/></SelectedTests></TestableReference>'
+            for key, product in target_ids
+        ) + '</Testables>'
+    if performance:
+        test_configuration = (
+            '<Testables><TestableReference skipped="NO">' + ref("ui", "RoomInTheCartUITests.xctest") +
+            '<SelectedTests><Test Identifier="ReleasePerformanceUITests"/></SelectedTests>'
+            '</TestableReference></Testables>'
+        )
+        test_attributes = (
+            'buildConfiguration="Release" selectedDebuggerIdentifier="" '
+            'selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.PosixSpawn" shouldUseLaunchSchemeArgsEnv="NO" '
+            'codeCoverageEnabled="NO" enableAddressSanitizer="NO" enableThreadSanitizer="NO" '
+            'enableUBSanitizer="NO" disableMainThreadChecker="YES" disablePerformanceAntipatternChecker="YES"'
+        )
     return f'''<?xml version="1.0" encoding="UTF-8"?>
 <Scheme LastUpgradeVersion="1600" version="1.7">
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">{app}</BuildActionEntry></BuildActionEntries></BuildAction>
-  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">{test_configuration}</TestAction>
+  <TestAction {test_attributes}>{test_configuration}</TestAction>
   <LaunchAction buildConfiguration="{config}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></LaunchAction>
-  <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></ProfileAction>
+  <ProfileAction buildConfiguration="{distribution_build}" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></ProfileAction>
   <AnalyzeAction buildConfiguration="{config}"/>
-  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+  <ArchiveAction buildConfiguration="{distribution_build}" revealArchiveInOrganizer="YES"/>
 </Scheme>
 '''
 
@@ -169,6 +203,8 @@ def outputs():
         result[PROJECT / "xcshareddata" / "xcschemes" / (name + ".xcscheme")] = scheme(name, config, test_ids)
     if (IOS / "Tests/LocalStoreKit.xctestplan").exists():
         result[PROJECT / "xcshareddata/xcschemes/RoomInTheCart-LocalStoreKit.xcscheme"] = scheme("RoomInTheCart-LocalStoreKit", "Debug", test_ids, local_storekit=True)
+    if (IOS / "UITests/ReleasePerformanceUITests.swift").exists():
+        result[PROJECT / "xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme"] = scheme("RoomInTheCart-Performance", "Release", test_ids, performance=True)
     return result
 
 

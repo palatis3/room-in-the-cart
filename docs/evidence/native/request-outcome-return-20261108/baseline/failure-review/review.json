@@ -1,0 +1,29 @@
+{
+  "observed": "The Review request sheet remains open with Cancel visible, Decision confirmed by the household, and Added to the plan.",
+  "hierarchyEvidence": {
+    "sheetNavigationAndCancelLines": [
+      98,
+      99,
+      101,
+      102
+    ],
+    "sheetConfirmationLines": [
+      128,
+      135
+    ],
+    "underlyingUpdatedOriginalRequestLines": [
+      78,
+      82
+    ],
+    "fixtureOneCommandOneLine": [
+      10,
+      11
+    ]
+  },
+  "interpretation": "The baseline failure is missing automatic return, not an absent confirmation or duplicate effect. The updated original row exists behind the still-present sheet.",
+  "limits": [
+    "One original baseline failure state; no accessibility-focus claim.",
+    "Image displayed resized from1206x2622 to942x2048; original exported bytes unchanged.",
+    "No native action, product edit, audit waiver, or video/full attachment export."
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "source": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "observedAtUtc": "2026-11-08T04:17:07Z",
+  "mostRecentJobTransitionSnapshot": "monitor-20261108T041437Z.json",
+  "jobs": [
+    {
+      "runId": 42440464721,
+      "workflow": "Build and test",
+      "state": "pending",
+      "counts": {
+        "success": 13,
+        "failure": 2,
+        "in_progress": 2,
+        "pending": 2
+      },
+      "remaining": [
+        {
+          "id": 128616614616,
+          "name": "ios-tests (ui-06, 8)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128617122245,
+          "name": "ios-tests (ui-07, 8)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128621833502,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "pending"
+        },
+        {
+          "id": 128624830058,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "pending"
+        }
+      ],
+      "failures": [
+        {
+          "id": 128608399841,
+          "name": "typescript (web)",
+          "failedSteps": [
+            "Check contributor outbox and history privacy in Chrome"
+          ]
+        },
+        {
+          "id": 128613594078,
+          "name": "ios-tests (ui-05, 6)",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42440464691,
+      "workflow": "iOS deep checks",
+      "state": "success",
+      "counts": {
+        "success": 4
+      },
+      "remaining": [],
+      "failures": []
+    },
+    {
+      "runId": 42440464791,
+      "workflow": "iOS fixture checks",
+      "state": "pending",
+      "counts": {
+        "success": 7,
+        "in_progress": 3,
+        "pending": 2
+      },
+      "remaining": [
+        {
+          "id": 128612236597,
+          "name": "Fixture (contributor-balanced-03)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128620991581,
+          "name": "Fixture (RecordsMediaUITests)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128621149453,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "pending"
+        },
+        {
+          "id": 128624824824,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "pending"
+        },
+        {
+          "id": 128624899598,
+          "name": "Fixture (SharedFallbackUITests)",
+          "status": "in_progress"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "runId": 42440464669,
+      "workflow": "iOS Release performance",
+      "state": "success",
+      "counts": {
+        "success": 4
+      },
+      "remaining": [],
+      "failures": []
+    },
+    {
+      "runId": 42440464677,
+      "workflow": "Native Swift HTTPS and PostgreSQL",
+      "state": "success",
+      "counts": {
+        "success": 1
+      },
+      "remaining": [],
+      "failures": []
+    },
+    {
+      "runId": 42440464675,
+      "workflow": "Security checks",
+      "state": "success",
+      "counts": {
+        "success": 3
+      },
+      "remaining": [],
+      "failures": []
+    }
+  ],
+  "strictReceipts": [
+    "ui-05/verification.json",
+    "ui-08/verification.json",
+    "contributor-balanced-01/verification.json",
+    "contributor-balanced-05/verification.json"
+  ]
+}

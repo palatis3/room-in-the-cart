@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "modelName" : "iPhone SE (3rd generation)",
+        "osBuildNumber" : "21A328",
+        "osVersion" : "17.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1794140547.476,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1794140447.373,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Missing fully actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type Button\n    ↪︎Find: Elements matching predicate '\"Compare available packs for this request\" IN identifiers'\nNo matches found for Elements matching predicate '\"Compare available packs for this request\" IN identifiers' from input {(\n    Button, {{91.5, 89.5}, {192.1, 18.8}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access',\n    Button, {{16.0, 54.0}, {60.5, 28.5}}, identifier: 'household.decision.cancel', label: 'Cancel',\n    Button, {{30.6, 214.8}, {313.7, 40.2}}, label: 'Refresh requests',\n    Button, {{45.3, 395.9}, {284.5, 83.7}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Wraps for lunch, Sam, 8 wraps, Nov 2, 2026 at 7:00 PM',\n    Button, {{16.0, 463.5}, {343.0, 44.0}}, identifier: 'household.decision.choice', label: 'Outcome, Add packs to this shop',\n    Button, {{332.5, 533.0}, {10.5, 13.5}}, identifier: 'collapsed',\n    Button, {{249.0, 622.0}, {46.5, 32.0}}, identifier: 'Decrement', label: 'Whole packs, 1, Decrement', value: 1, Disabled,\n    Button, {{296.5, 622.0}, {46.5, 32.0}}, identifier: 'Increment', label: 'Whole packs, 1, Increment', value: 1\n)}\n",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "testName" : "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

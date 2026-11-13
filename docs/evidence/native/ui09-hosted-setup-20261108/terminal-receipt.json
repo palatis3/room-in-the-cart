@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "ca967b540dce824adbf6e82a470e9167c9cc4e8d",
+    "branch": "codex/ui09-hosted-observer-a305",
+    "runId": 42495529960,
+    "jobId": 128776935933,
+    "runAttempt": 1,
+    "event": "workflow_dispatch",
+    "runUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42495529960",
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42495529960/job/128776935933",
+    "workflowPath": ".github/workflows/ios-toggle-diagnostic.yml",
+    "sourcePath": "diagnostics/ui09-hosted/hosted.py",
+    "sourceSHA256": "34efb3eb85ee34c744d8008352a3f689d012d5a99e9236ab41262645ea98e460"
+  },
+  "statusSnapshot": {
+    "path": "status-20261108T154406Z.json",
+    "sha256": "2024cf2bb82758356ae95813165e121141f6337a062777e379a6dea4d06f9967"
+  },
+  "runConclusion": "failure",
+  "jobConclusion": "failure",
+  "completedAtUtc": "2026-11-08T15:43:49Z",
+  "phases": {
+    "preflight": "success",
+    "build": "success",
+    "boot": "success",
+    "ownedBootSeconds": 85,
+    "testStep": "failure",
+    "shutdownOwned": "success",
+    "upload": "success"
+  },
+  "failure": {
+    "classification": "Hosted diagnostic preflight timed out before XCTest and probe launch.",
+    "command": [
+      "/usr/bin/xcrun",
+      "simctl",
+      "ui",
+      "9BFF63FE-D167-4AD8-866B-807ECEC1B488",
+      "appearance"
+    ],
+    "timeoutSeconds": 30,
+    "sourceLine": 92,
+    "jobLogLine": 560,
+    "derivativeInspection": {
+      "classification": "Hosted inspect required an original result bundle before any native run had created it.",
+      "sourceLine": 147,
+      "jobLogLines": [
+        565,
+        568
+      ]
+    }
+  },
+  "native": {
+    "planned": 8,
+    "started": 0,
+    "nativeExit": null,
+    "result": "not-run",
+    "strictAcceptance": "not-run",
+    "runtimeWarningCount": null
+  },
+  "probe": {
+    "status": "not-started",
+    "transportSealed": null,
+    "coverage": null
+  },
+  "artifact": {
+    "id": 13623686890,
+    "name": "ui09-a305-observer-42495529960-1",
+    "bytes": 63625984,
+    "digest": "sha256:6d037aed90f95251fff6752f5d4eb4dc844e67b4720e6134f0d545ff7943cb77",
+    "expiresAt": "2026-11-15T15:43:38Z",
+    "downloaded": false
+  },
+  "jobLogExcerpt": {
+    "path": "terminal-job-log-excerpts.txt",
+    "ranges": [
+      [
+        515,
+        516
+      ],
+      [
+        524,
+        539
+      ],
+      [
+        560,
+        572
+      ],
+      [
+        609,
+        614
+      ]
+    ],
+    "lineNumbering": "One-based LF-delimited indices in decoded GitHub job log.",
+    "sha256": "8478bd64e6ce98c15742fd49cf74dae4493afe7fa7812f03b65de5b775f79eba"
+  }
+}

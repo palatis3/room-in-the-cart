@@ -1,0 +1,5 @@
+# One-factor postboot inventory diagnostic
+
+All287portable helper controls pass after installing the reviewed four-file change. The combined postboot inventory command is prospectively excluded from optional sampling; both preparation and outer receipts record that policy. Direct executable dispatch, exact ownership/source/runtime validation,30-second query and300-second preparation budgets, cleanup and transport gates remain unchanged. Legacy runtime-only sampling remains tested. [Verification](verification.json).
+
+The prior hosted run booted successfully and then timed out in the combined inventory command with no output. The next hosted control must keep all other factors fixed: another timeout demonstrates sampling is not necessary for the stall; success supports interference or host variability but does not prove cause or app performance. This is diagnostic-only, not a relaxation of a release gate. Exact-commit workflow profiles and hosted execution are not yet qualified for this successor.

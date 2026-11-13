@@ -3,7 +3,7 @@
 export type PublicLanguage = 'en' | 'es';
 export type PublicPageKey = 'help' | 'privacy' | 'terms' | 'support';
 export type PublicCopy = Readonly<Record<PublicLanguage, string>>;
-export type PublicPage = Readonly<{ title: PublicCopy; lead: PublicCopy; notice: PublicCopy;
+export type PublicPage = Readonly<{ title: PublicCopy; lead: PublicCopy; notice: PublicCopy | null;
   sections: readonly Readonly<{ title: PublicCopy; paragraphs: readonly PublicCopy[] }>[] }>;
 
 export const publicPages = {
@@ -13,13 +13,10 @@ export const publicPages = {
       "es": "Ayuda"
     },
     "lead": {
-      "en": "Use the invited web app or the private iPhone tools. Typed entry and offline native help stay available.",
-      "es": "Usa la app web por invitación o las herramientas privadas del iPhone. La entrada escrita y la ayuda nativa sin conexión siguen disponibles."
+      "en": "You can compare packs and plan a pickup on your iPhone without signing in. Open a household invitation to send a request or read shared instructions in your browser.",
+      "es": "Puedes comparar paquetes y planificar una recogida en tu iPhone sin iniciar sesión. Abre una invitación del hogar para enviar una solicitud o leer las instrucciones compartidas en tu navegador."
     },
-    "notice": {
-      "en": "English and US-Spanish help copy is prepared for review. Human language and device review are still required before release.",
-      "es": "La ayuda en inglés y español de EE. UU. está preparada para revisión. Antes del lanzamiento aún se requieren revisión humana del idioma y pruebas en dispositivos."
-    },
+    "notice": null,
     "sections": [
       {
         "title": {
@@ -48,8 +45,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs.",
-            "es": "Abre Comparar paquetes en Compras. Ingresa la cantidad que necesitas, la cantidad aprovechable de cada paquete y su precio. Usa la misma unidad para la cantidad necesaria y ambos paquetes."
+            "en": "Open Compare packs in Shop. Enter the amount you need, the usable amount in each pack and the price. If the package uses a different kind of unit, enter two equivalent amounts from its label or your own measurement, such as 120 grams of this flour for 1 cup. Without that information, leave the conversion blank.",
+            "es": "Abre Comparar paquetes en Compras. Ingresa la cantidad que necesitas, la cantidad aprovechable de cada paquete y su precio. Si el paquete usa otro tipo de unidad, ingresa dos cantidades equivalentes de la etiqueta o de una medición propia, por ejemplo, 120 gramos de esa harina por 1 taza. Si no tienes ese dato, deja la conversión en blanco."
           },
           {
             "en": "Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records.",
@@ -90,6 +87,10 @@ export const publicPages = {
           {
             "en": "In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps.",
             "es": "En Cenas, guarda una comida conocida con sus porciones, ingredientes, fuente, exclusiones y cualquier tiempo de preparación previo conocido. Revisa una idea antes de elegirla para esta compra. Elegir una idea y asignarle una noche son pasos separados."
+          },
+          {
+            "en": "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup.",
+            "es": "Antes de tu primera recogida, abre Cenas y luego Importar y usar recetas. Escribe una receta familiar o elige un archivo Recipe JSON-LD en Archivos. Revisa la receta y guárdala. Cuando tengas una recogida, abre la receta guardada desde Biblioteca de cenas para revisar los ingredientes que necesitas comprar."
           },
           {
             "en": "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation.",

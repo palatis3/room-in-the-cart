@@ -1,0 +1,40 @@
+515	2026-11-08T15:42:06.7571860Z [2026-11-08 15:42:06 +0000] Status=4294967295, isTerminal=YES, Elapsed=01:25.
+516	2026-11-08T15:42:07.2635010Z 	Finished
+
+524	2026-11-08T15:42:15.8685520Z env:
+525	2026-11-08T15:42:15.8686070Z   DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+526	2026-11-08T15:42:15.8686590Z   EXPECTED_SHA: ca967b540dce824adbf6e82a470e9167c9cc4e8d
+527	2026-11-08T15:42:15.8687170Z   PYTHONDONTWRITEBYTECODE: 1
+528	2026-11-08T15:42:15.8687490Z   SIMULATOR_ID: 9BFF63FE-D167-4AD8-866B-807ECEC1B488
+529	2026-11-08T15:42:15.8687880Z ##[endgroup]
+530	2026-11-08T15:43:21.5844880Z Traceback (most recent call last):
+531	2026-11-08T15:43:21.5848450Z   File "/Users/runner/work/room-in-the-cart/room-in-the-cart/diagnostics/ui09-hosted/hosted.py", line 179, in <module>
+532	2026-11-08T15:43:21.6048880Z     globals()[parser.parse_args().phase]()
+533	2026-11-08T15:43:21.6253180Z     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+534	2026-11-08T15:43:21.8011390Z   File "/Users/runner/work/room-in-the-cart/room-in-the-cart/diagnostics/ui09-hosted/hosted.py", line 92, in test
+535	2026-11-08T15:43:21.9303260Z     appearance={key:capture(['/usr/bin/xcrun','simctl','ui',device(),key]) for key in ('appearance','content_size','increase_contrast')}
+536	2026-11-08T15:43:21.9605750Z                     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+537	2026-11-08T15:43:21.9607000Z   File "/Users/runner/work/room-in-the-cart/room-in-the-cart/diagnostics/ui09-hosted/hosted.py", line 19, in capture
+538	2026-11-08T15:43:21.9610810Z     def capture(cmd, timeout=30): return subprocess.check_output(cmd, text=True, timeout=timeout).strip()
+539	2026-11-08T15:43:21.9611520Z                                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+560	2026-11-08T15:43:21.9984890Z subprocess.TimeoutExpired: Command '['/usr/bin/xcrun', 'simctl', 'ui', '9BFF63FE-D167-4AD8-866B-807ECEC1B488', 'appearance']' timed out after 30 seconds
+561	2026-11-08T15:43:25.3581640Z Traceback (most recent call last):
+562	2026-11-08T15:43:25.4845540Z   File "/Users/runner/work/room-in-the-cart/room-in-the-cart/diagnostics/ui09-hosted/hosted.py", line 179, in <module>
+563	2026-11-08T15:43:25.5037290Z     globals()[parser.parse_args().phase]()
+564	2026-11-08T15:43:25.5964970Z     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+565	2026-11-08T15:43:25.6403010Z   File "/Users/runner/work/room-in-the-cart/room-in-the-cart/diagnostics/ui09-hosted/hosted.py", line 147, in inspect
+566	2026-11-08T15:43:25.6933560Z     result=OUT/'Tests.xcresult'; original=tree(result); assert original
+567	2026-11-08T15:43:25.7186860Z                                                                ^^^^^^^^
+568	2026-11-08T15:43:25.8884030Z AssertionError
+569	2026-11-08T15:43:26.2210510Z ##[error]Process completed with exit code 1.
+570	2026-11-08T15:43:26.4580360Z ##[group]Run python3 diagnostics/ui09-hosted/hosted.py cleanup
+571	2026-11-08T15:43:26.4582160Z [36;1mpython3 diagnostics/ui09-hosted/hosted.py cleanup[0m
+572	2026-11-08T15:43:26.6081990Z shell: /bin/bash -e {0}
+
+609	2026-11-08T15:43:43.0360890Z Finished uploading artifact content to blob storage!
+610	2026-11-08T15:43:43.0363030Z SHA256 digest of uploaded artifact zip is 6d037aed90f95251fff6752f5d4eb4dc844e67b4720e6134f0d545ff7943cb77
+611	2026-11-08T15:43:43.0367110Z Finalizing artifact upload
+612	2026-11-08T15:43:43.4411260Z Artifact ui09-a305-observer-42495529960-1.zip successfully finalized. Artifact ID 13623686890
+613	2026-11-08T15:43:43.4412370Z Artifact ui09-a305-observer-42495529960-1 has been successfully uploaded! Final size is 63625984 bytes. Artifact ID is 13623686890
+614	2026-11-08T15:43:43.4456030Z Artifact download URL: https://github.com/palatis3/room-in-the-cart/actions/runs/42495529960/artifacts/13623686890

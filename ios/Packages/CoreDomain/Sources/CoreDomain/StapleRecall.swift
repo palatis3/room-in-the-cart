@@ -13,9 +13,21 @@ public struct StapleSource: Codable, Hashable, Sendable {
 
 public enum StapleChoice: String, Codable, Sendable { case needed, alreadyHandled, skip }
 
+/// The specific current-list obligation the shopper reviewed as bought elsewhere.
+public struct HandledStapleLine: Codable, Equatable, Sendable {
+    public let lineID: UUID
+    public let boughtBy: String
+
+    public init(lineID: UUID, boughtBy: String) {
+        self.lineID = lineID
+        self.boughtBy = boughtBy.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 public struct StapleRecallReceipt: Codable, Equatable, Sendable {
     public let source: StapleSource
     public let choice: StapleChoice
+    public let handledLine: HandledStapleLine?
     public let newLineID: UUID?
     public let quantity: Quantity?
 }
@@ -55,17 +67,18 @@ extension LedgerWorkspace {
             seen.insert(GroupKey(name:row.line.name,purpose:row.approval.purpose,store:row.approval.branch)).inserted && !completed.contains(row.source)
         }
     }
-    public mutating func applyStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, at date: Date) throws {
-        guard (choice == .needed || quantity == nil), quantity.map({ $0.amount > .zero }) ?? true else { throw LedgerError.invalid("stapleQuantity") }
+    public mutating func applyStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?,
+                                     handledLine: HandledStapleLine? = nil, at date: Date) throws {
+        guard (handledLine == nil || choice == .alreadyHandled), (choice == .needed || quantity == nil), quantity.map({ $0.amount > .zero }) ?? true else { throw LedgerError.invalid("stapleQuantity") }
         guard selectedShopID == review.targetID, let index = shops.firstIndex(where: { $0.id == review.targetID }),
               let source = shops[..<index].first(where: { $0.id == review.source.shopID }) else { throw LedgerError.stalePreview }
         if let original = shops[index].stapleReviews?.first(where: { $0.source == review.source }) {
-            guard original.choice == choice, original.quantity == quantity else { throw LedgerError.stalePreview }
+            guard original.choice == choice, original.quantity == quantity, original.handledLine == handledLine else { throw LedgerError.stalePreview }
             return
         }
         guard shops[index].revisionID == review.targetRevision, source.revisionID == review.sourceRevision,
               source.lines.contains(review.line), !review.line.isTrashed, review.line.stapleApproval == review.approval else { throw LedgerError.stalePreview }
         let exclusions = Array(Set(source.contributions(forLineID: review.line.id).flatMap(\.exclusions))).sorted()
-        try shops[index].recordStaple(review, choice:choice, quantity:quantity, exclusions:exclusions, at:date)
+        try shops[index].recordStaple(review, choice:choice, quantity:quantity, exclusions:exclusions, handledLine:handledLine, at:date)
     }
 }

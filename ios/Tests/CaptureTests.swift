@@ -59,6 +59,17 @@ import UniformTypeIdentifiers
         XCTAssertFalse(speech.active)
         XCTAssertEqual(model.text, "12 wraps")
     }
+    func testDictationUsesTheInterfaceLanguageForRecognitionAndReview() async {
+        let speech = FakeSpeech()
+        let model = CaptureModel(initialText: "Arroz", speech: speech, ocr: FakeOCR())
+        model.startSpeech()
+        await settle { model.listening }
+        let expected = CaptureCorrectionScope.appLanguage()
+        XCTAssertEqual(speech.locale, expected)
+        model.stopSpeech()
+        model.confirmed = true
+        XCTAssertEqual(model.reviewed()?.localeIdentifier, expected)
+    }
     func testRepeatedSpeechCallbackDoesNotAppendOrApply() async {
         let speech = FakeSpeech(); let model = make(speech); model.startSpeech()
         await settle { model.listening }
@@ -74,6 +85,19 @@ import UniformTypeIdentifiers
         XCTAssertEqual(result?.source, .speech)
         XCTAssertNil(model.reviewed())
         XCTAssertFalse(speech.active)
+    }
+    func testClosingBeforeSpeechStartsDoesNotRequestPermission() async {
+        let speech = FakeSpeech()
+        let unexpected = expectation(description: "Speech authorization after leaving capture")
+        unexpected.isInverted = true
+        speech.onBegin = { unexpected.fulfill() }
+        let model = make(speech)
+        model.startSpeech()
+        model.close()
+        await fulfillment(of: [unexpected], timeout: 0.25)
+        XCTAssertEqual(speech.begins, 0)
+        XCTAssertFalse(model.listening)
+        XCTAssertNil(model.candidate)
     }
     func testLateSpeechPermissionAfterCloseCannotRestoreDraft() async {
         let speech = FakeSpeech(); speech.pausePermission = true
@@ -157,12 +181,16 @@ import UniformTypeIdentifiers
 
 @MainActor private final class FakeSpeech: CaptureSpeechService {
     var failure: CaptureFailure?
+    var locale: String?
+    var onBegin: (() -> Void)?
     var begins = 0; var stops = 0; var active = false
     var pausePermission = false
     var permission: CheckedContinuation<Void, Never>?
     private var stream: AsyncThrowingStream<SpeechCaptureUpdate, Error>.Continuation?
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         begins += 1
+        locale = localeIdentifier
+        onBegin?()
         if pausePermission { await withCheckedContinuation { permission = $0 } }
         if let failure { throw failure }
         active = true

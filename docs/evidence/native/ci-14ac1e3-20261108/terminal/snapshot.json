@@ -1,0 +1,1017 @@
+{
+  "observedAtUtc": "2026-11-08T09:39:27Z",
+  "previousSnapshot": {
+    "observedAtUtc": "2026-11-08T09:36:54Z",
+    "path": "status-20261108T093654Z.json",
+    "sha256": "13fb072abd8a7749369ebdfeaeef13c3eb5499161b55172d39d56ed65bdc94b8"
+  },
+  "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+  "headTree": "218cedd302444eda05094a3c84fdc5299dc7ea41",
+  "event": "pull_request",
+  "runAttempt": 1,
+  "workflowCount": 6,
+  "visibleJobCounts": {
+    "success": 47,
+    "failure": 5
+  },
+  "changes": [
+    {
+      "scope": "workflow",
+      "runId": 42457094298,
+      "name": "iOS fixture checks",
+      "from": "in_progress",
+      "to": "failure"
+    },
+    {
+      "scope": "job",
+      "runId": 42457094298,
+      "id": 128686333317,
+      "name": "Fixture (DinnerDecisionSheetUITests)",
+      "from": "in_progress",
+      "to": "success",
+      "failedSteps": []
+    }
+  ],
+  "immediateFailures": [
+    {
+      "runId": 42457092386,
+      "id": 128660927505,
+      "name": "ios-tests (ui-01, 5)",
+      "status": "completed",
+      "conclusion": "failure",
+      "activeSteps": [],
+      "failedSteps": [
+        {
+          "name": "Run selected tests and verify complete execution",
+          "conclusion": "failure"
+        }
+      ],
+      "completedAcceptanceSteps": [
+        {
+          "name": "Run selected tests and verify complete execution",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "runId": 42457092386,
+      "id": 128667962590,
+      "name": "ios-tests (ui-08, 7)",
+      "status": "completed",
+      "conclusion": "failure",
+      "activeSteps": [],
+      "failedSteps": [
+        {
+          "name": "Run selected tests and verify complete execution",
+          "conclusion": "failure"
+        }
+      ],
+      "completedAcceptanceSteps": [
+        {
+          "name": "Run selected tests and verify complete execution",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "runId": 42457092386,
+      "id": 128685521345,
+      "name": "CI gate",
+      "status": "completed",
+      "conclusion": "failure",
+      "activeSteps": [],
+      "failedSteps": [
+        {
+          "name": "Require every build and test job to succeed",
+          "conclusion": "failure"
+        }
+      ],
+      "completedAcceptanceSteps": [
+        {
+          "name": "Require every build and test job to succeed",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "runId": 42457094298,
+      "id": 128662104339,
+      "name": "Fixture (contributor-balanced-01)",
+      "status": "completed",
+      "conclusion": "failure",
+      "activeSteps": [],
+      "failedSteps": [
+        {
+          "name": "Boot the iPhone simulator",
+          "conclusion": "failure"
+        }
+      ],
+      "completedAcceptanceSteps": [
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "runId": 42457094298,
+      "id": 128671571534,
+      "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+      "status": "completed",
+      "conclusion": "failure",
+      "activeSteps": [],
+      "failedSteps": [
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "conclusion": "failure"
+        }
+      ],
+      "completedAcceptanceSteps": [
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "conclusion": "failure"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "runId": 42457092386,
+      "name": "Build and test",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457092386",
+      "workflowPath": ".github/workflows/ci.yml",
+      "runNumber": 39,
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "success": 17,
+        "failure": 3
+      },
+      "jobs": [
+        {
+          "id": 128658325453,
+          "name": "source-checks",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658325597,
+          "name": "typescript (web)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "acceptanceSteps": [
+            {
+              "name": "Run npm test",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check contributor outbox and history privacy in Chrome",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128658325633,
+          "name": "typescript (service)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658325653,
+          "name": "service-postgres",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658325696,
+          "name": "swift-packages",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658325782,
+          "name": "ios-release",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658325836,
+          "name": "ios-build",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Build iPhone simulator test products once",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify the compiled simulator app",
+              "conclusion": "success"
+            },
+            {
+              "name": "Discover compiled tests and balance UI groups",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain test discovery attempts",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128658326091,
+          "name": "ios-swift-codeql",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Compile Release Swift sources for CodeQL",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128660927273,
+          "name": "ios-tests (ui-04, 6)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128660927453,
+          "name": "ios-tests (models, 696)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128660927463,
+          "name": "ios-tests (ui-02, 7)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128660927505,
+          "name": "ios-tests (ui-01, 5)",
+          "status": "completed",
+          "conclusion": "failure",
+          "activeSteps": [],
+          "failedSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "failure"
+            }
+          ],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "failure"
+            }
+          ]
+        },
+        {
+          "id": 128660927531,
+          "name": "ios-tests (ui-03, 6)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128663596395,
+          "name": "ios-tests (ui-05, 6)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128665603526,
+          "name": "ios-tests (ui-06, 8)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128666846454,
+          "name": "ios-tests (ui-07, 8)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128667962590,
+          "name": "ios-tests (ui-08, 7)",
+          "status": "completed",
+          "conclusion": "failure",
+          "activeSteps": [],
+          "failedSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "failure"
+            }
+          ],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "failure"
+            }
+          ]
+        },
+        {
+          "id": 128670865070,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128675681204,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected tests and verify complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128685521345,
+          "name": "CI gate",
+          "status": "completed",
+          "conclusion": "failure",
+          "activeSteps": [],
+          "failedSteps": [
+            {
+              "name": "Require every build and test job to succeed",
+              "conclusion": "failure"
+            }
+          ],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Require every build and test job to succeed",
+              "conclusion": "failure"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42457094298,
+      "name": "iOS fixture checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457094298",
+      "workflowPath": ".github/workflows/ios-fixtures.yml",
+      "runNumber": 37,
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "success": 18,
+        "failure": 2
+      },
+      "jobs": [
+        {
+          "id": 128658331748,
+          "name": "fixture-plan",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658374966,
+          "name": "Build contributor, stock and carryover fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Enumerate compiled tests and package fixture products",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture discovery diagnostics on failure",
+              "conclusion": "skipped"
+            }
+          ]
+        },
+        {
+          "id": 128658375206,
+          "name": "Build dinner decision fixture",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Enumerate compiled tests and package fixture products",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture discovery diagnostics on failure",
+              "conclusion": "skipped"
+            }
+          ]
+        },
+        {
+          "id": 128662104134,
+          "name": "Fixture (contributor-balanced-05)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662104298,
+          "name": "Fixture (contributor-balanced-03)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662104337,
+          "name": "Fixture (contributor-balanced-02)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662104339,
+          "name": "Fixture (contributor-balanced-01)",
+          "status": "completed",
+          "conclusion": "failure",
+          "activeSteps": [],
+          "failedSteps": [
+            {
+              "name": "Boot the iPhone simulator",
+              "conclusion": "failure"
+            }
+          ],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "skipped"
+            }
+          ]
+        },
+        {
+          "id": 128662104370,
+          "name": "Fixture (contributor-balanced-04)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128668251023,
+          "name": "Fixture (RecordsMediaUITests)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128668732692,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128671571534,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "completed",
+          "conclusion": "failure",
+          "activeSteps": [],
+          "failedSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "failure"
+            }
+          ],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "failure"
+            }
+          ]
+        },
+        {
+          "id": 128673125070,
+          "name": "Fixture (SharedFallbackUITests)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128676681876,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128678844411,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128679604279,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128680101367,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128682767737,
+          "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128684690040,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128686181274,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128686333317,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42457094804,
+      "name": "iOS deep checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457094804",
+      "workflowPath": ".github/workflows/ios-deep.yml",
+      "runNumber": 28,
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      },
+      "jobs": [
+        {
+          "id": 128658333405,
+          "name": "storekit (en, US English — local StoreKit)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Export StoreKit results even after a failed scenario",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify exact StoreKit configuration and all scenario results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128658333490,
+          "name": "sanitizers (thread)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658333518,
+          "name": "sanitizers (address)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658333547,
+          "name": "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Export StoreKit results even after a failed scenario",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify exact StoreKit configuration and all scenario results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42457097096,
+      "name": "iOS Release performance",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457097096",
+      "workflowPath": ".github/workflows/ios-performance.yml",
+      "runNumber": 37,
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      },
+      "jobs": [
+        {
+          "id": 128658340193,
+          "name": "Build optimized iPhone test products",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Check performance evidence validation",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the Release app and dedicated performance tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check the compiled XCTest inventory and plan performance jobs",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify and package Release test products",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release build log",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662909236,
+          "name": "Release performance (rendered)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662909353,
+          "name": "Release performance (launch)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 128662909417,
+          "name": "Release performance (scroll)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": [],
+          "completedAcceptanceSteps": [
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42457092321,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457092321",
+      "workflowPath": ".github/workflows/ios-native-wire.yml",
+      "runNumber": 26,
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 1
+      },
+      "jobs": [
+        {
+          "id": 128658325524,
+          "name": "native-wire",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        }
+      ]
+    },
+    {
+      "runId": 42457094347,
+      "name": "Security checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457094347",
+      "workflowPath": ".github/workflows/security.yml",
+      "runNumber": 31,
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 3
+      },
+      "jobs": [
+        {
+          "id": 128658331816,
+          "name": "Dependency review",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658331927,
+          "name": "CodeQL (actions)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        },
+        {
+          "id": 128658331928,
+          "name": "CodeQL (javascript-typescript)",
+          "status": "completed",
+          "conclusion": "success",
+          "activeSteps": [],
+          "failedSteps": []
+        }
+      ]
+    }
+  ],
+  "scope": "One exact-commit GitHub connector workflow and job snapshot. Counts cover listed jobs. Workflow status and job status are retained separately."
+}

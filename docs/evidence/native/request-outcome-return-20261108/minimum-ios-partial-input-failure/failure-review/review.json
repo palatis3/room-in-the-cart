@@ -1,0 +1,58 @@
+{
+  "scope": "Evidence only; no source/test/docs edits or native build/test/simulator/UI actions",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "durationSeconds": 33.403,
+  "hierarchy": {
+    "path": "txt/B5B6FE47-08BF-41DB-8BF5-7DFC291B6B3B.txt",
+    "sha256": "0831794677c0da48123c10f14b00890812ef91c49ce77d2aa854657fb2732ce0",
+    "expandedDisclosureLine": 147,
+    "disclosureRole": "Button",
+    "disclosureID": "household.pack.open",
+    "disclosureLabel": "Compare available packs for this request",
+    "disclosureValue": "Expanded",
+    "disclosureFrame": [
+      16,
+      455.5,
+      343,
+      66
+    ],
+    "needLine": 173,
+    "needRole": "TextField",
+    "needID": "household.pack.need",
+    "needFrame": [
+      16,
+      652,
+      343,
+      44
+    ],
+    "applicationViewport": [
+      0,
+      0,
+      375,
+      667
+    ],
+    "fieldBottom": 696,
+    "fieldCenterY": 674,
+    "verticalViewportIntersection": 15,
+    "keyboardNodeObserved": false
+  },
+  "nativeLog": {
+    "tapSeconds": 21.36,
+    "firstNoFocusErrorSeconds": 25.09,
+    "error": "Neither element nor any descendant has keyboard focus"
+  },
+  "screenshot": {
+    "path": "png/BABDEBB1-D605-40D7-B8E1-722B42A0264E.png",
+    "sha256": "f769c243d0d3959176342f7a28043f4c91669cf9eff6cac75c037a499277de2a",
+    "visualReview": "Root notified; no image interpretation asserted by this receipt"
+  },
+  "conclusion": "Disclosure is present, named and expanded; first need field was recorded partially below viewport and input synthesis lacked keyboard focus. Later Apply outcome-return behavior was not reached.",
+  "limits": [
+    "No synthesized tap coordinates or delivery evidence exported; partial clipping is supported context, not proved sole cause.",
+    "No Keyboard node in retained failure hierarchy does not reconstruct keyboard transitions at the tap instant.",
+    "XCTest internally repeated input synthesis; no test-level retry or additional action performed by reviewer.",
+    "Screenshot and hierarchy are failure-time records; no physical accessibility acceptance."
+  ],
+  "originalUnchanged": true
+}

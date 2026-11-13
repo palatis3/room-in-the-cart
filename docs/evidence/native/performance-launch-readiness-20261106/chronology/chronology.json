@@ -1,0 +1,1150 @@
+[
+  {
+    "label": "f117",
+    "testStartUTC": "2026-11-06T22:17:22.946000+00:00",
+    "activityCount": 493,
+    "rootActivityCount": 169,
+    "timestampConversion": "SQLite Activities use seconds since2001-01-01; adding978307200 reproduces raw-log test-start UTC. Relative values avoid epoch ambiguity.",
+    "windows": [
+      {
+        "label": "warm-up",
+        "gesture": {
+          "rowid": 398,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 296.279,
+          "relativeFinish": 299.419,
+          "startUTC": "2026-11-06T22:22:19.225000+00:00",
+          "finishUTC": "2026-11-06T22:22:22.365000+00:00"
+        },
+        "synthesis": {
+          "rowid": 400,
+          "title": "Synthesize event",
+          "relativeStart": 296.674,
+          "relativeFinish": 297.173,
+          "startUTC": "2026-11-06T22:22:19.620000+00:00",
+          "finishUTC": "2026-11-06T22:22:20.119000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 397,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 295.954,
+          "relativeFinish": 296.244,
+          "startUTC": "2026-11-06T22:22:18.900000+00:00",
+          "finishUTC": "2026-11-06T22:22:19.190000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 404,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 302.058,
+          "relativeFinish": 302.539,
+          "startUTC": "2026-11-06T22:22:25.004000+00:00",
+          "finishUTC": "2026-11-06T22:22:25.485000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 403,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 296.279,
+            "relativeFinish": 296.488,
+            "startUTC": "2026-11-06T22:22:19.225000+00:00",
+            "finishUTC": "2026-11-06T22:22:19.434000+00:00"
+          },
+          {
+            "rowid": 402,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 296.489,
+            "relativeFinish": 296.591,
+            "startUTC": "2026-11-06T22:22:19.435000+00:00",
+            "finishUTC": "2026-11-06T22:22:19.537000+00:00"
+          },
+          {
+            "rowid": 401,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 296.598,
+            "relativeFinish": 296.672,
+            "startUTC": "2026-11-06T22:22:19.544000+00:00",
+            "finishUTC": "2026-11-06T22:22:19.618000+00:00"
+          },
+          {
+            "rowid": 400,
+            "title": "Synthesize event",
+            "relativeStart": 296.674,
+            "relativeFinish": 297.173,
+            "startUTC": "2026-11-06T22:22:19.620000+00:00",
+            "finishUTC": "2026-11-06T22:22:20.119000+00:00"
+          },
+          {
+            "rowid": 399,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 297.175,
+            "relativeFinish": 299.418,
+            "startUTC": "2026-11-06T22:22:20.121000+00:00",
+            "finishUTC": "2026-11-06T22:22:22.364000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 5.779,
+        "gestureDurationSeconds": 3.14,
+        "synthesisDurationSeconds": 0.499,
+        "preGestureActivityGapSeconds": 0.035,
+        "postGestureActivityGapSeconds": 2.639,
+        "retainedSignpostSummary": {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.598
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 1",
+        "gesture": {
+          "rowid": 415,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 305.353,
+          "relativeFinish": 308.254,
+          "startUTC": "2026-11-06T22:22:28.299000+00:00",
+          "finishUTC": "2026-11-06T22:22:31.200000+00:00"
+        },
+        "synthesis": {
+          "rowid": 417,
+          "title": "Synthesize event",
+          "relativeStart": 305.533,
+          "relativeFinish": 306.003,
+          "startUTC": "2026-11-06T22:22:28.479000+00:00",
+          "finishUTC": "2026-11-06T22:22:28.949000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 414,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 305.136,
+          "relativeFinish": 305.334,
+          "startUTC": "2026-11-06T22:22:28.082000+00:00",
+          "finishUTC": "2026-11-06T22:22:28.280000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 421,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 309.489,
+          "relativeFinish": 309.871,
+          "startUTC": "2026-11-06T22:22:32.435000+00:00",
+          "finishUTC": "2026-11-06T22:22:32.817000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 420,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 305.353,
+            "relativeFinish": 305.361,
+            "startUTC": "2026-11-06T22:22:28.299000+00:00",
+            "finishUTC": "2026-11-06T22:22:28.307000+00:00"
+          },
+          {
+            "rowid": 419,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 305.361,
+            "relativeFinish": 305.44,
+            "startUTC": "2026-11-06T22:22:28.307000+00:00",
+            "finishUTC": "2026-11-06T22:22:28.386000+00:00"
+          },
+          {
+            "rowid": 418,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 305.445,
+            "relativeFinish": 305.53,
+            "startUTC": "2026-11-06T22:22:28.391000+00:00",
+            "finishUTC": "2026-11-06T22:22:28.476000+00:00"
+          },
+          {
+            "rowid": 417,
+            "title": "Synthesize event",
+            "relativeStart": 305.533,
+            "relativeFinish": 306.003,
+            "startUTC": "2026-11-06T22:22:28.479000+00:00",
+            "finishUTC": "2026-11-06T22:22:28.949000+00:00"
+          },
+          {
+            "rowid": 416,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 306.004,
+            "relativeFinish": 308.252,
+            "startUTC": "2026-11-06T22:22:28.950000+00:00",
+            "finishUTC": "2026-11-06T22:22:31.198000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.136,
+        "gestureDurationSeconds": 2.901,
+        "synthesisDurationSeconds": 0.47,
+        "preGestureActivityGapSeconds": 0.019,
+        "postGestureActivityGapSeconds": 1.235,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 2",
+        "gesture": {
+          "rowid": 432,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 312.887,
+          "relativeFinish": 315.887,
+          "startUTC": "2026-11-06T22:22:35.833000+00:00",
+          "finishUTC": "2026-11-06T22:22:38.833000+00:00"
+        },
+        "synthesis": {
+          "rowid": 434,
+          "title": "Synthesize event",
+          "relativeStart": 313.139,
+          "relativeFinish": 313.641,
+          "startUTC": "2026-11-06T22:22:36.085000+00:00",
+          "finishUTC": "2026-11-06T22:22:36.587000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 431,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 312.616,
+          "relativeFinish": 312.864,
+          "startUTC": "2026-11-06T22:22:35.562000+00:00",
+          "finishUTC": "2026-11-06T22:22:35.810000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 438,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 317.04,
+          "relativeFinish": 317.355,
+          "startUTC": "2026-11-06T22:22:39.986000+00:00",
+          "finishUTC": "2026-11-06T22:22:40.301000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 437,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 312.888,
+            "relativeFinish": 312.891,
+            "startUTC": "2026-11-06T22:22:35.834000+00:00",
+            "finishUTC": "2026-11-06T22:22:35.837000+00:00"
+          },
+          {
+            "rowid": 436,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 312.891,
+            "relativeFinish": 313.035,
+            "startUTC": "2026-11-06T22:22:35.837000+00:00",
+            "finishUTC": "2026-11-06T22:22:35.981000+00:00"
+          },
+          {
+            "rowid": 435,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 313.044,
+            "relativeFinish": 313.138,
+            "startUTC": "2026-11-06T22:22:35.990000+00:00",
+            "finishUTC": "2026-11-06T22:22:36.084000+00:00"
+          },
+          {
+            "rowid": 434,
+            "title": "Synthesize event",
+            "relativeStart": 313.139,
+            "relativeFinish": 313.641,
+            "startUTC": "2026-11-06T22:22:36.085000+00:00",
+            "finishUTC": "2026-11-06T22:22:36.587000+00:00"
+          },
+          {
+            "rowid": 433,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 313.645,
+            "relativeFinish": 315.886,
+            "startUTC": "2026-11-06T22:22:36.591000+00:00",
+            "finishUTC": "2026-11-06T22:22:38.832000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.153,
+        "gestureDurationSeconds": 3.0,
+        "synthesisDurationSeconds": 0.502,
+        "preGestureActivityGapSeconds": 0.023,
+        "postGestureActivityGapSeconds": 1.153,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.583
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 3",
+        "gesture": {
+          "rowid": 449,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 319.966,
+          "relativeFinish": 323.07,
+          "startUTC": "2026-11-06T22:22:42.912000+00:00",
+          "finishUTC": "2026-11-06T22:22:46.016000+00:00"
+        },
+        "synthesis": {
+          "rowid": 451,
+          "title": "Synthesize event",
+          "relativeStart": 320.181,
+          "relativeFinish": 320.683,
+          "startUTC": "2026-11-06T22:22:43.127000+00:00",
+          "finishUTC": "2026-11-06T22:22:43.629000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 448,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 319.738,
+          "relativeFinish": 319.944,
+          "startUTC": "2026-11-06T22:22:42.684000+00:00",
+          "finishUTC": "2026-11-06T22:22:42.890000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 455,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 324.225,
+          "relativeFinish": 324.504,
+          "startUTC": "2026-11-06T22:22:47.171000+00:00",
+          "finishUTC": "2026-11-06T22:22:47.450000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 454,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 319.967,
+            "relativeFinish": 319.973,
+            "startUTC": "2026-11-06T22:22:42.913000+00:00",
+            "finishUTC": "2026-11-06T22:22:42.919000+00:00"
+          },
+          {
+            "rowid": 453,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 319.974,
+            "relativeFinish": 320.099,
+            "startUTC": "2026-11-06T22:22:42.920000+00:00",
+            "finishUTC": "2026-11-06T22:22:43.045000+00:00"
+          },
+          {
+            "rowid": 452,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 320.107,
+            "relativeFinish": 320.18,
+            "startUTC": "2026-11-06T22:22:43.053000+00:00",
+            "finishUTC": "2026-11-06T22:22:43.126000+00:00"
+          },
+          {
+            "rowid": 451,
+            "title": "Synthesize event",
+            "relativeStart": 320.181,
+            "relativeFinish": 320.683,
+            "startUTC": "2026-11-06T22:22:43.127000+00:00",
+            "finishUTC": "2026-11-06T22:22:43.629000+00:00"
+          },
+          {
+            "rowid": 450,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 320.684,
+            "relativeFinish": 323.069,
+            "startUTC": "2026-11-06T22:22:43.630000+00:00",
+            "finishUTC": "2026-11-06T22:22:46.015000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.259,
+        "gestureDurationSeconds": 3.104,
+        "synthesisDurationSeconds": 0.502,
+        "preGestureActivityGapSeconds": 0.022,
+        "postGestureActivityGapSeconds": 1.155,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.583
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 4",
+        "gesture": {
+          "rowid": 466,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 327.374,
+          "relativeFinish": 330.321,
+          "startUTC": "2026-11-06T22:22:50.320000+00:00",
+          "finishUTC": "2026-11-06T22:22:53.267000+00:00"
+        },
+        "synthesis": {
+          "rowid": 468,
+          "title": "Synthesize event",
+          "relativeStart": 327.573,
+          "relativeFinish": 328.084,
+          "startUTC": "2026-11-06T22:22:50.519000+00:00",
+          "finishUTC": "2026-11-06T22:22:51.030000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 465,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 327.156,
+          "relativeFinish": 327.356,
+          "startUTC": "2026-11-06T22:22:50.102000+00:00",
+          "finishUTC": "2026-11-06T22:22:50.302000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 472,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 331.479,
+          "relativeFinish": 331.753,
+          "startUTC": "2026-11-06T22:22:54.425000+00:00",
+          "finishUTC": "2026-11-06T22:22:54.699000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 471,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 327.374,
+            "relativeFinish": 327.397,
+            "startUTC": "2026-11-06T22:22:50.320000+00:00",
+            "finishUTC": "2026-11-06T22:22:50.343000+00:00"
+          },
+          {
+            "rowid": 470,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 327.397,
+            "relativeFinish": 327.474,
+            "startUTC": "2026-11-06T22:22:50.343000+00:00",
+            "finishUTC": "2026-11-06T22:22:50.420000+00:00"
+          },
+          {
+            "rowid": 469,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 327.494,
+            "relativeFinish": 327.57,
+            "startUTC": "2026-11-06T22:22:50.440000+00:00",
+            "finishUTC": "2026-11-06T22:22:50.516000+00:00"
+          },
+          {
+            "rowid": 468,
+            "title": "Synthesize event",
+            "relativeStart": 327.573,
+            "relativeFinish": 328.084,
+            "startUTC": "2026-11-06T22:22:50.519000+00:00",
+            "finishUTC": "2026-11-06T22:22:51.030000+00:00"
+          },
+          {
+            "rowid": 467,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 328.087,
+            "relativeFinish": 330.319,
+            "startUTC": "2026-11-06T22:22:51.033000+00:00",
+            "finishUTC": "2026-11-06T22:22:53.265000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.105,
+        "gestureDurationSeconds": 2.947,
+        "synthesisDurationSeconds": 0.511,
+        "preGestureActivityGapSeconds": 0.018,
+        "postGestureActivityGapSeconds": 1.158,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 5",
+        "gesture": {
+          "rowid": 483,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 334.451,
+          "relativeFinish": 337.331,
+          "startUTC": "2026-11-06T22:22:57.397000+00:00",
+          "finishUTC": "2026-11-06T22:23:00.277000+00:00"
+        },
+        "synthesis": {
+          "rowid": 485,
+          "title": "Synthesize event",
+          "relativeStart": 334.647,
+          "relativeFinish": 335.082,
+          "startUTC": "2026-11-06T22:22:57.593000+00:00",
+          "finishUTC": "2026-11-06T22:22:58.028000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 482,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 334.103,
+          "relativeFinish": 334.432,
+          "startUTC": "2026-11-06T22:22:57.049000+00:00",
+          "finishUTC": "2026-11-06T22:22:57.378000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 489,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 338.738,
+          "relativeFinish": 339.303,
+          "startUTC": "2026-11-06T22:23:01.684000+00:00",
+          "finishUTC": "2026-11-06T22:23:02.249000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 488,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 334.451,
+            "relativeFinish": 334.454,
+            "startUTC": "2026-11-06T22:22:57.397000+00:00",
+            "finishUTC": "2026-11-06T22:22:57.400000+00:00"
+          },
+          {
+            "rowid": 487,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 334.454,
+            "relativeFinish": 334.57,
+            "startUTC": "2026-11-06T22:22:57.400000+00:00",
+            "finishUTC": "2026-11-06T22:22:57.516000+00:00"
+          },
+          {
+            "rowid": 486,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 334.582,
+            "relativeFinish": 334.646,
+            "startUTC": "2026-11-06T22:22:57.528000+00:00",
+            "finishUTC": "2026-11-06T22:22:57.592000+00:00"
+          },
+          {
+            "rowid": 485,
+            "title": "Synthesize event",
+            "relativeStart": 334.647,
+            "relativeFinish": 335.082,
+            "startUTC": "2026-11-06T22:22:57.593000+00:00",
+            "finishUTC": "2026-11-06T22:22:58.028000+00:00"
+          },
+          {
+            "rowid": 484,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 335.084,
+            "relativeFinish": 337.33,
+            "startUTC": "2026-11-06T22:22:58.030000+00:00",
+            "finishUTC": "2026-11-06T22:23:00.276000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.287,
+        "gestureDurationSeconds": 2.88,
+        "synthesisDurationSeconds": 0.435,
+        "preGestureActivityGapSeconds": 0.019,
+        "postGestureActivityGapSeconds": 1.407,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        }
+      }
+    ],
+    "measurementBoundaryActivityRows": [
+      {
+        "rowid": 491,
+        "finishTime": 815696591.879,
+        "orderInParent": 167,
+        "uuid": "2271F60A-64AE-4613-BEBC-1269F2D2EAF2",
+        "startTime": 815696591.879,
+        "parent_fk": null,
+        "title": "Added attachment named 'Populated pickup list after measured scroll'",
+        "warningIDs": "",
+        "failureIDs": "",
+        "testCaseRun_fk": 1,
+        "activityType": "com.apple.dt.xctest.activity-type.attachmentContainer",
+        "expectedFailureIDs": ""
+      }
+    ],
+    "sourceSQLiteSHA256": "1cd02b9184f9bd04e143fee809244989627f31540d35d63e078f6dceb0e4de32"
+  },
+  {
+    "label": "807",
+    "testStartUTC": "2026-11-06T22:42:20.694000+00:00",
+    "activityCount": 496,
+    "rootActivityCount": 170,
+    "timestampConversion": "SQLite Activities use seconds since2001-01-01; adding978307200 reproduces raw-log test-start UTC. Relative values avoid epoch ambiguity.",
+    "windows": [
+      {
+        "label": "warm-up",
+        "gesture": {
+          "rowid": 401,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 309.197,
+          "relativeFinish": 312.063,
+          "startUTC": "2026-11-06T22:47:29.891000+00:00",
+          "finishUTC": "2026-11-06T22:47:32.757000+00:00"
+        },
+        "synthesis": {
+          "rowid": 403,
+          "title": "Synthesize event",
+          "relativeStart": 309.338,
+          "relativeFinish": 309.804,
+          "startUTC": "2026-11-06T22:47:30.032000+00:00",
+          "finishUTC": "2026-11-06T22:47:30.498000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 400,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 309.042,
+          "relativeFinish": 309.186,
+          "startUTC": "2026-11-06T22:47:29.736000+00:00",
+          "finishUTC": "2026-11-06T22:47:29.880000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 407,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 328.971,
+          "relativeFinish": 329.255,
+          "startUTC": "2026-11-06T22:47:49.665000+00:00",
+          "finishUTC": "2026-11-06T22:47:49.949000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 406,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 309.197,
+            "relativeFinish": 309.199,
+            "startUTC": "2026-11-06T22:47:29.891000+00:00",
+            "finishUTC": "2026-11-06T22:47:29.893000+00:00"
+          },
+          {
+            "rowid": 405,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 309.2,
+            "relativeFinish": 309.275,
+            "startUTC": "2026-11-06T22:47:29.894000+00:00",
+            "finishUTC": "2026-11-06T22:47:29.969000+00:00"
+          },
+          {
+            "rowid": 404,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 309.282,
+            "relativeFinish": 309.337,
+            "startUTC": "2026-11-06T22:47:29.976000+00:00",
+            "finishUTC": "2026-11-06T22:47:30.031000+00:00"
+          },
+          {
+            "rowid": 403,
+            "title": "Synthesize event",
+            "relativeStart": 309.338,
+            "relativeFinish": 309.804,
+            "startUTC": "2026-11-06T22:47:30.032000+00:00",
+            "finishUTC": "2026-11-06T22:47:30.498000+00:00"
+          },
+          {
+            "rowid": 402,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 309.805,
+            "relativeFinish": 312.062,
+            "startUTC": "2026-11-06T22:47:30.499000+00:00",
+            "finishUTC": "2026-11-06T22:47:32.756000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 19.774,
+        "gestureDurationSeconds": 2.866,
+        "synthesisDurationSeconds": 0.466,
+        "preGestureActivityGapSeconds": 0.011,
+        "postGestureActivityGapSeconds": 16.908,
+        "retainedSignpostSummary": {
+          "case": "warm-up",
+          "eventCount": 1,
+          "pairCount": 0,
+          "pairs": []
+        }
+      },
+      {
+        "label": "measured swipe 1",
+        "gesture": {
+          "rowid": 418,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 331.645,
+          "relativeFinish": 334.502,
+          "startUTC": "2026-11-06T22:47:52.339000+00:00",
+          "finishUTC": "2026-11-06T22:47:55.196000+00:00"
+        },
+        "synthesis": {
+          "rowid": 420,
+          "title": "Synthesize event",
+          "relativeStart": 331.784,
+          "relativeFinish": 332.251,
+          "startUTC": "2026-11-06T22:47:52.478000+00:00",
+          "finishUTC": "2026-11-06T22:47:52.945000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 417,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 331.525,
+          "relativeFinish": 331.632,
+          "startUTC": "2026-11-06T22:47:52.219000+00:00",
+          "finishUTC": "2026-11-06T22:47:52.326000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 424,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 335.628,
+          "relativeFinish": 336.046,
+          "startUTC": "2026-11-06T22:47:56.322000+00:00",
+          "finishUTC": "2026-11-06T22:47:56.740000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 423,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 331.645,
+            "relativeFinish": 331.648,
+            "startUTC": "2026-11-06T22:47:52.339000+00:00",
+            "finishUTC": "2026-11-06T22:47:52.342000+00:00"
+          },
+          {
+            "rowid": 422,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 331.648,
+            "relativeFinish": 331.721,
+            "startUTC": "2026-11-06T22:47:52.342000+00:00",
+            "finishUTC": "2026-11-06T22:47:52.415000+00:00"
+          },
+          {
+            "rowid": 421,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 331.731,
+            "relativeFinish": 331.782,
+            "startUTC": "2026-11-06T22:47:52.425000+00:00",
+            "finishUTC": "2026-11-06T22:47:52.476000+00:00"
+          },
+          {
+            "rowid": 420,
+            "title": "Synthesize event",
+            "relativeStart": 331.784,
+            "relativeFinish": 332.251,
+            "startUTC": "2026-11-06T22:47:52.478000+00:00",
+            "finishUTC": "2026-11-06T22:47:52.945000+00:00"
+          },
+          {
+            "rowid": 419,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 332.253,
+            "relativeFinish": 334.501,
+            "startUTC": "2026-11-06T22:47:52.947000+00:00",
+            "finishUTC": "2026-11-06T22:47:55.195000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 3.983,
+        "gestureDurationSeconds": 2.857,
+        "synthesisDurationSeconds": 0.467,
+        "preGestureActivityGapSeconds": 0.013,
+        "postGestureActivityGapSeconds": 1.126,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 1",
+          "eventCount": 1,
+          "pairCount": 0,
+          "pairs": []
+        }
+      },
+      {
+        "label": "measured swipe 2",
+        "gesture": {
+          "rowid": 435,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 340.393,
+          "relativeFinish": 343.815,
+          "startUTC": "2026-11-06T22:48:01.087000+00:00",
+          "finishUTC": "2026-11-06T22:48:04.509000+00:00"
+        },
+        "synthesis": {
+          "rowid": 437,
+          "title": "Synthesize event",
+          "relativeStart": 340.982,
+          "relativeFinish": 341.582,
+          "startUTC": "2026-11-06T22:48:01.676000+00:00",
+          "finishUTC": "2026-11-06T22:48:02.276000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 434,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 339.761,
+          "relativeFinish": 340.378,
+          "startUTC": "2026-11-06T22:48:00.455000+00:00",
+          "finishUTC": "2026-11-06T22:48:01.072000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 441,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 344.956,
+          "relativeFinish": 345.718,
+          "startUTC": "2026-11-06T22:48:05.650000+00:00",
+          "finishUTC": "2026-11-06T22:48:06.412000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 440,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 340.393,
+            "relativeFinish": 340.395,
+            "startUTC": "2026-11-06T22:48:01.087000+00:00",
+            "finishUTC": "2026-11-06T22:48:01.089000+00:00"
+          },
+          {
+            "rowid": 439,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 340.395,
+            "relativeFinish": 340.809,
+            "startUTC": "2026-11-06T22:48:01.089000+00:00",
+            "finishUTC": "2026-11-06T22:48:01.503000+00:00"
+          },
+          {
+            "rowid": 438,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 340.847,
+            "relativeFinish": 340.981,
+            "startUTC": "2026-11-06T22:48:01.541000+00:00",
+            "finishUTC": "2026-11-06T22:48:01.675000+00:00"
+          },
+          {
+            "rowid": 437,
+            "title": "Synthesize event",
+            "relativeStart": 340.982,
+            "relativeFinish": 341.582,
+            "startUTC": "2026-11-06T22:48:01.676000+00:00",
+            "finishUTC": "2026-11-06T22:48:02.276000+00:00"
+          },
+          {
+            "rowid": 436,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 341.586,
+            "relativeFinish": 343.814,
+            "startUTC": "2026-11-06T22:48:02.280000+00:00",
+            "finishUTC": "2026-11-06T22:48:04.508000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.563,
+        "gestureDurationSeconds": 3.422,
+        "synthesisDurationSeconds": 0.6,
+        "preGestureActivityGapSeconds": 0.015,
+        "postGestureActivityGapSeconds": 1.141,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.577
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 3",
+        "gesture": {
+          "rowid": 452,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 349.934,
+          "relativeFinish": 353.227,
+          "startUTC": "2026-11-06T22:48:10.628000+00:00",
+          "finishUTC": "2026-11-06T22:48:13.921000+00:00"
+        },
+        "synthesis": {
+          "rowid": 454,
+          "title": "Synthesize event",
+          "relativeStart": 350.269,
+          "relativeFinish": 350.969,
+          "startUTC": "2026-11-06T22:48:10.963000+00:00",
+          "finishUTC": "2026-11-06T22:48:11.663000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 451,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 349.3,
+          "relativeFinish": 349.899,
+          "startUTC": "2026-11-06T22:48:09.994000+00:00",
+          "finishUTC": "2026-11-06T22:48:10.593000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 458,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 354.362,
+          "relativeFinish": 354.682,
+          "startUTC": "2026-11-06T22:48:15.056000+00:00",
+          "finishUTC": "2026-11-06T22:48:15.376000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 457,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 349.934,
+            "relativeFinish": 349.937,
+            "startUTC": "2026-11-06T22:48:10.628000+00:00",
+            "finishUTC": "2026-11-06T22:48:10.631000+00:00"
+          },
+          {
+            "rowid": 456,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 349.938,
+            "relativeFinish": 350.18,
+            "startUTC": "2026-11-06T22:48:10.632000+00:00",
+            "finishUTC": "2026-11-06T22:48:10.874000+00:00"
+          },
+          {
+            "rowid": 455,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 350.188,
+            "relativeFinish": 350.268,
+            "startUTC": "2026-11-06T22:48:10.882000+00:00",
+            "finishUTC": "2026-11-06T22:48:10.962000+00:00"
+          },
+          {
+            "rowid": 454,
+            "title": "Synthesize event",
+            "relativeStart": 350.269,
+            "relativeFinish": 350.969,
+            "startUTC": "2026-11-06T22:48:10.963000+00:00",
+            "finishUTC": "2026-11-06T22:48:11.663000+00:00"
+          },
+          {
+            "rowid": 453,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 350.97,
+            "relativeFinish": 353.225,
+            "startUTC": "2026-11-06T22:48:11.664000+00:00",
+            "finishUTC": "2026-11-06T22:48:13.919000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.428,
+        "gestureDurationSeconds": 3.293,
+        "synthesisDurationSeconds": 0.7,
+        "preGestureActivityGapSeconds": 0.035,
+        "postGestureActivityGapSeconds": 1.135,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.6
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 4",
+        "gesture": {
+          "rowid": 469,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 357.695,
+          "relativeFinish": 360.812,
+          "startUTC": "2026-11-06T22:48:18.389000+00:00",
+          "finishUTC": "2026-11-06T22:48:21.506000+00:00"
+        },
+        "synthesis": {
+          "rowid": 471,
+          "title": "Synthesize event",
+          "relativeStart": 357.98,
+          "relativeFinish": 358.573,
+          "startUTC": "2026-11-06T22:48:18.674000+00:00",
+          "finishUTC": "2026-11-06T22:48:19.267000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 468,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 357.463,
+          "relativeFinish": 357.661,
+          "startUTC": "2026-11-06T22:48:18.157000+00:00",
+          "finishUTC": "2026-11-06T22:48:18.355000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 475,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 362.112,
+          "relativeFinish": 362.906,
+          "startUTC": "2026-11-06T22:48:22.806000+00:00",
+          "finishUTC": "2026-11-06T22:48:23.600000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 474,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 357.696,
+            "relativeFinish": 357.698,
+            "startUTC": "2026-11-06T22:48:18.390000+00:00",
+            "finishUTC": "2026-11-06T22:48:18.392000+00:00"
+          },
+          {
+            "rowid": 473,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 357.698,
+            "relativeFinish": 357.852,
+            "startUTC": "2026-11-06T22:48:18.392000+00:00",
+            "finishUTC": "2026-11-06T22:48:18.546000+00:00"
+          },
+          {
+            "rowid": 472,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 357.861,
+            "relativeFinish": 357.977,
+            "startUTC": "2026-11-06T22:48:18.555000+00:00",
+            "finishUTC": "2026-11-06T22:48:18.671000+00:00"
+          },
+          {
+            "rowid": 471,
+            "title": "Synthesize event",
+            "relativeStart": 357.98,
+            "relativeFinish": 358.573,
+            "startUTC": "2026-11-06T22:48:18.674000+00:00",
+            "finishUTC": "2026-11-06T22:48:19.267000+00:00"
+          },
+          {
+            "rowid": 470,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 358.573,
+            "relativeFinish": 360.812,
+            "startUTC": "2026-11-06T22:48:19.267000+00:00",
+            "finishUTC": "2026-11-06T22:48:21.506000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.417,
+        "gestureDurationSeconds": 3.117,
+        "synthesisDurationSeconds": 0.593,
+        "preGestureActivityGapSeconds": 0.034,
+        "postGestureActivityGapSeconds": 1.3,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.567
+            }
+          ]
+        }
+      },
+      {
+        "label": "measured swipe 5",
+        "gesture": {
+          "rowid": 486,
+          "title": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "relativeStart": 369.078,
+          "relativeFinish": 372.577,
+          "startUTC": "2026-11-06T22:48:29.772000+00:00",
+          "finishUTC": "2026-11-06T22:48:33.271000+00:00"
+        },
+        "synthesis": {
+          "rowid": 488,
+          "title": "Synthesize event",
+          "relativeStart": 369.665,
+          "relativeFinish": 370.322,
+          "startUTC": "2026-11-06T22:48:30.359000+00:00",
+          "finishUTC": "2026-11-06T22:48:31.016000+00:00"
+        },
+        "previousActivity": {
+          "rowid": 485,
+          "title": "Find the \"Saved on this iPhone\" StaticText",
+          "relativeStart": 368.591,
+          "relativeFinish": 368.976,
+          "startUTC": "2026-11-06T22:48:29.285000+00:00",
+          "finishUTC": "2026-11-06T22:48:29.670000+00:00"
+        },
+        "nextActivity": {
+          "rowid": 492,
+          "title": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "relativeStart": 373.749,
+          "relativeFinish": 374.305,
+          "startUTC": "2026-11-06T22:48:34.443000+00:00",
+          "finishUTC": "2026-11-06T22:48:34.999000+00:00"
+        },
+        "children": [
+          {
+            "rowid": 491,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 369.079,
+            "relativeFinish": 369.084,
+            "startUTC": "2026-11-06T22:48:29.773000+00:00",
+            "finishUTC": "2026-11-06T22:48:29.778000+00:00"
+          },
+          {
+            "rowid": 490,
+            "title": "Find the CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+            "relativeStart": 369.084,
+            "relativeFinish": 369.482,
+            "startUTC": "2026-11-06T22:48:29.778000+00:00",
+            "finishUTC": "2026-11-06T22:48:30.176000+00:00"
+          },
+          {
+            "rowid": 489,
+            "title": "Check for interrupting elements affecting CollectionView",
+            "relativeStart": 369.497,
+            "relativeFinish": 369.663,
+            "startUTC": "2026-11-06T22:48:30.191000+00:00",
+            "finishUTC": "2026-11-06T22:48:30.357000+00:00"
+          },
+          {
+            "rowid": 488,
+            "title": "Synthesize event",
+            "relativeStart": 369.665,
+            "relativeFinish": 370.322,
+            "startUTC": "2026-11-06T22:48:30.359000+00:00",
+            "finishUTC": "2026-11-06T22:48:31.016000+00:00"
+          },
+          {
+            "rowid": 487,
+            "title": "Wait for dev.roominthecart.app to idle",
+            "relativeStart": 370.323,
+            "relativeFinish": 372.575,
+            "startUTC": "2026-11-06T22:48:31.017000+00:00",
+            "finishUTC": "2026-11-06T22:48:33.269000+00:00"
+          }
+        ],
+        "windowDurationSeconds": 4.671,
+        "gestureDurationSeconds": 3.499,
+        "synthesisDurationSeconds": 0.657,
+        "preGestureActivityGapSeconds": 0.102,
+        "postGestureActivityGapSeconds": 1.172,
+        "retainedSignpostSummary": {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.58
+            }
+          ]
+        }
+      }
+    ],
+    "measurementBoundaryActivityRows": [
+      {
+        "rowid": 494,
+        "orderInParent": 168,
+        "activityType": "com.apple.dt.xctest.activity-type.attachmentContainer",
+        "expectedFailureIDs": "",
+        "startTime": 815698118.938,
+        "failureIDs": "",
+        "testCaseRun_fk": 1,
+        "uuid": "DE8F4ECB-3283-4756-B428-E040A94749BF",
+        "parent_fk": null,
+        "title": "Added attachment named 'Populated pickup list after measured scroll'",
+        "finishTime": 815698118.9389999,
+        "warningIDs": ""
+      }
+    ],
+    "sourceSQLiteSHA256": "ba2d0c735aacb9a941fd4f842b897ab6f701d7bce8a306e081b003c9e67b9f65"
+  }
+]

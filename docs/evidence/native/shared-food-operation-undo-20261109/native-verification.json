@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "scope": "Bounded eligible shared-food patch Undo; fixture-backed original EN/ES app routes",
+  "status": "passed",
+  "sourceFiles": 613,
+  "modelsPassed": 167,
+  "appAndModelProductFilesReused": 121,
+  "uiJourneysPassed": 2,
+  "uiENSeconds": 197.358,
+  "uiESSeconds": 190.318,
+  "sourceAndProductUnchanged": true,
+  "firstFailurePreserved": ".build/SharedDemandGraphNov09/root-native-undo-r1/ui-en.xcresult",
+  "localFocusedDiagnostics": "never; CI on-failure policy unchanged",
+  "files": {
+    ".build/SharedDemandGraphNov09/root-native-undo-r1/source-manifest.json": "ba2fe41374ee6de0875be31e5327a02b370a3b4f8cefd64260af854c2fbe322c",
+    ".build/SharedDemandGraphNov09/root-native-undo-r1/products.json": "b2d4697c9b466d4ef9f2d8edb8a45d9cfdc9110e7b01c8d0febd1dd4d5deb114",
+    ".build/SharedDemandGraphNov09/root-native-undo-r1/models-receipt.json": "a66c997465e1f28cf40b48aeaea4fea1bb67bf4dc091a18c86b5bbea621a3ed0",
+    ".build/SharedDemandGraphNov09/root-native-undo-r1/models-strict-receipt.json": "950e680ae3498b1c0584a4f820bbcced5b51d559212dcfcd38f27e78775dbdb2",
+    ".build/SharedDemandGraphNov09/root-native-undo-r1/ui-en-receipt.json": "7fa5b733752f8b22e7a41d1563b4f1897994bb1e4b1db7d9512ec0fdb38593ff",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/source-manifest.json": "c7fdd94ce931f474cd611abce0dc2057ccf71ef066b1512ee4422774a9b40159",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/products.json": "5bac4b3cd0657ccf727d6b268acf34a01795f1dfa8dbdef379b7e088b5d554a3",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/build-receipt.json": "0b1880df065cf63ba76bc4aa9bcb0384c0e0e3e4c4a1d78059ac5ed23e47838f",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/app-model-parity.json": "28d6046b9986ae1ce090fed1cec2ad37fa64a29719e163dbfd30cf87f94d6d76",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/ui-en-receipt.json": "88e22ef4f10d3edff83262e61441f9e20bb4728d3438c2875bb64c9d9f04c5ef",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/ui-en-strict-receipt.json": "563566f9beded8f611328b33f619e9ff54804dea8dfc7f290e26b1c0795b69b3",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/ui-es-receipt.json": "d21a36cb11c2ebf0f3241c1aad8124d5ca3f34727b317cd929bbc3d1db49690e",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/ui-es-strict-receipt.json": "6d1ba0bfef76318b5039460f4a71e54479ff0ed680292cf11f07c1849e7b17bf",
+    ".build/SharedDemandGraphNov09/root-native-undo-r2/final.json": "f2e8ec113973ae4364ac203b012f33130552ce8ae5738fce1249f445fed99c66"
+  },
+  "realServiceUndoWireAcceptance": false,
+  "fullReleaseAcceptance": false,
+  "visualFollowup": "Existing Food quantities and sources navigation title truncates in the survivor screen; review with next shared-food UI change."
+}

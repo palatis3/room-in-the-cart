@@ -1,0 +1,41 @@
+{
+  "scope": "Actual shard shell and checker with mocked build and simulator commands. Original pre-start failure log and original passing ui-02 log drive the successful retry. No native work ran.",
+  "outcomes": [
+    {
+      "scenario": "normal",
+      "exitCode": 0,
+      "xcodebuildResultPaths": [
+        ".build/Tests.xcresult"
+      ],
+      "simctlMockOperations": []
+    },
+    {
+      "scenario": "pre-start-kill",
+      "exitCode": 0,
+      "xcodebuildResultPaths": [
+        ".build/Tests.xcresult",
+        ".build/Tests-retry.xcresult"
+      ],
+      "simctlMockOperations": [
+        "shutdown",
+        "bootstatus"
+      ]
+    },
+    {
+      "scenario": "kill-after-start",
+      "exitCode": 1,
+      "xcodebuildResultPaths": [
+        ".build/Tests.xcresult"
+      ],
+      "simctlMockOperations": []
+    },
+    {
+      "scenario": "implicit-restart",
+      "exitCode": 1,
+      "xcodebuildResultPaths": [
+        ".build/Tests.xcresult"
+      ],
+      "simctlMockOperations": []
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "captures": [
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-unknown-quantity-disabled-accept_0_34DB8837-B75C-4E68-84E0-CBF778AC6D24.txt",
+        "payloadId": "0~xFl3vimcfqIbt1Qr9rQ2J0Fe0UlpN3InPQ72Zt8kDQF5XRLWmAb3nEgGVwQHR238LwTYWDcWpQ1HyARzNaj8-A==",
+        "timestamp": 1794153332.723,
+        "uuid": "B5013487-A065-46AB-A7EC-86996DC9B34A"
+      },
+      "path": "png-0-0/B5013487-A065-46AB-A7EC-86996DC9B34A.txt",
+      "sha256": "3bd05d39c692a3a16b3b26331c7078dda9d2534080cceb712473bac1a86006c2",
+      "bytes": 13167,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-unknown-quantity-disabled-accept_0_4D59F9DE-8C1F-44C9-BD9A-332BBFA2A904.png",
+        "payloadId": "0~d1wunDjEdO0tB_IalWvKP9QiVmVqA2HqLl4dvXUhz2xUHKkarsVqeZOOIbn3rCqqPPwlLYhez4yUHkfddTAV2Q==",
+        "timestamp": 1794153332.965,
+        "uuid": "78D67976-3C4C-4DA3-B4EF-59F743E46B17"
+      },
+      "path": "png-0-1/78D67976-3C4C-4DA3-B4EF-59F743E46B17.png",
+      "sha256": "29598f464b6d6c71d4f5f359eb528be6e3739892d3dfc49e8e7e39b90af79919",
+      "bytes": 579173,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-disabled-accept-whole-button_0_CFB9123B-FE7C-4E6E-B7FF-2FC4811DE20C.png",
+        "payloadId": "0~fHvBDBWxn1AgM-90qdL-ptH4svDZwuQu3OUxoektMyqnF4jPwBwwOZSQ0htTctDoMlYdMnDEB45_FlyLg8-69A==",
+        "timestamp": 1794153336.441,
+        "uuid": "3807B411-94D4-4980-A2BA-2DD46AD235D8"
+      },
+      "path": "png-0-2/3807B411-94D4-4980-A2BA-2DD46AD235D8.png",
+      "sha256": "2e56a6ec7e11a30a3421c8aef0bf428c4641cc8b431074fe765cd79787092277",
+      "bytes": 25807,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-disabled-accept-label-interior_0_9CD5958D-1FC1-40BD-84AA-0C1DDE2D1738.png",
+        "payloadId": "0~x4FbhgThOfMdHfL2kRANU_UPpKbUF3LB_aXYdqFOw6iq2-1kznzcd65PXZdcYo8xk38Araa2o-3QsCYSIdRwog==",
+        "timestamp": 1794153336.456,
+        "uuid": "E5E2FFC0-4A1C-4A46-A934-B0AB50F97235"
+      },
+      "path": "png-0-3/E5E2FFC0-4A1C-4A46-A934-B0AB50F97235.png",
+      "sha256": "5fc7cc24cb293e691551974dfe3dceeaa1a5a331d3f3b568f0fe2affdec5ec34",
+      "bytes": 11206,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-disabled-accept-state-and-crop_0_99371D5D-51F1-43EF-810F-76238F1D53B2.txt",
+        "payloadId": "0~N1RydrNQrnvlZnhzOMvHzDQzbG1jwJE34_A_v6JNuemoTa-b2YIeDDcv78zC9VFAs6cT9zKVslHdllEV5oTgVQ==",
+        "timestamp": 1794153337.704,
+        "uuid": "ADE99DCA-1372-4FF6-BBD3-7496550B62EA"
+      },
+      "path": "png-0-4/ADE99DCA-1372-4FF6-BBD3-7496550B62EA.txt",
+      "sha256": "a9f7985ca6d29f666a27b15721c7482aef45cc131de25379b9019c8029b069a9",
+      "bytes": 13237,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-accept-row-padding-target_0_02A99FE1-90D2-450D-AEA0-6DF583ADD8F3.txt",
+        "payloadId": "0~im0bcQ5uivUDWLr_F6qPbx_x9aLGfz5BvOGIhj6XJ1NcxBzn4VLqlmxhN9_vG71Y0fGsGt9zi39up5OlZCXwlQ==",
+        "timestamp": 1794153344.955,
+        "uuid": "50B7230D-01E4-4AF6-B2E9-5FB0658833C4"
+      },
+      "path": "png-0-5/50B7230D-01E4-4AF6-B2E9-5FB0658833C4.txt",
+      "sha256": "febecb07cfbc54dd925cd7ac285ce17ebe121f68d0beb9dcc2366427a52294ea",
+      "bytes": 13222,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-enabled-accept-whole-button_0_BFC6A65E-8AAC-4FDF-A717-D88D6E424D1E.png",
+        "payloadId": "0~DnqdNjzzKSBqs2lGxu2RqgVa77xnUyfvUYjCTucC4nBUHnUkb06L3hVV0CvDAvMhQrCLB3lq1By_ImF5kgGdcQ==",
+        "timestamp": 1794153513.062,
+        "uuid": "4B4CC0F1-C422-466E-B7CD-BBCDCC9749BF"
+      },
+      "path": "png-0-6/4B4CC0F1-C422-466E-B7CD-BBCDCC9749BF.png",
+      "sha256": "48166a55081ec85d5b55c3e428de01cfb8fc20204799fb638714b9e833c70cbd",
+      "bytes": 14360,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-enabled-accept-label-interior_0_83620DC4-7762-4B83-BE3A-7BCFE4E3DB87.png",
+        "payloadId": "0~V8aHFZHAsRQ3phNdh1rPfj_GtJiADJ_NZ5MIKayZTKZQhS-WmG1s02rssA67Lc2nIp9UWHoZAx9MP2iOWt3ZpA==",
+        "timestamp": 1794153513.07,
+        "uuid": "0F43ADF3-228A-447A-9919-C00CF0FD4F31"
+      },
+      "path": "png-0-7/0F43ADF3-228A-447A-9919-C00CF0FD4F31.png",
+      "sha256": "bc189ea0a7d4345adeca9c56e1915e32953393ee2a331c49cc053e1bb5e5561e",
+      "bytes": 9450,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-enabled-accept-state-and-crop_0_3536F0E2-3C95-4C5E-9422-CF845C8C1122.txt",
+        "payloadId": "0~0zVjKW8vxbXWx2L-S6Tl6vrgH0QL69JrfbRQxdGhJv6l-_8lox72KSkxNkHFWsU7bMiLZ9LGrk7ncQ1GfZXFLA==",
+        "timestamp": 1794153514.274,
+        "uuid": "02FCE436-AB5F-46ED-847F-0E1DA1980420"
+      },
+      "path": "png-0-8/02FCE436-AB5F-46ED-847F-0E1DA1980420.txt",
+      "sha256": "ac3a1a687f71bd88e4134ba2a95451e1bc2f80e615fbc6cc7efdc809dafdf870",
+      "bytes": 12487,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Dinner-accept-row-padding-target_0_255697D4-AD84-4A9C-BE57-E07B23E7F728.txt",
+        "payloadId": "0~b--_RNf8dtIcrFiIpTS9C0vYTIM7mcBvWIQTxkLTSgh19xwrumAfnf4hN1SEl3Ky0w4tmrLzcqA2Mqk_N1LQDg==",
+        "timestamp": 1794153519.165,
+        "uuid": "C6F25F32-C810-42EF-AE33-20DDF8774875"
+      },
+      "path": "png-0-9/C6F25F32-C810-42EF-AE33-20DDF8774875.txt",
+      "sha256": "cbf192d16b12f0a6002ba3d951dad2555d61125c8cc4bce120d0600dfb3fb9f3",
+      "bytes": 12460,
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "perFileLimitBytes": 4000000,
+  "timeoutPerCommandSeconds": 45,
+  "visualReview": "pending root"
+}

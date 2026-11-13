@@ -1,6 +1,894 @@
 # Current implementation and acceptance map
 
-Updated November 4, 2026. Foundation 2.1 covers **52 launch requirements and 27 screen contracts**. Each result below identifies its own tested source and device. The [product contracts](product/foundation-gen2.1/02-features.md) govern scope. **Release acceptance remains open.** Use the traceability and release gates below for current status. `IMPLEMENTATION.md` and the earlier audits preserve prior checkpoints.
+## Current checkpoint — November 10, focused product completion
+
+Selected shared historical backup is implemented locally, including food allocation
+ancestry, stock chronology and carried delivery corrections between pickups.
+Carried physical evidence omits source budgets and other meals; opaque joint cook
+text requires current shopper scope on all recorded sources. Old files remain
+readable with explicit capture coverage. TypeScript plus12focused server checks
+pass;11Swift client checks pass; database regression passes444with3separate browser
+skips. The app builds and11archive/erasure checks pass with0reported runtime warnings.
+Logs/results: `.build/SharedRecordsNov10/carried-history-database` and
+`.build/SharedRecordsNov10/carried-history-native`. Existing local deletion-marker,
+cleanup retry and recovery-lifetime mechanisms passed focused checks; authenticated
+household lifecycle/deployment and full combined regression remain unqualified.
+
+
+The app builds with the Records import-review navigation correction. Both English/Spanish
+Records export/recovery journeys pass (2/2, no skips or reported runtime warnings) in `.build/SharedRecordsNov10/review-focus`. Final results belong in
+[CURRENT-HANDOFF](CURRENT-HANDOFF.md), which controls active execution state.
+
+Backend Records-v2 passes all eight new HTTP cases and the full441 PostgreSQL
+suite with three separately assigned browser skips; offline is1,031passes plus
+one database-only skip. The qualified actual transport remains24Node/80Swift.
+No backend behavior changed in this UI correction. [HTTP proof](evidence/service/records-protected-conversion-20261110/records-http-verification.json).
+
+Development now uses affected checks and batches broad qualification at
+integration/release; optional hosted diagnostics are deferred. The requirement
+scope clarification in CURRENT-HANDOFF removes unnecessary remote-file recall and
+a separate guardian recovery subsystem, without removing required historical
+Records, controlled-data erasure, guardian permissions or release checks.
+
+## Earlier component checkpoints (historical)
+
+The entries below describe their recorded revisions and may mention work that
+was subsequently completed. They do not supersede CURRENT-HANDOFF.
+
+Protected conversion successor now passes fresh combined backend **1,031 offline / 433 PostgreSQL** with declared skips and actual signed restore/erasure. Expanded native transport passes **24 Node / 80 Swift** with zero failures/skips; both first-run failures are resolved. Records EN/ES UI qualification is active, additional route privacy coverage pending. [Combined component proof](evidence/service/records-protected-conversion-20261110/README.md).
+
+Latest Records integration builds and passes **135 focused simulator models**, zero runtime warnings; client **230 passes plus three separate wire skips**, archive **33 passes**. Current shared snapshot export/import and unknown-date presentation are installed; actual-service/UI qualification, full history, remote erasure reconciliation and guardian recovery remain open. Protected conversion successor is held for a confirmed inverse-basis review defect. These scoped results supersede older counts below without establishing final combined acceptance. [Records proof](evidence/native/shared-records-20261110/verification.json).
+
+Newest native integration: the partial-state meal client/editor now compiles in the app and passes all88focused simulator model tests, strict checks and zero runtime warnings. Root verified667current/archived inputs and phase hashes. Eight cases beyond r7 cover restored Undo pack evidence and fresh conversion review. Actual new service wire, visual journeys and one combined release candidate remain unqualified. [Native proof](evidence/native/partial-tracking-flow-20261110/verification.json). Later paragraphs are scoped earlier checkpoints, not the current installed state.
+
+Newest backend successor: strict compilation,979offline passes+1database-only skip,412PostgreSQL passes+3browser-only skips. All18partial-state HTTP scenarios and all7first-run failures now pass; actual signed048restore/erasure passed. Matching client/UI/wire integration and full combined qualification remain incomplete. App tracking baseline separately passes62focused simulator models; the prior real-service lane passed21Node/70Swift. [Partial backend proof](evidence/service/partial-tracking-20261110/verification.json).
+
+Latest successor: strict backend compilation passes, with925offline and394PostgreSQL passes (one offline and three browser skips). All six original failures are resolved, including request reacceptance and actual signed048 restore erasure replay. The native client successor freshly compiles and passes213tests plus three expected real-wire skips. These are component qualifications; actual wire/UI successor, partial-state store re-review, enabled-partial meal source enumeration and final combined release remain unfinished. [Backend proof](evidence/service/compound-request-undo-20261110/verification.json), [client proof](evidence/native/tracking-client-successor-20261110/verification.json). The entries below retain earlier scoped checkpoints; [CURRENT-HANDOFF](CURRENT-HANDOFF.md) controls active execution state.
+
+The creation-Undo successor passes **736 offline and 332 PostgreSQL tests**, with one database-only offline skip and three optional browser skips. The twelve new HTTP/database cases cover genuine creation, atomic rollback/retry, later-change conflicts, erasure/revocation, backfill, tenant isolation and immutable proof. Root independently verified 257 source inputs and 149 compiled entries, stopped PostgreSQL and removed successful private state. Migration047 is local only. [Backend proof](evidence/service/created-meal-undo-20261110/README.md).
+
+The new native creation client passes **150 package tests** plus three expected wire skips, and app/model/UI build-for-testing passes. Explicit null removal survives complete-candidate/action encoding after a reproduced and fixed encoder rejection. These builds did not execute the model or UI suites. [Native proof](evidence/native/created-meal-undo-20261110/README.md). The full creation successor now passes all16 Node/50 Swift HTTPS/PostgreSQL scenarios, zero failures/skips, including the complete original15/45. Cancel, lost reply, exact persisted retry, erasure and revoked authority all pass. [Real-wire proof](evidence/service/created-meal-undo-20261110/native-wire-verification.json).
+
+The subsequent tracking read-contract installation passes165client tests plus the same three expected wire skips, with91 source files unchanged. Its later write-r2 successor now passes190client tests with the same three expected wire skips after a fresh build. Authenticated transport, complete review/Apply, partial-freeze preparation and exact retry are installed with controlled HTTP/concurrency tests. Native screens and actual-service tracking wire remain unfinished. [Write proof](evidence/native/tracking-write-contract-20261110/README.md). [Read-contract proof](evidence/native/tracking-read-contract-20261110/README.md).
+
+Previous r5/r7 qualification passed 174 models and six English/Spanish Undo/Meal/Quote fixture journeys. The fresh creation successor now passes one model and both EN/ES UI journeys, with root-verified627 inputs/280 products and unchanged original bundles. Original-resolution review disproved an initial apparent Spanish label/value crowding finding from the resized preview; no confirmed layout defect. [Creation UI proof](evidence/native/created-meal-undo-20261110/ui-verification.json). These scoped results do not establish authenticated mixed-device acceptance or one final frozen release candidate. [Six-journey proof](evidence/native/shared-food-six-journeys-20261110/README.md).
+
+Hosted simulator/performance qualification remains unresolved. Latest helper42761136084 timed out after 513 early controls passed; owned cleanup and artifact integrity verified. A local trivial-process sampler control passed within the original three-second limit. Timing-only instrumentation now passes157 controls; no deadlines or performance baselines changed. All three exact-commit profiles passed520 controls each; changed helper42764945390 failed at03739511. New timing proves sampler startup exceeded its3s wall window before binding, while bootstatus ultimately exited normally; root verified the artifact and cleanup. The reviewed lifecycle correction passes178 portable controls and all three exact-commit541-check workflow profiles; changed helper42768734881 failed at ea6d2966 because its exact-bound sampler handled owned SIGINT with normal exit1, rejected by the incomplete-diagnostic exit guard. Bootstatus completed normally in177.895s; root verified archived evidence and owned cleanup. The handled-SIGINT successor passes190portable controls and553checks in each exact36374e94 profile. Hosted42771834008 reached the actual180s boot deadline after safely classifying its sampler incomplete; cleanup also timed out before deletion. Root verified retained artifacts. Changed helper42774882605 at606033a8 passed568hosted controls, actual boot and scoped cleanup/deletion, but failed capture readiness within15s. No emission/export or performance qualification. [Hosted proof](evidence/ci/helper-lifecycle-acquisition-20261110/hosted-42774882605-verification.json). Actual helper/performance qualification remains unproven. Minimum-iOS Spanish XCTest failure remains open.
+
+Mixed initial-tracking/user-edit correction, request acceptance, actual store-switch inverse and portable shared Records remain unfinished. The initial-tracking inverse and recovery/rebinding domain modules have 60 focused regressions included in the current offline suite; persistence, privacy integration and endpoints now pass the r3 backend suite below; native write/UI and compound Undo remain unfinished. [Tracking proof](evidence/service/shared-demand-tracking-20261110/README.md). Private D02/B02 list-batch import/Undo already exists; a separate shared import UI was not established as required scope.
+
+Tracking persistence r2 compiled and passed753offline+1skip; its fullPG run passed334, failed15 and skipped3. PostgreSQL stopped; failed evidence retained. Installed r3 corrects scoped authority, false manual-text attribution, invalid demand fixture and missing freeze-review conflict. Its full successor passes753offline+1skip and350PostgreSQL+3skips,0failures; all15first-run failures resolved. Root verified265sources/151products, PostgreSQL stopped and successful private state removed. [R3 proof](evidence/service/tracking-persistence-20261110/r3-verification.json). [First-failure proof](evidence/service/tracking-persistence-20261110/r2-first-failure.json).
+
+Staging approval extends through041; local042–047 are not deployed. Provider/signing setup and physical/human/operational acceptance remain in [RELEASE-EXECUTION](RELEASE-EXECUTION.md). [CURRENT-HANDOFF](CURRENT-HANDOFF.md) tracks active owners and execution handles. Final combined regression, merge and release remain incomplete.
+
+## Historical component checkpoints
+
+The following scoped records remain historical evidence; they do not supersede the current checkpoint or establish one combined release candidate.
+
+The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
+pass153 native model regressions,122 client-package tests (3 expected integration
+skips),595 backend offline tests (1 expected database-only skip), and292 PostgreSQL
+tests (3 optional browser skips). These are not a complete combined release run.
+The full backend run reused137 verified compiled entries with239 unchanged source
+files; the original journal harness fenced correctly, and PostgreSQL stopped.
+[Current backend proof](evidence/service/shared-demand-action-sources-20261109/backend-regression-verification.json).
+The next quote/item editor slice now compiles and passes all 59 strict native model
+checks plus one real PostgreSQL expired-quote/privacy-recovery case. Independent review found two legacy fixture routes needing explicit demand status;
+they are corrected and both original S17/S26 UI journeys pass with strict checks
+and zero recorded runtime warnings. The stable-ID binding fix closes the retained
+Cancel crash: combined-r6 passed148 strict model checks and both original graph-editor
+journeys, including quote preservation and one-write exact retry after relaunch.
+Native request Add/Link and meal/proposal review are installed. The successor r7
+also builds and passes153 strict model checks; its English journey passes and
+r8 corrects only the old Spanish title expected by the test after the copy was shortened
+and passes the complete Spanish journey. Production app/model products are byte-identical
+to r7; the English method is unchanged. It adds contract-exact meal text normalization,
+explicit conversion reconfirmation and bounded test search direction hints.
+The full typed-client lane passes10 Node integration cases and27 exact Swift
+scenarios over HTTPS/PostgreSQL with zero failures/skips; mixed-device acceptance
+remains open. [Wire proof](evidence/service/shared-demand-action-sources-20261109/native-wire-verification.json).
+[Editor proof](evidence/native/shared-food-editor-20261109/README.md).
+[Native proof](evidence/native/shared-food-manual-flow-20261109/README.md),
+[backend proof](evidence/service/shared-demand-adoption-20261109/README.md).
+The new proposed meal-action source catalog is installed and independently reviewed.
+Its conversion/quantification corrections pass116 offline controls,91 r2 PostgreSQL
+cases and one affected r3 PostgreSQL scenario, scoped separately.
+[Catalog proof and limits](evidence/service/shared-demand-action-sources-20261109/README.md).
+
+The latest workflow update passes 457 offline source checks, including the existing
+queue contracts. Native shards report test-suite time separately from post-test
+observer work and retain distinct retry evidence. The earlier build/native-wire
+retention update passed 449 checks and all 17 queue contracts. Gates and hosted
+diagnostic defaults remain unchanged. [Timing proof](evidence/ci/native-finalization-timing-20261109/README.md),
+[retention proof](evidence/ci/workflow-followthrough-20261109/README.md).
+
+The shared source-removal regression now passes the complete expanded wire lane:
+8 Node cases and 15 actual Swift HTTPS/PostgreSQL scenarios, zero failures/skips.
+It checks cancellation, one committed removal despite a restored-operation retry,
+preserved meals/manual basket lines/history, and a separately authorized planner’s
+fresh restricted projection. This does not complete shared F02 UI or typed manual
+quantity merging. [Scoped proof](evidence/native/shared-meal-removal-wire-20261109/README.md).
+The shared-demand contract/reducer and local persistence/API boundary now pass 527
+offline and 281 PostgreSQL tests, including 54 pure domain and 21 shared-demand
+database cases. Exact quantities, reviewed pack capacity, protected reservations,
+atomic replay, tenant isolation and actual privacy restore/replay are covered.
+One database-only offline skip and three existing optional browser skips remain
+explicit. Native UI, scoped downstream projections and shared export/import remain
+open. Migration043 is not deployed. The typed client now passes 114 package tests
+with three expected database-only skips. Its eight demand scenarios pass over real
+HTTPS/PostgreSQL after correcting a request-body observer in the test fixture;
+the verified Swift build was reused. Earlier eight Node/15 Swift wire passes stay
+separate evidence; the final combined lane has not run.
+[Client proof](evidence/native/shared-demand-client-wire-20261109/README.md).
+[Persistence proof and limits](evidence/service/shared-demand-persistence-20261109/README.md),
+[original domain proof](evidence/service/shared-demand-domain-20261109/README.md).
+
+The standalone simulator collector now has qualified readiness, normal exits and
+exact expected events, with 13 offline controls. This enables a scoped app capture
+investigation; it does not resolve hosted missing measurements or approve a
+performance baseline. [Collector proof](evidence/native/simulator-collector-control-20261109/README.md).
+The compact Spanish date defect is now handled by a localized full-date button and
+staged sheet with stable outer presentation ownership. All four final English/Spanish
+date-sheet journeys pass at ordinary/largest text on one build, with strict checks
+and screenshot review. Accessibility sizes use native wheels without the duplicate
+visible label. The earlier nine-case date/deadline regression remains separate
+historical evidence. Human accessibility and minimum-OS acceptance remain open.
+[Date-sheet proof](evidence/native/shared-day-sheet-20261109/README.md),
+[original locale observation](evidence/native/shared-picker-locale-20261109/README.md).
+
+Minimum-OS qualification remains failed, but the immediate crash is now captured:
+the original Spanish iOS17.0 journey reached a null-pointer fault in XCTest's
+runtime logging callback during an accessibility query. A direct-label query
+experiment also failed and is not installed. This is a diagnostic result, not a
+passing minimum-OS journey. [First-fault evidence](evidence/native/minimum-os-first-fault-20261109/README.md).
+
+Hosted 42639339096 at dc343f3e verifies the optimized arm64 producer and restored
+products; the original scroll XCTest passes. Strict validation still rejects missing
+scroll duration. Its post-measure runner image report matches local exactly except
+PID, including Main Thread Checker UUID; RPAC is not observed in either. Filesystem
+path absence does not establish absent runner loading. The metric collection cause
+remains open. [Hosted proof](evidence/native/hosted-arm64-observer-20261109/README.md).
+No new performance baseline, full combined acceptance or merge is approved.
+Local app-signpost diagnostics now verify the original scroll XCTest, five duration
+samples, three memory series and the 500-row persisted fixture. Six outer observer
+envelopes contain the named UIKit scroll intervals. Saved-artifact recovery completed
+without another app run; original XML-cap and inspector-filename failures remain
+retained. Animation hitches remain unavailable, and the hosted missing-duration
+cause is still open. [Local diagnostic proof](evidence/native/app-signpost-export-recovery-20261109/README.md).
+A new default-off hosted app observation is prepared with workflow lint, exact
+helper typecheck and portable evidence. Its first hosted run 42697685059 failed
+Ubuntu preflight; both Mac jobs were skipped. The 281-control preparation count
+covered incremental checkpoints, not the final profile. Ordinary-fixture isolation
+and artifact expectations are now fixed. The actual complete cheap step passes
+227 checks under both observer and ordinary profiles, with source-bound receipts.
+[Dispatch parity proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
+Corrected run 42700832046 at 506fef51 passed all 227 controls on GitHub, then
+rejected the hosted xcodebuild file hash before compilation. The observed hash was
+not retained. Failure-time identity reporting is now fixed and covered by 16 new
+regressions; both complete local profiles pass 243 checks and workflow lint passes.
+Hosted retention verification and static identity review now pass. Exact reviewed
+hosted tool admission is committed at 8f58b7f4; both isolated complete local
+profiles pass 263 controls. Run 42707391568 passed the observer helper and Release producer build/upload.
+Its consumer stopped at an early container lookup timeout during runner installation.
+No selected-case verdict or measurements were established. The narrow initial
+lookup correction at ca3cf777 passes 279 complete early controls in both profiles;
+focused successor 42711707477 passed Release build but exhausted its original
+120-second startup deadline before selected-case execution. The earlier five-second
+query cutoff did not recur. The phased correction passed both298-check profiles and hosted42717128576
+passed its producer, but a separate two-second process-image binding gate rejected
+the tenth query before any phase deadline. The query had no verified terminal
+status or live identity; ENOENT alone is insufficient. The same-process acquisition
+correction is now installed and passes147 observer controls and both complete
+324-check profiles without weakening custody. Successor42728845944 passed those
+checks and Release producer; the selected XCTest started and initial data discovery
+succeeded. Initial installed-app discovery then hit a separate five-second cutoff,
+with92.434 seconds remaining in binding. The reviewed fix covers initial app/runner
+lookups with the same original deadline and passes155 observer controls. Later
+lookups remain five seconds; no selected verdict, metric or trace was established.
+[First-fault and correction proof](evidence/ci/performance-dispatch-parity-20261109/initial-bundle-verification.json).
+The separate
+producer/consumer and original required metrics remain; native observation,
+performance baseline and combined acceptance are still unproven.
+[Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
+The earlier diagnostic workflow update passed 438 offline checks and 17 native
+queue-definition checks; the later follow-through total is recorded above. Its
+opt-in performance diagnostic preserves default commands and
+rejects release-enforced requests. One local original scroll control passes native,
+strict and required measurements, but the accepted diagnostics flag retains no
+trace. No hosted repeat is justified by that control yet.
+[Diagnostic option and limits](evidence/native/performance-diagnostics-20261109/README.md).
+
+Shared recovery now consistently orders scarce-stock allocation across delivery,
+pantry and effective repair projections. An original HTTP negative control failed;
+the final fix passes seven focused HTTP, 93 domain, 452 fast service and 257 broad
+integration checks. Protected portions, reservations, exact older-shop precedence
+and strict verification remain intact. No deployment or new native acceptance.
+[Ordering regression proof](evidence/service/shared-recovery-order-20261109/README.md).
+
+Shared match acceptance is now corrected locally: explicit exclusions reject new
+pantry and delivery matches before saving, including effective recovery needs.
+Original negative controls reproduced both incorrect successes; 38 focused and
+250 broad PostgreSQL/HTTP integration tests pass. The iOS build and all 19 shared
+shop flow tests pass, including rejection feedback and lost-response retries.
+This does not complete authenticated mixed-device F02 acceptance or deploy the
+service. [Exact verification](evidence/native/shared-match-exclusions-20261109/README.md).
+
+The ordinary F02 Dinner-removal journey and actual saved SQLite now pass together
+on the corrected SDK27.1 build, including Cancel, Apply and restart. The existing
+private-pickup recovery control also passes. The new UI regression is installed
+in existingui-07; all419offline tests pass. Shared-device F02 work remains open.
+[Exact source, native results and persisted proof](evidence/native/source-removal-journey-20261109/README.md).
+
+Full-release source preflight now rejects known performance-baseline mismatches
+before any native suite starts. It reuses the performance workflow configuration
+and existing validator, preserving focused calibration and every downstream gate.
+[Workflow proof](evidence/native/release-batch-preflight-20261109/README.md).
+
+Clarification contrast is now corrected and installed. Five same-source native
+cases pass, with independent light/dark Large/AX5 target review. Both targets
+measure7.083:1 light and8.295:1 dark; original colors failed the unchanged4.5limit.
+The new existing-shard regression distinguishes0cancelled command attempts from
+1rejected attempt, and all409offline/17queue checks pass after integration.
+[Scoped proof](evidence/native/clarification-contrast-fix-20261109/README.md).
+
+Hosted42611979729 verifies producer/consumer plan and executable identity, passes
+native scroll and500-row persistence, but still lacks required scroll duration.
+A pre-setup checker-library availability difference is not execution-time proof;
+a distinct after-setup receipt is now prepared for the next justified observation.
+[Exact failure and limits](evidence/native/verified-performance-artifacts-20261109/README.md).
+
+Latest model fix: removing one dinner now preserves earlier deletion dates on
+unrelated rows. The new regression fails on the original implementation, then
+all196CoreDomain tests pass with the fix. The initial native investigation's
+`12 units` lookup failure is preserved; exact `ledgerIngredientTotal`/`12 items`
+verification now passes with the complete native/SQLite proof above. Combined CI
+remains pending. [Model evidence](evidence/native/source-removal-tombstones-20261109/README.md).
+Workflow artifact provenance checks pass409offline checks and17queue-node checks;
+current execution state is maintained in [CURRENT-HANDOFF](CURRENT-HANDOFF.md).
+
+
+Current-candidate hostedscroll42592941333 at e95fcec9 reproduces missing duration:
+original native test and500-row persistence pass, but only three memory metrics
+exist in both originalSQLite andJSON. Local required metrics remain complete; no
+hosted baseline is approved. [Retained current failure](evidence/native/current-hosted-scroll-20261109/README.md).
+The optional collector's observed framing/count errors are corrected with64focused
+and378offline passes; stderr still fails qualification. This parser correction is
+not a remedy for the hosted result, which ran with optional capture disabled.
+
+At909f7c9b, the original local Release scroll and cold-launch cases pass native,
+strict and required measurement checks on Xcode 27.1/27A9275+iOS27.0/24A434. All five
+original-duration samples are present in each case; scroll also has all three
+memory series and verified500-row persistence. Hitches remain unavailable.
+This is local calibration evidence, not a hosted baseline or final combined pass.
+The optional capture tool remains unqualified; hosted42561773341's omissions
+remain unresolved. [Exact source, custody and limits](evidence/native/local-performance-metrics-20261109/README.md).
+
+S24 test-fixture routing is now independently isolated per model/session. A native
+negative control proved the former shared-server defect; all 28 affected tests
+(26 original plus 2 new) now pass native/strict on 26.2. App/production networking is
+unchanged. Verified archived proof permits stable build-path reuse; the final
+incremental build passed in 13.102s. [Evidence](evidence/native/s24-fixture-isolation-20261109/README.md).
+The separate released 27.1/Duo hosted probe also failed postboot discovery despite
+verified exact preboot identity and successful boot. It did not execute XCTest
+and does not change the combined candidate's runtime or performance baseline.
+
+
+Five test-fixture declaration corrections are now installed. Debug compilation
+and bundle checks pass on Xcode 27.1; all55 selected request, membership, restoration,
+stock-privacy and media regressions pass native/strict on 26.2. Five targeted
+compiler warnings are gone. Actual fixture shared-state synchronization remains
+separate. [Evidence](evidence/native/xcode27-native-followup-20261109/README.md).
+The isolated snapshot traversal optimization did not fix the original17.5 journey:
+its later crash has the same first13 framework frames and remains native65/strict1.
+It is not installed.
+
+Workflow improvements through `c97bbc00` are published to the combined candidate
+branch; its terminal outcome is recorded at `e92f97e2`. All **366 offline tests**
+and **17 queue-node checks** pass. Build-free capability checks, bounded stage
+receipts, same-job identity reuse and separate inventory infrastructure budgets
+are implemented. Capability-only run42580515105 is terminal failure on the exact
+c97 revision: UUID-scoped device discovery hit 30seconds with the child running
+and no normal/late pipe bytes. Runtime/help/compilation/transport/XCTest were not
+reached. The longer bounded allowance did not resolve the hosted bottleneck;
+no further timeout increase or unchanged retry is planned. Exact log-help
+handling remains hosted-unqualified and no performance baseline is approved.
+
+The now-integrated combined R4 product inputs pass original English, Spanish AX5 on 26.2,
+64 audio regressions on each of 17.0/26.2, Free repair and cross-week meal move.
+Spanish AX5's 13 screenshots and 10 geometry records were reviewed; stock-summary
+wrapping remains unsampled at AX5 and is verified only in the English profile.
+Unsigned Release compilation and bundle validation also pass on the same source.
+Spanish on 17.0 and 17.5 still fails in the XCTest logging callback. The combined
+app is consolidated locally; full combined CI, merge and release gates remain open.
+[Exact integration](evidence/native/combined-candidate-integration-20261109/README.md). The
+independent iOS17.5 reduction R3 restores the original ingredient row structure
+and now passes its two-edit/two-Done sequence with native/strict0. This fixes the
+reduction's fidelity problem; it does not reproduce or resolve the full app's
+logging callback crash. A six-second historical query for the original PID hit
+its4MiB cap;2678complete prefix records identify the same XCTest automation image
+as the crash. Partial records establish sender provenance, not the full cause or
+a repair. No logging suppression or framework injection change was applied.
+[Reduction outcome](evidence/native/minimum-ios-reduction-20261109/README.md).
+
+Hosted focused core run42561415704 passed all11jobs atdf49c37d:717 model tests,
+two original Dinner journeys, unsigned Release compilation and Swift CodeQL.
+This is focused evidence, not the final combined regression. Performance
+run42561773341 is terminal: all3native cases passed, rendered pickup has complete
+strict evidence and20persisted checkoffs; launch has no metric rows and scroll
+lacks its required duration. No new baseline is approved.
+
+Dinner R6 passed the original English Large and Spanish AX5 journeys with strict
+validation. Combined Dinner/audio R2 passed64selected audio/capture/projection
+regressions on both iOS17 and26.2, then failed Spanish17 field focus. R3 adds a
+whole-row focus gesture: build/source checks pass and the original Spanish17 run
+now completes all5Done probes, but then crashes in XCTest's logging callback
+while locating the supply-confirm control. Native65/strict1; the full journey
+remains failed. Original evidence is retained and diagnosis is active. The
+combined product changes are now installed canonically by exact source equality.
+
+Early performance-environment rejection, exact-revision receipts and compact
+retention policy are implemented. Free space is about20.5GiB after installing the
+official17.5 simulator and compiling Release, above the8GiB native guard. Current process/source
+identities and next action belong in [current handoff](CURRENT-HANDOFF.md).
+
+The [release execution checklist](RELEASE-EXECUTION.md) orders remaining merge,
+staging, physical/human/provider and signed-distribution work. Full52requirements,
+27routes and B11 acceptance remain incomplete. Historical checkpoints below
+preserve earlier evidence; their running/blocked statements are not current.
+
+## November 8 checkpoint (historical)
+
+The pending-purchase reconciliation is locally qualified by all 60 MembershipTests
+and the unchanged Spanish Ask to Buy case. Hosted run42544579944 atd1705d92 is
+now terminal success: all seven jobs, both 15-scenario locale suites, both
+sanitizers, shared build and strict aggregate gate passed. No retry occurred.
+[Exact hosted result](evidence/native/membership-pending-reconciliation-20261108/README.md).
+This closes that focused billing validation, not full combined release acceptance.
+
+The top-content Done repair is now installed locally with a native inline supply
+title. Its full original English journey passes all five coordinate samples,
+unknown-quantity rejection, supply approval and persistence: native0, strict0,
+zero idle misses. Root/helper reviewed all ten screenshots and five after-action
+records; title and control separation now pass. The two visual failures and the
+failed top-inset alternative remain preserved. Spanish largest-text case is terminal native65/strict1 after failing to locate
+Accept idea. Inspection is complete and text size is restored to Large. That
+scope is not qualified. MinimumOS, Release
+and combined hosted regression also remain open.
+Scratch scroll R2 subsequently passes all five Done probes and approval, then
+fails on lazy root/library recovery after relaunch. The short retained-state
+recovery probe passes but is not original-journey acceptance. A separate product
+candidate now fixes truncated ingredient/supply labels; its original English
+Large journey passes native/strict validation and all 11 screenshots are reviewed.
+The candidate is not installed. Spanish AX5, minimum OS, Release and combined
+hosted regression remain outstanding. The subsequent R2 AX5 failure was traced to restoring a different lazy Amount
+field; R3 stable field IDs fix that targeting error. R3 passes all5Done and meal
+approval but reaches the720s test limit at relaunch, leaving persistence unproven.
+R4 preserves all assertions while removing redundant review traversals and adds
+a full wrapping selection summary for the truncated picker value. R4 reduced its
+restored-review block from49 to29gestures, reached the final list assertion at
+715.60s, then timed out during teardown; it remains native65/strict1. R5 adds
+Edit/Editar in the review navigation bar to avoid another long trip to the bottom;
+R5 retained native65/strict1 despite fewer gestures. R6 removes redundant test
+accessibility queries, preserves every assertion/limit, and uses matching native
+Edit/Editar names; build/source checks pass and qualification is active. See the
+current handoff for execution state; no broad accessibility pass is claimed.
+[Scroll evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
+
+[Repair evidence](evidence/native/dinner-top-done-20261108/README.md),
+[current handles and next action](CURRENT-HANDOFF.md).
+
+Cook readback's render-only alternative reproduced the framework-main wait and
+remains rejected. Scroll metric cardinality, broader accessibility and the full
+52requirements/27routes/B11 scope remain incomplete. Owner-deferred SMTP and Apple
+distribution, actual KWS activation, physical/human/provider and separate042
+rollout gates remain open. Requirement and route traceability below is unchanged.
+
+## Historical checkpoints
+
+## November 8, plain Done candidate terminal; review edge sampling
+
+Plain style compiled (native0/bundle0), changed Done's AX frame from68×36 to44×44,
+and preserved the successful center interaction and unknown-quantity safeguards.
+The top sample(360,62), exactly on the target/navigation-bar minimum edge, still
+left the keyboard open after5s. Native65/strict1,0idle; no supply/later approval/
+relaunch result. Root reviewed restored-Amount before image and all3geometry
+records. [Retained result and boundary limitation](evidence/native/native-done-plain-style-20261108/README.md).
+Do not describe the style as a no-op or a proven repair.
+
+All handles terminal: preparation94234, build42907/PID75063,
+test48485/PID75366, inspection17748. Do not repeat inspection/export.
+Current reused source/DD now contain plain candidate,561-source
+`80ac0da5e0b9ad919e985a244e0d3811a9c32fe9165c091c8bc58e9d9c289aa4`.
+Package `.build/EnglishKeyboardReviewNov08/native-done-plain-execution-r1`,
+manifest `a55bb8cb477edfd6b239c4a181145841775bf3c67d0b251214d87c3d68048b18`;
+its preservation retains automatic-style direct-touch source/products.
+Canonical556native stays8d0eb48f; no canonical app or new hosted/deployment change.
+
+Agent `english_keyboard_review` is reviewing the exact boundary/physical-pixel
+sampling assumption before further app code. Existing test is asymmetric: min
+edge exact, max inset one pixel. A principled symmetric first/last pixel-center
+policy, if justified, must be tested identically on automatic control and plain
+candidate; it is not permission to move one point only togreen. Preserve every
+old failure and all business/restart checks. No helper native execution/source
+mutation is authorized by this review task. Full52/27 goal remains active.
+
+
+## November 8, direct Done touch result terminal
+
+The direct-touch candidate builds (native0/bundle0) and the first center Done tap
+passes: keyboard/Done disappear, exact whitespace remains, editor retained. The
+original unknown-quantity/disabled-acceptance section then completes. After amount4
+is restored, the top midpoint(348,62) of the planned centered44pt region leaves the
+keyboard visible after5s. Native65/strict1,0idle; supply/final approval/relaunch not
+reached. Root reviewed all3screens and3geometry records. [Evidence and scope](evidence/native/native-done-touch-behavior-20261108/README.md).
+This proves failed behavior at that point, not a complete map of possible hit areas.
+
+All handles terminal: preparation5682, build27809/PID73222,
+test61472/PID73556, inspection55172. Do not repeat inspection. Current reused
+source/DD is the direct-touch candidate,561-source
+`2bebda3ee325cd752d31e7951796ae9a16e3c42137819066098d3da9ef79af40`.
+Execution package `.build/EnglishKeyboardReviewNov08/native-done-touch-execution-r1`,
+manifest `bde92bb703abc520452297e648c839651a9373b27f8ad164ba6ef115f5cc1b41`.
+Its preservation directory holds the previous observer source/products; R3 is in
+`native-done-hit-execution-r1/preservation`. Canonical native source remains8d0eb48f.
+
+Agent `english_keyboard_review` is reviewing official toolbar styling/control APIs
+and preparing a scratch-only app correction against this exact behavioral test.
+No new source/DD mutation or native execution is assigned to the helper. Avoid
+another arbitrary label-size guess, introspection iteration, or moving the failed
+point togreen. Original Theme.keyboardDoneAction is the bottom safeAreaInset that
+previously stalled; do not reintroduce it as an unexplained fallback. No new hosted
+run/deploy occurred. Full52/27 first-version acceptance stays open.
+
+
+## November 8, native Done observation terminal; actual touch behavior next
+
+The isolated native Done observer compiled (native0/bundle0). Its original English
+journey remains native65/strict1 at the unchanged36<44 AX-frame assertion, before
+Done; zero idle misses. Root reviewed the before screenshot and geometry.
+The process/source/nonce-bound observer returned unknown: one semantic view found,
+but no unambiguous public UIControl binding. No touch samples were produced.
+[Evidence and limits](evidence/native/native-done-hit-observation-20261108/README.md).
+
+All handles are terminal: preparation64831, build72869/PID70967,
+test42046/PID71333, inspection61210. Do not rerun inspection or collect the fixed
+cache file again. Reused source/DD now hold this diagnostic (561-source
+`e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9`);
+pre-observer R3 source/products are preserved in
+`.build/EnglishKeyboardReviewNov08/native-done-hit-execution-r1/preservation`.
+Canonical556 app source remains unchanged. No new hosted dispatch or deployment.
+
+Agent `english_keyboard_review` is preparing a scratch-only direct touch-behavior
+proposal based on preserved R3, removing the observer and retaining every original
+business/restart assertion. Correct the unsupported AX-frame-as-hit-area test
+assumption; use explicit target-region taps and verify actual dismissal/value
+preservation. No further introspection iteration or arbitrary label-sizing guess.
+Full52/27 acceptance remains open; this result is diagnostic progress, not repair.
+
+
+## November 8, R3 terminal and touch-region evidence gap
+
+R3 compiled, but its original English test and strict inspection failed before
+the first Done tap because the automation frame remained36points high. The one
+before screenshot and geometry are reviewed; actual44-point touch support is
+still unmeasured. The automation frame is not itself proof of the complete touch
+region. [Retained failure and limits](evidence/native/supply-navigation-target-20261108/rejected-r3/README.md).
+No keyboard repair, full journey or release acceptance is claimed. All local
+native handles are terminal. The next prepared direction is bounded public
+hit-testing observation; no observer code or execution exists yet. Canonical
+app source is unchanged by these isolated candidates. Full52/27 scope remains open.
+
+## November 8, earlier editor stall and R3 qualification
+
+The second supply target candidate encountered four animation waits in the
+earlier Dinner idea Amount edit before reaching supply. Root stopped the
+known-failed diagnostic early; native75/strict1 and original evidence remain
+preserved. It establishes no new supply target-size or complete-journey result.
+[Interrupted R2](evidence/native/supply-navigation-target-20261108/interrupted-r2/README.md).
+
+The separate R3 candidate covers both observed forms while preserving the
+original unknown-quantity rejection, restored amount, supply review, approval
+and relaunch assertions. Its build and built-app check pass; the original
+English journey is active under session82246/PID64813. No product repair is
+accepted yet. See the first section of CURRENT-HANDOFF.md for exact source and
+continuation commands. Full52/27 acceptance remains open.
+
+## November 8, live-font proof and supply target correction
+
+The live large→AX5→large request-expiry measurement is terminal native0/strict0.
+All18 attachments, system-size readbacks and restoration verify; all12 PNGs and
+six geometry records have been reviewed across root/helper. The expiry title
+and date remain complete, grow from20.333 to125.333points in height and return
+to their original geometry. This is scoped live-resizing evidence, not closure
+of the broader accessibility audit. [Verified result](evidence/native/request-live-type-transition-20261108/README.md).
+
+The isolated supply-navigation candidate compiled and passed the built-app check,
+but its original English journey failed before the first Done tap: the button's
+accessibility frame is36points high instead of the required44. Native65/strict1,
+zero observed idle messages and incomplete later interactions are retained.
+[Rejected candidate](evidence/native/supply-navigation-target-20261108/rejected-r1/README.md).
+The original timeout is not repaired by this early failure. Canonical app source
+is unchanged; a new minimum-target candidate is being prepared. Spanish,
+minimum-OS and Release follow-up remain conditional on the corrected original
+journey passing. Full52/27 acceptance and owner-deferred release gates remain open.
+
+## November 8, hosted cook terminal and live-font execution
+
+Previous goal turn was progress: the original English diagnostic reproduced a720-second timeout, its result and bounded probe were collected/verified once, and focused hosted cook evidence is now fully retained. Hosted42527730777 is terminal failure at348dcdd2: **all five native journeys passed**, but strict warning provenance fails because the readback warning activity has no Complete Issue Description attachment. Its89cook trace records show the expected false→true confirmation in that passing case; this is not a repair. Archive/product digests, exact speech UUID symbols and original results are preserved. [Hosted outcome](evidence/native/ci-focused-cook-20261108/README.md), commit `6b6177a7`. No hosted run remains from this dispatch; no successor was launched. Do not download/re-export the same artifacts. A complete xcresult replay was not performed; the exact hosted parser rejection was independently reproduced against the verified retained activity export.
+
+English root session92390 and inspector34748 are terminal. Native65/strict1; first missing-animation wait begins at Yield Done203.95→263.97s, before Price. The later Price probe is bound and closed but drops four late records at its output cap; it cannot establish onset ownership. Eight in-case idle misses, one later unattributed message and one runner restart remain failures. [Retained diagnostic](evidence/native/english-supply-dismissal-20261108/README.md), commit `3ad38825`. Inspection and probe collection are complete; do not repeat. Its current561source and products must be preserved before any future cache reuse.
+
+Root live-font measurement is **active** under session82990, PID55468, started 2026-11-08T22:34:22.763795+00:00. Process confirmed live 2026-11-08T22:36:20.932133+00:00. Root: `.build/RequestDecisionAccessibilityNov08/live-type-transition-r1`; exact diagnostic manifest3504044d3b5cce5eb4a87f128f4ca9a6e858025e3b2a1713a01acdebb19be6a1. It runs the original standard request journey plus system-size acknowledgement, visible expiry bounds/contrast at large→AX5→large, original cancellation/no-write/access-revocation checks. The runner changes only owned858A's system text size at the two exact markers and restores large in finally. Poll the same handle; after terminal run `inspect-transition.py` once and verify readbacks/restoration and required captures. Do not launch another local native job while it is active.
+
+The new sheet-only navigation-bar Done candidate and strengthened original English/Spanish supply checks are reviewed at `.build/EnglishKeyboardReviewNov08/supply-navigation-qualification-r1`. It changes only IdeaSupplyEditor and FreeJourneyUITests; common Theme and every original outcome assertion remain. Proposal package8022926a60a5e14bd4289faedd1bc743faf3b8ca28f5bb4a251426fb76aae19d, target561manifest6e43bb2091b43a07b9102afdd1744fb35a9145e724fe6c9db7547ec4174f7e55. Agent `english_keyboard_review` is preparing separate guarded wrappers only; no source/cache mutation or native execution. Next review its execution package, verify APFS preservation of old source/products, restore Theme and install only the two reviewed candidate files in the isolated reused path, then build/test once. Existing old immutable runner pins must not be edited or reused. The stable-zero-height subtree family was already rejected; don't repeat it.
+
+Speech helper finished read-only review: five new faults comprise one direct LocalCookSpeech.pause boundary and four framework-main paths. Both old r5 actual-app runs already fail strict checks; no unchanged r5 rerun is justified. Default owner QoS is only an unqualified dependency-alignment hypothesis and does not repair four main-framework waits. No warning exception was introduced.
+
+Canonical native source is still8d0eb48f; all new product candidates are isolated. PR1 remains atfe3e143; no full PR push/staging deployment/provider activation occurred. The full52-requirement/27-screen objective remains active and incomplete.
+
+## November 8, callback evidence and active English diagnostic
+
+The previous workflow turn made progress: focused CI is implemented/published and its quote path is hosted-verified. The subsequent accessibility measurement is now complete and committed as `83252754`. Its unfiltered audit remains native65/strict1 with36 findings. All descriptions reconcile, all six callback screenshots/hierarchies were reviewed, and original results are preserved. The two clipping reports now name the expiry title/date; the named contrast report targets an occluded Review decision button. Callback images show standard-size content, not the internal Dynamic Type sampling. No findings were waived and the count change is not a repair. [Evidence and next measurement](evidence/native/request-audit-callback-context-20261108/README.md). Do not rerun this audit or repeat its exports unchanged.
+
+Root-reviewed English Price Done diagnostic package is `.build/EnglishKeyboardReviewNov08/current-r1/execution-r1`; package SHA `75e28110e3a735b5d10e8aee9d0d92b99e791735166432001492daf2559d6e91`. Isolated build and compiled-app checks passed. Exactly the original English dinner-pattern selector is active under root session92390, xcodebuild PID51381, started 2026-11-08T22:17:16.457673+00:00. Process confirmed live at 2026-11-08T22:20:43.278883+00:00. Poll this handle; do not start another local native job. After terminal, run the package's `inspect.py` once to preserve/verify the original result and collect one bounded PID-bound Price-dismissal probe. Original720/900 allowances and assertions remain. Passing would be an instrumented nonreproduction, not a repair. Canonical native inputs remain `8d0eb48f…`; protected preview is untouched.
+
+Astra reviewed the separate live-font transition preparation at `.build/RequestDecisionAccessibilityNov08/live-type-transition-r1`. It is uncompiled/unexecuted: original standard request journey plus system category acknowledgement, visible expiry geometry/contrast at large→AX5→large, original cancellation/no-write checks. Candidate source manifest `3504044d3b5cce5eb4a87f128f4ca9a6e858025e3b2a1713a01acdebb19be6a1`. Runner/inspector AST and static plan checks pass; inspector requires all six geometry/twelve full-and-crop images, transition readbacks, restoration and native/strict success. Root reviewed final test/inspector. Run only after the English test and its inspection release the native lane; no automatic retry.
+
+Hosted focused cook run42527730777 is in_progress at348dcdd2. Observed 2026-11-08T22:20:43.278883+00:00: fixture-plan: success; Build contributor, stock and carryover fixtures: success; Build dinner decision fixture: skipped; Fixture (SharedDeliveryUITests-recovery-cook-and-closeout): in_progress. Collect terminal results once; no duplicate dispatch. PR1 remains atfe3e143; no full PR push or staging deployment occurred. English timeout, cook confirmation, scroll metric consistency, accessibility and full52/27 acceptance remain open. Goal remains active.
+
+## November 8, qualified workflow and focused CI checkpoint
+
+The workflow efficiency changes are committed and published on development branches. Fast Linux source checks gate the four expensive core macOS entry jobs; performance has Linux preflight and optional manual launch/rendered/scroll selection. Fixture diagnostics select one complete group and only its required build profile. All 250 Python checks and paired actionlint/workflow validation pass. Full PR/release coverage, exact compiled inventory, original assertions, runtime-warning checks and five shared macOS slots remain required. [Workflow and operating instructions](CI-VALIDATION.md).
+
+Focused quote [run 42524447359](https://github.com/palatis3/room-in-the-cart/actions/runs/42524447359) at `48c9f713` is terminal success: planner/build passed, dinner build skipped, and exactly one original quote journey passed native/strict checks in 671.499 seconds. Zero runtime warnings or restarts were recorded. Overall wall time was 28m27s; this is reduced diagnostic scope, not a same-coverage speedup. Artifact download, independent strict verification and selected screenshot review are complete. [Retained result](evidence/native/ci-focused-known-trip-20261108/README.md). Do not repeat collection.
+
+The native protected-heading correction is committed as `fc656a89`. All six original standard/AX5 executions across current light, current dark and minimum iOS 17 light passed native/strict checks; unsigned Release and bundle checks passed. Screenshot review and collection are complete. [Qualification](evidence/native/protected-heading-text-20261108/README.md). The subsequent unfiltered audit still fails with 39 findings; the unknown clipping/inaccessible reports are not closed by the heading correction. [Full audit](evidence/native/request-audit-after-text-heading-20261108/README.md).
+
+Commit `348dcdd2` adds scoped Debug-fixture cook-confirmation logging and artifact retention, with unchanged actions/assertions. The original local cook journey and Release qualification pass; diagnostic markers are absent from the Release executable. This verifies transport, not a hosted cook bug fix. [Diagnostic qualification](evidence/native/cook-confirmation-log-20261108/README.md). One focused cook-group [run 42527730777](https://github.com/palatis3/room-in-the-cart/actions/runs/42527730777) is in_progress on `codex/ci-focus-cook-trace-20261108` at exactly `348dcdd2`. Observed 2026-11-08T22:00:16.796261+00:00: fixture-plan: success; Build contributor, stock and carryover fixtures: in_progress; Build dinner decision fixture: skipped. Do not dispatch a duplicate.
+
+PR 1 remains draft at `fe3e143`; these development changes are not merged. Next: collect the existing cook run once at terminal, use its evidence to resolve the confirmation failure, then batch qualified fixes for full PR regression. The English animation timeout, scroll metric-count failure and broader accessibility acceptance remain open. Keyboard-card wait optimization is measured only. No local native job is active. Full 52-requirement/27-screen acceptance remains incomplete; staging 041 is live and 042/provider/distribution approvals remain separate.
+
+## November 8, 21:06 UTC checkpoint
+
+The measured CI-efficiency change is committed locally as `648e86ff`: optional manual exact-shard selection runs one complete fixture group and only its required build profile. Default PR/release runs retain all17groups and existing checks. Workflow validation and all245Python tests pass. [Timing and validation evidence](evidence/native/ci-workflow-efficiency-20261108/README.md). The published fe3e143 cohort is terminal; five macOS slots were91.22% utilized over150.70minutes. No new remote push/dispatch occurred; the focused hosted path remains unverified. Prefer focused feedback on a branch without an open PR, then one full regression batch for a coherent fix set.
+
+The S24 heading-wrapper candidate r2 is terminal native65/strict1 and rejected: it creates ambiguous same-label nodes while retaining the narrow heading frame in its hierarchy. No canonical app change was installed. [Retained failure](evidence/native/request-named-audit-measurements-20261108/rejected-heading-wrapper/README.md). Both its inspection/exports and r1 baseline collection are finished; do not repeat. Next use a native text heading and preserve the original bounds assertion; aim to reuse a stable incremental build path rather than another cold source directory.
+
+No local native build/test or export remains active. Canonical iOS inputs remain `ffd68bf9…`. The store-quote coherent-snapshot proposal remains prepared/uncompiled at `.build/CIFe3e143Nov08/known-trip-visible-label-proposal-r1`. Four hosted execution failures, cook-warning evidence, the unfiltered37 accessibility findings and full52-requirement/27-screen release acceptance remain open. Migration041 is live;042 remains separately pending. No provider/distribution activation occurred.
+
+## November 8, 20:56 UTC checkpoint
+
+Published `fe3e143` is fully terminal:47jobs passed,4executionjobs failed, and the aggregate CI gate failed as a consequence. Deep, Security and NativeWire passed. Core UI02–10 passed; fixtures18jobs passed/2failed. The four execution failures are the English dinner-pattern timeout, scroll metric-count mismatch, cook-copy confirmation, and store-quote break-even target lookup. The cook warning inventory also remains unavailable. [Terminal inventory](evidence/native/ci-fe3e143-20261108/TERMINAL.md). No hosted job remains active; no new push occurred. A focused coherent-snapshot reveal proposal is prepared but uncompiled/uninstalled at `.build/CIFe3e143Nov08/known-trip-visible-label-proposal-r1`.
+
+The named S24 baseline is terminal native65/strict1: standard text passes, AX5 stops on protected-heading bounds before expiry/cancellation. Root's full-screen and crop review shows complete visible heading words but an AX frame that excludes lower-line left edges. Fully visible Review decision contrast passes at both sizes; standard expiry checks pass. [Retained baseline and limitations](evidence/native/request-named-audit-measurements-20261108/baseline/README.md). All exports and crop analysis are complete; do not repeat. The full unfiltered37-finding audit remains retained and open.
+
+Root session22638/PID30703 is testing a candidate in `.build/S24NamedAuditTargetsNov08/heading-r2`, manifest `79c69dc9e20c7a8d13bca97f52c471c6e238463a1583da5d70c496f9832594a0`. It gives only the existing heading Label a full-width accessibility element with its localized label and header trait. Diagnostic assertions are unchanged. Poll the same handle, then run its inspector once. No canonical product changes are installed and no other local native test should run concurrently. Protected preview remains untouched.
+
+Full52-requirement/27-screen acceptance remains incomplete. Migration041 is live;042 remains separately pending. Owner-deferred provider/distribution and physical/human gates remain open.
+
+## November 8, 20:36 UTC continuation checkpoint
+
+The unfiltered S24 audit is terminal (native65/strict1), with37 retained findings:2 contrast,1 potentially inaccessible text,2 Dynamic Type unsupported,29 partially unsupported and3 clipping. Inspection and complete target/category/context reconciliation are finished; do not repeat the export. None is closed merely because the prior count was41. Five historical reports are outside the current captured viewport. [Audit evidence](evidence/native/request-audit-after-disclosure-20261108/README.md).
+
+A separate unchanged-product measurement is active under root session92893 at `.build/S24NamedAuditTargetsNov08/measurement-r1`. It has two private UI cases for standard/AX5 fully visible review-button contrast and protected heading/expiry bounds and contrast. Source manifest `badbb8895707a18b1c705448eaea99275b5824a6f244723dc727f4b3aa5bf356` differs from canonical only in the diagnostic UI file. Poll this handle; no second local native run. Protected preview is untouched. No canonical app/test changes or new CI push occurred.
+
+GitHub fe3e143 fixture workflow remains unfinished: the latest poll found13 passed jobs,1 failed,4 running and1 pending. Core/Performance failures and the cook confirmation/speech-warning evidence remain unresolved as described below. Root owns monitoring. Full52-requirement/27-screen acceptance remains open.
+
+## November 8, 20:25 UTC checkpoint
+
+The shared disclosure heading correction is committed locally as `137c661`. Reserving both native chevron dimensions prevents largest-text rewrap on expansion. Exact 556-input source `ffd68bf9a00de16e7be6c7d2121b2502da3b134626b5b3810cd65820434fd763` passes five native/strict UI executions: Other meals on minimum17/light, current26.2/light and current26.2/dark/AX5, plus nested checkout/charge disclosures on both standard-text platforms. Root reviewed all 15 PNGs and24 text records. The header stays311×44points on SE3,338×44 at current standard text and338×187.333 at AX5 in all states. Unsigned arm64 Release and bundle checks pass. [Qualified evidence](evidence/native/disclosure-stable-heading-20261108/README.md).
+
+The fresh unfiltered S24 accessibility audit is active under root session81161, xcodebuildPID23834, in `.build/RequestDecisionAccessibilityNov08/after-disclosure-r1/run`. It uses an isolated556-input snapshot with only the original audit callback inserted after the standard protected-lunch screenshot. All categories are enabled and the callback returns false. Poll that same handle; after terminal, run its prepared `inspect-audit.py` once. Do not start another local native job. Prior41 findings remain open pending target/category/context reconciliation. A separate faint-clarification-text candidate is prepared only in `.build/S24ClarificationContrastNov08/proposal-r1`, not installed or measured.
+
+Published `fe3e143` Core is terminal: UI02–10 passed; UI01 retains the known English keyboard-animation timeout and the aggregate gate consequently failed. Fixtures continue. The recovery/cook/closeout group is now terminal4pass/1fail: cook-copy destination confirmation remained0 after the inner switch tap at `SharedDeliveryUITests.swift:544`. Its runtime warning inventory is also unavailable because a priority-inversion activity lacks its required description attachment. These remain unresolved; do not infer a tap repair or speech fix. Original artifact/log are preserved in `.build/CIFe3e143Nov08/shared-delivery-recovery-artifact` and `shared-delivery-recovery-job.log`. Archived-bundle inspection is terminal. Its console query returned No console log available; the separately exported failure screenshot was reviewed and shows the fully visible switch still off. [Exact retained evidence](evidence/native/ci-fe3e143-20261108/shared-cook-failure/README.md). No simulator operation, repeated console query or native rerun followed. The scroll-performance metric-count failure remains open. No push, rerun, deployment or provider activation occurred.
+
+The full52-requirement/27-screen goal remains active. Physical/human/provider/distribution gates remain separate and open. Root owns monitoring; helpers previously reported usage-limit errors.
+
+## November 8, 20:08 UTC checkpoint
+
+Cancel preview now has qualified regression coverage on exact 556-input source `8f809b9a72bb6e73dbcbf99336548a7602605cceb99fa7af8af61ae499af43ce`: all 20 request-pack model cases and the new actual UI journey pass on iOS17.0/SE3 and iOS26.2/17Pro, English/light/Large. Strict verification passes; root reviewed all eight screenshots. The unchanged draft requires new overage or unknown-total consent after cancellation, writes nothing before fresh approval, remains editable, and saves once after approved Apply. [Evidence](evidence/native/request-cancel-preview-20261108/README.md). The initial minimum-OS checker invocation incorrectly supplied a suite selector; the preserved result was revalidated using all 20 source-derived method selectors and the original UI method, with no native rerun or gate change.
+
+The 16 planner tests pass; 72 fixture methods remain split across 17 shards. No production code changed in this addition. All local native/inspection/export handles are terminal. Automatic/physical VoiceOver focus, clarification-text contrast and the wider accessibility audit remain open. A prepared, uninstalled shared-chevron layout correction and geometry regression are in `.build/DisclosureStableIndicatorNov08/proposal-r1`; it reserves both native symbol widths to prevent largest-text heading rewrap. Qualify that change, then repeat the unfiltered current S24 audit against the historical 41 findings.
+
+Published `fe3e143` remains under test: ordinary UI02–08 and10 pass, UI09 remains active, and fixture jobs continue. Known UI01 timeout and scroll-performance metric-count failures remain unresolved. No new push or staging deployment occurred. Root owns monitoring; helper agents previously reported usage-limit errors. Full52-requirement/27-screen first-version acceptance and deferred provider/distribution/human/device gates remain open.
+
+## November 8, 19:55 UTC checkpoint
+
+The Other meals disclosure fix is locally qualified. The complete label-tap journey passes native and strict validation on iOS 17.0 light, iOS 26.2 light, and iOS 26.2 dark at the largest accessibility text size. All 15 screenshots and 24 control records were reviewed. Both protected lunches, checkout amounts, disabled Apply and zero writes survive expansion and collapse. The exact 556-input source `a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26` also passes unsigned arm64 Release compilation and bundle validation. [Evidence and retained failures](evidence/native/request-other-meals-disclosure-20261108/README.md). The largest-text header changes wrapping with the chevron width; a stable indicator-width refinement remains useful. No global accessibility or physical-device acceptance is claimed.
+
+Published `fe3e143` still has two observed failed jobs: the known English dinner-pattern keyboard-animation timeout (now UI01), and inconsistent scroll-performance metric counts. Launch/rendered performance, Security, Deep, native Swift/backend integration, 713 model tests, Debug/Release compilation, Swift CodeQL and ordinary UI shards 02–05 pass. Four contributor groups and Records/media pass; the remaining Core and fixture jobs are unfinished. [New failure evidence](evidence/native/ci-fe3e143-20261108/early-failures/README.md) includes the previously missing app stack: its main thread waits in the event loop during the late timeout sample while XCTest waits for animation quiescence. The recording attachment contains an error, not usable video. No cause or repair is inferred from that sample.
+
+All local native, inspection and collection processes for the disclosure fix are terminal. The next prepared work is the Cancel preview UI/model regression in `.build/S24CancelPreviewNov08/proposal-r2`, followed by the unfiltered accessibility audit. The full 52-requirement/27-screen goal remains active. Provider/distribution and human/physical gates remain open. Helper agents reported usage-limit errors; root owns monitoring and fixes. No staging update or new CI push occurred during this work.
+
+## Latest verified state — November 8, 18:16 UTC
+
+The portion-quantity correction is installed and locally qualified on the unchanged 556-input source `d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18`. The two existing standard/AX5 protected-lunch journeys pass native and strict validation in current iOS26.2 light, current dark, and minimum iOS17.0 on iPhoneSE3: **six case executions, zero failures**. Root directly reviewed all27 selected PNGs and their24 exact frame summaries. Essential portion facts now use native body type; checkout amounts and both named protected lunches remain visible together at standard text. Cancellation, no-write, shopper-access and disabled-action assertions remain intact. [Light proof](evidence/native/request-portion-typography-20261108/README.md), [dark/minimum and Release proof](evidence/native/request-portion-dark-minimum-20261108/README.md). Unsigned arm64 iPhone Release compilation and compiled-bundle validation both pass on this exact source. This is scoped simulator/compile evidence, not physical assistive or distribution acceptance.
+
+The isolated r5 app-PID speech recording completed its original journey (60.621seconds, native0), but strict validation remains failed because warning descriptions are unavailable. Recording finalization required termination; the retained bundle lacks instrument run data. A single bounded cloned-bundle TOC query confirmed that failure (native10); no retry or further recording followed. [Exact outcome](evidence/native/cook-attached-trace-20261108/README.md). Canonical speech remains unchanged; no wait-duration, waker or speech-repair claim is made.
+
+The cumulative code/workflow review found no push blocker: selectors remain accounted for, no production diagnostic instrumentation entered the candidate, and warning/privacy/time gates remain intact. The known English animation timeout, speech warnings and broader accessibility acceptance remain open. A focused Other meals disclosure fixture/test is prepared only in `.build/S24OtherMealsNov08/proposal-r1`; it has not been installed or executed. CI failure diagnostics remain on-failure. No staging change occurred; migration041 is live and042 remains separately pending. The full52-requirement/27-screen first-version goal remains active, with owner-deferred provider/distribution and physical/human gates unchanged.
+
+## Latest verified state — November 8, 17:48 UTC
+
+The documented raw `.atrc` import/TOC check completed successfully, exit0 in163.529seconds. Original/clone/source/receipts are unchanged. It exposes65 table declarations, but the reported run range17:34:34.277–17:34:42.611UTC ends before actual Play43.962 and Pause47.132. It cannot qualify those waits; no table rows or causal chain were exported. [Sanitized recovered metadata](evidence/native/cook-raw-trace-toc-20261108/README.md). Root93305 is terminal; all current native/inspection handles are terminal. A separately frozen app-PID attachment proposal is being prepared; no additional all-process recording is planned or authorized by these results.
+
+The accessibility audit found a concrete remaining quantity-typography mismatch in `HouseholdRequestMealContext.swift`: portions use caption, while Foundation requires body/headline. Astra S24 has prepared the one-line body correction plus actual label/value visibility, rendered-size and contrast checks in the two existing standard/AX5 journeys. The frozen proposal is `.build/S24PortionTypographyNov08/proposal-r1` (manifest5474ba50db5e7f92e259ed8698b73946e4c3f9b0014c64b25cf3d2ae2fb2c5eb). It is not installed or executed; a preserved-product execution package is being prepared. The Other meals disclosure and Cancel preview focus remain separate unqualified paths. No source-supported repair was found for the English animation timeout.
+
+Canonical speech remains unchanged; r5's actual speech journey is native1/1 but strict1, while its43 model cases pass. CI failure diagnostics are committed locally as2910ca0 with17 workflow tests and lint passing, but not pushed. Hosted UI09 is terminal native8/8/strict0 with unavailable observer; no successor was dispatched. Current app Release compilation remains qualified in its earlier scope. Full first-version acceptance remains open.
+
+## Latest verified state — November 8, 17:40 UTC
+
+The isolated r5 actual speech journey passed native 1/1 in 62.276 seconds with observed Play/Pause/Resume/Stop, but strict inspection failed on two priority-inversion records without required issue descriptions. The inspector is complete and must not be repeated. The separately passing 43 model/owner tests remain preserved. Canonical speech remains unchanged. [Actual API result and limits](evidence/native/cook-r5-actual-api-20261108/README.md).
+
+The accompanying trace requested Stop on the sampled volume-growth guard before Play and required forced termination after 120 seconds of finalization. Native completion remained independent. The 4.87 GB raw trace is private and unqualified; its actual time coverage is unknown. A separately bounded import of the documented raw `.atrc` format is being prepared to inspect retained data, without a new recording. No local native process or inspector is active. Root sessions34926,32979,8182 are all terminal.
+
+CI failure-diagnostic collection is now enabled locally in the four existing callers (`on-failure`), committed as2910ca0. Shell syntax,17 existing workflow tests, all8 workflow lint and15 queue-node checks pass. Native deadlines, warning gates, retention and the Records raw-artifact exclusion are unchanged; actual hosted failure collection remains unverified. [Policy](CI-VALIDATION.md#xctest-failure-diagnostics). The hosted UI09 diagnostic is terminal native8/8/strict0 but observer-unavailable; no GitHub run remains active or queued at the latest check, and no successor/main PR push occurred. The English timeout still has no source-supported repair. Full first-version, provider, physical/human and release acceptance remain open.
+
+## Latest verified state — November 8, 17:26 UTC
+
+The isolated r5 speech candidate now compiles and passes all 43 model/owner-transport cases, native 0 and strict 0. The three new cases verify removal of redundant active-Stop getters while preserving failed-Stop and matched-terminal idle barriers. No runtime warnings were recorded in this controlled test scope. Source, products, original result and preserved r4 evidence are unchanged at inspection. [Exact proof and limitations](evidence/native/cook-active-stop-20261108/README.md). Inspection is complete; do not repeat it. A reviewed fresh fixture build for one causal speech trace is active under root session34926, PID82630, in `.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/build`. Capture has not launched; poll that same handle before its next phase. Canonical speech remains unchanged; real AVFoundation/framework waits and the prior strict failure are unresolved.
+
+The revised trace harness is frozen, root-reviewed and passes eight offline controls. It preserves failure diagnostics and native completion independently, with a 4 GiB sampled trace threshold, 8 GiB free reserve and explicitly revised 120-second finalization allowance. The retained earlier trace fails a one-shot cloned TOC export with Missing Template, so scheduler-table availability remains unproven. [Trace limitation](evidence/native/cook-retained-trace-unavailable-20261108/README.md). A single existing English timeout attachment extraction reached its 4 MB cap. The preserved scoped runner stack confirms the late Source-field quiescence wait; the app section is missing from the captured prefix, and the first Yield Done stall remains unexplained. [Scoped stack and incomplete extraction](evidence/native/english-timeout-runner-stack-20261108/README.md). No capture retry or cap increase occurred. Hosted diagnostic 42502133362 is terminal: all eight original cases and strict validation passed, but its observer exhausted all three process-list polls with no successful snapshot or target admission. This is a second nonreproduction, not a timeout repair. [Exact hosted result](evidence/native/ui09-hosted-result-r4-20261108/README.md). GitHub now reports zero active and zero queued runs; no successor was dispatched. No main PR push or staging deployment occurred. The full first-version scope and remaining acceptance gates stay open.
+
+## Latest verified state — November 8, 17:04 UTC
+
+The disabled-action and confirmed-retry corrections are locally qualified. The current frozen556-input source24fc718 passes all19 request-pack model cases and the complete minimum17 carry/current-price journey (125.74s), native0/strict0 with zero recorded runtime warnings. The latter preserves exact retry, unknown-price disabled/no-command behavior, cancellation and final4.25price with one saved line. Its prior failure was an offscreen lazy row on the375×667 screen; the test now calls the existing bounded reveal before its unchanged8-second assertion. The model separately clears the stale503 notice only after a validated receipt, preserving new cleanup/refresh warnings. [Original failure, correction and current proof](evidence/native/request-retry-and-minimum-style-20261108/README.md).
+
+The minimum17 Spanish dinner journey also passes native/strict1/1 (215.38s); root reviewed all five PNGs. Current light/dark and minimum17 dinner/style sources and the ordinary test body are unchanged by the final household correction. The selected minimum17 shared Apply label measures15.21385:1 and remains natively disabled. The current combined source compiles as an unsigned arm64 iPhone Release app; bundle checks pass and no warning/error matches occur in the incremental build log. [Exact Release result and source lineage](evidence/native/disabled-action-release-20261108/README.md). All local inspectors/exports above are complete; do not repeat them. No local native process remains active.
+
+The speech candidate remains isolated and uninstalled. Eight exact-PID fault records were bound to the actual fixture binaries: three owner-thread waits and five TextToSpeech/main-framework waits. The old direct MainActor Pause entry is absent from these stacks, but framework waits and strict1/missing issue attachments remain. [Fault provenance and limits](evidence/native/cook-owner-fault-stacks-20261108/README.md). Scratch r5 removes a redundant active-Stop state read and adds three controlled owner tests (43total), but is not installed or executed. It is not a QoS-repair claim.
+
+Root applied the reviewed collector-only correction and pushed isolated diagnostic7f3d3ce after50 offline checks. [Single hosted successor42502133362](https://github.com/palatis3/room-in-the-cart/actions/runs/42502133362) is active: build/boot passed and the original-eight wrapper is running; native/strict/capture outcomes remain unknown. ci_f90_monitor owns read-only terminal collection. [Reviewed discovery correction](evidence/native/ui09-discovery-recovery-20261108/README.md). No main PR push or staging deployment occurred. Main PR1 remains a305065; migration041 is live and042 remains separate. English animation timeout, speech, broader accessibility, human/physical/provider/distribution acceptance and the full first-version goal remain open.
+
+## Latest verified state — November 8, 16:43 UTC
+
+The hosted UI09 diagnostic completed all original eight cases with native0/strict0, including the previously timed-out contextual-route case (188.42s). The job failed because its first process-list observation timed out before native launch; it captured no target PID or probe. This is a nonreproduction, not a cause/fix claim. Six small original artifact members are CRC/SHA verified. [Exact hosted outcome](evidence/native/ui09-hosted-result-20261108/README.md). A bounded collector correction is being prepared and reviewed offline; no successor dispatch yet.
+
+The isolated speech r4 candidate completed the original five journeys, native0, with actual Play/Pause/Resume/Stop taps. Strict validation remains failed because two priority-inversion warning activities lack their required issue-description attachments. Source, original result and compiled products are unchanged. [Actual-app evidence and limits](evidence/native/cook-thread-owner-actual-app-20261108/README.md). The inspector is complete and must not be repeated. A bounded read-only query recovered eight exact-PID runtime fault records for stack review; an earlier overbroad query was stopped at its1MiB cap and retained. Those raw records are not a strict warning inventory or an acoustic qualification. Canonical speech source remains unchanged.
+
+The corrected Spanish dinner journey now also passes native/strict1/1 in current26.2 dark/Large (272.24s), with zero recorded runtime warnings, observed animation-idle messages or runner restarts. Root reviewed all five PNGs: disabled label13.7464:1, enabled9.4803:1; row-padding taps preserve disabled behavior and enabled save/restart succeeds once. [Dark evidence](evidence/native/disabled-primary-action-dark-20261108/README.md). Inspection and export are complete. The same source is now running the minimum17 ordinary Spanish journey, root session18372, under `.build/S24DisabledActionNov08/row-qualification-r2/minimum-ordinary-run`; poll that handle, then its prepared inspector once after terminal. No other local native run may start concurrently.
+
+Main PR1 remains a305065; no new main-branch push or staging deployment. The four dinner/Theme/UI-test files remain locally modified pending minimum17 and final Release qualification. English animation timeout, broader accessibility and human/physical acceptance remain open. Migration041 is live;042 and provider/distribution requirements remain separate. The full first-version objective remains active and incomplete.
+
+## Latest verified state — November 8, 16:26 UTC
+
+The full first-version goal remains active. The corrected Spanish dinner journey passes native/strict1/1 on iOS26.2/light/Large in267.81s, with zero recorded runtime warnings, observed idle messages or runner restarts. Root reviewed all five PNGs: actual disabled label contrast15.21385:1 and enabled8.29777:1. Disabled center/padding attempts remain disabled; enabled top-padding activation saves once, restart finds exactly one library dinner and leaves the list empty. A test-only assertion now runs after the existing reveal helper. [Frozen Spanish proof](evidence/native/disabled-primary-action-20261108/spanish-light-followup/README.md).
+
+The preceding English/Spanish run remains native65/strict1: English exceeded720s amid animation synchronization waits, while Spanish queried an offscreen row before revealing it. Both prior disabled labels already measured15.21:1. [Both retained failures and partial captures](evidence/native/disabled-primary-action-20261108/attempt-2/README.md). The passing Spanish follow-up does not resolve the English timeout. Dinner dark/minimum17, final Release, wider accessibility and physical acceptance remain open. The four app/test files remain locally modified; no combined source publication yet.
+
+The first hosted animation diagnostic built successfully but stopped at an optional simulator appearance query before all eight tests. The reviewed successor makes that observation bounded and optional, records setup failures before launch, and preserves primary failure status. It passes36 focused offline checks and workflow lint. Root pushed only isolated diagnostic branch `codex/ui09-hosted-observer-a305` at2397704 and dispatched [42497538157](https://github.com/palatis3/room-in-the-cart/actions/runs/42497538157) once; read-only monitoring is active. [Failure and successor evidence](evidence/native/ui09-hosted-setup-20261108/README.md). The main PR remains a305065. Original CI failures remain unresolved until exact follow-up evidence proves otherwise.
+
+The isolated speech-owner candidate compiles and passes all40 selected model/real-thread tests, native0/strict0, with no recorded runtime warnings and unchanged source/result/236 compiled-product entries at inspection. All16 original test bodies remain unchanged. The two new callback warnings and missing framework import were corrected; existing test/package compiler warnings remain separately tracked. [Frozen proof and limits](evidence/native/cook-thread-owner-20261108/README.md). This uses a confined fake engine for owner transport and is not actual AV/acoustic acceptance or an original QoS repair claim.
+
+Review then caught an initial-control presentation regression: Stop was absent while stopped. Root intentionally interrupted the first actual-app fixture run (native73/strict1; only one case started, playback case unexecuted), preserved it, and restored one always-visible Stop outside the private-text branch, disabled only when stopped. [Interruption and view correction](evidence/native/cook-stop-visibility-20261108/README.md). R4 changes only that view; all40 model tests and the original five UI cases are unchanged. Root session21863 is running the complete original-five fixture order on the isolated checkout, under `.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r4-execution/fixture-r1`. Poll the same handle, then use its prepared `inspect-fixture.py` exactly once after terminal. Actual Play/Pause/Resume/Stop must be distinguished from the permitted unavailable-voice fallback. No other local native operation may run concurrently. Canonical speech source remains unchanged.
+
+GitHub diagnostic42497538157 was still in progress at16:25UTC, its original-eight test wrapper active. Native count, strict outcome and capture quality are not yet known; ci_f90_monitor owns read-only collection. Main PR remains a305065. Migration041 remains live;042/provider/distribution approvals and physical/human acceptance remain separate. The full first-version goal stays active.
+
+## November 8 latest verified state
+
+Disabled-action follow-up: seven selected native/strict executions pass, but screenshot review finds the direct automatic Form dinner button still below the product contrast target at3.11:1. The custom request-button states measure15.21:1 light/13.75:1 dark with retained disabled semantics and no extra writes. [Frozen evidence](evidence/native/disabled-primary-action-20261108/attempt-1/README.md). A scoped full-row dinner Button successor and new contrast/edge-activation assertions are installed locally; its English/Spanish light qualification is running. Dark, minimum17 and final Release are pending. This is not global accessibility or hosted CI acceptance.
+
+The isolated speech-ordering prototype now passes12/12 deterministic tests, including duplicate callback/sequence rejection and delayed Pause/Stop ordering. [Exact evidence](evidence/native/cook-control-ordering-20261108/README.md). Real AVSpeech ownership, responsiveness, natural end/teardown, notifications and acoustic behavior remain separate integration and acceptance work. The first-version goal remains active; no new deployment or hosted CI result is claimed.
+
+Latest follow-up, 14:36 UTC: The isolated animation observer compiled successfully, and the original eight UI09 cases passed native/strict 8/8 with zero recorded runtime warnings, idle messages or restarts. The previously failing second case passed in130.127s. Its exact PID-bound capture shows normal keyboard spring completion by0.534s after dismissal, while fifteen preexisting UIKit decorative-layer keys remain during successful progression. This is a passing diagnostic baseline, not a reproduction or fix of the hosted stall. The original a305 test sources, limits and order were unchanged; local Xcode 27.1 differs from hosted26.3. [Bounded diagnostic evidence](evidence/native/ui09-animation-baseline-20261108/README.md).
+
+The wrapper correctly stopped on its preservation assertion because database.sqlite3 appeared during result inspection. All79 preexisting result entries and the native log remained unchanged; root separately preserved the exact preinspection file set and verified all196 build-product entries unchanged. The original failed wrapper receipt remains intact. No native rerun, repeat export or result deletion occurred. UI09 test and process monitor are terminal; its result inspections and target-case trace collection are complete. Do not repeat them.
+
+The speech recorder started on reused verified products, but the reserved-disk guard fired2.542s after native launch. No test-case start was recorded; both owned processes were stopped, with source and both product copies unchanged. Final trace output reached2.011GB during cleanup, exceeding its sampled1GiB cap; the capture is unavailable, not a pass. [Preserved startup failure](evidence/native/cook-pause-trace-startup-20261108/assessment.json). The supported collector options expose no byte/buffer limit; another all-process trace is not queued. Root reclaimed35 inactive historical compiler-intermediate directories, recovering10.39GiB and leaving17.45GiB free. Current556iOS inputs and every affected sibling product tree verified unchanged; older UI09/consent caches, source, results and backups were retained. [Cleanup receipt](evidence/native/cook-pause-trace-startup-20261108/cache-cleanup.json). The disabled-primary-action contrast proposal remains scratch-only. Canonical app source remains c4d9f72, published PR1 remains a305065, four underlying hosted CI failures remain unresolved, and no staging deployment or remote CI run occurred. The full first-version goal and broader accessibility/release acceptance remain open.
+
+Latest follow-up, 13:58 UTC: The request-decision sheet now gives the expected total native large-title emphasis, uses a filled primary action for the current review/apply stage, and shows the quoted fee rule and named missing facts beside the result. The initial hierarchy source passed seven scoped UI journeys across light/dark, including the standard-size budget/lunch viewport and largest accessibility text. All thirteen screenshots were reviewed. An actual empty-price prompt defect measured 1.72:1 in light mode; using the existing themed field fixes the captured prompt to 7.08:1 light and 8.30:1 dark. Both final-source carried-request journeys pass native and strict checks, including unknown-price rejection, correction and once-only confirmation. Four more screenshots were reviewed. All nine scoped executions recorded zero runtime warnings, idle messages or restarts. The final-source unsigned arm64 Release build and compiled-bundle checks passed. [Layered source and verification evidence](evidence/native/request-decision-hierarchy-20261108/README.md).
+
+This qualifies the selected English fixed-fee and unknown-price states. Spanish and threshold-fee runtime checks, new minimum-iOS17 hierarchy coverage, physical VoiceOver and the 41 reported audit findings remain open; the prompt fix is not counted as an audit closure. Hosted CI still has four underlying failures. Published PR1 remains `a305065`; no push or deployment occurred. Migration041 was previously applied and verified;042 remains separately pending. No native job remains active; both final inspections and exports are complete and must not be repeated.
+
+Latest follow-up, 13:25 UTC: request-decision semantic surfaces and essential/metadata text roles are qualified by three unchanged native/strict journeys in each of light and dark on iOS 26.2 (6/6 total), zero recorded runtime warnings/idle messages/restarts, twelve root-reviewed screenshots and a successful final-source unsigned arm64 Release build/bundle check. [Exact styling evidence](evidence/native/request-decision-semantic-style-20261108/README.md). The 41 audit findings remain open. Checkout amount/heading hierarchy, a stage-specific filled primary action and nearby fee/missing-fact context remain explicit design gaps; no complete-S24, physical VoiceOver or new minimum-iOS17 styling claim. Hosted CI remains terminal with four underlying failures; no new remote run or deployment. Earlier paragraphs retain historical scope.
+
+Latest follow-up, 13:10 UTC: the test-only request input/reveal correction passes the full primary journey on iOS 17.0 (1/1) and primary/carried journeys on iOS 26.2 (2/2), all strictly verified with zero recorded runtime warnings, idle messages or restarts. Product code is unchanged from the qualified unsigned Release build. The earlier crash and visibility failure remain preserved; no framework-causal repair or whole-app minimum-OS acceptance is claimed. [Exact evidence](evidence/native/request-minimum-os-input-20261108/README.md).
+
+The published `a305065` cohort is now fully terminal: 47 successful jobs, five failed jobs representing four underlying failures plus the derivative Core gate. Models pass 702/702; ordinary UI 67/68; fixtures 69/69 native and 64/69 strict, with five missing-warning-evidence failures. Deep, NativeWire and Performance pass; animation-hitch samples remain unavailable. UI09 timeout, cook warning evidence and two HTTP504 downloads remain unresolved. [Terminal record](evidence/native/ci-a305065-20261108/terminal/README.md). Migration 041 is already deployed; the repeated approval triggers no duplicate update and does not authorize 042. No combined green or release-ready claim. Earlier paragraphs are historical.
+
+Latest follow-up, 12:45 UTC: the confirmed request-return fix has an original preserved failure,16strict request-pack model passes,6strict meal-context model passes and6scoped current-OS UI journeys. Minimum17 additionally exposed an unnamed native disclosure, corrected with the existing full-row labeled style. The final affected primary/carried journeys pass strict2of2 on 26.2; the final unsigned arm64 Release build and compiled-bundle checks pass. [Source-pinned evidence and all retained failures](evidence/native/request-outcome-return-20261108/README.md).
+
+Minimum17 full UI remains open after an exactly matched XCTest logging/accessibility instrumentation crash. No logging suppression or warning waiver was applied; physical VoiceOver and the older S24 audit findings remain open. The actual synthetic Simulator Safari editor foreground-revocation case passes with no product writes, committed as `a1e63d9`. [Safari scope](evidence/b11/safari-editor-foreground-20261108/README.md).
+
+Published `a305065` Core finished with702models and67of68ordinary UI passing. UI09 animation-idle timeout, cook missing-warning evidence and two HTTP504 tool downloads remain unresolved; Fixtures is still running. Migration041 remains live and042 separately unapproved. No combined green or release-ready claim. Earlier paragraphs below retain historical scope.
+
+Latest follow-up, 11:25 UTC: published `a305065` has passed Deep, NativeWire and Performance; Core/Fixtures are still active. The hosted model suite passed 702/702. Two tool-download HTTP504 failures remain recorded. Local final saved-cook UI qualification passes on iOS17light and iOS26.2dark; semantic history/copy styling and the portable editor selector are verified, with stronger one-tap share dismissal assertions. The first dark share dismissal failure remains unexplained. Final-source unsigned arm64 Release compilation and compiled-bundle checks passed. [Saved-cook evidence](evidence/native/shared-cook-history-surfaces-20261108/README.md) retains both final UI results and earlier failures. The fresh unfiltered S24 audit still reports41 issues; [its reconciliation](evidence/native/request-decision-measurements-20261108/current-audit/README.md) does not waive findings or infer regressions from counts. Migration041 is live;042 remains separately pending. Earlier snapshots below are historical; no combined green or release-ready claim.
+
+Current follow-up: published `14ac1e3` is fully terminal: four workflows pass, Core66/68ordinaryUIpasses, fixtures66executed/66nativepasses of69selected. Threefixturecases wereboot-blocked; cook’sfivepassingcases stillfail warningverification. FourunderlyingCIfailurecategories remain; the redCoregate isderivative. [Exact terminal evidence](evidence/native/ci-14ac1e3-20261108/terminal/README.md). S24’s additional3controls passedall3sizes with complete21+9group inventories and root/independentvisualreviews; all36historicalauditfindings remaintracked. R8keyboardcontrol passed but leavesblankspace and isonlynonreproduction. The new original-order speechdiagnostic passes5/5 but reproduces the strictwarningfailure; numericDebug/TPCobservations measure84msvoiceenumeration and62msPause onMainActor, notRelease/device latency. The minimal asynchronous voice-preparation change now passes 702/702 model tests strictly (including 16 focused readback cases) and all five original shared-cook journeys natively, with actual Play/Pause/Resume/Stop taps. The fixture strict check still fails on the missing speech-warning attachment; no Pause/QoS fix is claimed. The final-source unsigned arm64 iPhone Release build and bundle checks also pass. The reviewed candidate is ready for the next hosted CI run; release acceptance remains incomplete. [Handoff](CURRENT-HANDOFF.md) records ownership and pendingreview. No combinedgreen orrelease-ready claim.
+
+Previous terminal cohort, 05:21 UTC: the six-workflow `15f216b` cohort is terminal. Four workflows passed; Core and fixtures failed. Ordinary native assertions pass 65/68; fixtures pass 67/69. The five cook/speech cases pass native assertions but fail the separate warning-evidence gate, so those warning counts are unavailable. Chrome startup is a separate failure. The [current handoff](CURRENT-HANDOFF.md) records exact remaining failures and local-only corrections; no combined green or release-ready claim is made.
+
+A companion-web foreground privacy defect is fixed locally in `58419f9`. [Both original actual Simulator Safari cases](evidence/b11/safari-foreground-20261108/README.md) fail while authority is held; both unchanged cases pass against the fixed bundle. Same-account draft recovery and revoked-access clearing are separately verified with zero product commands. All 152 web unit/regression tests and 14 local Chromium browser checks pass. This does not close physical/provider/App Switcher or continuous-frame acceptance and is not yet deployed. Earlier progress snapshots below are historical.
+
+The final two minimal Safari queue cases now pass: [explicit storage loss](evidence/b11/safari-history-20261108/queue-evicted/verification.json) shows the exact missing-request notice and no resend; [device queue permission revocation](evidence/b11/safari-history-20261108/queue-revoked/verification.json) removes pending storage/text/controls with zero command attempts. All four history and four queue cases qualify within their synthetic Simulator Safari scope. Wider fresh/primed invite/helper/editor, storage denial, external links, background/process restart, sign-out, Spanish and physical/provider tasks are not closed by this matrix.
+
+The unchanged local S24 standard/AX5 baseline passes strict2/2 with zero runtime warnings. The first three-size diagnostic passed Small/Large but failed to navigate back to an earlier control at AX5; its partial capture inventory was rejected. The separately pinned navigation-only followup passes strict3/3 with zero warnings/skips/restarts and all21groups/84attachments. Root reviewed all21 crops and representative full screens: captured text is complete and AX5 Review labels wrap over two lines. Raw glyph measurements support scaling for these targets only; all36 historical audit findings remain tracked. [Current measurement evidence](evidence/native/request-decision-measurements-20261108/README.md). Physical VoiceOver and original audit reconciliation remain open.
+
+As of04:46UTC, Deep, Release performance, native wire and security are successful; Core/fixtures remain unfinished. The [current bounded checkpoint](evidence/native/ci-15f216b-20261108/checkpoint-044653/README.md) records59ordinary UI passes/2failures among61executed of68selected and51fixture passes/1failure among52executed of69source-selected. The new UI07 failure is a Spanish quantity-keyboard timeout before Save, with one runner restart; it is under investigation. All three performance jobs passed their available timing/memory checks, but no animation-hitch series was emitted. [Performance scope](evidence/native/ci-15f216b-20261108/checkpoint-040352/README.md). UI05's original immediate Branch read failed while its later screenshot showed the full value; a narrow exact-value completion assertion now passes its original six-selector replay locally, strict6/6 with zero warnings/skips/restarts. [Local qualification](evidence/native/ci-15f216b-20261108/ui05-exact-value-followup/README.md) preserves the exact sequence and original failure; hosted confirmation remains pending. [Original failure and later image](evidence/native/ci-15f216b-20261108/checkpoint-041707/README.md). The04:25 snapshot adds a SharedFallback toggle failure under investigation, alongside the separate Chrome startup failure. Core later finished65/68native passes, with three failed selectors and two runner restarts; UI10adds a fresh-branch-pricing keyboard-idle timeout while its Settings/Reduce Motion case passes. Core web startup remains separate, and fixture collection continues. No combined green or release-ready claim is made. The paragraphs below preserve historical snapshots, superseded by the current handoff.
+
+Actual iPhone Simulator Safari now additionally passes offline queue persistence and lost committed-reply recovery. Both use real native Reload and an explicit product Retry; neither reload automatically submits. Offline recovery yields one POST/effect, and lost-reply recovery yields two identical POSTs with one total effect. Both clear durable pending storage and show received status. [Offline proof](evidence/b11/safari-history-20261108/queue-offline/verification.json) and [lost-reply proof](evidence/b11/safari-history-20261108/queue-lost/verification.json). Storage-eviction and permission-revocation Safari queue cases remain open; this is synthetic API/engine acceptance, not physical radio-offline or provider proof.
+
+Through03:38UTC, current CI also passes UI01(5/5), UI03(6/6), Release cold launch(4.667s against5.5s), and Swift CodeQL(zero findings,11retained extractor diagnostics). The Settings/Reduce Motion selector is now in pendingUI10, not UI01. Other UI/fixture/performance jobs remain unfinished and Chrome startup remains the only observed failed job. No full green or release-ready claim is made. The following03:29snapshot predates these additional results.
+
+Published candidate `15f216b` has completed strict model coverage (696/696), English and Spanish StoreKit (15/15 each), both sanitizers (437 passes plus three declared opt-in wire skips each), security and native HTTPS/PostgreSQL. Core UI, fixture and performance jobs remain live or queued as of03:29UTC. Chrome startup is the only observed failed job so far; it failed before browser-history assertions. No combined green result is claimed. The [current handoff](CURRENT-HANDOFF.md) identifies exact runs and unpublished local work.
+
+Actual iPhone Simulator Safari 26.2 now qualifies four persisted-history cases: same actor, changed actor, revoked authority and unavailable authority. Prior request/draft remain hidden until fresh authorization, and each case reaches its required final state. Zero product mutations. [Exact additional-history proof](evidence/b11/safari-history-20261108/additional-history/verification.json). Four queue cases and the wider human/physical Safari matrix remain open. This synthetic loopback engine evidence does not substitute for real-provider acceptance.
+
+Staging remains041; the separately reviewed042 rollout awaits approval. The [concrete review](evidence/b11/staging-042-preparation-20261108/ROLLOUT-REVIEW.md) records the completed restored-database owner-runner rehearsal and verified upload. Apple membership, SMTP/KWS activation, distribution and human/physical acceptance remain separate.
+
+## Earlier November 8 CI and recovery checkpoint
+
+The original f90 cohort is terminal and fully collected. All684model tests passed; ordinary UI passed62/67 and fixture native assertions passed65/67 across17jobs. Security, native HTTPS/PostgreSQL and all3Release performance gates passed. Original UI failures, disconnected Swift CodeQL runner, strict StoreKit log-parser failure and incomplete speech-warning evidence remain recorded; no combined acceptance is claimed. [Terminal snapshot](evidence/native/ci-f90-20261107/monitor-20261108T024722Z.json).
+
+Later local corrections pass the full checkout-review, store-quote and Spanish save journeys without weakening their original assertions. Fixture-only pack and cook switch traces qualify capture, not a causal repair. The cook five-case execution passes all native assertions but still fails strict verification on the preceding speech warning’s missing diagnostic attachment. The warning gate remains intact. Both traces are absent from the unsigned Release app and its extensions. Hosted confirmation of this accumulated candidate is pending. A pre-push package audit also corrected four missing compiled test identifiers; the full client package passes105cases with its three unchanged wire skips, and the original inventory failure is retained in [the verification](evidence/native/package-inventory-20261108/README.md).
+
+A fresh encrypted041 backup and two new actual restores now pass the local042 upgrade rehearsal. Existing data and the untouched baseline are preserved, and both images are detached. The first catalog-rendering mismatch remains recorded and its narrow correction retains real-FK-change negative controls. [Recovery proof](evidence/b11/staging-042-preparation-20261108/README.md). Live staging remains041;042 rollout approval, maintenance routing and deployment verification remain separate. Signed distribution, provider activation and physical-device/human acceptance are still open.
+
+## November 7 store-quote and Spanish save navigation
+
+Both complete original journeys now pass locally with their existing limits, strict2/2 and zero warnings/skips/restarts. The known top branch header is found without scrolling away from it; Spanish Save is fully visible before the existing single tap. Store comparison adoption/revision/original proof and Spanish save/reopen checks remain intact. Application behavior is unchanged. Original failures and pending hosted26.3 acceptance remain explicit. [Proof](evidence/native/core-navigation-20261107/README.md).
+
+## November 7 complete checkout-review journey
+
+The full ordinary Free journey passes locally after following both existing pricing-review confirmations. It verifies preserved old prices, fresh source and inclusive$3.00, the committed result, placement, short fill, protected-lunch repair, settlement, next-shop reuse and restarted history. Strict1/1 passes with zero warnings/skips/restarts; no application guard or later assertion changed. Both earlier failed attempts remain retained, and hosted26.3 follow-up is pending. [Evidence](evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/README.md).
+
+## November 7 closed-pickup corrections
+
+S08/S11 now preserve later physical correction after closure: an assigned shopper can register late food, revise received/usable quantities and correct protected portions without reopening the pickup or changing its order or spending. A reproduced pending-action bug is also fixed: another shop’s review cannot clear the original durable delivery. The complete iOS 17 batch passed 696 model tests and three UI journeys; both selected iOS 26.2 journeys passed, all with zero skips or recorded runtime warnings. Real Swift/HTTPS/PostgreSQL, backend regressions and the unsigned Release build passed in their [documented scopes](evidence/native/closed-delivery-20261107/README.md). Spanish largest-text confirmation recovery is covered; human language and physical assistive-access acceptance remain separate.
+
+The earlier hosted f90 candidate now passes all three Release performance gates, including the previously missing five-sample scroll metric. [Exact performance proof](evidence/native/ci-f90-20261107/performance/README.md). Other hosted gates remain incomplete, and these later local changes are not yet hosted or deployed to staging.
+
+## November 7 shared confirmation acceptance
+
+The assigned shopper can review and record independently retailer-confirmed shared-order changes while retaining the original order, quote, actual food and financial evidence. Exact retry after a lost reply and restart is covered in the full iPhone journey on iOS 17 and 26.2. The final iOS 17 run passed 693 model tests and that UI case, with zero recorded runtime warnings. Real Swift HTTPS/PostgreSQL scenarios cover confirmation, replay, new independent delivery sources and full cancellation. Backend tenant/authority, erasure and populated-restore checks passed; the unsigned Release iPhone build passed. [Exact verification and limits](evidence/native/shared-amendment-20261107/README.md).
+
+This is local acceptance for migration 042 and the corresponding client/service source. Staging remains at approved 041. The current hosted f90 cohort does not include these later changes and retains distinct parser, system-Settings setup and runner-loss failures. Hosted validation and the remaining production gates are open.
+
+## November 7 offline request retries
+
+An adult contributor can opt in to keeping a pending request on a specific enrolled device for up to 24 hours. On a local service with migration 041, Android Chrome and the iPhone app recovered after disconnection and restart. PostgreSQL recorded one request and one operation per submitted intent, including after a committed reply was lost. Revoking contribution rights removed the Android pending text and IndexedDB row. The merged native run passed all 22 selected app tests and 12 client tests, including account changes and first sign-in. The released 040 web client could still submit an immediate request to the corrected 041 service. Its legacy queue flag stayed off even on an enrolled device with a current grant. A populated restore rehearsal preserved all 104 tables and verified that the service cannot resume through the signed recovery procedure while restored queue permissions are present. A separate Chrome test confirmed that losing a pending IndexedDB row shows its missing status and does not resend the command. [Compatibility and recovery evidence](evidence/b11/offline-requests-20261107/restore-and-compatibility.json) The reviewed 041 service and web update is live on staging. Authenticated offline replay was verified on the local service, and the hosted rollout passed the anonymous checks. [Hosted deployment](evidence/b11/staging-041-preparation-20261107/deployed.json) [Verified checks](evidence/b11/offline-requests-20261107/verified.json)
+
+## November 7 purchase, closeout and next-shop acceptance
+
+The [current handoff](CURRENT-HANDOFF.md) records the native S11 purchase and financial-closeout tests, real-service Android contributor checks in both languages and the local 039 restore. S12 now has a Free path for an assigned shopper to bring an eligible earlier family request to a fresh shared inbox and price it there. The local 040 regression suite covers source and destination authority, child consent, erasure, pagination and competing destinations. A previous store review is excluded from the new-shop command. The approved [hosted rollout through 040](evidence/b11/staging-040-preparation-20261107/deployed.json) has passed its database and deployed-web checks. The mixed-phone grocery test used a local service and synthetic accounts. End-to-end access with production providers and physical phones remains open.
+
+## November 7 delivery coverage and dinner recovery
+
+The [current handoff](CURRENT-HANDOFF.md) records the verified private and shared post-placement meal changes. S09.01 now has two shared shopper walkthroughs on iOS 17.0 and 26.2. Replacing Wednesday preserves Tuesday’s exact protected shortage, and declining an unresolved replacement preserves the original dinner. A separate shopper walkthrough verifies that five freezer portions cover two protected lunches and three of four dinner plates (S09.02). Service tests cover immutable orders, cross-shop commitments, stale decisions, retry and scoped cook instructions. For S09.03 and P04, the service and Swift client now reject an unworkable set of accepted recipes while preserving the current meal. An explicitly unknown preparation time stays conditional. Seven live Swift-to-PostgreSQL scenarios passed, including receipt recovery and rejection of new approvals after membership expiry. Both iOS 26.2 shopper journeys for recipe approval, withdrawal, a dated no-fit result and a two-pack top-up passed together. The top-up test reopened cook instructions with the protected lunch and the remaining three-unit shortage. Human fallback and travel comparison is pending. Remaining release requirements are open.
+
+## Earlier November 7 snapshot at 1080fad
+
+At this checkpoint CI targeted 1080fad. Deep passes both15-case StoreKit configurations and both sanitizer jobs; Security and Native wire are terminal success. Ordinary UI has a new S14 input-value failure before saving; the earlier local persistence passes do not erase it. A [failure-boundary diagnostic](evidence/native/s14-value-boundary-diagnostic-20261107/README.md) is committed locally, with whole-file typecheck only and no causal product fix claimed. The quote case also fails its first switch readback; the locally installed [switch diagnostic](evidence/native/quote-switch-boundary-diagnostic-20261107/README.md) preserves the original action/assertion and adds bounded observations. A third Core job passes all six native cases but fails the strict gate on two view-hierarchy warnings. Exact activity evidence supports a [selector-specific Menu settling phase](evidence/native/pickup-menu-idle-phase-20261107/README.md);32 checker tests and a separate six-case replay pass with the same2 reported warnings. The original hosted failure remains unchanged. The rest of the hosted cohort is unfinished.
+
+The [future-arrival fix](evidence/native/future-arrival-boundary-20261107/README.md), committed locally as81a6e8b, excludes future evidence from current food, carryover and pending-offer decisions while preserving history. Five identical tests fail on the old product; all129 affected model tests pass on the fix. The [saved-arrival timestamp row](evidence/native/saved-arrival-date-display-20261107/README.md) is installed and verified in the complete English current-save/restart journey. The same two-case run fails Spanish earlier at a text-menu helper, before arrival. Native past/future interaction and Spanish arrival rendering remain pending.
+
+**S09.01 at 1080fad.** The required post-arrival replacement of Wednesday's dinner is not implemented by the existing repair-note flow. DinnerPlanning correctly rejects noncalendar ledger changes after placement; the current accepted-fallback action only fills manual instructions, whose Save appends a PickupRepair. A draft-only replacement or a note-only test cannot prove the required post-arrival behavior. The implementation needs a distinct reviewed recovery change that preserves the original order and charges, keeps Tuesday's shortage and protected portions visible, and updates only the chosen meal's current requirements. Local/shared authority, stale review, durable retries, physical matching and cook projection must be covered. The [pure recovery engine](evidence/native/meal-recovery-domain-20261107/README.md) is installed as f160156 with180 passing package tests, including9 new recovery cases, and exact source/fixture/log verification. This component is not yet connected to a completed native Apply flow or shared service. Context/calendar revisions, immutable source provenance, app CAS/current projections and canonical shared supply remain in progress under `.build/RecoveryHandoffAcceptance20261107`. Existing purchase guards remain unchanged.
+
+The Dinner supply-sheet/error styling candidate remains uninstalled while its native validation continues. The first failed attempt and the later approval-completion failure are retained. Earlier scoped color/field observations do not establish a complete passing flow.
+
+The paragraphs below retain historical evidence; old active-candidate and unresolved StoreKit descriptions are superseded by this current section where stated. Full first-version and release acceptance remain incomplete.
+
+The [shared Dinner editor semantic styling](evidence/native/dinner-semantic-theme-20261107/README.md) is installed with passing unchanged normal S14 and Spanish approval regressions, plus separately scoped light/dark diagnostic renders. The earlier normal Dark idle timeout remains open; this does not establish an animation fix, whole-app design acceptance or hosted coverage.
+
+The original8d1a79b CI cohort is now [terminal and independently frozen](evidence/native/ci-8d1a79b-20261107/README.md):604/604models,51/53ordinary UI,29/30StoreKit,47/47fixtures and all3performance gates pass in their recorded scopes. Two share-sheet readiness failures and the English StoreKit timeout remain open, including two runner restarts. Six UI and six fixture warning occurrences remain explicitly scoped. This evidence does not cover the later local commits or establish release acceptance.
+
+S04 now has complementary exact evidence for the six/four/two meal split and hiding protected needs. [Ten native model cases pass locally, and the unchanged protected-lunch UI case passes on hosted CI](evidence/native/protected-meal-packs-20261107/README.md). The strengthened existing test verifies two eight-packs and SQLite reopen without converting the mathematical remainder into confirmed stock.
+
+An [additive evidence refresh](evidence/native/screen-evidence-refresh-20261107/README.md) binds nine previously indirect Check clauses to exact current-source assertions and retained passing outcomes: checkout thresholds, usable-food correction and arrival replay, pending/included credits, and unavailable-source recipe editing. The historical 123-clause ledger is preserved; calculation proof remains distinct from native screen and release acceptance.
+
+The ordinary S14 recipe journey now verifies editing with an unavailable source, explicit portion bindings, restart persistence and separation from the reusable recipe. It also exposed and verifies a persistent localized name for filled Notes. [The unchanged complete case passes locally](evidence/native/recipe-source-editing-20261107/README.md) and is installed as permanent ordinary CI coverage; human accessibility and hosted acceptance remain separate.
+
+The dinner idea model now has permanent regressions for abandoned preparation, repeated save/approval, a separate explicit shop apply, and revoked planning access. [All 27 selected model tests pass locally](evidence/native/dinner-idea-model-20261107/README.md), with exact compiled selection and zero runtime warnings. This covers the production model with an in-memory store; it does not replace native interaction or SQLite persistence evidence.
+
+S26 now has an exact ordinary-contributor save/approval denial check with unchanged idea, receipt and full-shop snapshots, valid adult controls and idempotent retries. [Seven real HTTP/PostgreSQL tests pass](evidence/b11/idea-authority-20261107/README.md) on a fresh local cluster under the restricted runtime role. Current catalog preparation is synchronous; this does not claim in-flight generation cancellation or replace native access/UI evidence.
+
+The exact S05 coffee/salsa fee-threshold examples now run in Swift and TypeScript, and S08 verifies six-to-seven usable-wrap correction, protected lunches, replay and serialization. [Calculation evidence](evidence/native/acceptance-math-20261107/README.md):171CoreDomain cases and13service checkout checks pass locally; screen/device acceptance remains separate.
+
+StoreKit cancellation remains an unresolved hosted failure. [Test-only diagnostic evidence](evidence/native/storekit-cancellation-diagnostic-20261107/README.md) includes a15/15local nonreproduction and a deliberate120-second timeout that preserves25stage attachments while the strict checker rejects the failure. Instrumentation is installed without the artificial sleep or relaxed gates; it is not a product correction or hosted pass.
+
+The companion-web history boundary now conceals private content before browser caching and requires fresh access on return. Six real persisted Chrome restores and six cold-history controls cover unchanged, changed, revoked, offline and expired-identity recovery;129web unit checks and14combined browser checks pass locally. The regression runs in the existing CI web step with its unchanged two-minute limit. [Root-reviewed evidence and limits](evidence/b11/web-history-privacy-20261107/README.md). Hosted/mobile/live-provider acceptance remains separate. The current hosted cohort is8d1a79b; older candidate paragraphs below retain historical scope.
+
+The real selected-text share-extension journey now verifies native Cancel, explicit Save, one interactive sheet dismissal, two cold restarts and exactly-once Add. All ten read-only database/journal checkpoints and the single native case pass; strict XCTest reports zero runtime warnings, with separate simulator/Xcode log notices retained. Effective Wraps2/Pears3 survive the duplicate merge, and the consumed inbox receipt retains no payload. [Scoped English iOS26.2 proof](evidence/native/selected-text-explicit-save-20261106/README.md). This is local acceptance evidence, not a permanent CI case or a late-completion-race/physical/Spanish claim.
+
+The local import review now keeps **Add reviewed list** in a persistent footer, reachable at the largest text size without traversing 500 rows. The prior layout fails the new reachability assertion; the fixed large-list and two existing import journeys pass 3/3 with zero runtime warnings/restarts. [Scoped native evidence](evidence/native/large-import-footer-20261106/README.md). Real failed-save recovery is now separately verified: the old shared Form row incorrectly saved when Discard was tapped; independent recovery-button styles preserve the saved state, while Retry commits exactly once and survives restart. The complete local contention/restart case passes 1/1 with zero runtime warnings. [Recovery negative and fixed evidence](evidence/native/import-recovery-actions-20261106/README.md). Permanent CI coverage now has two passing native cases, plus a byte-identical-test negative control that catches the unwanted durable save. Both cases are required in an existing fixture job; no new job or relaxed gate. [CI regression proof](evidence/native/import-recovery-ci-20261106/README.md). Fresh hosted validation remains pending. These app changes remain outside the published PR candidate.
+
+A separate [hosted scroll report-window diagnostic](evidence/native/scroll-report-window-hosted-20261106/README.md) completed on `ab149a7`, based exactly on `0d5bb1b`, with all three original performance gates passing. It appends an empty-result witness while preserving the existing built-in metrics, measured gesture and all performance gates; it is not a replacement duration or a causal fix. Its dispatch explicitly enforced baselines. Root verified the 696-file collection and report-window correlation; this demonstrates hosted compatibility and instrumented nonreproduction, not the cause or resolution of the historical missing series. The local [five-slot adjustment](evidence/native/ci-slot-balance-20261106/README.md) moves Swift CodeQL to the lighter existing slot, with 44 checks passing; it has no measured hosted speedup yet.
+
+A second local [selected-text correction](evidence/native/selected-text-completion-scope-20261106/README.md) prevents an older asynchronous completion from republishing a review after backgrounding clears it. A deterministic negative control reproduces that published-state race; the fixed three-class suite passes 31/31, strict 0, zero runtime warnings/restarts, and retains exactly-once durable recovery. Physical gesture and cross-account disclosure claims are outside this proof. This correction is not yet in hosted CI.
+
+Current-candidate performance is terminal failure. Launch and rendered gates pass, and all three native cases pass without runtime warnings, but the scroll duration series is absent from original XCTest metadata. Independent scroll event pairs and persisted pickup checks remain separate evidence; they cannot satisfy the missing metric. [Terminal performance proof](evidence/native/ci-0d5bb1b-performance-20261106/README.md). The measurement-collection cause remains unresolved.
+
+A local [selected-text review fix](evidence/native/selected-text-cancellation-20261106/README.md) closes a reproduced cancellation gap: unconfirmed duplicate choices no longer silently become durable. Cancel preserves the source and previous saved review; explicit Save review draft and Add remain distinct. The negative control fails exactly on persisted cancelled edits, and all 30 selected composition/import-recovery tests pass after correction with strict 0 and zero runtime warnings/restarts. New control visibility and actual swipe gestures remain outside this model proof. The published cohort does not yet contain this fix.
+
+A scratch-only [UI04 focus diagnostic](evidence/native/ui04-focus-diagnostic-20261106/README.md) now captures the missing public before/after observations and passes the original full case locally, 1/1 in 151.23 seconds with strict 0 and zero warnings/restarts. Its sequential observations alter timing and local Xcode differs from hosted Xcode. It validates the capture mechanism; it does not resolve or supersede the hosted focus failure. No shipping implementation changed.
+
+The current candidate's security workflow and separate Swift CodeQL job are now terminal success. JS/TS, Actions and Swift report 87, 17 and 27 rules respectively, with zero findings. Root verified the frozen evidence and all 258 archived Swift repository source files against the exact candidate. The 11 compiler diagnostics and 292 unresolved AST nodes remain; a refused compressed database page was not read or exempted from the archive guard. [Security evidence and limits](evidence/native/ci-0d5bb1b-security-20261106/README.md). Other CI gates remain independent and incomplete.
+
+The current PR candidate is `0d5bb1b`; its original full cohort is now terminal. Core has **601/601 model passes and 49/52 ordinary UI passes**, with the three failures classified below. Fixtures pass **45/45**, including both consent cases. Root verified the terminal [core](evidence/native/ci-0d5bb1b-core-terminal-20261106/README.md) and [fixture](evidence/native/ci-0d5bb1b-fixtures-terminal-20261106/README.md) collections. Deep checks passed both 15-case StoreKit configurations and both sanitizer lanes (389 passes plus three declared wire skips each); [terminal deep proof](evidence/native/ci-0d5bb1b-deep-20261106/README.md). Performance remains failed because its required scroll series is absent. These results do not establish combined release acceptance.
+
+Three original ordinary shards now retain failures. UI01 is3/4pass with two allowed warnings in its passing manual-list case; the Free journey attempted placement on a control mostly beneath the floating tabs and then backed out while still unplaced. A targeted test visibility/positive-placement correction passes the complete original journey locally in404.969s, zero recorded warnings/restarts; [exact scope](evidence/native/ui01-placement-visibility-20261106/README.md). UI04 is5/6pass with zero warnings; initial B-quantity typing had no keyboard focus before any Edit assertion. The unchanged hosted binaries pass that single case locally on the same iOS26.2/23C54 runtime, but with a newer coordinator. This is nonreproduction, not a causal fix; [unresolved focus evidence](evidence/native/ui04-focus-review-20261106/README.md). These local follow-ups do not relabel the published failures.
+UI10 adds a separate Settings setup failure: 5/6 pass, strict exit 1, zero runtime warnings. The Reduce Motion case timed out on its initial `com.apple.Preferences` launch before entering the app/share scenario; XCTest then asserted and restarted its runner before a different case. This does not resolve or reproduce the earlier Close failure. [Root-verified classification](evidence/native/ui10-settings-launch-20261106/README.md).
+
+
+A subsequent local fix prevents newly handled/dismissed next-shop choices from reviving source-linked meal carryovers. The new persisted regression fails on the prior code and all nine Free journey model cases pass with the fix, zero recorded warnings/restarts. Prior history and same-name siblings remain intact. This follow-up is not yet part of the published candidate. [Fix and negative-control evidence](evidence/native/next-shop-fresh-closing-20261106/README.md).
+
+Updated November 6, 2026 UTC. Foundation 2.1 covers **52 launch requirements and 27 screen contracts**. Each result below identifies its own tested source and device. The [product contracts](product/foundation-gen2.1/02-features.md) govern scope. **Release acceptance remains open.** Use the traceability and release gates below for current status. `IMPLEMENTATION.md` and the earlier audits preserve prior checkpoints.
+
+Candidate `804030e` now has terminal original core and fixture results. Both app builds and all 601 model tests pass. Ordinary UI has **48 passes / 3 failures** across all 51 cases; fixtures have **44 passes / 1 failure** across all 45 cases. Each collection retains six narrowly allowed runtime warnings. The four failed journeys are the consent toggle, saved-offer and next-shop animation-idle timeouts, and Reduce Motion share Close readiness. The unchanged consent case’s local pass on a different Xcode is nonreproduction. [Original core audit](evidence/native/ci-804030e-20261106/original-core-deep-performance-audit.json), [UI07 failure](evidence/native/ci-804030e-20261106/ui07-native-failure.json). Swift CodeQL covers all 254 intended inputs with 27 rules / zero findings, retaining 11 compiler diagnostics and 292 unresolved AST nodes. JS/TS, Actions and dependency checks pass in scope. Scroll failed before native execution. English StoreKit originally acquired no runner; the single English-only recovery passed15/15 with zero warnings, preserving the original acquisition failure. A separate exact-source seven-case consent diagnostic passed7/7 with zero warnings; it did not reproduce the original consent failure and its log shutdown was incomplete. [Diagnostic evidence](evidence/native/consent-hosted-result-20261106/REVIEW.md). Neither result supersedes the original failures. No combined acceptance is claimed.
+
+The exact-source UI07 keyboard diagnostic `efc1bfc` completed all six original cases in order with zero runtime warnings or restarts. The next-shop case passed in 79.973 seconds; observed Done events show later focus clearing and keyboard hiding in that passing execution. Capture is incomplete: 50 live events, zero persisted events and failed helper finalization. This instrumented nonreproduction does not resolve the original timeout or establish full candidate acceptance. Root verified all 493 frozen collection files. [Result and limits](evidence/native/keyboard-hosted-result-20261106/README.md).
+
+The separate measurement-boundary diagnostic `775961d` passed launch, rendered-list and scrolling native cases with zero runtime warnings or restarts. Required five-sample scroll duration is present (median 2.5818 s against 3.25 s); original memory and persisted-pickup checks pass. All 367 frozen files were root-verified. Its public-call timestamps locate this passing run’s post-swipe gap within `stopMeasuring()`; they do not explain the historical missing series. Simulator hitch samples remain unavailable. [Diagnostic result and limits](evidence/native/scroll-measurement-boundaries-20261106/result/DIAGNOSTIC-REVIEW.md).
+
+S04 ingredient detail now has a presentation-only control for separately protected needs. A local unseeded UI regression verifies hiding a linked lunch keeps 12 total wraps, 2 protected wraps and two eight-packs with no stock, then restores visibility and verifies saved data after relaunch. The final case passes with zero recorded XCTest warnings/restarts on Xcode 27.1 / iPhone 17 / iOS 27.0; three test-interaction corrections and their failed runs are retained. This new source is not included in the older hosted candidates. [Implementation and exact validation scope](evidence/native/protected-need-visibility-20261106/README.md).
+
+A local S02 follow-up adds an ordinary UI regression for cancelling a typed import and returning from ingredient detail on a long filtered list. The first native execution passed (1/1, zero recorded XCTest warnings/restarts); query and measured row position persist, and a separate copied-ledger readback preserves all 30 original rows and their import identities with no new revision after the initial import. This is a test-only follow-up outside the already-running `0d5bb1b` cohort. [Exact scope and proof](evidence/native/list-context-return-20261106/README.md). A separate current-source normal-app run now also passes the real system-extension Cancel sequence followed by filtered-list and detail return (1/1, 98.66 seconds, strict0, zero recorded warnings/restarts). Durable readback confirms the same 30 original rows and an empty App Group inbox. This covers cancellation before staging; the containing-app saved-review and physical-device variants retain separate evidence boundaries. [Real system-share proof](evidence/native/system-share-list-context-20261106/README.md).
+
+A browser-discovered stale access-denial notice is fixed in`bb9cb7e` and deployed to staging. All120web tests/build pass, including changed-actor recovery, retained storage warnings and helper/editor expiry during an awaited Refresh. Actual Android Chrome verifies old private content is cleared, no request is delivered across actors, and successful authorization removes the old denial. Full-browser restart retains a pending row but hides it without a session. [Local fix and exact browser scope](evidence/b11/web-stale-access-recovery-20261106/README.md). The reviewed frozen9d2bf47package was deployed as`dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P`; all29protected and29public checks passed, with the compiled server unchanged. [Staging proof](evidence/b11/web-stale-access-staging-20261106/README.md). This web fix is not covered by804/f117native results and does not establish real-provider or physical-device acceptance.
+
+Main now has independently verified core/security PR protection, including admin enforcement and app-bound checks. This is a merge safeguard, not full regression/distribution acceptance; the unfiltered pre-release workflow and remaining owner/device/provider gates still apply. [Applied policy and limits](evidence/native/main-protection-20261106/README.md).
+
+Candidate `8f864ea` is fully collected and remains unaccepted. Both app builds and all 601 models pass. Ordinary UI has 32 passes, one keyboard-idle timeout and 18 cases that never acquired runners; fixtures have 32 passes, one separate KnownTrip keyboard-idle timeout and 12 cases that never acquired runners. Both recent helper fixes pass their full hosted journeys. Billing, package/sanitizer, native-wire and source-security checks pass in their documented scopes. All three performance methods complete, but the required scroll-duration series is absent, so that performance gate fails. A targeted UI07 recovery again acquired no runner. Original failures, warning counts, readback scopes and Swift analysis limitations are retained. [Terminal status](evidence/native/ci-8f864ea-20261106/terminal-status.json), [verified evidence](evidence/native/ci-8f864ea-20261106/REVIEW.md). The completed English/Spanish [public staging browser walkthrough](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md) does not close authenticated/provider or physical-device acceptance.
+
+The isolated Xcode 26.4.1/iOS 26.4.1 qualification is terminal failure. Both builds pass and all 10 selected native cases pass (UI06 five, Spanish four, scroll one), but the required scroll-duration series is absent again. Urgent-repair restart retains a 60.04-second animation-completion wait despite passing. This does not resolve the synchronization symptom or missing-series issue, and no new baseline/toolchain adoption is approved. Original candidate failures and unexecuted cases remain open. [Final qualification audit](evidence/native/toolchain-qualification-20261106/FINAL-AUDIT.json).
+
+Previous checkpoint: Candidate `0d33c11` is fully collected: models601/601, ordinary UI50/51, fixtures44/45, billing30/30 and all3performance cases; no unexpected skips or unstarted cases. Packages/sanitizers, native wire and source security pass within their documented scopes. Core and fixture workflows retain one failure each. Both targeted helper corrections had passed their complete original journeys locally and were prepared for the subsequent hosted candidate. Production code, inventories, runtime pins and thresholds remain unchanged. All five standalone quote cases and the earlier Spanish/unknown-weight keyboard waits pass normally here without establishing their earlier causes. Existing Menu warning allowances and Swift extraction limitations remain explicit. [Terminal results](evidence/native/ci-0d33c11-20261106/terminal-status.json), [current follow-up and evidence](CURRENT-HANDOFF.md#latest-completed-ci-candidate-0d33c11). Release acceptance remains open.
+
+The following candidate paragraphs preserve earlier checkpoints; their local-only and pending-result descriptions are superseded by the latest collected candidate above.
+
+Previous combined candidate `b359d07` has a terminal core failure: all 601 models pass; ordinary UI is 45/51 passed with six retained failures and no skips. Four failed journeys have independently passing local corrections, while two Done animation timeouts remain unresolved. Security/dependency checks, both sanitizer lanes, both StoreKit languages and native HTTPS/PostgreSQL pass. Swift scanning has zero findings with its existing extraction limitations. All three performance cases meet unchanged limits. Fixtures are terminal: 40 strictly verified passes plus one verified redacted Records report, three retained quote failures, and one Spanish case that never acquired a hosted runner. All 45 planned cases are accounted for. See [run IDs and scoped evidence](CURRENT-HANDOFF.md#active-acceptance-candidate-b359d07). No original failure has been relabeled or removed.
+
+The two complete Free and offer journeys now pass locally after bounded navigation corrections, in 384.573 and 396.383 seconds with strict 2/2 and zero runtime warnings. The changes preserve every business/restart assertion and the existing time limits. The new checks also exposed and now verify a persistent localized accessible name for the filled ingredient-exclusion field. Both intermediate failures are retained. [Local evidence](evidence/native/free-journey-navigation-20261106/validation.json). These follow-ups are not yet in the hosted candidate; the separate Spanish animation wait is unresolved, with focused diagnostic wiring passing locally. The first two hosted diagnostics stopped during setup. The third passes the original Spanish singleton in 176.523 seconds with independent strict 1/1, zero warnings, all 528 source/238 product hashes verified and complete matching event capture. Root fully decoded the recording and viewed keyboard removal after bQuantity Done. [Hosted evidence](evidence/native/spanish-done-diagnostic-20261106/hosted-4bff959-result.json). This is nonreproduction only; all four original keyboard-wait failures remain unresolved. The separate original-order history also passes strict 4/4 with zero warnings on the same products, but PickupOffer passed its earlier failed switch and continued with extra actions/restarts, changing the observed prefix. [History result and limits](evidence/native/spanish-done-diagnostic-20261106/hosted-0beb28e-history-result.json). Neither diagnostic establishes a keyboard fix. The next combined candidate now includes the five locally verified journey corrections and boot guard; all six hosted workflows must run before a combined result can be recorded.
+
+The shared-quote switch helper now reveals its target from one accessibility snapshot, preserving full visibility and checking the actual tap point. All three original quote journeys pass locally with strict validation and the original scoped Menu warning allowances. [Helper validation](evidence/native/shared-quote-switch-reveal-20261106/verification.json). Lost-reply acknowledgement is corrected locally; the two hosted quote-entry timeouts remain unresolved.
+
+The stock input selector is also corrected locally. Both complete original stock-planning tests pass in 120.883 and 100.329 seconds, strict 2/2 with zero warnings; they retain actual top-up-pack, use-at-home and restart assertions. Logs show editable TextField targets instead of the identical-name persistent labels. [Verification](evidence/native/confirmed-stock-field-selection-20261106/verification.json). Both recorded hosted stock failures remain independent of these local passes.
+
+The same compiled Done-target regression additionally passes on iOS 27.0. Its iOS 27.1 assertions pass, but the simulator reports a startup migration failure despite returning zero; this is not clean compatibility acceptance. Both owned devices are deleted and frozen inputs verify. [Runtime proof](evidence/native/keyboard-target-20261106/ios27-verification.json). A locally tested CI boot guard now rejects this known failure at all eight call sites; it is not yet hosted acceptance evidence. [Guard verification](evidence/native/simulator-boot-guard-20261106/verification.json).
+
+Previous candidate `d0b0b12` is terminal. Simulator/unsigned iPhone Release builds passed; all601model cases and51ordinaryUIassertions pass. The original UI-08 strict warning classification failed; the bounded verifier correction passes an independent replay. Fixtures are42/44passed, retaining the StockReview identity-switch failure and quote keyboard/input timeout. Launch and the targeted rendered-performance retry pass; the original required scroll metric remains missing. One separate diagnostic captured the metric within its unchanged limit but established no fix. StoreKit, package/sanitizers, native wire and security results retain their recorded scopes. [Final collection](evidence/native/ci-d0b0b12-20261106/resumed-collection-summary.json), [scroll diagnostic](evidence/native/ci-d0b0b12-20261106/scroll-diagnostic-conclusion.json).
+
+The owner-approved staging rollout is now live: all29migration checksums and original table data verify; separate maintenance credentials pass privilege checks. Deployment `dpl_5WrPFnhZhcp51X9UWU919sULJaTh` serves the pinned reviewed server/web source. All27publicAPI/page/asset checks and four public maintenance checks pass. The later public English/Spanish browser walkthrough is complete within its recorded scope; authenticated/provider and mixed-device journeys remain open. Actual scheduled housekeeping was observed at 08:21 UTC with HTTP 200, empty queues and no attention needed. Provider processing remains disabled. [Scheduled invocation](evidence/b11/staging-scheduled-maintenance-20261106/verification.json). [Hosted rollout](evidence/b11/staging-rollout-20261106/summary.json).
+
+The subsequent additive migration 030 is now applied to staging. All 30 checksums match, the prior 29 registry rows remain unchanged, both measurement functions retain their bodies and privileges, and all 81 app-table security definitions match. The two search-path warnings are resolved; all 27 public HTTP checks still pass. The tested rollback SQL is retained, and the encrypted recovery copies remain detached. [Hosted hardening proof](evidence/b11/staging-measurement-hardening-20261106/verification.json).
+
+The shared keyboard Done control now has an explicit 44×44 touch region. The old version missed all four tested margin points; the corrected version accepts center and all four margins. The merged app passes the new regression plus the original stale-meal stock journey (2/2, zero runtime warnings) on local Xcode 27.1/iOS 26.2. The same products also pass all five points on iPhone SE / iOS 17.0 (strict 1/1, zero warnings). [Minimum-OS check](evidence/native/keyboard-target-20261106/minimum-os-verification.json). The fixture planner includes the additional case, preserving all prior cases for a total of 45. This local improvement does not close the earlier hosted centered-tap/idle failures. [Verified target fix](evidence/native/keyboard-target-20261106/integrated-verification.json). A separate hosted instrumented run passes the original stock case on Xcode 26.3, establishing nonreproduction only. [Hosted diagnostic](evidence/native/keyboard-events-d0b0b12-20261106/summary.json).
+
+The exact-product six-case keyboard-history diagnostic also passes all six assertions in the original order, including the Spanish keyboard-onboarding predecessor. Its workflow remains failed/incomplete because the persisted capture has zero events versus 46 live events. This narrows the observations without establishing the cause or repair of the original stall. [History diagnostic](evidence/native/keyboard-history-d0b0b12-20261106/summary.json).
+
+The preceding `3d26f1f` candidate is terminal: 601 models pass, ordinary UI 49/51 pass, and fixtures 42/44 pass including the restricted Records report. Three failing keyboard/reminder cases now pass their full original journeys locally after narrow helper corrections. One correctly targeted switch failure following repeated animation waits did not reproduce in an unchanged local baseline; its hosted failure remains unresolved. Both normal and Reduce Motion share cases pass in this terminal candidate. All performance, native integration, sanitizer and bilingual billing checks pass within their recorded scopes. [Terminal evidence](evidence/native/ci-3d26f1f-20261105/terminal-status.json), [keyboard corrections](evidence/native/ci-3d26f1f-20261105/keyboard-followup.json), [reminder correction](evidence/native/ci-3d26f1f-20261105/reminder-followup.json), [unchanged switch baseline](evidence/native/ci-3d26f1f-20261105/switch-baseline.json).
+
+The following candidate paragraphs preserve earlier checkpoints. The current status above supersedes their pending-result descriptions.
+
+Candidate `3d26f1f` has now passed all 601 model cases with zero runtime warnings. The compiled selection independently regenerates byte-for-byte, covering those models and all 51 ordinary UI cases. The original test-discovery attempt failed before execution; one targeted build retry succeeded. Ordinary UI and the remaining fixtures are still collecting results. The restricted Records pass report and compiled selection were independently verified. [Model execution](evidence/native/ci-3d26f1f-20261105/models.json) · [Compiled plan](evidence/native/ci-3d26f1f-20261105/compiled-plan.json) · [Records report scope](evidence/native/ci-3d26f1f-20261105/records.json).
+
+Candidate `3d26f1f` passed the offline Spanish pack comparison on the minimum iOS 17.0 runtime with Increase Contrast enabled and the largest accessibility text size. The iPhone SE simulator showed the item-only cap, both pack counts, $6 and $4 totals and $26 headroom. The wrapped Save button cleared the tab bar by 28 points. Records reopened the original revision, and the visible decision passed the native accessibility audit in dark and light appearances. Physical assistive access and human Spanish review remain release gates. [Rendered minimum-OS check](evidence/native/minimum-os-spanish-contrast-20261105/summary.json).
+
+The completed `b95a179` candidate passed five of six hosted workflows. Core failed three of 51 ordinary UI cases. All 44 fixture cases passed, including the restricted Records report, and all three Release performance cases met their existing limits. Two keyboard journey corrections subsequently passed locally. The normal system-share presentation failure remains open. [Terminal outcome](evidence/native/ci-b95a179-20261105/terminal-status.json).
+
+Candidate `b95a179` builds for the iPhone simulator and as an unsigned iPhone Release. The simulator build contains 599 model tests and 51 UI tests across ten groups. The locally regenerated selection matches the hosted selection byte for byte. The model job passed all 599 cases with zero runtime warnings. [Compiled test plan](evidence/native/ci-b95a179-20261105/compiled-plan.json).
+
+On this candidate, both local StoreKit configurations passed all 15 scenarios with zero runtime warnings, including Spanish Ask to Buy. The ordinary package, Address Sanitizer and Thread Sanitizer jobs each passed 389 tests with three expected skips for native transport. Four separate integration cases exercised six Swift scenarios over HTTPS and PostgreSQL. Actions and JavaScript scanning passed on the PR merge tree, which matches the candidate tree. GitHub marked the prior fixture finding fixed on this PR. [Billing](evidence/native/ci-b95a179-20261105/storekit.json) · [Package results](evidence/native/ci-b95a179-20261105/packages-sanitizers.json) · [Transport](evidence/native/ci-b95a179-20261105/native-wire.json) · [Source security](evidence/native/ci-b95a179-20261105/security.json).
+
+The preceding candidate `ab1779c` passed all 599 model tests, 49 of 51 ordinary UI tests, all 44 fixture cases and all three performance cases. Its Swift scan timeout, keyboard-dismissal timeout, Settings launch failure and Spanish Ask to Buy failure remain recorded. [Candidate results](evidence/native/ci-ab1779c-20261105/terminal-status.json).
+
+A separate whole-module scan completed in 36m54 and included all 254 intended runtime inputs. Its 11 compiler notifications and 292 unresolved AST nodes limit semantic coverage. The PR candidate subsequently finished its traced build in 36m17 and analysis in 2m00 under the 45-minute compile and 60-minute job limits. Its final archive contains all 254 expected runtime sources, and the 27-rule scan reports zero security findings. All 11 prior compiler diagnostic locations and messages persist. [Candidate Swift results](evidence/native/ci-b95a179-20261105/swift-security.json). [Scanner evidence](evidence/native/swift-wholemodule-completion-20261105/hosted-experiment.json).
+
+The following paragraphs preserve earlier candidate checkpoints and do not supersede the current status above.
+
+Published candidate `4a0f7f3` is terminal: five required workflows succeeded and the fixture workflow failed one contributor-editor test. All598 native model cases and all 51 ordinary UI cases pass, including both system-share variants. **The ordinary UI results contain five existing, narrowly allowed Menu warnings; earlier progress messages saying zero were incorrect.** Both 15-case hosted StoreKit language configurations, native HTTPS/PostgreSQL integration, unsigned iPhone Release build, three CodeQL categories and all three Release performance jobs pass in their recorded scopes. The package and both sanitizer lanes each verify 389 passes plus three deliberate native-wire skips. [Terminal candidate evidence](evidence/native/ci-4a0f7f3-20261105/terminal-status.json).
+
+Fixture execution has43 of 44 native/reported passes. Strict-success groups cover 37 non-Records cases; five additional passes belong to the failed six-case contributor group. Records separately reports one passing case through a verified, restricted redacted report and compiled plan; raw Records evidence is neither retained nor replayed. The quote scenarios record six existing allowed Menu warnings. The plan preserves all 44 cases across 14 jobs instead of 22; this candidate's full grouped acceptance is failed, not green. [Fixture results](evidence/native/ci-4a0f7f3-20261105/fixture-progress.json) · [Records scope](evidence/native/ci-4a0f7f3-20261105/records.json).
+
+Local follow-up `979d749` corrects the failed contributor test by revealing its offscreen editor after keyboard dismissal, requiring the keyboard to remain absent, then preserving the exact-text and original-at-top assertions. The original six-case group passes locally with zero runtime warnings. Local follow-up `39de0fc` coalesces equivalent membership delivery instructions without clearing transaction evidence or changing gating; all 57 membership cases pass in each language, also with zero runtime warnings. Lumpy reviewed both changes. Both require fresh hosted validation; the terminal `4a0f7f3` results do not cover them. [Contributor validation](evidence/native/contributor-editor-reveal-20261105/validation.json) · [Membership validation](evidence/native/membership-message-coalescing-20261105/validation.json).
+
+Predecessor `23a73a8` remains a retained failed run: two 720-second keyboard/animation waits, a Reduce Motion system-share readiness deadline, Swift CodeQL timeout, Spanish StoreKit delivery assertion, private Records failure and a strict shared-store warning-phase failure. Subsequent billing, sharing-check, Swift analysis and narrowly scoped warning-policy changes do not relabel those results. [Original terminal evidence](evidence/native/ci-23a73a8-20261105/terminal-status.json). The local sharing correction passes both normal and Reduce Motion journeys, preserving the original deadlines, actionable frozen snapshot, saved cancellation history and restart assertions. [Sharing baseline and fix](evidence/native/share-dismissal-20261105). Two local keyboard controls pass without reproducing the hosted stall on their different SDK/runtime. [Control scope](evidence/native/dinner-keyboard-20261105/controls.json).
+
+November5 CI follow-up: eight targeted native checks passed locally, including both complete pickup journeys, normal/Reduce Motion sharing, two history-permission cases, and exact reminder cutoff selection on iOS26.2 and17.0. [Navigation validation](evidence/native/ci-ui-navigation-20261105). These test-driver fixes do not certify hosted or physical acceptance. Published f20 is terminal with retained UI/fixture failures; its sharing-switch/animation-wait failure remains unexplained despite local nonreproduction. [Hosted failures and progress](evidence/native/ci-f20feb6-20261105).
+
+The two complete shared-store follow-ups passed their original assertions locally, but each strict guard failed one Menu runtime warning outside the hosted-only exception. These are retained non-green results; no warning allowance or timeout was relaxed. [Shared-store evidence](evidence/native/ci-ui-navigation-20261105/shared-store.json).
+
+A newly identified saved-checkout restoration bug is fixed locally: reopening and saving an inclusive quote now preserves the entered evidence. The new UI regression fails on the preserved old app and passes on the fixed app. Final validation includes36 targeted model cases, with dirty/pristine source-change and private hold-state coverage. [Comparative and final evidence](evidence/native/checkout-restoration-20261105). Fresh hosted and physical acceptance remain required.
 
 The six gaps identified in the [point-in-time review](evidence/b11/current-launch-gap-review.md) now have implementation and passing dedicated screen scopes: stock-aware pack/no-purchase review, current-allocation cook projection, dependent-meal stock preview, S24 protected meal context, S23 duplicate comparison and S21 scoped device management. Subsequent caption wrapping and measurement privacy-purpose corrections are included in the polished build. No further unowned local product-flow gap was demonstrated by this review. This is not a claim that every acceptance criterion passed.
 
@@ -24,12 +912,35 @@ Migration 028 extends that drill with a single source database. It verifies drai
 
 Migration 029 verifies and stages a complete archive window in a distinct quarantine database. The operator applies two signed segments to a real pre-switch dump and checks both exact erasures, the unrelated member and the final quarantine gate. [Restore window evidence](evidence/b11/privacy-window-20261104/validation.json)
 
+The isolated performance setup follow-up f117439 is terminal: setup3/3 passed, launch and scroll pass strict native/baseline checks, and rendered fails before fixture entry due to missing launch-time accessibility queries. Required scroll duration is present in original result SQLite and JSON; this does not explain prior omissions. Root verified357frozen files. [Final audit](evidence/native/performance-setup-followup-20261106/final-audit.json). The reviewed four-line readiness follow-up807aa3c has completed run42304515547 with baselines enforced: three native passes and zero warnings, launch/rendered limits pass, but scroll required duration is absent again. Root verified359frozen files and independently confirmed original SQLite/JSON omission. Both saved-pickup checks pass. [807 final audit](evidence/native/performance-launch-readiness-20261106/final-audit.json). Performance release acceptance remains open. Original804 failures remain open. [Scope](evidence/native/performance-launch-readiness-20261106/README.md).
+
+The tested stale-access web correction is now live on staging (dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P, source9d2bf47). Exact Android-tested bundle delivery and29/29protected +29/29public route/asset/anonymous-boundary checks pass. All94server runtime files remain byte-identical to the approved prior build; no database/provider/environment changes. This supersedes earlier local-only status for that web fix, without replacing actual live household or native acceptance. [Deployment proof](evidence/b11/web-stale-access-staging-20261106/summary.json).
+
+Six additional actual Android scopes now pass against the exact staged bundle using synthetic fixture authority: queue-permission loss, fresh helper invite/read-only EN/ES/reload, editor unsent reload, wrong-household child denial, unconfirmed child Finish without scoped cookie, and unconfigured child setup. All19observed DOM states fit411CSS pixels; effect counts and cleanup are verified. [Evidence](evidence/b11/android-remaining-scopes-20261106/summary.json). This closes those bounded emulator scenarios, not live guardian/email, real mixed-device household, physical accessibility or radio-offline acceptance.
+
 ## Evidence scopes
 
 Results belong to their own immutable source and binary identities. Do not add these counts together or treat an actual UI pass with a synthetic service as a deployed household pass.
 
 | Key | Inspected proof | What it establishes and excludes |
 |---|---|---|
+| CI-MODELS-565 | [Candidate model evidence](evidence/native/ci-candidate-models-20261105.json), [complete warning audit](evidence/native/ci-runtime-warnings-20261105/full-model-detail-audit.json) | Published `f0e2ac3` passed all 565 native model cases on hosted Xcode 26.3 / iOS 26.2 build 23C54, with zero failures, skips, expected failures or recorded per-test runtime warnings. Ordinary UI and fixture failures remain separate and visible in their progress records; the full candidate is not green. |
+| CI-UI-50 | [Complete ordinary UI matrix](evidence/native/ci-candidate-ui-progress-20261105.json) | Published `f0e2ac3` executed all 50 selected cases once, with 49 passes and one large-paste focus failure. UI10 additionally fails the newer strict guard for two unallowed menu warnings in a different case. Local corrections and their reruns remain separate; the hosted candidate is not green. |
+| CI-FIXTURES-44 | [Complete fixture matrix](evidence/native/ci-candidate-fixture-progress-20261105.json) | Published `f0e2ac3` executed 44 cases across 17 groups: 31 passed and 13 failed. Six additional unallowed menu warnings occur in SharedStoreQuote. Ten wholly passing groups provide 24 verified cases with no recorded warnings. Synthetic household flows do not prove deployed-provider acceptance. |
+| CI-DINNER-NAVIGATION | [Current dinner destination regression](evidence/native/dinner-decision-navigation-20261105/validation.json) | Test-only navigation correction `2c1ff46` passed all five original selectors locally on iPhone 17 / iOS 26.2 build 23C52. Both languages retain exact package/fee values, guest cancellation/apply, replacement and protected-lunch assertions; the largest-text pairing sheet returns to its initiating control. The original hosted four failures remain recorded; fresh hosted confirmation is pending. |
+| CI-RELEASE-SECURITY | [Optimized unsigned Release](evidence/native/ci-candidate-release-20261105.json), [CodeQL evidence](evidence/native/ci-candidate-codeql-20261105.json) | Candidate `f0e2ac3` passed the independent optimized arm64 iPhone build and Swift/JavaScript/Actions analyses. The Swift trace recorded 252 distinct compile inputs and 1,888,463 AST nodes. Exact per-file extraction coverage is unavailable. Production metadata was not required by this run; signing and distribution remain open. |
+| CI-NATIVE-WIRE | [First hosted native transport result](evidence/native/ci-native-wire-hosted-20261105.json) | Candidate `fa93f60` passed four integration cases and six exact compiled Swift HTTPS/PostgreSQL scenarios on hosted Xcode26.3, with zero skips. Root verified the artifact digest, exact scenario identities/counts and database shutdown. Covers free/paid history and separate meal/quote proposer and shopper roles. Identity/provider fixtures remain synthetic; deployed-provider and signed-device acceptance remain open. |
+| CI-DEEP-CANDIDATE | [Candidate sanitizer evidence](evidence/native/ci-candidate-sanitizers-20261105.json), [native transport validation](evidence/native/node-runtime-security-20261105/validation.json) | Candidate package sanitizers each passed 389 cases and explicitly skipped three opt-in native transport cases. Both local StoreKit language configurations passed 15 cases. A new dedicated lane passes four integration cases with six exact Swift HTTPS/PostgreSQL invocations locally, including under Node 22.23.4; its first hosted run passed separately at `fa93f60`, as recorded in CI-NATIVE-WIRE. No live Apple/provider acceptance is implied. |
+| CI-STRICT-PERFORMANCE | [Strict candidate results](evidence/native/ci-performance-strict-20261105/validation.json) | Launch, 500-item interactions and scrolling/memory satisfy all seven unchanged environment-specific limits across the stated hosted attempts. The first scroll attempt failed because its required duration series was absent; one controlled repeat of the exact same compiled products passed. The missing-metric failure remains an instrumentation reliability issue. No frame-hitch samples were emitted, so physical-device animation acceptance remains open. |
+| CI-PARTIAL-UI | [Ordinary progress](evidence/native/ci-candidate-ui-progress-20261105.json), [fixture progress](evidence/native/ci-candidate-fixture-progress-20261105.json) | Exact compiled selections, artifact digests and detailed runtime-warning checks verify the recorded cases. Original failing cases are not relabeled by separate local corrections. Known UIKit warnings remain visible under narrow environment/test/count limits. Remaining execution and the consolidated follow-up candidate are still required. |
+| CI-MODELS-564 | [Current hosted model evidence](evidence/native/ci-native-models-20261104.json) | Published source `1fd2b96` passed 564 native model cases on iPhone 17 / iOS 26.2, with zero failures, skips or expected failures. The ordinary UI matrix has separate failures under investigation and the combined traced Release build timed out. This is not a complete green pipeline. |
+| CI-CIVIL-WEEK | [Civil-day and saved-week regression](evidence/native/ci-ui06-civil-week-20261105/validation.json) | Three CoreDomain cases pass workspace encode/decode across midnight, New Year and New York fall-back. English, Spanish and move-across-week native journeys pass on iOS 26.2, recovering exact dinner/lunch identities, quantity and purpose in the original selected week after relaunch. The English, Spanish and cross-week move cases also pass on hosted `f0e2ac3`, verified in the ordinary progress record. These results do not establish deployed cross-device or physical-device acceptance. |
+| CI-DEEP | [Hosted sanitizer and billing evidence](evidence/native/ci-native-deep-20261104.json) | The same published source passed 386 cases in each package sanitizer and 15 cases in each local StoreKit language. Local billing simulation does not establish signed sandbox or App Store acceptance. |
+| CI-PERFORMANCE | [Repeated hosted calibration and reviewed limits](evidence/native/ci-performance-baseline-20261105/validation.json) | All three optimized Release cases passed in two attempts with complete samples and exact 500-line persisted readback. Initial environment-specific limits are committed for seven metrics, including a maximum reported peak that catches isolated spikes. Local comparison/negative checks and 73 validator tests pass. Original calibration jobs remain missing-baseline failures. The separate CI-STRICT-PERFORMANCE row records subsequent strict hosted results and the retained missing-metric attempt. No frame-hitch series was emitted. |
+| IMPORT-VIEWPORT | [Bounded native editor regression](evidence/native/bounded-import-editor-20261104/validation.json) | SE / iOS 26.2 AX5 preserves exact 500-line native paste, real edit/delete and Done, then opens editable preview through a visible Review action. Old layout fails at 92,612-point height; restored candidate passes 65.887s. No commit of this batch or physical-device performance is implied. |
+| PICKUP-FACTS-HOLD | [Optional hold and facts regression](evidence/native/pickup-facts-hold-20261104/validation.json) | Two SE / iOS 17 UI cases passed: save dinner-only cap/date, cancel date removal and reopen exact facts; optional private hold comparison clears amounts when disabled and remains separate from checkout cap. The corrected hold and dinner-only facts cases also pass on hosted `f0e2ac3` in UI07 and UI08; physical-device acceptance remains open. |
+| REDUCE-MOTION | [Native preference and handoff regression](evidence/native/reduce-motion-regression-20261104/validation.json) | The isolated iOS 27 test enabled the real OS setting, verified it through UIKit, cancelled sharing and reopened the exact frozen unplaced pickup. Teardown restored the original setting. This is functional coverage, not physical animation or spoken-access acceptance. Published `f0e2ac3` also passed this exact case on hosted iPhone 17 / iOS 26.2 in 255.265 seconds, with no warning attributed to it; see [UI10 evidence](evidence/native/ci-candidate-ui-progress-20261105.json). The group's separate menu-warning failure remains open. |
+| RECIPE-IMPORT-ALLOCATIONS | [Corrupt import and real-store restart](evidence/native/recipe-import-allocation-regression-20261104/validation.json) | One iOS 27 app-hosted model test verifies that malformed Recipe JSON-LD preserves exact ledger and registry bytes, a dated dinner and portion bindings across owner release/reopen. Valid preview/cancel and editing the original recipe remain possible. The reserved invalid-domain attribution survives as text; external network requests were not instrumented. |
 | HOSTED-MODELS | [GitHub build and XCTest artifact readback](evidence/native/hosted-models-20261104.json) | The private CI run verified the unsigned iPhone Release build and passed all 563 native model tests on iOS 26.2. The web, TypeScript service and PostgreSQL jobs also passed. The native UI jobs are a separate result. |
 | PRIVACY-ARCHIVE | [Archive validation](evidence/native/privacy-archive-20261104/validation.json), [Xcode privacy report](evidence/native/privacy-archive-20261104/RoomInTheCart-PrivacyReport.pdf) | The November 4 unsigned arm64 Release archive includes the required reason for private recovered-file metadata checks. The compiled manifest matches source. Xcode reports seven linked data types, three with Analytics, and tracking marked No for each type. Signed distribution and the App Store questionnaire remain open. |
 | BUILD | [Polished build proof](evidence/native/current-build-20261103/polish/build-proof.json), [preview preservation](evidence/native/current-build-20261103/polish/preview-install.json) | Frozen 470-input polish source: unsigned physical-arm64 Release and ordinary DEBUG compile/metadata checks, correct operator/contact, seven privacy types and exactly three Analytics purposes, tracking=false, no XCTest bundles or fixture markers. Ordinary Debug installs/launches on the regular17 simulator with 22 durable files byte-identical before relaunch, no erase/reset/test arguments. Documents/Application Support/Preferences were inventoried; App Groups/Keychain were not separately inventoried. No distribution, physical-device installation, actual StoreKit or complete production metadata. Earlier [build proof](evidence/native/current-build-20261103/build-proof.json) remains historical. |
@@ -51,11 +962,11 @@ Results belong to their own immutable source and binary identities. Do not add t
 | PLANNING | [Shared planning proof](evidence/native/shared-acceptance-20261103/proof-index.json), [guest packs](evidence/native/guest-packages-and-protected-checkout-local.json), [contextual decisions](evidence/native/contextual-dinner-decisions-local.json) | Scoped local model and functional UI evidence for proposals, carryover, adult idea approval, guest pack boundaries and cancel. The older shared bundle's known civil-label defect is superseded by LIBRARY's dedicated fix/evidence. Synthetic shared service does not establish deployed authority. |
 | QUOTES | [Native quote acceptance](evidence/native/connected-store-quotes/acceptance.json), [HTTP/Swift evidence](evidence/connected-s27/README.md) | Five connected quote cases and scoped local service/client proof. The ordinary checkout quote case passed on iOS 17 after timing out in the broader iOS 27 run. Each result records its source and runtime. |
 | MEASUREMENT | [Optional consent proof](evidence/native/optional-measurement/acceptance.json) | Native explicit consent/decline/withdrawal and closed-shop coded feedback, isolated from groceries and billing; real marketing study and paid-household demand are not established. |
-| DEVICE | [Focused device proof](evidence/b11/s21-device-management-20261103/validation-summary.json), [SE/iOS17 UI acceptance](evidence/b11/s21-device-management-20261103/ui-acceptance-20261103/acceptance.json) | Actual English case passes54.187s; separate Spanish accessibility5 case passes102.291s, with14 selected screenshot/AX artifacts. Cancel writes0; exact target revokes once; current/sibling/member/shopper remain distinct. English runs unmuted within a bundle whose other case crashes; Spanish suppresses unified logging only in the launched fixture app after the preserved XCTest callback crash. No absence-of-warnings claim. Spanish test-helper SHA143865… / source4c52bc09… differs only in the test helper from polished production sources. |
+| DEVICE | [Focused device proof](evidence/b11/s21-device-management-20261103/validation-summary.json), [SE / iOS 17 UI acceptance](evidence/b11/s21-device-management-20261103/ui-acceptance-20261103/acceptance.json) | Actual English case passes54.187s; separate Spanish accessibility5 case passes102.291s, with14 selected screenshot/AX artifacts. Cancel writes0; exact target revokes once; current/sibling/member/shopper remain distinct. English runs unmuted within a bundle whose other case crashes; Spanish suppresses unified logging only in the launched fixture app after the preserved XCTest callback crash. No absence-of-warnings claim. Spanish test-helper SHA143865… / source4c52bc09… differs only in the test helper from polished production sources. |
 | REQUEST-UI | [Four scoped request passes](evidence/native/integrated-local-20261103/requests-final/evidence.json), earlier470-input source | S24 cereal/protected lunches and unknown meals plus S23 separate authors and Spanish largest text pass. Whole six-case invocation remains4pass/2S21 startup failures; later DEVICE passes do not relabel it. Actual SwiftUI with bounded fictional services is not hosted authority or human-language/VoiceOver proof. The observed S23 caption ellipsis is addressed by the separate CAPTION proof. |
 | CAPTION | [Post-wrap scope](evidence/native/current-build-20261103/polish/s23-caption/scope.json), [result](evidence/native/current-build-20261103/polish/s23-caption/result-summary.json) | Separate Spanish largest-text S23 case passes1/1 after the wrapping change,361.533s on the polished source. Exact source/screenshots are retained; no logging accommodation in this case. |
 | PRIVACY | [Measurement declaration correction](evidence/native/privacy-measurement-declaration-20261103.md), BUILD | Analytics added to existing Other User Content/User ID/Purchase History alongside App Functionality; seven types remain linked=true/tracking=false. Literal declarations and updated archive/ordinary-bundle inclusion verified. Actual App Store questionnaire, operator/provider and human policy review remain separate. |
-| WEB | [Guardian browser proof](evidence/b11/guardian-browser-20261103/actual-browser/README.md), [Android status](evidence/b11/android-current-stable-20261103/README.md) | Actual browser captures and local synthetic/provider boundary tests have their own scopes. Historical Android 113/149 runs cannot satisfy current-stable Android acceptance; 156 acquisition/launch/task remains open. |
+| WEB | [Guardian browser proof](evidence/b11/guardian-browser-20261103/actual-browser/README.md), [Android status](evidence/b11/android-current-stable-20261103/README.md) | Actual browser captures and local synthetic/provider boundary tests have their own scopes. Historical Android 113/149 runs cannot satisfy current-stable Android acceptance; current stable acquisition/launch/task remains open. |
 | WEB-OFFLINE | [Offline request queue validation](evidence/b11/web-offline-queue-20261104/validation.json) | 104 web tests pass. The compiled desktop browser app queues an explicitly reviewed request when the connection drops before the session check. Reload hides the draft until authorization. An explicit retry sends the original command once. A separate revoked retry clears the queue with zero mutation POSTs. The browser used a synthetic HTTP fixture. |
 | WEB-SIGNOUT | [Interrupted sign-out validation](evidence/b11/browser-sign-out-20261104/validation.json) | 107 web tests pass. A real desktop browser reload after an interrupted sign-out retained only the pending sign-out state and made zero new private reads. The retry refreshed authorization and confirmed one sign-out. Separate tests cover a lost successful response and the child invitation page. |
 | WEB-ROUTES | [Direct invitation route validation](evidence/b11/web-deployment-routes-20261104/validation.json) | 109 web tests pass. A loopback routing rehearsal serves the child invitation page and companion slash aliases. Both invitation flows clear fictional token fragments in the desktop browser. Hosted routes require a staging check. |
@@ -86,6 +997,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | LEDGER-SURFACES | [Shopping list surface validation](evidence/native/ledger-surfaces-20261104/validation.json) | Search and form errors in a 500-line pickup leave the widget file alone. A saved checkoff refreshes the existing route, a new pickup changes it, and backgrounding clears it. All 533 models passed on iOS 27. Two coordinator cases and both reminder UI cases passed on iOS 17. The unsigned Release archive passed metadata checks. |
 | RECIPE-FILES | [System Files picker validation](evidence/native/recipe-system-picker-20261104/validation.json) | The native iOS 27 picker opened a Safari download. The probe verified system Cancel, preview and review cancellation, explicit save and original recipe text after relaunch. The first combined probe stopped at a Files menu selector. The isolated repeat import reported one duplicate and one skipped row, with no new copy. All 534 model cases and unsigned Release metadata checks passed. |
 | RECOVERY-FILES | [Coordinated recovery validation](evidence/native/coordinated-recovery-20261104/validation.json) | Records coordinates external reads on a background queue and checks authorization again before validation. The actual iOS 27 exporter and picker round trip saved an encrypted backup, cancelled review, then restored a separate copy and preserved the original through relaunch. All 535 current models, 34 iOS 17 recovery tests and the unsigned Release metadata checks passed. |
+| RECOVERY-FILES-REIMPORT | [Native Files cancel, damaged backup and reimport](evidence/native/records-files-reimport-20261107/README.md) | On iOS 27, the shopper cancelled the picker, rejected a damaged encrypted backup and cancelled a valid preview. The older recipe recovered separately. Reimport after relaunch reopened that copy. The live comparison kept its prices and stored revision. |
 | PHOTO-CONSENT | [System photo validation](evidence/native/photo-consent-20261104/validation.json) | The real iOS 27 Photos picker staged a bilingual package photo. Done dismissed the typing keyboard. Turning off photo consent restored the earlier typed draft. A second selection required explicit review, and one reduced reference survived relaunch while the ledger kept two wraps. All 536 models, 20 focused iOS 17 capture cases and the unsigned Release metadata checks passed. |
 | RECEIPT-PHOTOS | [Receipt photo validation](evidence/native/receipt-photos-20261104/validation.json) | The iOS 27 Photos picker delivered an ambiguous bilingual receipt. Explicit evidence review saved the unclear-amount note and original wording. The reference reopened after relaunch. The two ordered wraps, zero payment entries and zero arrival records remained unchanged. |
 | RECIPE-PHOTOS | [Recipe photo validation](evidence/native/recipe-photos-20261104/validation.json) | The capture sheet opened on first use and after Cancel. The iOS 27 Photos picker staged a Spanish recipe, and explicit review saved one candidate with four servings and zero grocery lines or chosen dinners. Original photo and wording reopened after relaunch. The separate Choose action opened a cancellable preview. All 536 model cases and unsigned Release metadata checks passed. |
@@ -114,23 +1026,23 @@ Results belong to their own immutable source and binary identities. Do not add t
 | D03 | Scoped cap, fees, reserves, mode/slot/zone and dependent review invalidation; ledger facts/checkout; N526. | Final complete/unknown basis scenarios and hardware labels. |
 | D04 | Separate occurrences, contributions, named serving groups and protected allocations; dinner/ledger; N526, PLANNING, MEAL-WEEK. | Mixed-device shared week against deployed grants. |
 | D05 | Pure comparison plus durable stock-evidence pack selection and zero-purchase result; `LedgerPackStockReview`, checkout bridge; N526, ORDINARY. | Current promoted screen artifacts; source changes must invalidate reviewed stock before checkout. |
-| D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI, CHECKOUT-KEYBOARD. | Verify configured deployed household and final hardware task. |
+| D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI, CHECKOUT-KEYBOARD. On November 12 the compiled Swift client read a request from the English companion in Chrome, priced the $3.49 box at $40.69 against a $38 cap, and deferred it. Both basket lines and the $37.20 quote survived. The service used local PostgreSQL 17.11 and signed fixture identities. The iPhone 17 Pro simulator also completed the add preview, Cancel and defer through the shipping screens. See `.build/CompanionHouseholdNov12/native-ui/Attempt2.xcresult`. | Verify configured deployed household and final hardware task. |
 | D07 | Required/flexible/undecided needs, explicit deferral/handled disposition; checkout/next shop; N526, ORDINARY. | Final contextual reminder/next-trip hardware task. |
 | D08 | Base-bound previews, apply-once, compensating undo and locked-order proposals; N526, B175, PLANNING. | Cross-device current-grant race and final UI candidate. |
-| D09 | Frozen dated retailer handoff, action receipts and separate placed report; placement/pickup; N526, B175, HANDOFF-VERSION. | Physical iPhone share/open and retailer roundtrip. |
+| D09 | Frozen dated handoff, separate placement and independent private/shared retailer confirmations preserve original checkout. [Private evidence](evidence/native/private-amendment-20261107/verification.json); [shared evidence](evidence/native/shared-amendment-20261107/verification.json). | Hosted 042/current-source regression, physical iPhone share/open and retailer roundtrip. |
 | D10 | Reopen exact saved offer, per-dish acceptance/yield and joint charges/cutoff review; offer editor/evaluator; N526 and scoped S07 UI. | Physical deadline/offline/retailer note task. |
 | D11 | Idempotent split receipt fragments, usable correction and protected allocation; pickup domain/model; N526, ORDINARY, STOCK. | Physical receipt/partial/wrong/late item capture and final UI regression. |
 | D12 | Complete dated text from all current physical needs, current allocated/short amounts and historical initial observation labels; cook projection; N526, STOCK, HANDOFF-VERSION. | Human cook task on Android and physical share/readback. |
 | D13 | Fresh next-shop identity, selected carryovers/handled omission, reusable dinner link and cleared stale prices; N526, ORDINARY. The complete Free journey reopened the next trip and reused dinner after restart on both tested iOS versions. | Final signed-device run. |
 | D14 | Atomic SQLite records/revisions, pending saves and restart paths; N526, F07, ORDINARY. | Interrupted real-device sync/storage and accessible recovery. |
 | D15 | Scoped exports, correction, deletion/undo, account exit/erasure and isolated recovery; N526, F07, RESTORE, B175, RECOVERY-FILES. | Production provider erasure, policy and durable journal. Physical Files delivery remains. |
-| D16 | Optional coded feedback, separate versioned consent and zero benefit for ties; N526, MEASUREMENT, B175. | Consented household study and human language review. |
+| D16 | Optional coded feedback, separate versioned consent and zero benefit for ties; N526, MEASUREMENT, B175. At `793e7ebc`, the native shopper journey verified that failed consent reads conceal unconfirmed controls, lost send/delete replies each commit once, and refresh restores only the same consent’s unsent choices. See `.build/D16FeedbackReviewNov12/unread-after/strict.log`. The overlapping household-switch guard is source-reviewed only. | Consented household study and human language review. |
 | F01 | Money/Quantity/Rational/UnitBasis and explicit unknowns; domain and capture; N526. | Physical dual-label/locale fixtures. |
-| F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. | Complete end-to-end source-removal and shared-device task. |
-| F03 | Independent templates, drafts, snapshots, placed originals, proposals and fills; N526, B175. | Final real OS external-action/retry journey. |
+| F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. Ordinary native removal/Cancel/restart plus exact SQLite history pass on the reviewed source. | Complete the shared-device task and final combined qualification. |
+| F03 | Independent templates, drafts, snapshots, placed originals, retailer-confirmed amendments, proposals and fills; shared confirmation/retry never implies arrival or payment. [Shared evidence](evidence/native/shared-amendment-20261107/verification.json). | Final hosted and real OS external-action/retry journey. |
 | F04 | Scoped dated price evidence; expected/hold/pending/posted/included-credit/top-up separation; N526, B175, QUOTES. | Real manually entered evidence and final receipt/settlement task. |
 | F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. | S21 native rerun, hosted and mixed-device authority. |
-| F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE, CHECKOUT-KEYBOARD, CAPTURE-FIELDS. The [unfiltered Shop and comparison audit](evidence/native/minimum-os-current-20261104/validation.json) passed on iOS 17 and iOS 27. The iOS 17 comparison also passed at the largest text size in dark mode. The [iOS 17 Spanish week check](evidence/native/meal-week-20261104/validation.json) mirrored the Grid and Back control and opened the correct day note. | Human en-US/es-US, physical VoiceOver/Switch Control and broader right-to-left and largest-text route checks. |
+| F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE, CHECKOUT-KEYBOARD, CAPTURE-FIELDS, REDUCE-MOTION. The [unfiltered Shop and comparison audit](evidence/native/minimum-os-current-20261104/validation.json) passed on iOS 17 and iOS 27. The iOS 17 comparison also passed at the largest text size in dark mode. The [iOS 17 Spanish week check](evidence/native/meal-week-20261104/validation.json) mirrored the Grid and Back control and opened the correct day note. | Human en-US/es-US, physical VoiceOver/Switch Control and broader right-to-left and largest-text route checks. |
 | F07 | Versioned bounded archive/media staging, siblings, canonical identity and scoped cleanup; N526, F07, RECOVERY-FILES. | Physical file providers and photo flow, production deletion recovery. |
 | F08 | Actor-keyed outboxes and authoritative local service receipts; separate draft/waiting/received/conflict/placed states; N526, B175, WEB, WEB-OFFLINE, NATIVE-OFFLINE. | Deployed offline/refresh/device-loss task. |
 | F09 | StoreKit/server purchase binding, seats and separate measurement consent; N526, B175, MEASUREMENT, PRIVACY. | Final privacy questionnaire; owner-deferred actual Apple product/team and sandbox lifecycle. |
@@ -139,28 +1051,28 @@ Results belong to their own immutable source and binary identities. Do not add t
 | P03 | Named group/guest/away changes, pack impact and manual alternative; N526, PLANNING, B175. | Deployed non-shopper proposal and post-purchase task. |
 | P04 | Confirmed accepted fallback ranking from actual fill/stock, exclusions, elapsed time and explicit top-up consent; N526, PLANNING. | Human fallback/travel comparison and actual pickup scenario. |
 | P05 | Purpose/store-approved staple recall and per-trip review/handled status; N526, ORDINARY. | Real re-entry effort and long-lived checked-item task. |
-| P06 | Recipient-specific intentional-send delta and complete Free/manual correction; N526 and scoped recipient-handoff UI. | Real uncertain destination/cancel/lapse resend task. |
+| P06 | Recipient-specific changes use the last intentional send. On iOS 17, English and Spanish cook corrections kept an unknown meal deadline in the items to confirm, including for previously saved copies. A known deadline kept its own time zone. All 19 cook draft and handoff tests passed. See `.build/CookCorrectionDeadlineNov12`. | Real uncertain destination, cancelled share and membership-lapse resend on the distribution candidate. |
 | P07 | Private/shared decision history, observed/unknown outcome and explicit promotion; N526, B175. | Final household history task with real paid seat. |
 | P08 | Actual localized StoreKit offer, two named adult seats, restore/manage and lapse preservation; N526, B175, MEMBERSHIP-DELIVERY. | Actual Apple configuration/purchase/renewal/refund/second device. |
-| E01 | Recipe JSON-LD adapter, original source, duplicates/skips, preview, whole-batch undo and explicit dinner choice; N526, F07, LIBRARY, RECIPE-ADOPTION, RECIPE-FILES. | Physical file providers and human recipe-library task. |
+| E01 | Recipe JSON-LD adapter, original source, duplicates/skips, preview, whole-batch undo and explicit dinner choice. A Spanish-language Release iPhone simulator imported a bilingual recipe through Files and saved separate readable owner and cook files. The original ingredients survived both exports, and the private note and source link appeared only in the owner file. See `.build/RealRecipeFilesNov12/qualification.json`, N526, F07, LIBRARY, RECIPE-ADOPTION and RECIPE-FILES. | Physical file providers and human recipe-library task. |
 | E02 | Optional reviewed photo/OCR/barcode/receipt capture and typed path; N526, F07, PHOTO-CONSENT, RECEIPT-PHOTOS, RECIPE-PHOTOS, BARCODE-PHOTOS, CAMERA-REFUSAL. | Physical low-light bilingual camera, live barcode and permission denial tasks. |
 | E03 | Authenticated one-shop helper projection/editor proposals with expiry/revoke; N526, B175, WEB. | Deployed iPhone/Android grant and stale-cache task. |
 | E04 | Bilingual catalogs/help/billing/handoff and original text preservation; N526, LIBRARY, GUARDIAN-UI. | Human US-Spanish review and both-direction cook/billing task. |
 | E06 | Dated/use-first batches, explicit identity, carryover, multi-meal preview and stock-bound purchase review; N526, STOCK, ORDINARY, FREE-BATCH. | Physical multi-meal stock observation and final build diagnostic review. |
 | E07 | Store sorting/aisles, print, selected-text inbox, widget/App Intent and dictation ports; N526, SYSTEM-SELECTED-TEXT, SYSTEM-PRINT, SYSTEM-WIDGET, WIDGET-ROUTE and scoped surface UI. | Physical AirPrint, signed extensions/widget/lock-screen, delayed WidgetKit refresh and speech. |
-| E08 | Explicit per-offer/deferral reminder time/zone/quiet hours/expiry; N526, REMINDER-VIEWPORT, REMINDER-LOGGING, REMINDER-LIFECYCLE, DEFERRAL-READBACK, REMINDER-TAP, REMINDER-SAVE, SYSTEM-REMINDER, NOTIFICATION-REFUSAL. | Verify protected signed-in unlock and interruption on a physical iPhone. |
-| E09 | Authorized history, saved Free references and partial-scope period budgets; N526, B175, LIBRARY. | Final configured household period-budget task. |
-| E10 | Narrow contributor/cook web clients and market configuration; B175, WEB. | Current stable Android, deployed browser/screen-reader and market claims. |
-| N01 | Own-only contributor requests, guardian flow, inbox duplicates, pack/meal preview and once-only decisions; N526, B175, G29, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. | Actual KWS/SMTP, configured hosted service and mixed-phone household. |
+| E08 | Explicit per-offer/deferral reminder time/zone/quiet hours/expiry; N526, REMINDER-VIEWPORT, REMINDER-LOGGING, REMINDER-LIFECYCLE, DEFERRAL-READBACK, REMINDER-TAP, REMINDER-SAVE, SYSTEM-REMINDER, NOTIFICATION-REFUSAL. At `cc1e0676`, replacement failure withdraws obsolete pending/delivered notices and stale Turn off rejects a newer saved reminder. The initial repair passed 13 iOS 27 checks. The final recovery addition passed all 34 package tests and 12 iOS 17 models, and Release compiled. See `.build/ReminderReplacementNov12`. The November 13 iPhone simulator journey reopened the chosen deferral expiry and turned the reminder off. Model checks preserve overnight quiet-hour minutes and the persisted expiry when another date is only reviewed. See `.build/ReminderExpiryNov13/verified-current/check.log`. | Verify protected signed-in unlock and interruption on a physical iPhone. |
+| E09 | Authorized history, saved Free references and partial-scope period budgets. In a two-adult, two-shop period, the native client verified the remaining amount before and after a shopper transfer, a read grant and its revocation. Limited access revealed only the authorized subtotal. See `.build/HouseholdBudgetNov12/qualification.json`, N526, B175 and LIBRARY. | Final configured household period-budget task. |
+| E10 | Narrow contributor/cook web clients and market configuration; B175, WEB. | Actual Chrome156/Android14 synthetic scopes now verified; authenticated deployed household, physical browser/screen-reader and market claims remain. |
+| N01 | Own-only contributor requests, guardian flow, inbox duplicates, pack/meal preview and once-only decisions; N526, B175, G29, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. English and Spanish adult Chrome users separately signed in, joined and sent one request each. After the native client deferred the English request, that author saw the outcome on reload, and each browser showed only its own request. In a separate run, the iPhone shopper applied the decision and the requester saw it in Chrome; the other request was still pending in the inbox and database. See `.build/CompanionHouseholdNov12/iphone-ui-browser-return.json` and `iphone-ui-db-return.json`. | Actual KWS/SMTP, configured hosted service and mixed-phone household. |
 | N02 | Structured typed/speech review of item/count/unit/pack/purpose/destination; native contributor and ledger routes; N526, SPEECH-READBACK. The [separate native microphone refusal](evidence/native/microphone-refusal-20261104.json) preserved the editable draft and one confirmed import after restart, with Speech Recognition allowed. | Physical on-device speech/negation/locale and retry task. |
 | N03 | Exact current cook projection, pause/stop/repeat and VoiceOver arbitration model; N526, STOCK, SPEECH-READBACK. | Physical playback and assistive speech interruption. |
 | N04 | Device/profile/locale-scoped reviewed spelling memory, forget/opt-out without rewriting history; N526, LIBRARY, SPELLING-MEMORY. A verified adult contributor review supplies its own profile, and confirmed account deletion retires that account's local files. | Connected models passed. System Photos exercised recognition, explicit Use, original wording and Forget. A separate opt-out test passed and verified removal of that profile’s file while preserving another profile. Bilingual device, live household and physical VoiceOver acceptance remain. |
-| N05 | Optional recipe source plus independent editable original data; N526, LIBRARY, RECIPE-ADOPTION, RECIPE-PHOTOS. | Broken-site original/weekly allocation human task. |
-| N06 | Source/revision/projection/conflict comparison and separate recovery; N526, F07. | Real Files cancel/corrupt/reimport and lifecycle task. |
+| N05 | Optional recipe source plus independent editable original data; N526, LIBRARY, RECIPE-ADOPTION, RECIPE-PHOTOS, RECIPE-IMPORT-ALLOCATIONS. Malformed import and actual store restart preserve the dated dinner and portion bindings. | Human external-source and file-provider task; network behavior is outside the new model test’s scope. |
+| N06 | Source/revision/projection/conflict comparison and separate recovery. N526, F07, RECOVERY-FILES and RECOVERY-FILES-REIMPORT cover the simulator’s local provider and app relaunch. | Physical iPhone, iCloud Drive and third-party file providers. |
 | N07 | Spoken/typed guest proposal uses the same identified group planner and review; N526, PLANNING. | Physical speech and current-grant apply/amendment task. |
 | A01 | Adult meal week grid and list, full civil dates, stable occurrence identity and protected lunches; N526, LIBRARY, PLANNING, MEAL-WEEK. | Deployed cross-device week and physical accessibility. |
 | A02 | App-owned/manual editable ideas, exclusions/yield/source, adult approval distinct from choose/apply; N526, PLANNING, PLANNING-KEYBOARD. | Final household/human idea task; unavailable generator fallback. |
-| A03 | Two entered complete quotes, trip cash/time, break-even/unknowns, private proposal and shopper adoption; N526, B175, QUOTES, PLANNING-KEYBOARD. | Final configured household/hardware bilingual task. |
+| A03 | Two entered complete quotes, trip cash/time, break-even/unknowns, private proposal and shopper adoption; N526, B175, QUOTES, PLANNING-KEYBOARD. On Spanish ordinary Release at `965b3580`, saving and reopening preserved $3 checkout savings, $4 extra travel and 18 extra minutes. Clearing travel cash then saving and reopening produced an unresolved combined total and $3 break-even, with the pickup branch and unrelated Records intact. See `.build/SpanishTwoStore965Nov12/qualification.json`. | Final configured household/hardware bilingual task. |
 
 ## Route traceability
 
@@ -168,12 +1080,12 @@ All 27 have current source entries. “Pending” below concerns current screen 
 
 | Route | Actual entry / current source | Evidence or next screen gate |
 |---|---|---|
-| S01 Shop | `RestorableAdultTabs` → `ShopView`; active pickup, quick packs, urgent repair, contextual inbox. | ORDINARY; final current root regression. |
-| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY, SYSTEM-SELECTED-TEXT and SYSTEM-PRINT. The [Release list layout](evidence/native/ledger-surfaces-20261104/validation.json) passed standard text and largest system text in dark mode with increased contrast on iOS 17. The largest-text case reached the full title and add-list action, filtered a row and moved it to Recently checked. Physical assistive access, shared text, dictation, AirPrint and device latency remain open. |
-| S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526; final cap/slot/cancel task. |
+| S01 Shop | Shop opens Compare packs, Start pickup, Check one change, urgent repair and the authorized inbox. A selected pickup presents its name and available checkout or recovery action. | [First-visit comparison on iOS 17](evidence/native/first-pickup-change-20261107/README.md), ORDINARY. |
+| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY, SYSTEM-SELECTED-TEXT, SYSTEM-PRINT and IMPORT-VIEWPORT. The [Release list layout](evidence/native/ledger-surfaces-20261104/validation.json) passed standard text and largest system text in dark mode with increased contrast on iOS 17. English reached the full title and add-list action, filtered a row and moved it to Recently checked. Spanish opened the pickup and prior-staples menus, filtered a row and preserved its original food name. The unsigned arm64 device archive passed bundle verification. Physical assistive access, shared text, dictation, AirPrint and device latency remain open. |
+| S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526, PICKUP-FACTS-HOLD; final physical cap/slot/cancel task. |
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
-| S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |
-| S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526, B175, HANDOFF-VERSION, SHARE-CANCELLATION. Physical external open and retailer return remain. |
+| S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES, PICKUP-FACTS-HOLD; unknown/stock stale review.  The [first-visit regression](evidence/native/first-pickup-change-20261107/iphone-se-verification.txt) also saves, cancels and reopens a retailer comparison with its original cap and observations. |
+| S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`; private `PickupAmendmentView` and shared `SharedOrderAmendmentView` record independently confirmed changes. | [Private](evidence/native/private-amendment-20261107/verification.json) and [shared](evidence/native/shared-amendment-20261107/verification.json) local proofs; hosted 042, physical external open and retailer return remain. |
 | S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI and REMINDER-VIEWPORT; physical cutoff. |
 | S08 Arrivals/urgent | Pickup → `PickupArrivalView`; Shop → `UrgentRepairView`. | ORDINARY/STOCK; physical receipt. |
 | S09 Repair | Arrival/urgent/pickup → `PickupRepairView`, fallback review. | STOCK; actual household food task. |
@@ -184,25 +1096,33 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S14 Library | Dinners/next shop → `DinnerLibraryView` / editor; Records library import. | LIBRARY, RECIPE-FILES, RECIPE-PHOTOS. |
 | S15 Pairing | Dinners → `DinnerScenarioEditor` decision sheet/library comparison. | PLANNING; real accepted-library task. |
 | S16 Guests | Meal → `DinnerGuestsView`, guest capture review. | PLANNING; physical speech. |
-| S17 Apply | Dinner decision sheet / shared proposal → shopper `HouseholdShopView`. | PLANNING/B175; final shared candidate. |
+| S17 Apply | Dinner decision sheet / shared proposal → shopper `HouseholdShopView`; retailer confirmation remains a separate reviewed operation. | PLANNING/B175; [shared confirmation and scoped retry](evidence/native/shared-amendment-20261107/verification.json); final hosted candidate remains. |
 | S18 Offer | Settings/selected paid feature → `MembershipEntryView`. | Local StoreKit matrix; actual Apple deferred. |
 | S19 Seats | Membership named seats and shared-shop authorized handover. | N526/B175; actual second paid device. |
 | S20 Records | Records root → history, saved evidence, recovery and managed views. | F07/LIBRARY. The [Release support check](evidence/native/release-first-install-20261104.json) verified exact preview-to-clipboard content and preserved the saved comparison. Physical Files delivery, support mailbox operation and policy publication remain open. |
-| S21 People/grants/devices | Household → People/Guardian/Managed views/Devices. | DEVICE/G29/GUARDIAN-UI; dedicated English and Spanish SE/iOS17 cases pass with exact separate logging/source limits. |
+| S21 People/grants/devices | Household → People/Guardian/Managed views/Devices. | DEVICE/G29/GUARDIAN-UI; dedicated English and Spanish SE / iOS 17 cases pass with exact separate logging/source limits. |
 | S22 Own requests | Contributor/child scoped root; native structured review and narrow web client. | N526/GUARDIAN-UI/WEB; actual provider/mixed phone. |
 | S23 Inbox | Shop contextual inbox or Household → grouped requests/comparison. | N526/B175/REQUEST-UI/CAPTION; both functional cases and separate Spanish post-wrap case pass. |
 | S24 Decision | Inbox row → request decision sheet, sufficient pack and protected meal context. | N526/B175/REQUEST-UI; both current cases pass in separately scoped actual UI. |
 | S25 Week | Dinners → This week → Grid or chronological List. Shared meal dates, guest/away/carryover. | MEAL-WEEK, MEAL-WEEK-MOVE, PLANNING and LIBRARY civil dates. The [accessible week layout](evidence/native/meal-week-20261104/validation.json) passed the Spanish route, the iOS 17 cross-week move and both pickup-switch cases, and the largest system text Grid with the full meal, lunch and note frames visible. All 563 current model tests and the unsigned arm64 Release bundle checks passed. List contrast reports occurred at clipped scroll edges and remain recorded. Deployed cross-device and physical checks remain open. |
 | S26 Idea | Dinners or shared planning → local/shared idea review and approval. | PLANNING; final real household. |
-| S27 Quotes | Checkout contextual entry or Dinners/shared shop → quotes. | QUOTES/B175; final configured hardware. |
+| S27 Quotes | Checkout contextual entry or Dinners/shared shop → quotes. A saved private comparison reopens its dated observations. Editing creates a separate comparison against the current pickup and preserves the historical result. | QUOTES/B175 and [iPhone SE saved-quote verification](evidence/native/saved-store-quotes-20261107/iphone-se-verification.txt). The iOS 17 run passed one shopper journey and three model tests. After grouping keyboard entry, the [iPhone 17 run on iOS 26.2](evidence/native/saved-store-quotes-20261107/iphone-17-verification.txt) passed in 597.73 seconds and recorded zero runtime warnings. Final configured hardware remains open. |
+
+The isolated [keyboard diagnostic](evidence/native/keyboard-hosted-preparation-20261106/README.md) now compiles locally and has one hosted run42309239002 on exactefc1bfc. Its original six selectors, test bodies and limits remain unchanged. No native result exists at this checkpoint; original UI07/UI06 stalls remain unresolved.
+
+The [measurement-boundary diagnostic](evidence/native/scroll-measurement-boundaries-20261106/STATUS.md) has one pending hosted run42309808686 on isolated775961d. It preserves all performance gates and adds buffered call timestamps/scoped endpoint receipts. Instrumentation overhead is explicit; no causal fix, native result or release acceptance is established.
 
 ## Remaining production work and release gates
+
+Use the [first-release execution checklist](RELEASE-EXECUTION.md) to order these
+remaining gates and record candidate identity, executor, environment and direct
+proof. A merged PR or focused CI success does not complete B11.
 
 - **Current local milestone:** all six follow-up flow scopes now have passing dedicated UI evidence across their separately pinned runs; current polished Release/ordinary Debug and privacy resources compile/verify, and the preview is replaced without resetting its inventoried data. This is local implementation/acceptance progress, not a combined all-green regression or full27-route/device release gate. Recheck evidence affected by later changes. Preserve failed runs, the S21 logging accommodation and unlocated invalid-frame diagnostics.
 - **Production journal implementation:** migrations 024–029 cover the private observer, restore bounds, worker capacity, runtime source binding, rotation and chained quarantine replay. The local two-cluster rehearsal verifies receipt completion, signed capacity telemetry, and independent recovery including a real dump and restore. Local writer contention and continued operation are covered by the dedicated test. Local successor registration and archive continuity are verified. Same-source activation is verified in a disposable database. Chained replay passed on a local pre-switch dump with exact preimages. Hosted alert delivery, backup and restore, provider reconciliation and runtime activation remain open. The default operations runtime performs receipt cleanup only.
 - **Owner-deferred setup:** Apple paid team/product/signing/sandbox and SMTP remain deferred; do not interpret time or prior local authorization as permission to enable them. Actual KWS verification/notice configuration and Test activation have not occurred.
-- **Hosted state:** the signed-in dashboard verified all eight applied checksums on November 4 and shows no scheduled backups for this Free project. The local candidate rehearsal upgrades 008 to 029 while preserving fictional household data and enrolled-device access. Public policy routes still return 404. The actual protected staging backup and rollout review remain pending. [Candidate evidence](evidence/b11/staging-upgrade-20261104/candidate.json), [staging plan](STAGING-UPDATE-PLAN.md).
-- **Human/device/browser:** current stable Android task remains unaccepted; the reopened emulator exited again, the Google error was not retained, and clock/network/Play Services remain unverified. No current Play Store screen or product acceptance is claimed. Real mixed-phone household, human US-Spanish, physical camera/audio/share/widget/print/notification and VoiceOver/Switch Control remain. Synthetic provider or browser DOM tests do not replace them.
+- **Hosted state:** the actual protected capture, Auth/app restore and second-copy001–029upgrade rehearsal passed. Under subsequent explicit owner approval, live009–029migrations and separate least-privilege maintenance provisioning are complete. The approved server/web source is promoted; all27public checks pass and previously missing named routes now resolve. All29checksums match,57original table data hashes are preserved outside the registry, and encrypted recovery archives are detached. [Hosted evidence](evidence/b11/staging-rollout-20261106/summary.json), [actual restore](evidence/b11/staging-readiness-20261106/live-restore.json), [rehearsed upgrade](evidence/b11/staging-readiness-20261106/live-upgrade.json). Scheduled maintenance delivery is verified once. Public Help, Privacy, Terms and Support rendering is now verified in English/Spanish; authenticated journeys, mixed-device acceptance and separate provider/journal activation remain open. [Public browser evidence](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md). Additive migration 030 for the two invoker-trigger search paths is now applied and verified; [hosted proof](evidence/b11/staging-measurement-hardening-20261106/verification.json). The029negative control fails the new regression; after030all9measurement tests pass, prior data/privileges remain intact and the official targeted advisor warnings fall2→0. [Local030proof](evidence/b11/measurement-trigger-hardening-20261106/verification.json).
+- **Human/device/browser:** the owner completed Play authentication, and official Play updated the retained Android 14 emulator to Chrome 156.0.8078.79, an active stable rollout cohort. All eight deployed public EN/ES pages and the Spanish unavailable-email refresh state passed with no horizontal overflow. [Android public evidence](evidence/b11/android-chrome-public-20261106/README.md). Actual Android synthetic invitation/recovery/scoped-access checks also pass in their [documented scopes](evidence/b11/android-recovery-flows-20261106/README.md), with unexecuted cases and driver corrections retained. Authenticated live mixed-phone household tasks, physical devices, human US-Spanish, camera/audio/share/widget/print/notification and VoiceOver/Switch Control remain. The current browser result is scoped to the exact installed version, not every newer staged release; synthetic provider and DOM checks do not replace real-provider or human acceptance.
 - **Operating/release acceptance:** approved policy/retention/support/contact operation, actual provider erasure and independent restore drill, signed distribution/App Store review/complete route walkthrough and any required household study remain. Direct retailer integration E05 is deferred; X01–X06 remain product boundaries.
 
-No local source, provider configuration, hosted data or user preview was changed by this documentation review.
+Historical documentation-only reviews made no hosted changes. The November6 approved staging rollout is explicitly recorded above; it does not establish App Store or provider activation readiness.

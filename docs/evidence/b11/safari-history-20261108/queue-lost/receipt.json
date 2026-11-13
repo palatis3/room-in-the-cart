@@ -1,0 +1,628 @@
+{
+  "caseName": "queue-lost",
+  "origin": "http://127.0.0.1:52060",
+  "manifestSHA": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "fixture": {
+    "profile": "queue",
+    "cache": "no-store",
+    "state": {
+      "actor": "A",
+      "offline": false,
+      "hold": false,
+      "queueAllowed": true,
+      "commandMode": "normal",
+      "phase": "final"
+    },
+    "pendingAuthority": 0,
+    "counts": {
+      "commandAttempts": 2,
+      "commandEffects": 1,
+      "rowsA": 1,
+      "rowsB": 0
+    },
+    "attempts": [
+      {
+        "actor": "A",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+        "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+        "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+      },
+      {
+        "actor": "A",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+        "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+        "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+      }
+    ],
+    "events": [
+      {
+        "seq": 1,
+        "phase": "initial",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 2,
+        "phase": "initial",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/households/A/requests/mine"
+      },
+      {
+        "seq": 3,
+        "phase": "initial",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 4,
+        "phase": "initial",
+        "kind": "request",
+        "method": "PUT",
+        "path": "/v1/households/A/devices/current/request-queue"
+      },
+      {
+        "seq": 5,
+        "phase": "initial",
+        "kind": "queue-permission",
+        "enabled": true
+      },
+      {
+        "seq": 6,
+        "phase": "initial",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 7,
+        "phase": "initial",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/households/A/requests/mine"
+      },
+      {
+        "seq": 8,
+        "phase": "queued",
+        "kind": "control",
+        "commandMode": "dropAfter"
+      },
+      {
+        "seq": 9,
+        "phase": "queued",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 10,
+        "phase": "queued",
+        "kind": "request",
+        "method": "POST",
+        "path": "/v1/households/A/commands"
+      },
+      {
+        "seq": 11,
+        "phase": "queued",
+        "kind": "command-attempt",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+      },
+      {
+        "seq": 12,
+        "phase": "queued",
+        "kind": "command-effect",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+      },
+      {
+        "seq": 13,
+        "phase": "queued",
+        "kind": "command-after-effect-drop"
+      },
+      {
+        "seq": 14,
+        "phase": "reloaded",
+        "kind": "control"
+      },
+      {
+        "seq": 15,
+        "phase": "reloaded",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 16,
+        "phase": "reloaded",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/households/A/requests/mine"
+      },
+      {
+        "seq": 17,
+        "phase": "final",
+        "kind": "control"
+      },
+      {
+        "seq": 18,
+        "phase": "final",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 19,
+        "phase": "final",
+        "kind": "request",
+        "method": "POST",
+        "path": "/v1/households/A/commands"
+      },
+      {
+        "seq": 20,
+        "phase": "final",
+        "kind": "command-attempt",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+      },
+      {
+        "seq": 21,
+        "phase": "final",
+        "kind": "exact-retry",
+        "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+      },
+      {
+        "seq": 22,
+        "phase": "final",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/session"
+      },
+      {
+        "seq": 23,
+        "phase": "final",
+        "kind": "request",
+        "method": "GET",
+        "path": "/v1/households/A/requests/mine"
+      },
+      {
+        "seq": 24,
+        "phase": "final",
+        "kind": "control",
+        "hold": false
+      }
+    ]
+  },
+  "observations": [
+    {
+      "phase": "queued",
+      "serverCounts": {
+        "commandAttempts": 1,
+        "commandEffects": 1,
+        "rowsA": 1,
+        "rowsB": 0
+      },
+      "serverAttempts": [
+        {
+          "actor": "A",
+          "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+          "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+          "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+        }
+      ],
+      "pendingAuthority": 0,
+      "version": 2,
+      "doc": "16fcd54a-fc89-4dd6-a614-d1bb4ac6d396",
+      "action": "observe",
+      "truncated": false,
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+      "events": [
+        {
+          "kind": "pageshow",
+          "persisted": false,
+          "at": 40,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": false,
+          "queuePermissionControl": false,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 84,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": true
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 14560,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 14622,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": true
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 43423,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": false,
+          "statusEmpty": true
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 54492,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 54539,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": false,
+          "waiting": true,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": true,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": false
+        }
+      ],
+      "current": {
+        "ownA": false,
+        "ownB": false,
+        "queued": true,
+        "draftA": false,
+        "busy": false,
+        "waiting": true,
+        "received": false,
+        "missing": false,
+        "ready": true,
+        "accessEnded": false,
+        "loadUnavailable": false,
+        "refreshAvailable": true,
+        "retryPresent": true,
+        "queuePermissionControl": true,
+        "contributorReady": true,
+        "statusEmpty": false
+      },
+      "storage": {
+        "status": "read",
+        "count": 1,
+        "commands": [
+          {
+            "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+          }
+        ]
+      }
+    },
+    {
+      "phase": "reloaded",
+      "serverCounts": {
+        "commandAttempts": 1,
+        "commandEffects": 1,
+        "rowsA": 1,
+        "rowsB": 0
+      },
+      "serverAttempts": [
+        {
+          "actor": "A",
+          "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+          "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+          "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+        }
+      ],
+      "pendingAuthority": 0,
+      "version": 2,
+      "doc": "e54765cd-a08c-4f12-ae04-5a71d3c318b7",
+      "action": "observe",
+      "truncated": false,
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+      "events": [
+        {
+          "kind": "pageshow",
+          "persisted": false,
+          "at": 51,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": false,
+          "queuePermissionControl": false,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 88,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": true,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": true
+        }
+      ],
+      "current": {
+        "ownA": false,
+        "ownB": false,
+        "queued": true,
+        "draftA": false,
+        "busy": false,
+        "waiting": false,
+        "received": false,
+        "missing": false,
+        "ready": true,
+        "accessEnded": false,
+        "loadUnavailable": false,
+        "refreshAvailable": true,
+        "retryPresent": true,
+        "queuePermissionControl": true,
+        "contributorReady": true,
+        "statusEmpty": true
+      },
+      "storage": {
+        "status": "read",
+        "count": 1,
+        "commands": [
+          {
+            "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c"
+          }
+        ]
+      }
+    },
+    {
+      "phase": "final",
+      "serverCounts": {
+        "commandAttempts": 2,
+        "commandEffects": 1,
+        "rowsA": 1,
+        "rowsB": 0
+      },
+      "serverAttempts": [
+        {
+          "actor": "A",
+          "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+          "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+          "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+        },
+        {
+          "actor": "A",
+          "digest": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+          "key": "aee27b75-955f-42b4-982a-7a46d39cda40",
+          "grant": "4f14be8f-efc9-48c4-af14-cb09a8489f38"
+        }
+      ],
+      "pendingAuthority": 0,
+      "version": 2,
+      "doc": "e54765cd-a08c-4f12-ae04-5a71d3c318b7",
+      "action": "observe",
+      "truncated": false,
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+      "events": [
+        {
+          "kind": "pageshow",
+          "persisted": false,
+          "at": 51,
+          "ownA": false,
+          "ownB": false,
+          "queued": false,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": false,
+          "queuePermissionControl": false,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 88,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": true,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": true
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 29133,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": true,
+          "waiting": false,
+          "received": false,
+          "missing": false,
+          "ready": false,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": false,
+          "retryPresent": true,
+          "queuePermissionControl": true,
+          "contributorReady": false,
+          "statusEmpty": false
+        },
+        {
+          "kind": "render",
+          "persisted": false,
+          "at": 29194,
+          "ownA": false,
+          "ownB": false,
+          "queued": true,
+          "draftA": false,
+          "busy": false,
+          "waiting": false,
+          "received": true,
+          "missing": false,
+          "ready": true,
+          "accessEnded": false,
+          "loadUnavailable": false,
+          "refreshAvailable": true,
+          "retryPresent": false,
+          "queuePermissionControl": true,
+          "contributorReady": true,
+          "statusEmpty": false
+        }
+      ],
+      "current": {
+        "ownA": false,
+        "ownB": false,
+        "queued": true,
+        "draftA": false,
+        "busy": false,
+        "waiting": false,
+        "received": true,
+        "missing": false,
+        "ready": true,
+        "accessEnded": false,
+        "loadUnavailable": false,
+        "refreshAvailable": true,
+        "retryPresent": false,
+        "queuePermissionControl": true,
+        "contributorReady": true,
+        "statusEmpty": false
+      },
+      "storage": {
+        "status": "read",
+        "count": 0,
+        "commands": []
+      }
+    }
+  ]
+}

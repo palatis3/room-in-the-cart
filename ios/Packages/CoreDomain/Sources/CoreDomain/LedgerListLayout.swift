@@ -8,6 +8,20 @@ public struct ShopListLayout: Codable, Equatable, Sendable {
     public var aisleOverride: [String]?
     public var branch = ""
     public init() {}
+
+    /// Reorder the editable rows while preserving the positions of checked, handled and trashed rows.
+    public mutating func setActiveOrder(_ activeIDs: [UUID], in shop: ShoppingLedger) throws {
+        let active = Set(activeIDs)
+        let expected = shop.lines.filter { !$0.isChecked && !$0.isHandled && !$0.isTrashed }
+        guard active.count == activeIDs.count, active == Set(expected.map(\.id)) else { throw LedgerError.stalePreview }
+        let ranked = Set(lineOrder)
+        let unranked = shop.lines.sorted { $0.originalOrder < $1.originalOrder }.map(\.id).filter { !ranked.contains($0) }
+        var next = activeIDs.makeIterator()
+        lineOrder = (lineOrder + unranked).map { id in
+            if active.contains(id), let replacement = next.next() { return replacement }
+            return id
+        }
+    }
 }
 
 public struct LedgerListLayout: Codable, Equatable, Sendable {

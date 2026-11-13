@@ -1,0 +1,65 @@
+{
+  "scope": "Both complete unseeded confirmed-stock journeys; first buys one whole top-up pack, second saves use-at-home without a retailer order.",
+  "baselineCandidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "problem": "The original generic Any-first query selected the persistent label instead of its editable input. The hosted event and AX show the touch at the StaticText center.",
+  "change": "Restrict input selection to editable element types in fill, import and confirmed-amount controls. All test bodies and their business/restart assertions are byte-identical.",
+  "tests": [
+    {
+      "identifier": "LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack()",
+      "durationSeconds": 120.88332605361938
+    },
+    {
+      "identifier": "LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder()",
+      "durationSeconds": 100.32888293266296
+    }
+  ],
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "D9AA3331-7DB1-4C16-85E5-A69BB419C6CC",
+    "deviceName": "RITC confirmed stock field selection 20261106",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "actualEditableFieldTaps": {
+    "Actual food or freezer batch": 2,
+    "Confirmed usable amount": 2
+  },
+  "sourceFilesVerified": 514,
+  "productFilesVerified": 179,
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true
+  },
+  "ownedSimulatorDeleted": true,
+  "bootGuardAcceptedFinished": true,
+  "timeAllowanceSeconds": {
+    "default": 720,
+    "maximum": 900
+  },
+  "scratchDirectory": ".build/ConfirmedStockFieldSelection20261106/validation",
+  "knownHarnessDiagnostics": {
+    "invalidDigitCountOccurrences": 15
+  },
+  "sha256": {
+    "Tests.log": "06b80a3b218749142052a13c901d2713f0c0db7b63dc5db1cc428a7957584b74",
+    "strict.log": "9989b679c121e59401f4db059ebec187b640e8d2a9ae224acfb8d36f2575fef8",
+    "test-summary.json": "6341308c8e6f36af4a8c4fed4efd2f0d9fcd35a1fca157eb2e97bfba0f9ad2b4",
+    "test-details.json": "56ca1e680400cb0e381c20d6e24ac3148e4722b90adccc939919a047b254da98",
+    "source-sha256.json": "fe5207a356cac7a7008d52908d2e01c3e7d59dc00eb5504d9f0f7622f66449c0",
+    "product-sha256.json": "406d09635da5190ae1ccc9a805856f31839b9ccc280998ec9e2b7a086f8026bf",
+    "source-diff.patch": "6a5fa7b5c22eaa3ad8c6c16e29310866624369663b3b7c232eb1fac1de01b2c1",
+    "boot.log": "9a20c8fc9a58798e23c4460aaa84af6ceb07e2a505c9492da45595ed6415cb24"
+  },
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3; retained hosted results are not relabeled.",
+    "No new hosted retry or full acceptance run; no time allowance, warning policy, business assertion or fixture profile changed."
+  ]
+}

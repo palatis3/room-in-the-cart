@@ -1,0 +1,45 @@
+Executed 38 of 38 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/RecordsMediaTests/testSelectedReducedJPEGRoundTripAndCorruptImageRejectsWholeBatch | Passed | 0.49 |
+| RoomInTheCartTests/RecordsAdapterTests/testConfirmedLedgerDeletionSurvivesRestartAndRetriesOriginalReceiptUntilCleanup | Passed | 0.20 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testActualRecoveredLedgerNewPhotoReexportSiblingAndCleanupPreservePhysicalIdentity | Passed | 0.11 |
+| RoomInTheCartTests/RecordsAdapterTests/testFailedRecipeImportPreservesEditableDinnerAndWeeklyAllocationsAcrossRestart | Passed | 0.11 |
+| RoomInTheCartTests/RecordsAdapterTests/testDamagedBackupReportsMalformedAndPreservesLiveAndRecoveredRecords | Passed | 0.09 |
+| RoomInTheCartTests/RecordsAdapterTests/testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome | Passed | 0.09 |
+| RoomInTheCartTests/RecordsAdapterTests/testComparisonNativeRoundTripAndNestedAuthorityFieldRejection | Passed | 0.08 |
+| RoomInTheCartTests/RecordsMediaTests/testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer | Passed | 0.07 |
+| RoomInTheCartTests/RecordsMediaTests/testLiveScopeChangeDuringValidationClearsPrivateExportAndStagedImport | Passed | 0.05 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testRecoveredPickupReceiptAndRecipeSourceUseActualStoreAndRetainNativeBinding | Passed | 0.05 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testJournalIsBoundToActualDatabaseAndCopyAndUnknownFieldsFailClosed | Passed | 0.04 |
+| RoomInTheCartTests/RecordsAdapterTests/testPickupCanonicalRoundTripOrdersSetAndUUIDQuoteMapWithoutChangingValues | Passed | 0.04 |
+| RoomInTheCartTests/RecordsAdapterTests/testWholeLedgerErasurePurgesAllReviewedHistoryAndRecoveryOriginOnly | Passed | 0.04 |
+| RoomInTheCartTests/RecordsAdapterTests/testScopedDinnerPlanningRecoveryRetainsSourceReferencesWithoutAuthority | Passed | 0.03 |
+| RoomInTheCartTests/RecordsErasureCleanupTests/testFailedPrivateProjectionCleanupKeepsExactRetirementPendingAcrossRestart | Passed | 0.03 |
+| RoomInTheCartTests/RecordsMediaTests/testUntrustedNestedAuthorityWrongOwnerUnsupportedImageAndVersionFailWithoutRegistryMutation | Passed | 0.03 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testMediaScrubRetainsCopyDirectoryAndReopensUsingFreshReceipt | Passed | 0.03 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testWrongPhysicalMappingRejectedAndImportedUnrelatedMappingNeverMintsLiveScope | Passed | 0.03 |
+| RoomInTheCartTests/RecordsAdapterTests/testRetiredModelCannotSaveOldWorkspaceIntoReplacement | Passed | 0.02 |
+| RoomInTheCartTests/RecordsMediaTests/testActionOutcomeAnchorChangesOnlyAfterCompletedDeletionAndClearsOnFailure | Passed | 0.02 |
+| RoomInTheCartTests/RecordsAdapterTests/testLedgerCanonicalRoundTripPreservesOriginalImportAndUUIDDecisionMap | Passed | 0.02 |
+| RoomInTheCartTests/RecordsAdapterTests/testStaleEntireLedgerReviewDeletesNothingAndAllowsFreshReview | Passed | 0.02 |
+| RoomInTheCartTests/RecordsAdapterTests/testHelperExportDropsNativeFinanceAndPersonalExportRequiresWorkingKey | Passed | 0.02 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testSymlinksAndDeniedAuthorizationCannotCreateRecoveryStores | Passed | 0.02 |
+| RoomInTheCartTests/RecordsAdapterTests/testUnsupportedNativeImportStagesNothingAndPreservesRegistryBytes | Passed | 0.02 |
+| RoomInTheCartTests/RecordsListingTests/testUnreadableNativeSiblingsAreReportedAndExcludedFromHealthyExportWithoutChangingBytes | Passed | 0.02 |
+| RoomInTheCartTests/RecordsMediaTests/testRecoveredEditProjectionFiltersMediaForRemovedTargetsNewShopsAndMealLibrary | Passed | 0.02 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testDeletionCancelsInFlightLeaseAndDrainPreventsLateFolderRecreation | Passed | 0.02 |
+| RoomInTheCartTests/RecordsMediaTests/testCorruptOptionalSidecarIsReportedWithoutBlockingHealthyRecordBackupOrReplacingBytes | Passed | 0.02 |
+| RoomInTheCartTests/RecordsMediaTests/testCaptureArchiveListingCannotEscapeLiveNamespaceAndHonorsRemovalMarkers | Passed | 0.01 |
+| RoomInTheCartTests/RecordsMediaTests/testReceiptAndRecipeEvidenceStayBoundToTheirOwnedRecord | Passed | 0.01 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testCancelledOpenCannotReplaceCompletedDeletionOutcomeAndDeniedDeletionCannotMutateRegistry | Passed | 0.01 |
+| RoomInTheCartTests/RecordsAdapterTests/testFailedDeletionIntentWriteNeverCallsDestructiveStoreOperation | Passed | 0.01 |
+| RoomInTheCartTests/RecordsAdapterTests/testFileImportRechecksAccessBeforeValidatingExternalContents | Passed | 0.01 |
+| RoomInTheCartTests/RecordsAdapterTests/testHelperOnlyImportReconcilesRetiredOriginBeforeReview | Passed | 0.01 |
+| RoomInTheCartTests/RecordsAdapterTests/testEarlierLedgerV1DefaultsPlanningButRejectsInjectedAccessFlags | Passed | 0.01 |
+| RoomInTheCartTests/RecordsRecoveryCaptureTests/testDrainWaitsForCancelledInFlightUser | Passed | 0.01 |
+| RoomInTheCartTests/RecordsAdapterTests/testSourceErasureBetweenSelectionAndExportCannotExportCachedPrivateData | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 38 examined tests.

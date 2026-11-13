@@ -1,0 +1,31 @@
+{
+  "evidenceKind": "synthetic compiled-symbol planner validation; not a native run",
+  "full": {
+    "include": [
+      {
+        "case": "launch",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+        "macos_slot": 0
+      },
+      {
+        "case": "rendered",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+        "macos_slot": 1
+      },
+      {
+        "case": "scroll",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+        "macos_slot": 2
+      }
+    ]
+  },
+  "focusedScroll": {
+    "include": [
+      {
+        "case": "scroll",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+        "macos_slot": 2
+      }
+    ]
+  }
+}

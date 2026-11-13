@@ -48,7 +48,8 @@ private struct PickupOfferDraft: Equatable {
         return value
     }
     func offer(id: UUID, journey: PickupJourney, original: PickupOffer?) throws -> PickupOffer {
-        guard let line = journey.pickup?.orderLines.first(where: { $0.id == lineID }) else { throw PickupError.unknownOrderLine }
+        let availableLines = original == nil ? journey.retailerOrderLines : journey.pickup?.orderLines ?? []
+        guard let line = availableLines.first(where: { $0.id == lineID }) else { throw PickupError.unknownOrderLine }
         let evidence: CostEvidence
         switch priceKind {
         case "bounded":
@@ -108,15 +109,20 @@ struct PickupOfferEditorView: View {
                         .frame(minHeight: 44)
                 }
             } else {
+                if original != nil { retailerResponseFields }
                 draftFields
-                Button(pTr("Review offer changes")) { review() }
-                    .accessibilityIdentifier("pickup.offer.review").frame(minHeight: 44)
-                    .disabled(model.saving || model.hasPendingSave)
+                if original == nil {
+                    retailerResponseFields
+                    reviewChangesButton
+                }
             }
             if let formError { Text(formError).foregroundStyle(.red).accessibilityIdentifier("pickup.offer.error") }
         }
         .navigationTitle(pTr(original == nil ? "New store offer" : "Review or edit saved offer"))
         .toolbar {
+            if original != nil, scopeMatches, reviewed == nil {
+                ToolbarItem(placement: .confirmationAction) { reviewChangesButton }
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button(pTr("Cancel")) { dismiss() }.accessibilityIdentifier("pickup.offer.cancel")
             }
@@ -143,7 +149,7 @@ struct PickupOfferEditorView: View {
         Section(pTr("Store offer")) {
             Picker(pTr("Original line"), selection: $draft.lineID) {
                 Text(pTr("Choose a line")).tag(UUID?.none)
-                ForEach(journey.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
+                ForEach(original == nil ? journey.retailerOrderLines : journey.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
             }.accessibilityIdentifier("pickup.offer.line").disabled(original != nil)
             TextField(pTr("Replacement and offered pack"), text: $draft.replacement).accessibilityIdentifier("pickup.offer.replacement")
             TextField(pTr("Required usable amount"), text: $draft.required).accessibilityIdentifier("pickup.offer.required")
@@ -174,7 +180,16 @@ struct PickupOfferEditorView: View {
             TextField(pTr("Reviewed offer-specific maximum price"), text: $draft.ceiling).keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.ceiling")
             Text(pTr("A line ceiling does not establish that the whole checkout fits. Review combined charges separately."))
         }
-        PickupOfferForecastEditor(draft: $forecast, journey: journey, lineID: draft.lineID, offerID: offerID)
+        PickupOfferForecastEditor(draft: $forecast, journey: journey, lineID: draft.lineID, offerID: offerID, replacement: draft.replacement)
+    }
+
+    private var reviewChangesButton: some View {
+        Button(pTr("Review offer changes")) { review() }
+            .accessibilityIdentifier("pickup.offer.review").frame(minHeight: 44)
+            .disabled(model.saving || model.hasPendingSave)
+    }
+
+    private var retailerResponseFields: some View {
         Section(pTr("Retailer response")) {
             DatePicker(pTr("Retailer response cutoff"), selection: $draft.deadline)
                 .environment(\.timeZone, TimeZone(identifier: draft.zone) ?? .current)

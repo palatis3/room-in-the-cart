@@ -1,0 +1,38 @@
+{
+  "originalCandidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "originalRunID": 42021894739,
+  "originalArtifactID": 13421910845,
+  "originalStrictResult": "failed; retained unchanged",
+  "futurePolicy": "Only known-trip selector gains the observed Synthesize event alternative under its exact fixture Menu tap. All occurrences must share one observed phase; mixed phases remain rejected. Combined cap remains2, with exact message, device/build, configuration, run and unique issue identities.",
+  "rationale": "Root and Dot independently reviewed identical issue count/message/tap/device in known-trip versus accepted stale-save and lost-reply. Prior stock SwiftUI Menu-open/no-open diagnostic supports narrow scope. Event-phase difference is observed, not a demonstrated product defect or proof of framework causation.",
+  "risk": "An identical new issue in this exact accepted scope cannot be distinguished by signature alone. This is not a zero-warning or release-acceptance claim.",
+  "checks": {
+    "focusedPythonTests": 31,
+    "initialNegativeFixtureError": "A synthetic deeper-path test omitted its required isAssociatedWithFailure field; corrected the test fixture, not the production guard. Initial test log retained.",
+    "isolatedOriginalArtifactReplayExit": 0,
+    "warningReplay": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "negativeCoverage": "one/two allowed per observed phase;three rejected; mixed2/3 paths rejected; wrong message/selector/tap/phase/device/config/type/path and duplicate identities/detail mismatches fail"
+  },
+  "checkerSHA256": "cbd4f9bf6c4f7d223a708d3fce9461f75a16086b6763cdf86ef7fc7f77ee99e5",
+  "testsSHA256": "4374f2640fad9e33643ef35cc95392576e5f0ecf0a679856a488169c2639a5d9",
+  "priorControlProof": "docs/evidence/native/ci-menu-warning-20261105/standalone-fresh-scenarios.json"
+}

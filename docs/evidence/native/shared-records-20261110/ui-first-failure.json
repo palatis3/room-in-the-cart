@@ -1,0 +1,16 @@
+{
+  "status": "failed",
+  "phase": "records-en",
+  "sourceInputs": 679,
+  "sourceManifestSHA256": "6badd23e59dec9c5c20a0fbc79e2f8f7ed0fed348c6c3193af07724d2cc158e9",
+  "buildPassed": true,
+  "uiTestsExecuted": 1,
+  "failure": "Second helper-export error remained above visible lazy Form viewport; first denial passed and no file was produced. prepareExport fail() did not publish an action outcome to reveal/focus the error.",
+  "correction": "prepareExport failure publishes a fresh action outcome; background refresh behavior and UI assertions unchanged.",
+  "finalReceiptSHA256": "004dcbe9e1b518af90aadec625b504bf6b0343f4423609cc4a349cc33de20550",
+  "uiLogSHA256": "ebd233d1555a20e5bc6d07e0eb749ce3fbcb392ab3b4c6ecf5057a4551787d30",
+  "failureScreenshotSHA256": "7b2494ef69ee6a01377e9895f0e08f159d5eafd1412604bfa55cea47e28fce9c",
+  "failureAccessibilitySHA256": "0659fd3cb85296d41b018c85ae9988e588b2ef146ca8b3b9a71b8ea5dccf1e55",
+  "nextAttempt": "r11; one focused model regression plus original EN/ES journeys",
+  "nextAttemptStarted": false
+}

@@ -1,0 +1,49 @@
+{
+  "appSourceCommit": "7cdfe77b8b0ea11b336c2a8ff01cff63c0e089f4",
+  "sourceSHA256": {
+    "ios/UITests/ReleasePerformanceUITests.swift": "9b9e4dd28b9e8edd9fdbbd332e45d709fd9c21fc29c3ffacbb9c4517eb63a1ca"
+  },
+  "appBinarySHA256": "734dd4610ee25c2c6b26912cd8e7ced2dd90c8b9880fe548f871ab49e7703d14",
+  "resultBundle": ".build/RenderedLedger50020261104/Hitch27/retry/ScrollHitch.xcresult",
+  "summarySHA256": "e0f9897839a71caa5d504be41958818384bd05a6f994296fc3ec8ab7c1043212",
+  "metricsSHA256": "3dd522d05a474425b51607220c795838acf37eb69943c08a24b343021330c634",
+  "environment": {
+    "osVersion": "27.0",
+    "osBuildNumber": "24A434",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "result": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": []
+  },
+  "requiredMetricSampleCounts": {
+    "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": 5,
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": 5,
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": 5,
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": 5
+  },
+  "persistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 2,
+    "payloadSHA256": "974c4d32b1cd1d2f79e09306db93aa2497ae6e782726e84fdfb962550443b5ab",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 0,
+    "checkedRowIDs": []
+  },
+  "hitchResult": {
+    "status": "unavailable",
+    "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+  },
+  "strictBaselineCheck": "Same real measurements rejected because approved environment baseline is absent.",
+  "earlierAttempt": "Initial iOS27 test could not reach Review list below expanded500-line editor. Bounded native fast-swipe fallback passed; initial result retained in .build/RenderedLedger50020261104/Hitch27/ScrollHitch.xcresult.",
+  "limits": "Local simulator measurement completeness only. No hosted calibration, hitch/frame acceptance, physical-device or launch-ready claim."
+}

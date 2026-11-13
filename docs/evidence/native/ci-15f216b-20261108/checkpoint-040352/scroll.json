@@ -1,0 +1,250 @@
+{
+  "observedAtUtc": "2026-11-08T04:02:54+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "success",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS Release performance",
+    "runId": 42440464669,
+    "status": "completed",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464669"
+  },
+  "job": {
+    "completedAt": "2026-11-08T03:52:08Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128610747620,
+    "name": "Release performance (scroll)",
+    "startedAt": "2026-11-08T03:43:19Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13602579577,
+    "name": "iphone-performance-scroll-1",
+    "digest": "sha256:135820f1161a8687668e0f1aa8fa1884788a04c3ad03c1da452a41b47531ed2b",
+    "size_in_bytes": 2124298,
+    "workflow_run": {
+      "id": 42440464669,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "1946205704591fbc3d3fcadc242cb684d38803c091aa927c98bf974d6259b1ae",
+    "rangeBytes": 14326,
+    "verifiedMembers": [
+      {
+        "file": "Performance.log",
+        "bytes": 21651,
+        "sha256": "59f82e643af0ff55868aa520f8172fbf30425fdec81c213ffc9f7d7983472fe5",
+        "zipCRC": 2390801692,
+        "CRCVerified": true
+      },
+      {
+        "file": "evidence-validation.json",
+        "bytes": 769,
+        "sha256": "5a9f6e2ad7946264d15a338926523f9fbbb2e050e3c8a59230d52bf5e2b6f3a0",
+        "zipCRC": 4058602650,
+        "CRCVerified": true
+      },
+      {
+        "file": "calibration.json",
+        "bytes": 2791,
+        "sha256": "509635a02e68dd044faf1cd0439be5675c42a02bebcf8edeee786ef134da77bb",
+        "zipCRC": 4034776450,
+        "CRCVerified": true
+      },
+      {
+        "file": "metrics.json",
+        "bytes": 2045,
+        "sha256": "0eb6349db07f614e0aa71b140304c96c09af7a9b3be67b34aaf3dbf886dbc47d",
+        "zipCRC": 2550343046,
+        "CRCVerified": true
+      },
+      {
+        "file": "scroll-signpost-diagnostic.json",
+        "bytes": 1494,
+        "sha256": "2692e038543f36e08a6ae1fd361d6548b1571be560d099a5d8765bcb05c3f56a",
+        "zipCRC": 1852191705,
+        "CRCVerified": true
+      },
+      {
+        "file": "selector.txt",
+        "bytes": 95,
+        "sha256": "a7fa18c33b4e70ecdf816b513590d0f4339ad72ab2bf56e547c5b16a2562db84",
+        "zipCRC": 3873958102,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1183,
+        "sha256": "03dc680e8781da0d9fccfa2821b27ec48a8680ae49342732deb1b61af50bedcf",
+        "zipCRC": 1012315243,
+        "CRCVerified": true
+      },
+      {
+        "file": "setup.json",
+        "bytes": 580,
+        "sha256": "2d750a3b61542db476832382e34fb5a33ca4f1504cae98740a793f76f5bfd3b2",
+        "zipCRC": 3594379636,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+        "zipCRC": 635318996,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 803,
+        "sha256": "4ebbcbb4ecf320c1c74c8894aa431f81f6e1ee10a4b3a26babb0b7e333f8cde5",
+        "zipCRC": 56417971,
+        "CRCVerified": true
+      },
+      {
+        "file": "toolchain.txt",
+        "bytes": 32,
+        "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+        "zipCRC": 1329079503,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup": 106.8557049036026
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "performance": {
+    "environment": {
+      "osVersion": "26.2",
+      "osBuildNumber": "23C54",
+      "modelName": "iPhone 17",
+      "architecture": "arm64",
+      "xcode": "Xcode 26.3\nBuild version 17C529",
+      "buildConfiguration": "Release",
+      "testConfiguration": "Test Scheme Action"
+    },
+    "measurements": {
+      "metrics": {
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": {
+          "unit": "s",
+          "samples": [
+            2.5847345,
+            2.583603667,
+            2.583771708,
+            2.566535333,
+            2.566976167
+          ],
+          "median": 2.583603667
+        },
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": {
+          "unit": "kB",
+          "samples": [
+            278.528,
+            0,
+            16.384,
+            -163.84,
+            49.152
+          ],
+          "median": 16.384
+        },
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": {
+          "unit": "kB",
+          "samples": [
+            97722.304,
+            97820.608,
+            97836.992,
+            97722.304,
+            97771.456
+          ],
+          "median": 97771.456
+        },
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": {
+          "unit": "kB",
+          "samples": [
+            97755.072,
+            98115.52,
+            98131.904,
+            98197.44,
+            98033.6
+          ],
+          "median": 98115.52
+        }
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      }
+    },
+    "baselineComparisons": {
+      "scrollMedianSeconds": {
+        "measured": 2.583603667,
+        "maximum": 3.25,
+        "passed": true
+      },
+      "absoluteMemoryMedianKilobytes": {
+        "measured": 97771.456,
+        "maximum": 150000,
+        "passed": true
+      },
+      "peakMemoryMedianKilobytes": {
+        "measured": 98115.52,
+        "maximum": 155000,
+        "passed": true
+      },
+      "maximumPeakMemoryKilobytes": {
+        "measured": 98197.44,
+        "maximum": 160000,
+        "passed": true
+      }
+    },
+    "hostedPersistedPickup": {
+      "status": "passed",
+      "result": {
+        "sqliteQuickCheck": "ok",
+        "revision": 3,
+        "payloadSHA256": "444333f652144fa5b1ff9a5bd584703d78f120968ff91d1ef8c3997c2d65e8fd",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      }
+    },
+    "maximumMeasuredSignpostDeltaMilliseconds": 0.7345000000000823,
+    "sqliteScope": "Original hosted SQLite readback receipt. Database replay was outside this collection."
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

@@ -1,0 +1,19 @@
+{
+  "README.md": "c9f90c203a4e6e0512537c2a17ddf7f1e520c27a31ebdc5f21beea741a71ae85",
+  "add-tests.py": "ea348c72cc8e95ae1f0d52df8dab09b2b7fe92f5dee7f609f3bdca42378be417",
+  "applicability-copy/ios/UITests/ReleasePerformanceUITests.swift": "b75b9ede2ff8da817b13fc503792de1f81fb0d22adbe8987f16c8ec01d3ad877",
+  "applicability-copy/scripts/scroll_signpost_diagnostic.py": "be4a3f473c7e5dc6bc952df4c82e350a8ad58c4c2fb8721e71efabfa441f7de9",
+  "applicability-copy/scripts/test_scroll_signpost_diagnostic.py": "a3b94cec9424acfed37a1e102c5f79ef240d984154ecc80ee31e6dbd78942c4c",
+  "base/ios/UITests/ReleasePerformanceUITests.swift": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+  "base/scripts/scroll_signpost_diagnostic.py": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1",
+  "base/scripts/test_scroll_signpost_diagnostic.py": "c2e59c37b3527ff86f326f0e3798f5f7c72ee985db0f8a2d13342083108e0a1d",
+  "files/ios/UITests/ReleasePerformanceUITests.swift": "b75b9ede2ff8da817b13fc503792de1f81fb0d22adbe8987f16c8ec01d3ad877",
+  "files/scripts/scroll_signpost_diagnostic.py": "be4a3f473c7e5dc6bc952df4c82e350a8ad58c4c2fb8721e71efabfa441f7de9",
+  "files/scripts/test_scroll_signpost_diagnostic.py": "a3b94cec9424acfed37a1e102c5f79ef240d984154ecc80ee31e6dbd78942c4c",
+  "finalize.py": "df895b227d75c9a20d2ae2e20de011e0feb71d4b6d8fee72b29bbc483bfc689c",
+  "offline-tests.log": "8bc070d22aaafcf3e6a2344bd7c92c13caa91cc0b3a0733589736c4364b7fb6b",
+  "patch-application.log": "3c62ec09fceae2a201884b7ac453390636a384ebaa559dca2bed9ed232c17dea",
+  "prepare.py": "9587e304c2636ebbf8fb9ff439fdf1ff0652411115aee299a4f984127b710c60",
+  "proposal.patch": "57d3d4d21619f5c24ff1db3eb748f9b3c44760313dc163c039d7c63f45e497db",
+  "validation.json": "0cc6d124a402f5319056023f157b6e9783d36424e96237f759bf7aa7e7f4044f"
+}

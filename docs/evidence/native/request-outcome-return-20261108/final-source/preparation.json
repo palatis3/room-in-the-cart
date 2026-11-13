@@ -1,0 +1,20 @@
+{
+  "preparedAtUTC": "2026-11-08T12:29:38.250109+00:00",
+  "sourceManifestSHA256": "7cafa30c68921bb57afd7e05e620ff3929a955fb064716042c1b9c4059a54c72",
+  "priorManifestSHA256": "17055a858536fa784f0b066595ff9fe3720daf5a632ff160d5d74dea79d5bcce",
+  "changedFiles": [
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "change": "Test fill helper requires full visibility before the existing single tap. App source unchanged from disclosure-followup. Original failure remains preserved.",
+  "scriptChanges": "Only common BASE and source manifest SHA changed; other3scripts and2selector files byte-identical.",
+  "files": {
+    "qualification_common.py": "c1d2ab3bb444cea540f0a012ba6ba662cc0fcaef7d2cb1c572bc71e7d071c989",
+    "run-release.py": "338510b3827b2426d3af9d384d94c4b6239dc5f63d53fb0e0a9e4f44fb921294",
+    "ios17-selectors.txt": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45",
+    "fixed-source-manifest.json": "7cafa30c68921bb57afd7e05e620ff3929a955fb064716042c1b9c4059a54c72",
+    "inspect-ui.py": "cee53d437cef58ecff996b003a2af4348a4bd47719c28e412e756468fb201859",
+    "ios26-selectors.txt": "5ee9aae41f5dde27016aedb42e41f73718d11ef660be10546026c8ffbe26d10d",
+    "run-ui.py": "7ae5bc59392ac565f21f025135e8e418b37411e610b6b88266950de4d6225e38"
+  },
+  "nativeRuns": 0
+}

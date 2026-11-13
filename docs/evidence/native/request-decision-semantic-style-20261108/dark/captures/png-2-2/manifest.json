@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "43FE41CB-B042-4F46-A9D9-E1792EC12D5A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text review actions_0_D000581C-00ED-4436-8508-B35DAC8E4BD6.png",
+        "timestamp" : 1794144116.187
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+  }
+]

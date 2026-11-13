@@ -1,0 +1,51 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "attempt": 2,
+  "jobID": 127990082834,
+  "artifactID": 13523211334,
+  "classification": "Executed test timeout at unchanged 720-second gate",
+  "failedSelector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+  "failureText": "Test exceeded execution time allowance of 12 minutes",
+  "strictReplayExit": 1,
+  "actualRuntimeWarningCount": 0,
+  "hostedRetryArtifactPresent": false,
+  "xctestAutomaticRunnerRestartRecorded": true,
+  "beforeTimeoutAnimationWaitMessages": 7,
+  "firstAnimationWaitAfterDone": {
+    "doneTapSeconds": 283.58,
+    "firstWaitMessageSeconds": 344.33,
+    "precedingField": "sharedQuotes.second.extraMinutes"
+  },
+  "lastObservedFlow": "First review reached firstFacts and secondFacts; timed out while revealing cashDelta; later save/proposal/adoption flow not verified.",
+  "failureTail": [
+    "    t =   714.98s App animations complete notification not received, will attempt to continue.",
+    "    t =   715.00s Checking existence of `\"sharedQuotes.firstFacts\" Any`",
+    "    t =   715.67s Find the \"sharedQuotes.firstFacts\" Any",
+    "    t =   716.20s Find the \"sharedQuotes.firstFacts\" StaticText",
+    "    t =   716.49s Checking existence of `\"sharedQuotes.secondFacts\" Any`",
+    "    t =   717.02s Find the \"sharedQuotes.secondFacts\" Any",
+    "    t =   718.06s Find the \"sharedQuotes.secondFacts\" StaticText",
+    "    t =   718.67s Checking existence of `\"sharedQuotes.cashDelta\" Any`",
+    "    t =   719.37s Find the Target Application 'dev.roominthecart.app.debug'",
+    "    t =   719.57s Find the Target Application 'dev.roominthecart.app.debug'",
+    "    t =   719.63s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 691.1) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 289.6) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds ",
+    "    t =   719.63s     Wait for dev.roominthecart.app.debug to idle",
+    "Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides."
+  ],
+  "sourceLineOfCashDeltaAssertion": 25,
+  "causalCaveat": "Timing correlation recorded; no root cause claim from log alone.",
+  "rawLogSHA256": "657dfebc47799437153652cac8fec82bdd918b83b57d921dc20d5a8833d873a8",
+  "sourcePath": "ios/UITests/SharedStoreQuoteUITests.swift",
+  "sourceSHA256": "ba6685c3b2b710e7f112524467e5bafe559a5c9742d076431c15feb680b0a7ad",
+  "harnessSHA256": "d76fe05dcfb42d3a64313af0c5e7ff5f4daf59f3e2fd4f6a23c61438b86ae347",
+  "verifierSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+  "runtime": {
+    "modelName": "iPhone 17",
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "architecture": "arm64",
+    "platform": "iOS Simulator"
+  },
+  "defaultAllowanceSeconds": 720,
+  "maximumAllowanceSeconds": 900
+}

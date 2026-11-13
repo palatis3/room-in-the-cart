@@ -1,0 +1,12 @@
+[
+  {
+    "source": ".build/DinnerTopDoneSafeAreaNov08/english/inspection/screens/1E9F7698-B1E2-4274-91BE-BC51862E2FE0.png",
+    "file": "Dinner-supply-Done-ideaSupplyYield-before.png",
+    "sha256": "7e8926cb4eff8429d73cbe8cb28e0b31f9cc115bbd23e400a4c1c9970aa10ed2"
+  },
+  {
+    "source": ".build/DinnerTopDoneSafeAreaNov08/english/inspection/screens/EB01261F-515E-4EDA-B6B2-6A2D64FD0C7B.png",
+    "file": "Dinner-supply-Done-ideaSupplyPrice-before.png",
+    "sha256": "e5e9641099c253b078b452d14fe92a9f68097a98d31fba5f27ae51547082da33"
+  }
+]

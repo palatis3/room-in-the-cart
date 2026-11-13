@@ -1,0 +1,60 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T08:40:39.510701+00:00",
+  "run": 41994028656,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/41994028656",
+  "hostedConclusion": "success",
+  "artifacts": [
+    {
+      "id": 13400520406,
+      "name": "storekit-es-1",
+      "sha256": "b2397a7ea2a124fdb055194fb5a719f0867ab8acdf69fd52a20510ee171c7e40",
+      "githubDigestVerified": true
+    },
+    {
+      "id": 13400265126,
+      "name": "swift-thread-1",
+      "sha256": "323495bb9d047151d342e6659aa96b98f627bc60600c5df6e67645e2b529e3fc",
+      "githubDigestVerified": true
+    },
+    {
+      "id": 13399344636,
+      "name": "storekit-en-1",
+      "sha256": "abccfd5380925271441e415405376e6e192f0cb0c36a416b91e9c60ccfc10103",
+      "githubDigestVerified": true
+    },
+    {
+      "id": 13399322632,
+      "name": "swift-address-1",
+      "sha256": "410f79eda98ad6ff0b837109d2b8c0b46bfb6e509df8dd82878af82d0cce11e2",
+      "githubDigestVerified": true
+    }
+  ],
+  "independentReplay": {
+    "sanitizers": {
+      "address": {
+        "passed": 389,
+        "deliberateNativeWireSkips": 3
+      },
+      "thread": {
+        "passed": 389,
+        "deliberateNativeWireSkips": 3
+      },
+      "inventoryAndExecutionVerifier": "passed for all five packages in both configurations"
+    },
+    "localStoreKit": {
+      "en": {
+        "passed": 15,
+        "skipped": 0,
+        "runtimeWarnings": 0
+      },
+      "es": {
+        "passed": 15,
+        "skipped": 0,
+        "runtimeWarnings": 0
+      },
+      "verification": "Exact selector inventory, raw execution lifecycle, result tree and detailed runtime warnings independently replayed successfully."
+    }
+  },
+  "limits": "Local StoreKit fixtures do not establish App Store sandbox billing, signed-device behavior or production configuration."
+}

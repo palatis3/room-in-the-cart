@@ -1,0 +1,63 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T21:54:49.497535+00:00",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/CookDestinationLogNov08/execution-r1/fixed-source-manifest.json",
+  "sourceManifestSHA256": "8d0eb48f5f54f1ac22b43a01966509d9637b34ec88d9f13a06d3a145967f5d1a",
+  "runnerSHA256": "85c9970e8232389c0b927ee6e464cc45ddd5cda056e25428c42b68ed4ca51038",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "bundleCheckCommand": [
+    "python3",
+    "scripts/check_built_app.py",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+    "--configuration",
+    "Release"
+  ],
+  "rootReviews": {
+    "run": {
+      "path": "/Users/palatis/Room in the Cart/.build/CookDestinationLogNov08/execution-r1/run/root-review.json",
+      "sha256": "e840139e456358cb5fe0ee96fca67829aa6a0ca7f41fd789a583b945191cb1fb",
+      "verificationSHA256": "8561e3d28f2b8871aaaa4c27e7627fbfe31edd8f1ce02aa43a104cf49eafb07e"
+    }
+  },
+  "priorReleaseRun": "/Users/palatis/Room in the Cart/.build/S24TextHeadingNov08/release-r1/run/run.json",
+  "priorReleaseRunSHA256": "bc43529b111d30af4cf5970cfa2fd00f0c7fdf9c6af3cc0d452774c8f9e6f76c",
+  "scope": "Debug-fixture-only unified cook log addition unsigned generic iPhone arm64 Release and compiled-bundle validation; no distribution or physical acceptance",
+  "buildWatchdogSeconds": 1800,
+  "diskFloorBytes": 8589934592,
+  "bundleCheckTimeoutSeconds": 60,
+  "toolchain": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcodebuild": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftExecutable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0"
+  },
+  "pid": 45426,
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "finishedAtUTC": "2026-11-08T21:55:16.417047+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "privateRunReceiptSHA256": "2d525998687d660d7add9b5be8ded85ca4c2d676c9156728d552a7104354142c"
+}

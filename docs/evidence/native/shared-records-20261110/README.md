@@ -1,0 +1,85 @@
+# Shared Records component qualification
+
+The current shared-shop snapshot adapter, inert encrypted archive record and explicit unknown-date presentation compile in the native app. The integrated app passes 135 selected simulator model tests with zero runtime warnings; no UI journeys ran in this batch. HouseholdClient passes 230 tests with three explicitly separate real-service skips; RecordArchive passes 33 without skips. Root independently checked current and archived source inputs and the recorded build/test log hashes.
+
+These results do not qualify actual service transport, full shared history, erasure reconciliation, guardian recovery or a final release candidate. Full details are in [verification.json](verification.json). Original results remain in `.build/TrackingFlowUIQualificationNov10/r9` and `.build/SharedRecordsNov10/native-packages-r1`.
+
+
+## November 10 UI integration
+
+The original SharedRecordsUITests EN and ES journeys both pass on iPhone17 /
+iOS27.0 (2passed,0failed,0skipped; no runtime warnings reported by xcresult).
+Production RecordsToolsView now reveals the import review when a file opens;
+previous r12 logs/screenshots show the review details above the retained viewport.
+The earlier repeated-export error focus regression also remains fixed.
+
+Logs, build result, test result and exported screenshots are retained in
+`.build/SharedRecordsNov10/review-focus` (build.log, ui.log, Records.xcresult).
+The run used the existing DerivedData and selected only SharedRecordsUITests;
+no backend or model rerun was needed. EN/ES review screenshots and the Spanish
+read-only recovery disclosure were inspected. Private export, encrypted recovery,
+Cancel, identical-import dedupe and unchanged source data passed.
+
+This uses synthetic HTTP and a deterministic file-selection adapter with the
+production model, encryption, registry and views. It does not qualify real device
+file transport, authenticated mixed-device service behavior or full historical
+backup. The generated shared-record title was subsequently localized at display
+using the existing Records catalog, without changing stored archive bytes or
+user-authored wording; localized-build.log records that follow-up build.
+CI planner registration plus existing planner/slot checks pass20/20.
+
+
+## Historical export component
+
+`sharedHistory` adds independently validated historical records without changing
+current `sharedShop` v2 archives. TypeScript/8projection tests,6Swift DTO/client
+tests and the full442-pass PostgreSQL suite (3declared browser skips) pass. Actual
+HTTP covers Free export, normal removed-meal markers, zero export mutations,
+contributor denial, retired history, and revoked/erased sources.
+
+The integrated app builds; all7SharedRecordArchiveTests pass, including the new
+historical encrypted roundtrip, identical reimport, helper denial, readable
+EN/ES content, forged revision rejection and known-erasure refusal. xcresult
+reports0failures/0skips/0runtime warnings. Results remain at
+`.build/SharedRecordsNov10/history-native/Archive.xcresult`; build/test logs sit
+beside it. Database logs are in `.build/SharedRecordsNov10/history-database`.
+No hosted CI, additional UI journey or new custom verification infrastructure
+was used. See the Records integration note for supported families and remaining
+stock-lot/food-history scope.
+
+
+## Stock and allocation history extension
+
+The successor retains selected-shop stock chronology and historical food graphs,
+pack reviews and tracking partitions. Existing v1 files keep their original bytes;
+missing sections are disclosed rather than shown as empty. Readable EN/ES recovery
+preserves original quantities and labels reservation release separately from an
+unknown observation. The stored tracking state uses its original digest algorithm.
+
+Verification: TypeScript build and10focused service tests;9focused Swift history
+tests; app build and7archive tests,0failures/0skips/0runtime warnings. The existing
+PostgreSQL harness passes443with3declared browser skips (127seconds). Its real-route
+checks compare exported graphs/partitions with stored values and exercise stock
+corrections4→unknown→0 without export writes. Original result bundles/logs remain
+in `.build/SharedRecordsNov10/history-food-native` and `history-food-database`.
+No new wrapper, source archive, hosted run or unchanged UI suite was added.
+Foreign-shop delivery-stock/cook dependencies, controlled restore reconciliation,
+deployment and human/device acceptance remain open.
+
+
+## Carried delivery history and existing restore protections
+
+Carried delivery ancestry is now included without foreign budgets or meal lists.
+Joint cook copies require current full shopper scope on every recorded source.
+TypeScript/12focused service checks and11Swift history checks pass. Actual API/PG
+passes444with3declared browser skips (86seconds), covering stock-only export after
+source authority transfer, joint-text denial and source retirement. The owned
+fixture stopped and was removed. Logs: `.build/SharedRecordsNov10/carried-history-database`.
+
+App build and11focused simulator tests pass with0failures/0skips/0runtime warnings:
+7archive tests plus existing cleanup-restart, stale-open, late-folder prevention
+and erased-media recovery checks. Results/logs:
+`.build/SharedRecordsNov10/carried-history-native/Archive.xcresult`. This verifies
+existing local restore protections rather than adding another subsystem. Deployed
+household reauthorization/deletion, real device/language review and final combined
+regression remain separate. Next step is one combined full core CI batch.

@@ -1,0 +1,345 @@
+{
+  "passed": true,
+  "actionlintVersion": "1.7.12\ninstalled by downloading from release page\nbuilt with go1.26.1 compiler for darwin/arm64",
+  "validationErrors": [],
+  "exemptedQueueDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 157,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 189,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 228,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 387,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 445,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 32,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 84,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 175,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 62,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 129,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 145,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 285,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-native-wire.yml",
+      "line": 26,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-performance.yml",
+      "line": 70,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-performance.yml",
+      "line": 126,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-toggle-diagnostic.yml",
+      "line": 20,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/release-checks.yml",
+      "line": 47,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ],
+  "unexpectedDiagnostics": [],
+  "sourceSHA256": {
+    ".github/workflows/ci.yml": "6f287e067d12b632178fe79556401992836cfcdfbbe2b6710b7e9c371d22b714",
+    ".github/workflows/ios-deep.yml": "6d2235f661ffd271b6abed0dfee43e7dbc53c33b1aeaa8cad619f3e9d4a3fbc4",
+    ".github/workflows/ios-fixtures.yml": "6338798d21fba37ffe1c24d4fefdd625ecf1a604a960b48dad03b46dfc793cb6",
+    ".github/workflows/ios-native-wire.yml": "e1cc36dc552458deeee2f78ce7ae33c76d512d797835d9ecd7d7da5ee18f86d8",
+    ".github/workflows/ios-performance.yml": "e228b25f2c4cdc590914d1a71c8da153b09e58736fcb7e85fdaf75d60a926100",
+    ".github/workflows/ios-toggle-diagnostic.yml": "a5b7024f0f171f20c1c45252ade36b05007e9c6643414893a95384f413d301f2",
+    ".github/workflows/release-checks.yml": "9f149700b4e35aeee3e0d4874adeec75f0e7588ed744b9b3f11be5803fc97bae",
+    ".github/workflows/security.yml": "06aa8d5942f88e546c8cbbcdf0476fcab6cd21ed1a9fc7883e9276b4c9757897"
+  },
+  "actionlintArguments": [
+    "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+    "-no-color",
+    "-shellcheck=",
+    "-pyflakes=",
+    "-format",
+    "{{json .}}",
+    ".github/workflows/ci.yml",
+    ".github/workflows/ios-deep.yml",
+    ".github/workflows/ios-fixtures.yml",
+    ".github/workflows/ios-native-wire.yml",
+    ".github/workflows/ios-performance.yml",
+    ".github/workflows/ios-toggle-diagnostic.yml",
+    ".github/workflows/release-checks.yml",
+    ".github/workflows/security.yml"
+  ],
+  "actionlintExit": 1,
+  "actionlintStderr": "",
+  "actionlintStdout": "[{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ci.yml\",\"line\":157,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ci.yml\",\"line\":189,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ci.yml\",\"line\":228,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ci.yml\",\"line\":387,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ci.yml\",\"line\":445,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-deep.yml\",\"line\":32,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-deep.yml\",\"line\":84,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-deep.yml\",\"line\":175,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-fixtures.yml\",\"line\":62,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-fixtures.yml\",\"line\":129,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-fixtures.yml\",\"line\":145,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-fixtures.yml\",\"line\":285,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-native-wire.yml\",\"line\":26,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-performance.yml\",\"line\":70,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-performance.yml\",\"line\":126,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/ios-toggle-diagnostic.yml\",\"line\":20,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".github/workflows/release-checks.yml\",\"line\":47,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12}]\n",
+  "actionlintDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 157,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 189,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 228,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 387,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ci.yml",
+      "line": 445,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 32,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 84,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-deep.yml",
+      "line": 175,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 62,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 129,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 145,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-fixtures.yml",
+      "line": 285,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-native-wire.yml",
+      "line": 26,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-performance.yml",
+      "line": 70,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-performance.yml",
+      "line": 126,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/ios-toggle-diagnostic.yml",
+      "line": 20,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".github/workflows/release-checks.yml",
+      "line": 47,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ]
+}

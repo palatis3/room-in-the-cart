@@ -1,0 +1,178 @@
+diff --git a/ios/App/Theme.swift b/ios/App/Theme.swift
+index 133bbe4..8b7ac7e 100644
+--- a/ios/App/Theme.swift
++++ b/ios/App/Theme.swift
+@@ -7,6 +7,7 @@ enum Theme {
+     static let secondary = Color("secondary")
+     static let action = Color("accent")
+     static let onAction = Color("on_accent")
++    static let controlEdge = Color("control_edge")
+     static let error = Color("error")
+     static let warning = Color("warning")
+     static let warningSurface = Color("warning_surface")
+@@ -72,8 +73,18 @@ struct PrimaryActionLabel<Label: View>: View {
+     var body: some View {
+         label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+             .padding(.horizontal, 12).padding(.vertical, 4)
+-            .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
+-            .opacity(isEnabled ? (isPressed ? 0.8 : 1) : 0.45)
++            .foregroundStyle(isEnabled ? Theme.onAction : Theme.ink)
++            // Normalize label rendering only; the enclosing control keeps its disabled state.
++            .environment(\.isEnabled, true)
++            .background(isEnabled ? Theme.action : Theme.surface, in: RoundedRectangle(cornerRadius: 14))
++            .overlay {
++                if !isEnabled {
++                    RoundedRectangle(cornerRadius: 14)
++                        .strokeBorder(Theme.controlEdge, lineWidth: 1)
++                        .accessibilityHidden(true)
++                }
++            }
++            .opacity(isEnabled && isPressed ? 0.8 : 1)
+     }
+ }
+ 
+diff --git a/ios/UITests/FreeJourneyUITests.swift b/ios/UITests/FreeJourneyUITests.swift
+index f5b9fa9..ab41ec6 100644
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -1659,7 +1659,32 @@ import XCTest
+         choose(copy("Starting meal", "Comida que usarás como base"), value: copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+         tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
+         tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
++        let amountLabel = copy("Amount, optional", "Cantidad, opcional")
++        let amount = app.textFields.matching(identifier: amountLabel).firstMatch
++        reveal(amount)
++        let originalAmount = amount.value as? String ?? ""
++        XCTAssertFalse(originalAmount.isEmpty || originalAmount == amount.placeholderValue)
++        // An unknown ingredient quantity is reviewable, but the domain forbids acceptance.
++        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
++        tap(element("ledgerReviewDinner"))
++        let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
++        assertText(unknownQuantity)
++        let accept = element("dinnerAcceptIdea")
++        reveal(accept)
++        XCTAssertEqual(accept.elementType, .button)
++        XCTAssertFalse(accept.isEnabled)
++        let disabledState = XCTAttachment(string: accept.debugDescription)
++        disabledState.name = "Dinner-unknown-quantity-disabled-accept"; disabledState.lifetime = .keepAlways; add(disabledState)
++        capture("Dinner-unknown-quantity-disabled-accept")
++        tapVisibleFormRow(accept, marker: "DISABLED_DINNER_ACCEPT_TAP")
++        XCTAssertTrue(accept.exists)
++        XCTAssertFalse(accept.isEnabled)
++        XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
++        assertText(unknownQuantity)
++        tap(app.buttons[copy("Continue editing", "Seguir editando")])
++        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
+         tap(element("ledgerReviewDinner"))
++        reveal(accept); XCTAssertTrue(accept.isEnabled)
+         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+         assertText(copy("Shredded cabbage", "Repollo rallado"))
+         assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
+@@ -1682,6 +1707,7 @@ import XCTest
+         tap(element("dinnerLibrary"))
+         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+         XCTAssertTrue(app.buttons["ledgerChooseTemplate"].isEnabled)
++        XCTAssertEqual(app.buttons.matching(identifier: "ledgerChooseTemplate").count, 1)
+         openShoppingList()
+         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
+     }
+diff --git a/ios/UITests/HouseholdRequestPackUITests.swift b/ios/UITests/HouseholdRequestPackUITests.swift
+index 7cf444f..4afb527 100644
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -83,8 +83,10 @@ import XCTest
+         XCTAssertEqual(details.value as? String, "Collapsed")
+         reveal(apply)
+         XCTAssertFalse(apply.isEnabled)
++        try assertDisabledApplyRejectsActivation(apply, name: "S24-unknown-price-disabled-apply")
+         tap(element("household.decision.cancel"))
+         XCTAssertTrue(successor.waitForExistence(timeout: 5))
++        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+         openAddDecision()
+         reveal(price, fullyVisible: true)
+@@ -93,6 +95,7 @@ import XCTest
+         dismissKeyboardIfPresent()
+         tap(element("household.decision.review"))
+         assertElementContains("household.decision.after-total", "$4.25")
++        reveal(apply); XCTAssertTrue(apply.isEnabled)
+         tap(apply)
+         assertReturnedToConfirmedRequest()
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
+@@ -198,6 +201,7 @@ import XCTest
+             }
+             capture("Largest text " + name)
+         }
++        try assertDisabledApplyRejectsActivation(element("household.decision.apply"), name: "S24-largest-disabled-apply")
+         centerForReading(app.buttons["Cancel preview"])
+         capture("Largest text review actions")
+         tap(element("household.decision.cancel"))
+@@ -208,7 +212,10 @@ import XCTest
+     // Measure the ink and background of this visible, single-color text element.
+     // Ignore the outermost 1% of values so individual antialiasing pixels cannot pass it.
+     private func assertReadableContrast(_ text: XCUIElement) throws {
+-        let image = try XCTUnwrap(text.screenshot().image.cgImage)
++        try assertReadableContrast(try XCTUnwrap(text.screenshot().image.cgImage), label: text.label)
++    }
++
++    private func assertReadableContrast(_ image: CGImage, label: String) throws {
+         let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+         let bitmap = try XCTUnwrap(CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
+             bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+@@ -225,7 +232,38 @@ import XCTest
+         }.sorted()
+         let trim = luminance.count / 100
+         let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
+-        XCTAssertGreaterThanOrEqual(contrast, 4.5, text.label)
++        XCTAssertGreaterThanOrEqual(contrast, 4.5, label)
++    }
++
++    private func assertDisabledApplyRejectsActivation(_ button: XCUIElement, name: String) throws {
++        reveal(button, fullyVisible: true)
++        XCTAssertEqual(button.elementType, .button)
++        XCTAssertEqual(button.label, "Apply reviewed decision")
++        XCTAssertFalse(button.isEnabled)
++        let full = button.screenshot()
++        let image = try XCTUnwrap(full.image.cgImage)
++        let frame = button.frame
++        // The native Form can include horizontal row padding in the button frame.
++        // Remove that padding plus the rounded outline; measure only central label ink/surface.
++        XCTAssertGreaterThan(frame.width, 64)
++        XCTAssertGreaterThan(frame.height, 32)
++        let scaleX = CGFloat(image.width) / frame.width
++        let scaleY = CGFloat(image.height) / frame.height
++        let crop = CGRect(x: ceil(32 * scaleX), y: ceil(16 * scaleY),
++                          width: floor((frame.width - 64) * scaleX), height: floor((frame.height - 32) * scaleY))
++        let interior = try XCTUnwrap(image.cropping(to: crop))
++        let fullAttachment = XCTAttachment(screenshot: full)
++        fullAttachment.name = name + "-whole-button"; fullAttachment.lifetime = .keepAlways; add(fullAttachment)
++        let labelAttachment = XCTAttachment(image: UIImage(cgImage: interior))
++        labelAttachment.name = name + "-label-interior"; labelAttachment.lifetime = .keepAlways; add(labelAttachment)
++        let state = XCTAttachment(string: "\(button.debugDescription)\nlabelInteriorPixels=\(crop); sourcePixels=\(image.width)x\(image.height)")
++        state.name = name + "-disabled-state-and-crop"; state.lifetime = .keepAlways; add(state)
++        try assertReadableContrast(interior, label: button.label)
++        // Send a physical tap rather than asking XCTest to activate a disabled AX element.
++        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
++        XCTAssertTrue(button.exists)
++        XCTAssertFalse(button.isEnabled)
++        XCTAssertTrue(element("household.decision.cancel").exists)
+     }
+ 
+     func testUnavailableMealFactsRemainUnknownInRequestDecision() {
+@@ -263,7 +301,7 @@ import XCTest
+         review.tap()
+         reveal(element("household.decision.after-total"))
+     }
+-    func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() {
++    func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() throws {
+         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+         app.launch()
+         let request = element("household.request.44444444-4444-4444-8444-444444444444")
+@@ -298,6 +336,7 @@ import XCTest
+         let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled); tap(use)
+         tap(element("household.decision.review"))
+         let apply = element("household.decision.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
++        try assertDisabledApplyRejectsActivation(apply, name: "S24-overage-disabled-apply")
+         assertText("Reviewed shelf a")
+         assertText("After this decision")
+         capture("S24-actual-household-preview-before-overage-approval")

@@ -1,0 +1,152 @@
+{
+  "reviewer": "astra_s24_return",
+  "sourceManifestSHA256": "be308a336e69d2b316df79efd8d71ff3e3e9824b516c0091934bd05f2ea9462d",
+  "allFrozenSourceFilesVerified": 556,
+  "nativeEvidence": {
+    "summary": "Passed3/3,0failed,0skipped,0expectedFailures",
+    "strictExit": 0,
+    "nativeExit": 0,
+    "runtimeWarningOccurrences": 0,
+    "nativeExecutionByReviewer": false,
+    "exportsByReviewer": false
+  },
+  "pixelReview": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/independent-review/png-0-1-independent-pixels.json",
+      "dominant": {
+        "RGB": [
+          23,
+          41,
+          37
+        ],
+        "pixels": 6151,
+        "contrast": 15.213849827934512,
+        "componentsWithColor": 23,
+        "componentsWhereColorIsMode": 23
+      },
+      "edgeResidual": {
+        "nonwhitePixelsInOuterFourRows": 56,
+        "fractionOfCrop": 0.0004066811909949165,
+        "strongestContrastAgainstWhite": 1.4015502032792673,
+        "notGlyphOnly": "Four faint first/last-row corner antialias fragments remain. They are excluded by component measurement, are below 4.5:1, and occupy less than the native percentile trim."
+      },
+      "wholeCropInkPixelCount": 6336
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/independent-review/png-1-1-independent-pixels.json",
+      "dominant": {
+        "RGB": [
+          23,
+          41,
+          37
+        ],
+        "pixels": 6151,
+        "contrast": 15.213849827934512,
+        "componentsWithColor": 23,
+        "componentsWhereColorIsMode": 23
+      },
+      "edgeResidual": {
+        "nonwhitePixelsInOuterFourRows": 56,
+        "fractionOfCrop": 0.0004066811909949165,
+        "strongestContrastAgainstWhite": 1.4015502032792673,
+        "notGlyphOnly": "Four faint first/last-row corner antialias fragments remain. They are excluded by component measurement, are below 4.5:1, and occupy less than the native percentile trim."
+      },
+      "wholeCropInkPixelCount": 6336
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/independent-review/png-2-1-independent-pixels.json",
+      "dominant": {
+        "RGB": [
+          23,
+          41,
+          37
+        ],
+        "pixels": 67872,
+        "contrast": 15.213849827934512,
+        "componentsWithColor": 23,
+        "componentsWhereColorIsMode": 23
+      },
+      "edgeResidual": {
+        "nonwhitePixelsInOuterFourRows": 56,
+        "fractionOfCrop": 0.0001051761700848922,
+        "strongestContrastAgainstWhite": 1.4015502032792673,
+        "notGlyphOnly": "Four faint first/last-row corner antialias fragments remain. They are excluded by component measurement, are below 4.5:1, and occupy less than the native percentile trim."
+      },
+      "wholeCropInkPixelCount": 69888
+    }
+  ],
+  "visualReview": "Whole normal and AX5 buttons contain complete labels; full AX5 action frame has no overlap with overage switch or Cancel preview. Viewed five distinct images; other normal whole/crop pair has identical hashes. Faint first/last-row corner edge pixels are present, so exclude meaningful outline is more accurate than glyphs only.",
+  "activationReview": {
+    "AX": "All three original AX TXT exports explicitly identify parent Button household.decision.apply Disabled. Frames370x82 standard and370x225.3 AX5 include outlined control; physical center lands inside the label/fill.",
+    "physicalTapLogLines": [
+      1507,
+      2937,
+      4155
+    ],
+    "observedSequence": "Native log records coordinate tap, synthesized event, idle completion, then button existence/disabled checks. Frozen source asserts exact label/type and false isEnabled before/after.",
+    "noWrite": "AX5 cancels with posts0/lines0. Unknown-price cancels with prior posts2/lines0, later known-price Apply ends posts3/lines1. Overage consent remains explicit before enabled Apply; finalposts1/lines1 and original-row return. Allassertions passed.",
+    "limit": "Does not instrument internal closure invocation; proves exposed disabled AX state and absence of extra command/durable outcome. No claim of physical VoiceOver or every runtime/input mode."
+  },
+  "callerReview": {
+    "total": 43,
+    "customStyleButtons": 41,
+    "customStyleNavigationLinks": 1,
+    "directAutomaticFormLabelButtons": 1,
+    "labelShapes": "40 custom-style buttons use text; ledgerImport uses text-or-Label with plus symbol. newComparison NavigationLink uses Label with arrows. Direct dinnerAcceptIdea uses Text. No interactive child controls or custom gestures within these labels.",
+    "featureCounts": {
+      "Ledger": 23,
+      "App": 7,
+      "Dinners": 4,
+      "Household": 4,
+      "Pickup": 3,
+      "Membership": 1,
+      "Shop": 1
+    },
+    "scopeReview": "Reviewed direct and inherited disabled environments, consent/identity gates, busy/pending gates, blank-entry gates, Form vs ScrollView, NavigationLink, and direct automatic Form button. All action closures and disabling expressions remain unchanged. Label override is below the owning control; state calculation reads the parent environment.",
+    "necessaryAdditionalSelectorsBeyondPlan": [],
+    "reason": "Ordinary English/Spanish light/dark and minimum17 remain necessary, especially direct automatic Form caller. Beyond that plan, no materially distinct disabled interactive-label path exists. Symbol labels and enabled NavigationLink have unchanged geometry and noninteractive label content; triggering subscription, unlock, or every ledger workflow adds no unique control-semantic qualification for this delta.",
+    "limits": "This is bounded change qualification, not global style/accessibility certification. Any ordinary/direct-label failure requires investigation before acceptance."
+  },
+  "evidence": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-0-0/D86E1CB3-54F1-4432-8044-7937166402A9.png",
+      "sha256": "d3618c84fb142d4f45cc381eca3e16aaedc41d7fcddb30e4b04ff10be0514762"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-0-1/AA9D9C9D-ABFF-4970-8FC5-B59ACA2B87B0.png",
+      "sha256": "4fef49ed26da63a8c460505fed9c46a6af4d802503315f2e8ba61744059d6a77"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-0-2/33D4C629-FCB7-49CF-90F6-8D7128A9CF18.txt",
+      "sha256": "f2ac4441f3b7604fff7c67f835b6d77b13d6f3b3d6d44c966ad0cd4a016441a9"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-1-0/FE231F4A-0716-44B1-9FF1-4F79B14C1A41.png",
+      "sha256": "d3618c84fb142d4f45cc381eca3e16aaedc41d7fcddb30e4b04ff10be0514762"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-1-1/1F6D3241-16A4-44EA-9524-9C4C9B5073DE.png",
+      "sha256": "4fef49ed26da63a8c460505fed9c46a6af4d802503315f2e8ba61744059d6a77"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-1-2/BDCE0A6A-93C2-4F5D-8E50-431FBF4E0C83.txt",
+      "sha256": "fdb3b26e9342de292f453f77b1b8a2afe799efeffbd1fcdd9043cf6cb1824f4d"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-2-0/5C068387-A42A-4D43-A2C7-1B7A415BFA27.png",
+      "sha256": "8027192901fa41c89c133824a775add89ea51004f67c41fbb5652a8de7ff017b"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-2-1/D10BD9C2-9544-41F4-917C-DD8C48FD43FF.png",
+      "sha256": "a5e6dda718ce3e3ee1ccb37fefe0e3c4b15cc716f29dd7ae6e1cdca760e30816"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-2-2/D704F2FE-E382-4C70-820C-369AE4B484C8.txt",
+      "sha256": "3be1cfe487660b5be03dc3b8854f2fc0b29a141d979d6dd0244f790b7f780fb6"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-light-run/captures/png-2-3/548FDEE2-46FF-4CE8-8FD9-808E234F718A.png",
+      "sha256": "ecf7bea87c201bf0a662ac29471a64d4a864ed19e52c417df1a3f63fbcff53a6"
+    }
+  ]
+}

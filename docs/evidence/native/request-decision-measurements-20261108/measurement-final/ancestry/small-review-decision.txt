@@ -1,0 +1,101 @@
+OWNER
+Attributes: Button, 0x11e06d670, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Element subtree:
+ →Button, 0x11e06d670, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Path to element:
+ →Application, 0x11fa14320, pid: 20547, label: 'Room in the Cart'
+  ↳Window (Main), 0x11fa160b0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11fd0f820, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11fd0fa60, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11fd0fb80, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11fd0fca0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11fd0fdc0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11fd0fee0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11f915920, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11dffcf90, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11dfa05e0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11dfa1820, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11fb09d10, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11fd10000, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11e06cfb0, {{16.0, 384.3}, {370.0, 50.0}}
+                ↳Other, 0x11e06d310, {{16.0, 384.3}, {370.0, 50.0}}
+                 ↳Other, 0x11e06d430, {{16.0, 384.3}, {370.0, 50.0}}
+                  ↳Other, 0x11e06d550, {{16.0, 384.3}, {370.0, 50.0}}
+                   ↳Button, 0x11e06d670, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11e741ed0, pid: 20547, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x11e6bedf0, {{106.7, 102.7}, {189.0, 18.0}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      Button, 0x11e6c3410, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Button, 0x11e6c05f0, {{16.0, 256.7}, {370.0, 50.0}}, label: 'Refresh requests'
+      Button, 0x11e6c1b50, {{16.0, 430.3}, {370.0, 137.0}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Button, 0x11e6c5810, {{32.0, 75.3}, {338.0, 32.0}}, identifier: 'household.decision.choice', label: 'Outcome, Add packs to this shop'
+      Button, 0x11e072a20, {{16.0, 116.3}, {370.0, 50.0}}, label: 'Compare available packs for this request'
+      Button, 0x11e6c6c50, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+      Button, 0x11f880ad0, {{360.7, 135.0}, {9.3, 12.7}}
+      Button, 0x11f8821b0, {{276.0, 225.3}, {47.0, 32.0}}, identifier: 'Decrement', label: 'Whole packs, 1, Decrement', value: 1
+      Button, 0x11f8822d0, {{323.0, 225.3}, {47.0, 32.0}}, identifier: 'Increment', label: 'Whole packs, 1, Increment', value: 1
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.review" IN identifiers'
+      Output: {
+        Button, 0x11ef912a0, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x11fb13550, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+        }
+
+TARGET
+Attributes: Button, 0x11fa14320, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Element subtree:
+ →Button, 0x11fa14320, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Path to element:
+ →Application, 0x11fb2a280, pid: 20547, label: 'Room in the Cart'
+  ↳Window (Main), 0x11fb2a3a0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11fd313f0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11fd31630, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11fd31750, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11fd31870, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11fd31990, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11fd31ab0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11fd31bd0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11fd32290, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11fd323b0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11fd324d0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11fd325f0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11fd32710, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11fd37ed0, {{16.0, 384.3}, {370.0, 50.0}}
+                ↳Other, 0x11fd38230, {{16.0, 384.3}, {370.0, 50.0}}
+                 ↳Other, 0x11fa16090, {{16.0, 384.3}, {370.0, 50.0}}
+                  ↳Other, 0x11fa16410, {{16.0, 384.3}, {370.0, 50.0}}
+                   ↳Button, 0x11fa14320, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11e744fa0, pid: 20547, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x11efac970, {{106.7, 102.7}, {189.0, 18.0}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      Button, 0x11efb0780, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Button, 0x11efad600, {{16.0, 256.7}, {370.0, 50.0}}, label: 'Refresh requests'
+      Button, 0x11efaeda0, {{16.0, 430.3}, {370.0, 137.0}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Button, 0x11f8820d0, {{32.0, 75.3}, {338.0, 32.0}}, identifier: 'household.decision.choice', label: 'Outcome, Add packs to this shop'
+      Button, 0x11f8829d0, {{16.0, 116.3}, {370.0, 50.0}}, label: 'Compare available packs for this request'
+      Button, 0x11efb2160, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+      Button, 0x11f882c10, {{360.7, 135.0}, {9.3, 12.7}}
+      Button, 0x11f883090, {{276.0, 225.3}, {47.0, 32.0}}, identifier: 'Decrement', label: 'Whole packs, 1, Decrement', value: 1
+      Button, 0x11f8831b0, {{323.0, 225.3}, {47.0, 32.0}}, identifier: 'Increment', label: 'Whole packs, 1, Increment', value: 1
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.review" IN identifiers'
+      Output: {
+        Button, 0x11ef91770, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x11e6f9a40, {{16.0, 384.3}, {370.0, 50.0}}, identifier: 'household.decision.review', label: 'Review decision'
+        }

@@ -1,0 +1,70 @@
+{
+  "scope": "Two-shard normal-CI pilot only",
+  "pilots": [
+    {
+      "workflow": "ci.yml",
+      "job": "ios-tests",
+      "shard": "ui-01"
+    },
+    {
+      "workflow": "ios-fixtures.yml",
+      "job": "fixture-tests",
+      "shard": "contributor-balanced-01"
+    }
+  ],
+  "otherExecutionShards": "Existing selection-only policy; missing ownership receipt cleanup is no action.",
+  "files": [
+    {
+      "file": "scripts/select_ci_iphone.py",
+      "sha256": "af3978cfaf783cd686c06dc9d0e37dd6d8d7783b0331488111ed7c389e2bfc15"
+    },
+    {
+      "file": "scripts/test_select_ci_iphone.py",
+      "sha256": "74db12b0314618c492625e8fc887cb6257fce2c1058a5a29fc534712e41c1452"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "1d177b717045f330fd3fc1fd1adca341aaed418b1fbfc01bc3eecc12a66aeb56"
+    },
+    {
+      "file": ".github/workflows/ios-fixtures.yml",
+      "sha256": "546244180779418bc05947d4af23bb1f52cdb63d0fb5663cd0e2b5ca0ac70627"
+    }
+  ],
+  "currentChecks": {
+    "ownedAndPilotPolicyTests": 12,
+    "workflowGuardTests": 17,
+    "total": 29,
+    "actionlintAndQueuePolicy": "passed15queue nodes",
+    "diffCheck": "passed"
+  },
+  "unchangedEarlierChecks": {
+    "bootGuardTests": 12,
+    "triggerCoverageTests": 6
+  },
+  "validationLog": ".build/CI14AC1E3Nov08/owned-simulator-pilot-validation.log",
+  "workflowLint": ".build/CI14AC1E3Nov08/owned-simulator-pilot-workflow-lint.json",
+  "rootNativeQualification": {
+    "path": ".build/CI14AC1E3Nov08/owned-simulator-native-qualification/run.json",
+    "sha256": "6728577d2fb42706224d63a6f3853e8f90fc61ff75b108d9cfa2a2a90c0fe203",
+    "selectorAndBootGuardStillMatch": true,
+    "runtime": {
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-1",
+      "version": "27.1",
+      "buildversion": "24A94425",
+      "bundlePath": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.94425.0.t4kke8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.1.simruntime"
+    },
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-Duo",
+    "createExit": 0,
+    "bootExit": 1,
+    "cleanupStatus": "deleted",
+    "originalDeviceIdentitiesAndStatesUnchanged": true,
+    "createdDeviceAbsent": true,
+    "normalSelectedShardExecuted": false,
+    "meaning": "Isolation/guard/cleanup exercised. Guard rejected terminal Data Migration Failed. No healthy boot or Apple failure repair established."
+  },
+  "thisRevisionAdditionalNativeOrRemoteActions": false,
+  "privateSourceReceiptSHA256": "8b283c21303db40f71c6e6756cb1c586152b2e7b573940641e4d5dc3faaf2310",
+  "publishedCandidate": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+  "hostedPilotQualification": "Pending next normal candidate; no remote run dispatched"
+}

@@ -15,6 +15,11 @@ struct HistoryEntryView: View {
     @State private var endDate = Date()
     @State private var selectedShop = ""
     @State private var clearingRetry = false
+    private enum NumericField: Hashable {
+        case packNumerator, packDenominator, exactPrice, lowerPrice, upperPrice
+        case budget, excludedReserve, reservation(String)
+    }
+    @FocusState private var focusedAmount: NumericField?
 
     var body: some View {
         Form {
@@ -24,7 +29,7 @@ struct HistoryEntryView: View {
                     .font(.footnote)
             }
             if model.authorized {
-                if let chooseShop, !editingObservation, model.periodDraft == nil, model.reviewed == nil, !model.hasUnresolvedWrite {
+                if let chooseShop, !editingObservation, model.periodDraft == nil, model.reviewed == nil, model.pending == nil {
                     Button(HistoryCopy.text("Choose shared shop"), action: chooseShop).disabled(model.busy)
                 }
                 Picker(HistoryCopy.text("Records view"), selection: $section) {
@@ -59,8 +64,10 @@ struct HistoryEntryView: View {
                 }
             }
         }
+        .keyboardDoneAction(visible: focusedAmount != nil, title: tr("Done"), identifier: "history.amount.done") {
+            focusedAmount = nil
+        }
         .navigationTitle(HistoryCopy.text("Prices and period budgets"))
-        .accessibilityIdentifier("history.home")
         .task { await model.load() }
         .task {
             while !Task.isCancelled {
@@ -81,6 +88,9 @@ struct HistoryEntryView: View {
             }
         } message: {
             Text(HistoryCopy.text("Current access and saved status will be checked first. Clearing a retry does not undo a write already received. Exact retry is the way to recover the original receipt."))
+        }
+        .onChange(of: model.ownedShops) { _, shops in
+            if !shops.contains(where: { $0.shopId == selectedShop }) { selectedShop = "" }
         }
         .onChange(of: useStartDate) { _, enabled in model.filter.from = enabled ? startDate : nil }
         .onChange(of: useEndDate) { _, enabled in model.filter.through = enabled ? endDate : nil }
@@ -165,7 +175,9 @@ struct HistoryEntryView: View {
             Toggle(HistoryCopy.text("Record a usable pack quantity"), isOn: $model.observationDraft.hasUsablePack)
             if model.observationDraft.hasUsablePack {
                 TextField(HistoryCopy.text("Quantity numerator"), text: $model.observationDraft.packNumerator).keyboardType(.numberPad)
+                    .focused($focusedAmount, equals: .packNumerator)
                 TextField(HistoryCopy.text("Quantity denominator"), text: $model.observationDraft.packDenominator).keyboardType(.numberPad)
+                    .focused($focusedAmount, equals: .packDenominator)
                 Picker(HistoryCopy.text("Pack unit"), selection: $model.observationDraft.packUnit) {
                     ForEach(HistoryUnit.allCases, id: \.rawValue) { unit in Text(HistoryCopy.unit(unit.rawValue)).tag(unit) }
                 }
@@ -173,7 +185,7 @@ struct HistoryEntryView: View {
                 Text(HistoryCopy.text("A mass ounce and a fluid ounce are different units. Enter the quantity shown; no density conversion is inferred."))
                     .font(.footnote)
             }
-        }.disabled(model.busy)
+        }.autocorrectionDisabled().disabled(model.busy)
         Section(HistoryCopy.text("Price evidence · USD")) {
             Picker(HistoryCopy.text("Price certainty"), selection: $model.observationDraft.priceKind) {
                 Text(HistoryCopy.text("Exact entered price")).tag("exact")
@@ -182,9 +194,12 @@ struct HistoryEntryView: View {
             }
             if model.observationDraft.priceKind == "exact" {
                 TextField(HistoryCopy.text("Price in USD"), text: $model.observationDraft.exactPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .exactPrice)
             } else if model.observationDraft.priceKind == "bounded" {
                 TextField(HistoryCopy.text("Lower price in USD"), text: $model.observationDraft.lowerPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .lowerPrice)
                 TextField(HistoryCopy.text("Upper price in USD"), text: $model.observationDraft.upperPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .upperPrice)
             }
             if model.observationDraft.priceKind != "exact" {
                 TextField(HistoryCopy.text("Why the price is uncertain"), text: $model.observationDraft.priceReason, axis: .vertical)
@@ -205,7 +220,7 @@ struct HistoryEntryView: View {
             DatePicker(HistoryCopy.text("Evidence date and time"), selection: $model.observationDraft.observedAt)
             TextField(HistoryCopy.text("Source language or locale"), text: $model.observationDraft.sourceLocale).textInputAutocapitalization(.never)
             TextField(HistoryCopy.text("Original source text"), text: $model.observationDraft.sourceText, axis: .vertical).lineLimit(3...10)
-        }.disabled(model.busy)
+        }.autocorrectionDisabled().disabled(model.busy)
         Section {
             Button(HistoryCopy.text("Review this observation")) { model.reviewObservation() }
                 .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.reviewObservation").disabled(!model.canReviewObservation)
@@ -257,8 +272,10 @@ struct HistoryEntryView: View {
                     LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map(HistoryCopy.money) ?? HistoryCopy.text("Unknown"))
                     LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor))
                     Text(value.reconciledEnteredPeriod ? HistoryCopy.text("Entered evidence has been reconciled for this period. This is not bank verification.") : HistoryCopy.text("This period is incomplete. Remaining amounts are conditional, not a verified balance."))
-                    Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
-                        .disabled(model.busy).frame(minHeight: 44)
+                    if model.canEditSelectedPeriod {
+                        Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
+                            .frame(minHeight: 44)
+                    }
                 }
             }
         } else if let selected = model.selectedPeriod {
@@ -266,8 +283,10 @@ struct HistoryEntryView: View {
                 HistoryPeriodDetails(period: selected.period)
                 Text(HistoryCopy.text("This raw record does not calculate a remaining balance or establish current membership."))
                     .font(.footnote)
-                Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
-                    .disabled(model.busy).frame(minHeight: 44)
+                if model.canEditSelectedPeriod {
+                    Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
+                        .frame(minHeight: 44)
+                }
             }
         }
     }
@@ -279,7 +298,9 @@ struct HistoryEntryView: View {
             DatePicker(HistoryCopy.text("Period ends"), selection: periodDate(\.endsAt)).environment(\.timeZone, planningTimeZone)
             TextField(HistoryCopy.text("Planning time zone"), text: periodField(\.timeZoneID)).textInputAutocapitalization(.never).autocorrectionDisabled()
             TextField(HistoryCopy.text("Shop budget after excluded reserve, USD"), text: periodField(\.budget)).keyboardType(.decimalPad)
+                .focused($focusedAmount, equals: .budget)
             TextField(HistoryCopy.text("Reserve already excluded, optional USD"), text: periodField(\.excludedReserve)).keyboardType(.decimalPad)
+                .focused($focusedAmount, equals: .excludedReserve)
             Text(HistoryCopy.text("The budget is already net of the excluded reserve. The reserve is explanatory and will not be subtracted twice."))
                 .font(.footnote)
             Text(HistoryCopy.text("This is a shop-plan envelope, not a posting-date statement. Later credits for assigned shops remain part of their entered evidence."))
@@ -288,9 +309,8 @@ struct HistoryEntryView: View {
         Section(HistoryCopy.text("Assigned shops")) {
             shopPicker(selection: $selectedShop)
             Button(HistoryCopy.text("Assign selected shop")) {
-                guard !selectedShop.isEmpty, !(model.periodDraft?.shopIDs.contains(selectedShop) ?? true) else { return }
-                model.periodDraft?.shopIDs.append(selectedShop)
-            }.disabled(model.busy || selectedShop.isEmpty || (model.periodDraft?.shopIDs.count ?? 100) >= 100).frame(minHeight: 44)
+                model.assignPeriodShop(selectedShop)
+            }.disabled(!model.canAssignPeriodShop(selectedShop)).frame(minHeight: 44)
             ForEach(model.periodDraft?.shopIDs ?? [], id: \.self) { id in
                 HStack {
                     Text(id).font(.caption).textSelection(.enabled)
@@ -315,6 +335,7 @@ struct HistoryEntryView: View {
                 } else {
                     TextField(HistoryCopy.text("Original plan or deferral wording"), text: reservationField(reservation.id, \.originalText), axis: .vertical)
                     TextField(HistoryCopy.text("Reserved amount in USD"), text: reservationField(reservation.id, \.amount)).keyboardType(.decimalPad)
+                        .focused($focusedAmount, equals: .reservation(reservation.id))
                     DatePicker(HistoryCopy.text("Planned date and time"), selection: reservationDate(reservation.id)).environment(\.timeZone, planningTimeZone)
                     Picker(HistoryCopy.text("Reservation state"), selection: reservationField(reservation.id, \.state)) {
                         Text(HistoryCopy.text("Reserved for a future shop")).tag("reserved")

@@ -1,0 +1,10 @@
+--- a/ios/App/Theme.swift
++++ b/ios/App/Theme.swift
+@@ -98,6 +98,7 @@
+                     .accessibilityIdentifier(identifier ?? title)
+                 }
+             }
++            .frame(height: 44)
+             .padding(.horizontal).background(.bar)
+         }
+     }

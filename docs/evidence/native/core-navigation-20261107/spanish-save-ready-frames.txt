@@ -1,0 +1,12 @@
+Window: (0.0, 0.0, 402.0, 874.0)
+List: (0.0, 0.0, 402.0, 782.9999999999999)
+Navigation: (0.0, 62.0, 402.0, 54.0)
+Tabs: (0.0, 791.0, 402.0, 83.0)
+Visible results: (0.0, 116.0, 402.0, 666.9999999999999)
+editComparison: (303.0, 62.0, 79.0, 44.0); hittable=true; Editar
+aHeader: absent from current hierarchy
+bHeader: (32.0, 174.33333333333337, 338.0, 21.0); hittable=true; Paquete B
+comparisonSourceNote: (32.0, 601.0000000000001, 338.0, 65.0); hittable=true; Fuente: los precios y las cantidades aprovechables que ingresaste. Estimaciones solo para este artículo.
+saveComparison: (32.0, 696.0000000000001, 338.0, 52.0); hittable=true; Guardar comparación
+savedStatus: absent from current hierarchy
+comparisonSavedDetails: absent from current hierarchy

@@ -10,16 +10,31 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public let enrolled: Bool
     public let selectionRequired: Bool?
     public let canSelectShop: Bool?
+    public private(set) var canSetRequestQueue: Bool? = nil
+    public private(set) var requestQueueGrant: UUID? = nil
+    public private(set) var requestQueueUntil: String? = nil
+    // Older clients use this wire flag to enable retries without a generation.
     public let queueConsent: Bool
+    public var requestQueueEnabled: Bool {
+        guard enrolled, canSetRequestQueue == true, capabilities.contains("request_queue_permission"),
+              requestQueueGrant != nil, let requestQueueUntil,
+              let expiry = HistoryValidation.date(requestQueueUntil) else { return false }
+        return expiry > Date()
+    }
     public let capabilities: [String]
 }
+public enum ConfirmedRequestPurchase: String, Codable, Sendable { case bought, notBought }
 public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
+    public private(set) var fromPreviousShop: Bool? = nil
+    public private(set) var carriedForward: Bool? = nil
     public var id: String { requestId }
     public let requestId: String; public let shopId: String; public let revision: Int; public let originalItem: String
     public let ownQuantity: String?; public let authoredAt: String; public let receivedAt: String
     public let route: String; public let status: String; public let ownActionAllowed: Bool
     public let clarification: String?; public let followupTo: String?
     public let authorAlias: String?
+    public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
+    public private(set) var linkedLineId: UUID? = nil
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
 public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String
@@ -65,14 +80,22 @@ public struct CommandEnvelope: Codable, Equatable, Sendable {
 public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public var id: String { clientKey }
     public let clientKey: String; public let householdID: String; public let memberID: String
+    public let requestQueueGrant: UUID?
+    public let sharedDemandBinding: SharedDemandOperationBinding?
+    public let sharedRequestUndoBinding: SharedRequestUndoOperationBinding?
+    public let sharedTrackingBinding: SharedTrackingOperationBinding?
     public let deviceID: String; public let bytes: Data
     public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
         guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
         if includeCreation, envelope.kind == "shop.create" { return true }
-        guard let shopID else { return true }
+        guard let shopID else { return envelope.kind != "request.carry" && envelope.kind != "request.confirmPurchase" && !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
         return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
     }
-    public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String) throws {
+    public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String, requestQueueGrant: UUID? = nil, sharedDemandBinding: SharedDemandOperationBinding? = nil, sharedTrackingBinding: SharedTrackingOperationBinding? = nil, sharedRequestUndoBinding: SharedRequestUndoOperationBinding? = nil) throws {
+        self.sharedDemandBinding = sharedDemandBinding
+        self.sharedTrackingBinding = sharedTrackingBinding
+        self.sharedRequestUndoBinding = sharedRequestUndoBinding
+        self.requestQueueGrant = requestQueueGrant
         clientKey = envelope.clientKey; self.householdID = householdID; self.memberID = memberID
         self.deviceID = deviceID; bytes = try encoded(envelope)
     }

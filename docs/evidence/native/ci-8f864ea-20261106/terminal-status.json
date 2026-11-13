@@ -1,0 +1,123 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "checkedAt": "2026-11-06T17:07:04.224214+00:00",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234316869,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "updatedAt": "2026-11-06T15:26:57Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234316869"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234316864,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "Security checks",
+      "status": "completed",
+      "updatedAt": "2026-11-06T14:30:33Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234316864"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234316992,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "updatedAt": "2026-11-06T15:00:59Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234316992"
+    },
+    {
+      "attempt": 2,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234316853,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "updatedAt": "2026-11-06T16:13:03Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234316853"
+    },
+    {
+      "attempt": 2,
+      "conclusion": "failure",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234317004,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "Build and test",
+      "status": "completed",
+      "updatedAt": "2026-11-06T16:53:10Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234317004"
+    },
+    {
+      "attempt": 2,
+      "conclusion": "failure",
+      "createdAt": "2026-11-06T14:29:07Z",
+      "databaseId": 42234316857,
+      "event": "pull_request",
+      "headSha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "updatedAt": "2026-11-06T17:01:32Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42234316857"
+    }
+  ],
+  "allTerminal": true,
+  "allEvidenceCollected": true,
+  "allChecksPassing": false,
+  "ordinary": {
+    "planned": 51,
+    "passed": 32,
+    "failed": 1,
+    "notExecuted": 18,
+    "allowedWarnings": 4
+  },
+  "fixtures": {
+    "planned": 45,
+    "passed": 32,
+    "failed": 1,
+    "notExecuted": 12,
+    "observedWarnings": 0,
+    "redactedRecordsPassIncluded": true
+  },
+  "models": {
+    "passed": 601,
+    "planned": 601
+  },
+  "billing": {
+    "passed": 30,
+    "planned": 30
+  },
+  "performance": {
+    "testMethodsPassed": 3,
+    "requiredMeasurementGatesPassed": 2,
+    "missingRequiredScrollSeries": true
+  },
+  "rootVerification": {
+    "coreAttempt1FrozenFileHashes": 70,
+    "coreAttempt2FrozenFileHashes": 26,
+    "fixtureReviewFileHashes": 89,
+    "fixtureSourceGitObjects": 42
+  },
+  "remainingFailures": [
+    "UI06 largest-text comparison720s animation-idle timeout",
+    "KnownTrip quote720s animation-idle timeout",
+    "Missing required scroll duration metric",
+    "30 ordinary/fixture cases not executed due hosted-runner acquisition failures"
+  ],
+  "recovery": "Deep and fixture attempt2 and coreUI07 attempt2 retain original failures. UI07 recovery again acquired no runner; no further unchanged recovery requested.",
+  "diagnosticQualification": "Prepared separately; not yet dispatched or accepted."
+}

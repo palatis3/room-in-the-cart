@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "execution": "native-meal-undo-qualification-r3",
+  "passed": 142,
+  "expectedSkips": 3,
+  "compiledSelectors": 145,
+  "sourceManifestSHA256": "7d250778e65e62c07a161fcd1a70149022a3ca06dff4d2e0e0b1a1a40151fcd4",
+  "logSHA256": "df0df45353a71114447e6a07b75c5f7205fded0866b0d46acd5fbf607fb192cd",
+  "compiledInventorySHA256": "0f4176ff73fa00307c5cd4d270ae22752cf99a8ee49f26fbb1acb56183e747cd",
+  "reviewedInventorySHA256": "8a716241af6a78ad4d2ba3720809c522c0dd2117776eb47c39cf4b675cdf2a8b",
+  "sourcesUnchanged": true,
+  "seconds": 63.896,
+  "scope": "Full client package; app build, model/UI and visual acceptance recorded separately"
+}

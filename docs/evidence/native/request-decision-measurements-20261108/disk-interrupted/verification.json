@@ -1,0 +1,23 @@
+{
+  "inspectedAtUTC": "2026-11-08T04:01:01.128539+00:00",
+  "nativeExitCode": 0,
+  "strictExitCode": 1,
+  "expectedCount": 2,
+  "originalBundleUnchanged": true,
+  "command": [
+    "python3",
+    "/Users/palatis/Room in the Cart/scripts/check_ios_test_results.py",
+    "--selectors",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline/selectors.txt",
+    "--expected-count",
+    "2",
+    "--summary",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline/inspection/test-summary.json",
+    "--tests",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline/inspection/test-details.json",
+    "--result-bundle",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline/inspection/native.xcresult",
+    "--test-log",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline/native.log"
+  ]
+}

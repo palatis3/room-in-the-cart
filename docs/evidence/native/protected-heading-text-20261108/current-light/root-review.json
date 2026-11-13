@@ -1,0 +1,13 @@
+{
+  "status": "scoped pass reviewed",
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "reviewer": "root",
+  "scope": "Standard checkout/two lunches, AX5 heading full screen and ink, AX5 expiry screen; not full accessibility audit acceptance",
+  "findings": "Complete heading and date text; full heading AX crop includes lower-line leading characters. iOS17 wraps/hyphenates at largest size; readable but less compact than current OS.",
+  "files": {
+    "inspection/0-screens/AF20C408-38C9-49CF-B354-F70E4341A54C.png": "1f9f66117d7e7cdbe5bf80835e2350034257effd9b60128daf01c02dd759012a",
+    "inspection/1-screens/353BC0BB-2B71-4308-A7A1-69D1E716CED4.png": "115c88372ceb83ed106571c914d09db6ff238dd1473bbffef35c06b706acd9d8",
+    "inspection/1-screens/BD7174D7-7689-4EE2-9DB0-04E58089B78B.png": "282015a627a312f6c5083275f834746343cc308c93ba062a2978378737e63b27",
+    "inspection/1-screens/F44FBEC1-85B4-4604-B525-C6CA1FF8A48B.png": "1a2c8be251a3aa2c9315e5d82affad20ebc097b41ada642a7984d54a585e6d42"
+  }
+}

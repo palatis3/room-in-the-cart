@@ -20,8 +20,10 @@ extension HouseholdClientTests {
     }
     func testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities() async throws {
         let auth = try auth(); var privateCalls = 0
+        let stateLock = NSLock()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.bootstrapBytes(role: "contributor")) }
@@ -33,12 +35,14 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         do { _ = try await service.shopperInbox(shopID: shopID); XCTFail("Contributor fetched other requests") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(privateCalls, 0)
+        XCTAssertEqual(stateLock.withLock { privateCalls }, 0)
     }
     func testPreviewUsesReviewedBaseAndDecisionRetryKeepsExactBytes() async throws {
         let auth = try auth(); var role = "shopper"; var previews: [Data] = []; var commands: [Data] = []
+        let stateLock = NSLock()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), "device-token")
@@ -55,17 +59,17 @@ extension HouseholdClientTests {
             base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
             decision: .add(line: .init(originalItem: "Cereal", packs: 1, unitPriceMinor: 349, feeEligible: true), promote: false))
         XCTAssertEqual(result.after.totalMinor, 4069); XCTAssertEqual(result.after.overCapMinor, 269); XCTAssertTrue(result.requiresOverageAcceptance)
-        let previewBody = try XCTUnwrap(JSONSerialization.jsonObject(with: previews[0]) as? [String: Any])
+        let previewBody = try XCTUnwrap(JSONSerialization.jsonObject(with: stateLock.withLock { previews[0] }) as? [String: Any])
         XCTAssertEqual((previewBody["base"] as? [String: Int])?["shopRevision"], 7)
         XCTAssertEqual((previewBody["decision"] as? [String: Any])?["choice"] as? String, "add")
         let operation = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shopID, kind: "request.apply", base: result.base,
             body: ["requestId": .string(requestID), "previewId": .string(result.previewId), "acceptOverage": .bool(true), "acceptUnknown": .bool(false)]), bootstrap: projection)
         for _ in 0..<2 { do { _ = try await service.executeShopper(operation); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
-        XCTAssertEqual(commands, [operation.bytes, operation.bytes])
-        role = "contributor"
+        XCTAssertEqual(stateLock.withLock { commands }, [operation.bytes, operation.bytes])
+        stateLock.withLock { role = "contributor" }
         do { _ = try await service.executeShopper(operation); XCTFail("Old shopper retried after transfer") }
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(commands.count, 2)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 2)
     }
     func testShopperDecisionsEncodeOnlyDocumentedDiscriminatedFields() throws {
         for decision in [ShopperDecision.deferRequest, .dismiss, .handled] {
@@ -76,5 +80,195 @@ extension HouseholdClientTests {
         let value = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded(ShopperDecision.link(lineID: line, promote: true))) as? [String: Any])
         XCTAssertEqual(Set(value.keys), Set(["choice", "lineId", "promote"]))
         XCTAssertEqual(value["lineId"] as? String, line); XCTAssertEqual(value["promote"] as? Bool, true)
+    }
+}
+
+extension HouseholdClientTests {
+    func testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                      auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let sourceShop = UUID().uuidString.lowercased()
+        var rowShop = sourceShop, echoedRequest = requestID, role = "shopper"
+        var posts: [Data] = []
+        let stateLock = NSLock()
+        MockURLProtocol.handler = { request in
+            // The async test and CFNetwork callbacks share this fixture state.
+            stateLock.lock(); defer { stateLock.unlock() }
+            if let result = self.authResponse(request) { return result }
+            let path = request.url!.path
+            if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
+            if path.hasSuffix("/bootstrap") {
+                var scope = try XCTUnwrap(JSONSerialization.jsonObject(with: self.bootstrapBytes(role: role)) as? [String: Any])
+                scope["capabilities"] = ["shopper_inbox", "request_preview", "shopper_commands", "deferred_requests"]
+                return (200, try JSONSerialization.data(withJSONObject: scope))
+            }
+            if path.hasSuffix("/deferred-requests") {
+                let row: [String:Any] = ["requestId":self.requestID, "sourceShopId":rowShop, "sourceAuthorityEpoch":2,
+                    "requestRevision":4, "originalItem":"School coffee", "ownQuantity":"one bag", "authorAlias":"Ana",
+                    "authoredAt":"2026-11-01T12:00:00Z", "receivedAt":"2026-11-01T12:00:01Z"]
+                return (200, try JSONSerialization.data(withJSONObject:["shopId":self.shopID, "shopRevision":3,
+                    "authorityEpoch":5, "requests":[row], "nextCursor":NSNull()]))
+            }
+            XCTAssertTrue(path.hasSuffix("/commands"))
+            posts.append(self.requestBytes(request))
+            let receipt: [String:Any] = ["operationId":self.previewID, "kind":"request.carry", "shopId":self.shopID,
+                "shopRevision":3, "authorityEpoch":5, "disposition":"recorded", "sourceRequestId":echoedRequest,
+                "requestId":self.previewID, "requestRevision":1]
+            return (200, try JSONSerialization.data(withJSONObject:receipt))
+        }
+        _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
+        let scope = try await service.enroll(householdID:household)
+        let page = try await service.deferredRequests(shopID:shopID)
+        let row = try XCTUnwrap(page.requests.first)
+        XCTAssertEqual(row.sourceShopId.uuidString.lowercased(), sourceShop)
+        let envelope = CommandEnvelope(replayWindow:UUID().uuidString, shopId:shopID, kind:"request.carry",
+            base:.init(shopRevision:page.shopRevision, authorityEpoch:page.authorityEpoch,requestRevision:row.requestRevision),
+            body:["sourceShopId":.string(sourceShop),"sourceAuthorityEpoch":.integer(row.sourceAuthorityEpoch),"requestId":.string(requestID)])
+        let operation = try await service.prepare(envelope:envelope, bootstrap:scope)
+        XCTAssertFalse(operation.targetsShop(nil))
+        stateLock.withLock { rowShop = shopID }
+        do { _ = try await service.deferredRequests(shopID:shopID); XCTFail("A draft supplied its own row as a previous request") }
+        catch ClientError.invalidResponse {}
+        stateLock.withLock { echoedRequest = UUID().uuidString.lowercased() }
+        do { _ = try await service.executeShopper(operation); XCTFail("A receipt named a different source request") }
+        catch ClientError.invalidResponse {}
+        stateLock.withLock { echoedRequest = requestID }
+        let receipt = try await service.executeShopper(operation)
+        XCTAssertEqual(receipt.requestId,previewID)
+        XCTAssertEqual(stateLock.withLock { posts },[operation.bytes,operation.bytes])
+        stateLock.withLock { role = "contributor" }
+        do { _ = try await service.executeShopper(operation); XCTFail("Former shopper replayed") }
+        catch ClientError.accessEnded {}
+        XCTAssertEqual(stateLock.withLock { posts.count },2)
+    }
+    func testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                      auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let line = UUID().uuidString.lowercased()
+        var role = "shopper", capability = true, reply = "loss"
+        var posts: [Data] = []
+        let stateLock = NSLock()
+        MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
+            if let result = self.authResponse(request) { return result }
+            if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
+            if request.url!.path.hasSuffix("/bootstrap") {
+                var scope = try XCTUnwrap(JSONSerialization.jsonObject(with: self.bootstrapBytes(role: role)) as? [String: Any])
+                if capability { scope["capabilities"] = ["shopper_inbox", "request_preview", "shopper_commands", "request_purchase_confirmation"] }
+                return (200, try JSONSerialization.data(withJSONObject: scope))
+            }
+            XCTAssertTrue(request.url!.path.hasSuffix("/commands"))
+            posts.append(self.requestBytes(request))
+            if reply == "loss" { throw URLError(.networkConnectionLost) }
+            let receipt: [String: Any] = ["operationId": self.previewID, "kind": "request.confirmPurchase", "shopId": self.shopID,
+                "shopRevision": 7, "authorityEpoch": 3, "requestId": self.requestID, "requestRevision": 3,
+                "disposition": "recorded", "purchaseOutcome": reply]
+            return (200, try JSONSerialization.data(withJSONObject: receipt))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        let scope = try await service.enroll(householdID: household)
+        let operation = try await service.prepare(envelope: .init(replayWindow: UUID().uuidString, shopId: shopID,
+            kind: "request.confirmPurchase", base: .init(shopRevision: 7, authorityEpoch: 3, requestRevision: 2),
+            body: ["requestId": .string(requestID), "lineId": .string(line), "placedRevision": .integer(5), "outcome": .string("bought")]),
+            bootstrap: scope)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let file = dir.appendingPathComponent("shopper.json")
+        try await OperationOutbox(url: file).append(operation)
+        do { _ = try await service.executeShopper(operation); XCTFail("Expected initial delivery loss") }
+        catch { XCTAssertEqual(error as? ClientError, .transport) }
+        let saved = try await OperationOutbox(url: file).operations()
+        let restored = try XCTUnwrap(saved.first)
+        XCTAssertEqual(restored, operation)
+        XCTAssertFalse(restored.targetsShop(nil))
+        XCTAssertFalse(restored.targetsShop(UUID().uuidString))
+        stateLock.withLock { reply = "notBought" }
+        do { _ = try await service.executeShopper(restored); XCTFail("A different outcome was accepted") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        stateLock.withLock { reply = "bought" }
+        let receipt = try await service.executeShopper(restored)
+        XCTAssertEqual(receipt.purchaseOutcome, stateLock.withLock { reply })
+        stateLock.withLock { capability = false }
+        do { _ = try await service.executeShopper(restored); XCTFail("Missing purchase capability") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        stateLock.withLock { role = "contributor"; capability = true }
+        do { _ = try await service.executeShopper(restored); XCTFail("Transferred shopper could replay") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        XCTAssertEqual(stateLock.withLock { posts }, [operation.bytes, operation.bytes, operation.bytes])
+    }
+
+    func testOwnPurchaseReadbackAcceptsOnlyRecordedOutcomesAndRejectsPrivateLinks() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                      auth: auth, deviceVault: MemoryVault(), transport: transport())
+        var outcome: String?, privateLink = false
+        let stateLock = NSLock()
+        MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
+            if let result = self.authResponse(request) { return result }
+            if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
+            if request.url!.path.hasSuffix("/bootstrap") { return (200, self.bootstrapBytes(role: "contributor")) }
+            XCTAssertTrue(request.url!.path.hasSuffix("/requests/mine"))
+            var row: [String: Any] = ["requestId": self.requestID, "shopId": self.shopID, "revision": 2, "originalItem": "Lunch fruit",
+                "ownQuantity": "a bag", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
+                "status": "added", "route": "current", "ownActionAllowed": false]
+            row["purchaseOutcome"] = outcome
+            if privateLink { row["linkedLineId"] = self.previewID }
+            return (200, try JSONSerialization.data(withJSONObject: ["requests": [row]]))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household)
+        for known: ConfirmedRequestPurchase? in [nil, .bought, .notBought] {
+            stateLock.withLock { outcome = known?.rawValue }
+            let page = try await service.ownRequests()
+            XCTAssertEqual(page.requests.count, 1)
+            XCTAssertEqual(page.requests[0].purchaseOutcome, known)
+            XCTAssertEqual(page.requests[0].status, "added")
+        }
+        stateLock.withLock { privateLink = true }
+        do { _ = try await service.ownRequests(); XCTFail("Own view accepted a private link") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+    }
+}
+
+extension HouseholdClientTests {
+    func testPurchaseMatchRequiresTheReviewedPlacedLineAndCurrentAuthorityEvenAfterClose() throws {
+        let line = UUID()
+        let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: 300, capScope: "wholeCheckout",
+                                     fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0,
+                                     observedAt: Date(), expiresAt: Date().addingTimeInterval(3600))
+        func shop(_ phase: String = "placed") -> ShopperShop {
+            .init(shopId: shopID, shopRevision: 8, authorityEpoch: 3, phase: phase, meals: nil, quote: quote,
+                  lines: [], frozenRevision: 6, placedRevision: 6)
+        }
+        func request(_ status: String = "added") throws -> OwnRequest {
+            let fields: [String: Any] = ["requestId": requestID, "shopId": shopID, "revision": 2, "originalItem": "Cereal",
+                "ownQuantity": "one box", "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
+                "authorAlias": "Jo", "status": status, "route": "current", "ownActionAllowed": false,
+                "linkedLineId": line.uuidString]
+            return try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: fields))
+        }
+        func placed(_ changes: [String: Any] = [:]) throws -> SharedDeliveryPage {
+            let fields: [String: Any] = ["shopId": shopID, "shopRevision": 8, "placedRevision": 6, "authorityEpoch": 3,
+                "supplyRevision": 0, "sources": [], "lines": [["lineId": line.uuidString, "name": "Original line"]]]
+            return try JSONDecoder().decode(SharedDeliveryPage.self, from: JSONSerialization.data(withJSONObject: fields.merging(changes) { _, new in new }))
+        }
+        let own = try request(), snapshot = try placed()
+        for phase in ["placed", "closed"] {
+            let match = try XCTUnwrap(RequestPurchaseMatch(request: own, shop: shop(phase), placed: snapshot))
+            XCTAssertEqual(match.line.name, "Original line")
+            XCTAssertNil(match.line.packs, "A legacy sealed line carries no ordered pack count")
+            XCTAssertEqual(match.base, .init(shopRevision: 8, authorityEpoch: 3, requestRevision: 2))
+            XCTAssertEqual(match.body(outcome: nil)["outcome"], .string("unknown"))
+        }
+        for changed: [String: Any] in [["shopId": UUID().uuidString], ["shopRevision": 7],
+                                         ["placedRevision": 5], ["authorityEpoch": 4],
+                                         ["lines": [["lineId": UUID().uuidString, "name": "Cereal"]]], ["lines": []]] {
+            XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop(), placed: try placed(changed)))
+        }
+        XCTAssertNil(RequestPurchaseMatch(request: try request("handled"), shop: shop(), placed: snapshot))
+        XCTAssertNil(RequestPurchaseMatch(request: own, shop: shop("draft"), placed: snapshot))
     }
 }

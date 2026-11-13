@@ -1,0 +1,17 @@
+{
+  "target": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+  "device": "ACD2EFC7-844B-4F00-ABF8-07F39040E857",
+  "finishedUTC": "2026-11-08T16:07:17.019065+00:00",
+  "polls": 0,
+  "elapsedSeconds": 6.6804177500000606,
+  "maxPollMS": 0.0,
+  "error": "TimeoutExpired: Command '['/bin/ps', '-ww', '-axo', 'pid=,comm=']' timed out after 2 seconds",
+  "targetStarted": false,
+  "targetEnded": false,
+  "targetPIDs": [],
+  "uniqueSampledPID": false,
+  "associationAmbiguous": false,
+  "probes": [],
+  "missingDataIsInconclusive": true,
+  "eventsSHA256": "067bc47f3d33ff10bdca16414f0fdea338300672a5041bf0511c9f3c4ad24204"
+}

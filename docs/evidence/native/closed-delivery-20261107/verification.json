@@ -1,0 +1,124 @@
+{
+  "baseCommit": "53950b78fbae665c6000b7b271d730d962811c6f",
+  "requirements": [
+    "Foundation 2.1 S08 late/split delivery and corrected usable/protected amounts",
+    "S11 closure preserves unresolved items for later correction",
+    "S12 new shop preserves previous history",
+    "F06 bilingual accessible controls",
+    "F08 scoped durable retries"
+  ],
+  "behavior": [
+    "Current assigned shopper can register, record/correct arrival and usable quantities, match ingredients and review protected portions after pickup closure.",
+    "Original checkout, retailer-confirmed amendments, sealed meal plan, closure and financial entries remain unchanged.",
+    "Exact retries and stale-supply/authority/predecessor/physical-stock checks still apply; another shop cannot clear the original durable delivery action.",
+    "Spanish largest-text confirmation uses separate date/time controls and brings the saved retry into view after an uncertain reply or restart."
+  ],
+  "native": {
+    "iOS17": {
+      "modelPassed": 696,
+      "uiPassed": 3,
+      "totalPassed": 699,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictReceipt": "final-strict.txt",
+      "bundle": ".build/ClosedDeliveryNov07/final.xcresult"
+    },
+    "iOS26_2": {
+      "uiPassed": 2,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictReceipt": "modern-strict.txt",
+      "sameCompiledProducts": true,
+      "bundle": ".build/ClosedDeliveryNov07/modern.xcresult"
+    },
+    "journeys": [
+      "Closed pickup: pending credit and included credit remain separate; late arrival, usable1→2, matching and set-aside2→1; still closed, paid37.20, pending0, included2.40.",
+      "Confirmed order: cancel unchanged; lost reply, restart and exact retry once; original1/current3 with unknown changed price; English and Spanish largest text."
+    ]
+  },
+  "backend": "backend/verification.json",
+  "wire": "wire/verification.json",
+  "pythonPassed": 219,
+  "release": {
+    "passed": true,
+    "configuration": "Release",
+    "destination": "generic iPhone",
+    "architecture": "arm64",
+    "signed": false,
+    "bundleCheck": "release-check.txt"
+  },
+  "localization": {
+    "catalogs": 26,
+    "enEsEntries": 4304,
+    "literalSourceKeys": 4005,
+    "humanSpanishReview": "pending"
+  },
+  "negativeControls": [
+    {
+      "scope": "Backend previous placed-only guard",
+      "result": "Late registration after real closure/amendment fails409 placed_order_required; fixed focused test passes."
+    },
+    {
+      "scope": "Native previous delivery-screen guards",
+      "bundle": ".build/ClosedDeliveryNov07/baseline.xcresult",
+      "result": "The extended complete closeout journey fails because Add a delivery is absent after closure."
+    },
+    {
+      "scope": "Native wrong-shop pending clear",
+      "bundle": ".build/ClosedDeliveryNov07/scope/baseline.xcresult",
+      "result": "Reviewing another shop and clearing removes the original durable operation; byte-identical regression passes after scoped fix."
+    }
+  ],
+  "initialFollowups": [
+    {
+      "bundle": ".build/SharedAmendmentSpanishNov07/native.xcresult",
+      "result": "English passed; Spanish largest-text retry was below long pending explanation after restart."
+    },
+    {
+      "bundle": ".build/ClosedDeliveryNov07/fixed.xcresult",
+      "result": "695models and2UI passed; Spanish failed after confirmation because preserved scroll position left pending retry above the viewport. Strict gate failed as required with0runtimeWarnings."
+    },
+    {
+      "log": ".build/ClosedDeliveryNov07/recovery-focus.log",
+      "result": "Build caught String pending ID declared UUID; corrected to String before execution."
+    },
+    {
+      "bundle": ".build/ClosedDeliveryNov07/recovery-focus-corrected.xcresult",
+      "result": "Both English and Spanish largest-text journeys passed with strict0 and no warnings before final scope integration."
+    }
+  ],
+  "sourceSHA256": {
+    "ios/Features/Household/HouseholdShopModel.swift": "ea637300c639dc178e8b2acfb81bf358fc920bcd197f14e5409a9f93105dbe9f",
+    "ios/Features/Household/OrderAmendment.xcstrings": "757ae4a25ee97352429ce4bf64f471e2cf42116ed17f4de508a4a980fa3d001a",
+    "ios/Features/Household/SharedDeliveryView.swift": "0598b25ef884ddaee637e8acc68d7fe7a414bef6c9198ed7177d5ef7ea30b38f",
+    "ios/Features/Household/SharedOrderAmendmentView.swift": "c98b33a8dce702f2304602eea99ae24d9f07e03d560d67afb1c07cdb2195d8ad",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift": "2cc16f553161da18a2c35c2e1385ca3652fdea6cd1fab7281249f1da038192b4",
+    "ios/Tests/SharedShopFlowTests.swift": "66de405a460c1565a6d31257714bbd36762ea1a6cb9c534acb16526ef6e418fc",
+    "ios/UITestSupport/SharedDeliveryUIFixture.swift": "1c6e0330feccb0c5b530012404258a290468141d9f625858a1ca393b043a9637",
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift": "9279f6329064e76f4e1564857e0636310dd8c83e73a7bbc169c37649cc7f38a5",
+    "ios/UITests/SharedDeliveryUITests.swift": "971db8c4b3cc37cdae5d4704cb58942952902fbcf2fdb4986b139afee1ee5f7a",
+    "scripts/plan_ios_fixture_tests.py": "1986c8ab51ee2dbf8d264ea3d1d4d00a3bcf2b5ebe00a3dea93c18fce44228cd",
+    "scripts/test_plan_ios_fixture_tests.py": "2de56b5992ddc41e9cb55797cefacaf2f0810c8a04a95655659c8b6bafc064fd",
+    "service/API-CONFIRMED-ORDER.md": "ef9be8a147dbed93b96b149b0828b1f9eb20979438eebacc3d3d41b72c6bf311",
+    "service/src/delivery-evidence.ts": "8ff3e7ca5edf3d54e06731fc69548a91bc03e501c387b2415f3c443ed5abbf00",
+    "service/tests/shared-meal-changes.integration.mjs": "13a981202898068bddf78fa29cc79e0decbd18e1a7466952cc359cec4cfd13f4"
+  },
+  "artifactSHA256": {
+    ".build/ClosedDeliveryNov07/baseline.log": "0018c9c5b090fc28f208dff3369d43ceeb2d9c7c1fd0d196fb3de7fe138b03d9",
+    ".build/ClosedDeliveryNov07/fixed.log": "dcb81ce9847468c32e388226f040eb5c9095834f947de7b53d04dde9856e0c1c",
+    ".build/ClosedDeliveryNov07/scope/baseline.log": "23cd03487451877b888b2ec6fa6ed38859f345855d51954258efe1313fc766b1",
+    ".build/ClosedDeliveryNov07/recovery-focus.log": "a5a65ca71c81e7afb70bcf136a0c0c54c7c307a24e9f845ce515712269324aa8",
+    ".build/ClosedDeliveryNov07/recovery-focus-corrected.log": "96dcc6ec3377b07800d50af444fc1f330fb9b1a91e31d6eb676475173b4adf0b",
+    ".build/ClosedDeliveryNov07/final.log": "0b76d3f1f79cbf06ad256dac4cadbb510fb209434922f4cdf93d2bc339f09534",
+    ".build/ClosedDeliveryNov07/modern.log": "74d80c95241aa6fad186d2ae3434418f0343542cbf14aaa9ae6aa98e3096259c",
+    ".build/ClosedDeliveryNov07/release.log": "5f94fae7a3dd044c59acb5fa1523bc24e8666b821ef24f3a00ed89492c937670",
+    ".build/ClosedDeliveryNov07/release-check.txt": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+    ".build/ClosedDeliveryNov07/python.log": "f058911264ea4c96cebc663a1fd6be2e15b83c0dcb938ba78fb91d604c8e2c57",
+    ".build/ClosedDeliveryNov07/localization.txt": "77f7a7411818fc7eda20e3aa8ddb2f2340aca84d0010aaa3877c304a7aa2076a"
+  },
+  "limits": [
+    "Local synthetic service/accounts and simulator evidence; staging still through041.",
+    "No physical-device, signed distribution, real email/KWS/provider or human language acceptance.",
+    "Current hosted f90 performance passed, but remaining core/fixture failures are separate and next-source hosted validation is outstanding."
+  ]
+}

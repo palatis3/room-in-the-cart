@@ -1,0 +1,23 @@
+9557: 01:59:10.395 RoomInTheCartUITests-Runner[8535:31035] Waiting for dev.roominthecart.app.debug (PID 8951) quiescence...
+9564: 01:59:10.396 RoomInTheCartUITests-Runner[8535:31035] Waiting on quiescence state variables
+9571: 01:59:10.397 RoomInTheCartUITests-Runner[8535:32061] Got event loop idle reply for dev.roominthecart.app.debug (PID 8951)
+9577: 01:59:10.397 RoomInTheCartUITests-Runner[8535:32061] Got animations reply for dev.roominthecart.app.debug (PID 8951)
+9595: 01:59:10.398 RoomInTheCartUITests-Runner[8535:31035] dev.roominthecart.app.debug has quiesced or quiescence timeout has elapsed.
+9995: 01:59:11.383 RoomInTheCartUITests-Runner[8535:31035] Waiting for dev.roominthecart.app.debug (PID 8951) quiescence...
+10002: 01:59:11.385 RoomInTheCartUITests-Runner[8535:31035] Waiting on quiescence state variables
+10011: 01:59:11.440 RoomInTheCartUITests-Runner[8535:32061] Got event loop idle reply for dev.roominthecart.app.debug (PID 8951)
+10018: 01:59:11.448 RoomInTheCartUITests-Runner[8535:32061] Got animations reply for dev.roominthecart.app.debug (PID 8951)
+10033: 01:59:11.449 RoomInTheCartUITests-Runner[8535:31035] dev.roominthecart.app.debug has quiesced or quiescence timeout has elapsed.
+10257: 01:59:12.476 RoomInTheCartUITests-Runner[8535:31035] Waiting for dev.roominthecart.app.debug (PID 8951) quiescence...
+10264: 01:59:12.477 RoomInTheCartUITests-Runner[8535:31035] Waiting on quiescence state variables
+10273: 01:59:12.478 RoomInTheCartUITests-Runner[8535:34809] Got event loop idle reply for dev.roominthecart.app.debug (PID 8951)
+10278: 01:59:12.478 RoomInTheCartUITests-Runner[8535:34809] Got animations reply for dev.roominthecart.app.debug (PID 8951)
+10295: 01:59:12.479 RoomInTheCartUITests-Runner[8535:31035] dev.roominthecart.app.debug has quiesced or quiescence timeout has elapsed.
+10641: 01:59:13.283 RoomInTheCartUITests-Runner[8535:31035] Waiting for dev.roominthecart.app.debug (PID 8951) quiescence...
+10646: 01:59:13.287 RoomInTheCartUITests-Runner[8535:34809] Got event loop idle reply for dev.roominthecart.app.debug (PID 8951)
+10652: 01:59:13.288 RoomInTheCartUITests-Runner[8535:31035] Waiting on quiescence state variables
+10796: 02:00:13.365 RoomInTheCartUITests-Runner[8535:31035] <XCTContext: 0x600002122d50> started activity <XCActivityRecord: 0x600002135b80> 2026-11-08 02:00:13 +0000: App animations complete notification not received, will attempt to continue.
+10798: 02:00:13.408 xcodebuild[6071:24121] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> willStartActivity:<XCActivityRecord: 0x6000035a99a0> 2026-11-08 02:00:13 +0000: App animations complete notification not received, will attempt to continue.
+10800: 02:00:13.366 RoomInTheCartUITests-Runner[8535:31035] <XCTContext: 0x600002122d50> finished activity <XCActivityRecord: 0x600002135b80> 2026-11-08 02:00:13 +0000: App animations complete notification not received, will attempt to continue. (0.00157702s)
+10801: 02:00:13.431 xcodebuild[6071:24121] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x6000035a99f0> 2026-11-08 02:00:13 +0000: App animations complete notification not received, will attempt to continue. (0.00157702s)
+10803: 02:00:13.366 RoomInTheCartUITests-Runner[8535:31035] dev.roominthecart.app.debug has quiesced or quiescence timeout has elapsed.

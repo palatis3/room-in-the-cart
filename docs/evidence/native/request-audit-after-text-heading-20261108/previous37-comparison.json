@@ -1,0 +1,159 @@
+{
+  "previousCount": 37,
+  "currentCount": 39,
+  "previousCategories": {
+    "Contrast failed": 2,
+    "Potentially inaccessible text": 1,
+    "Dynamic Type font sizes are unsupported": 2,
+    "Dynamic Type font sizes are partially unsupported": 29,
+    "Text clipped": 3
+  },
+  "currentCategories": {
+    "Dynamic Type font sizes are partially unsupported": 29,
+    "Dynamic Type font sizes are unsupported": 2,
+    "Text clipped": 2,
+    "Contrast failed": 3,
+    "Potentially inaccessible text": 3
+  },
+  "namedCurrentNotInPrevious": [
+    {
+      "finding": 35,
+      "category": "Contrast failed",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a7fe5f0, {{16.0, 95.7}, {370.0, 40.3}}, label: 'Review before applying'",
+        "label": "Review before applying",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Review before applying",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 36,
+      "category": "Contrast failed",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11cb2b850, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'",
+        "label": "Add packs to this shop",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Add packs to this shop",
+          null
+        ]
+      }
+    }
+  ],
+  "namedPreviousNotObserved": [
+    {
+      "finding": 4,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x10d936eb0, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'",
+        "label": "Preview expires",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Preview expires",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 16,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11adc0b90, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'",
+        "label": "Checkout calculation details",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Checkout calculation details",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 34,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11c669640, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00\u202fPM'",
+        "label": "Dec 31, 2098 at 7:00\u202fPM",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Dec 31, 2098 at 7:00\u202fPM",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 35,
+      "category": "Text clipped",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11c3cca20, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'",
+        "label": "Preview expires",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Preview expires",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 36,
+      "category": "Text clipped",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11c438770, {{36.3, 488.0}, {270.3, 21.7}}, label: 'Protected meal commitments'",
+        "label": "Protected meal commitments",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Protected meal commitments",
+          null
+        ]
+      }
+    },
+    {
+      "finding": 37,
+      "category": "Text clipped",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11e207440, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00\u202fPM'",
+        "label": "Dec 31, 2098 at 7:00\u202fPM",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Dec 31, 2098 at 7:00\u202fPM",
+          null
+        ]
+      }
+    }
+  ],
+  "limitation": "Named target/category matching only. Unattributed clipped/inaccessible reports cannot be matched. Not observed does not establish closure, and a count increase does not establish regression."
+}

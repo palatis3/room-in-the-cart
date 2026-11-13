@@ -85,6 +85,7 @@ import CoreDomain
 
 @main struct DinnerDecisionUIFixtureApp: App {
     @StateObject private var pickup = PickupModel()
+    @State private var prepared = false
     let model: DinnerFeatureModel?
     init() {
         guard ProcessInfo.processInfo.arguments.contains("--ui-testing"), let store = try? DinnerDecisionFixtureStore(),
@@ -94,9 +95,20 @@ import CoreDomain
     var body: some Scene {
         WindowGroup {
             if let model {
-                NavigationStack { DinnerWorkspaceView(model: model,startPickup: {}) { EmptyView() } }
-                    .environmentObject(pickup)
-                    .task { await DinnerDecisionUIFixture.prepareCheckout(model, pickup: pickup) }
+                Group {
+                    if prepared {
+                        NavigationStack { DinnerWorkspaceView(model: model,startPickup: {}) { EmptyView() } }
+                            .environmentObject(pickup)
+                    } else if let error = pickup.error {
+                        Text(error)
+                    } else { ProgressView() }
+                }.task {
+                    guard !prepared else { return }
+                    await pickup.load()
+                    guard pickup.ready else { return }
+                    await DinnerDecisionUIFixture.prepareCheckout(model, pickup: pickup)
+                    prepared = true
+                }
             }
         }
     }

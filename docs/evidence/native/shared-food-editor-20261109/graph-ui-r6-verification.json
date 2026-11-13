@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "scope": "r6 contributor fixture build; 148 models and original English/Spanish graph-editor journeys",
+  "result": {
+    "status": "passed",
+    "modelTests": 148,
+    "UIJourneys": 2,
+    "sourceUnchanged": true,
+    "productsUnchanged": true,
+    "releaseAcceptance": false,
+    "realServiceUIAcceptance": false
+  },
+  "originals": ".build/SharedDemandNativeRequestsNov09/combined-r6",
+  "files": {
+    "final.json": "133790a32224f6e78e784428c015ea998bb2d68bb996e126502d55efe4e761fc",
+    "source-manifest.json": "7a5d3b0cf410d708ce0df1a0024eb319eb31e1cbfc8197614539e00d4195a319",
+    "products.json": "d7b2a790678b071e843d524457d00ac0ab20641d8fe56a1c799ed1fec6615abd",
+    "selectors.json": "42d10f988e2dc0afadd8ca3d9b22089aa4335f6ed54ca14a588092acd48fda6e",
+    "client-package-receipt.json": "c0acd973c5f87d6d4fc09d82cd8972a8464a9f2133912b51fbd76d7761954ea3",
+    "build-receipt.json": "7d0151a325db4b9079b29ea90f100a150ba349d04ec1802a268b050b657f9941",
+    "models-receipt.json": "54f20b14ebf5903fbd8f5623921dd993d3c2937c737c28e74b09b34516292a49",
+    "models-strict-receipt.json": "8afce1080963ee9086b7f3823538cde46cfaf106ef4645b537681f86e1022adf",
+    "models-summary.json": "dacd48199d5daa07a2aba2e719492315a7864d2c2a18b46ab66d3137d53adaf0",
+    "models-tests.json": "a7c1a7b6aeb79b203cd9c9b0ed54ba6f55a68561f621778d38bac7a55347ef60",
+    "ui-en-receipt.json": "23836eefe5bbf8ff03b79f1bc68443a7a38646310d5d753a1df5f49508a8f261",
+    "ui-en-strict-receipt.json": "635ebbd73f86ca3b59eedfb31b262524bf6d0b9f752d4638889fbd5a0fcb8213",
+    "ui-en-summary.json": "8899f2af0e4e445fc8ea6c5d20acecd75471ec70e771ebb855c31519e87e1bac",
+    "ui-en-tests.json": "a8463778c9aeb85547f97fecc2615b49a639c61967c110f3dc27346cfccaa500",
+    "ui-es-receipt.json": "6e47691880e817ed031bad359cc549b572d4a2fd28e9352c145a4f0accf73c68",
+    "ui-es-strict-receipt.json": "0b19b56c2863759f8381436f3ab0b7ead942fe6b97e1caba00fec080eb8d2ac7",
+    "ui-es-summary.json": "4e151cc771b16f590f93afac09cf3cd9099c8acba1c1e874f330b9e9d648749c",
+    "ui-es-tests.json": "1ccfbfc5f534d8a32be62b4d1908df043f3ae392a3477984adb71d0e182110a7"
+  },
+  "clientPackage": {
+    "executed": 125,
+    "passed": 122,
+    "expectedIntegrationSkips": 3
+  },
+  "visualReview": "Review controls and localized expiry inspected; Spanish navigation title truncation corrected in r7, unqualified here",
+  "realDatabaseUI": false,
+  "fullRegression": false
+}

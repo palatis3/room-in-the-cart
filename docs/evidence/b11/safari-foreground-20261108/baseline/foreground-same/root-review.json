@@ -1,0 +1,19 @@
+{
+  "observedAtUTC": "2026-11-08T05:03:09.553038+00:00",
+  "status": "reproduced-foreground-privacy-failure",
+  "manifestIdentity": "161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414",
+  "nativeActions": "Existing task Safari tab, new isolated loopback origin; typed fictional draft; recorded initial; Controls > Home; held authority; returned via Safari home icon; recorded held/final. No Reload/Back/navigation during return.",
+  "nativeObservations": "Initial full fictional draft and own request visible. On return with one authority request held, native screen still showed SAFARI_OWN_A_7d91 and disabled private controls. After release same own request and enabled controls visible. DOM confirms preserved draft and ready final state.",
+  "documentIdentityUnchanged": true,
+  "verifierExit": 1,
+  "failure": "private field/control exposed: ownA",
+  "finalSameActorRecovery": true,
+  "zeroProductMutations": true,
+  "serverSession": 88826,
+  "serverPID": 26483,
+  "serverExit": 0,
+  "port": 54663,
+  "portClosed": true,
+  "receiptSHA256": "80c4e0afee294dd3d206c4a1a19a788c6412c929658dd23bead61416d49b54f1",
+  "limits": "Synthetic local API, actual Simulator Safari; transcript-only screenshots not standalone exports; no App Switcher snapshot observed, no continuous-frame or physical/provider claim."
+}

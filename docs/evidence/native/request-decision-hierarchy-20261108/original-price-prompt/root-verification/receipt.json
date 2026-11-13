@@ -1,0 +1,10 @@
+{
+  "reviewer": "root",
+  "reportedIndependentRerun": true,
+  "publisherVerifiedMeasurementByteIdentity": true,
+  "measurementSHA256": "8a4adf8ca938877a0d13d06b659aeca1c3bd173ec1495c0dba41157af47ce1fb",
+  "originalSourcePNG_SHA256": "a70bb7b0630f9c79be8ece0951eb4aeede559519c5d7411120eaa8263ff2f10a",
+  "reportedRenderedContrast": 1.7233924684533595,
+  "scope": "Original light standard-text empty-price prompt only; not a final-source contrast result or audit closure.",
+  "measurementReexecutedByPublisher": false
+}

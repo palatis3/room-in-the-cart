@@ -38,12 +38,18 @@ public struct UnitBasis: Codable, Hashable, Sendable {
     public let targetUnit: UnitOfMeasure
     public let targetAmountPerSourceUnit: Rational
     public let sourceNote: String
+    /// Original measured equality. Older observations retain their normalized rate alone.
+    public let sourceLiteral: String?
+    public let targetLiteral: String?
     public init(sourceUnit: UnitOfMeasure, targetUnit: UnitOfMeasure,
-                targetAmountPerSourceUnit: Rational, sourceNote: String = "") {
+                targetAmountPerSourceUnit: Rational, sourceNote: String = "",
+                sourceLiteral: String? = nil, targetLiteral: String? = nil) {
         self.sourceUnit = sourceUnit
         self.targetUnit = targetUnit
         self.targetAmountPerSourceUnit = targetAmountPerSourceUnit
         self.sourceNote = sourceNote
+        self.sourceLiteral = sourceLiteral
+        self.targetLiteral = targetLiteral
     }
 
     func validate() throws {
@@ -51,6 +57,23 @@ public struct UnitBasis: Codable, Hashable, Sendable {
               sourceUnit.dimension != targetUnit.dimension else {
             throw DomainError.invalidInput("conversionBasis")
         }
+        if sourceLiteral != nil || targetLiteral != nil {
+            guard let sourceLiteral, let targetLiteral,
+                  try Self.measuredAmount(targetLiteral).divided(by: Self.measuredAmount(sourceLiteral)) == targetAmountPerSourceUnit
+            else { throw DomainError.invalidInput("conversionBasis") }
+        }
+    }
+
+    private static func measuredAmount(_ literal: String) throws -> Rational {
+        guard literal.utf8.count <= StagedListImport.maximumOriginalLineBytes else { throw DomainError.invalidNumber }
+        let text = literal.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.utf8.count <= 64,
+              text.allSatisfy({ $0.isNumber || $0 == "/" || $0 == "." || ($0.isWhitespace && !$0.isNewline) })
+        else { throw DomainError.invalidNumber }
+        var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        let amount = try ListQuantityParser.takeAmount(from: &tokens)
+        guard tokens.isEmpty, amount > .zero else { throw DomainError.invalidNumber }
+        return amount
     }
 }
 
@@ -69,7 +92,8 @@ public struct Quantity: Codable, Hashable, Sendable {
     }
 
     func validate() throws {
-        guard originalLiteral.utf8.count <= 2_048 else { throw DomainError.invalidInput("quantityLiteral") }
+        // A reviewed list quantity can carry the entire source label.
+        guard originalLiteral.utf8.count <= StagedListImport.maximumOriginalLineBytes else { throw DomainError.invalidInput("quantityLiteral") }
         try confirmedConversion?.validate()
     }
 

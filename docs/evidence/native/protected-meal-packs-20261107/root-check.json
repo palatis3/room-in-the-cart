@@ -1,0 +1,24 @@
+{
+  "nativeExit": 0,
+  "strictExit": 0,
+  "expectedClassCount": 10,
+  "originalUnchanged": true,
+  "originalMembers": 47,
+  "sourceAndProductsUnchanged": true,
+  "strictCommand": [
+    "python3",
+    "/Users/palatis/Room in the Cart/scripts/check_ios_test_results.py",
+    "--selectors",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/selectors.txt",
+    "--expected-count",
+    "10",
+    "--summary",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/inspection/summary.json",
+    "--tests",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/inspection/tests.json",
+    "--result-bundle",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/inspection/S04.xcresult",
+    "--test-log",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/native.log"
+  ]
+}

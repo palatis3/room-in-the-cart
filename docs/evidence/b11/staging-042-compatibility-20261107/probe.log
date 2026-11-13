@@ -1,0 +1,21 @@
+PASS old-client-old-service-schema041
+PASS old migration runner leaves all42 registry entries intact
+PASS existing shop has false erasure fence
+PASS old-client-old-service-schema042-before-amendment
+PASS old service lacks confirmed-order capability
+PASS old service has no confirmed-order route
+PASS old service rejects amendment exact retry before receipt lookup
+PASS old service exact-replays already registered added identity
+PASS old service cannot register another segment for added identity
+PASS old service can correct already registered amendment source while placed
+PASS old-client-new-service-two-historical-identities
+PASS old-client-old-service-silently-omits-added-line
+PASS new service returns complete202 historical identities
+PASS old-client-new-service-rejects-202-identities
+PASS old-client-old-service-accepts-truncated-202-union
+PASS old service can close shop without deleting amendment chain
+PASS closed revision advances once and placed identity unchanged
+PASS old service blocks fresh closed usable correction
+PASS old service still exact-replays prior delivery receipt after close
+PASS new service permits same reviewed closed correction
+PASS rollback reads and allowed writes preserve snapshots amended order and posted financial evidence

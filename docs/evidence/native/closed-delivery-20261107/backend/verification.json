@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-07",
+  "runtime": "Node 22.23.4 / isolated bundled PostgreSQL 17",
+  "build": "passed",
+  "focused": {
+    "passed": 2,
+    "failed": 0
+  },
+  "unit": {
+    "passed": 443,
+    "failed": 0,
+    "skipped": 1
+  },
+  "postgres": {
+    "passed": 243,
+    "failed": 0,
+    "skipped": 3
+  },
+  "negativeControl": {
+    "expectedFailure": true,
+    "method": "Task-owned copy of compiled service with prior placed-only guard restored; canonical build untouched",
+    "failure": "placed_order_required at late delivery.register after actual close and retailer-confirmed amendment"
+  },
+  "initialSetupFailure": "Fresh focused-test database lacked auth.users fixture; supplied established runner schema setup and retained failure log",
+  "scope": "Five reviewed physical evidence commands on closed pickup; unchanged shop phase/revision, original snapshots, confirmed order, and financial entries; exact retry, protected portions, current authority and stale supply checks; next shop independent",
+  "nativeTests": "Prepared; root coordinates simulator run"
+}

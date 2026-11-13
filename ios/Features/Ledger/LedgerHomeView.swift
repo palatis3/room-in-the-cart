@@ -1,15 +1,19 @@
 import SwiftUI
 import CoreDomain
 
-private enum LedgerHomeSheet: String, Identifiable {
+private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList
-    var id: String { rawValue }
+    case renameShop(id: UUID, title: String)
+    var id: Self { self }
 }
 
 struct LedgerHomeView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
+    @State private var showingShopPicker = false
+    @State private var showingListOptions = false
+    @State private var stapleRecallShopID: UUID?
     private enum Focus: Hashable { case result, error, line(UUID) }
     @AccessibilityFocusState private var focus: Focus?
 
@@ -88,10 +92,15 @@ struct LedgerHomeView: View {
         }
         .background(Theme.canvas)
         .task { await model.open() }
+        .navigationDestination(item: $stapleRecallShopID) { shopID in
+            StapleRecallView(ledger: model, targetID: shopID)
+        }
         .sheet(item: $sheet) { destination in
             NavigationStack {
                 switch destination {
                 case .newShop: LedgerNewShopView(model: model)
+                case let .renameShop(id, title):
+                    LedgerNewShopView(model: model, shopID: id, title: title)
                 case .entry:
                     if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
                 case .facts:
@@ -121,12 +130,7 @@ struct LedgerHomeView: View {
     }
 
     private func shopPicker(_ shop: ShoppingLedger) -> some View {
-        Menu {
-            ForEach(model.workspace.shops, id: \.id) { item in
-                Button(item.title) { Task { await model.selectShop(item.id) } }
-            }
-            Button(ledgerText("Start another pickup")) { sheet = .newShop }
-        } label: {
+        Button { showingShopPicker = true } label: {
             if dynamicTypeSize.isAccessibilitySize {
                 Label {
                     Text(shop.title).multilineTextAlignment(.leading)
@@ -136,22 +140,36 @@ struct LedgerHomeView: View {
             } else {
                 Label(shop.title, systemImage: "chevron.down").font(.headline).frame(minHeight: 44)
             }
-        }.disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerShopPicker")
+        }
+        .disabled(model.saving || model.hasPendingSave)
+        .accessibilityIdentifier("ledgerShopPicker")
+        .confirmationDialog(shop.title, isPresented: $showingShopPicker, titleVisibility: .visible) {
+            ForEach(model.workspace.shops, id: \.id) { item in
+                Button(item.title) { Task { await model.selectShop(item.id) } }
+            }
+            Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }
+                .accessibilityIdentifier("ledgerRenameShop")
+            Button(ledgerText("Start another pickup")) { sheet = .newShop }
+            Button(ledgerText("Cancel"), role: .cancel) {}
+        }
     }
 
     private func listOptions(_ shop: ShoppingLedger) -> some View {
-        Menu {
-            Button(ledgerText("List order and aisles")) { sheet = .layout }
-            NavigationLink(ledgerText("Review prior staples")) { StapleRecallView(ledger: model, targetID: shop.id) }
-            Button(ledgerText("Large-print list")) { sheet = .printList }
-        } label: {
+        Button { showingListOptions = true } label: {
             if dynamicTypeSize.isAccessibilitySize {
                 Text(ledgerText("List options")).frame(minHeight: 44)
             } else {
                 Label(ledgerText("List options"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)
                     .frame(minWidth: 44, minHeight: 44)
             }
-        }.accessibilityIdentifier("ledgerListOptions")
+        }
+        .accessibilityIdentifier("ledgerListOptions")
+        .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
+            Button(ledgerText("List order and aisles")) { sheet = .layout }
+            Button(ledgerText("Review prior staples")) { stapleRecallShopID = shop.id }
+            Button(ledgerText("Large-print list")) { sheet = .printList }
+            Button(ledgerText("Cancel"), role: .cancel) {}
+        }
     }
 
     private var searchField: some View {
@@ -183,6 +201,7 @@ struct LedgerHomeView: View {
                     Text("\(moneyText(cap)) · \(shop.basis.capScope.ledgerLabel)")
                 } else { Text(ledgerText("No spending cap entered")) }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier("ledgerFacts")
             .disabled(model.saving || model.hasPendingSave)
     }
@@ -228,9 +247,12 @@ struct LedgerSaveStatus: View {
             }
             if model.saving { ProgressView(ledgerText("Saving…")) }
             if model.hasPendingSave {
+                // Keep each recovery action independent inside Form and List rows.
                 Button(ledgerText("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
+                    .buttonStyle(.borderless)
                     .disabled(model.saving).accessibilityIdentifier("ledgerRetrySave")
                 Button(ledgerText("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSave() } }
+                    .buttonStyle(.borderless)
                     .disabled(model.saving)
             } else if let savedAt = model.savedAt {
                 Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")
@@ -246,18 +268,41 @@ struct LedgerSaveStatus: View {
 struct LedgerNewShopView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
+    private let originalID: UUID?
+    private let originalTitle: String
+    @State private var title: String
+
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "") {
+        self.model = model
+        originalID = shopID
+        originalTitle = title
+        _title = State(initialValue: title)
+    }
+
     var body: some View {
         Form {
             TextField(ledgerText("Pickup name"), text: $title, axis: .vertical).accessibilityIdentifier("ledgerShopName")
                 .disabled(model.saving || model.hasPendingSave)
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
-            Button(ledgerText("Start pickup")) {
-                Task { if await model.startShop(title: title.trimmingCharacters(in: .whitespacesAndNewlines)) { dismiss() } }
-            }.buttonStyle(PrimaryAction()).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving).accessibilityIdentifier("ledgerCreateShop")
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Start pickup"))
+            Button(originalID == nil ? ledgerText("Start pickup") : ledgerText("Save name")) {
+                Task { await save() }
+            }.buttonStyle(PrimaryAction())
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
+                .accessibilityIdentifier(originalID == nil ? "ledgerCreateShop" : "ledgerSaveShopName")
+        }.scrollDismissesKeyboard(.interactively).workingSurface()
+            .navigationTitle(originalID == nil ? ledgerText("Start pickup") : ledgerText("Rename pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
+    }
+
+    private func save() async {
+        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let id = originalID {
+            if await model.editShop(key: "rename-\(id)", shopID: id, { shop in
+                guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
+                shop.title = name
+            }) { dismiss() }
+        } else if await model.startShop(title: name) { dismiss() }
     }
 }
 

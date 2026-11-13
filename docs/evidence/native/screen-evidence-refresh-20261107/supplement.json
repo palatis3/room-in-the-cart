@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "reviewed_commit": "e7d87d5b440d44e84826bb481c610c1ec5334be7",
+  "historical_ledger": "docs/evidence/native/screen-acceptance-ledger-20261106/ledger.json",
+  "historical_ledger_unchanged": true,
+  "scope": "Nine exact Check clauses with current-source bindings. Not a replacement 123-clause ledger or full-screen/release certification. No new native/package invocation performed for this refresh.",
+  "rows": [
+    {
+      "clause_id": "S05.01",
+      "requirement": "Deferring coffee alone in specified threshold basket produces $36.30",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.CheckoutTests/testSharedCheckoutVectors",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/CheckoutTests.swift",
+      "source_line": 78,
+      "assertion_review": "One shared fixture starts from protected3480 + coffee460 + salsa150. Removing coffee leaves3630 with the fee waived, change-460, within3800.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 79,
+          "text": "Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' started."
+        },
+        {
+          "line": 80,
+          "text": "Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' passed (0.002 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service.",
+      "shared_vector": {
+        "id": "s05-defer-coffee-retains-salsa-and-fee-waiver",
+        "scope": "wholeCheckout",
+        "capScope": "wholeCheckout",
+        "capCents": 3800,
+        "before": {
+          "lines": [
+            {
+              "id": "protected",
+              "cents": 3480,
+              "eligible": true
+            },
+            {
+              "id": "coffee",
+              "cents": 460,
+              "eligible": true
+            },
+            {
+              "id": "salsa",
+              "cents": 150,
+              "eligible": true
+            }
+          ],
+          "complete": true,
+          "fee": {
+            "kind": "threshold",
+            "thresholdCents": 3500,
+            "belowThresholdCents": 495
+          },
+          "discountCents": 0,
+          "taxCents": 0,
+          "depositCents": 0
+        },
+        "after": {
+          "lines": [
+            {
+              "id": "protected",
+              "cents": 3480,
+              "eligible": true
+            },
+            {
+              "id": "salsa",
+              "cents": 150,
+              "eligible": true
+            }
+          ],
+          "complete": true,
+          "fee": {
+            "kind": "threshold",
+            "thresholdCents": 3500,
+            "belowThresholdCents": 495
+          },
+          "discountCents": 0,
+          "taxCents": 0,
+          "depositCents": 0
+        },
+        "expected": {
+          "beforeCents": 4090,
+          "afterCents": 3630,
+          "changeCents": -460,
+          "afterLowerCents": 3630,
+          "afterUpperCents": 3630,
+          "capStatus": "within",
+          "overCents": 0,
+          "wholeCheckoutWithinCap": true
+        }
+      }
+    },
+    {
+      "clause_id": "S05.02",
+      "requirement": "Deferring coffee and salsa in same threshold basket produces $39.75",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.CheckoutTests/testSharedCheckoutVectors",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/CheckoutTests.swift",
+      "source_line": 78,
+      "assertion_review": "The companion fixture starts from the same4090 base. Removing coffee and salsa leaves3480+495=3975, change-115, exceeding3800.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 79,
+          "text": "Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' started."
+        },
+        {
+          "line": 80,
+          "text": "Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' passed (0.002 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service.",
+      "shared_vector": {
+        "id": "s05-defer-coffee-and-salsa-restores-pickup-fee",
+        "scope": "wholeCheckout",
+        "capScope": "wholeCheckout",
+        "capCents": 3800,
+        "before": {
+          "lines": [
+            {
+              "id": "protected",
+              "cents": 3480,
+              "eligible": true
+            },
+            {
+              "id": "coffee",
+              "cents": 460,
+              "eligible": true
+            },
+            {
+              "id": "salsa",
+              "cents": 150,
+              "eligible": true
+            }
+          ],
+          "complete": true,
+          "fee": {
+            "kind": "threshold",
+            "thresholdCents": 3500,
+            "belowThresholdCents": 495
+          },
+          "discountCents": 0,
+          "taxCents": 0,
+          "depositCents": 0
+        },
+        "after": {
+          "lines": [
+            {
+              "id": "protected",
+              "cents": 3480,
+              "eligible": true
+            }
+          ],
+          "complete": true,
+          "fee": {
+            "kind": "threshold",
+            "thresholdCents": 3500,
+            "belowThresholdCents": 495
+          },
+          "discountCents": 0,
+          "taxCents": 0,
+          "depositCents": 0
+        },
+        "expected": {
+          "beforeCents": 4090,
+          "afterCents": 3975,
+          "changeCents": -115,
+          "afterLowerCents": 3975,
+          "afterUpperCents": 3975,
+          "capStatus": "over",
+          "overCents": 175,
+          "wholeCheckoutWithinCap": false
+        }
+      }
+    },
+    {
+      "clause_id": "S08.01",
+      "requirement": "Eight delivered, six usable and two reserved leaves four for tacos",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testSixUsableWrapsProtectTwoLunchesBeforeDinners",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 7,
+      "assertion_review": "Receipt8, usable6, needs tacos6/quesadillas4/protectedlunch2 produce allocations4/0/2 and shortfalls2/4/0; the received8 fact is retained.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 308,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' started."
+        },
+        {
+          "line": 309,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S08.02",
+      "requirement": "Correcting usable to seven leaves five for tacos",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testSixUsableWrapsProtectTwoLunchesBeforeDinners",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 7,
+      "assertion_review": "Correction supersedes usable6 with7 and yields tacos5/quesadillas0/protectedlunch2; same demandIDs, original received8, replay idempotency and serialized allocation are asserted.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 308,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' started."
+        },
+        {
+          "line": 309,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S08.03",
+      "requirement": "Replayed arrival save creates no extra pack",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testReceiptRetryAddsNothingButSecondGenuineSegmentCounts",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 47,
+      "assertion_review": "The same first receipt key returns true then false on replay. The second distinct delivery segment yields exactly two receipts; a changed body with the original key throws and leaves the ledger unchanged.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 304,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' started."
+        },
+        {
+          "line": 305,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S08.04",
+      "requirement": "Two separately confirmed deliveries survive",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testReceiptRetryAddsNothingButSecondGenuineSegmentCounts",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 47,
+      "assertion_review": "Two distinct confirmed segments of4 each produce two allocations covering the8-unit dinner, exactly two receipt rows, and serialization equality.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 304,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' started."
+        },
+        {
+          "line": 305,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S11.01",
+      "requirement": "Pending $2.40 credit leaves $37.20 posted as $37.20 paid",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testPendingCreditDoesNotReducePostedCashUntilPosted",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 175,
+      "assertion_review": "Postedcharge3720 plus pendingcredit240 leaves paidSoFar3720 and pendingCredits240. Only separately postedcredit changes paidSoFar3480; replay and a second posting are rejected.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 302,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testPendingCreditDoesNotReducePostedCashUntilPosted]' started."
+        },
+        {
+          "line": 303,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testPendingCreditDoesNotReducePostedCashUntilPosted]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S11.02",
+      "requirement": "Already-netted posted credit is not subtracted twice",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-calculation-run",
+      "selector": "CoreDomainTests.PickupTests/testIncludedCreditExplainsNetChargeWithoutSecondDeduction",
+      "source": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "source_line": 194,
+      "assertion_review": "Netpostedcharge3480 with includedcredit240 still yields paidSoFar3480, includedCredits240 and pendingCredits0; separately posting the same refund throws and serialization preserves the ledger.",
+      "execution_log": "docs/evidence/native/acceptance-math-20261107/core-domain.log",
+      "execution_events": [
+        {
+          "line": 290,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testIncludedCreditExplainsNetChargeWithoutSecondDeduction]' started."
+        },
+        {
+          "line": 291,
+          "text": "Test Case '-[CoreDomainTests.PickupTests testIncludedCreditExplainsNetChargeWithoutSecondDeduction]' passed (0.000 seconds)."
+        }
+      ],
+      "limits": "Pure Swift domain execution; does not prove corresponding rendered screens, physical devices or deployed service."
+    },
+    {
+      "clause_id": "S14.01",
+      "requirement": "Broken recipe link leaves servings and allocations editable",
+      "historical_classification": "indirect-or-unmapped",
+      "current_assessment": "proven-in-scoped-native-run",
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart",
+      "source": "ios/UITests/FreeJourneyUITests.swift",
+      "evidence": "docs/evidence/native/recipe-source-editing-20261107/root-verification.json",
+      "assertion_review": "Unchanged ordinary UI creates a recipe with a deliberately unresolvable .invalid URL, edits servings and explicit ingredient allocations, restarts, verifies the same occurrence identity and updated amounts, then verifies the reusable recipe retains its original source/notes/servings/amounts. The one-line persistent Notes label is the sole production correction.",
+      "limits": "English local simulator and stored unavailable source; no HTTP-fetch/browser roundtrip, human VoiceOver, Spanish or physical-device claim."
+    }
+  ],
+  "core_domain_strict_replay": {
+    "passed": 171,
+    "skipped": 0
+  },
+  "remaining": "Unreviewed historical clauses retain their prior evidence limits. S26 synchronous model/service and S22 browser-history improvements remain separately scoped; this report does not promote their entire screen requirements."
+}

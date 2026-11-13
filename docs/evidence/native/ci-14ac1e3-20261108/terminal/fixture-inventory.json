@@ -1,0 +1,1144 @@
+{
+  "schema": 1,
+  "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+  "headTree": "218cedd302444eda05094a3c84fdc5299dc7ea41",
+  "observedAtUtc": "2026-11-08T09:39:27Z",
+  "runId": 42457094298,
+  "conclusion": "failure",
+  "cohortTerminal": true,
+  "workflows": [
+    {
+      "runId": 42457092386,
+      "name": "Build and test",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "success": 17,
+        "failure": 3
+      }
+    },
+    {
+      "runId": 42457094298,
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "success": 18,
+        "failure": 2
+      }
+    },
+    {
+      "runId": 42457094804,
+      "name": "iOS deep checks",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      }
+    },
+    {
+      "runId": 42457097096,
+      "name": "iOS Release performance",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      }
+    },
+    {
+      "runId": 42457092321,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 1
+      }
+    },
+    {
+      "runId": 42457094347,
+      "name": "Security checks",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 3
+      }
+    }
+  ],
+  "aggregate": {
+    "selected": 69,
+    "executed": 66,
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0,
+    "unexecuted": 3,
+    "strictlyAcceptedCases": 61,
+    "warningCountUnavailableShards": [
+      "SharedDeliveryUITests-recovery-cook-and-closeout"
+    ],
+    "warningVerificationNotRunShards": [
+      "contributor-balanced-01"
+    ],
+    "scopedWarningCount": "Zero across strictly accepted rows, per scoped hosted test exports and the sanitized Records report."
+  },
+  "scope": "Original hosted console, artifact metadata, and bounded original plan member for the boot-failed shard. Records includes only the sanitized report. No full archives or media retrieved.",
+  "rows": [
+    {
+      "shard": "contributor-balanced-05",
+      "jobId": 128662104134,
+      "conclusion": "success",
+      "native": {
+        "selected": 14,
+        "executed": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 9186,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+            "durationSeconds": 128.123,
+            "jobLogLine": 1240
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+            "durationSeconds": 67.949,
+            "jobLogLine": 1548
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+            "durationSeconds": 51.706,
+            "jobLogLine": 1724
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+            "durationSeconds": 276.674,
+            "jobLogLine": 5014
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock",
+            "durationSeconds": 103.965,
+            "jobLogLine": 5265
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+            "durationSeconds": 45.3,
+            "jobLogLine": 5507
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+            "durationSeconds": 53.977,
+            "jobLogLine": 5749
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+            "durationSeconds": 22.505,
+            "jobLogLine": 5989
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+            "durationSeconds": 7.264,
+            "jobLogLine": 6013
+          },
+          {
+            "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+            "durationSeconds": 17.103,
+            "jobLogLine": 6205
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+            "durationSeconds": 184.283,
+            "jobLogLine": 7373
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+            "durationSeconds": 252.456,
+            "jobLogLine": 8694
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline",
+            "durationSeconds": 185.089,
+            "jobLogLine": 9501
+          },
+          {
+            "selector": "RoomInTheCartUITests/StapleRecallUITests/testShopperClosesExactCoffeeAfterFilteringAndReopensOnlyThePriorMarketCheck",
+            "durationSeconds": 68.072,
+            "jobLogLine": 9690
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 14,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 9730
+      },
+      "acceptedCases": 14,
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline",
+        "RoomInTheCartUITests/StapleRecallUITests/testShopperClosesExactCoffeeAfterFilteringAndReopensOnlyThePriorMarketCheck"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 522
+      },
+      "artifact": {
+        "id": 13609937525,
+        "name": "iphone-fixture-results-contributor-balanced-05-1",
+        "bytes": 20772867,
+        "digest": "sha256:b978b19f223d6a4c3bccefabb0a9767dc92a6dced389e6573458b9a9a413ac73"
+      }
+    },
+    {
+      "shard": "contributor-balanced-03",
+      "jobId": 128662104298,
+      "conclusion": "success",
+      "native": {
+        "selected": 10,
+        "executed": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 9126,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+            "durationSeconds": 94.313,
+            "jobLogLine": 1918
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+            "durationSeconds": 156.646,
+            "jobLogLine": 5231
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+            "durationSeconds": 98.241,
+            "jobLogLine": 5598
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+            "durationSeconds": 143.568,
+            "jobLogLine": 6360
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+            "durationSeconds": 211.269,
+            "jobLogLine": 7578
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+            "durationSeconds": 98.646,
+            "jobLogLine": 8250
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+            "durationSeconds": 66.208,
+            "jobLogLine": 8772
+          },
+          {
+            "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+            "durationSeconds": 52.957,
+            "jobLogLine": 9036
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+            "durationSeconds": 35.061,
+            "jobLogLine": 9321
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+            "durationSeconds": 36.781,
+            "jobLogLine": 9603
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 10,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 9639
+      },
+      "acceptedCases": 10,
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 495
+      },
+      "artifact": {
+        "id": 13610577677,
+        "name": "iphone-fixture-results-contributor-balanced-03-1",
+        "bytes": 36895992,
+        "digest": "sha256:4499241a9d6c1406d7add79ae770359919fbbb6de084dc1807e6ce503bd95d6c"
+      }
+    },
+    {
+      "shard": "contributor-balanced-02",
+      "jobId": 128662104337,
+      "conclusion": "success",
+      "native": {
+        "selected": 11,
+        "executed": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 4998,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/ContributorRequestUITests/testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages",
+            "durationSeconds": 34.736,
+            "jobLogLine": 627
+          },
+          {
+            "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests",
+            "durationSeconds": 16.412,
+            "jobLogLine": 690
+          },
+          {
+            "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+            "durationSeconds": 136.476,
+            "jobLogLine": 1389
+          },
+          {
+            "selector": "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+            "durationSeconds": 399.133,
+            "jobLogLine": 3291
+          },
+          {
+            "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+            "durationSeconds": 57.536,
+            "jobLogLine": 3535
+          },
+          {
+            "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+            "durationSeconds": 42.021,
+            "jobLogLine": 3766
+          },
+          {
+            "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+            "durationSeconds": 102.338,
+            "jobLogLine": 4196
+          },
+          {
+            "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+            "durationSeconds": 63.284,
+            "jobLogLine": 4524
+          },
+          {
+            "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+            "durationSeconds": 36.686,
+            "jobLogLine": 4684
+          },
+          {
+            "selector": "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+            "durationSeconds": 84.682,
+            "jobLogLine": 4980
+          },
+          {
+            "selector": "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+            "durationSeconds": 70.145,
+            "jobLogLine": 5484
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 11,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 5521
+      },
+      "acceptedCases": 11,
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages",
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests",
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 504
+      },
+      "artifact": {
+        "id": 13609486850,
+        "name": "iphone-fixture-results-contributor-balanced-02-1",
+        "bytes": 23906461,
+        "digest": "sha256:5e7eaba02597b5e68d817a69a4217dc830e61e6671535ce638be319854ff2d37"
+      }
+    },
+    {
+      "shard": "contributor-balanced-01",
+      "jobId": 128662104339,
+      "conclusion": "failure",
+      "native": {
+        "selected": 3,
+        "executed": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 3,
+        "scope": "Boot guard stopped the job before XCTest."
+      },
+      "warning": {
+        "status": "not-run",
+        "recordedCount": null
+      },
+      "acceptedCases": 0,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+      ],
+      "selectorEvidence": {
+        "kind": "Original ZIP plan member",
+        "receipt": "contributor-balanced-01-plan/range-receipt.json",
+        "member": "test-plan/contributor-balanced-01.txt",
+        "sha256": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a"
+      },
+      "artifact": {
+        "id": 13609457451,
+        "name": "iphone-fixture-results-contributor-balanced-01-1",
+        "bytes": 32677,
+        "digest": "sha256:d64011736acce1ea63b45e12fc00350e2b61b9fbf2611d1f99c2cc827076b468"
+      }
+    },
+    {
+      "shard": "contributor-balanced-04",
+      "jobId": 128662104370,
+      "conclusion": "success",
+      "native": {
+        "selected": 5,
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 6342,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+            "durationSeconds": 165.35,
+            "jobLogLine": 1271
+          },
+          {
+            "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+            "durationSeconds": 81.069,
+            "jobLogLine": 1694
+          },
+          {
+            "selector": "RoomInTheCartUITests/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy",
+            "durationSeconds": 105.128,
+            "jobLogLine": 2139
+          },
+          {
+            "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+            "durationSeconds": 297.851,
+            "jobLogLine": 5524
+          },
+          {
+            "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice",
+            "durationSeconds": 151.543,
+            "jobLogLine": 6795
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 5,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 6826
+      },
+      "acceptedCases": 5,
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+        "RoomInTheCartUITests/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 471
+      },
+      "artifact": {
+        "id": 13609592057,
+        "name": "iphone-fixture-results-contributor-balanced-04-1",
+        "bytes": 9914319,
+        "digest": "sha256:3a142d34f2ed88b00bea634d9653fab1218b30bad28a2c013e7be3cf88db5274"
+      }
+    },
+    {
+      "shard": "RecordsMediaUITests",
+      "jobId": 128668251023,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "scope": "Hosted sanitized Records Media report."
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "scope": "Sanitized report only.",
+        "jobLogLine": 585
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted sanitized Records Media report",
+        "jobLogLine": 585
+      },
+      "artifact": {
+        "id": 13610443286,
+        "name": "iphone-fixture-results-RecordsMediaUITests-1",
+        "bytes": 33033,
+        "digest": "sha256:92f5815cef8d9138a6286a316c2ba705887f412e7205f4cefe2162f3f10d95d6"
+      }
+    },
+    {
+      "shard": "SharedDeliveryUITests-stock-and-purchase",
+      "jobId": 128668732692,
+      "conclusion": "success",
+      "native": {
+        "selected": 6,
+        "executed": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 2744,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+            "durationSeconds": 75.671,
+            "jobLogLine": 761
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
+            "durationSeconds": 58.196,
+            "jobLogLine": 1006
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperRecordsAndCorrectsDeliveryThenReopensIt",
+            "durationSeconds": 184.955,
+            "jobLogLine": 1617
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
+            "durationSeconds": 179.743,
+            "jobLogLine": 2314
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+            "durationSeconds": 128.18,
+            "jobLogLine": 2785
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
+            "durationSeconds": 102.333,
+            "jobLogLine": 3191
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 6,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 3223
+      },
+      "acceptedCases": 6,
+      "selectors": [
+        "RoomInTheCartUITests/SharedDeliveryUITests/testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperRecordsAndCorrectsDeliveryThenReopensIt",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 465
+      },
+      "artifact": {
+        "id": 13612335242,
+        "name": "iphone-fixture-results-SharedDeliveryUITests-stock-and-purchase-1",
+        "bytes": 7417284,
+        "digest": "sha256:b21a9b02ce6afa161c1d6c7db728cbf86e7d12028a1bb0d6eccf16af956aed34"
+      }
+    },
+    {
+      "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+      "jobId": 128671571534,
+      "conclusion": "failure",
+      "native": {
+        "selected": 5,
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 2539,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+            "durationSeconds": 300.057,
+            "jobLogLine": 1414
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+            "durationSeconds": 72.095,
+            "jobLogLine": 1648
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+            "durationSeconds": 130.71,
+            "jobLogLine": 2172
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+            "durationSeconds": 70.053,
+            "jobLogLine": 2437
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+            "durationSeconds": 160.775,
+            "jobLogLine": 3053
+          }
+        ]
+      },
+      "warning": {
+        "status": "failed-evidence-unavailable",
+        "recordedCount": null,
+        "jobLogLine": 3084,
+        "detail": "XCTest runtime warning evidence is unavailable. Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0."
+      },
+      "acceptedCases": 0,
+      "selectors": [
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+        "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 532
+      },
+      "artifact": {
+        "id": 13611400715,
+        "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+        "bytes": 4909856,
+        "digest": "sha256:bc8b89cc1f18a4dd8070fa85684654cf2f15adc8fcdd5a04fdf744b7ea388522"
+      }
+    },
+    {
+      "shard": "SharedFallbackUITests",
+      "jobId": 128673125070,
+      "conclusion": "success",
+      "native": {
+        "selected": 2,
+        "executed": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 1123,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+            "durationSeconds": 99.936,
+            "jobLogLine": 812
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+            "durationSeconds": 199.306,
+            "jobLogLine": 1515
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 2,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 1543
+      },
+      "acceptedCases": 2,
+      "selectors": [
+        "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+        "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 410
+      },
+      "artifact": {
+        "id": 13610194391,
+        "name": "iphone-fixture-results-SharedFallbackUITests-1",
+        "bytes": 4918409,
+        "digest": "sha256:b098d6d0b0c2e3806a40db4ada90110b7417312e94df59ffaf83b9348274270b"
+      }
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "jobId": 128676681876,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 1878,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+            "durationSeconds": 448.956,
+            "jobLogLine": 2385
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 2412
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 525
+      },
+      "artifact": {
+        "id": 13611591487,
+        "name": "iphone-fixture-results-SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-1",
+        "bytes": 8157430,
+        "digest": "sha256:b8d2a1a3543292443d51feae9b8dfd2a2204096ca70700f052e992fa4cd96cdc"
+      }
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+      "jobId": 128678844411,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 1118,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+            "durationSeconds": 229.834,
+            "jobLogLine": 1603
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 1630
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 503
+      },
+      "artifact": {
+        "id": 13611986966,
+        "name": "iphone-fixture-results-SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn-1",
+        "bytes": 5122527,
+        "digest": "sha256:ecf12629c217ea52a35e4eac8d713b76e255779d0ff54a92b6f6183eda1d0c39"
+      }
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "jobId": 128679604279,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 443,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+            "durationSeconds": 109.88,
+            "jobLogLine": 869
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 896
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 444
+      },
+      "artifact": {
+        "id": 13611893189,
+        "name": "iphone-fixture-results-SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult-1",
+        "bytes": 2837774,
+        "digest": "sha256:12e67661dc11c6272709d076ae4f66f26a1dbf0fa13455fcacc0ab56e020eae7"
+      }
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "jobId": 128680101367,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 2237,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+            "durationSeconds": 476.321,
+            "jobLogLine": 2667
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 2694
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 448
+      },
+      "artifact": {
+        "id": 13611377606,
+        "name": "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1",
+        "bytes": 10474727,
+        "digest": "sha256:c696e2c727477d0860919b3a9fcc2f877cb6197fbc832a127d8fa13a492365e9"
+      }
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "jobId": 128682767737,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 1207,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+            "durationSeconds": 357.324,
+            "jobLogLine": 1708
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 1735
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 519
+      },
+      "artifact": {
+        "id": 13612030430,
+        "name": "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1",
+        "bytes": 5853133,
+        "digest": "sha256:f923d26b2b33701a3e19c04ed5ef8846a0552277b1346e62b3769abde3aa1db5"
+      }
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+      "jobId": 128684690040,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 372,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+            "durationSeconds": 83.04,
+            "jobLogLine": 897
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 924
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 543
+      },
+      "artifact": {
+        "id": 13612235091,
+        "name": "iphone-fixture-results-SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable-1",
+        "bytes": 2531998,
+        "digest": "sha256:b5ea09d2f51bcae0cf2625146adf64eaa75c66bfd00b9b502cd56e6e76f8583a"
+      }
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "jobId": 128686181274,
+      "conclusion": "success",
+      "native": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 1258,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+            "durationSeconds": 246.399,
+            "jobLogLine": 1663
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 1,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 1690
+      },
+      "acceptedCases": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 423
+      },
+      "artifact": {
+        "id": 13611654702,
+        "name": "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1",
+        "bytes": 6247993,
+        "digest": "sha256:fa94c2b58129a62b48740e437509302516727d936d2fd586d95af0bc55991e54"
+      }
+    },
+    {
+      "shard": "DinnerDecisionSheetUITests",
+      "jobId": 128686333317,
+      "conclusion": "success",
+      "native": {
+        "selected": 5,
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "unexecuted": 0,
+        "animationIdleMessagesObserved": 0,
+        "analyzedNativeLogLines": 945,
+        "runnerRestartBoundariesObserved": 0,
+        "passedCases": [
+          {
+            "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+            "durationSeconds": 79.738,
+            "jobLogLine": 701
+          },
+          {
+            "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+            "durationSeconds": 66.178,
+            "jobLogLine": 953
+          },
+          {
+            "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+            "durationSeconds": 21.824,
+            "jobLogLine": 1017
+          },
+          {
+            "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+            "durationSeconds": 45.115,
+            "jobLogLine": 1185
+          },
+          {
+            "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+            "durationSeconds": 68.925,
+            "jobLogLine": 1444
+          }
+        ]
+      },
+      "warning": {
+        "status": "passed",
+        "recordedCount": 0,
+        "examinedTests": 5,
+        "summaryFieldAvailable": false,
+        "jobLogLine": 1475
+      },
+      "acceptedCases": 5,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "selectorEvidence": {
+        "kind": "Hosted xcodebuild exact invocation and ordered XCTest passes",
+        "jobLogLine": 517
+      },
+      "artifact": {
+        "id": 13612133155,
+        "name": "iphone-fixture-results-DinnerDecisionSheetUITests-1",
+        "bytes": 4673736,
+        "digest": "sha256:ba41772bcd4a65479e39ed81787bc5c33adc0064a0ead7c476d016d863c6fabc"
+      }
+    }
+  ],
+  "snapshot": {
+    "path": "status-20261108T093927Z.json",
+    "sha256": "a038312b3ca6af0c1644d999d2d18091f51e744a74cf7ab4862f9baae36ea56a"
+  },
+  "coreTerminalReceipt": {
+    "path": "core-terminal/receipt.json",
+    "sha256": "4f74427c8c8d2dc9352947dc5ec3bc490adc97121d284c938df565d7190b50ee",
+    "ordinaryUI": {
+      "selected": 68,
+      "executed": 68,
+      "passed": 66,
+      "failed": 2
+    }
+  },
+  "priorFailureReceipts": [
+    {
+      "path": "contributor-balanced-01/receipt.json",
+      "sha256": "66c1e6cfa5edc49884130173928ea80750bd250bd421c1d2fa08904073f6b1e6"
+    },
+    {
+      "path": "cook-recovery-closeout/receipt.json",
+      "sha256": "a44e804f82236dbe1fcfbdb2d52fe9052e5b2163bc3fc633b623d2bf6f6082af"
+    }
+  ],
+  "jobLogExcerpts": {
+    "path": "fixture-terminal-job-log-excerpts.txt",
+    "sha256": "5780d66abc11e6f046b158041d2bbcee96affc02404332ea37c3aa4b4dddb4dc",
+    "bytes": 44045
+  }
+}

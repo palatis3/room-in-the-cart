@@ -1,0 +1,66 @@
+{
+  "baseCommit": "afce8b8e88bfca7b562ea121e2d3dcfe88865706",
+  "workflows": {
+    "ci.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "f584ee2152ae84ade510b9ed44789857b7e0b8530621bbd4c47129a8c4369729",
+      "proposedSHA256": "12b1df6bf660aa404dca51e477683eed71f416cbc3a4e37fee8f3fa8b747e13c",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "ios-deep.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "5c5ae5f2639f242fe57b7f831a55b4c9b6bf7ddb18fe0041e2c1c378deffd625",
+      "proposedSHA256": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "ios-fixtures.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "ca95b419a1fe79e5ca40f1cdb7d95a1fd4502a3b8ebb8d3c6ce6ad73429239bd",
+      "proposedSHA256": "226f618f4ff84e83d5ca54c5c2103bdae5977c6f6d2c055a626266958031975d",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "ios-native-wire.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "962a131c12eef729769a080a1e14d6d1c98396c7fd17a800f6bd02176215fcd6",
+      "proposedSHA256": "e1cc36dc552458deeee2f78ce7ae33c76d512d797835d9ecd7d7da5ee18f86d8",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "ios-performance.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "850c7c73584e1574fcba5cc282b890620b29b18c557983164b113b445b67b5c6",
+      "proposedSHA256": "1ed55580574c9e511724858a52f854b8649be76a591729d7f73c3dcce66fe404",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "ios-toggle-diagnostic.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "66546a0dca11099f8af2cda227d4a73db7b0a1d0928fbc762f3bc7a0d263417e",
+      "proposedSHA256": "a5b7024f0f171f20c1c45252ade36b05007e9c6643414893a95384f413d301f2",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "release-checks.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "e056b193ad811e2ad503cfec4f4b993e67937bac5588413cb05a1d4d1229ebe3",
+      "proposedSHA256": "e056b193ad811e2ad503cfec4f4b993e67937bac5588413cb05a1d4d1229ebe3",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    },
+    "security.yml": {
+      "preservedOutsideReviewedSchedulingAndLintChanges": true,
+      "workflowSupersessionUnchanged": true,
+      "originalSHA256": "06aa8d5942f88e546c8cbbcdf0476fcab6cd21ed1a9fc7883e9276b4c9757897",
+      "proposedSHA256": "06aa8d5942f88e546c8cbbcdf0476fcab6cd21ed1a9fc7883e9276b4c9757897",
+      "jobNeedsTimeoutsRuntimePinsCapsFailFastArtifactsAndGatesUnchanged": true
+    }
+  },
+  "preservedImplicitMatrixDisplayNames": {
+    "ci.yml/ios-tests": "ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})",
+    "ios-deep.yml/sanitizers": "sanitizers (${{ matrix.sanitizer }})",
+    "ios-deep.yml/storekit": "storekit (${{ matrix.locale }}, ${{ matrix.configuration }})"
+  }
+}

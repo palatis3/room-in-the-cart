@@ -22,6 +22,11 @@ export const deletionSchema=z.object({clientKey:id,statusToken:secret,confirm:z.
 export const exitSchema=z.object({clientKey:id,confirm:z.literal(true),disposition:exitChoiceSchema}).strict();
 export interface AccountDeletionProvider { assertAvailable(subject:string,call?:JournalCall):Promise<void>; deleteAccount(subject:string,call?:JournalCall):Promise<void> }
 const unavailable=()=>new ServiceError(503,'deletion_unavailable','Account deletion is unavailable until the configured provider can remove the account.');
+// Supabase Auth returns error_code on its legacy API and code on the versioned API.
+const absentProviderUser = z.union([
+ z.object({error_code:z.literal('user_not_found'),code:z.literal(404).optional()}),
+ z.object({code:z.literal('user_not_found'),error_code:z.literal('user_not_found').optional()})
+]);
 export class SupabaseAccountDeletionProvider implements AccountDeletionProvider {
  private readonly base:string;private readonly key:string;
  constructor(config:{url:string;secretKey:string;revokeApple?:(subject:string,call?:JournalCall)=>Promise<void>},private readonly fetcher:typeof fetch=(input,init)=>globalThis.fetch(input,init)){
@@ -34,11 +39,23 @@ export class SupabaseAccountDeletionProvider implements AccountDeletionProvider 
   return privacyPhase(parent,async call=>{
   id.parse(subject);let response:Response;
   try{response=await this.fetcher(this.base+subject,{method,headers:{apikey:this.key,...(this.key.startsWith('sb_secret_')?{}:{Authorization:'Bearer '+this.key}),'Content-Type':'application/json'},redirect:'error',signal:call.signal,...(method==='DELETE'?{body:JSON.stringify({should_soft_delete:false})}:{})});}catch{throw unavailable();}
-  if(response.status===404)return null;if(!response.ok)throw unavailable();if(method==='DELETE'){await response.body?.cancel();return null;}
+  const missing = response.status === 404;
+  if(!response.ok && !missing)throw unavailable();
+  if(method==='DELETE' && !missing){await response.body?.cancel();return null;}
   if(!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))throw unavailable();
   const reader=response.body?.getReader();if(!reader)throw unavailable();let size=0;const parts:Uint8Array[]=[];
   for(;;){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>65536){await reader.cancel();throw unavailable();}parts.push(part.value);}
-  try{const user=z.object({id,identities:z.array(z.object({provider:z.string()}))}).parse(JSON.parse(Buffer.concat(parts).toString('utf8')));if(user.id!==subject)throw Error();return user;}catch{throw unavailable();}
+  try {
+   const body: unknown = JSON.parse(Buffer.concat(parts).toString('utf8'));
+   if (missing) {
+    const header = response.headers.get('x-sb-error-code');
+    if ((header !== null && header !== 'user_not_found') || !absentProviderUser.safeParse(body).success) throw unavailable();
+    return null;
+   }
+   const user=z.object({id,identities:z.array(z.object({provider:z.string()}))}).parse(body);
+   if(user.id!==subject)throw unavailable();
+   return user;
+  } catch { throw unavailable(); }
   });
  }
  private async account(subject:string,call:JournalCall){const value=await this.request(subject,'GET',call);if(value&&value.identities.some(i=>i.provider==='apple')&&!this.apple)throw unavailable();return value;}

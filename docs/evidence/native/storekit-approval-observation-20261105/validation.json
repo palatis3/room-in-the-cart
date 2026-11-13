@@ -1,0 +1,95 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "scope": "Local diagnostic nonreproduction; original hosted Spanish failure remains failed. No production behavior, deadline, assertions, selectors or StoreKit read frequency changed.",
+  "rawEvidence": ".build/CIResearch20261105/storekit-approval-ab-diagnostic",
+  "sourceFiles": 494,
+  "productFiles": 167,
+  "manifestsRecheckedUnchanged": true,
+  "buildExit": 0,
+  "driverExit": 0,
+  "patchSHA256": "83e99996fad3af9eb4641899766ed7280b069a499ae16a0fcb96fac743e63c9a",
+  "sourceManifestSHA256": "e1a5296baee4a2a2c06c61616f9845cd3035f38193baff4272107b4ab848b586",
+  "productsManifestSHA256": "37b57faab709a259b8fe7867daa00f333d6534b8dd3de34592fd6252d7e1f3ee",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runs": [
+    {
+      "locale": "es",
+      "selected": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "configuration": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "EC32B4AD-3019-44C8-A953-EDD3D03108FB",
+        "deviceName": "RITC Ask Approval Diagnostic es",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "nativeExit": 0,
+      "strictExit": 0,
+      "simulatorStateAfter": "Shutdown",
+      "observations": 67,
+      "firstDeliveryObservation": "1.142349125 seconds stage=purchase-open finished=false busy=true report=awaiting-result delivery=[failed(RoomInTheCart.MembershipFailure.notConfigured)] callbacks=[] currentRead=false verified=0 productMatches=0 tokenMatches=0 nilTokens=0 matching=0 matchingOutcome=non-unique unverified=0",
+      "firstFinishedObservation": "6.703754584 seconds stage=current-read finished=true busy=false report=pending delivery=[failed(RoomInTheCart.MembershipFailure.notConfigured)] callbacks=[] currentRead=true verified=1 productMatches=1 tokenMatches=1 nilTokens=0 matching=1 matchingOutcome=failed(RoomInTheCart.MembershipFailure.notConfigured) unverified=0",
+      "firstMatchingObservation": "6.703754584 seconds stage=current-read finished=true busy=false report=pending delivery=[failed(RoomInTheCart.MembershipFailure.notConfigured)] callbacks=[] currentRead=true verified=1 productMatches=1 tokenMatches=1 nilTokens=0 matching=1 matchingOutcome=failed(RoomInTheCart.MembershipFailure.notConfigured) unverified=0",
+      "observationAttachmentSHA256": "4be06f55665922cb986ae0950d032ec0163da4e92b0aa0fd30f8276bb2fc05a8",
+      "files": {
+        "Tests.log": "0c6e769763a6f58a0b9536d719059eeae8a125d8680491fa7f926706ad1a578c",
+        "test-summary.json": "48ef85e5915bdeae7b7db1ddabae0eba3134aec59a6d6e2e71c4abb6a5373581",
+        "test-details.json": "c4ec3fa806b27718c9b5951015a98e2bcdd38f8ca33461cb03babd25f14d8d57",
+        "test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        "verification.txt": "e96a8accabb4e26889d2c2044c9c23831ab7d7fe47ab6cdf05ac04269fa67163",
+        "attachments/manifest.json": "45bf8f3006f9c467ad1ec6995da7fb60612d7a54ffe021d807cdc165602c7eae"
+      }
+    },
+    {
+      "locale": "en",
+      "selected": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "configuration": "US English \u2014 local StoreKit",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "CBBD8327-BEB4-4344-B4C7-748DE5DAFC5F",
+        "deviceName": "RITC Ask Approval Diagnostic en",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "nativeExit": 0,
+      "strictExit": 0,
+      "simulatorStateAfter": "Shutdown",
+      "observations": 9,
+      "firstDeliveryObservation": "1.047470375 seconds stage=current-read finished=true busy=false report=pending delivery=[failed(RoomInTheCart.MembershipFailure.notConfigured)] callbacks=[] currentRead=true verified=1 productMatches=1 tokenMatches=1 nilTokens=0 matching=1 matchingOutcome=failed(RoomInTheCart.MembershipFailure.notConfigured) unverified=0",
+      "firstFinishedObservation": "0.120574459 seconds stage=current-read finished=true busy=false report=pending delivery=[] callbacks=[] currentRead=true verified=0 productMatches=0 tokenMatches=0 nilTokens=0 matching=0 matchingOutcome=non-unique unverified=0",
+      "firstMatchingObservation": "1.047470375 seconds stage=current-read finished=true busy=false report=pending delivery=[failed(RoomInTheCart.MembershipFailure.notConfigured)] callbacks=[] currentRead=true verified=1 productMatches=1 tokenMatches=1 nilTokens=0 matching=1 matchingOutcome=failed(RoomInTheCart.MembershipFailure.notConfigured) unverified=0",
+      "observationAttachmentSHA256": "d3529bb87c70e03128418bb971637671baa5333552ff2dcc2997539a45193584",
+      "files": {
+        "Tests.log": "e714cc79dadb0826e575ef4e3a32ffe0dcc45646c57c4cc5d3c72d8b8810339f",
+        "test-summary.json": "fa7556ee59676650365fcae0dc307401836cc77bbfefe62c0325c6fb9f77a07e",
+        "test-details.json": "a809d5553cc0197fd94ef8f567a632b61d44bd6ef807d94a5bbbdd3104d45f21",
+        "test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        "verification.txt": "9ccf5943a06897d33d8560fc249e4df725beea159f06a0b2c7443ec3bf7a56e6",
+        "attachments/manifest.json": "80803c98809c0d53aa0e54a342573817d78ba05cb5879c0dc3d9779749f8e106"
+      }
+    }
+  ],
+  "limits": {
+    "predicateSeconds": 10,
+    "pollMilliseconds": 100,
+    "nativeCaseSeconds": 120
+  },
+  "limitations": [
+    "Instrumented observations can affect scheduling.",
+    "Local iOS 26.2 build23C52 differs from hosted23C54; local Xcode27.1 differs from hosted26.3.",
+    "This does not identify the failing predicate branch in the original hosted result."
+  ],
+  "previewState": "Booted"
+}

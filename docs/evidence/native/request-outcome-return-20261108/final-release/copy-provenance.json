@@ -1,0 +1,12 @@
+{
+  "run.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/release-run/run.json",
+    "sha256": "aec699351f035dac14c7321cab7606bfcf0b037f1279997a770b1fa4470717c9",
+    "bytes": 32890
+  },
+  "bundle-check.txt": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/release-run/bundle-check.txt",
+    "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+    "bytes": 105
+  }
+}

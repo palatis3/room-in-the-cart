@@ -1,0 +1,61 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998676",
+  "toolchain": "Xcode 26.3 on standard macos-15 arm64",
+  "jobs": {
+    "address": 126927542386,
+    "thread": 126927542162
+  },
+  "casesPerSanitizer": {
+    "CoreDomain": 168,
+    "DeviceSurfaces": 29,
+    "HouseholdClient": 82,
+    "LocalStore": 74,
+    "RecordArchive": 33
+  },
+  "totalPerSanitizer": 386,
+  "failedPerSanitizer": 0,
+  "logEvidence": {
+    "swift-address-1/CoreDomain.log": {
+      "summary": "Executed 168 tests, with 0 failures (0 unexpected) in 8.809 (8.923) seconds",
+      "sha256": "cc2293a75126c5658ed2385c4431f82c4abf433229f5303fb03c1f670099bbf5"
+    },
+    "swift-address-1/DeviceSurfaces.log": {
+      "summary": "Executed 29 tests, with 0 failures (0 unexpected) in 0.291 (0.304) seconds",
+      "sha256": "349f177fc79f79a0675adc1a6c857bdfe8b4c6958cab1be9b51f83df48a28ba8"
+    },
+    "swift-address-1/HouseholdClient.log": {
+      "summary": "Executed 82 tests, with 0 failures (0 unexpected) in 1.610 (1.647) seconds",
+      "sha256": "fc946823392de3240e7bf0152289ab9341384fab162d7cb44f31256dbc16417a"
+    },
+    "swift-address-1/LocalStore.log": {
+      "summary": "Executed 74 tests, with 0 failures (0 unexpected) in 3.200 (3.250) seconds",
+      "sha256": "40758d3010daa55af4fa7d0095e4952b8cfab6991a99db34e6f9db7779d8f2ef"
+    },
+    "swift-address-1/RecordArchive.log": {
+      "summary": "Executed 33 tests, with 0 failures (0 unexpected) in 1.075 (1.092) seconds",
+      "sha256": "03ccb5cbcc6269a6d548381354cf4285868708a42bb028ae9dc30499941965f9"
+    },
+    "swift-thread-1/CoreDomain.log": {
+      "summary": "Executed 168 tests, with 0 failures (0 unexpected) in 4.657 (4.731) seconds",
+      "sha256": "77cd3dcfaede969d5b60119e43863de000359e42bb9cefe4c39eeefd4f5fd978"
+    },
+    "swift-thread-1/DeviceSurfaces.log": {
+      "summary": "Executed 29 tests, with 0 failures (0 unexpected) in 0.530 (0.562) seconds",
+      "sha256": "c15fcae6bb4e9cbc6075d71eee44f5c348908871fd1297ee72637086362ba7db"
+    },
+    "swift-thread-1/HouseholdClient.log": {
+      "summary": "Executed 82 tests, with 0 failures (0 unexpected) in 1.391 (1.426) seconds",
+      "sha256": "1674abe8abe63d172e76796940e66961844d831cb34dc471985b260d3e42b444"
+    },
+    "swift-thread-1/LocalStore.log": {
+      "summary": "Executed 74 tests, with 0 failures (0 unexpected) in 1.977 (2.019) seconds",
+      "sha256": "7c1b3eedcbc992046eaf271db0be2ae0278e7b8c243f04ed8e5ec76a3e546faf"
+    },
+    "swift-thread-1/RecordArchive.log": {
+      "summary": "Executed 33 tests, with 0 failures (0 unexpected) in 0.946 (0.968) seconds",
+      "sha256": "3f42247e35ee89e86a0bb18681223496fd9c163312fbcb44725a34b6c02927d5"
+    }
+  },
+  "scope": "Package sanitizer jobs only; not a complete iOS UI, billing or release acceptance claim."
+}

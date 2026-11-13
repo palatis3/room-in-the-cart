@@ -1,0 +1,36 @@
+{
+  "status": "failed",
+  "execution": ".build/PartialTrackingWireNov10/execution-result-r1",
+  "sourceFiles": 417,
+  "nodePassed": 22,
+  "nodeFailed": 2,
+  "swiftScenariosPassed": 76,
+  "expectedNode": 24,
+  "expectedSwift": 80,
+  "allOriginal21Node70SwiftPassed": true,
+  "newStoreReviewPassed": true,
+  "trackedMealCancelApplyRetryPassed": true,
+  "failures": [
+    {
+      "case": 23,
+      "code": "duplicate_order",
+      "status": 422,
+      "stage": "Adding later independent staple before Undo",
+      "next": "Correct fixture order collision without changing existing cases."
+    },
+    {
+      "case": 24,
+      "code": "protected_meal",
+      "status": 409,
+      "stage": "Meal-action source catalog before conversion review",
+      "next": "Investigate actual protected-meal admission; preserve conservation and reject real reductions."
+    }
+  ],
+  "postgresStopped": true,
+  "privateFailureFixtureRetained": true,
+  "sourceAndArchiveVerified": true,
+  "logSHA256": "74596ce5e88a8052498cd604a4ef3df133985ace2f5203534393865944c4ea54",
+  "receiptSHA256": "b5143ee975c23dc57d2eea54a0528f6e20d85e3adf5518ba4d7eaa8dac8bf068",
+  "sourceManifestSHA256": "80c0d4e08eaac562eb5cf8c5f45854db1453c8676368d6adc734abafa79fc088",
+  "newNativeRunQualified": false
+}

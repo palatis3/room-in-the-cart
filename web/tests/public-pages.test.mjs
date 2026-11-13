@@ -37,7 +37,10 @@ test('every public page renders both languages, one main, named navigation and a
     for (const section of root.querySelectorAll('.public-article')) assert.ok(dom.window.document.getElementById(section.getAttribute('aria-labelledby')));
     assert.ok(root.querySelector('label[for="public-language"]'));
     assert.equal(root.querySelector('.public-skip').hash, '#public-main');
-    for (const page of Object.values(publicPages)) for (const copy of [page.title, page.lead, page.notice, ...page.sections.flatMap(section => [section.title, ...section.paragraphs])]) {
+    if (key === 'help') assert.equal(root.querySelector('[role=note]'), null);
+    if (key === 'terms' || key === 'privacy') assert.equal(root.querySelector('[role=note]').textContent, publicPages[key].notice[language]);
+    const page = publicPages[key];
+    for (const copy of [page.title, page.lead, ...page.sections.flatMap(section => [section.title, ...section.paragraphs]), ...(page.notice ? [page.notice] : [])]) {
       assert.deepEqual(Object.keys(copy).sort(), ['en', 'es']);
       assert.ok(copy.en.trim()); assert.ok(copy.es.trim());
     }
@@ -78,10 +81,11 @@ test('privacy and terms disclose remaining operator gates and support uses the s
   assert.match(setup('/terms').root.textContent, /Operator-approved release terms.*pending/);
   const support = setup('/support').root;
   assert.equal(support.querySelector('.public-contact').href, 'mailto:hello@roominthecart.com');
-  assert.match(support.textContent, /hello@roominthecart.com/);
+  assert.equal(support.querySelector('.public-contact').textContent, 'Email support · hello@roominthecart.com');
+  assert.equal(support.querySelector('[role=note]'), null);
   assert.doesNotMatch(support.textContent, /support destination has not been configured|guaranteed savings|successful purchase/);
   const unconfigured = setup('/support', 'en-US', { operatorSupportURL: null }).root;
-  assert.match(unconfigured.textContent, /support destination has not been configured/);
+  assert.match(unconfigured.querySelector('[role=note]').textContent, /support destination has not been configured/);
   assert.equal(unconfigured.querySelector('.public-contact'), null);
 });
 
@@ -92,7 +96,8 @@ test('only a configured public HTTPS contact appears and unsafe configuration is
   }
   const { root } = setup('/support?lang=es', 'en-US', { operatorSupportURL: 'https://support.grocery-app.com/contact' });
   assert.equal(root.querySelector('.public-contact').href, 'https://support.grocery-app.com/contact');
-  assert.match(root.textContent, /destino configurado del operador/);
+  assert.equal(root.querySelector('.public-contact').textContent, 'Contactar con soporte');
+  assert.equal(root.querySelector('[role=note]'), null);
   assert.doesNotMatch(root.textContent, /No se ha configurado un destino/);
 });
 

@@ -1,0 +1,22 @@
+{
+  "matchingButtonCount": 1,
+  "currentHelperByteEqualTo804": true,
+  "files": {
+    ".build/CIResearch20261106/candidate-804030e/core-collection/ui10-share-failure-inspection/FreeJourneyUITests.swift.804030e": "b3dc1d03c808aae5638fbeb326be107306bea621791fbec711e7eb309d716f7d",
+    ".build/CIResearch20261106/candidate-804030e/core-collection/ui10-share-failure-inspection/activities.json": "6fbd8035f1522686f3587dd5c8ad4156292d88dd2bb0bb93bf31fdf41ff8fdca",
+    ".build/CIResearch20261106/candidate-804030e/core-collection/ui10-share-failure-inspection/close-query-timeline.json": "a82212f95e63637615e05cceb8fcdea516f358eb28910921720e468929800498",
+    ".build/CIResearch20261106/candidate-804030e/core-collection/ui10-share-failure-inspection/failed-case-raw-log.txt": "01c48a8bfa483491099def2ba330919c209aa1aea308006b90c464c60c86c5d1",
+    ".build/CIResearch20261106/candidate-804030e/core-collection/ui10-share-failure-inspection/full-failure-hierarchy.txt": "2398fbf92fb6e929a9982ecff7e9feecef9a8b35dd97a8a9762380d1826518ca",
+    "ios/UITests/FreeJourneyUITests.swift": "44b99fdf50ef9d62a962f52d1e48cea3c32c836719de668976fb9b9cc3236256",
+    "ios/Features/Pickup/PickupHomeView.swift": "0f428130e8186e550fa68eba4c5c474f51f89adae1fb04a63d37253b1f78fee6",
+    "docs/evidence/native/ci-804030e-20261106/share-failure-inspection.json": "d4c4263f03c69ffe90ca56c5181bdcad7fe419a5736a3bbf472ee9e0abd5b58b",
+    ".build/UI10ClosePayloadInspection20261106/close-query-debug.txt": "d74ac45135b353a8b51cab0d24b5afd4802705ba81e4b22dc8ffad8b9753402a"
+  },
+  "sharedQueryDebugPayload": {
+    "bytes": 250,
+    "containsResolvedNode": false,
+    "containsExistenceOrHittabilityValues": false,
+    "parentExportedFromFreshVerifiedResultCopy": true,
+    "reviewerPerformedExtraction": false
+  }
+}

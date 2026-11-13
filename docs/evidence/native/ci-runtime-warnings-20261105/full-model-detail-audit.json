@@ -1,0 +1,7 @@
+{
+  "source": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "examinedTestDetails": 565,
+  "runtimeWarningOccurrences": 0,
+  "localAuditSeconds": 25.02,
+  "scope": "Existing hosted result bundle read on local Xcode 27.1. No model rerun."
+}

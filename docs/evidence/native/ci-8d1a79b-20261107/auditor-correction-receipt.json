@@ -1,0 +1,9 @@
+{
+  "exit": 0,
+  "installedSHA256": "a8b15aa9a43cbc78e0c69336836b68fc7c45f44beec307381eeb0fdaae2f0722",
+  "correctedOutcomeSHA256": "474473a170e897f3f71bd15ff27c3c10a11cf20cd65a0e88d6a5b08135eea6ee",
+  "scope": "Only copied auditor merge binding corrected; original retained; no hosted execution or test verdict changed",
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "merge": "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6",
+  "tree": "f39e75df75ff2225492f95d7237650bdddc56e69"
+}

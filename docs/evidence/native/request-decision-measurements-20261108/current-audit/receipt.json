@@ -1,0 +1,48 @@
+{
+  "sourceRun": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/run.json",
+    "sha256": "340abc239f332f5aecec2c5b86d028ab3e416aed7374ffc258f783e95a9c0697"
+  },
+  "inspectionVerification": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/inspection/verification.json",
+    "sha256": "61c278fe3e925308c2e693f78965fcb041e2eabae031973eb67f9ec53b2dbc7d"
+  },
+  "collectionReceipt": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/reconciliation/collection-receipt.json",
+    "sha256": "b24bad545563216e6eaa5cf00f987697d8cf5370376b7b5e9b24404e4dd30d6d"
+  },
+  "nativeLog": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/native.log",
+    "sha256": "48d295c572bd7d2337260a0f6002abd144cc97ba7dc3f23872b919eb04a2e0a6"
+  },
+  "sourceManifest": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source-manifest.json",
+    "sha256": "79c518de96d56be8272fd3979b66bad357d8855f3c880d1a3595d1321b386dbe"
+  },
+  "originalResultUnchangedAfterCollection": true,
+  "sourceUnchangedAfterCollection": true,
+  "runtimeSetupFailure": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r2/run.json",
+    "note": "root-retained setup failure path not found at expected location; r3 setupCorrection retained"
+  },
+  "firstActualNativeAttempt": "run-r3; earlier run-r2 stopped before tests on duplicate runtime metadata selection",
+  "actualBootedRuntimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "actualSystemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "originalIncreasedContrast": "unknown; currentdisabled is explicit, not inferred parity",
+  "matchingBasis": "41 custom attachment timestamps in chronological order; rawlog has exactly1 Family attachment event before each audit error; timestamp-minus-consoleelapsed offsets vary by0.01seconds. Automatic descriptions have no timestamps; only their multiset is checked, no invented per-issue assignment.",
+  "nativeAppSimulatorBuildTestActions": false,
+  "resultToolInputs": "inspection COPY only",
+  "newScreenshotsOrVideoExported": false
+}

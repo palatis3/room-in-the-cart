@@ -1,0 +1,500 @@
+name: iOS Release performance
+run-name: iOS performance${{ inputs.simulator_signpost_control && ' · standalone helper (diagnostic only)' || '' }}${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
+
+on:
+  # Run deliberately during development; release-checks always calls this workflow.
+  workflow_dispatch:
+    inputs:
+      case:
+        description: Diagnostic case; use all for the full performance suite
+        type: choice
+        options: [all, launch, rendered, scroll]
+        default: all
+      simulator_signpost_control:
+        description: Standalone helper Logging prerequisite only; no app build, XCTest, or baseline
+        type: boolean
+        default: false
+      observe_app_scroll_signposts:
+        description: One owned app Instruments observation on the separate scroll consumer (diagnostic only)
+        type: boolean
+        default: false
+      capture_scroll_signposts:
+        description: One scroll-only live/persisted signpost transport diagnostic (no acceptance)
+        type: boolean
+        default: false
+      capture_preflight_only:
+        description: Capability checks only; requires scroll capture and calibration mode; no compilation or XCTest
+        type: boolean
+        default: false
+      fresh_performance_simulator:
+        description: One original scroll case on a new job-owned simulator (calibration only)
+        type: boolean
+        default: false
+      enable_performance_diagnostics:
+        description: Collect a trace for one launch or scroll case (diagnostic only, no baseline approval)
+        type: boolean
+        default: false
+      enforce_baselines:
+        description: Require approved limits for this Xcode and simulator environment
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      enforce_baselines:
+        description: Require approved limits for this Xcode and simulator environment
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.simulator_signpost_control && '-simulator-helper' || '' }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}${{ inputs.enable_performance_diagnostics && '-performance-diagnostics' || '' }}${{ inputs.observe_app_scroll_signposts && '-app-observation' || '' }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+  CI_IPHONE_NAME: iPhone 17
+  ENFORCE_BASELINES: ${{ inputs.enforce_baselines }}
+  REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
+  ENABLE_PERFORMANCE_DIAGNOSTICS: ${{ inputs.enable_performance_diagnostics || false }}
+  CAPTURE_SCROLL_SIGNPOSTS: ${{ inputs.capture_scroll_signposts || false }}
+  CAPTURE_PREFLIGHT_ONLY: ${{ inputs.capture_preflight_only || false }}
+  OBSERVE_APP_SCROLL_SIGNPOSTS: ${{ inputs.observe_app_scroll_signposts || false }}
+  SIMULATOR_SIGNPOST_CONTROL: ${{ inputs.simulator_signpost_control || false }}
+  FRESH_PERFORMANCE_SIMULATOR: ${{ inputs.fresh_performance_simulator || false }}
+
+jobs:
+  performance-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate performance selection before allocating macOS
+        run: |
+          python3 scripts/test_plan_ios_performance_tests.py
+          python3 scripts/test_performance_plan_provenance.py
+          python3 scripts/test_observe_runtime_checker.py
+          python3 scripts/test_preserve_performance_store.py
+          python3 scripts/test_check_ios_performance.py
+          python3 scripts/test_scroll_signpost_diagnostic.py
+          python3 scripts/test_capture_scroll_signposts.py
+          python3 scripts/test_app_scroll_observation.py
+          python3 scripts/test_app_scroll_preflight_retention.py
+          python3 scripts/test_boot_ios_simulator.py
+          python3 scripts/test_simulator_signpost_control.py
+          python3 scripts/run_simulator_signpost_control.py validate-request
+          python3 scripts/plan_ios_performance_tests.py --validate-request
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            test "${{ github.event_name }}" = workflow_dispatch
+            test "${{ inputs.case }}" = scroll
+            test "$ENFORCE_BASELINES" = false
+          fi
+          if [[ "${{ inputs.capture_preflight_only }}" == true ]]; then
+            test "${{ inputs.capture_scroll_signposts }}" = true
+          fi
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            test "${{ github.event_name }}" = workflow_dispatch
+            test "${{ inputs.case }}" = scroll
+            test "$ENFORCE_BASELINES" = false
+            test "${{ inputs.capture_scroll_signposts }}" = false
+            test "${{ inputs.capture_preflight_only }}" = false
+          fi
+      - name: Reject known baseline incompatibility before allocating macOS
+        run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
+
+  performance-build:
+    if: ${{ !inputs.simulator_signpost_control }}
+    needs: performance-plan
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    name: ${{ inputs.capture_preflight_only && 'Check scroll capture capabilities (no build)' || 'Build optimized iPhone test products' }}
+    runs-on: xcode-27
+    timeout-minutes: 35
+    outputs:
+      artifact: ${{ steps.upload.outputs['artifact-id'] }}
+      test_matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - name: Record Xcode and select an iPhone simulator
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Verify actual baseline environment before compiling
+        shell: bash
+        run: |
+          identity=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            identity=(--identity-output .build/capture-preflight/runner-identity.json)
+          fi
+          python3 scripts/check_ios_performance_environment.py runner "${identity[@]}"
+      - name: Boot diagnostic simulator before capability checks
+        if: inputs.capture_scroll_signposts
+        timeout-minutes: 3
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+      - name: Observe selected-runtime checker without building
+        if: inputs.capture_preflight_only
+        timeout-minutes: 2
+        run: python3 scripts/observe_runtime_checker.py --output .build/capture-preflight/runtime-checker.json
+      - name: Check capture capabilities before compilation
+        if: inputs.capture_scroll_signposts
+        # Infrastructure discovery has its own bounded allowance; app limits stay unchanged.
+        timeout-minutes: 3
+        env:
+          PERFORMANCE_CASE: scroll
+        run: |
+          python3 scripts/capture_scroll_signposts.py --capabilities-only --simulator "$SIMULATOR_ID" \
+            --toolchain-identity .build/capture-preflight/runner-identity.json \
+            --output .build/capture-preflight/capabilities.json
+      - name: Retain capture capability stages
+        if: always() && inputs.capture_scroll_signposts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-scroll-capture-capabilities-${{ github.run_attempt }}
+          path: .build/capture-preflight/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Check Swift syntax before compilation
+        if: ${{ !inputs.capture_preflight_only }}
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
+      - name: Typecheck and bind the opt-in app observer before building
+        if: inputs.observe_app_scroll_signposts
+        timeout-minutes: 7
+        run: python3 scripts/capture_app_scroll_observation.py prepare
+      - name: Build the Release app and dedicated performance tests
+        if: ${{ !inputs.capture_preflight_only }}
+        shell: bash
+        run: |
+          mkdir -p .build
+          if [[ "$OBSERVE_APP_SCROLL_SIGNPOSTS" == true ]]; then
+            python3 scripts/capture_app_scroll_observation.py build
+          else
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance \
+            -configuration Release -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
+            -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO \
+            -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build-for-testing \
+            2>&1 | tee .build/PerformanceBuild.log
+          fi
+      - name: Check the compiled XCTest inventory and plan performance jobs
+        if: ${{ !inputs.capture_preflight_only }}
+        id: plan
+        run: |
+          products=.build/DerivedData/Build/Products/Release-iphonesimulator
+          executable="$products/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests"
+          matrix=$(python3 scripts/plan_ios_performance_tests.py "$executable")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+      - name: Verify and package Release test products
+        if: ${{ !inputs.capture_preflight_only }}
+        run: |
+          python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
+          python3 scripts/performance_plan_provenance.py producer --products .build/DerivedData/Build/Products \
+            --output .build/performance-plan-producer.json
+          cp .build/performance-plan-producer.json .build/DerivedData/Build/Products/performance-plan-producer.json
+          if [[ "$OBSERVE_APP_SCROLL_SIGNPOSTS" == true ]]; then
+            python3 scripts/capture_app_scroll_observation.py package
+          fi
+          tar -czf "$RUNNER_TEMP/iphone-performance-products.tar.gz" -C .build/DerivedData/Build Products
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
+        if: ${{ !inputs.capture_preflight_only }}
+        with:
+          name: iphone-performance-products-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-performance-products.tar.gz
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain Release build log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-performance-build-log-${{ github.run_attempt }}
+          path: |
+            .build/PerformanceBuild.log
+            .build/performance-plan-producer.json
+            .build/app-observation-producer/prepare/
+            .build/app-observation-producer/build/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
+  performance-tests:
+    if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
+    name: Release performance (${{ matrix.case }})
+    needs: performance-build
+    runs-on: xcode-27
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.performance-build.outputs.test_matrix) }}
+    env:
+      PERFORMANCE_CASE: ${{ matrix.case }}
+      TEST_SHARD: performance-${{ matrix.case }}
+      TEST_SELECTOR: ${{ matrix.selector }}
+      FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.performance-build.outputs.artifact }}
+          path: .build/download
+          merge-multiple: true
+      - name: Restore Release products and record the toolchain
+        run: |
+          mkdir -p .build/DerivedData/Build .build/performance
+          tar -xzf .build/download/iphone-performance-products.tar.gz -C .build/DerivedData/Build
+          xcodebuild -version | tee .build/performance/toolchain.txt
+          printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
+      - name: Verify restored performance plan and product provenance
+        timeout-minutes: 2
+        run: |
+          python3 scripts/performance_plan_provenance.py consumer --products .build/DerivedData/Build/Products \
+            --producer .build/DerivedData/Build/Products/performance-plan-producer.json \
+            --output .build/performance/plan-provenance.json
+      - name: Select an iPhone simulator
+        timeout-minutes: 8
+        run: |
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py --create-owned .build/performance/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
+      - name: Reject runner environment drift before boot and testing
+        shell: bash
+        run: |
+          identity=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            identity=(--identity-output .build/performance/runner-identity.json)
+          fi
+          python3 scripts/check_ios_performance_environment.py runner "${identity[@]}"
+      - name: Boot and verify a fresh Release installation
+        timeout-minutes: 8
+        run: |
+          python3 scripts/prepare_ios_performance_simulator.py \
+            --simulator "$SIMULATOR_ID" --case "$PERFORMANCE_CASE" --fixture "$FIXTURE" \
+            --output .build/performance/setup.json
+      - name: Observe unchanged performance provenance after simulator setup
+        timeout-minutes: 2
+        run: |
+          python3 scripts/performance_plan_provenance.py consumer --products .build/DerivedData/Build/Products \
+            --producer .build/DerivedData/Build/Products/performance-plan-producer.json \
+            --output .build/performance/plan-provenance-after-setup.json
+      - name: Observe selected-runtime checker identity
+        timeout-minutes: 2
+        run: |
+          python3 scripts/observe_runtime_checker.py --products .build/DerivedData/Build/Products \
+            --plan-provenance .build/performance/plan-provenance-after-setup.json \
+            --output .build/performance/runtime-checker.json
+      - name: Run one Release performance case
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          diagnostics=()
+          if [[ "$ENABLE_PERFORMANCE_DIAGNOSTICS" == true ]]; then
+            python3 scripts/plan_ios_performance_tests.py --validate-request
+            diagnostics=(-enablePerformanceTestsDiagnostics YES)
+          fi
+          capture=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            test "$PERFORMANCE_CASE" = scroll
+            capture=(python3 scripts/capture_scroll_signposts.py --simulator "$SIMULATOR_ID"
+              --xctestrun "${test_runs[0]}" --toolchain-identity .build/performance/runner-identity.json
+              --output .build/performance/live-signpost-diagnostic.json --)
+          fi
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            python3 scripts/preserve_performance_store.py mark-attempt --evidence .build/performance
+          fi
+          if [[ "$OBSERVE_APP_SCROLL_SIGNPOSTS" == true ]]; then
+            python3 scripts/capture_app_scroll_observation.py collect
+            exit $?
+          fi
+          "${capture[@]}" xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
+            -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics on-failure \
+            "-only-testing:$(cat .build/performance/selector.txt)" "${diagnostics[@]}" test-without-building \
+            2>&1 | tee .build/performance/Performance.log
+      - name: Seal app observation custody before owned-device cleanup
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 3
+        run: python3 scripts/capture_app_scroll_observation.py seal
+      - name: Preserve the observation ledger independently of transport
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 2
+        run: python3 scripts/preserve_performance_store.py preserve --evidence .build/performance
+      - name: Export and validate the app observation once
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 2
+        run: python3 scripts/capture_app_scroll_observation.py export
+      - name: Independently inspect original observation XCTest and metrics
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 5
+        run: python3 scripts/capture_app_scroll_observation.py results
+      - name: Combine app observation and original required gates
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 2
+        run: python3 scripts/capture_app_scroll_observation.py qualify
+      - name: Export available XCTest metrics, attachments and test results
+        if: always() && !inputs.observe_app_scroll_signposts
+        run: |
+          evidence=.build/performance
+          result="$evidence/Performance.xcresult"
+          if [[ -d "$result" ]]; then
+            xcrun xcresulttool get test-results summary --path "$result" --compact > "$evidence/test-summary.json" || echo '::warning::XCTest summary export unavailable.'
+            xcrun xcresulttool get test-results tests --path "$result" --compact > "$evidence/test-details.json" || echo '::warning::XCTest details export unavailable.'
+            xcrun xcresulttool get test-results metrics --path "$result" --compact > "$evidence/metrics.json" || echo '::warning::XCTest metric JSON export unavailable.'
+            xcrun xcresulttool export metrics --path "$result" --output-path "$evidence/metrics-csv" || echo '::warning::XCTest metrics CSV export unavailable.'
+            xcrun xcresulttool export attachments --path "$result" --output-path "$evidence/attachments" || echo '::warning::XCTest attachments export unavailable.'
+          fi
+      - name: Export requested performance diagnostics
+        if: always() && inputs.enable_performance_diagnostics
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          evidence=.build/performance
+          mkdir -p "$evidence"
+          receipt="$evidence/performance-diagnostics.json"
+          printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"export_started"}' > "$receipt"
+          if [[ ! -d "$evidence/Performance.xcresult" ]]; then
+            printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"missing_result"}' > "$receipt"
+            exit 1
+          fi
+          if xcrun xcresulttool export diagnostics --path "$evidence/Performance.xcresult" \
+              --output-path "$evidence/performance-diagnostics" > "$evidence/performance-diagnostics-export.log" 2>&1; then
+            printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"exported","exitCode":0}' > "$receipt"
+          else
+            status=$?
+            printf '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"export_failed","exitCode":%s}\n' "$status" > "$receipt"
+            exit "$status"
+          fi
+      - name: Capture scroll signpost diagnostic
+        if: always() && matrix.case == 'scroll' && !inputs.observe_app_scroll_signposts
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Diagnostic only. Raw filtered logs and activities remain temporary.
+          evidence=.build/performance
+          mkdir -p "$evidence"
+          printf '%s\n' '{"schemaVersion":1,"diagnosticOnly":true,"status":"capture_incomplete"}' > "$evidence/scroll-signpost-diagnostic.json"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          capture=unavailable
+          activity=unavailable
+          if [[ -n "${SIMULATOR_ID:-}" ]]; then
+            if xcrun simctl spawn "$SIMULATOR_ID" log show --last 35m --signpost --info --debug --style compact --timezone UTC \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "com.apple.UIKit" AND category == "ScrollView" AND signpostName == "Scroll_DraggingAndDeceleration"' > "$tmp/signposts.log" 2> "$tmp/log-error"; then
+              capture=ok
+            else
+              capture=error
+            fi
+          fi
+          if [[ -d "$evidence/Performance.xcresult" && -s "$evidence/selector.txt" ]]; then
+            if xcrun xcresulttool get test-results activities --path "$evidence/Performance.xcresult" --compact \
+              --test-id 'ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()' > "$tmp/activities.json" 2> "$tmp/activity-error"; then
+              activity=ok
+            else
+              activity=error
+            fi
+          fi
+          python3 scripts/scroll_signpost_diagnostic.py --log "$tmp/signposts.log" --activities "$tmp/activities.json" \
+            --capture-status "$capture" --activity-status "$activity" --output "$evidence/scroll-signpost-diagnostic.json" || \
+            printf '%s\n' '{"schemaVersion":1,"diagnosticOnly":true,"status":"collector_error"}' > "$evidence/scroll-signpost-diagnostic.json"
+      - name: Require exact test execution and complete performance evidence
+        if: ${{ !inputs.observe_app_scroll_signposts }}
+        shell: bash
+        run: |
+          evidence=.build/performance
+          python3 scripts/check_ios_test_results.py --selectors "$evidence/selector.txt" --expected-count 1 \
+            --summary "$evidence/test-summary.json" --tests "$evidence/test-details.json" \
+            --result-bundle "$evidence/Performance.xcresult" --test-log "$evidence/Performance.log"
+          args=("$PERFORMANCE_CASE" --evidence "$evidence")
+          if [[ "$PERFORMANCE_CASE" != launch ]]; then
+            container=$(xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app data)
+            args+=(--fixture "$FIXTURE" --store "$container/Library/Application Support/RoomInTheCart/ledger.sqlite")
+          fi
+          if [[ "$ENFORCE_BASELINES" == true ]]; then
+            args+=(--baseline scripts/ios_performance_baselines.json)
+          fi
+          python3 scripts/check_ios_performance.py "${args[@]}"
+      - name: Preserve the attempted pilot ledger before cleanup
+        if: always() && inputs.fresh_performance_simulator && !inputs.observe_app_scroll_signposts
+        timeout-minutes: 2
+        run: python3 scripts/preserve_performance_store.py preserve --evidence .build/performance
+      - name: Preserve portable observation modes before artifact upload
+        id: observation_archive
+        if: always() && inputs.observe_app_scroll_signposts
+        timeout-minutes: 4
+        run: python3 scripts/capture_app_scroll_observation.py archive
+      - name: Clean up the job-owned performance simulator
+        if: always() && inputs.fresh_performance_simulator
+        timeout-minutes: 2
+        run: |
+          if [[ "$OBSERVE_APP_SCROLL_SIGNPOSTS" == true ]]; then
+            python3 scripts/capture_app_scroll_observation.py cleanup-gate
+          fi
+          python3 scripts/preserve_performance_store.py require-preserved --evidence .build/performance
+          python3 scripts/select_ci_iphone.py --cleanup-owned .build/performance/test-simulator-ownership.json
+      - name: Retain Release performance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-performance-${{ matrix.case }}-${{ github.run_attempt }}
+          path: ${{ inputs.observe_app_scroll_signposts && (steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') || '.build/performance/' }}
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
+  simulator-signpost-control:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulator_signpost_control }}
+    needs: performance-plan
+    runs-on: xcode-27
+    timeout-minutes: 12
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    env:
+      TEST_SHARD: simulator-helper
+      SIMULATOR_HELPER_DIRECT_INVENTORY: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - name: Run one standalone helper control
+        run: python3 scripts/run_simulator_signpost_control.py run --output .build/simulator-helper
+      - name: Preserve helper evidence bytes and modes
+        id: helper-archive
+        if: always()
+        run: python3 scripts/run_simulator_signpost_control.py archive --output .build/simulator-helper --archive .build/simulator-helper-archive
+      - name: Delete only the verified owned helper device after preservation
+        if: ${{ always() && steps.helper-archive.outcome == 'success' }}
+        run: python3 scripts/run_simulator_signpost_control.py cleanup --output .build/simulator-helper --archive .build/simulator-helper-archive --cleanup .build/simulator-helper-cleanup
+      - name: Upload bounded standalone helper evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: simulator-helper-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            ${{ steps.helper-archive.outputs.artifact_path || '.build/simulator-helper-archive/report' }}
+            .build/simulator-helper-cleanup
+          if-no-files-found: error
+          retention-days: 7

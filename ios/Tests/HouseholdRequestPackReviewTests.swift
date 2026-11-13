@@ -9,10 +9,62 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
     private func pack(_ id:String, yield:Int64=4, price:Int64?=300, available:RequestPackAvailability = .confirmed, maximum:Int?=nil, matched:Bool=true) -> HouseholdRequestPackCandidate {
         HouseholdRequestPackCandidate(id:id,label:"Reviewed " + id,usable:q(yield),price:price.map { Money(minorUnits:$0) },availability:available,availablePacks:maximum,matchesRequest:matched,feeEligible:true,source:"Reviewed shelf label " + id,observedAt:now)
     }
-    func testFixtureInterceptsEveryRequestAndRejectsUnexpectedNetworkDestinations() throws {
+    func testFixtureInterceptsEveryRequestAndRejectsUnexpectedNetworkDestinations() async throws {
         let unexpected = URLRequest(url: URL(string: "https://example.com/unexpected")!)
         XCTAssertTrue(S24FixtureProtocol.canInit(with: unexpected))
         XCTAssertThrowsError(try S24FixtureServer().respond(unexpected))
+        let server = S24FixtureServer()
+        defer { server.close() }
+        let session = server.makeSession()
+        let trackingURL = server.baseURL.appendingPathComponent("v1/households/" + S24FixtureServer.household + "/shops/" + S24FixtureServer.shop + "/demand/tracking")
+        let (trackingBytes, _) = try await session.data(from: trackingURL)
+        let page = try SharedTrackingWire.page(from: trackingBytes)
+        XCTAssertEqual(page.status, .legacy); XCTAssertEqual(page.shopRevision, 1)
+        XCTAssertEqual(page.state?.graph.revision, 0); XCTAssertTrue(page.state?.catalog.isEmpty == true)
+        XCTAssertEqual(server.commandCount, 0); XCTAssertEqual(server.previewCount, 0)
+
+        let unregistered = URLRequest(url: URL(string: "https://unregistered-s24.invalid/unexpected")!)
+        do {
+            _ = try await session.data(for: unregistered)
+            XCTFail("An unregistered destination must fail inside the fixture protocol")
+        } catch {
+            XCTAssertEqual((error as? URLError)?.code, .unsupportedURL)
+        }
+        // A retained session must not make the registry own an otherwise released fixture.
+        var temporary: S24FixtureServer? = S24FixtureServer()
+        weak let released = temporary
+        let retiredURL = try XCTUnwrap(temporary?.baseURL).appendingPathComponent("auth/v1/user")
+        let retainedSession = try XCTUnwrap(temporary).makeSession()
+        temporary = nil
+        XCTAssertNil(released)
+        retainedSession.invalidateAndCancel()
+        do {
+            _ = try await session.data(from: retiredURL)
+            XCTFail("A retired fixture host must not resolve to another live server")
+        } catch {
+            XCTAssertEqual((error as? URLError)?.code, .unsupportedURL)
+        }
+    }
+
+    @MainActor func testIndependentFixtureModelsKeepTheirOwnServerAfterReload() async throws {
+        let (first, firstServer, firstURL) = try await setup()
+        defer { try? FileManager.default.removeItem(at: firstURL.deletingLastPathComponent()) }
+        let secondURL = firstURL.deletingLastPathComponent().appendingPathComponent("cereal-outbox.json")
+        let secondServer = S24FixtureServer(cerealScenario: true)
+        let second = try await s24FixtureModel(server: secondServer, outboxURL: secondURL)
+        // This body deliberately uses only pre-isolation fixture APIs so the
+        // original helper can demonstrate its cross-fixture routing failure.
+        await first.load()
+        first.select(try XCTUnwrap(first.requests.first)); first.choice = .add
+        second.select(try XCTUnwrap(second.requests.first)); second.choice = .add
+        first.price = "3.00"; await first.review()
+        second.price = "3.49"; await second.review()
+        XCTAssertEqual(first.preview?.before.totalMinor, 0)
+        XCTAssertEqual(first.preview?.after.totalMinor, 300)
+        XCTAssertEqual(second.preview?.before.totalMinor, 3720)
+        XCTAssertEqual(second.preview?.after.totalMinor, 4069)
+        XCTAssertEqual(firstServer.previewCount, 1); XCTAssertEqual(secondServer.previewCount, 1)
+        XCTAssertEqual(firstServer.commandCount, 0); XCTAssertEqual(secondServer.commandCount, 0)
     }
     func testCheapestUsesWholePacksAndUsableYieldRatherThanStickerPrice() throws {
         let result = try HouseholdRequestPackReview.calculate(needed:q(8),candidates:[pack("A"),pack("B",yield:6,price:400)],at:now)
@@ -47,9 +99,39 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
     @MainActor private func setup(existing:Bool=false) async throws -> (HouseholdInboxModel,S24FixtureServer,URL) {
         let url=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
         let server=S24FixtureServer(includeExistingLine:existing)
+        addTeardownBlock { server.close() }
         let model=try await s24FixtureModel(server:server,outboxURL:url)
         model.select(try XCTUnwrap(model.requests.first)); model.choice = .add
         return(model,server,url)
+    }
+    @MainActor func testManualPackQuantitiesKeepExactFractionsAndOriginalDecimalPrecision() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let need = try XCTUnwrap(requestPackQuantity(" 1 ⅓ ", unit: .cup))
+        var offer = pack("A")
+        offer.usable = try requestPackQuantity("2/3", unit: .cup)
+        let compared = try HouseholdRequestPackReview.calculate(needed: need, candidates: [offer])
+        let selection = try HouseholdRequestPackReview.select(compared.results[0], needed: need, scope: XCTUnwrap(model.packReviewScope))
+        XCTAssertTrue(model.usePackSelection(selection))
+        XCTAssertEqual(model.packs, 2)
+        await model.review()
+        let decision = try XCTUnwrap(server.previewBody?["decision"] as? [String: Any])
+        let evidence = try XCTUnwrap(decision["reviewedPackEvidence"] as? [String: Any])
+        XCTAssertEqual(evidence["needed"] as? [String: String], ["originalLiteral": " 1 ⅓ ", "numerator": "4", "denominator": "3", "unit": "cup"])
+        XCTAssertEqual(evidence["usablePerPack"] as? [String: String], ["originalLiteral": "2/3", "numerator": "2", "denominator": "3", "unit": "cup"])
+        XCTAssertEqual(server.commandCount, 0)
+
+        for input in ["0.000000000000000001", "0,000000000000000001"] {
+            let value = try XCTUnwrap(requestPackQuantity(input, unit: .gram))
+            XCTAssertEqual(value.amount, try Rational(1, 1_000_000_000_000_000_000))
+            XCTAssertEqual(value.originalLiteral, input)
+        }
+        XCTAssertNil(try requestPackQuantity(" ", unit: .count))
+        for invalid in ["-1/3", "-0/1", "1/-3", "+1/3", "1/0", "1/3 cup", "2/3 1/4", "1.2,3", "0.0000000000000000001"] {
+            XCTAssertThrowsError(try requestPackQuantity(invalid, unit: .count), invalid)
+        }
+        XCTAssertEqual(try HouseholdInboxModel.priceMinor("3,49"), 349)
+        XCTAssertThrowsError(try HouseholdInboxModel.priceMinor("1/3"))
     }
     @MainActor func testReviewedSelectionFeedsActualPreviewAndRequiresExplicitOverageBeforeAtomicApply() async throws {
         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
@@ -77,6 +159,383 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         await model.apply(); XCTAssertEqual(server.commandCount,1); XCTAssertEqual(server.lineCount,1)
         await model.apply(); XCTAssertEqual(server.commandCount,1)
     }
+    @MainActor func testConfirmedExactRetryClearsObsoleteDeliveryNotice() async throws {
+        try await checkConfirmedRetryNotice(failure: .none)
+    }
+
+    @MainActor func testConfirmedExactRetryRetainsNewCleanupWarning() async throws {
+        try await checkConfirmedRetryNotice(failure: .cleanup)
+    }
+
+    @MainActor func testConfirmedExactRetryRetainsNewRefreshWarning() async throws {
+        try await checkConfirmedRetryNotice(failure: .refresh)
+    }
+
+    private enum ConfirmedRetryFailure { case none, cleanup, refresh }
+
+    @MainActor private func checkConfirmedRetryNotice(failure: ConfirmedRetryFailure) async throws {
+        let (model, server, url) = try await setup()
+        defer {
+            server.intercept = nil
+            try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+        }
+        model.price = "3.00"; await model.review()
+        var sentBodies: [Data] = []
+        let retainedQueue = url.appendingPathExtension("before-cleanup")
+        server.intercept = { task in
+            if task.request.url?.path.hasSuffix("/commands") == true {
+                do {
+                    // URLSession may expose the body as a stream. Replay the same
+                    // captured bytes to the existing idempotent service fixture.
+                    var request = task.request
+                    var body = request.httpBody ?? Data()
+                    if body.isEmpty, let stream = request.httpBodyStream {
+                        stream.open(); defer { stream.close() }
+                        var buffer = [UInt8](repeating: 0, count: 4096)
+                        while stream.hasBytesAvailable {
+                            let size = stream.read(&buffer, maxLength: buffer.count)
+                            guard size >= 0 else { throw URLError(.cannotDecodeRawData) }
+                            if size == 0 { break }
+                            body.append(buffer, count: size)
+                        }
+                    }
+                    request.httpBodyStream = nil; request.httpBody = body
+                    sentBodies.append(body)
+                    let (status, receipt) = try server.respond(request)
+                    if sentBodies.count == 1 {
+                        // Commit once, then lose the receipt through a gateway503.
+                        finishS24OutcomeResponse(task, status: 503, data: Data())
+                    } else {
+                        if failure == .cleanup {
+                            // Preserve the exact durable queue, then make only its
+                            // owned file path unwritable as a file during remove().
+                            try FileManager.default.moveItem(at: url, to: retainedQueue)
+                            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+                        }
+                        finishS24OutcomeResponse(task, status: status, data: receipt)
+                    }
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            if failure == .refresh, sentBodies.count == 2,
+               task.request.url?.path.hasSuffix("/inbox") == true {
+                task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut))
+                return true
+            }
+            return false
+        }
+        await model.apply()
+        XCTAssertEqual(model.delivery, .waiting)
+        XCTAssertEqual(model.notice, "The service could not confirm this decision. Retry the pending decision to avoid a duplicate.")
+        let pending = try XCTUnwrap(model.pending)
+        let queueBeforeRetry = try Data(contentsOf: url)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        // Honor the production retry deadline; do not alter its clock/backoff.
+        while model.retryAfter > .now {
+            try await Task.sleep(for: .seconds(model.retryAfter.timeIntervalSinceNow))
+        }
+        await model.retry()
+        guard case .confirmed(let receipt) = model.delivery else { return XCTFail("Expected the stored receipt on exact retry") }
+        XCTAssertEqual(receipt.kind, "request.apply")
+        XCTAssertEqual(receipt.requestId, S24FixtureServer.requestID)
+        XCTAssertEqual(sentBodies, [pending.bytes, pending.bytes])
+        XCTAssertEqual(server.commandCount, 2); XCTAssertEqual(server.lineCount, 1)
+        XCTAssertNil(model.pending); XCTAssertFalse(model.busy)
+        switch failure {
+        case .none:
+            XCTAssertNil(model.notice)
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        case .cleanup:
+            XCTAssertEqual(model.notice, "The decision was confirmed. Local retry cleanup needs another attempt.")
+            XCTAssertEqual(try Data(contentsOf: retainedQueue), queueBeforeRetry)
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        case .refresh:
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            XCTAssertNil(model.confirmedDecisionRequestID)
+            XCTAssertTrue(model.requests.isEmpty)
+        }
+        if failure != .cleanup {
+            let remaining = try await OperationOutbox(url: url).operations()
+            XCTAssertTrue(remaining.isEmpty)
+        }
+    }
+
+    @MainActor func testConfirmedApplyWaitsForRefreshedOriginalOutcomeBeforeReturning() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        let held = HeldS24OutcomeResponse()
+        defer { server.intercept = nil; held.release() }
+        let arrived = expectation(description: "Confirmed Apply is refreshing its original request")
+        server.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            held.hold(task); arrived.fulfill(); return true
+        }
+        let apply = Task { await model.apply() }
+        await fulfillment(of: [arrived], timeout: 3)
+        guard case .confirmed = model.delivery else { return XCTFail("Expected durable receipt before inbox refresh") }
+        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty, "The old row cannot supply the outcome focus")
+        server.intercept = nil; held.release()
+        await apply.value
+        XCTAssertFalse(model.busy)
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.first?.status, "added")
+        XCTAssertEqual(model.requests.first?.revision, 2)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        model.clear(); XCTAssertNil(model.confirmedDecisionRequestID)
+    }
+
+    @MainActor func testConfirmedApplyRefreshFailureWaitsForSuccessfulRefresh() async throws {
+        let (model, server, url) = try await setup()
+        defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        server.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut)); return true
+        }
+        await model.apply()
+        guard case .confirmed = model.delivery else { return XCTFail("The accepted decision must stay confirmed") }
+        XCTAssertFalse(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty)
+        server.intercept = nil
+        await model.load()
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.first?.status, "added")
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testConfirmedApplyFindsOriginalOutcomeOnLaterInboxPage() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        let held = HeldS24OutcomeResponse()
+        defer { server.intercept = nil; held.release() }
+        let arrived = expectation(description: "Original confirmed request is on the second inbox page")
+        server.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
+            else { held.hold(task); arrived.fulfill() }
+            return true
+        }
+        let apply = Task { await model.apply() }
+        await fulfillment(of: [arrived], timeout: 3)
+        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty, "A partial page cannot replace the original outcome")
+        held.release()
+        await apply.value
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.map(\.id), [s24OtherRequestID, S24FixtureServer.requestID])
+        XCTAssertEqual(model.requests.last?.status, "added")
+        XCTAssertNil(model.nextCursor)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testOutcomePageCycleOrShopChangePreservesReceiptWithoutPublishingPartialRows() async throws {
+        for cycle in [true, false] {
+            let (model, server, url) = try await setup()
+            defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            server.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+                if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
+                else if cycle {
+                    let page: [String: Any] = ["requests": [], "nextCursor": s24OtherRequestID]
+                    let bytes = try! JSONSerialization.data(withJSONObject: page)
+                    finishS24OutcomeResponse(task, status: 200, data: bytes)
+                } else {
+                    server.advanceSource()
+                    task.finishResponse()
+                }
+                return true
+            }
+            await model.apply()
+            guard case .confirmed = model.delivery else { return XCTFail("Refresh failure must preserve the durable receipt") }
+            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            // Repeated failed Refresh must not claim that the decision is unconfirmed.
+            await model.load()
+            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            server.intercept = nil
+            await model.load()
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+            XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        }
+    }
+
+    @MainActor func testOutcomeReturnRequiresKnownStateAndAllowsNewerDurableOutcome() async throws {
+        for (status, revision, canReturn) in [("unexpected", 2, false), ("pending", 2, false),
+                                             ("deferred", 2, false), ("deferred", 3, true), ("withdrawn", 3, true)] {
+            let (model, server, url) = try await setup()
+            defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            server.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+                do {
+                    let (_, bytes) = try server.respond(task.request)
+                    var page = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                    var rows = try XCTUnwrap(page["requests"] as? [[String: Any]])
+                    rows[0]["status"] = status; rows[0]["revision"] = revision; page["requests"] = rows
+                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            await model.apply()
+            XCTAssertEqual(model.confirmedDecisionRequestID, canReturn ? S24FixtureServer.requestID : nil,
+                           "Outcome \(status) at revision \(revision)")
+        }
+    }
+
+    @MainActor func testAccessEndsDuringConfirmedRefreshWithoutAnOutcomeReturn() async throws {
+        let (model, server, url) = try await setup()
+        defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        XCTAssertNil(model.confirmedDecisionRequestID)
+        server.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            finishS24OutcomeResponse(task, status: 403, data: Data())
+            return true
+        }
+        await model.apply()
+        XCTAssertFalse(model.authorized); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertNil(model.shop); XCTAssertTrue(model.requests.isEmpty)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testUnrelatedReceiptAndChangedAuthorityCannotReturnToDecisionOutcome() async throws {
+        let replacements: [[String: Any]] = [
+            ["kind": "request.clarify"], ["kind": "request.carry"],
+            ["requestId": UUID().uuidString], ["authorityEpoch": 2],
+            ["requestRevision": 3], ["shopRevision": 3], ["requestRevision": 0], ["shopRevision": 0],
+            ["disposition": "unexpected"], ["disposition": "clarified"]
+        ]
+        for replacement in replacements {
+            let (model, server, url) = try await setup()
+            defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            server.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
+                do {
+                    let (_, bytes) = try server.respond(task.request)
+                    var receipt = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                    receipt.merge(replacement) { _, changed in changed }
+                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: receipt))
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            await model.apply()
+            XCTAssertNil(model.confirmedDecisionRequestID, "Mismatched receipt: \(replacement)")
+            XCTAssertEqual(model.requests.first?.status, "added")
+        }
+    }
+
+    @MainActor func testLostReplyAndConflictDoNotReturnEvenWhenRefreshedRowHasOutcome() async throws {
+        for conflict in [false, true] {
+            let (model, server, url) = try await setup()
+            defer { server.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            server.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
+                if conflict {
+                    finishS24OutcomeResponse(task, status: 409, data: Data("{\"error\":{\"code\":\"stale_base\"}}".utf8))
+                } else {
+                    // The service commits once, but the app never receives its receipt.
+                    _ = try? server.respond(task.request)
+                    task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut))
+                }
+                return true
+            }
+            await model.apply()
+            XCTAssertEqual(model.delivery, conflict ? .needsReview : .waiting)
+            XCTAssertNotNil(model.pending); XCTAssertNil(model.confirmedDecisionRequestID)
+            server.intercept = nil
+            await model.load()
+            XCTAssertEqual(model.requests.first?.status, conflict ? "pending" : "added")
+            XCTAssertNil(model.confirmedDecisionRequestID)
+        }
+    }
+
+    @MainActor func testCancelUnknownPreviewKeepsDraftAndRequiresFreshAcknowledgmentBeforeAnyWrite() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.lineItem = "Unknown-price wraps"
+        model.packs = 2
+        model.price = ""
+        model.feeEligible = false
+        model.clarification = "Keep this draft question"
+        let selectedID = try XCTUnwrap(model.selected).id
+        func assertDraftPreserved() {
+            XCTAssertEqual(model.selected?.id, selectedID)
+            XCTAssertEqual(model.choice, .add)
+            XCTAssertEqual(model.lineItem, "Unknown-price wraps")
+            XCTAssertEqual(model.packs, 2)
+            XCTAssertEqual(model.price, "")
+            XCTAssertFalse(model.feeEligible)
+            XCTAssertEqual(model.clarification, "Keep this draft question")
+        }
+        func assertNoWrites() {
+            XCTAssertEqual(server.commandCount, 0)
+            XCTAssertEqual(server.lineCount, 0)
+            XCTAssertNil(model.pending)
+            XCTAssertEqual(model.requests.first?.status, "pending")
+        }
+        func assertUnknownPreviewRequest() throws {
+            let body = try XCTUnwrap(server.previewBody)
+            let decision = try XCTUnwrap(body["decision"] as? [String: Any])
+            let line = try XCTUnwrap(decision["line"] as? [String: Any])
+            XCTAssertEqual(body["requestId"] as? String, selectedID)
+            XCTAssertEqual(decision["choice"] as? String, "add")
+            XCTAssertEqual(line["originalItem"] as? String, "Unknown-price wraps")
+            XCTAssertEqual(line["packs"] as? Int, 2)
+            XCTAssertTrue(line["unitPriceMinor"] is NSNull)
+            XCTAssertEqual(line["feeEligible"] as? Bool, false)
+        }
+
+        await model.review()
+        XCTAssertEqual(server.previewCount, 1)
+        XCTAssertTrue(try XCTUnwrap(model.preview).requiresUnknownAcceptance)
+        XCTAssertNil(model.preview?.after.totalMinor)
+        try assertUnknownPreviewRequest()
+        XCTAssertFalse(model.canApply)
+        model.acceptUnknown = true
+        XCTAssertTrue(model.canApply)
+        assertNoWrites()
+
+        model.invalidatePreview() // The exact model transition invoked by Cancel preview.
+        XCTAssertNil(model.preview)
+        XCTAssertFalse(model.acceptUnknown)
+        XCTAssertFalse(model.canApply)
+        assertDraftPreserved()
+        await model.apply() // The discarded acknowledgment cannot authorize a write.
+        assertNoWrites()
+        XCTAssertEqual(server.previewCount, 1)
+
+        // Do not edit any draft field: those setters would independently clear
+        // consent and could hide a defective Cancel preview transition.
+        await model.review()
+        XCTAssertEqual(server.previewCount, 2, "Fresh review must use the real fixture transport")
+        XCTAssertTrue(try XCTUnwrap(model.preview).requiresUnknownAcceptance)
+        XCTAssertNil(model.preview?.after.totalMinor)
+        try assertUnknownPreviewRequest()
+        assertDraftPreserved()
+        XCTAssertFalse(model.acceptUnknown)
+        XCTAssertFalse(model.canApply)
+        await model.apply()
+        assertNoWrites()
+        XCTAssertEqual(server.previewCount, 2)
+
+        model.acceptUnknown = true
+        XCTAssertTrue(model.canApply)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1)
+        XCTAssertEqual(server.lineCount, 1)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1, "A confirmed decision must not be written twice")
+        XCTAssertEqual(server.lineCount, 1)
+    }
+
     @MainActor func testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment() async throws {
         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
         let scope=try XCTUnwrap(model.packReviewScope)
@@ -106,4 +565,34 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         model.cancelReview(); XCTAssertNil(model.selected); XCTAssertNil(model.preview)
         model.clear(); XCTAssertFalse(model.usePackSelection(selection)); XCTAssertNil(model.packReviewScope)
     }
+}
+
+private final class HeldS24OutcomeResponse: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: S24FixtureProtocol?
+    func hold(_ value: S24FixtureProtocol) { lock.lock(); task = value; lock.unlock() }
+    func release() {
+        lock.lock(); let value = task; task = nil; lock.unlock()
+        value?.finishResponse()
+    }
+}
+private func finishS24OutcomeResponse(_ task: S24FixtureProtocol, status: Int, data: Data) {
+    let response = HTTPURLResponse(url: task.request.url!, statusCode: status, httpVersion: nil,
+                                   headerFields: ["Content-Type": "application/json"])!
+    task.client?.urlProtocol(task, didReceive: response, cacheStoragePolicy: .notAllowed)
+    task.client?.urlProtocol(task, didLoad: data)
+    task.client?.urlProtocolDidFinishLoading(task)
+}
+
+private let s24OtherRequestID = "77777777-7777-4777-8777-777777777777"
+private func finishS24FirstOutcomePage(_ task: S24FixtureProtocol, server: S24FixtureServer) {
+    do {
+        let (_, bytes) = try server.respond(task.request)
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        var other = try XCTUnwrap((original["requests"] as? [[String: Any]])?.first)
+        other["requestId"] = s24OtherRequestID; other["originalItem"] = "Other request"
+        other["revision"] = 1; other["status"] = "pending"; other["ownActionAllowed"] = true
+        let page: [String: Any] = ["requests": [other], "nextCursor": s24OtherRequestID]
+        finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
+    } catch { task.client?.urlProtocol(task, didFailWithError: error) }
 }

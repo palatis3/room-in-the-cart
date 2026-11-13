@@ -1,0 +1,159 @@
+1: Date/Time:        2026-11-08 02:09:28.936 +0000
+2: End time:         2026-11-08 02:09:33.919 +0000
+3: OS Version:       macOS 15.8.2 (Build 24H232)
+4: Architecture:     arm64e
+5: Report Version:   60
+6: Incident Identifier: 205422F6-4800-4B9D-A3D7-D6C73C39ED2D
+7: 
+8: Data Source:      Stackshots
+9: Shared Cache:     E130CBA3-99F2-36E1-98C3-DDC73414B433 slid base address 0x19173c000, slide 0x1173c000 (System Primary)
+10: Shared Cache:     079FF234-C3E0-3454-A987-3AB684F6743E slid base address 0x18c2e8000, slide 0xc2e8000 (DriverKit)
+11: Shared Cache:     2EADFB87-308A-313C-9DBF-A7B8C8873E3E slid base address 0x7ff806b70000, slide 0x6b70000 (Rosetta)
+12: Reason:           Requested by testmanagerd [43926] - XCTest Diagnostics
+57: Process:          RoomInTheCartUITests-Runner [8535]
+58: UUID:             C132DF87-A471-3BE7-87EA-353991B7E069
+59: Path:             /Users/runner/Library/Developer/CoreSimulator/Devices/BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06/data/Containers/Bundle/Application/831A3EF1-C3A8-460E-8D1A-3A7FCE3A4210/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner
+60: Identifier:       dev.roominthecart.RoomInTheCartUITests.xctrunner
+61: Version:          1.0 (1)
+62: Is First Party:   No
+63: Beta Identifier:  B81B7FBC-9D63-5FAA-9EED-0BE7DB6BFF4B
+64: Shared Cache:     None
+65: Architecture:     arm64
+66: Parent:           launchd_sim [4194]
+67: Responsible:      launchd_sim [4194]
+68: UID:              501
+69: Footprint:        40.68 MB
+70: Pageins:          29 pages
+71: Time Since Fork:  738s
+72: Num samples:      297 (1-297)
+73: CPU Time:         0.050s
+74: Num threads:      6
+75: Note:             4 idle work queue threads omitted
+76: 
+77:   Thread 0x793b    DispatchQueue "com.apple.main-thread"(1)    297 samples (1-297)    priority 31-46 (base 31)    cpu time 0.043s
+78:   176  start + 6076 (dyld + 27544) [0x102baab98]
+79:     176  start_sim + 20 (dyld + 5072) [0x102a613d0]
+80:       176  main + 176 (RoomInTheCartUITests-Runner + 9024) [0x10290a340]
+180:                                                                                                                                                                                                               96   mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x1039e4b70]
+181:                                                                                                                                                                                                                *94   ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0]
+182:                                                                                                                                                                                                                *2    ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0] (runnable)
+183:                                                                                                                                                                                                 1    -[XCTWaiter _performWait:manager:completionHandler:] + 772 (XCTestCore + 523416) [0x1038b3c98]
+184:                                                                                                                                                                                                   1    -[XCTWaiter _shouldContinueWait:remainingTimeInterval:] + 80 (XCTestCore + 525060) [0x1038b4304]
+185:                                                                                                                                                                                                     1    -[XCTWaiter _getFulfilledExpectations:invertedExpectations:fromWait:] + 288 (XCTestCore + 516760) [0x1038b2298]
+186:                                                                                                                                                                                                       1    ??? [0x181098c48]
+187:                                                                                                                                                                                                         1    ??? [0x1815b5920]
+188:                                                                                                                                                                                                          *1    ??? (kernel.release.vmapple + 306340) [0xfffffe0007dcaca4] (runnable)
+189:                                                                                                                                                                                       1    -[XCTRunnerAutomationSession matchesForQuery:error:] + 144 (XCUIAutomation + 41316) [0x1034ea164]
+190:                                                                                                                                                                                         1    +[XCTFuture futureWithTimeout:description:block:] + 180 (XCTestCore + 499176) [0x1038adde8]
+191:                                                                                                                                                                                           1    __52-[XCTRunnerAutomationSession matchesForQuery:error:]_block_invoke + 216 (XCUIAutomation + 41740) [0x1034ea30c]
+192:                                                                                                                                                                                             1    ??? [0x181206d9c]
+193:                                                                                                                                                                                               1    ??? [0x1811f3048]
+194:                                                                                                                                                                                                 1    ??? [0x1811f39a0]
+195:                                                                                                                                                                                                   1    ??? [0x1801200cc]
+196:                                                                                                                                                                                                    *1    ??? (kernel.release.vmapple + 19728) [0xfffffe0007d84d10]
+197:                                                                                                                                                                                                      *1    ??? (kernel.release.vmapple + 1770116) [0xfffffe0007f30284]
+198:                                                                                                                                                                                                        *1    ??? (kernel.release.vmapple + 1772524) [0xfffffe0007f30bec]
+199:                                                                                                                                                                                                          *1    ??? (kernel.release.vmapple + 1096288) [0xfffffe0007e8ba60]
+200:                                                                                                                                                                                                            *1    IORWLockRead + 144 (kernel.release.vmapple + 466128) [0xfffffe0007df1cd0]
+201:                                                                                                                                                                                                              *1    ??? (kernel.release.vmapple + 467120) [0xfffffe0007df20b0]
+202:                                                                                                                                                                                                                *1    ??? (kernel.release.vmapple + 560072) [0xfffffe0007e08bc8]
+203:                                                                                                                                                                                                                  *1    ??? (kernel.release.vmapple + 565384) [0xfffffe0007e0a088] (runnable)
+204:                                                                                                                                                                     78   -[XCUIElement(XCUIElementEventSynthesis) _dispatchEventWithEventBuilder:error:] + 80 (XCUIAutomation + 313816) [0x10352c9d8]
+205:                                                                                                                                                                       78   -[XCUIApplication _waitForQuiescenceAsPreEvent:] + 96 (XCUIAutomation + 57188) [0x1034edf64]
+206:                                                                                                                                                                         78   -[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:] + 360 (XCUIAutomation + 96992) [0x1034f7ae0]
+207:                                                                                                                                                                           78   -[XCTContext runInternalActivityNamed:block:] + 124 (XCTestCore + 393028) [0x103893f44]
+208:                                                                                                                                                                             78   -[XCTContext _runActivityNamed:type:block:] + 196 (XCTestCore + 398276) [0x1038953c4]
+209:                                                                                                                                                                               78   __92-[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:]_block_invoke + 144 (XCUIAutomation + 97228) [0x1034f7bcc]
+210:                                                                                                                                                                                 78   XCUIWaitAndLog + 128 (XCUIAutomation + 120256) [0x1034fd5c0]
+211:                                                                                                                                                                                   78   +[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 72 (XCTestCore + 515820) [0x1038b1eec]
+212:                                                                                                                                                                                     78   -[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 108 (XCTestCore + 514828) [0x1038b1b0c]
+213:                                                                                                                                                                                       78   -[XCTWaiter _waitForExpectations:timeout:enforceOrder:synchronously:completionHandler:] + 520 (XCTestCore + 515428) [0x1038b1d64]
+214:                                                                                                                                                                                         78   -[XCTWaiter _performWait:manager:completionHandler:] + 792 (XCTestCore + 523436) [0x1038b3cac]
+215:                                                                                                                                                                                           78   +[XCTWaiter _synchronouslyWaitForTimeInterval:] + 108 (XCTestCore + 521724) [0x1038b35fc]
+216:                                                                                                                                                                                             78   ??? [0x18044fcec]
+217:                                                                                                                                                                                               78   ??? [0x180454dbc]
+218:                                                                                                                                                                                                 78   ??? [0x180455c04]
+219:                                                                                                                                                                                                   78   mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x1039e4ed8]
+220:                                                                                                                                                                                                     78   mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x1039ecc28]
+285:                                                                                                                             121  ??? [0x1804fdba0]
+286:                                                                                                                               121  @objc ContextualNavigationUITests.testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() + 44 (RoomInTheCartUITests + 27308) [0x108332aac]
+287:                                                                                                                                 121  ContextualNavigationUITests.testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() + 1520 (RoomInTheCartUITests + 21000) [0x108331208]
+288:                                                                                                                                   121  ContextualNavigationUITests.fill(_:into:replacing:) + 1760 (RoomInTheCartUITests + 16236) [0x10832ff6c]
+289:                                                                                                                                     121  -[XCUIElement(XCUIElementKeyboardEvents) typeText:] + 484 (XCUIAutomation + 322480) [0x10352ebb0]
+290:                                                                                                                                       121  -[XCUIElement(XCUIElementEventSynthesis) _dispatchEvent:eventBuilder:] + 228 (XCUIAutomation + 315148) [0x10352cf0c]
+291:                                                                                                                                         121  -[XCTContext runInternalActivityNamed:block:] + 124 (XCTestCore + 393028) [0x103893f44]
+292:                                                                                                                                           121  -[XCTContext _runActivityNamed:type:block:] + 196 (XCTestCore + 398276) [0x1038953c4]
+293:                                                                                                                                             121  __70-[XCUIElement(XCUIElementEventSynthesis) _dispatchEvent:eventBuilder:]_block_invoke + 116 (XCUIAutomation + 315400) [0x10352d008]
+294:                                                                                                                                               116  -[XCUIElement(XCUIElementEventSynthesis) _dispatchEventWithEventBuilder:error:] + 80 (XCUIAutomation + 313816) [0x10352c9d8]
+295:                                                                                                                                                 115  -[XCUIApplication _waitForQuiescenceAsPreEvent:] + 96 (XCUIAutomation + 57188) [0x1034edf64]
+296:                                                                                                                                                   115  -[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:] + 360 (XCUIAutomation + 96992) [0x1034f7ae0]
+297:                                                                                                                                                     115  -[XCTContext runInternalActivityNamed:block:] + 124 (XCTestCore + 393028) [0x103893f44]
+298:                                                                                                                                                       114  -[XCTContext _runActivityNamed:type:block:] + 196 (XCTestCore + 398276) [0x1038953c4]
+299:                                                                                                                                                         111  __92-[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:]_block_invoke + 144 (XCUIAutomation + 97228) [0x1034f7bcc]
+300:                                                                                                                                                           111  XCUIWaitAndLog + 128 (XCUIAutomation + 120256) [0x1034fd5c0]
+301:                                                                                                                                                             111  +[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 72 (XCTestCore + 515820) [0x1038b1eec]
+302:                                                                                                                                                               111  -[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 108 (XCTestCore + 514828) [0x1038b1b0c]
+303:                                                                                                                                                                 110  -[XCTWaiter _waitForExpectations:timeout:enforceOrder:synchronously:completionHandler:] + 520 (XCTestCore + 515428) [0x1038b1d64]
+304:                                                                                                                                                                   104  -[XCTWaiter _performWait:manager:completionHandler:] + 792 (XCTestCore + 523436) [0x1038b3cac]
+305:                                                                                                                                                                     104  +[XCTWaiter _synchronouslyWaitForTimeInterval:] + 108 (XCTestCore + 521724) [0x1038b35fc]
+306:                                                                                                                                                                       104  ??? [0x18044fcec]
+307:                                                                                                                                                                         102  ??? [0x180454dbc]
+308:                                                                                                                                                                           102  ??? [0x180455c04]
+309:                                                                                                                                                                             102  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x1039e4ed8]
+310:                                                                                                                                                                               102  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x1039ecc28]
+69752: Process:          RoomInTheCart [8951]
+69753: UUID:             32C3B5C8-3956-39DA-9F28-036E4D517700
+69754: Path:             /Users/runner/Library/Developer/CoreSimulator/Devices/BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06/data/Containers/Bundle/Application/3829E490-1202-415A-B99F-8F984CB137F4/RoomInTheCart.app/RoomInTheCart
+69755: Identifier:       dev.roominthecart.app.debug
+69756: Version:          0.1.0 (1)
+69757: Is First Party:   No
+69758: Beta Identifier:  8FCC066E-6637-5D4C-9073-43D0A07A726E
+69759: Shared Cache:     97ECA66B-AD55-3F61-8379-F8AB536FC272 slid base address 0x180000000, slide 0x180000001
+69760: Architecture:     arm64
+69761: Parent:           launchd_sim [4194]
+69762: Responsible:      launchd_sim [4194]
+69763: UID:              501
+69764: Footprint:        72.93 MB
+69765: Pageins:          144 pages
+69766: Time Since Fork:  705s
+69767: Num samples:      297 (1-297)
+69768: CPU Time:         0.121s
+69769: Num threads:      5
+69770: Note:             2 idle work queue threads omitted
+69771: 
+69772:   Thread 0x80ec    DispatchQueue none,"com.apple.main-thread"(1)    297 samples (1-297)    priority 47 (base 47)    cpu time 0.094s
+69773:   297  start + 6076 (dyld + 27544) [0x1005eab98]
+69774:     297  start_sim + 20 (dyld + 5072) [0x1003c93d0]
+69775:       297  __debug_main_executable_dylib_entry_point + 12 (RoomInTheCart.debug.dylib + 2208760) [0x1052fb3f8]
+69776:         297  static RoomInTheCartApp.$main() + 40 (RoomInTheCart.debug.dylib + 2068424) [0x1052d8fc8]
+69777:           297  static App.main() + 148 (SwiftUI + 5534764) [0x1da31b42c]
+69778:             297  runApp<A>(_:) + 180 (SwiftUI + 8098664) [0x1da58d368]
+69779:               297  closure #1 in KitRendererCommon(_:) + 164 (SwiftUI + 8099360) [0x1da58d620]
+69780:                 297  UIApplicationMain + 124 (UIKitCore + 18540444) [0x18634c79c]
+69781:                   297  -[UIApplication _run] + 772 (UIKitCore + 18523508) [0x186348574]
+69782:                     297  GSEventRunModal + 116 (GraphicsServices + 10684) [0x192a669bc]
+69783:                       297  _CFRunLoopRunSpecificWithOptions + 496 (CoreFoundation + 576748) [0x18044fcec]
+69784:                         277  __CFRunLoopRun + 1128 (CoreFoundation + 597436) [0x180454dbc]
+69785:                           277  __CFRunLoopServiceMachPort + 156 (CoreFoundation + 601092) [0x180455c04]
+69786:                             277  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x100ea0ed8]
+69787:                               277  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x100ea8c28]
+69788:                                 277  <patched truncated backtrace>
+69789:                                   277  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x100ea0b70]
+69790:                                    *277  ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0]
+69791:                         20   __CFRunLoopRun + 2280 (CoreFoundation + 598588) [0x18045523c]
+69792:                           20   __CFRunLoopDoBlocks + 340 (CoreFoundation + 600312) [0x1804558f8]
+69793:                             20   __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 (CoreFoundation + 602480) [0x180456170]
+69794:                               19   __XCTPerformOnMainRunLoop_block_invoke + 368 (XCTAutomationSupport + 155020) [0x101d45d8c]
+69795:                                 19   __56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke_2 + 52 (XCTAutomationSupport + 56060) [0x101d2dafc]
+69796:                                   16   -[XCTElementSnapshotRequest(PlatformImplementation) accessibilitySnapshotOrError:] + 868 (XCTAutomationSupport + 64540) [0x101d2fc1c]
+69797:                                     16   -[XCTAccessibilityFramework userTestingSnapshotForElement:options:error:] + 348 (XCTAutomationSupport + 27940) [0x101d26d24]
+69798:                                       16   AXUIElementCopyParameterizedAttributeValue + 92 (AXRuntime + 12644) [0x192fca164]
+69799:                                         16   AXUIElementCopyParameterizedAttributeValueRecursive + 616 (AXRuntime + 13408) [0x192fca460]
+69800:                                           16   _AXXMIGCopyParameterizedAttributeValue + 428 (AXRuntime + 39172) [0x192fd0904]
+69801:                                             16   _handleNonMainThreadCallback + 52 (AXRuntime + 37576) [0x192fd02c8]
+69802:                                               16   ___AXXMIGCopyParameterizedAttributeValue_block_invoke + 60 (AXRuntime + 39608) [0x192fd0ab8]
+69803:                                                 16   _copyParameterizedAttributeValueCallback + 340 (UIAccessibility + 20604) [0x19485b07c]
+69804:                                                   16   -[UIApplicationAccessibility _iosAccessibilityAttributeValue:forParameter:] + 1596 (UIKit + 344176) [0x1d244c070]
+69805:                                                     16   -[NSObject(AXPrivCategory) _iosAccessibilityAttributeValue:forParameter:] + 1384 (UIAccessibility + 145788) [0x19487997c]
+69806:                                                       16   -[NSObject(UIAccessibilityAutomation) _accessibilityUserTestingSnapshotWithOptions:] + 848 (UIAccessibility + 336300) [0x1948a81ac]
+69807:                                                         8    -[NSObject(UIAccessibilityAutomation) _accessibilityUserTestingSnapshotDescendantsWithAttributes:maxDepth:maxChildren:maxArrayCount:honorsModalViews:] + 696 (UIAccessibility + 330856) [0x1948a6c68]

@@ -1,0 +1,51 @@
+{
+  "phase": "build",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=858A2244-001F-4BAD-AFE0-A6E7AF02F41A,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/DinnerTopDoneSafeAreaNov08/build/native.xcresult",
+    "build-for-testing"
+  ],
+  "sourceSHA256": "94c871796090b737893661a45ab10117fbce1ee9c06cea48a4aab1cb7e923a5a",
+  "device": [
+    [
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+      {
+        "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/858A2244-001F-4BAD-AFE0-A6E7AF02F41A/data",
+        "dataPathSize": 3201105920,
+        "logPath": "/Users/palatis/Library/Logs/CoreSimulator/858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "udid": "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "lastUsedAt": "2026-11-08T11:10:25Z",
+        "isAvailable": true,
+        "logPathSize": 389120,
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state": "Booted",
+        "name": "RITC S24 Current Audit Nov08"
+      }
+    ]
+  ],
+  "contentSize": "large",
+  "startedAt": "2026-11-09T01:33:42.373321+00:00",
+  "pid": 97110,
+  "nativeExit": 0,
+  "elapsedSeconds": 25.192158125000002,
+  "finishedAt": "2026-11-09T01:34:07.566318+00:00",
+  "sourceUnchanged": true,
+  "bundleCheckExit": 0
+}

@@ -1,0 +1,12 @@
+{
+  "status": "captured",
+  "markers": 117,
+  "malformedMarkerLines": [],
+  "appStdoutPath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/app-stdout-private.txt",
+  "appStdoutBytes": 62150929,
+  "appStdoutSHA256": "76a59edf43218dd427c24c6fdf4864eaa88a68eb5b8a4ae2457307b5d17df854",
+  "runtimeSignatureLineNumbers": [],
+  "runtimeSignatureScope": "Locations only, separately from validated destination markers; see structured issues/strict status. Not a complete runtime diagnosis.",
+  "privacy": "Only exact fixed-scope validated marker fields retained in markers.json; full stdout stays scratch/private.",
+  "limits": "Captured events qualify this execution only. Capped/missing export never means setter not called. No retries or native actions."
+}

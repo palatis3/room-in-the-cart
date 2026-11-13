@@ -1,0 +1,42 @@
+{
+  "status": "frozen-prepared-native-not-launched",
+  "files": [
+    {
+      "path": "common.py",
+      "bytes": 3940,
+      "sha256": "2ed4b7d390956b0b14876c42a6637f2f2ba2ad1fa32626feb56416b196d0062c"
+    },
+    {
+      "path": "run.py",
+      "bytes": 3687,
+      "sha256": "44b4f163b9aef950501ffc386ed29eb0664a183fa4179c542373206f3d409b20"
+    },
+    {
+      "path": "inspect.py",
+      "bytes": 2595,
+      "sha256": "8d9a6405546d7db7d78511084a5934195a5542673a94eb670fb29521dd544ef0"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 8224,
+      "sha256": "fe08416b0359ae65de2f0d85cd39705d288c9b8c933238492263c9473f429e75"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3387,
+      "sha256": "4ac1db06856b46bf86ec8ea1c11c616a16771f1d3e4d857671d01cf12db9ade0"
+    },
+    {
+      "path": "r4-preservation.json",
+      "bytes": 63048,
+      "sha256": "d95c5bc2ebdecad08d76310582b65737dd5080ccb2fd119308259b567cf636ba"
+    },
+    {
+      "path": "installation.json",
+      "bytes": 762,
+      "sha256": "aa330ec70dab164c04ddbd25a3a8b8c343d4e4c8885a6921c5cf226773b36d78"
+    }
+  ],
+  "checkerSHA256": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+  "pythonSyntaxCheck": "ast.parse passed for three scripts; scripts not invoked"
+}

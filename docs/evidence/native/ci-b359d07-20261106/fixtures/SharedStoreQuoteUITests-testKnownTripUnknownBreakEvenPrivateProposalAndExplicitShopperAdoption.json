@@ -1,0 +1,32 @@
+{
+  "artifactID": 13493718537,
+  "artifactName": "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1",
+  "sha256": "5efde24dc6d23d06f1b037f88d6a33fab53d78f81c7051aaa3b4cce3d7771047",
+  "size": 2048972,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433866,
+  "hostedConclusion": "failure",
+  "selected": 1,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+  ],
+  "rawLogSHA256": "5e6f2f46f7fbc0ac07ace5ec259868bbabc761c6662bd2d7403cba58d3c3f07d",
+  "replayedBundle": "Tests.xcresult"
+}

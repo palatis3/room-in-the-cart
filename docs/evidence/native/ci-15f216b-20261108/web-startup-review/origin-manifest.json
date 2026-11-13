@@ -1,0 +1,64 @@
+[
+  {
+    "file": "job-metadata.json",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/web-job-metadata.json",
+    "bytes": 2580,
+    "sha256": "3a12c1bafd0883b6dc654d74bd2a48509726882c8342e65b710ad9e61cd30f30"
+  },
+  {
+    "file": "prior-job.json",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/prior-web-job.json",
+    "bytes": 218,
+    "sha256": "894765d4d9133a8f03d616e415848656aba59bb36b13f10738aca9bb220e54b5"
+  },
+  {
+    "file": "playwright-source-manifest.json",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/playwright-source-manifest.json",
+    "bytes": 158,
+    "sha256": "d3d61e54e31372b25dfbb8723b288eca53a2d8f3331f69b38ba04062605c68e8"
+  },
+  {
+    "file": "original-log-excerpt.txt",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/web-job-original.log",
+    "originalBytes": 77351,
+    "originalSHA256": "f4ea19908a88c88cd14e1cbb5a22776665f2a5204514927f4c333646ad1c5ea1",
+    "lineRanges": [
+      [
+        1,
+        21
+      ],
+      [
+        1025,
+        1077
+      ]
+    ],
+    "sha256": "85a4756283909fd1b21c0ceeefbd4a761ed199d09d846872818e7e028853048e"
+  },
+  {
+    "file": "prior-log-excerpt.txt",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/prior-web-job-original.log",
+    "originalBytes": 80673,
+    "originalSHA256": "678cc5df562183232a677c03b99af302a30b878d3448233738c30a3ff7db1510",
+    "lineRanges": [
+      [
+        12,
+        21
+      ],
+      [
+        1025,
+        1033
+      ],
+      [
+        1043,
+        1150
+      ]
+    ],
+    "sha256": "834457df34ee64e41a3b560e64cb452ca30a0c3f27f1ebe8642ec4ee9b14b620"
+  },
+  {
+    "file": "browser-start-diagnostics.patch",
+    "originalPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/browser-start-diagnostics.patch",
+    "bytes": 346,
+    "sha256": "f2f43d9011402919bc5a1cfd2d1024eeb78c4e023794b5d22a0b107a5cf89bca"
+  }
+]

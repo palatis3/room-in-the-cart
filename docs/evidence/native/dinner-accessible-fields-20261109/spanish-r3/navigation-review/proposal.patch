@@ -1,0 +1,30 @@
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -1657,8 +1657,8 @@
+             let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+             revealScrollableContent(target, initiallyUpward: initiallyUpward)
+         }
+-        func tapDinnerControl(_ target: XCUIElement) {
+-            revealScrollableContent(target)
++        func tapDinnerControl(_ target: XCUIElement, initiallyUpward: Bool = true) {
++            revealScrollableContent(target, initiallyUpward: initiallyUpward)
+             target.tap()
+         }
+         launch(reset: true, spanish: spanish)
+@@ -1705,12 +1705,14 @@
+         fill(originalAmount, into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false, expectedPriorValue: " ",
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
+         tapDinnerControl(element("ledgerReviewDinner"))
+-        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
++        // Check the upper review facts before descending to the acceptance row.
+         assertReviewedText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"), initiallyUpward: false)
+         assertReviewedText(copy("Shredded cabbage", "Repollo rallado"))
+         assertReviewedText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
+         capture("First-pickup-editable-dinner-pattern")
+-        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
++        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
++        // Supply rows precede Accept; start toward them without visiting the title again.
++        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")], initiallyUpward: false)
+         let supplyHeading = app.staticTexts["ideaSupplyHeading"]
+         revealScrollableContent(supplyHeading, entireRow: true)
+         XCTAssertEqual(supplyHeading.label, copy("Review ingredient supply", "Revisar el abastecimiento del ingrediente"))

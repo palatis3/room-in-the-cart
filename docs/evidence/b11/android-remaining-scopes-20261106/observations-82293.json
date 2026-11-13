@@ -1,0 +1,292 @@
+{
+  "synthetic": true,
+  "lane": "child",
+  "mode": "online",
+  "primedRole": null,
+  "counts": {
+    "authStarts": 0,
+    "verifies": 0,
+    "redeems": 0,
+    "activations": 0,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "events": [
+    {
+      "method": "GET",
+      "path": "/v1/guardian/availability",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/child-invitations/auth/start",
+      "bodySHA256": "ef5f605685c38a9bfccab939decc8f0642334b6ad44e0d16eff34a4940d8a7d2"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/email/verify",
+      "bodySHA256": "ce1342efa3c150420e9e14cbec79d3ef66b8bd1a8f74ff921ea3b964bb1a89ba"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/guardian/availability",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/child-invitations/claim",
+      "bodySHA256": "9074614e1b498ac9a9774883d0b88f9f85185ab6a76d697f2a73c56bece55e88"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/guardian/availability",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/claims/33333333-3333-4333-8333-333333333333",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/claims/33333333-3333-4333-8333-333333333333",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/child-invitations/finish",
+      "bodySHA256": "d58313a150f1f5bad6b52dfea02cb4cc58b91dea94e9adfde592b1ec375dfc8e"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/guardian/availability",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/child-invitations/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    }
+  ],
+  "requestCount": 0,
+  "proposalCount": 0,
+  "childCounts": {
+    "starts": 1,
+    "verifies": 1,
+    "claimPosts": 1,
+    "claims": 1,
+    "finishPosts": 1,
+    "finishes": 1,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  }
+}

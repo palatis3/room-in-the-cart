@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "execution": ".build/TrackingFlowUIQualificationNov10/r8",
+  "sourceFiles": 667,
+  "modelTests": 88,
+  "suites": 6,
+  "runtimeWarnings": 0,
+  "buildSeconds": 37.533,
+  "testSeconds": 13.684,
+  "sourceAndArchiveIndependentlyVerified": true,
+  "allPhaseLogHashesVerified": true,
+  "uiJourneysExecuted": 0,
+  "realServiceAcceptance": false,
+  "scope": "App/model/UI compilation and focused simulator model execution for partial meal editing, full review and Undo. Separate package tests do not replace actual service wire or visual journeys.",
+  "hashes": {
+    "final.json": "cee67d4a5216fa25f30b0516c8b3fda6044e488591c09ac97cfc6729ed358559",
+    "source-manifest.json": "7f3c077cdbbca3c4425cc40a48e2e6d73795028b7359d1d3f2ab3d84c0459bee",
+    "build-receipt.json": "2fd11e3536359505e86b2b0ada138100d451d9cdbc8380537beec6f28e184314",
+    "models-receipt.json": "4d117eb53f7a6d7088b179957d11724d757c6e5ff7bef5e6b9e6f7453d8b6bce",
+    "models-strict.log": "4b502261d05a3cf5f9b04dcfed84507d007fb946f0f05dc2b05615b42d87271c",
+    "models-verification.json": "ebba98db5796f0fdf7efd2359372032d6c81e8c74a7d0d14e07f94243638b94b",
+    "custody-final.json": "1c6d4381631746a770f867df147c4de65536b9a7a82191cda40ae8aa8321ede3",
+    "models-inspection-custody.json": "cc9d63f5818fbe85113689d20a9ba04cd6ca3ba5c51d62f0486ee94ef38bd9af",
+    "compiled-selection.json": "f0c7d9cfc925571da3f40a1c1cd5b48ad37df6206b0aa36d4eadba62951f4421",
+    "products.json": "1479b9729b22767675830c9d0d0c1ce844bfaf1bd081cbb30fc8ad2d69ddb02c"
+  },
+  "preparationManifestSHA256": "1fd4cd33445ea09c7e1529888b51eee0513decbaba9422ddd8636ba31fa01ccf",
+  "previousQualifiedRun": ".build/TrackingFlowUIQualificationNov10/r7",
+  "newCasesSinceR7": 8,
+  "compileWarnings": [
+    "Existing unnecessary try in SharedTrackingFlowLeaseTests fixture; no new compiler error."
+  ]
+}

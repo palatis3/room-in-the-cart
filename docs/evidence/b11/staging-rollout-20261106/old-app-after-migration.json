@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-11-06T06:19:34.713333+00:00",
+  "url": "https://room-in-the-cart-staging.vercel.app",
+  "checks": [
+    {
+      "check": "health",
+      "path": "/health",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "session",
+      "path": "/v1/session",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "email-availability",
+      "path": "/v1/auth/session",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "unauthenticated",
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "check": "invalid-token",
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "check": "wrong-origin",
+      "path": "/v1/session",
+      "status": 403,
+      "expected": 403,
+      "pass": true
+    }
+  ]
+}

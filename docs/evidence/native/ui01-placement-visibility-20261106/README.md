@@ -1,0 +1,15 @@
+# Place the visible order control before continuing the Free journey
+
+The original `0d5bb1b` UI01 case failed after attempting to report placement. Its recording shows **I placed this order mostly beneath the floating tab bar**; the synthesized tap is `(17,786)`. The following Pickup screen remains **Frozen · placement unconfirmed**. The generic return helper then taps Back twice and reaches Shop without an arrival action. This is evidence for correcting the test's visibility and completion preconditions; no production placement defect is claimed.
+
+The targeted test change scrolls the complete report button inside the measured vertical content bounds, asserts its horizontal bounds and enabled/hittable state, and performs **one native tap**. It then returns only from the named Retailer handoff destination, requires the Pickup screen, and positively asserts **Placement reported · original order locked** before opening arrival. It neither retries the report nor repeatedly pops screens while awaiting an asynchronous state change. App source, shared test helpers, native deadlines and warning rules are unchanged.
+
+The **entire original Free journey** passed on its first corrected local run: **404.969 seconds, strict0, zero recorded runtime warnings or restarts**. The case continues through protected lunch, observed short fill, confirmed stock, repair, dated cook instructions, settlement, feedback, next-shop creation, dinner reuse, relaunch and saved decision assertions. The screenshot `corrected-fully-visible-placement.png` is exported by its exact attachment-name filter; no Records media was viewed.
+
+## Source and evidence limits
+
+Original hosted run42316648565, UI01 job128234291592, attempt1: three of four cases pass; the long Free journey fails in331.423s. The separate passing manual-list case has two existing narrowly allowed UIKit warnings. Root's strict replay confirms the failure and those warnings. The default collector refused one97,779,296-byte XCResult data member under its unchanged50MB limit. Root separately inspected the exact SHA-verified archive under a per-artifact128MB member /256MB total ceiling; `isolated-extraction.json` records this exception. No global collector guard was changed.
+
+Corrected source is main `b7fc82e` plus this targeted UI-test diff; `corrected-source.json` pins relevant files. Local compiler/coordinator Xcode27.1/27A9275 and iOS26.2/23C54 differ from the hosted Xcode26.3 coordinator/compiler, so this is local correction evidence, not hosted follow-up acceptance. Original failures and original ZIP remain retained. Native result exports used inspection copies; source hashes remained unchanged during execution. The owned simulator was shut down and deleted after this run and the preceding UI04 control. `root-review.json` pins the318-file evidence freeze.
+
+`source-review.md` retains the initial bounded-log uncertainty; the later frame-based addendum and `correction-review.md` record the supporting visual evidence and independent review. Original event and frame receipts are preserved alongside the failed and passing summaries.

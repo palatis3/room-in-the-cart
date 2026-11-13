@@ -1,0 +1,138 @@
+{
+  "requirement": "Foundation 2.1 D09/F03/S06/S17: independently retailer-confirmed shared order changes, original evidence, authorized retry and physical-food separation",
+  "baseCommit": "b541fded9a489ad0f43e3fd86e9119f50c6f34b8",
+  "scope": "Local implementation and synthetic service/simulator verification. Staging remains through 041; migration 042 is not deployed.",
+  "behavior": [
+    "Assigned adult shopper records a reviewed retailer reference, confirmation time and complete changed order; original checkout stays immutable.",
+    "Current order may add, remove or change quantities, including full cancellation; retained identities keep names and retired identities cannot revive.",
+    "Append-only complete history; new delivery identities do not imply arrival, usable food, meal changes, payment or refunds.",
+    "Exact pending operation survives restart and lost reply; stale authority and erased evidence require review. Pending action appears above history.",
+    "Switching shops detaches pending work from the new scope; uncertain reads cannot authorize deletion of pending work.",
+    "Erasure invalidates affected copied confirmation chains instead of silently restoring original ordered quantities."
+  ],
+  "native": {
+    "iOS17": {
+      "modelsPassed": 693,
+      "uiPassed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "resultBundle": ".build/SharedAmendmentNov07/corrected-native.xcresult",
+      "strictReceipt": "native-strict.txt"
+    },
+    "iOS26_2": {
+      "uiPassed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "sameBuiltProducts": true,
+      "resultBundle": ".build/SharedAmendmentNov07/modern.xcresult",
+      "strictReceipt": "modern-strict.txt"
+    },
+    "journey": "testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart: cancel preserves original; retry after lost reply and restart records once; original one pack and current three packs remain distinct, changed price unknown."
+  },
+  "client": {
+    "passed": 105,
+    "skipped": 3,
+    "skipReason": "Existing opt-in native wire cases run separately.",
+    "finalBoundaryFollowup": {
+      "passed": 4,
+      "reason": "Reference control-character validation boundary."
+    }
+  },
+  "nativeWire": {
+    "nodeCasesPassed": 6,
+    "exactSwiftScenariosPassed": 10,
+    "skipped": 0,
+    "transport": "Pinned local HTTPS and isolated PostgreSQL; real Swift client, synthetic identities.",
+    "coverage": "New confirmation, exact retry, new independent delivery registration, complete cancellation and preservation of original order, physical quantities and financial entries.",
+    "clusterStopped": true
+  },
+  "backendReceipt": "backend/verification.json",
+  "backendSourceHashesMatch": true,
+  "python": {
+    "passed": 219
+  },
+  "localization": {
+    "catalogs": 26,
+    "enEsEntries": 4302,
+    "literalSourceKeys": 4003,
+    "dynamicHelpersExcluded": 43,
+    "runtimeCompositionsExcluded": 117,
+    "humanSpanishReview": "pending"
+  },
+  "release": {
+    "buildPassed": true,
+    "configuration": "Release",
+    "architecture": "arm64",
+    "destination": "generic iPhone",
+    "signed": false,
+    "bundleCheck": "release-check.txt"
+  },
+  "initialFailures": [
+    {
+      "artifact": "native.log",
+      "cause": "Test fixture stored-property initializer used Self; replaced with explicit fixture type."
+    },
+    {
+      "artifact": "integrated.log",
+      "cause": "Three retry fixtures seeded the request queue instead of the shared-shop outbox; corrected exact persisted-operation fixture. UI retry was below lazy order history; moved pending product action above history."
+    },
+    {
+      "artifact": "native-wire.log",
+      "cause": "Swift scenarios passed; Node postconditions still expected pre-amendment shop revision and delivery source count. Updated assertions explicitly preserve original physical quantities and verify added sources without arrival."
+    },
+    {
+      "artifact": "python-all.log",
+      "cause": "System Python lacked yaml; full suite reran using existing repository CI Python environment."
+    }
+  ],
+  "artifactSHA256": {
+    ".build/SharedAmendmentNov07/corrected-native.log": "ea40ad33e430a7b10b8de903cbf724bd51ffd6751a00c717ee99791d6694c120",
+    ".build/SharedAmendmentNov07/modern.log": "0af2fa32ea66fd2f24836a42e053b6966e1cb0fdc87e46a3d493b4a0c6e36480",
+    ".build/SharedAmendmentNov07/native-wire-corrected.log": "06f5f36a95c5f764d622877c5f35c355ca2716bb455315b858a95efc95092969",
+    ".build/SharedAmendmentNov07/client-final.log": "617ab1a6c81dca7963db1b16ec7acedbe68b01668ff268be2e4bdca5a5a4fef6",
+    ".build/SharedAmendmentNov07/client-focused-final.log": "b754989e0975941b81e2dacc8598409075eb93041a4e77dcf5a059b39d3e1a0f",
+    ".build/SharedAmendmentNov07/python-final.log": "c10d8073f83c01ffaf472c13b6e4c351ff3748d356593d6dd83faaaa3112eea2",
+    ".build/SharedAmendmentNov07/release.log": "0e3e681653e47f36af10c7c308d9101362b8012bf7b6cebd980baa258bc46cc7",
+    ".build/SharedAmendmentNov07/release-check.txt": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+    ".build/SharedAmendmentNov07/integrated.log": "4f71c94bda1fcb022512509f2969866ef2448003b7e74252174d96ba8a5aefec",
+    ".build/SharedAmendmentNov07/native-wire.log": "cb443b8d7b988db77910549e55ef28f2cae4eb6b57e4fc07c613160068d98f19",
+    ".build/SharedAmendmentNov07/native.log": "9009d2b492015a750d3657b366d4b3515062ddea4be626291631307b3376604e",
+    ".build/SharedAmendmentNov07/python-all.log": "ab309f723ca963262ea126857296c3114103e5f12c3354dc51ed04e856b7286b"
+  },
+  "sourceSHA256": {
+    "ios/Features/Household/HouseholdShopModel.swift": "403c96f15f7a9355219b5f884a8dd0f40f38b1eb081e79c2e8920ec6cdc1214f",
+    "ios/Features/Household/HouseholdShopView.swift": "6acc8e8adbeee577742a00b688f6664b6d8892587ffb0125902486738687c3aa",
+    "ios/Features/Household/OrderAmendment.xcstrings": "b1879a9d7e5008c37a6cf0052c7adead91f8578e0c86f2494502d5e2c7221a22",
+    "ios/Features/Household/SharedDeliveryView.swift": "695f0525c7d9dd25415003abe0c8625b1fa3029ee0344ed0eae6ec9d65cb248f",
+    "ios/Features/Household/SharedOrderAmendmentView.swift": "2d704426d88801b03205718c6458fe66ab77dec3633fea70b10aa9a649f4cb93",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift": "142a05348159f242079e0ad83cd5e48b027a47d71c30f3e0ce408e8cde9ec9f9",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedConfirmedOrder.swift": "efc0c694690386968a60f18730c49d14e81c6836c283cc45440628fda509b29b",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedDelivery.swift": "98bf5b81769a9bb3516319f3a0e7001fe78947cfc1f5265a54ad8712dad7d937",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/ShopperContracts.swift": "77f1b136679c8aeefd66244c43a4fd3b9fba9de8055616978ec61fe9614809cc",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedConfirmedOrderTests.swift": "874d6fc0347a840d783b2c6f9b512b087e4c8b49ef4341bde1bcd1e3aeb8c844",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift": "257badf0f9aa9a79801d3f5ad75d2338f64a8c0c7bd8ee9a0d35d50a040b2f0e",
+    "ios/RoomInTheCart.xcodeproj/project.pbxproj": "8f9336be0d2647a849dee9eaa6fc2d0b4b07f7b1ff8e2fc1a283f336f22efc95",
+    "ios/Tests/SharedShopFlowTests.swift": "075711f1e134c8061ce59c93f0a08f9d0f800209ad9c179e482717f22e970248",
+    "ios/UITestSupport/SharedConfirmedOrderUIFixture.swift": "b46465e9a0e132b38259e3c691ecc3bc0a52855c0e5a43326a47151a058047db",
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift": "f0b026ca630256e3c067630db5e5af0bfe77d03b86f459787389cb2706682a8e",
+    "ios/UITests/SharedDeliveryUITests.swift": "404a9641f9aaedd33f3ee6491bbe27dc5decb12e3381a089b196eda3bcffef01",
+    "scripts/check_localization.py": "fbd41997992d21e1052b7f1134a39f5adfac5defff2bb2de1abe33a45f2c13c9",
+    "scripts/plan_ios_fixture_tests.py": "c6f68235e86c3f4acd34bc57e4055809a04bb3d666829ab53f78f26d08bfd953",
+    "scripts/test_plan_ios_fixture_tests.py": "c4dc32721f3127d73b0448b16cf4c289e009d45d830b14ebd881f6d995abe7b6",
+    "service/API-CONFIRMED-ORDER.md": "4430c2b735d8052950fad1a7046e0395d8508aab6b4619ded293a83fd403fc8d",
+    "service/migrations/042_confirmed_order_amendments.sql": "1bc54c2d91fe9a38f494078463b95aaec0b20314fc486ff23ae141edc93751f8",
+    "service/src/contracts.ts": "eb3fa7515224a6646d7473706369c8ce644ada46225adf318155486c62075591",
+    "service/src/delivery-evidence.ts": "d793dabf991bd3f80be70eaea6a4a1ce7daf0623bf8754a4cc24ee862dfde925",
+    "service/src/http.ts": "38e8e06a2193a9df4b56c48122e2324a927c2c952647ba7905a6e6432d10d202",
+    "service/src/order-amendments.ts": "12ef48d995cfa1db939e18829111a1b1f92d99351a39d9759905476ec1ce3d47",
+    "service/src/repository.ts": "0d086c9d2c042e965359c488425e9e3c544cb9572418a5cdeae8d1691f4e98ec",
+    "service/tests/order-amendments.integration.mjs": "f5dff67447a8f30cc6276fa0135d3141d258d59e526481b7e17694e2bf611c3d",
+    "service/tests/shared-meal-changes.integration.mjs": "0823ba2dc57fee27e00dadceba9d4af5cdd04c54f35cb7a0a8d0a55e32d53bfd",
+    "shared/contracts/service-v1.d.ts": "c467f5446566e49b6285830fb3030eafb5bed26bbacedecc2d66b918443999b0"
+  },
+  "limits": [
+    "Not a staging 042 deployment or hosted CI pass.",
+    "No signed build, physical device, production provider, human Spanish or App Store acceptance claim.",
+    "Hosted f90 parser and Settings setup failures remain recorded independently; subsequent source requires hosted checks."
+  ]
+}

@@ -24,6 +24,10 @@ struct RecipientSend: Codable, Equatable {
     let language: String
     let sentAt: Date
     var acknowledgedAt: Date?
+
+    func matches(_ copy: HandoffCopy, recipient: String) -> Bool {
+        channel == copy.channel && versionID == copy.versionID && language == copy.language && self.recipient == recipient
+    }
 }
 
 struct HandoffCopy: Equatable, Identifiable {
@@ -38,7 +42,7 @@ struct HandoffCopy: Equatable, Identifiable {
     var id: UUID { versionID }
     var heading: String { "\(pCook("Revision", language: language)) \(revision)" }
 
-    static func retailer(_ snapshot: HandoffSnapshot, text: String, language: String) -> Self {
+    static func retailer(_ snapshot: HandoffSnapshot, language: String) -> Self {
         let pieces = snapshot.revision.lines.map { line in
             let text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
             let unresolved: String?
@@ -48,6 +52,10 @@ struct HandoffCopy: Equatable, Identifiable {
             }
             return HandoffPiece(key: line.id.uuidString, text: text, unresolved: unresolved)
         }
+        let date = snapshot.createdAt.formatted(Date.FormatStyle(date: .complete, time: .shortened, locale: Locale(identifier: language)))
+        let title = "\(pCook("Reviewed pickup", language: language)) · \(date)"
+        let revision = "\(pCook("Revision", language: language)) \(snapshot.revision.number)"
+        let text = ([title, revision] + pieces.map(\.text)).joined(separator: "\n")
         return Self(shopID: snapshot.basketID, channel: .retailer, versionID: snapshot.id, revision: snapshot.revision.number,
                     language: language, fullText: text, pieces: pieces, needsPrivateReview: false)
     }
@@ -104,7 +112,7 @@ extension PickupJourney {
             guard sourceExists, !send.recipient.isEmpty, send.recipient == send.recipient.trimmingCharacters(in: .whitespacesAndNewlines),
                   send.recipient.utf8.count <= 160, send.sentAt.timeIntervalSinceReferenceDate.isFinite,
                   send.acknowledgedAt?.timeIntervalSinceReferenceDate.isFinite != false,
-                  unique.insert([send.channel.rawValue,send.versionID.uuidString,send.recipient]).inserted else { throw HandoffError.invalid }
+                  unique.insert([send.channel.rawValue,send.versionID.uuidString,send.recipient,send.language]).inserted else { throw HandoffError.invalid }
         }
         for review in notes.compactMap(\.reviewedHandoff) {
             guard TimeZone(identifier: review.timeZoneID) != nil,
@@ -119,10 +127,10 @@ extension PickupModel {
     func handoffCopy(channel: HandoffChannel, versionID: UUID, language: String) -> HandoffCopy? {
         guard let value = journey else { return nil }
         if channel == .cook {
-            return value.notes.first { $0.id == versionID }.map { .cook($0, shopID: value.id) }
+            return value.notes.first { $0.id == versionID && $0.language == language }.map { .cook($0, shopID: value.id) }
         }
         guard let snapshot = value.basket?.snapshots.first(where: { $0.id == versionID }) else { return nil }
-        return .retailer(snapshot, text: Self.datedRetailerText(snapshot), language: language)
+        return .retailer(snapshot, language: language)
     }
 
     func isCurrent(_ copy: HandoffCopy) -> Bool {
@@ -148,7 +156,7 @@ extension PickupModel {
         guard let value = journey, value.id == copy.shopID, !saving, !hasPendingSave,
               handoffCopy(channel: copy.channel, versionID: copy.versionID, language: copy.language) == copy,
               !recipient.isEmpty, recipient.utf8.count <= 160, recipient == recipient.trimmingCharacters(in: .whitespacesAndNewlines) else { return false }
-        let match: (RecipientSend) -> Bool = { $0.channel == copy.channel && $0.versionID == copy.versionID && $0.recipient == recipient }
+        let match: (RecipientSend) -> Bool = { $0.matches(copy, recipient: recipient) }
         let old = value.recipientSends?.first(where: match)
         if let old, !acknowledge || old.acknowledgedAt != nil { return true }
         guard value.revision == reviewedRevision, acknowledge ? old != nil : isCurrent(copy) else { return false }
@@ -204,10 +212,11 @@ struct PickupRecipientSection: View {
                 }
                 let current = model.isCurrent(copy)
                 let last = journey.lastSend(channel, recipient: name)
-                let sent = (journey.recipientSends ?? []).first { $0.channel == channel && $0.versionID == versionID && $0.recipient == name }
+                let sent = journey.recipientSends?.first { $0.matches(copy, recipient: name) }
                 Text(copy.heading)
                 if let last, let previous = model.handoffCopy(channel: channel, versionID: last.versionID, language: last.language) {
-                    Text("\(pTr("Last marked sent")) · \(last.recipient) · \(previous.heading) · \(last.sentAt.formatted())")
+                    let languageName = pTr(last.language.hasPrefix("es") ? "Español (EE. UU.)" : "English (US)")
+                    Text("\(pTr("Last marked sent")) · \(last.recipient) · \(previous.heading) · \(languageName) · \(last.sentAt.formatted())")
                 }
                 if let sent {
                     Text("\(pTr("This version was marked sent")) · \(sent.sentAt.formatted())")
@@ -242,6 +251,7 @@ struct PickupRecipientSection: View {
                                         resetReview(); return
                                     }
                                     UIPasteboard.general.string = fresh.text(current: copy)
+                                    privateWordingConfirmed = false
                                     reviewRevision = nil; copied = true
                                 }
                             } else { Text(pTr("The source changed. Review this version again.")) }
@@ -250,9 +260,10 @@ struct PickupRecipientSection: View {
                     if copied { Text(pTr("Copied. Mark the version sent only after sending it.")) }
                 } else { Text(pTr("The source changed. Prepare and review the current instruction.")) }
             }
-            .onChange(of: recipient) { _, _ in destinationConfirmed = false; resetReview() }
+            .onChange(of: language) { _, _ in destinationConfirmed = false; resetReview() }
+            .onChange(of: recipient) { _, _ in destinationConfirmed = false; privateWordingConfirmed = false; resetReview() }
             .onChange(of: destinationConfirmed) { _, _ in resetReview() }
-            .onChange(of: privateWordingConfirmed) { _, _ in resetReview() }
+            .onChange(of: privateWordingConfirmed) { _, _ in reviewRevision = nil }
             .onChange(of: scenePhase) { _, value in if value != .active { privateWordingConfirmed = false; resetReview() } }
             .onReceive(model.cookLedgerRevisions) { _ in if channel == .cook { resetReview() } }
         }

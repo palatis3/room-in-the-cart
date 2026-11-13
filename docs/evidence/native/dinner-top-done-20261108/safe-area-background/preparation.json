@@ -1,0 +1,10 @@
+{
+  "priorSourceSHA256": "eeaad8f6df4a5a91baa305e25bc62992d4b7ade1b80914646b7eb72c85b11b01",
+  "priorNativeExit": 0,
+  "priorStrictExit": 0,
+  "visualRejection": "Focused supply title hidden; opaque Done background extends across navigation safe area",
+  "change": "Respect all safe-area edges for only the Done row background",
+  "file": "ios/Features/Dinners/DinnerEditors.swift",
+  "newSHA256": "03645277dad3843189450b5acbb8d1db6955b9c662446a35b645df619eff7979",
+  "preparedAt": "2026-11-09T01:33:41.635361+00:00"
+}

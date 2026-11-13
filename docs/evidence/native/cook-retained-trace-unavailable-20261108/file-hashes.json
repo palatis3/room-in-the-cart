@@ -1,0 +1,19 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 972,
+      "sha256": "687ccf3477e5a3af904aa691a07c5346b930a867d1379b67cd9059794d6520e3"
+    },
+    {
+      "path": "run.json",
+      "bytes": 1113,
+      "sha256": "9328ba55c2420ae2ab8dcd216c7da5f9d55f8349a00abcd86fa08fb67dd77098"
+    },
+    {
+      "path": "stderr.txt",
+      "bytes": 47,
+      "sha256": "28c3ee1d8e3698496c540c01ccbb9d79fed962accf4e675fd0f33a6af02fdef5"
+    }
+  ]
+}

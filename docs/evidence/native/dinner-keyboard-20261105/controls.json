@@ -1,0 +1,98 @@
+{
+  "status": "two-local-nonreproductions-not-a-fix",
+  "observedAt": "2026-11-05T13:42:14.376007+00:00",
+  "identity": {
+    "baseCandidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+    "sourceFileCount": 494,
+    "onlyChange": "Add two diagnostic selectors and their helper to FreeJourneyUITests; every original byte outside insertion unchanged. Production app source is exact candidate.",
+    "testSourceSHA256": "0f561033507ed93294d31d14a73d72f391da846d7af7679a1ef32f03044a1b81",
+    "sourceTarSHA256": "03db349057d9ef569737d43a5fb26d543c3fe2934ee54d55b896a9674b5e41e6",
+    "preparedAt": "2026-11-05T13:29:06.409106+00:00",
+    "purpose": "Compare keyboard Done-between-fields versus direct-focus then one dismissal, on fresh equivalent simulators. No causality or release pass inferred.",
+    "localEnvironmentLimit": "Xcode27.1/23C52 differs from hosted26.3/23C54",
+    "plannedRunsPerSelector": 1
+  },
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "sourceManifestSHA256": "b973d18970810592e80c3e399ee1f37281f5e3f3597e4b165131af3ff2233ff0",
+  "productManifestSHA256": "2308604d075e663dd749eba56eebb5b31ee716b083c89a282510218538e40139",
+  "allPinnedFilesUnchangedAfterRuns": true,
+  "runs": {
+    "done-between": {
+      "passed": 1,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "runtimeWarnings": 0,
+      "simulatorID": "645F3D4D-1AAA-4E2B-B004-A2BFF54E9C5D",
+      "logSHA256": "d3d8493a744d1610239ab225c204a4ed629d22d0d6e68c580a769003fb77c30a",
+      "summarySHA256": "f47bb5cafbc565ca7cedab67ad275c4895605633fb8c5e57410868d3fd53d6bf",
+      "captureVerificationSHA256": "faff18376c6aacd5dbd5b88b10a3621b720a8d3ba3382f038230c77b6a0a71cc",
+      "stateHierarchyScreenSets": 6,
+      "markerCount": 37,
+      "missingAnimationNotifications": 0,
+      "intervalSeconds": {
+        "field-0-tap-start": 0.9738257500575855,
+        "field-0-type-start": 0.6576286249328405,
+        "capture-start-field-0-before-transition": 1.7603243333287537,
+        "done-0-tap-start": 0.6816881665727124,
+        "done-0-dismiss-check-start": 2.215143166715279,
+        "capture-start-field-0-after-transition": 1.2524877917021513,
+        "field-1-tap-start": 0.8229319582460448,
+        "field-1-type-start": 0.3920013332972303,
+        "capture-start-field-1-before-transition": 1.4896783750737086,
+        "done-1-tap-start": 0.7377172916894779,
+        "done-1-dismiss-check-start": 2.256262708338909,
+        "capture-start-field-1-after-transition": 1.2978658332722262,
+        "field-2-tap-start": 0.8402708333451301,
+        "field-2-type-start": 0.5742468333337456,
+        "capture-start-field-2-before-transition": 1.4858385416446254,
+        "done-2-tap-start": 0.6903660832904279,
+        "done-2-dismiss-check-start": 2.22355841670651,
+        "capture-start-field-2-after-transition": 1.2919988333014771
+      }
+    },
+    "direct-focus": {
+      "passed": 1,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "runtimeWarnings": 0,
+      "simulatorID": "370D5DAF-23FA-42BA-969F-792D0ED7007C",
+      "logSHA256": "0585745d7f74e0557bb3e60bfdb1760eaf6938255db0c82386327452224d11b2",
+      "summarySHA256": "65348d5d392d0d709a7fe2d7e6d318f1b5c322de0829171d5691dcce1ea4b1d4",
+      "captureVerificationSHA256": "e18e137474145422512fcae87905a00064968190b0b9e37b30570116e6062543",
+      "stateHierarchyScreenSets": 6,
+      "markerCount": 29,
+      "missingAnimationNotifications": 0,
+      "intervalSeconds": {
+        "field-0-tap-start": 0.9168994583887979,
+        "field-0-type-start": 0.7150921665597707,
+        "capture-start-field-0-before-transition": 1.803752874955535,
+        "capture-start-field-0-after-transition": 2.086332625010982,
+        "field-1-tap-start": 0.6480552500579506,
+        "field-1-type-start": 0.41484916664194316,
+        "capture-start-field-1-before-transition": 1.788635625038296,
+        "capture-start-field-1-after-transition": 1.7611151667078957,
+        "field-2-tap-start": 0.5815849166829139,
+        "field-2-type-start": 0.5874231666093692,
+        "capture-start-field-2-before-transition": 1.8605015416396782,
+        "done-2-tap-start": 0.7382257916033268,
+        "done-2-dismiss-check-start": 2.2380154583370313,
+        "capture-start-field-2-after-transition": 1.287077666609548
+      }
+    }
+  },
+  "limits": [
+    "Each selector ran once on a separate fresh iPhone17/iOS26.2build23C52 simulator. Hosted failure used26.3/23C54; exact environment not reproduced.",
+    "Diagnostic queries and captures perturb timing; no causal attribution or dismissal-helper fix is established.",
+    "Fresh controls do not examine preceding-test/simulator state. Original ui05 and ui07 failures remain failed.",
+    "All original test bodies and app source remain unchanged. Two diagnostic methods are scratch-only and not included in shared/default CI."
+  ],
+  "visualInspection": "Root inspected Done-between first-field before/after and direct-focus first-field/final screenshots; keyboard and Done visibility agree with captured state; entered values remain displayed.",
+  "plannedPerSelectorExecutions": 1,
+  "nativeLimits": {
+    "defaultSeconds": 720,
+    "maximumSeconds": 900
+  },
+  "animationIdleChecks": "Unchanged; no bypass.",
+  "ownedSimulatorsShutdown": true,
+  "previewState": "Booted"
+}

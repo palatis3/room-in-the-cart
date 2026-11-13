@@ -1,0 +1,15 @@
+{
+  "afterRelaunch" : {
+    "checkedRowAbsent" : true,
+    "sameUncheckedRowFound" : true,
+    "unmatchedEmpty" : true
+  },
+  "beforeRelaunch" : {
+    "clearedListRestored" : true,
+    "replacementFoundUncheckedRow" : true,
+    "unmatchedEmpty" : true
+  },
+  "fixtureLineCount" : 500,
+  "uncheckedRowID" : "7A224822-6EE0-4E45-AC0C-C20697963CAD",
+  "unmatchedQuery" : "zz-no-such-fixture-item-987654321"
+}

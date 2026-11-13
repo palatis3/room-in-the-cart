@@ -1,0 +1,163 @@
+{
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runId": 42440464791,
+  "observedAtUtc": "2026-11-08T05:16:51Z",
+  "selected": 69,
+  "rows": {
+    "contributor-balanced-02": {
+      "jobId": 128612236397,
+      "conclusion": "success",
+      "selected": 11,
+      "selectorSHA256": "7ac65d36f80875b8c1749b1144b37e5dc267295c50e082e01aee41025f8ea077",
+      "receiptSHA256": "e9c150fe3712d6eb9e3cb0efe66a3076ce8a74a839dcfd8b3e8cc9f05903e07d",
+      "artifactId": 13603107200,
+      "boundedRangeBytes": 58714
+    },
+    "contributor-balanced-03": {
+      "jobId": 128612236597,
+      "conclusion": "success",
+      "selected": 10,
+      "selectorSHA256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+      "receiptSHA256": "f2e3abfbc1986250213316038f121732a87873abb531fb812717496d8a225c22",
+      "artifactId": 13603423376,
+      "boundedRangeBytes": 96619
+    },
+    "contributor-balanced-01": {
+      "jobId": 128612236658,
+      "conclusion": "success",
+      "selected": 3,
+      "selectorSHA256": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a",
+      "receiptSHA256": "b15ee85ab655b54c192ac545029a6db23d7e2b5bd67618763e6f0a9919b6ef9c",
+      "artifactId": 13603920480,
+      "boundedRangeBytes": 79800
+    },
+    "contributor-balanced-04": {
+      "jobId": 128612236669,
+      "conclusion": "success",
+      "selected": 5,
+      "selectorSHA256": "681ebe9b7ead2c23f7debd69ab6a6dfd0b5fa2a8fcf5eb0eb4d1358204f830c4",
+      "receiptSHA256": "a1ba4f428a7359f77f4b90260dd3ecef3500acef411825682caa30a9ffc04bcd",
+      "artifactId": 13601989785,
+      "boundedRangeBytes": 57320
+    },
+    "contributor-balanced-05": {
+      "jobId": 128612236684,
+      "conclusion": "success",
+      "selected": 14,
+      "selectorSHA256": "34dc67f998f83493163ae8af7e3eaf03aa48102bf0523a41b469bccae40a53b7",
+      "receiptSHA256": "bd49676b3066545e1456d11dc5c6d1bd791933dc538f1ce0e4a8e9006f6080ff",
+      "artifactId": 13603253261,
+      "boundedRangeBytes": 87170
+    },
+    "RecordsMediaUITests": {
+      "jobId": 128620991581,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b",
+      "receiptSHA256": "d284bb830c65899f524fa823042e74c5fb3df180fbbdcc38c283d6d63c3f42ec",
+      "artifactId": 13603623653,
+      "boundedRangeBytes": 2527
+    },
+    "SharedDeliveryUITests-stock-and-purchase": {
+      "jobId": 128621149453,
+      "conclusion": "success",
+      "selected": 6,
+      "selectorSHA256": "9f113c6e2e8ac1ac0e90b36b29386fea93bb24dba2c5e044e17bf504052b6cbf",
+      "receiptSHA256": "1bc6ac18c2f88f4c04028b84c51a11da0d6a00b6b7daebceb8475b0e235b9c77",
+      "artifactId": 13604681444,
+      "boundedRangeBytes": 31733
+    },
+    "SharedDeliveryUITests-recovery-cook-and-closeout": {
+      "jobId": 128624824824,
+      "conclusion": "failure",
+      "selected": 5,
+      "selectorSHA256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+      "receiptSHA256": "579fad391138bb8f15a923bf106a74a64dbc9591bf8d6277b9893aff4bd2b599",
+      "artifactId": 13604074151,
+      "boundedRangeBytes": 32251
+    },
+    "SharedFallbackUITests": {
+      "jobId": 128624899598,
+      "conclusion": "failure",
+      "selected": 2,
+      "selectorSHA256": "e140671e4e641c2f2bdb66da7b4ed4030bbc289e9651ffe952367f171106100a",
+      "receiptSHA256": "46f2bd0e1415b5f19e1d6182e2e0d6195598e3a80bc9c6b88146952790aa9efc",
+      "artifactId": 13604170744,
+      "boundedRangeBytes": 18329
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "jobId": 128626094384,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "0481679dfa40ef7aae745cdf4af797f613e7c9d2ff779ae98fe106b4b05359fe",
+      "receiptSHA256": "d62c37efdfff0850230402c23e035e730e599c558b816a1bfbe99ef7546bbf5d",
+      "artifactId": 13604912093,
+      "boundedRangeBytes": 24363
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "jobId": 128626872278,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "d5edad5d51c5465106f511e1d854157a60c633f6a6a358b3a9677f96e1efe50c",
+      "receiptSHA256": "780f436086fa81003865a3e71bc6e60b7826cdfbb1dfb507fae322a456144c21",
+      "artifactId": 13604623711,
+      "boundedRangeBytes": 18279
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "jobId": 128627124142,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "76c844050eca114fcf16267969780963d9ce646f1c5f64df275be91f46180287",
+      "receiptSHA256": "3a5dcee84a84022564577586beaea5391bc7736beeadd1e08a9b4c38d0dcc5d0",
+      "artifactId": 13604767105,
+      "boundedRangeBytes": 13984
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "jobId": 128631169252,
+      "conclusion": "failure",
+      "selected": 1,
+      "selectorSHA256": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de",
+      "receiptSHA256": "f0237eaa68ed6b44f440be0849f79e789ea323f61bc6eaad7957caba2b4bb659",
+      "artifactId": 13605425350,
+      "boundedRangeBytes": 33065
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "jobId": 128632608362,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889",
+      "receiptSHA256": "bb32316ed8523dff5dc9f5cf3930297e37c6903070630df2b768bb44e630e356",
+      "artifactId": 13604957936,
+      "boundedRangeBytes": 18561
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "jobId": 128633685007,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "bd19dd89da11f05ee96a89a88301f749dc95d554477430d3230f030e826eb249",
+      "receiptSHA256": "85d1ee986e8c1afd947f8f24d56bfd28c5023e697905d65900e713454a037a90",
+      "artifactId": 13605305875,
+      "boundedRangeBytes": 13326
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "jobId": 128634556278,
+      "conclusion": "success",
+      "selected": 1,
+      "selectorSHA256": "18490653592a3d155fb4595c559cf5429ef83a3bffa302e4b8e2053a5b99b946",
+      "receiptSHA256": "39cf8abcc9216b6528d6dd4f11f97a1435dbdc099d214b31dc028cbbca5b9d69",
+      "artifactId": 13604903936,
+      "boundedRangeBytes": 19300
+    },
+    "DinnerDecisionSheetUITests": {
+      "jobId": 128634727680,
+      "conclusion": "success",
+      "selected": 5,
+      "selectorSHA256": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74",
+      "receiptSHA256": "0d4df072a65b5b30ed70582d6f4883a7f89e38522d63d1da96ac68d93377430e",
+      "artifactId": 13605620404,
+      "boundedRangeBytes": 18719
+    }
+  },
+  "rangeBytes": 624060,
+  "scope": "Exact hosted shard selector files from bounded artifact extraction matched the pinned source planner across all 17 terminal fixture rows. Records is restricted to its redacted report and selector. Full product archives were not used."
+}

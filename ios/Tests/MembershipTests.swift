@@ -23,6 +23,700 @@ import Combine
             context: context, service: service, storefront: store, clock: { self.now })
     }
 
+    func testOffDeviceTransactionArrivingDuringOfferLoadAttemptsDelivery() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.submissionError = .deliveryPending
+        let store = FakeMembershipStorefront()
+        store.keepsUpdatesOpen = true
+        let purchase = transaction(token: context.appAccountToken)
+        store.onLoad = { [weak store] in store?.emit(.verified(purchase)) }
+        let model = makeModel(service, store)
+        defer { model.stop() }
+
+        await model.start()
+        await settle { model.deliveryOutcomes[purchase.transactionID] == .failed(.deliveryPending) }
+        XCTAssertEqual(service.submissions, 1)
+        XCTAssertTrue(store.finished.isEmpty)
+        XCTAssertFalse(model.hasPaidAccess)
+    }
+
+    func testLatePendingAndVerifiedDeliveryFailureRemainSimultaneouslyVisible() async {
+        for issue: MembershipFailure in [.notConfigured, .deliveryPending] {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.error = issue
+            let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+            let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.start()
+            let purchase = await pausedPurchase(model, store)
+            store.emit(.verified(transaction(id: "approved-B", token: context.appAccountToken)))
+            await settle { model.deliveryOutcomes["approved-B"] == .failed(issue) }
+            store.resolvePurchase(.pending); await purchase.value
+            XCTAssertEqual(model.purchaseReport, .pending)
+            XCTAssertEqual(model.deliveryOutcomes["approved-B"], .failed(issue))
+            XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+            XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(issue)))
+            XCTAssertFalse(model.hasPaidAccess); XCTAssertFalse(model.isBusy)
+            XCTAssertEqual(service.submissions, 1); XCTAssertTrue(store.finished.isEmpty)
+            XCTAssertEqual(model.canPurchase, issue != .deliveryPending,
+                           "Structured deliveryPending blocks Subscribe even after notice becomes pending")
+            assertNeutralProjection(model)
+        }
+    }
+
+    func testLatePendingDoesNotDenyAccessEstablishedByDurableVerifiedDelivery() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.start()
+        let purchase = await pausedPurchase(model, store)
+        service.snapshot = snapshot(revision: 2)
+        store.onFinish = { XCTAssertTrue(service.didCommit) }
+        store.emit(.verified(transaction(id: "verified-A", token: context.appAccountToken)))
+        await settle { model.deliveryOutcomes["verified-A"] == .delivered }
+        store.resolvePurchase(.pending); await purchase.value
+        XCTAssertEqual(model.purchaseReport, .pending)
+        XCTAssertEqual(model.deliveryOutcomes["verified-A"], .delivered)
+        XCTAssertTrue(model.hasPaidAccess)
+        XCTAssertTrue(model.statusMessages.contains(.pendingReport)); XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
+        XCTAssertEqual(service.submissions, 1); XCTAssertEqual(store.finished, ["verified-A"])
+        assertNeutralProjection(model)
+    }
+
+    func testOlderSameAccountTransactionDoesNotResolveDifferentPendingRequest() async {
+        let cases: [MembershipModel.DeliveryOutcome] = [.failed(.deliveryPending), .delivered, .inFlight]
+        for expected in cases {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free))
+            let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+            let model = makeModel(service, store)
+            defer {
+                store.resolvePurchase(.cancelled)
+                service.continuation?.resume(); service.continuation = nil
+                model.stop()
+            }
+            await model.start()
+            let purchaseB = await pausedPurchase(model, store)
+            switch expected {
+            case .failed(let issue): service.submissionError = issue
+            case .inFlight: service.pauseSubmission = true
+            case .delivered: break
+            }
+            // A is not B: neither the pending return nor product/account equality
+            // supplies an identity link to this older transaction update.
+            store.emit(.verified(transaction(id: "older-A", token: context.appAccountToken)))
+            await settle { model.deliveryOutcomes["older-A"] == expected }
+            store.resolvePurchase(.pending); await purchaseB.value
+            XCTAssertEqual(model.purchaseReport, .pending)
+            XCTAssertEqual(model.deliveryOutcomes["older-A"], expected)
+            XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+            switch expected {
+            case .failed(let issue):
+                XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(issue)))
+                XCTAssertFalse(model.canPurchase)
+            case .delivered: XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
+            case .inFlight:
+                XCTAssertTrue(model.statusMessages.contains(.deliveryInFlight))
+                XCTAssertFalse(model.canPurchase)
+                let continuation = service.continuation; service.continuation = nil; continuation?.resume()
+                await settle { model.deliveryOutcomes["older-A"] == .delivered }
+            }
+            XCTAssertEqual(model.purchaseReport, .pending, "Delivery of A cannot resolve B's unidentified report")
+            XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertEqual(service.submissions, 1)
+            if case .failed = expected { XCTAssertTrue(store.finished.isEmpty) }
+            else { XCTAssertEqual(store.finished, ["older-A"]) }
+            assertNeutralProjection(model)
+        }
+    }
+
+    func testPriorDeliveryFailureSurvivesNewPendingAttemptWithoutBecomingItsOutcome() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.submissionError = .notConfigured
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.start()
+        store.emit(.verified(transaction(id: "prior-A", token: context.appAccountToken)))
+        await settle { model.deliveryOutcomes["prior-A"] == .failed(.notConfigured) }
+        let purchaseB = await pausedPurchase(model, store)
+        XCTAssertEqual(model.purchaseReport, .awaitingResult)
+        XCTAssertEqual(model.deliveryOutcomes["prior-A"], .failed(.notConfigured))
+        store.resolvePurchase(.pending); await purchaseB.value
+        XCTAssertEqual(model.purchaseReport, .pending)
+        XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+        XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)))
+        XCTAssertEqual(service.submissions, 1); XCTAssertTrue(store.finished.isEmpty)
+    }
+
+    func testPendingFirstThenVerifiedFailureKeepsBothObservations() async {
+        for issue: MembershipFailure in [.notConfigured, .deliveryPending] {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.submissionError = issue
+            let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+            let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.start()
+            let purchase = await pausedPurchase(model, store)
+            store.resolvePurchase(.pending); await purchase.value
+            XCTAssertEqual(model.purchaseReport, .pending); XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+            store.emit(.verified(transaction(id: "approved-B", token: context.appAccountToken)))
+            await settle { model.deliveryOutcomes["approved-B"] == .failed(issue) }
+            XCTAssertEqual(model.purchaseReport, .pending)
+            XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+            XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(issue)))
+            XCTAssertEqual(model.canPurchase, issue != .deliveryPending)
+            XCTAssertFalse(model.hasPaidAccess); XCTAssertTrue(store.finished.isEmpty)
+        }
+    }
+
+    func testUnrelatedRejectedAndUnverifiedCallbacksCannotClearPurchaseOrAdmittedDeliveryEvidence() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.start()
+        let purchase = await pausedPurchase(model, store)
+        service.snapshot = snapshot(revision: 2)
+        store.emit(.verified(transaction(id: "verified-A", token: context.appAccountToken)))
+        await settle { model.deliveryOutcomes["verified-A"] == .delivered }
+        store.resolvePurchase(.pending); await purchase.value
+        let outcomes = model.deliveryOutcomes
+        let wrongProduct = SignedMembershipTransaction(transactionID: "wrong-product", originalTransactionID: "0",
+            productID: "other.product", signedTransactionInfo: "test-only-jws", appAccountToken: context.appAccountToken)
+        let rejected: [MembershipPurchaseOutcome] = [.verified(wrongProduct), .verified(transaction(id: "wrong-account", token: UUID())), .unverified]
+        for outcome in rejected {
+            await model.receive(outcome)
+            XCTAssertEqual(model.purchaseReport, .pending)
+            XCTAssertEqual(model.deliveryOutcomes, outcomes)
+            XCTAssertTrue(model.hasPaidAccess)
+            XCTAssertTrue(model.statusMessages.contains(.pendingReport)); XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
+            XCTAssertEqual(service.submissions, 1); XCTAssertEqual(store.finished, ["verified-A"])
+            assertNeutralProjection(model)
+        }
+    }
+
+    func testPerTransactionRetryUpdatesOnlyThatTransactionAndPreservesOtherFailures() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        defer { service.continuation?.resume(); service.continuation = nil; model.stop() }
+        await model.loadOffer(); await model.purchase()
+        service.submissionError = .notConfigured
+        await model.receive(.verified(transaction(id: "retry-A", token: context.appAccountToken)))
+        service.submissionError = .deliveryPending
+        await model.receive(.verified(transaction(id: "waiting-B", token: context.appAccountToken)))
+        service.submissionError = nil; service.pauseSubmission = true
+        let retry = Task { await model.receive(.verified(transaction(id: "retry-A", token: context.appAccountToken))) }
+        await settle { service.continuation != nil }
+        XCTAssertEqual(model.deliveryOutcomes["retry-A"], .inFlight)
+        XCTAssertEqual(model.deliveryOutcomes["waiting-B"], .failed(.deliveryPending))
+        XCTAssertEqual(model.purchaseReport, .pending)
+        let continuation = service.continuation; service.continuation = nil; continuation?.resume()
+        _ = await retry.value
+        XCTAssertEqual(model.deliveryOutcomes["retry-A"], .delivered)
+        XCTAssertEqual(model.deliveryOutcomes["waiting-B"], .failed(.deliveryPending))
+        XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.deliveryPending)))
+        XCTAssertEqual(service.submissions, 3); XCTAssertEqual(store.finished, ["retry-A"])
+        XCTAssertEqual(model.notice, .delivered)
+        XCTAssertFalse(model.canPurchase, "Another transaction's success cannot unlock unresolved waiting-B")
+        // Preserve the existing purchase policy: an unfinished transaction is
+        // retried before asking Apple for a new purchase, independent of notice.
+        store.unfinished = [.verified(transaction(id: "waiting-B", token: context.appAccountToken))]
+        service.pauseSubmission = false; service.submissionError = .deliveryPending
+        await model.purchase()
+        XCTAssertEqual(store.purchaseCount, 1); XCTAssertEqual(service.submissions, 4)
+        XCTAssertEqual(store.finished, ["retry-A"])
+    }
+
+    func testPurchaseReportResetsOnlyAtNewActualAttemptOrStopNotRefreshOrRestore() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.loadOffer(); await model.purchase()
+        XCTAssertEqual(model.purchaseReport, .pending)
+        await model.refresh(); XCTAssertEqual(model.purchaseReport, .pending)
+        await model.restore(); XCTAssertEqual(model.purchaseReport, .pending)
+        let next = await pausedPurchase(model, store)
+        XCTAssertEqual(model.purchaseReport, .awaitingResult)
+        XCTAssertNil(model.notice)
+        XCTAssertFalse(model.statusMessages.contains(.pendingReport))
+        XCTAssertFalse(model.statusMessages.contains(.otherNotice(.pending)))
+        store.resolvePurchase(.cancelled); await next.value
+        XCTAssertEqual(model.purchaseReport, .cancelled)
+        XCTAssertTrue(model.statusMessages.contains(.cancelledReport))
+        model.stop()
+        XCTAssertNil(model.purchaseReport); XCTAssertTrue(model.deliveryOutcomes.isEmpty); XCTAssertTrue(model.callbackRejections.isEmpty); XCTAssertTrue(model.statusMessages.isEmpty)
+    }
+
+    func testAllUnresolvedDeliveryPendingTransactionsGateSubscribeUntilExactRecovery() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.submissionError = .deliveryPending
+        let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.loadOffer()
+        let a = transaction(id: "unresolved-A", token: context.appAccountToken)
+        let b = transaction(id: "unresolved-B", token: context.appAccountToken)
+        await model.receive(.verified(a)); await model.receive(.verified(b))
+        XCTAssertFalse(model.canPurchase)
+        XCTAssertEqual(service.submissions, 2); XCTAssertTrue(store.finished.isEmpty)
+        service.submissionError = nil
+        store.onFinish = { XCTAssertTrue(service.didCommit) }
+        store.unfinished = [.verified(a)]
+        await model.purchase() // Retry unfinished A even though Subscribe is gated.
+        XCTAssertEqual(model.deliveryOutcomes["unresolved-A"], .delivered)
+        XCTAssertEqual(model.deliveryOutcomes["unresolved-B"], .failed(.deliveryPending))
+        XCTAssertEqual(model.notice, .delivered)
+        XCTAssertFalse(model.canPurchase, "Recovering A must not clear B's unresolved delivery")
+        XCTAssertEqual(store.purchaseCount, 0); XCTAssertEqual(store.finished, ["unresolved-A"])
+        store.unfinished = [.verified(b)]
+        await model.purchase() // Exact B recovery removes the final independent gate.
+        XCTAssertEqual(model.deliveryOutcomes["unresolved-B"], .delivered)
+        XCTAssertTrue(model.canPurchase)
+        XCTAssertEqual(service.submissions, 4); XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(store.finished, ["unresolved-A", "unresolved-B"])
+        store.unfinished = [] // Model the completed StoreKit unfinished queue.
+        let fresh = await pausedPurchase(model, store)
+        XCTAssertEqual(store.purchaseCount, 1)
+        XCTAssertEqual(model.purchaseReport, .awaitingResult)
+        store.resolvePurchase(.pending); await fresh.value
+        XCTAssertTrue(model.canPurchase, "An ordinary pending report does not invent a delivery failure")
+    }
+
+    func testNewActualAttemptClearsOldOperationCopyButRetainsStructuredDeliveryErrors() async {
+        let cases: [(MembershipPurchaseOutcome, MembershipFailure?)] = [
+            (.pending, nil), (.cancelled, nil), (.pending, .unavailable),
+        ]
+        for (oldOutcome, oldError) in cases {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free)); service.submissionError = .notConfigured
+            let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.loadOffer()
+            await model.receive(.verified(transaction(id: "prior-failed-A", token: context.appAccountToken)))
+            store.purchaseError = oldError
+            let prior = await pausedPurchase(model, store)
+            store.resolvePurchase(oldOutcome); await prior.value
+            if let oldError { XCTAssertEqual(model.notice, .failed(oldError)) }
+            else if case .pending = oldOutcome { XCTAssertEqual(model.notice, .pending) }
+            else { XCTAssertEqual(model.notice, .cancelled) }
+            store.purchaseError = nil
+            let fresh = await pausedPurchase(model, store)
+            XCTAssertEqual(model.purchaseReport, .awaitingResult); XCTAssertNil(model.notice)
+            XCTAssertEqual(model.deliveryOutcomes["prior-failed-A"], .failed(.notConfigured))
+            XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)))
+            let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
+            XCTAssertFalse(rendered.contains(membershipStatusMessageText(.pendingReport)))
+            XCTAssertFalse(rendered.contains(membershipStatusMessageText(.cancelledReport)))
+            XCTAssertFalse(rendered.contains(membershipNoticeText(.failed(.unavailable))))
+            XCTAssertTrue(rendered.contains(membershipStatusMessageText(.deliveryFailure(.notConfigured))))
+            store.resolvePurchase(.cancelled); await fresh.value
+        }
+    }
+
+    func testDeliveryHistoryAndUnresolvedFailureSurviveGenericRefreshRestoreAndRevocation() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+        defer { model.stop() }
+        await model.loadOffer(); await model.purchase()
+        await model.receive(.verified(transaction(id: "current-ack-A", token: context.appAccountToken)))
+        XCTAssertTrue(model.hasPaidAccess)
+        service.submissionError = .deliveryPending
+        await model.receive(.verified(transaction(id: "unresolved-B", token: context.appAccountToken)))
+        let history = model.deliveryOutcomes
+        XCTAssertEqual(history["current-ack-A"], .delivered)
+        XCTAssertEqual(history["unresolved-B"], .failed(.deliveryPending))
+        XCTAssertTrue(model.hasPaidAccess, "A delivery failure does not invent revocation of an authoritative active lease")
+        service.submissionError = nil
+        store.current = []; store.unfinished = [] // These refreshes perform no same-transaction retry.
+        service.snapshot = snapshot(status: .expired, revision: 2)
+        await model.refresh()
+        XCTAssertFalse(model.hasPaidAccess); XCTAssertEqual(model.deliveryOutcomes, history)
+        XCTAssertFalse(model.canPurchase, "An expired projection cannot erase unresolved B")
+        await model.restore()
+        XCTAssertFalse(model.hasPaidAccess); XCTAssertEqual(model.deliveryOutcomes, history)
+        XCTAssertEqual(model.purchaseReport, .pending); XCTAssertEqual(store.syncCount, 1)
+        service.snapshot = snapshot(status: .revoked, revision: 3)
+        await model.refresh()
+        XCTAssertFalse(model.hasPaidAccess); XCTAssertEqual(model.deliveryOutcomes, history)
+        service.snapshot = snapshot(revision: 4)
+        await model.refresh()
+        XCTAssertTrue(model.hasPaidAccess); XCTAssertEqual(model.deliveryOutcomes, history)
+        XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
+        XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.deliveryPending)))
+        XCTAssertEqual(membershipStatusMessageText(.deliverySaved),
+            mtr("An App Store transaction was saved by your household service. Current membership access is shown above."))
+        XCTAssertFalse(membershipStatusMessageText(.deliverySaved).contains(mtr("Household access is active")))
+        XCTAssertEqual(service.submissions, 2); XCTAssertEqual(store.finished, ["current-ack-A"])
+    }
+
+    func testHistoricalDeliveryAcknowledgementDoesNotExtendActualSubscriptionExpiry() async {
+        var time = now
+        let current = snapshot()
+        let shortTerm = MembershipSnapshot(householdID: current.householdID, purchaserID: current.purchaserID,
+            revision: current.revision, status: .active, expiresAt: now.addingTimeInterval(60), graceExpiresAt: nil,
+            verifiedAt: current.verifiedAt, validUntil: current.validUntil, seats: current.seats)
+        let service = FakeMembershipService(snapshot: shortTerm), store = FakeMembershipStorefront()
+        let model = MembershipModel(configuration: .init(productID: "test.household.annual",
+            privacyURL: URL(string: "https://example.test/privacy"), termsURL: URL(string: "https://example.test/terms")),
+            context: context, service: service, storefront: store, clock: { time })
+        defer { model.stop() }
+        await model.receive(.verified(transaction(id: "historic-ack", token: context.appAccountToken)))
+        XCTAssertTrue(model.hasPaidAccess)
+        time = now.addingTimeInterval(61)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.deliveryOutcomes["historic-ack"], .delivered)
+        XCTAssertTrue(model.statusMessages.contains(.deliverySaved))
+        XCTAssertEqual(membershipStatusMessageText(.deliverySaved),
+            mtr("An App Store transaction was saved by your household service. Current membership access is shown above."))
+        XCTAssertEqual(service.submissions, 1); XCTAssertEqual(store.finished, ["historic-ack"])
+    }
+
+    func testEquivalentDeliveryFailuresRenderOnceWithoutErasingTransactionEvidence() async {
+        let pairs: [(MembershipFailure, MembershipFailure)] = [
+            (.invalidReceipt, .serverRejected), (.unverified, .invalidSnapshot),
+            (.wrongHousehold, .accountMismatch),
+        ]
+        for (first, second) in pairs {
+            for issues in [[first, second], [second, first]] {
+                let service = FakeMembershipService(snapshot: snapshot(status: .free))
+                let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+                defer { model.stop() }
+                await model.loadOffer(); await model.purchase()
+                for (index, issue) in issues.enumerated() {
+                    service.submissionError = issue
+                    await model.receive(.verified(transaction(id: "delivery-\(index)", token: context.appAccountToken)))
+                }
+                let expectedText = membershipStatusMessageText(.deliveryFailure(first))
+                XCTAssertEqual(expectedText, membershipStatusMessageText(.deliveryFailure(second)))
+                XCTAssertEqual(model.statusMessages.map(membershipStatusMessageText).filter { $0 == expectedText }.count, 1)
+                XCTAssertEqual(model.deliveryOutcomes, ["delivery-0": .failed(issues[0]), "delivery-1": .failed(issues[1])])
+                XCTAssertTrue(store.finished.isEmpty)
+                XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+                let stableID = MembershipModel.StatusMessage.deliveryFailure(first).id
+                XCTAssertEqual(model.statusMessages.filter { $0.id == stableID }.count, 1)
+
+                // An unrelated delivery gate and rejected callback remain
+                // distinct from the coalesced delivery instruction.
+                service.submissionError = .deliveryPending
+                await model.receive(.verified(transaction(id: "pending-delivery", token: context.appAccountToken)))
+                await model.receive(.unverified)
+                XCTAssertFalse(model.canPurchase)
+                XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.deliveryPending)))
+                XCTAssertTrue(model.statusMessages.contains(.callbackRejection(.unverified)))
+                XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+
+                // Recovering one transaction must leave the other's instruction
+                // in place with the same identity and must not clear the gate.
+                service.submissionError = nil
+                await model.receive(.verified(transaction(id: "delivery-0", token: context.appAccountToken)))
+                XCTAssertEqual(model.deliveryOutcomes["delivery-0"], .delivered)
+                XCTAssertEqual(model.deliveryOutcomes["delivery-1"], .failed(issues[1]))
+                XCTAssertEqual(model.deliveryOutcomes["pending-delivery"], .failed(.deliveryPending))
+                XCTAssertEqual(model.statusMessages.filter { $0.id == stableID }.count, 1)
+                XCTAssertEqual(model.statusMessages.map(membershipStatusMessageText).filter { $0 == expectedText }.count, 1)
+                XCTAssertEqual(store.finished, ["delivery-0"])
+                XCTAssertFalse(model.canPurchase)
+                XCTAssertFalse(model.hasPaidAccess)
+            }
+        }
+    }
+
+    func testStatusMessagesHaveUniqueStableSemanticIdentityWithoutTransactionIdentity() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+        defer { service.continuation?.resume(); service.continuation = nil; model.stop() }
+        await model.loadOffer(); await model.purchase()
+        service.submissionError = .notConfigured
+        await model.receive(.verified(transaction(id: "private-transaction-A", token: context.appAccountToken)))
+        service.submissionError = nil; service.pauseSubmission = true
+        let deliveryB = Task { await model.receive(.verified(transaction(id: "private-transaction-B", token: context.appAccountToken))) }
+        await settle { service.continuation != nil }
+        service.pauseSubmission = false
+        await model.receive(.verified(transaction(id: "private-transaction-C", token: context.appAccountToken)))
+        let ids = model.statusMessages.map(\.id)
+        XCTAssertEqual(Set(ids).count, ids.count)
+        XCTAssertTrue(ids.contains("membership.status.purchase.pending"))
+        XCTAssertTrue(ids.contains("membership.status.delivery.failure.not-configured"))
+        XCTAssertTrue(ids.contains("membership.status.delivery.in-flight"))
+        XCTAssertTrue(ids.contains("membership.status.delivery.saved"))
+        let unrelated = SignedMembershipTransaction(transactionID: "private-rejected-ID", originalTransactionID: "0",
+            productID: "unrelated.product", signedTransactionInfo: "private-signed-payload", appAccountToken: context.appAccountToken)
+        await model.receive(.verified(unrelated))
+        let changedIDs = model.statusMessages.map(\.id)
+        XCTAssertTrue(Set(ids).isSubset(of: Set(changedIDs)))
+        XCTAssertEqual(Set(changedIDs).count, changedIDs.count)
+        let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
+        for value in ["private-transaction-A", "private-transaction-B", "private-transaction-C", "private-rejected-ID", "private-signed-payload"] {
+            XCTAssertFalse(rendered.contains(value)); XCTAssertFalse(changedIDs.contains { $0.contains(value) })
+        }
+        let continuation = service.continuation; service.continuation = nil; continuation?.resume()
+        _ = await deliveryB.value
+        XCTAssertFalse(model.statusMessages.map(\.id).contains("membership.status.delivery.in-flight"))
+        XCTAssertTrue(model.statusMessages.map(\.id).contains("membership.status.delivery.saved"))
+        XCTAssertTrue(model.statusMessages.map(\.id).contains("membership.status.delivery.failure.not-configured"))
+        XCTAssertEqual(service.submissions, 3); XCTAssertEqual(store.finished, ["private-transaction-C", "private-transaction-B"])
+    }
+
+    func testRejectedCallbackHistorySurvivesActualPendingAndCancelledPurchases() async {
+        let wrongProduct = SignedMembershipTransaction(transactionID: "rejected-callback-A", originalTransactionID: "0",
+            productID: "unrelated.product", signedTransactionInfo: "private-callback-jws", appAccountToken: context.appAccountToken)
+        let rejected: [(MembershipPurchaseOutcome, MembershipFailure)] = [
+            (.verified(wrongProduct), .unverified),
+            (.verified(transaction(id: "rejected-callback-A", token: UUID())), .accountMismatch),
+            (.unverified, .unverified),
+        ]
+        let returned: [MembershipPurchaseOutcome] = [.pending, .cancelled]
+        for (callbackA, issue) in rejected {
+            for outcomeB in returned {
+                let service = FakeMembershipService(snapshot: snapshot(status: .free))
+                let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+                let model = makeModel(service, store)
+                defer { store.resolvePurchase(.cancelled); model.stop() }
+                await model.start()
+                store.emit(callbackA)
+                await settle { model.callbackRejections.contains(issue) }
+                XCTAssertNil(model.purchaseReport); XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+                let purchaseB = await pausedPurchase(model, store)
+                XCTAssertNil(model.notice); XCTAssertEqual(model.purchaseReport, .awaitingResult)
+                XCTAssertEqual(model.statusMessages, [.callbackRejection(issue)])
+                XCTAssertFalse(model.statusMessages.contains(.deliveryFailure(issue)))
+                store.resolvePurchase(outcomeB); await purchaseB.value
+                switch outcomeB {
+                case .pending:
+                    XCTAssertEqual(model.purchaseReport, .pending); XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+                case .cancelled:
+                    XCTAssertEqual(model.purchaseReport, .cancelled); XCTAssertTrue(model.statusMessages.contains(.cancelledReport))
+                default: XCTFail("Unexpected test outcome")
+                }
+                XCTAssertEqual(model.callbackRejections, [issue])
+                XCTAssertTrue(model.statusMessages.contains(.callbackRejection(issue)))
+                XCTAssertFalse(model.statusMessages.contains(.purchaseFailure(issue)))
+                XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+                XCTAssertTrue(model.canPurchase, "A rejected callback is not an admitted deliveryPending gate")
+                XCTAssertFalse(model.hasPaidAccess); XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
+                let historyText = membershipStatusMessageText(.callbackRejection(issue))
+                let expectedHistory = issue == .accountMismatch
+                    ? mtr("An earlier App Store update did not match this account or household. Use its purchasing account to restore it. Current membership access is shown above.")
+                    : mtr("An earlier App Store update could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.")
+                XCTAssertEqual(historyText, expectedHistory)
+                let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
+                XCTAssertTrue(rendered.contains(historyText))
+                let ids = model.statusMessages.map(\.id)
+                XCTAssertEqual(ids.count, Set(ids).count)
+                for privateValue in ["rejected-callback-A", "private-callback-jws", context.appAccountToken!.uuidString] {
+                    XCTAssertFalse(rendered.contains(privateValue)); XCTAssertFalse(ids.contains { $0.contains(privateValue) })
+                }
+                await model.refresh(); await model.restore()
+                XCTAssertEqual(model.callbackRejections, [issue])
+                await model.receive(callbackA) // Repeat observations coalesce; they are not new purchase outcomes.
+                XCTAssertEqual(model.callbackRejections, [issue])
+                model.stop()
+                await model.receive(callbackA)
+                XCTAssertTrue(model.callbackRejections.isEmpty); XCTAssertTrue(model.statusMessages.isEmpty)
+            }
+        }
+    }
+
+    func testActualNewAttemptClearsOnlyPurchaseOwnedVerificationAndErrorEvidence() async {
+        let wrongProduct = SignedMembershipTransaction(transactionID: "purchase-owned-B", originalTransactionID: "0",
+            productID: "unrelated.product", signedTransactionInfo: "private-purchase-jws", appAccountToken: context.appAccountToken)
+        let cases: [(MembershipPurchaseOutcome, MembershipFailure?)] = [
+            (.unverified, nil), (.verified(wrongProduct), nil), (.pending, .unavailable),
+        ]
+        for (ownOutcome, purchaseError) in cases {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free))
+            let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.loadOffer()
+            await model.receive(.verified(transaction(id: "independent-A", token: UUID())))
+            XCTAssertEqual(model.callbackRejections, [.accountMismatch])
+            store.purchaseError = purchaseError
+            let ownedB = await pausedPurchase(model, store)
+            store.resolvePurchase(ownOutcome); await ownedB.value
+            XCTAssertEqual(model.callbackRejections, [.accountMismatch], "Purchase-owned failures cannot duplicate independent callback history")
+            XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+            if let purchaseError { XCTAssertTrue(model.statusMessages.contains(.purchaseFailure(purchaseError))) }
+            else if case .unverified = ownOutcome {
+                XCTAssertTrue(model.statusMessages.contains(.unverifiedReport))
+                XCTAssertFalse(model.statusMessages.contains(.purchaseFailure(.unverified)), "Do not duplicate purchase-owned unverified evidence")
+            } else { XCTAssertTrue(model.statusMessages.contains(.purchaseFailure(.unverified))) }
+            store.purchaseError = nil
+            let freshC = await pausedPurchase(model, store)
+            XCTAssertNil(model.notice); XCTAssertEqual(model.purchaseReport, .awaitingResult)
+            XCTAssertEqual(model.statusMessages, [.callbackRejection(.accountMismatch)])
+            let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
+            XCTAssertFalse(rendered.contains(membershipNoticeText(.failed(.unverified))))
+            XCTAssertFalse(rendered.contains(membershipNoticeText(.failed(.unavailable))))
+            XCTAssertTrue(rendered.contains(membershipStatusMessageText(.callbackRejection(.accountMismatch))))
+            store.resolvePurchase(.pending); await freshC.value
+            XCTAssertEqual(model.purchaseReport, .pending)
+            XCTAssertEqual(model.callbackRejections, [.accountMismatch])
+            XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
+        }
+    }
+
+    func testSameReasonHistoricalCallbackAndOwnedRejectionRemainDistinctWithoutDuplication() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.loadOffer()
+        await model.receive(.verified(transaction(id: "callback-A", token: UUID())))
+        let purchaseB = await pausedPurchase(model, store)
+        store.resolvePurchase(.verified(transaction(id: "purchase-owned-B", token: UUID())))
+        await purchaseB.value
+        XCTAssertEqual(model.callbackRejections, [.accountMismatch])
+        XCTAssertEqual(model.purchaseReport, .verified(transactionID: "purchase-owned-B"))
+        XCTAssertTrue(model.statusMessages.contains(.purchaseFailure(.accountMismatch)))
+        XCTAssertTrue(model.statusMessages.contains(.callbackRejection(.accountMismatch)))
+        let ids = model.statusMessages.map(\.id)
+        XCTAssertEqual(ids.count, Set(ids).count)
+        XCTAssertTrue(ids.contains("membership.status.purchase.failure.account-mismatch"))
+        XCTAssertTrue(ids.contains("membership.status.callback.rejection.account-mismatch"))
+        XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+        let freshC = await pausedPurchase(model, store)
+        XCTAssertEqual(model.statusMessages, [.callbackRejection(.accountMismatch)])
+        store.resolvePurchase(.pending); await freshC.value
+        XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+        XCTAssertFalse(model.statusMessages.contains(.purchaseFailure(.accountMismatch)))
+        XCTAssertEqual(model.callbackRejections, [.accountMismatch])
+        XCTAssertFalse(model.hasPaidAccess); XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
+    }
+
+    func testOrdinaryPendingCancellationAndPurchaseExceptionKeepExistingPolicies() async {
+        let cases: [MembershipPurchaseOutcome] = [.pending, .cancelled]
+        for outcome in cases {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free))
+            let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.loadOffer()
+            let purchase = await pausedPurchase(model, store)
+            store.resolvePurchase(outcome); await purchase.value
+            switch outcome {
+            case .pending: XCTAssertEqual(model.notice, .pending); XCTAssertEqual(model.purchaseReport, .pending)
+            case .cancelled: XCTAssertEqual(model.notice, .cancelled); XCTAssertEqual(model.purchaseReport, .cancelled)
+            default: XCTFail("Unexpected test outcome")
+            }
+            XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty); XCTAssertFalse(model.hasPaidAccess)
+        }
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.purchaseError = .unavailable
+        let model = makeModel(service, store); defer { model.stop() }
+        await model.loadOffer(); await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.unavailable)); XCTAssertEqual(model.purchaseReport, .failed(.unavailable))
+        XCTAssertTrue(model.deliveryOutcomes.isEmpty); XCTAssertFalse(model.hasPaidAccess)
+    }
+
+    func testStopDiscardsObservationsAndIgnoresLatePurchaseAndServiceCallbacks() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer {
+            store.resolvePurchase(.cancelled)
+            service.continuation?.resume(); service.continuation = nil
+            model.stop()
+        }
+        await model.start()
+        let purchase = await pausedPurchase(model, store)
+        service.pauseSubmission = true
+        let delivery = Task { await model.receive(.verified(transaction(id: "in-flight-A", token: context.appAccountToken))) }
+        await settle { service.continuation != nil }
+        XCTAssertEqual(model.deliveryOutcomes["in-flight-A"], .inFlight)
+        model.stop()
+        store.resolvePurchase(.pending); await purchase.value
+        let continuation = service.continuation; service.continuation = nil; continuation?.resume()
+        _ = await delivery.value
+        XCTAssertNil(model.purchaseReport); XCTAssertTrue(model.deliveryOutcomes.isEmpty); XCTAssertTrue(model.callbackRejections.isEmpty); XCTAssertNil(model.notice)
+        XCTAssertTrue(model.statusMessages.isEmpty); XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(service.submissions, 1); XCTAssertTrue(store.finished.isEmpty)
+    }
+
+    private func pausedPurchase(_ model: MembershipModel, _ store: FakeMembershipStorefront) async -> Task<Void, Never> {
+        store.pausePurchase = true
+        let task = Task { await model.purchase() }
+        await settle { store.purchaseContinuation != nil }
+        return task
+    }
+    private func assertNeutralProjection(_ model: MembershipModel, file: StaticString = #filePath, line: UInt = #line) {
+        let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
+        XCTAssertTrue(rendered.contains(mtr("Apple reported a pending purchase status. Use Restore Purchases to check current membership access.")), file: file, line: line)
+        XCTAssertFalse(rendered.contains(mtr("Purchase pending Apple approval. Paid access has not been added.")), file: file, line: line)
+        XCTAssertFalse(rendered.contains(mtr("The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support.")), file: file, line: line)
+        for privateValue in ["test-only-jws", "approved-B", "verified-A", "older-A", "wrong-product", "wrong-account", context.purchaserID, context.householdID, context.appAccountToken!.uuidString] {
+            XCTAssertFalse(rendered.contains(privateValue), "No raw identity or signed payload in status copy", file: file, line: line)
+        }
+    }
+
+    func testPendingCompletionReconcilesAvailableApprovalWithoutAnUpdateEvent() async {
+        for failsDelivery in [true, false] {
+            let service = FakeMembershipService(snapshot: snapshot(status: .free))
+            let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+            let model = makeModel(service, store)
+            defer { store.resolvePurchase(.cancelled); model.stop() }
+            await model.start()
+            let purchase = await pausedPurchase(model, store)
+            let readsBeforeCompletion = store.unfinishedReads
+            XCTAssertEqual(store.activeObservers, 1)
+            XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+            XCTAssertFalse(model.hasPaidAccess)
+            // Approval is available while purchase is suspended, but no update is emitted.
+            store.unfinished = [.verified(transaction(id: "approved-B", token: context.appAccountToken))]
+            service.snapshot = snapshot(revision: 2)
+            service.submissionError = failsDelivery ? .notConfigured : nil
+            store.onFinish = { XCTAssertTrue(service.didCommit, "Only durable service acknowledgement permits finish") }
+            store.resolvePurchase(.pending); await purchase.value
+            XCTAssertEqual(store.unfinishedReads, readsBeforeCompletion + 1, "One reconciliation; no polling")
+            XCTAssertEqual(store.purchaseCount, 1); XCTAssertEqual(service.submissions, 1)
+            XCTAssertEqual(store.syncCount, 0); XCTAssertEqual(store.observerStarts, 1)
+            XCTAssertEqual(model.purchaseReport, .pending, "No transaction is inferred to resolve the pending request")
+            XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+            if failsDelivery {
+                XCTAssertEqual(model.deliveryOutcomes["approved-B"], .failed(.notConfigured))
+                XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)))
+                XCTAssertTrue(store.finished.isEmpty); XCTAssertFalse(model.hasPaidAccess)
+            } else {
+                XCTAssertEqual(model.deliveryOutcomes["approved-B"], .delivered)
+                XCTAssertEqual(store.finished, ["approved-B"]); XCTAssertTrue(model.hasPaidAccess)
+            }
+        }
+    }
+
+    func testPendingCompletionReconciliationRejectsAnotherAccount() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer { store.resolvePurchase(.cancelled); model.stop() }
+        await model.start()
+        let purchase = await pausedPurchase(model, store)
+        store.unfinished = [.verified(transaction(id: "wrong-account", token: UUID()))]
+        store.resolvePurchase(.pending); await purchase.value
+        XCTAssertEqual(model.purchaseReport, .pending)
+        XCTAssertEqual(model.callbackRejections, [.accountMismatch])
+        XCTAssertTrue(model.deliveryOutcomes.isEmpty)
+        XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
+        XCTAssertFalse(model.hasPaidAccess)
+    }
+
+    func testStopDuringPendingReconciliationDiscardsItsLateSnapshot() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
+        let model = makeModel(service, store)
+        defer {
+            store.resolvePurchase(.cancelled)
+            store.unfinishedContinuation?.resume(); store.unfinishedContinuation = nil
+            model.stop()
+        }
+        await model.start()
+        let purchase = await pausedPurchase(model, store)
+        store.unfinished = [.verified(transaction(id: "approved-B", token: context.appAccountToken))]
+        store.pauseUnfinishedRead = true
+        store.resolvePurchase(.pending)
+        await settle { store.unfinishedContinuation != nil }
+        model.stop()
+        let continuation = store.unfinishedContinuation; store.unfinishedContinuation = nil
+        continuation?.resume(); await purchase.value
+        XCTAssertTrue(model.isStopped); XCTAssertNil(model.purchaseReport)
+        XCTAssertTrue(model.deliveryOutcomes.isEmpty); XCTAssertTrue(model.callbackRejections.isEmpty)
+        XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
+        XCTAssertFalse(model.hasPaidAccess)
+    }
+
     func testPendingCancellationAndUnverifiedNeverGrantSeatsOrFinish() async {
         for outcome: MembershipPurchaseOutcome in [.pending, .cancelled, .unverified] {
             let service = FakeMembershipService(snapshot: snapshot())
@@ -238,6 +932,39 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testOfferRetryCoalescesLoadsAndPreservesAnIndependentRestoreFailure() async {
+        let store = FakeMembershipStorefront()
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let model = makeModel(service, store)
+        await model.restore()
+        XCTAssertEqual(model.notice, .failed(.unavailable))
+        var resume: CheckedContinuation<Void, Never>?
+        var calls = 0
+        store.waitDuringLoad = {
+            calls += 1
+            if calls == 1 {
+                await withCheckedContinuation { resume = $0 }
+                throw MembershipFailure.unavailable
+            }
+        }
+
+        let initial = Task { await model.loadOffer() }
+        await settle { resume != nil }
+        XCTAssertTrue(model.isLoadingOffer)
+        await model.loadOffer()
+        XCTAssertEqual(calls, 1)
+        resume?.resume()
+        await initial.value
+        XCTAssertFalse(model.isLoadingOffer)
+        XCTAssertNil(model.offer)
+
+        await model.loadOffer()
+        XCTAssertEqual(calls, 2)
+        XCTAssertNotNil(model.offer)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.statusMessages, [.otherNotice(.failed(.unavailable))])
+    }
+
     func testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice() async {
         let service = FakeMembershipService(snapshot: snapshot())
         let model = makeModel(service, FakeMembershipStorefront())
@@ -346,7 +1073,29 @@ import Combine
         XCTAssertTrue(state.freeRecordsAndExportAvailable)
     }
 
+    func testHTTPAdaptersKeepTheirOwnResponsesAfterAnotherSessionIsCreated() async throws {
+        let firstFixture = httpFixture()
+        firstFixture.handler = { _ in
+            (409, Data("{\"error\":{\"code\":\"refresh_required\"}}".utf8))
+        }
+        let first = try httpService(firstFixture)
+        let secondFixture = httpFixture()
+        secondFixture.handler = { _ in
+            (409, Data("{\"error\":{\"code\":\"purchase_already_bound\"}}".utf8))
+        }
+        let second = try httpService(secondFixture)
+        defer { firstFixture.handler = nil; secondFixture.handler = nil }
+        let householdID = "11111111-1111-4111-8111-111111111111"
+        for (service, expected) in [(first, MembershipFailure.refreshRequired), (second, .wrongHousehold)] {
+            do {
+                _ = try await service.purchaseContext(householdID: householdID)
+                XCTFail("Expected the response belonging to this service's fixture")
+            } catch { XCTAssertEqual(error as? MembershipFailure, expected) }
+        }
+    }
+
     func testHTTPAdapterIncludesEnrolledDeviceAndDecodesServerDates() async throws {
+        let fixture = httpFixture()
         let householdID = "11111111-1111-4111-8111-111111111111"
         let actorID = "22222222-2222-4222-8222-222222222222"
         let accountToken = context.appAccountToken
@@ -356,7 +1105,7 @@ import Combine
             verifiedAt: now, validUntil: now.addingTimeInterval(300),
             seats: [.init(userID: actorID, displayName: "Mia", isAdult: true)])
         let data = try encoder.encode(expected)
-        MembershipURLProtocol.handler = { request in
+        fixture.handler = { request in
             XCTAssertEqual(request.url?.path, "/v1/households/\(householdID)/entitlements")
             XCTAssertEqual(request.httpMethod, "GET")
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test.access.token")
@@ -364,15 +1113,16 @@ import Combine
             XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
             return (200, data)
         }
-        defer { MembershipURLProtocol.handler = nil }
-        let service = try httpService()
+        defer { fixture.handler = nil }
+        let service = try httpService(fixture)
         let actual = try await service.fetch(context: .init(purchaserID: actorID, purchaserName: "Mia",
             householdID: householdID, householdName: "Home", appAccountToken: accountToken))
         XCTAssertEqual(actual, expected)
     }
 
     func testHTTPAdapterUsesSpecificServerFailureCodes() async throws {
-        let service = try httpService()
+        let fixture = httpFixture()
+        let service = try httpService(fixture)
         let cases: [(Int, String, MembershipFailure)] = [
             (409, "purchase_already_bound", .wrongHousehold), (409, "refresh_required", .refreshRequired),
             (409, "purchase_context_not_purchaser", .notPurchaser),
@@ -380,9 +1130,9 @@ import Combine
             (403, "membership_inactive", .membershipInactive),
             (422, "billing_verification_failed", .unverified), (503, "billing_unavailable", .deliveryPending),
             (503, "storage_unavailable", .deliveryPending), (429, "rate_limited", .deliveryPending)]
-        defer { MembershipURLProtocol.handler = nil }
+        defer { fixture.handler = nil }
         for (status, code, expected) in cases {
-            MembershipURLProtocol.handler = { _ in
+            fixture.handler = { _ in
                 (status, Data("{\"error\":{\"code\":\"\(code)\"}}".utf8))
             }
             do {
@@ -393,12 +1143,11 @@ import Combine
     }
 
     func testHTTPAdapterRequiresDeviceBeforeSendingPurchaseContext() async throws {
-        MembershipURLProtocol.handler = { _ in XCTFail("Missing device must not reach the network"); return (500, Data()) }
-        defer { MembershipURLProtocol.handler = nil }
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [MembershipURLProtocol.self]
-        let service = try HTTPMembershipEntitlementService(baseURL: URL(string: "https://service.example.test")!,
-            session: URLSession(configuration: configuration), deviceToken: { "" }, token: { "test.access.token" })
+        let fixture = httpFixture()
+        fixture.handler = { _ in XCTFail("Missing device must not reach the network"); return (500, Data()) }
+        defer { fixture.handler = nil }
+        let service = try HTTPMembershipEntitlementService(baseURL: fixture.baseURL,
+            session: fixture.session, deviceToken: { "" }, token: { "test.access.token" })
         do {
             _ = try await service.purchaseContext(householdID: "11111111-1111-4111-8111-111111111111")
             XCTFail("Expected missing-device rejection")
@@ -411,11 +1160,15 @@ import Combine
         }
     }
 
-    private func httpService() throws -> HTTPMembershipEntitlementService {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [MembershipURLProtocol.self]
-        return try HTTPMembershipEntitlementService(baseURL: URL(string: "https://service.example.test")!,
-            session: URLSession(configuration: configuration), deviceToken: { "test-device-token" }, token: { "test.access.token" })
+    private func httpFixture() -> MembershipHTTPFixture {
+        let fixture = MembershipHTTPFixture()
+        addTeardownBlock { @MainActor in fixture.close() }
+        return fixture
+    }
+
+    private func httpService(_ fixture: MembershipHTTPFixture) throws -> HTTPMembershipEntitlementService {
+        try HTTPMembershipEntitlementService(baseURL: fixture.baseURL,
+            session: fixture.session, deviceToken: { "test-device-token" }, token: { "test.access.token" })
     }
 
     private func session(household: String = "household-one", subject: String = "subject-one") -> MembershipSession {
@@ -645,24 +1398,47 @@ import Combine
     var finished: [String] = []
     var current: [MembershipPurchaseOutcome] = []
     var unfinished: [MembershipPurchaseOutcome] = []
+    var unfinishedReads = 0
+    var pauseUnfinishedRead = false
+    var unfinishedContinuation: CheckedContinuation<Void, Never>?
     var syncCount = 0
     var purchaseCount = 0
+    var pausePurchase = false
+    var purchaseError: MembershipFailure?
+    var purchaseContinuation: CheckedContinuation<MembershipPurchaseOutcome, Never>?
+    func resolvePurchase(_ outcome: MembershipPurchaseOutcome) {
+        let continuation = purchaseContinuation; purchaseContinuation = nil
+        continuation?.resume(returning: outcome)
+    }
     var onFinish: (() -> Void)?
     var keepsUpdatesOpen = false
+    var onLoad: (() -> Void)?
+    var waitDuringLoad: (() async throws -> Void)?
     var observerStarts = 0
     var activeObservers: Int { continuations.count }
     private var continuations: [UUID: AsyncStream<MembershipPurchaseOutcome>.Continuation] = [:]
     func emit(_ outcome: MembershipPurchaseOutcome) { for continuation in continuations.values { continuation.yield(outcome) } }
     func load(productID: String) async throws -> MembershipOffer {
-        .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
+        onLoad?()
+        try await waitDuringLoad?()
+        return .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
     }
     func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
         purchaseCount += 1
-        return .pending
+        let outcome: MembershipPurchaseOutcome
+        if pausePurchase { outcome = await withCheckedContinuation { purchaseContinuation = $0 } }
+        else { outcome = .pending }
+        if let purchaseError { throw purchaseError }
+        return outcome
     }
     func currentTransactions() async -> [MembershipPurchaseOutcome] { current }
-    func unfinishedTransactions() async -> [MembershipPurchaseOutcome] { unfinished }
-    func updates() -> AsyncStream<MembershipPurchaseOutcome> {
+    func unfinishedTransactions() async -> [MembershipPurchaseOutcome] {
+        unfinishedReads += 1
+        let snapshot = unfinished
+        if pauseUnfinishedRead { await withCheckedContinuation { unfinishedContinuation = $0 } }
+        return snapshot
+    }
+    func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome> {
         observerStarts += 1
         guard keepsUpdatesOpen else { return AsyncStream { $0.finish() } }
         let id = UUID()
@@ -677,19 +1453,85 @@ import Combine
     func sync() async throws { syncCount += 1 }
 }
 
-private final class MembershipURLProtocol: URLProtocol, @unchecked Sendable {
-    static var handler: ((URLRequest) -> (Int, Data))?
+// The test owns the fixture until teardown; the registry owns only a weak route.
+@MainActor private final class MembershipHTTPFixture {
+    private let responses = MembershipFixtureResponses()
+    let session: URLSession
+    var baseURL: URL { URL(string: "https://" + responses.host)! }
+    var handler: MembershipFixtureResponses.Handler? {
+        get { responses.handler }
+        set { responses.handler = newValue }
+    }
+    init() {
+        MembershipURLProtocol.register(responses)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MembershipURLProtocol.self]
+        session = URLSession(configuration: configuration)
+    }
+    func close() {
+        responses.close()
+        MembershipURLProtocol.remove(host: responses.host)
+        session.invalidateAndCancel()
+    }
+}
+
+private final class MembershipFixtureResponses {
+    typealias Handler = (URLRequest) -> (Int, Data)
+    let host = "membership-" + UUID().uuidString.lowercased() + ".invalid"
+    private let lock = NSLock()
+    private var closed = false
+    private var storedHandler: Handler?
+    var handler: Handler? {
+        get { lock.lock(); defer { lock.unlock() }; return storedHandler }
+        set { lock.lock(); defer { lock.unlock() }; if !closed { storedHandler = newValue } }
+    }
+    func respond(_ request: URLRequest) throws -> (Int, Data) {
+        lock.lock()
+        guard !closed, request.url?.host == host, let handler = storedHandler else {
+            lock.unlock(); throw URLError(.unsupportedURL)
+        }
+        lock.unlock()
+        // The request retains this handler snapshot; callbacks never run under a registry/state lock.
+        return handler(request)
+    }
+    func close() { lock.lock(); closed = true; storedHandler = nil; lock.unlock() }
+    deinit { MembershipURLProtocol.remove(host: host) }
+}
+
+private final class WeakMembershipResponses {
+    weak var value: MembershipFixtureResponses?
+    init(_ value: MembershipFixtureResponses) { self.value = value }
+}
+
+private final class MembershipURLProtocol: URLProtocol {
+    private static let registryLock = NSLock()
+    private static var routes: [String: WeakMembershipResponses] = [:]
+    static func register(_ responses: MembershipFixtureResponses) {
+        registryLock.lock(); defer { registryLock.unlock() }
+        routes[responses.host] = WeakMembershipResponses(responses)
+    }
+    static func remove(host: String) {
+        registryLock.lock(); defer { registryLock.unlock() }; routes.removeValue(forKey: host)
+    }
+    private static func responses(for request: URLRequest) -> MembershipFixtureResponses? {
+        registryLock.lock(); defer { registryLock.unlock() }
+        guard request.url?.scheme == "https", let host = request.url?.host else { return nil }
+        return routes[host]?.value
+    }
+    // Always intercept, including unknown destinations: never fall through to networking.
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
-        guard let handler = Self.handler, let url = request.url else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse)); return
-        }
-        let (status, data) = handler(request)
-        let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: data)
-        client?.urlProtocolDidFinishLoading(self)
+        do {
+            guard let responses = Self.responses(for: request), let url = request.url else {
+                throw URLError(.unsupportedURL)
+            }
+            let (status, data) = try responses.respond(request)
+            let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch { client?.urlProtocol(self, didFailWithError: error) }
     }
     override func stopLoading() {}
 }

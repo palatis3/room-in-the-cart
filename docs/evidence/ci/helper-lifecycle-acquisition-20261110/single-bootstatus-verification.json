@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "command": [
+    "python3",
+    "scripts/test_simulator_signpost_control.py"
+  ],
+  "exitCode": 0,
+  "passedControls": 251,
+  "logSHA256": "68ff640ccb7cf5379c5b31c8a6f571ed39066d7de148020c964443f4340f8a77",
+  "manifestSHA256": "a136f19f10155d15dd3c6ef1f6b87dc2d9806ee13b1ebb7db4d9a6b77438e9e8",
+  "patchSHA256": "d94066a42a26f442f7ec015cc537356518b8a5828c3dd4210d73b951ea7f690b",
+  "sourceFiles": {
+    "scripts/simulator_signpost_control/run.py": "13a6ae88b5d7e200204d3b729358babcaafa87fb915b3e96156b8e355059e9cc",
+    "scripts/simulator_signpost_control/runner.py": "3a3686f1592a7a2330376002ad5fe6fb06933e243c3e5a40a722c987dcfd0691",
+    "scripts/test_simulator_signpost_control.py": "65f4fed5dd53acaf9da03b8f6cc4a3e9dbda654d10b19945037888bd5a470265",
+    "scripts/app_scroll_observation/contract.json": "75600699b93f8c4e4f8d53619988c61e31a4130050074b15c28c1b01947bd553"
+  },
+  "checkedSourcePins": 50,
+  "nativeExecuted": false,
+  "hostedExecuted": false,
+  "fullWorkflowProfiles": "pending",
+  "appOrPerformanceAcceptance": false,
+  "negativeFixtureOutput": "snapshot_links archive failure is an expected negative control after unittest OK"
+}

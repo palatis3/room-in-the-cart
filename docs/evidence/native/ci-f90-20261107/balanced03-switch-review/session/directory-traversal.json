@@ -1,0 +1,57 @@
+[
+  {
+    "directoryRef": "0~47VU2Q8tKQy0ag94lHuYxMGKQSIoPIq7B4VOtjJWUkenQBWhdkPP_l5u7Z6bHbscWTmCYwTj72UUNqxy2RpfEQ==",
+    "entries": [
+      {
+        "name": "My Mac_93268eb67fce2ba28482976eade2bea2fd917c50",
+        "type": 2,
+        "id": "0~4VqMqsI5lOfxRppnud6-VDWcNsU8J7VgFCJfW2dXPwOcAkvU-I8Um5yp9n0Zv6nr3VmcxYggaVMDFfR0U_vjKw=="
+      },
+      {
+        "name": "RoomInTheCartUITests-836BCE5A-ADE9-4966-88D8-38CE8A6BFF96-Configuration-Test Scheme Action-Iteration-1",
+        "type": 2,
+        "id": "0~Xfqi8JWJ6z1NlXyIjwPg-mWuXyWb48eY0AvGA4Pr9wnn7sgrC73jtIXKKK53sDlMlL6Ku8sSvKeABdr1wGheaw=="
+      },
+      {
+        "name": "iPhone 17_BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "type": 2,
+        "id": "0~X5s-p_aayi3N0HbZDJsTSlXNpFzKbn7mJ1WyzTBot0osqn4dmjH2jweSKMPrsl7gsHEH6G1sP3KU0diaf3g0Zg=="
+      }
+    ]
+  },
+  {
+    "directoryRef": "0~Xfqi8JWJ6z1NlXyIjwPg-mWuXyWb48eY0AvGA4Pr9wnn7sgrC73jtIXKKK53sDlMlL6Ku8sSvKeABdr1wGheaw==",
+    "entries": [
+      {
+        "name": "RoomInTheCartUITests-50F9FE0A-7091-43FC-ABE0-5CBA51D3F8C3",
+        "type": 2,
+        "id": "0~9QXJVYtmIj6xBVLHQQS7AIyNowp-065PUyXCegMR2P9aBK3xGhh302BWGH1_YmxtaRjdQyr5wyKwNKa4jNyQpQ=="
+      },
+      {
+        "name": "scheduling.log",
+        "type": 1,
+        "id": "0~UabmnK6F7811pCHCR0FWywoHGTMFFxrZ-kvSLOTjJc4CXc4cf3GBZ4JehS_moDh92syL96TF4wY46uRvHlYybg=="
+      }
+    ]
+  },
+  {
+    "directoryRef": "0~9QXJVYtmIj6xBVLHQQS7AIyNowp-065PUyXCegMR2P9aBK3xGhh302BWGH1_YmxtaRjdQyr5wyKwNKa4jNyQpQ==",
+    "entries": [
+      {
+        "name": "Session-RoomInTheCartUITests-2026-11-08_012703-DATPi3.log",
+        "type": 1,
+        "id": "0~xJQVVgkFc5cVQirMfznELUCVNSxVaSYqocQnRTY6t142sicsk5N8_P4D3KONPZUt-5tLnl9-e0SwTxjbBfEqFw=="
+      },
+      {
+        "name": "StandardOutputAndStandardError-dev.roominthecart.app.debug.txt",
+        "type": 1,
+        "id": "0~ADSl3MFVQWNfpJhzTo0m794NJZJ9Acskf_YZ-jTaFTTTvAgL4pHehYqc00BiTJwreu9XIccrB8Sg3cSoO8pTNw=="
+      },
+      {
+        "name": "StandardOutputAndStandardError.txt",
+        "type": 1,
+        "id": "0~cDO4qDGVOgS6HwmfgUJNDhnYN4p6lha6TgWTuLnHIEiHosLUC1IbbgYOB2T2GXx57DfPoV5hH219QIIj80Dqbg=="
+      }
+    ]
+  }
+]

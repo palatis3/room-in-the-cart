@@ -1,0 +1,107 @@
+{
+  "runReceipt": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/phase1/run.json",
+  "runReceiptSHA256": "7694f4a19263b9bb5e00460df94d436c31201d251397b6901d2f3fe9043602de",
+  "log": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/phase1/native.log",
+  "logSHA256": "17c7a0a32009e1309d190d397a528e4490f449b9431d285deed1593434f8c14a",
+  "status": "completed",
+  "nativeExit": 65,
+  "sourceUnchanged": true,
+  "emittedDiagnosticLines": [
+    {
+      "line": 3600,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:256:107: warning: converting non-Sendable function value to '@Sendable (Notification) -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 3608,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:257:94: warning: converting non-Sendable function value to '@Sendable () -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 3618,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+    },
+    {
+      "line": 3626,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:256:107: warning: converting non-Sendable function value to '@Sendable (Notification) -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 3634,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:257:94: warning: converting non-Sendable function value to '@Sendable () -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 3646,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+    },
+    {
+      "line": 3995,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:256:107: warning: converting non-Sendable function value to '@Sendable (Notification) -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 4003,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:257:94: warning: converting non-Sendable function value to '@Sendable () -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 4710,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:256:107: warning: converting non-Sendable function value to '@Sendable (Notification) -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 4718,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Features/Capture/LocalCookSpeech.swift:257:94: warning: converting non-Sendable function value to '@Sendable () -> Set<String>?' may introduce data races"
+    },
+    {
+      "line": 5739,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/LocalStore/Package.swift: LocalStoredynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+    },
+    {
+      "line": 5744,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/LocalStore/Package.swift: LocalStoredynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+    },
+    {
+      "line": 5787,
+      "severity": "warning",
+      "text": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/SKTestTransaction.h:34:32: warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:)."
+    },
+    {
+      "line": 5822,
+      "severity": "warning",
+      "text": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/SKTestTransaction.h:34:32: warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:)."
+    },
+    {
+      "line": 5917,
+      "severity": "error",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/CookReadbackTests.swift:553:37: error: cannot find type 'AVSpeechSynthesisVoice' in scope"
+    },
+    {
+      "line": 5925,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+    },
+    {
+      "line": 5934,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+    },
+    {
+      "line": 5943,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:302:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+    },
+    {
+      "line": 5952,
+      "severity": "warning",
+      "text": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+    }
+  ],
+  "scope": "Primary compiler diagnostic lines, excluding rendered caret duplicates. Complete original log retained at source path."
+}

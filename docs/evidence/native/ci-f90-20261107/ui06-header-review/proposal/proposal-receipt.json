@@ -1,0 +1,138 @@
+{
+  "sourceHEAD": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "sourcePath": "ios/UITests/ContextualNavigationUITests.swift",
+  "baseSHA256": "3f2c8f9f21945a5004d87f2589d0a2b9be73d937e364499c60db6154989c614c",
+  "candidateSHA256": "c59477daa1b60ba20efc8aa93caa52cdf296d65e7698293b96eda11dafbc6045",
+  "patchSHA256": "f325e1c8d5ab05fcfef6257314d79afb038388258047c2cd78b4fe532a1b130e",
+  "gitApplyCheck": 0,
+  "nativeExecuted": false,
+  "compiled": false,
+  "canonicalSourceWritten": false,
+  "sourceReplacementLines": [
+    676,
+    681
+  ],
+  "productHeaderSource": "ios/Features/Dinners/DinnerQuotesView.swift:15",
+  "originalSearchWindowSeconds": [
+    476.88,
+    562.77
+  ],
+  "originalSearchElapsedSeconds": 85.89,
+  "drags": [
+    {
+      "line": 1644,
+      "seconds": 477.98,
+      "direction": "up",
+      "raw": "    t =   477.98s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1662,
+      "seconds": 481.9,
+      "direction": "up",
+      "raw": "    t =   481.90s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1680,
+      "seconds": 485.97,
+      "direction": "up",
+      "raw": "    t =   485.97s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1698,
+      "seconds": 490.05,
+      "direction": "up",
+      "raw": "    t =   490.05s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1716,
+      "seconds": 493.56,
+      "direction": "up",
+      "raw": "    t =   493.56s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1734,
+      "seconds": 497.08,
+      "direction": "up",
+      "raw": "    t =   497.08s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1752,
+      "seconds": 500.91,
+      "direction": "up",
+      "raw": "    t =   500.91s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1770,
+      "seconds": 506.91,
+      "direction": "up",
+      "raw": "    t =   506.91s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1788,
+      "seconds": 510.82,
+      "direction": "up",
+      "raw": "    t =   510.82s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1806,
+      "seconds": 515.41,
+      "direction": "up",
+      "raw": "    t =   515.41s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1824,
+      "seconds": 519.55,
+      "direction": "up",
+      "raw": "    t =   519.55s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1842,
+      "seconds": 523.73,
+      "direction": "up",
+      "raw": "    t =   523.73s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1860,
+      "seconds": 528.76,
+      "direction": "up",
+      "raw": "    t =   528.76s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1878,
+      "seconds": 532.92,
+      "direction": "up",
+      "raw": "    t =   532.92s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1896,
+      "seconds": 538.11,
+      "direction": "up",
+      "raw": "    t =   538.11s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1914,
+      "seconds": 542.74,
+      "direction": "up",
+      "raw": "    t =   542.74s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1932,
+      "seconds": 546.83,
+      "direction": "down",
+      "raw": "    t =   546.83s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1950,
+      "seconds": 552.28,
+      "direction": "down",
+      "raw": "    t =   552.28s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "line": 1971,
+      "seconds": 559.36,
+      "direction": "down",
+      "raw": "    t =   559.36s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    }
+  ],
+  "preservation": "Exact case retained. Undo helper insertion and two call substitutions reproduces original whole case byte-for-byte. 24-iteration cap and existing scroll gesture preserved; exact header label plus real existence/hittability required."
+}

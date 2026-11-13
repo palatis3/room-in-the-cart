@@ -6,6 +6,27 @@ import HouseholdClient
     private let household = "10000000-0000-4000-8000-000000000001"
     private let member = "10000000-0000-4000-8000-000000000002"
     private let shop = "10000000-0000-4000-8000-000000000003"
+
+    func testNewBudgetPeriodKeepsLocalClockTimeAcrossDaylightSavingChanges() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        for (start, end) in [
+            ("2026-03-01T04:30:00Z", "2026-03-15T03:30:00Z"),
+            ("2026-10-24T04:30:00Z", "2026-11-07T05:30:00Z")
+        ] {
+            let startDate = try XCTUnwrap(HistoryDate.date(start))
+            let endDate = try XCTUnwrap(HistoryDate.date(end))
+            var draft = HistoryPeriodDraft(start: startDate, calendar: calendar)
+            draft.title = "Two-week grocery budget"
+            draft.budget = "120"
+            let saved = try draft.dto()
+            let reopened = HistoryPeriodDraft(.init(periodId: saved.id, revision: 1, period: saved))
+            XCTAssertEqual(reopened.timeZoneID, calendar.timeZone.identifier)
+            XCTAssertEqual(reopened.startsAt, startDate)
+            XCTAssertEqual(reopened.endsAt, endDate)
+        }
+    }
+
     private func setup() async throws -> (HistoryFeatureModel, HistoryFixtureService, HistoryFixtureStore, HistoryScopeBox) {
         let service = try HistoryFixtureService()
         let store = HistoryFixtureStore()
@@ -69,7 +90,8 @@ import HouseholdClient
         model.observationDraft.shopID = granted; model.observationDraft.itemName = "Read-only grant"
         model.reviewObservation(); model.approved = true; await model.applyReviewed()
         XCTAssertNil(model.reviewed); XCTAssertTrue(service.observationSends.isEmpty)
-        model.beginPeriod(); XCTAssertNotNil(model.periodDraft,"Future planning must not infer entitlement or require an assigned shop in this observation-only guard")
+        model.beginPeriod(); XCTAssertEqual(model.periodDraft?.shopIDs, [])
+        XCTAssertNotNil(model.periodDraft,"Future planning must not infer entitlement or require an assigned shop in this observation-only guard")
     }
     func testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned() async throws {
         let (model, service, _, box) = try await setup()
@@ -108,6 +130,19 @@ import HouseholdClient
         await store.setCompleteFailure(false); await model.retry()
         XCTAssertNil(model.pending); XCTAssertEqual(service.observationSends.count, 1)
     }
+    func testConfirmedReceiptCleanupAfterTransferKeepsPrivateObservationHidden() async throws {
+        let (model, service, store, _) = try await setup()
+        enterObservation(model); model.approved = true
+        await store.setCompleteFailure(true); await model.applyReviewed()
+        XCTAssertNotNil(model.pending); XCTAssertEqual(service.observationSends.count, 1)
+        await store.setCompleteFailure(false)
+        service.authorizationError = ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+        await model.retry()
+        XCTAssertNil(model.pending); XCTAssertNil(model.selectedObservation)
+        XCTAssertEqual(service.observationSends.count, 1)
+        let retained = await store.read()
+        XCTAssertEqual(retained.pending.count, 1); XCTAssertTrue(retained.observations.isEmpty)
+    }
     func testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts() async throws {
         let (model, service, store, box) = try await setup(); enterObservation(model); model.approved = true
         service.beforePrepare = {
@@ -124,6 +159,40 @@ import HouseholdClient
         service.beforePrepare = { await store.purge() }
         await model.applyReviewed(); XCTAssertTrue(service.observationSends.isEmpty)
         let state = await store.read(); XCTAssertTrue(state.pending.isEmpty)
+    }
+    func testPeriodAssignmentRejectsAStaleSelectionAfterSourcesRefresh() async throws {
+        let (model, service, _, _) = try await setup()
+        model.beginPeriod()
+        model.periodDraft?.shopIDs = []
+        XCTAssertTrue(model.canAssignPeriodShop(shop))
+        service.ownedSources = []
+        await model.loadOwnedShops()
+        model.assignPeriodShop(shop)
+        XCTAssertEqual(model.periodDraft?.shopIDs, [])
+        service.ownedSources = nil
+        await model.loadOwnedShops()
+        model.assignPeriodShop(shop)
+        model.assignPeriodShop(shop)
+        XCTAssertEqual(model.periodDraft?.shopIDs, [shop])
+        XCTAssertFalse(model.canAssignPeriodShop(shop))
+    }
+    func testSavedPeriodUsesFreshPagedOwnershipForRawAndCalculatedEditActions() async throws {
+        let (model, service, _, _) = try await setup()
+        let owned = try await service.historyOwnedShops(cursor: nil)
+        let other = HistoryOwnedShop(shopId: UUID().uuidString.lowercased(), createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)
+        service.ownedPages[nilKey] = .init(shops: [other], nextCursor: other.shopId)
+        service.ownedPages[other.shopId] = owned
+        for analyze in [false, true] {
+            await model.openPeriod(service.saved.periodId, analyze: analyze)
+            XCTAssertTrue(model.canEditSelectedPeriod)
+            service.ownedPages[other.shopId] = .init(shops: [], nextCursor: nil)
+            await model.openPeriod(service.saved.periodId, analyze: analyze)
+            XCTAssertNotNil(model.selectedPeriod)
+            XCTAssertFalse(model.canEditSelectedPeriod)
+            model.editSelectedPeriod()
+            XCTAssertNil(model.periodDraft)
+            service.ownedPages[other.shopId] = owned
+        }
     }
     func testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan() async throws {
         let (model, service, _, _) = try await setup()
@@ -156,6 +225,28 @@ import HouseholdClient
         XCTAssertNil(reopened.pending); XCTAssertNil(reopened.periodDraft); XCTAssertNil(reopened.selectedPeriod)
         XCTAssertTrue(reopened.hasUnresolvedWrite); XCTAssertFalse(reopened.canEdit); XCTAssertEqual(service.periodSends.count, 1)
         XCTAssertFalse(reopened.periods.isEmpty); XCTAssertFalse(reopened.ownedShops.isEmpty)
+    }
+    func testUnavailablePendingSourceKeepsReadAccessAndReopensExactRetryAfterAuthorityReturns() async throws {
+        let (model, service, store, box) = try await setup()
+        model.beginPeriod(); model.periodDraft?.title = "Private funding"; model.periodDraft?.budget = "100"
+        model.reviewPeriod(); model.approved = true; service.losePeriodResponse = true
+        await model.applyReviewed()
+        let original = try XCTUnwrap(model.pending)
+        service.authorizationError = ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+        let reopened = HistoryFeatureModel(service: service, store: store, runtime: { box.value })
+        await reopened.load()
+        XCTAssertTrue(reopened.authorized)
+        XCTAssertTrue(reopened.hasUnresolvedWrite); XCTAssertFalse(reopened.canEdit)
+        XCTAssertNil(reopened.pending); XCTAssertNil(reopened.periodDraft)
+        XCTAssertFalse(reopened.periods.isEmpty)
+        await reopened.retry()
+        XCTAssertEqual(service.periodSends.count, 1)
+        let retained = await store.read()
+        XCTAssertEqual(retained.pending, [original])
+        service.authorizationError = nil
+        await reopened.load()
+        XCTAssertEqual(reopened.pending, original)
+        XCTAssertEqual(service.periodSends.count, 1)
     }
     func testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite() async throws {
         let (model, service, store, _) = try await setup()
@@ -258,6 +349,7 @@ private let nilKey = "initial"
     var saved: HistorySavedBudgetPeriod
     let subtotal: HistoryPermittedSubtotal
     var analysis: HistoryPeriodResponse
+    var ownedPages: [String: HistoryOwnedShopPage] = [:]
     var ownedSources: [HistoryOwnedShop]?
     var pricePages: [String: HistoryPriceObservationPage] = [:]
     var readablePages: [String: HistoryReadableShopPage] = [:]
@@ -276,7 +368,7 @@ private let nilKey = "initial"
     func observation(channel: HistoryPriceChannel = .storeShelf, mode: HistoryFulfillmentMode = .inStore, branch: String = "North") throws -> HistoryPriceObservation {
         try .init(shopId: shop, itemName: "Oats", packLabel: "12 oz", usablePack: nil, price: .exact(minor: 349), store: "Store", branch: branch, channel: channel, mode: mode, eligibility: "", observedAt: "2025-01-02T12:00:00Z", sourceText: "Shelf label", sourceLocale: "en-US")
     }
-    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
+    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { ownedPages[cursor ?? nilKey] ?? .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
     func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }

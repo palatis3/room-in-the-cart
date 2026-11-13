@@ -1,0 +1,45 @@
+{
+  "passed": 1,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "strictExit": 0,
+  "durationSeconds": 215.62280595302582,
+  "sourceFilesMatchingInstalled": 459,
+  "originalFailureFilesUnchanged": 77,
+  "correctedResultFilesUnchanged": 39,
+  "sourceDeltaFromOriginal": [
+    "ios/Features/Dinners/DinnerEditors.swift",
+    "ios/Tests/DinnerFeatureModelTests.swift"
+  ],
+  "testFileUnchangedBetweenRuns": true,
+  "compiledModels": 606,
+  "compiledOrdinaryUI": 54,
+  "uiShards": 10,
+  "macosSlotCount": 5,
+  "localSchedulingSeconds": 216,
+  "localMultiplierUnchanged": 4,
+  "buildLogSHA256": "17c79b1aafa6a82c47ba29c507b04684371a5c45998e66e07b55bdd7cf4f3215",
+  "actualToolchainRuntime": {
+    "simulator": "87F93DE8-670E-463D-8FAA-E3A256326B94",
+    "systemVersion": {
+      "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+      "ProductBuildVersion": "23C54",
+      "ProductCopyright": "1983-2025 Apple Inc.",
+      "ProductName": "iPhone OS",
+      "ProductVersion": "26.2",
+      "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+    },
+    "xcode": "Xcode 27.1\nBuild version 27A9275"
+  },
+  "ownedSimulatorsCleaned": [
+    "F1429485-FDE2-480F-9F8A-6CAB16E52695",
+    "87F93DE8-670E-463D-8FAA-E3A256326B94"
+  ],
+  "limitations": [
+    "English local simulator, not human VoiceOver or physical-device acceptance",
+    "Stored .invalid source; no HTTP-fetch or browser round-trip claim",
+    "Current hosted8d1a79b cohort does not include this follow-up"
+  ],
+  "modelClassTestsPassed": 27,
+  "newModelRegressionTestsPassed": 2
+}

@@ -1,0 +1,55 @@
+Building for debugging...
+[Planning deferred tasks]
+[28 / 52]
+[29 / 53] HouseholdClient
+[34 / 101]
+[38 / 101]
+[41 / 101]
+[44 / 101]
+[47 / 101]
+[49 / 101]
+[53 / 101]
+[55 / 101]
+[58 / 101]
+[62 / 101]
+[63 / 101]
+[64 / 101]
+[65 / 101]
+[69 / 101] HouseholdClient
+[71 / 101] HouseholdClient
+[77 / 101] HouseholdClient
+[78 / 101] HouseholdClientTests-product
+[79 / 101] HouseholdClientTests-product
+[81 / 101] HouseholdClient
+[82 / 101] HouseholdClient
+[83 / 101] HouseholdClient
+[85 / 101] HouseholdClient
+[90 / 102] HouseholdClient-product
+[91 / 102] HouseholdClientTests-product
+[94 / 146]
+[98 / 146]
+[100 / 146]
+[102 / 146]
+[105 / 146]
+[107 / 146]
+[110 / 146]
+[111 / 146]
+[115 / 146]
+[116 / 146]
+[118 / 146]
+[119 / 146]
+[120 / 146]
+[121 / 146]
+[122 / 146]
+[123 / 146]
+[124 / 146]
+[127 / 146] HouseholdClientTests-product
+[135 / 146] HouseholdClientTests-product
+[137 / 146] HouseholdClientTests-product
+[138 / 146] HouseholdClientTests-product
+[139 / 146] HouseholdClientTests-product
+[140 / 146] AllIncludingTests
+[140 / 146] HouseholdClientTests-product
+[142 / 146] HouseholdClientTests-product
+[144 / 146] HouseholdClientTests-product
+Build complete! (38.84 sec)

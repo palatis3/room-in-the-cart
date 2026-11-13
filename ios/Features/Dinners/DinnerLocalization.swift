@@ -27,6 +27,12 @@ func dinnerDay(_ day: MealDay) -> String {
     formatter.dateStyle = .full; formatter.timeStyle = .none
     return "\(formatter.string(from: date)) · \(day.timeZoneIdentifier)"
 }
+func dinnerStoreSlot(_ date: Date, zoneID: String?, locale: Locale = .current) -> String {
+    let zone = zoneID.flatMap(TimeZone.init(identifier:))
+    let text = date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: locale, timeZone: zone ?? .current))
+    guard let zone else { return text }
+    return "\(text) · \(zone.identifier)"
+}
 func dinnerMoney(_ money: Money?) -> String {
     guard let money else { return dinnerText("Unresolved") }
     let formatter = NumberFormatter(); formatter.numberStyle = .currency; formatter.currencyCode = money.currency.rawValue

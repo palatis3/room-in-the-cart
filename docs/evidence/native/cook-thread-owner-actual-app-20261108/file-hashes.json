@@ -1,0 +1,42 @@
+{
+  "README.md": {
+    "bytes": 1701,
+    "sha256": "8398cef2562256988a3a11169b8401e80ff5d2f39aa0e4cbe974950faad794e1"
+  },
+  "assessment.json": {
+    "bytes": 1677,
+    "sha256": "b434818cca34daf5e650fe29f324b5f67bd6428c644a475975ebdf62b1751783"
+  },
+  "playback-case-native-log.txt": {
+    "bytes": 22649,
+    "sha256": "1de148c18d269fbfb7bf2c0e77562639ba233725e580dbc0c4e5ab1ccbc03678"
+  },
+  "run.json": {
+    "bytes": 2775,
+    "sha256": "74cf0e43302553264cc9f0db7b8fcc77a71f0654cab5583d0ecf648232c90c50"
+  },
+  "selectors.txt": {
+    "bytes": 532,
+    "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99"
+  },
+  "strict.txt": {
+    "bytes": 1599,
+    "sha256": "e79286ac45a187442d5f05537f23381455500189010934fca75f07e5e62b2843"
+  },
+  "summary.json": {
+    "bytes": 1538,
+    "sha256": "36b9e03a2111012ae3b4f0e9d08239ffeba6b774492f777d7ea8e1953193cd3d"
+  },
+  "test-runtime-warning-activities.json": {
+    "bytes": 56205,
+    "sha256": "c85e75dca35eca9f5aa649341eba84f70bcfe1895977631539f67702c1337140"
+  },
+  "tests.json": {
+    "bytes": 4519,
+    "sha256": "41fb0d3cf7325c150e581e8668d0f81f22b8ff4cabed202ba48957fc2a191e40"
+  },
+  "verification.json": {
+    "bytes": 557,
+    "sha256": "f0bda8d663304d8ce5a8ef9ea9579a0bdbc72fd7517a0ff4b5afb2dab6c907ed"
+  }
+}

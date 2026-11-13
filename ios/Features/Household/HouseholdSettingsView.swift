@@ -3,6 +3,8 @@ import HouseholdClient
 
 struct HouseholdSettingsView: View {
     @ObservedObject var model: HouseholdModel
+    var continuesAfterWorkspaceLock = false
+    @State private var visibleEntry: UUID?
     @Environment(\.scenePhase) private var scenePhase
     @State private var requestReview: RequestReviewPresentation?
     private struct RequestReviewPresentation: Identifiable {
@@ -16,6 +18,15 @@ struct HouseholdSettingsView: View {
             Section {
                 Text(ht("Your private work stays on this phone. Signing in does not upload it."))
                     .foregroundStyle(.secondary)
+            }
+            // Shop selection briefly clears the projection. Keep this destination
+            // mounted while it rechecks the new scope before showing records.
+            if !model.locked, model.identity != nil, model.projection?.grantId == nil {
+                Section {
+                    NavigationLink(HistoryCopy.text("Prices and period budgets")) {
+                        HistoryRecordsEntryView(household: model)
+                    }.accessibilityIdentifier("household.priceBudgetHistory")
+                }
             }
             if !model.configured {
                 Section(ht("Household access")) {
@@ -37,7 +48,14 @@ struct HouseholdSettingsView: View {
                         .disabled(model.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if model.codeSent {
                         SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
-                        Button(ht("Verify code")) { Task { await model.verifyCode() } }.disabled(model.code.isEmpty)
+                        Button(ht("Verify code")) {
+                            let entry = visibleEntry
+                            Task {
+                                await model.verifyCode {
+                                    continuesAfterWorkspaceLock && entry != nil && entry == visibleEntry
+                                }
+                            }
+                        }.disabled(model.code.isEmpty)
                     }
                     } else {
                         Text(ht("Email sign-in is not ready yet. Your private shopping tools work without an account."))
@@ -50,6 +68,11 @@ struct HouseholdSettingsView: View {
                         Text(ht("Access is checked by the household service."))
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
+                        }
+                        if projection.canSetRequestQueue == true {
+                            Button(ht(projection.requestQueueEnabled ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
+                                Task { await model.setRequestQueuePermission(!projection.requestQueueEnabled) }
+                            }.disabled(model.busy).accessibilityIdentifier("household.request.queuePermission")
                         }
                         Button(ht("Refresh household")) { Task { await model.refresh() } }
                         if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
@@ -83,7 +106,9 @@ struct HouseholdSettingsView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(request.originalItem).font(.headline)
                                     if let quantity = request.ownQuantity { Text(quantity) }
+                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(status(request)).foregroundStyle(.secondary)
+                                    if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
                                     if let clarification = request.clarification { Text(clarification) }
                                     if request.ownActionAllowed {
                                         HStack {
@@ -94,6 +119,7 @@ struct HouseholdSettingsView: View {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
                                 }.accessibilityElement(children: .combine)
+                                .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
                             if model.requests.isEmpty { Text(ht("No received requests in this view.")) }
                             if model.nextRequestCursor != nil {
@@ -159,6 +185,8 @@ struct HouseholdSettingsView: View {
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }
         }
+        .onAppear { visibleEntry = UUID() }
+        .onDisappear { visibleEntry = nil }
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
         .sheet(item: $requestReview) { selected in
@@ -184,6 +212,7 @@ struct HouseholdSettingsView: View {
         }
     }
     private func status(_ request: OwnRequest) -> String {
+        if request.carriedForward == true { return ht("Moved to a later pickup for review") }
         switch request.status {
         case "pending": return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review")
         case "clarified": return ht("Clarification requested")

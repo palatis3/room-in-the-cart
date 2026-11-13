@@ -1,0 +1,65 @@
+{
+  "resultReceiptSHA256": "1dbb40bc126fa6522338fc6f8532c8d1a6fa351a5bd37f4263653b497c0c527a",
+  "consoleSHA256": "160855048682bfee23d3e15b6ff6efa12d02a31b862c861a8b08f71c33f8275f",
+  "firstWait": {
+    "rawLogLine": 4144,
+    "action": "Idle wait following aQuantity Listo tap",
+    "startSeconds": 31.66,
+    "completionSeconds": 91.69
+  },
+  "completed60SecondIdleWaits": [
+    {
+      "rawLogLine": 4145,
+      "endSeconds": 91.69
+    },
+    {
+      "rawLogLine": 4153,
+      "endSeconds": 154.93
+    },
+    {
+      "rawLogLine": 4158,
+      "endSeconds": 215.97
+    },
+    {
+      "rawLogLine": 4161,
+      "endSeconds": 276.02
+    },
+    {
+      "rawLogLine": 4167,
+      "endSeconds": 336.79
+    },
+    {
+      "rawLogLine": 4173,
+      "endSeconds": 398.03
+    },
+    {
+      "rawLogLine": 4178,
+      "endSeconds": 458.54
+    },
+    {
+      "rawLogLine": 4186,
+      "endSeconds": 521.2
+    },
+    {
+      "rawLogLine": 4191,
+      "endSeconds": 582.29
+    },
+    {
+      "rawLogLine": 4194,
+      "endSeconds": 642.32
+    },
+    {
+      "rawLogLine": 4200,
+      "endSeconds": 702.85
+    }
+  ],
+  "finalIdleWait": {
+    "rawLogLine": 4205,
+    "action": "Idle wait at beginning of bQuantity Done tap",
+    "startSeconds": 703.99
+  },
+  "timeoutLine": 4206,
+  "restartLine": 4214,
+  "timeoutBoundarySHA256": "06d827d39b2aeb2811965a9cd06dd4907b48450a42904171e0d459ad6ae77165",
+  "scope": "UI never reached Save in this attempt. The repeated application-idle waits consumed the XCTest allowance. Underlying cause remains unproven."
+}

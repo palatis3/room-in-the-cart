@@ -1,0 +1,13 @@
+--- a/ios/Features/Capture/CookReadbackView.swift
++++ b/ios/Features/Capture/CookReadbackView.swift
+@@ -43,9 +43,7 @@
+                 }
+                 // Stop never reveals instruction content. Keep explicit retry
+                 // reachable after authority revocation and a completed failed Stop.
+-                if model.state != .stopped {
+-                    Button(captureText("Stop readback")) { model.stop() }
+-                }
++                Button(captureText("Stop readback")) { model.stop() }.disabled(model.state == .stopped)
+             }
+             // In a Form, automatic buttons otherwise share a single row action.
+             .buttonStyle(.borderless)

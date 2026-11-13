@@ -37,6 +37,8 @@ import AVFoundation
                     Text(captureText("Prepare the current instruction without private budget details before playback."))
                 }
             }
+            // In a Form, automatic buttons otherwise share a single row action.
+            .buttonStyle(.borderless)
         }
         .onAppear { model.setVoiceOver(UIAccessibility.isVoiceOverRunning) }
         .onChange(of: instruction) { _, value in model.update(value) }

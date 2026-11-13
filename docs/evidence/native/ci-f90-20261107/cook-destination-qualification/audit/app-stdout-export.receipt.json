@@ -1,0 +1,21 @@
+{
+  "command": [
+    "xcrun",
+    "xcresulttool",
+    "export",
+    "object",
+    "--legacy",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/inspection.xcresult",
+    "--id",
+    "0~xYPXfq3i1yW_D8V18YkVdi5-JNe-njHWRyoEtlpA_kdYD5NeA1X7JHvDJ5tbZ3mZ25CsYVzyMPWWeRI48Uxong==",
+    "--type",
+    "file",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/app-stdout-private.txt"
+  ],
+  "exit": 0,
+  "fileSizeLimit": 256000000,
+  "stdoutSHA256": "f1d1424ce634a9b8d7992766175fe5ff512e39eec8901849701cd3bae1cd0305",
+  "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,18 @@
+{
+  "scope": "Only the retained per-case activity export; not a complete runtime-fault inventory",
+  "strictExit": 1,
+  "warningActivities": [
+    {
+      "title": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "activityType": null,
+      "startTime": 1794159284.877,
+      "attachments": null
+    },
+    {
+      "title": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "activityType": null,
+      "startTime": 1794159285.177,
+      "attachments": null
+    }
+  ]
+}

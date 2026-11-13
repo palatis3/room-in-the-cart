@@ -1,0 +1,44 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "6C6C5C7A-6C31-40D1-8FEF-D0A87A74E228.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-fresh-review-requires-consent_0_0C41F922-234C-46C1-997F-1273586C59E6.png",
+        "timestamp" : 1794168379.203
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "ED2FE808-AE2F-41DF-B57A-AB37BAA86F5D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-draft-ready-for-fresh-review_0_068306AA-B72E-4534-9F68-219FC9DC60B3.png",
+        "timestamp" : 1794168365.574
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "34708D50-8FDE-4961-B5F1-3D2711EF166C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-returned-to-draft_0_CEEA9D3F-7887-41F1-84E8-187CB959340C.png",
+        "timestamp" : 1794168359.038
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "7BD71711-DDAB-4D3A-93DA-3C0D9F97903A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-before-activation_0_BCB2E6F3-7617-4681-9232-D8F99B4285F9.png",
+        "timestamp" : 1794168357.582
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview"
+  }
+]

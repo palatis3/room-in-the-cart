@@ -1,0 +1,112 @@
+{
+  "method": "Existing-file read/hash/copy and original-pixel analysis only; no xcresult or native commands",
+  "copiedFiles": [
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/inspection/strict.txt",
+      "destination": "run/strict.txt",
+      "bytes": 832,
+      "sha256": "38f254c4c5aba5af3b6cc3d19a165916c639e79d9f8ad33ff63695dcf561778d"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/inspection/verification.json",
+      "destination": "run/verification.json",
+      "bytes": 269,
+      "sha256": "e203dc37af1cd18ab2c77ada60baaff23b7fb119a9626b69616fa461a2502db4"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/inspection/summary.json",
+      "destination": "run/summary.json",
+      "bytes": 1021,
+      "sha256": "f2c396ec3607e9909970dbf7830baa29fe6fe92fb38e3cac4aaffa8748c4d189"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/inspection/tests.json",
+      "destination": "run/tests.json",
+      "bytes": 2497,
+      "sha256": "3ea534a43b3e9e13fa1a2bbedb405181f4ca6518c48a5cd87c586ef89af28e53"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/inspection/test-runtime-warnings.json",
+      "destination": "run/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/selectors.txt",
+      "destination": "run/selectors.txt",
+      "bytes": 234,
+      "sha256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/root-review.json",
+      "destination": "root-review.json",
+      "bytes": 827,
+      "sha256": "48e66b25ba5e4ff4b5cbf8be5f55a99b95db857de32fabc3a4277caf9f26a40a"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-0-0/D1AE6BA4-5A0A-48DE-921A-08545D0B297D.png",
+      "destination": "images/S24-standard-Sam-portions-label.png",
+      "bytes": 9229,
+      "sha256": "eb74d1d176eca3f359e15303649c2ffe07dcf32318b3483e233ce580a4086154"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-0-2/E6A4FFD1-068F-43B1-A380-2D16314D5E41.png",
+      "destination": "images/S24-standard-Sam-portions-value.png",
+      "bytes": 1337,
+      "sha256": "44cd6967b4444917255807017aee38f4fc6b36ff9181aefe762c2ace7dd85d8c"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-0-4/107961DF-918C-4ED1-BE22-2A131AC767AB.png",
+      "destination": "images/S24-standard-Mia-portions-label.png",
+      "bytes": 9214,
+      "sha256": "a8c50defe3af60abd3a847cb4a22c123ab8be37696882046604a5d6d1261a0d1"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-0-6/F511FFBF-F924-4FD8-83D4-DD9E06AFC94D.png",
+      "destination": "images/S24-standard-Mia-portions-value.png",
+      "bytes": 1335,
+      "sha256": "67e1302dbc1c0a415c98c032c7efdc8ac028f18ef4e855ea363c8f0ea115fa60"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-1-0/E45E2884-0F93-4B3C-9DA3-1D9D700E3182.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png",
+      "bytes": 29344,
+      "sha256": "a35c922b5610707031aeef59fe7406382aa1294cb512b2ae0fbf4cf65e483e5c"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-1-2/234A9D29-92E0-483E-BE1C-63D6BBF489AE.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png",
+      "bytes": 2253,
+      "sha256": "8fd5621eacae987c47ebf22e7589a6d443b14fec2fa4d68480cdaec4c71ad4d3"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-1-4/DDB258F7-F932-4EAE-90E1-6E0A736E2FC0.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png",
+      "bytes": 29369,
+      "sha256": "4662cd080f6027d4c565677e0bce83c903e48e4690f1c2b28c77e2afab33e9e6"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/captures/target-1-6/47F29B46-ABF2-45A3-B5D4-92B0F3730925.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png",
+      "bytes": 2253,
+      "sha256": "8fd5621eacae987c47ebf22e7589a6d443b14fec2fa4d68480cdaec4c71ad4d3"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/dark-run/standard-context/png/2A05DDEC-C079-47B9-AC5F-47C435C127B1.png",
+      "destination": "images/standard-checkout-and-two-lunches.png",
+      "bytes": 302690,
+      "sha256": "ef59fad44155ad6cfc8c773cf5194f40e759695dbe2b6c0ebb4c52d4a13a625b"
+    },
+    {
+      "source": "docs/evidence/native/request-portion-typography-20261108/measurement/measure_field.py",
+      "destination": "measurement/measure_field.py",
+      "bytes": 9050,
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0"
+    }
+  ],
+  "verifiedOriginalTargets": 16,
+  "verifiedContextPNG": true,
+  "rawAXAndActivitiesCopied": false,
+  "lightProofUnchanged": true,
+  "lightManifestSHA256": "d3a56143e2065efcc545e71a0b479a2d77954277bca9f6bd40b1a65eb76e118b"
+}

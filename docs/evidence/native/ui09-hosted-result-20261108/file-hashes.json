@@ -1,0 +1,34 @@
+{
+  "README.md": {
+    "bytes": 1564,
+    "sha256": "bf07e5c3f4c4e63ec7ba374463ffca0993dae8471d85f79a50b91b67577732f7"
+  },
+  "evidence.json": {
+    "bytes": 7597,
+    "sha256": "cdf179536ab75fb714d0c60b6cfe200dcb46e6087e6cd6b18c083b9afaa75b58"
+  },
+  "original/appearance.json": {
+    "bytes": 703,
+    "sha256": "b9743b692c3fc8dbbfff2c764459c485d00db0367f79533b3756ba40198c19c6"
+  },
+  "original/observer/events.ndjson": {
+    "bytes": 453,
+    "sha256": "067bc47f3d33ff10bdca16414f0fdea338300672a5041bf0511c9f3c4ad24204"
+  },
+  "original/observer/receipt.json": {
+    "bytes": 660,
+    "sha256": "95d48cd9e9311bf6b864fae3665fb17ba600b3e51d55b6bdc81f89c43510908b"
+  },
+  "original/run.json": {
+    "bytes": 3391,
+    "sha256": "86ab7cea6730c85dd5d6f442a826bd05bcb31a9cb3c609f8646437379dafe628"
+  },
+  "original/strict-exit.json": {
+    "bytes": 16,
+    "sha256": "3e42a2ad3dbeab9d1167d20261ad6305bdea31103ffc09c30f25558345966de2"
+  },
+  "original/strict.log": {
+    "bytes": 1652,
+    "sha256": "202c24363201d65691419d34d51a26999c5b11c806a3c355f9ac7467d676d570"
+  }
+}

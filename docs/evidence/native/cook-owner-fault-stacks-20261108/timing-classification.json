@@ -1,0 +1,74 @@
+[
+  {
+    "index": 0,
+    "timestampUTC": "2026-11-08T16:31:11.142389+00:00",
+    "emissionThreadID": 26132822,
+    "classification": "owner-start-idle-query",
+    "precedingTap": "Tap \"capture.readback.play\" Button",
+    "secondsAfterTapActivityStart": 0.510389,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 1,
+    "timestampUTC": "2026-11-08T16:31:11.226244+00:00",
+    "emissionThreadID": 26131913,
+    "classification": "framework-main-dispatch-wait",
+    "precedingTap": "Tap \"capture.readback.play\" Button",
+    "secondsAfterTapActivityStart": 0.594244,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 2,
+    "timestampUTC": "2026-11-08T16:31:12.576539+00:00",
+    "emissionThreadID": 26131913,
+    "classification": "framework-main-dispatch-wait",
+    "precedingTap": "Tap \"capture.readback.play\" Button",
+    "secondsAfterTapActivityStart": 1.944539,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 3,
+    "timestampUTC": "2026-11-08T16:31:13.758964+00:00",
+    "emissionThreadID": 26132822,
+    "classification": "owner-pause",
+    "precedingTap": "Tap \"Pause readback\" Button",
+    "secondsAfterTapActivityStart": 0.270964,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 4,
+    "timestampUTC": "2026-11-08T16:31:13.767501+00:00",
+    "emissionThreadID": 26131913,
+    "classification": "framework-main-dispatch-wait",
+    "precedingTap": "Tap \"Pause readback\" Button",
+    "secondsAfterTapActivityStart": 0.279501,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 5,
+    "timestampUTC": "2026-11-08T16:31:15.329978+00:00",
+    "emissionThreadID": 26131913,
+    "classification": "framework-main-dispatch-wait",
+    "precedingTap": "Tap \"Resume readback\" Button",
+    "secondsAfterTapActivityStart": 0.208978,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 6,
+    "timestampUTC": "2026-11-08T16:31:16.257455+00:00",
+    "emissionThreadID": 26131913,
+    "classification": "framework-main-dispatch-wait",
+    "precedingTap": "Tap \"Resume readback\" Button",
+    "secondsAfterTapActivityStart": 1.136455,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  },
+  {
+    "index": 7,
+    "timestampUTC": "2026-11-08T16:31:16.930742+00:00",
+    "emissionThreadID": 26132822,
+    "classification": "owner-stop-state-query",
+    "precedingTap": "Tap \"Stop readback\" Button",
+    "secondsAfterTapActivityStart": 0.212742,
+    "caveat": "Correlation to UI activity start, NOT native-call or condition-wait duration"
+  }
+]

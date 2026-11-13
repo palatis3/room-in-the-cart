@@ -1,0 +1,103 @@
+{
+  "candidate": "3d26f1f2316586de89060b7ed2310c193206371f",
+  "status": "completed",
+  "accepted": false,
+  "workflowRuns": [
+    {
+      "id": 42132403119,
+      "name": "Build and test",
+      "conclusion": "failure",
+      "run_attempt": 2,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-06T02:11:20Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403119"
+    },
+    {
+      "id": 42132403163,
+      "name": "iOS deep checks",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-06T00:20:07Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403163"
+    },
+    {
+      "id": 42132403160,
+      "name": "iOS Release performance",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-06T00:25:37Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403160"
+    },
+    {
+      "id": 42132403128,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-05T23:54:20Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403128"
+    },
+    {
+      "id": 42132403192,
+      "name": "iOS fixture checks",
+      "conclusion": "failure",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-06T01:37:14Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403192"
+    },
+    {
+      "id": 42132403111,
+      "name": "Security checks",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T23:50:15Z",
+      "updated_at": "2026-11-05T23:51:31Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42132403111"
+    }
+  ],
+  "modelPasses": 601,
+  "ui": {
+    "selected": 51,
+    "passed": 49,
+    "failed": 2,
+    "skipped": 0,
+    "runtimeWarnings": 6
+  },
+  "fixture": {
+    "selected": 43,
+    "passed": 41,
+    "failed": 2,
+    "skipped": 0,
+    "runtimeWarnings": 4
+  },
+  "recordsMedia": {
+    "redactedReportPasses": 1,
+    "rawArchiveInspected": false
+  },
+  "failures": [
+    "UI06: date selected successfully; diagnostic attachment queried cutoff row outside lazy Form. Narrow reveal helper passes original selector locally.",
+    "UI07: singleStore switch remains off after correctly targeted tap, following repeated animation idle waits. One unchanged local baseline passes96.361s with no idle timeout; hosted failure remains unresolved.",
+    "Fixtures: two quote cases failed on undocumented keyboard focus predicate before typing. Public keyboard helper passes both original cases locally."
+  ],
+  "followupCommits": [
+    "37557e1",
+    "a5a23bc"
+  ],
+  "limitations": [
+    "Local follow-ups use Xcode27.1, hosted Xcode26.3; both run iOS26.2 build23C54.",
+    "Swift scan has zero findings but retains eleven known compiler diagnostic notifications; semantic extraction remains limited.",
+    "Live encrypted database capture/restore, signed distribution, provider activation and human/physical acceptance remain open."
+  ],
+  "runnerUtilization": {
+    "scope": "First to last executed step per macos-15 execution. GitHub assigns new job IDs to reused attempt1 results in attempt2; identical workflow/name/step-start/step-end intervals count once. Includes actual failed build and targeted retry; excludes Linux and queue time.",
+    "executions": 41,
+    "reusedAttemptRecordsExcluded": 3,
+    "occupiedMinutes": 642.0,
+    "idealFiveRunnerMinimumMinutes": 128.4,
+    "macWindowMinutes": 140.9,
+    "observedPeakMacJobs": 5
+  }
+}

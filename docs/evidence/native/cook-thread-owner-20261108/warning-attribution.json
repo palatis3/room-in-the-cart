@@ -1,0 +1,109 @@
+{
+  "r3GenericBuildNativeExit": 0,
+  "newSpeechCompilerWarnings": [],
+  "r3AllEmittedPrimaryWarningLines": [
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:302:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:302:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+  ],
+  "preexistingTestWarningSiteCount": 5,
+  "priorLog": ".build/CookVoicePreparationNov08/fixture-r1/native.log",
+  "priorLogSHA256": "5257d472bbf8d9ec8c31f85ac8ae1e0db65f7bbd33f8fbef106d01ac14111dca",
+  "priorEvidence": [
+    {
+      "site": "HouseholdRequestPackFixtureSupport.swift",
+      "priorOccurrences": [
+        {
+          "line": 4059,
+          "text": "/Users/palatis/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+        }
+      ]
+    },
+    {
+      "site": "MembershipTests.swift",
+      "priorOccurrences": [
+        {
+          "line": 4068,
+          "text": "/Users/palatis/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+        }
+      ]
+    },
+    {
+      "site": "NavigationRestorationTests.swift",
+      "priorOccurrences": [
+        {
+          "line": 4077,
+          "text": "/Users/palatis/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:302:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+        }
+      ]
+    },
+    {
+      "site": "PickupStockPrivateScopeIntegrationTests.swift",
+      "priorOccurrences": [
+        {
+          "line": 4086,
+          "text": "/Users/palatis/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+        }
+      ]
+    },
+    {
+      "site": "RecordsMediaTests.swift",
+      "priorOccurrences": [
+        {
+          "line": 4419,
+          "text": "/Users/palatis/Room in the Cart/ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten"
+        }
+      ]
+    },
+    {
+      "site": "RecordArchivedynamic-product",
+      "priorOccurrences": [
+        {
+          "line": 1764,
+          "text": "/Users/palatis/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+        }
+      ]
+    },
+    {
+      "site": "HouseholdClientdynamic-product",
+      "priorOccurrences": [
+        {
+          "line": 1870,
+          "text": "/Users/palatis/Room in the Cart/ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+        }
+      ]
+    },
+    {
+      "site": "DeviceSurfacesdynamic-product",
+      "priorOccurrences": [
+        {
+          "line": 1887,
+          "text": "/Users/palatis/Room in the Cart/ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+        }
+      ]
+    },
+    {
+      "site": "CoreDomaindynamic-product",
+      "priorOccurrences": [
+        {
+          "line": 2202,
+          "text": "/Users/palatis/Room in the Cart/ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+        }
+      ]
+    }
+  ],
+  "scope": "Prior occurrence is established. Underlying sysroot cause remains unresolved; no warning waiver or clean-build claim."
+}

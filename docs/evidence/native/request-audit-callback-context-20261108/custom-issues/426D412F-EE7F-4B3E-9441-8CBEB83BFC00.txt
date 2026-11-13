@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a4285f0, {{247.0, 318.8}, {123.0, 20.3}}, label: 'Whole checkout'
+Element subtree:
+ →StaticText, 0x11a4285f0, {{247.0, 318.8}, {123.0, 20.3}}, label: 'Whole checkout'
+Path to element:
+ →Application, 0x119fde180, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x119fd48f0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a5066c0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a506900, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a506a20, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a506b40, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a506c60, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a506d80, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a506ea0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a507560, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a507680, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a5077a0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a5078c0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a5079e0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a50a4a0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11a405ca0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11a427920, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11a427a40, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11a4283b0, {{32.0, 318.8}, {338.0, 20.3}}, label: 'Scope, Whole checkout'
+                    ↳StaticText, 0x11a4285f0, {{247.0, 318.8}, {123.0, 20.3}}, label: 'Whole checkout'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11a17a160, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4387828480.388
+    Output: {
+      StaticText, 0x11a451900, {{247.0, 318.8}, {123.0, 20.3}}, label: 'Whole checkout'
+    }

@@ -1,0 +1,104 @@
+{
+  "baseline": "1429eeb6ca6c5ab3cd967530d6f12bbe397c6bab",
+  "candidate": "b6d141191bac6544b41cdf50d8f4a4b556c4af2a",
+  "deviceID": "7ED811E0-218F-4041-9BF2-779B6BE66A95",
+  "result": "passed",
+  "installation": "simctl install over previously installed application, followed by simctl launch with no app arguments; XCTest specified a separate test-only marker app as its target and activated the preinstalled real application by bundle ID; the real app product was excluded from the runner install list",
+  "bundle": "dev.roominthecart.app",
+  "baselineExeSHA256": "0cfe71d3de1d18c684d299f261e1a8f3eff41e6bed19e1da7dc3609c67e83b06",
+  "candidateExeSHA256": "2a55b1d31d68bb6149bfc319f0a91642cdb8b360815810b0483b44422a4184a4",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "build": "1"
+    },
+    {
+      "version": "0.1.0",
+      "build": "1"
+    }
+  ],
+  "workspaceID": "123E95A8-3E85-44B8-AEDD-1652AF8E8474",
+  "comparisonID": "754DC6D3-3F95-4DFE-9DE3-751BE1A01972",
+  "updateChangedContainerPath": true,
+  "postInstallApplicationAndDataPathsStableAcrossUIRuns": true,
+  "sameStoreInode": true,
+  "schemaVersion": 2,
+  "schemaSHA256": "7bba7a985588011c2940e974e4dc0bbde96b1c28a352f0c1d6d9d6ec81af47b0",
+  "originalPayloadAndEnvelopeIdenticalBeforeInstallAfterInstallAfterReopenAndAfterEdit": true,
+  "originalPayloadSHA256": "75ffb12dae2233af3515f6cc5b7ea4a6a9ca43dcdcf067bedec0e2f36bc8f219",
+  "originalEnvelopeSHA256": "d6c1e94d8b782e60717da9d129e25b519466c6f139c2068842fe1cecd4471ca6",
+  "editedPayloadSHA256": "93dc53fa93653e5616df32ad6b50f539b528a3b1dd7da634517295dff76c1a72",
+  "headAfterEdit": 2,
+  "revisionsAfterEdit": [
+    1,
+    2
+  ],
+  "integrity": "PRAGMA integrity_check ok, no foreign key violations at every readback",
+  "scope": "Ad hoc simulator Release binaries from two pre-release commits. Same schema. No App Store/TestFlight update, physical device, or schema migration exercised. Only the local pack comparison was exercised.",
+  "ui": {
+    "Baseline": {
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "bundle": "Baseline.xcresult"
+    },
+    "Reopened": {
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "bundle": "Reopened.xcresult"
+    },
+    "Edited": {
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "bundle": "Edited.xcresult"
+    }
+  },
+  "recordsUI": {
+    "item": "Fictional first-install wraps",
+    "totalNeed": 12,
+    "itemLimitUSD": 30,
+    "original": {
+      "A": {
+        "packs": 2,
+        "totalUSD": 6
+      },
+      "B": {
+        "packs": 2,
+        "totalUSD": 4
+      },
+      "packBRoomUSD": 26
+    },
+    "afterEnteringSixAlreadyAtHome": {
+      "A": {
+        "packs": 1,
+        "totalUSD": 3
+      },
+      "B": {
+        "packs": 1,
+        "totalUSD": 2
+      },
+      "packBRoomUSD": 28
+    }
+  },
+  "harnessNote": "Xcode rejected its UseDestinationArtifacts option for a simulator before running the first candidate UI test. The successful runner targeted a separate test-only marker and accessed the installed production app by bundle identifier. The installation was performed exactly once.",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "7ED811E0-218F-4041-9BF2-779B6BE66A95",
+    "deviceName": "RoomCart Update Preservation 20261105",
+    "modelName": "iPhone 17e",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "artifactsSHA256": {
+    "before.json": "8c32fef7e26702da54641e6d433d37a93d734391c4de030d056d04c967102a14",
+    "installed.json": "277db92bf12e4849fe9956500cf8e3a65ef359a689952b5a45ce4a584cbfbec1",
+    "reopened.json": "277db92bf12e4849fe9956500cf8e3a65ef359a689952b5a45ce4a584cbfbec1",
+    "edited.json": "36ab3372f8914b15f2f935ec159251c3d832a1b8c19de545139a6f2451d515a3",
+    "baseline-artifacts.json": "02dd343c1ff185fd90d52ea0e2c00e560cf13fe92da85e046bec84f95997812e",
+    "candidate-source.json": "dd982ebc76e9a34ab43859e9211d2d92f3b9908d7e8ab1e29c9cce41a8720e69",
+    "probe.swift": "a0e42deb4bda0743312b26d2e9fab90f297f582b275a6e9260127f53254cbda0",
+    "install-and-check.log": "b35717991daf4c3539c63f659e16bd72147c66c4dcdb2a10b20c2a3315ebbd60",
+    "marker-runner.xctestrun": "93c593192277f080a053c5fe31c18fac59931158cf691833d6db8cc34dd97e4b",
+    "check-installed-ui.log": "24ede90336886739afa66a5b0243b87bd108294a67e11f6f472d940e9278e961"
+  }
+}

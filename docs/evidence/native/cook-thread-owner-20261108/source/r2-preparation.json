@@ -1,0 +1,94 @@
+{
+  "status": "frozen-r2-scratch-uncompiled-unexecuted",
+  "baseFiles": [
+    {
+      "path": "ios/Features/Capture/Capture.xcstrings",
+      "sha256": "14a590622c1c3ff6d6bf86defc796a300d9c87e254c5aa2e72a28a7d3cfab385"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackModel.swift",
+      "sha256": "e37edd16f7f23a15d1d7fdab2b0a010a9a33a4f8af51e874b182ed937cb553b8"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackView.swift",
+      "sha256": "7cc39b277f05f301ba84615c55dfdba8a04d29e8df0db6988f1402a6d4d137cd"
+    },
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "sha256": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407"
+    },
+    {
+      "path": "ios/Tests/CookReadbackTests.swift",
+      "sha256": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543"
+    }
+  ],
+  "candidateFiles": [
+    {
+      "path": "ios/Features/Capture/Capture.xcstrings",
+      "sha256": "08ea209b6328a335378f9e53e95988c8420a29b328c724ed8b30a576cd64ffbe"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackModel.swift",
+      "sha256": "05f2fc6b9260f9bcf240fcca3d691f4d83eccea714a000b679790e147e4ae24f"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackView.swift",
+      "sha256": "90f9fa795510184296424cce4e2cc682acdf5579e4a47a4852a24ec6c3cd906a"
+    },
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "sha256": "49831d71c4021e08cc430ae2dc0de54a2ff9262a225d9b7c46863ccbde38a314"
+    },
+    {
+      "path": "ios/Tests/CookReadbackTests.swift",
+      "sha256": "4af1645489ddc4e13044c7c9ed38de4cb32a81cfd2ac60daa6cc92036cd82e77"
+    }
+  ],
+  "changedFileCount": 5,
+  "original16ModelTestsByteIdentical": true,
+  "preparationAndAudioSessionHelpersByteIdenticalFromEnum": true,
+  "originalCatalogEntriesUnchanged": true,
+  "newModelIntegrationTests": [
+    "testExplicitRepeatWaitsForStopAcknowledgment",
+    "testInvalidationCancelsExplicitRepeatWhileStopIsHeld",
+    "testRepeatRechecksStartDeadlineAfterStopAcknowledgment",
+    "testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment",
+    "testRevocationAndFailedStopRemainExplicitlyRetryable",
+    "testIdlePreparationCancellationDoesNotRequireNativeStopSuccess",
+    "testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle",
+    "testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop",
+    "testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart",
+    "testInterruptionEndedShouldResumeNotificationNeverRestarts",
+    "testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback"
+  ],
+  "nativeThreadSpeechExecuted": false,
+  "swiftCompiled": false,
+  "r2FrozenManifestSHA256": "9e24726c0664b3abd7153e92a230080132c90b261d694efd43df076e7489ac30",
+  "r2RootExecution": "../blocked-pause-prototype-r2-execution/run.json",
+  "patchSHA256": "c7ad4c9a9fb1c5e7f1debfb1a7bc496891cc992a864021366044f3c5840402d5",
+  "staticRecheckUTC": "2026-11-08T15:56:52.866727+00:00",
+  "originalTestCount": 16,
+  "candidateTestCount": 40,
+  "pendingStatusPrivacyPresentation": "Stop action and non-content pending status outside authorization-protected text; stopped VO copy only after acknowledgment.",
+  "r1FrozenManifestSHA256": "81e9638de17230178c3b6a4b817042b3e8c6e8937b39b9ca45391801e11bbea5",
+  "newOwnerLifecycleTests": [
+    "testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread",
+    "testEngineCreationCallsAndDestructionUseOneNonMainThread",
+    "testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume",
+    "testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled",
+    "testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry",
+    "testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop",
+    "testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech",
+    "testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment",
+    "testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded",
+    "testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop",
+    "testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve",
+    "testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery",
+    "testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop"
+  ],
+  "realThreadFakeEngineTestsExecuted": false,
+  "isolatedWorktree": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart",
+  "isolatedHead": "e8b3c9f506f52025897a0d0eab9e96fd78215f44",
+  "independentStaticReview": "ci_log_record_fix reviewed whole-turn guard and two-scenario nested getter regression; no further blocker identified; no compile/native proof",
+  "preFreezeCheckpointManifestSHA256": "42887aa6ff68a28218df105c9d9757c413e2aebc04cf05d645c59209fc2882f8"
+}

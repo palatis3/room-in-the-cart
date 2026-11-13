@@ -1,0 +1,12 @@
+Test Suite 'Selected tests' started at 2026-11-07 20:50:43.634.
+Test Suite 'HouseholdClientTests.xctest' started at 2026-11-07 20:50:43.635.
+Test Suite 'Rollback041ProbeTests' started at 2026-11-07 20:50:43.635.
+Test Case '-[HouseholdClientTests.Rollback041ProbeTests testReleasedClientDeliveryProjection]' started.
+Test Case '-[HouseholdClientTests.Rollback041ProbeTests testReleasedClientDeliveryProjection]' passed (0.092 seconds).
+Test Suite 'Rollback041ProbeTests' passed at 2026-11-07 20:50:43.728.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.092 (0.093) seconds
+Test Suite 'HouseholdClientTests.xctest' passed at 2026-11-07 20:50:43.728.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.092 (0.093) seconds
+Test Suite 'Selected tests' passed at 2026-11-07 20:50:43.728.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.092 (0.094) seconds
+

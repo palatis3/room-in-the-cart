@@ -1,0 +1,139 @@
+{
+  "observedAtUtc": "2026-11-08T05:15:00+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    },
+    "strictCheckerSHA256": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa"
+  },
+  "runId": 42440464791,
+  "job": {
+    "completedAt": "2026-11-08T05:13:40Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected fixture tests and require complete execution"
+    ],
+    "id": 128631169252,
+    "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+    "startedAt": "2026-11-08T05:02:50Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13605425350,
+    "name": "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1",
+    "digest": "sha256:dd443851d5d0d5e7e5395ce71288d5e9269fd1aaafeb9eaff6c88daee28f639c",
+    "size_in_bytes": 36834303,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 33065,
+    "rangeReceiptSHA256": "6245e7d146ffe946277d4ae38db3266aef9bdc251922cdd59a4bb1e13d7b7136",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 39650,
+        "sha256": "e6e0a1688fad5c700f7dbd99ed81a86a41f0bf0e3931a08963be98559aac311d",
+        "zipCRC": 433584704,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1397,
+        "sha256": "1088b192a7c273733c50c96e4ce74b14642ae8d863b459e4bc60395cd6c79632",
+        "zipCRC": 3970705695,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+        "bytes": 116,
+        "sha256": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de",
+        "zipCRC": 1823941689,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+        "zipCRC": 635318996,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 1239,
+        "sha256": "a583c3b1c86f8dfdd52037480f237b8c06b4418ba7d82b6cc97d26728cffd57e",
+        "zipCRC": 379366916,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false
+  },
+  "nativeResult": {
+    "result": "Failed",
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "testFailures": [
+      {
+        "failureText": "XCTAssertTrue failed - Show the keyboard for sharedQuotes.first.extraMinutes",
+        "targetName": "RoomInTheCartUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "testName": "testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()"
+      }
+    ]
+  },
+  "observedResultCounts": {
+    "Failed": 1
+  },
+  "plannedSelectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+  ],
+  "missingSelectors": [],
+  "extraSelectors": [],
+  "executedSelectors": [
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "result": "Failed",
+      "durationSeconds": 174.1116189956665
+    }
+  ],
+  "hostedWarningReceipt": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "resultTreeWarningNames": [],
+  "console": {
+    "restartLines": [],
+    "failureRows": [
+      {
+        "rawLogLine": 489,
+        "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedStoreQuoteUITests.swift:251: error: -[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption] : XCTAssertTrue failed - Show the keyboard for sharedQuotes.first.extraMinutes"
+      }
+    ],
+    "strictReplayFailures": [
+      "XCTest logged a failure for RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption at log line 489.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  }
+}

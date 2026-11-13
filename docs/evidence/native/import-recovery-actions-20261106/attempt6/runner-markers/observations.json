@@ -1,0 +1,139 @@
+{
+  "observations" : [
+    {
+      "contentArea" : "(0.0, 132.0, 402.0, 288.6666564941406)",
+      "keyboardExists" : true,
+      "originalHeadingAboveViewport" : false,
+      "originalHeadingExists" : false,
+      "originalHeadingFrame" : "unavailable",
+      "phase" : "retry-before-submit"
+    },
+    {
+      "commitFrame" : "(16.0, 694.6666870117188, 370.0, 133.33331298828125)",
+      "contentArea" : "(0.0, 132.0, 402.0, 562.6666870117188)",
+      "errorFrame" : "(44.33333206176758, 131.0, 321.6666564941406, 373.3333435058594)",
+      "errorStartVisibleBeforeReveal" : true,
+      "keyboardAfterFailure" : false,
+      "phase" : "retry"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 514.3333333333333, 235.0, 63.33333333333337)",
+          "hittable" : true,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        },
+        {
+          "frame" : "(32.0, 1253.6666666666667, 235.0, 63.33333333333326)",
+          "hittable" : false,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        }
+      ],
+      "phase" : "retry-retry-visible"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 587.6666666666666, 201.66666666666666, 187.33333333333337)",
+          "hittable" : true,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        },
+        {
+          "frame" : "(32.0, 1327.0, 201.66666666666666, 187.33333333333326)",
+          "hittable" : false,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        }
+      ],
+      "phase" : "retry-discard-visible"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 514.3333333333333, 235.0, 63.33333333333337)",
+          "hittable" : true,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        },
+        {
+          "frame" : "(32.0, 1253.6666666666667, 235.0, 63.33333333333326)",
+          "hittable" : false,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        }
+      ],
+      "phase" : "retry-before-tap"
+    },
+    {
+      "contentArea" : "(0.0, 132.0, 402.0, 288.6666564941406)",
+      "keyboardExists" : true,
+      "originalHeadingAboveViewport" : false,
+      "originalHeadingExists" : false,
+      "originalHeadingFrame" : "unavailable",
+      "phase" : "discard-before-submit"
+    },
+    {
+      "commitFrame" : "(16.0, 694.6666870117188, 370.0, 133.33331298828125)",
+      "contentArea" : "(0.0, 132.0, 402.0, 562.6666870117188)",
+      "errorFrame" : "(44.33333206176758, 131.0, 321.6666564941406, 373.3333435058594)",
+      "errorStartVisibleBeforeReveal" : true,
+      "keyboardAfterFailure" : false,
+      "phase" : "discard"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 514.3333333333333, 235.0, 63.33333333333337)",
+          "hittable" : true,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        },
+        {
+          "frame" : "(32.0, 927.0000000000003, 235.0, 63.333333333333144)",
+          "hittable" : false,
+          "identifier" : "ledgerRetrySave",
+          "label" : "Retry save"
+        }
+      ],
+      "phase" : "discard-retry-visible"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 587.6666666666666, 201.66666666666666, 187.33333333333337)",
+          "hittable" : true,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        },
+        {
+          "frame" : "(32.0, 1000.3333333333335, 201.66666666666666, 187.33333333333348)",
+          "hittable" : false,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        }
+      ],
+      "phase" : "discard-discard-visible"
+    },
+    {
+      "actionMatches" : [
+        {
+          "frame" : "(32.0, 587.6666666666666, 201.66666666666666, 187.33333333333337)",
+          "hittable" : true,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        },
+        {
+          "frame" : "(32.0, 1000.3333333333335, 201.66666666666666, 187.33333333333348)",
+          "hittable" : false,
+          "identifier" : "",
+          "label" : "Discard unsaved change"
+        }
+      ],
+      "phase" : "discard-before-tap"
+    }
+  ],
+  "token" : "8ad3e195-1321-4a95-9e53-eb24d28fd61c"
+}

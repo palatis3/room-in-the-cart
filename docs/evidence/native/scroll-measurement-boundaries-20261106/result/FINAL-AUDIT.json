@@ -1,0 +1,2297 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "runID": 42309808686,
+  "attempt": 1,
+  "conclusion": "success",
+  "source": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "base": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "changedFiles": [
+      "ios/UITests/ReleasePerformanceUITests.swift",
+      "scripts/scroll_signpost_diagnostic.py",
+      "scripts/test_scroll_signpost_diagnostic.py"
+    ],
+    "overlaySHA256": "bed82fce5b3f2f854aa35c8b5ea06ac65e090224ea6d94f58b7179f3bf2463a6",
+    "frozenVerifierInputs": 155,
+    "unchangedParentVerifierInputs": 152,
+    "expectedDispatch": {
+      "workflow": "ios-performance.yml",
+      "ref": "codex/diagnose-scroll-boundaries-807aa3c",
+      "enforce_baselines": true
+    },
+    "scope": "Exact 807 plus reviewed three-file measurement boundary and bounded endpoint diagnostic. Original metrics, gesture order, selectors, iteration counts, warnings, runtime and baselines unchanged; instrumentation perturbs timing. Diagnostic only; no release acceptance."
+  },
+  "verifierInputsRehashed": 155,
+  "allVerifierInputsUnchanged": true,
+  "priorFreezesReverified": {
+    "core-collection": {
+      "sha256": "ae63230b336dfcfb9f5233230e709364c697f65bab2b7bd8a80269a2686ac4ec",
+      "files": 3138,
+      "allUnchanged": true
+    },
+    "deep-recovery-attempt2": {
+      "sha256": "48eddb1df9eb0634316066ec70d0a4965c55ab8a58e07e996cc9101094b6a18d",
+      "files": 268,
+      "allUnchanged": true
+    },
+    "performance-setup-f117439": {
+      "sha256": "56d431ee346583a4f22dd0e94ffeb7e45ab68c5ff668ad8772caca89aa8709c5",
+      "files": 357,
+      "allUnchanged": true
+    },
+    "performance-readiness-807aa3c": {
+      "sha256": "077a351934a6af515db860f6ad79a49ac066688c5f265098b0a4f07d7341a3e2",
+      "files": 359,
+      "allUnchanged": true
+    }
+  },
+  "archives": {
+    "iphone-performance-launch-1": {
+      "artifactID": 13550060825,
+      "archive": "iphone-performance-launch-1.zip",
+      "sha256": "e9b3f29f0cbe84302334e2d3f15ca1d16fb34f7fd05718282eed22be62c8d152",
+      "bytes": 85656,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42309808686,
+        "attempt": 1,
+        "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+        "artifactID": 13550060825,
+        "name": "iphone-performance-launch-1",
+        "apiSize": 85656,
+        "apiDigest": "sha256:e9b3f29f0cbe84302334e2d3f15ca1d16fb34f7fd05718282eed22be62c8d152",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "e9b3f29f0cbe84302334e2d3f15ca1d16fb34f7fd05718282eed22be62c8d152",
+        "digestVerified": true,
+        "members": 45,
+        "expandedBytes": 326992,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 45
+    },
+    "iphone-performance-rendered-1": {
+      "artifactID": 13549384177,
+      "archive": "iphone-performance-rendered-1.zip",
+      "sha256": "a7e24d093b1d518d7239ea76282d309656596483fb1c46daf9f7c673de6c723b",
+      "bytes": 7754027,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42309808686,
+        "attempt": 1,
+        "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+        "artifactID": 13549384177,
+        "name": "iphone-performance-rendered-1",
+        "apiSize": 7754027,
+        "apiDigest": "sha256:a7e24d093b1d518d7239ea76282d309656596483fb1c46daf9f7c673de6c723b",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "a7e24d093b1d518d7239ea76282d309656596483fb1c46daf9f7c673de6c723b",
+        "digestVerified": true,
+        "members": 56,
+        "expandedBytes": 8388021,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 56
+    },
+    "iphone-performance-build-log-1": {
+      "artifactID": 13549381093,
+      "archive": "iphone-performance-build-log-1.zip",
+      "sha256": "f8ea74ab6bf48e9193d9964e4da7d690ccb15280b297912ab791c8828b7ce4bd",
+      "bytes": 61820,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42309808686,
+        "attempt": 1,
+        "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+        "artifactID": 13549381093,
+        "name": "iphone-performance-build-log-1",
+        "apiSize": 61820,
+        "apiDigest": "sha256:f8ea74ab6bf48e9193d9964e4da7d690ccb15280b297912ab791c8828b7ce4bd",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "f8ea74ab6bf48e9193d9964e4da7d690ccb15280b297912ab791c8828b7ce4bd",
+        "digestVerified": true,
+        "members": 1,
+        "expandedBytes": 1122065,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 1
+    },
+    "iphone-performance-scroll-1": {
+      "artifactID": 13550343334,
+      "archive": "iphone-performance-scroll-1.zip",
+      "sha256": "34334fae1dc28b647a2fa0abce09bbe4912db52cba79f730c18aa28cc015a81d",
+      "bytes": 5079870,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42309808686,
+        "attempt": 1,
+        "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+        "artifactID": 13550343334,
+        "name": "iphone-performance-scroll-1",
+        "apiSize": 5079870,
+        "apiDigest": "sha256:34334fae1dc28b647a2fa0abce09bbe4912db52cba79f730c18aa28cc015a81d",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "34334fae1dc28b647a2fa0abce09bbe4912db52cba79f730c18aa28cc015a81d",
+        "digestVerified": true,
+        "members": 52,
+        "expandedBytes": 5477045,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 52
+    },
+    "iphone-performance-products-1": {
+      "artifactID": 13548986938,
+      "archive": "performance-compiled/products.zip",
+      "sha256": "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f",
+      "bytes": 85645487,
+      "apiDigestAndSizeMatched": true
+    }
+  },
+  "expectedArtifactCount": 5,
+  "compiledInventory": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "runID": 42309808686,
+    "artifactID": 13548986938,
+    "archiveSHA256": "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f",
+    "digestVerified": true,
+    "binarySHA256": "68126f63f9493ac16e59ba9109372c0d21725840fbcc5fb5ad6b796c7a83abe1",
+    "compiledMatrix": {
+      "include": [
+        {
+          "case": "launch",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+          "macos_slot": 0
+        },
+        {
+          "case": "rendered",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+          "macos_slot": 1
+        },
+        {
+          "case": "scroll",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+          "macos_slot": 2
+        }
+      ]
+    },
+    "scope": "Read-only symbol inspection of optimized test bundle using pinned candidate planner; no binary execution.",
+    "compiledPlists": {
+      "Products/Release-iphonesimulator/RoomInTheCart.app/Info.plist": {
+        "sha256": "c0903cdf42451cabc7aad5d63f533c3d485bce3fdc2ee4fe35ae6e2cb02d1c41",
+        "DTXcodeBuild": "17C529",
+        "DTSDKBuild": "23C57",
+        "DTPlatformVersion": "26.2"
+      },
+      "Products/Release-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/Info.plist": {
+        "sha256": "7684e6d5ae998047ae4255b53de3953bbf0c0ad420144dba88a08b89e14f60a0",
+        "DTXcodeBuild": "17C529",
+        "DTSDKBuild": "23C57",
+        "DTPlatformVersion": "26.2"
+      }
+    },
+    "xctestruns": [
+      {
+        "member": "Products/RoomInTheCart-Performance_iphonesimulator26.2-arm64-x86_64.xctestrun",
+        "sha256": "eba63c28e16c343caebf0e007afb7d15c428bc7c3fffdce8357f6f1f38c9458d"
+      }
+    ],
+    "archiveMembers": 298,
+    "archiveDeclaredBytes": 357640759
+  },
+  "outcomes": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "runID": 42309808686,
+    "jobs": [
+      {
+        "id": 128208158538,
+        "name": "Build optimized iPhone test products",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004088,
+        "started_at": "2026-11-06T23:18:36Z",
+        "completed_at": "2026-11-06T23:29:19Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T23:18:37Z",
+            "completed_at": "2026-11-06T23:18:37Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T23:18:37Z",
+            "completed_at": "2026-11-06T23:18:41Z"
+          },
+          {
+            "name": "Check performance evidence validation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T23:18:41Z",
+            "completed_at": "2026-11-06T23:18:42Z"
+          },
+          {
+            "name": "Record Xcode and select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T23:18:42Z",
+            "completed_at": "2026-11-06T23:19:43Z"
+          },
+          {
+            "name": "Build the Release app and dedicated performance tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T23:19:43Z",
+            "completed_at": "2026-11-06T23:28:53Z"
+          },
+          {
+            "name": "Check the compiled XCTest inventory and plan performance jobs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T23:28:53Z",
+            "completed_at": "2026-11-06T23:28:58Z"
+          },
+          {
+            "name": "Verify and package Release test products",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T23:28:58Z",
+            "completed_at": "2026-11-06T23:29:12Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T23:29:12Z",
+            "completed_at": "2026-11-06T23:29:14Z"
+          },
+          {
+            "name": "Retain Release build log",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T23:29:14Z",
+            "completed_at": "2026-11-06T23:29:15Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-06T23:29:15Z",
+            "completed_at": "2026-11-06T23:29:16Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-06T23:29:16Z",
+            "completed_at": "2026-11-06T23:29:18Z"
+          }
+        ],
+        "logSHA256": "458a589825ddb1daff059d1cc1d241818fa3c6392a644cd4a167b867e480eff1",
+        "checkoutCommits": [
+          "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true
+      },
+      {
+        "id": 128216207075,
+        "name": "Release performance (launch)",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004090,
+        "started_at": "2026-11-06T23:29:23Z",
+        "completed_at": "2026-11-06T23:37:42Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T23:29:24Z",
+            "completed_at": "2026-11-06T23:29:26Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T23:29:26Z",
+            "completed_at": "2026-11-06T23:29:31Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T23:29:31Z",
+            "completed_at": "2026-11-06T23:29:33Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T23:29:33Z",
+            "completed_at": "2026-11-06T23:29:37Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T23:29:37Z",
+            "completed_at": "2026-11-06T23:30:08Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T23:30:08Z",
+            "completed_at": "2026-11-06T23:32:17Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T23:32:17Z",
+            "completed_at": "2026-11-06T23:36:55Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T23:36:55Z",
+            "completed_at": "2026-11-06T23:37:08Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T23:37:08Z",
+            "completed_at": "2026-11-06T23:37:08Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T23:37:08Z",
+            "completed_at": "2026-11-06T23:37:09Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T23:37:09Z",
+            "completed_at": "2026-11-06T23:37:12Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T23:37:12Z",
+            "completed_at": "2026-11-06T23:37:13Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-06T23:37:13Z",
+            "completed_at": "2026-11-06T23:37:41Z"
+          }
+        ],
+        "logSHA256": "a0ec270f9e6f955e32abb1267f46dca7e9c4e36212d51250580572ae8667fb0a",
+        "checkoutCommits": [
+          "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      },
+      {
+        "id": 128216207159,
+        "name": "Release performance (rendered)",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004091,
+        "started_at": "2026-11-06T23:29:22Z",
+        "completed_at": "2026-11-06T23:48:34Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T23:29:23Z",
+            "completed_at": "2026-11-06T23:29:24Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T23:29:24Z",
+            "completed_at": "2026-11-06T23:29:29Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T23:29:29Z",
+            "completed_at": "2026-11-06T23:29:31Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T23:29:31Z",
+            "completed_at": "2026-11-06T23:29:41Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T23:29:41Z",
+            "completed_at": "2026-11-06T23:30:22Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T23:30:22Z",
+            "completed_at": "2026-11-06T23:32:03Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T23:32:03Z",
+            "completed_at": "2026-11-06T23:48:02Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T23:48:02Z",
+            "completed_at": "2026-11-06T23:48:10Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T23:48:10Z",
+            "completed_at": "2026-11-06T23:48:10Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T23:48:10Z",
+            "completed_at": "2026-11-06T23:48:15Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T23:48:15Z",
+            "completed_at": "2026-11-06T23:48:18Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T23:48:18Z",
+            "completed_at": "2026-11-06T23:48:18Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-06T23:48:18Z",
+            "completed_at": "2026-11-06T23:48:33Z"
+          }
+        ],
+        "logSHA256": "929b5120c1ca5d79a6d70b50df1c1b7d22d9ce43bcb7d1d2c57785730d47f6eb",
+        "checkoutCommits": [
+          "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      },
+      {
+        "id": 128216207641,
+        "name": "Release performance (scroll)",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004092,
+        "started_at": "2026-11-06T23:51:55Z",
+        "completed_at": "2026-11-07T00:03:12Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T23:51:55Z",
+            "completed_at": "2026-11-06T23:51:56Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T23:51:56Z",
+            "completed_at": "2026-11-06T23:52:02Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T23:52:02Z",
+            "completed_at": "2026-11-06T23:52:06Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T23:52:06Z",
+            "completed_at": "2026-11-06T23:52:10Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T23:52:10Z",
+            "completed_at": "2026-11-06T23:52:25Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T23:52:25Z",
+            "completed_at": "2026-11-06T23:55:05Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T23:55:05Z",
+            "completed_at": "2026-11-07T00:02:25Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-07T00:02:25Z",
+            "completed_at": "2026-11-07T00:02:32Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-07T00:02:32Z",
+            "completed_at": "2026-11-07T00:02:42Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-07T00:02:42Z",
+            "completed_at": "2026-11-07T00:02:44Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-07T00:02:44Z",
+            "completed_at": "2026-11-07T00:02:47Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-07T00:02:47Z",
+            "completed_at": "2026-11-07T00:02:49Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-07T00:02:49Z",
+            "completed_at": "2026-11-07T00:03:10Z"
+          }
+        ],
+        "logSHA256": "a69b0c541f0d0665931f55aadcd1e808eb2388504c406368de842bccc1a68d18",
+        "checkoutCommits": [
+          "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      }
+    ],
+    "cases": {
+      "launch": {
+        "jobID": 128216207075,
+        "conclusion": "success",
+        "runnerID": 1000004090,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:32:17Z",
+          "completed_at": "2026-11-06T23:36:55Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T23:37:08Z",
+          "completed_at": "2026-11-06T23:37:09Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "launch",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 106.624
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 18.872
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 0.798
+            }
+          ]
+        },
+        "setupReceiptSHA256": "ffb5fc44278278bddc27a689ccb8e490a07fa1a4047207f0c444d44ab29186ae",
+        "stageOrderVerified": true
+      },
+      "rendered": {
+        "jobID": 128216207159,
+        "conclusion": "success",
+        "runnerID": 1000004091,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:32:03Z",
+          "completed_at": "2026-11-06T23:48:02Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T23:48:10Z",
+          "completed_at": "2026-11-06T23:48:15Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "rendered",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 91.728
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 5.317
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 0.887
+            },
+            {
+              "stage": "seed-pasteboard",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 2.28
+            }
+          ]
+        },
+        "setupReceiptSHA256": "6d92a9aa867ffa06fdd48526eeaaa1c114aab8e959bb02daa8c015838e2c5805",
+        "stageOrderVerified": true
+      },
+      "scroll": {
+        "jobID": 128216207641,
+        "conclusion": "success",
+        "runnerID": 1000004092,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:55:05Z",
+          "completed_at": "2026-11-07T00:02:25Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-07T00:02:42Z",
+          "completed_at": "2026-11-07T00:02:44Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "scroll",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 83.446
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 72.278
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 0.241
+            },
+            {
+              "stage": "seed-pasteboard",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 2.406
+            }
+          ]
+        },
+        "setupReceiptSHA256": "8411c62452773c3226cb163b0074861a4d7c7fbb886a9c57d705a8028ffe1c70",
+        "stageOrderVerified": true
+      }
+    },
+    "allAvailableCheckoutLogsExpected": true,
+    "scope": "Explicit setup stages and baseline-enforcement evidence remain separate from native/measurement/persistence gates. Missing or interrupted evidence is not a pass."
+  },
+  "nativeExecution": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "attempt": 1,
+    "results": {
+      "iphone-performance-launch-1": {
+        "artifact": "iphone-performance-launch-1",
+        "summarySHA256": "6d5d0bd5d63c6ecb8fe8c58e80b7d6a49ab34d4a1bf4ff6acb1bfc4aa5f3b5e3",
+        "rawLogSHA256": "92c16e79173f2cf61525fb809bc5b955f7b592da34594bbddd9bd836058dedc3",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+            "startLine": 18,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (72.178 seconds).",
+            "endLine": 71,
+            "durationSeconds": 72.178
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      },
+      "iphone-performance-rendered-1": {
+        "artifact": "iphone-performance-rendered-1",
+        "summarySHA256": "c45e64c37821b338d31fef2f8943b3113d7aeede420a73a9f7f9f8eca1432bf1",
+        "rawLogSHA256": "7cf481367c7b38e10b20deb01985d62ed13e709760be3f8744c9dd5bc4548891",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+            "startLine": 19,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (537.762 seconds).",
+            "endLine": 1426,
+            "durationSeconds": 537.762
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      },
+      "iphone-performance-scroll-1": {
+        "artifact": "iphone-performance-scroll-1",
+        "summarySHA256": "5117f5302902c0161cd43e8341ab38f9b76f93f018ce3da0f841af191eab140a",
+        "rawLogSHA256": "91edf3eb96280eae057af1c4672873dc4a6f257736827a9cb121f94d4668192d",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+            "startLine": 18,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (330.538 seconds).",
+            "endLine": 534,
+            "durationSeconds": 330.538
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      }
+    },
+    "expectedResultGroups": 3,
+    "scope": "Exact runtime and raw-log lifecycle from preserved original artifacts; strict warning verification recorded separately. Model test execution order is recorded, not required to equal the selector-file order.",
+    "complete": true,
+    "allReportedExpected": true,
+    "allReportedLifecyclesPassed": true
+  },
+  "performance": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "runID": 42309808686,
+    "cases": {
+      "launch": {
+        "attempt": 1,
+        "artifactID": 13550060825,
+        "sha256": "e9b3f29f0cbe84302334e2d3f15ca1d16fb34f7fd05718282eed22be62c8d152",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "passed",
+        "independentSidecarNotAcceptance": true,
+        "failures": [],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "passed",
+        "sidecarSHA256": "fa91d0246bb1d5678a26ce41b628086236f805e911a232dbe91326b909afd720",
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "complete",
+        "metricIdentifiers": [
+          "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+        ],
+        "comparisons": {
+          "responsiveLaunchMedianSeconds": {
+            "measured": 4.359679125,
+            "maximum": 5.5,
+            "passed": true
+          }
+        },
+        "calibrationSHA256": "04675b8820505159b7846fc95ecac9d39bf516bb6a72681dbe790cbb80d7a540",
+        "simulatorHitches": null,
+        "rawLogSHA256": "92c16e79173f2cf61525fb809bc5b955f7b592da34594bbddd9bd836058dedc3",
+        "originalGatesPassed": true,
+        "acceptancePassed": false,
+        "diagnosticOnly": true
+      },
+      "rendered": {
+        "attempt": 1,
+        "artifactID": 13549384177,
+        "sha256": "a7e24d093b1d518d7239ea76282d309656596483fb1c46daf9f7c673de6c723b",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "passed",
+        "independentSidecarNotAcceptance": true,
+        "failures": [],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "passed",
+        "sidecarSHA256": "538ce0db5473df7ae0fdc1c813dc8a619a1e9aa463c1a61250de1f7375c1a04d",
+        "hostedPickupStructuralStatus": "passed",
+        "hostedPickupReadback": {
+          "sqliteQuickCheck": "ok",
+          "revision": 22,
+          "payloadSHA256": "febc842de881e8fd63a04be8853c34fdfabfcced919098c8c30ed1a728898891",
+          "lineCount": 500,
+          "contributionCount": 500,
+          "importCount": 1,
+          "source": "paste",
+          "checkedCount": 20,
+          "checkedRowIDs": [
+            "10377e3b-9d21-406e-a026-ce37a6b97808",
+            "1231be91-d347-4541-8539-178d1fc2232c",
+            "13a50972-bcbc-41ce-bf8d-cd2059d8c6ef",
+            "3a0969bc-d441-45c2-9f73-3464aa4b12bd",
+            "3d874199-7a01-41da-a1a5-8ce4b4df42df",
+            "412def8b-e833-4549-968c-dbba83ee2407",
+            "6dece95c-69f1-4715-9d4f-98952b0c61e1",
+            "76d5c586-d756-4d55-9d3c-03e8194ce445",
+            "7a94ee58-960d-464b-92a0-ebfd6dc7de16",
+            "8132ae5b-219a-40c4-909c-806ab1ed0a4d",
+            "88b62f70-49aa-43a0-a9ea-9943b8b32631",
+            "9cc0b0d2-6696-40e6-86e7-1a22217d4932",
+            "a1a57a30-0a12-40be-a78d-6670d519c8e9",
+            "b8e56510-2e5f-4e20-bc27-834568c61914",
+            "ca223c3e-2501-4e9b-a6f4-01496216db3a",
+            "e8da9c86-a5e7-4b71-a9fc-6ad5bef8aed5",
+            "e938c0bd-bbc4-418b-9d57-c32f7564f632",
+            "f050fa86-4852-42a2-936c-758ce24a028d",
+            "f3c03eca-617d-4676-976c-dec95b4ec655",
+            "f3d2c9e3-e4a7-49ab-9701-c7cbc6ca8a14"
+          ]
+        },
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "complete",
+        "comparisons": {
+          "searchP95Milliseconds": {
+            "measured": 3081.904874999964,
+            "maximum": 4750,
+            "passed": true
+          },
+          "checkP95Milliseconds": {
+            "measured": 2320.8815000000413,
+            "maximum": 3750,
+            "passed": true
+          }
+        },
+        "calibrationSHA256": "7985da3668951aa14e418b8860e0960351076717dbd3097c95d0cf8a8ae1dcfb",
+        "simulatorHitches": null,
+        "rawLogSHA256": "7cf481367c7b38e10b20deb01985d62ed13e709760be3f8744c9dd5bc4548891",
+        "originalGatesPassed": true,
+        "acceptancePassed": false,
+        "diagnosticOnly": true
+      },
+      "scroll": {
+        "attempt": 1,
+        "artifactID": 13550343334,
+        "sha256": "34334fae1dc28b647a2fa0abce09bbe4912db52cba79f730c18aa28cc015a81d",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "passed",
+        "independentSidecarNotAcceptance": true,
+        "failures": [],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "passed",
+        "sidecarSHA256": "d46128113450831af9e5f525e89927a55759e35777c39a57fe10d6ef9cbe7a1f",
+        "hostedPickupStructuralStatus": "passed",
+        "hostedPickupReadback": {
+          "sqliteQuickCheck": "ok",
+          "revision": 2,
+          "payloadSHA256": "f6ad78d3f180012823a850f7d7ae769c1be80ff7ab7ad45f8deb360f240ca026",
+          "lineCount": 500,
+          "contributionCount": 500,
+          "importCount": 1,
+          "source": "paste",
+          "checkedCount": 0,
+          "checkedRowIDs": []
+        },
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "complete",
+        "metricIdentifiers": [
+          "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+          "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+          "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+          "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+        ],
+        "comparisons": {
+          "scrollMedianSeconds": {
+            "measured": 2.581787917,
+            "maximum": 3.25,
+            "passed": true
+          },
+          "absoluteMemoryMedianKilobytes": {
+            "measured": 116727.808,
+            "maximum": 150000,
+            "passed": true
+          },
+          "peakMemoryMedianKilobytes": {
+            "measured": 117022.72,
+            "maximum": 155000,
+            "passed": true
+          },
+          "maximumPeakMemoryKilobytes": {
+            "measured": 117366.784,
+            "maximum": 160000,
+            "passed": true
+          }
+        },
+        "calibrationSHA256": "f5c0aafd3d2a051d2695644e9bb53b63498588c827ff3d0cfcfb624354073e85",
+        "simulatorHitches": {
+          "status": "unavailable",
+          "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+        },
+        "rawLogSHA256": "91edf3eb96280eae057af1c4672873dc4a6f257736827a9cb121f94d4668192d",
+        "originalGatesPassed": true,
+        "acceptancePassed": false,
+        "diagnosticOnly": true
+      }
+    },
+    "limits": [
+      "Simulator evidence only. Hosted SQLite readback is verified from retained independent sidecar/report fields, not a second local raw database read. Structural sidecar success never substitutes for missing metrics or baseline acceptance."
+    ]
+  },
+  "timing": {
+    "runCreatedAt": "2026-11-06T23:08:18Z",
+    "terminalAPIUpdatedAt": "2026-11-07T00:03:13Z",
+    "wallToTerminalAPIUpdateSeconds": 3295.0,
+    "jobs": [
+      {
+        "jobID": 128208158538,
+        "name": "Build optimized iPhone test products",
+        "reportedJobStartedAt": "2026-11-06T23:18:36Z",
+        "reportedJobCompletedAt": "2026-11-06T23:29:19Z",
+        "firstStepStartedAt": "2026-11-06T23:18:37Z",
+        "lastStepCompletedAt": "2026-11-06T23:29:18Z",
+        "runnerStepSpanSeconds": 641.0,
+        "runCreationToFirstStepSeconds": 619.0
+      },
+      {
+        "jobID": 128216207075,
+        "name": "Release performance (launch)",
+        "reportedJobStartedAt": "2026-11-06T23:29:23Z",
+        "reportedJobCompletedAt": "2026-11-06T23:37:42Z",
+        "firstStepStartedAt": "2026-11-06T23:29:24Z",
+        "lastStepCompletedAt": "2026-11-06T23:37:41Z",
+        "runnerStepSpanSeconds": 497.0,
+        "runCreationToFirstStepSeconds": 1266.0
+      },
+      {
+        "jobID": 128216207159,
+        "name": "Release performance (rendered)",
+        "reportedJobStartedAt": "2026-11-06T23:29:22Z",
+        "reportedJobCompletedAt": "2026-11-06T23:48:34Z",
+        "firstStepStartedAt": "2026-11-06T23:29:23Z",
+        "lastStepCompletedAt": "2026-11-06T23:48:33Z",
+        "runnerStepSpanSeconds": 1150.0,
+        "runCreationToFirstStepSeconds": 1265.0
+      },
+      {
+        "jobID": 128216207641,
+        "name": "Release performance (scroll)",
+        "reportedJobStartedAt": "2026-11-06T23:51:55Z",
+        "reportedJobCompletedAt": "2026-11-07T00:03:12Z",
+        "firstStepStartedAt": "2026-11-06T23:51:55Z",
+        "lastStepCompletedAt": "2026-11-07T00:03:10Z",
+        "runnerStepSpanSeconds": 675.0,
+        "runCreationToFirstStepSeconds": 2617.0
+      }
+    ],
+    "scope": "Runner spans use first/last steps; job started_at is not execution time. Dependency/admission/provider wait remains combined unless retained snapshots prove boundaries."
+  },
+  "collectorErrors": [],
+  "allOriginalGateChecksPassed": true,
+  "releaseAcceptance": false,
+  "diagnosticOnly": true,
+  "scope": [
+    "Setup receipts, native execution, metrics, saved-pickup structural readback and approved-baseline outcomes are separate gates.",
+    "Hosted SQLite report fields and exact attachment identities are verified; no raw app-ledger database downloaded.",
+    "All xcresulttool inspection used working copies, with original ZIPs and extracted members rehashed.",
+    "Earlier original804 setup failure and earlier missing-scroll-series failures remain preserved; setup success alone does not resolve a missing metric.",
+    "No retry, dispatch, source/Git edit or native app/test execution by collector."
+  ],
+  "frozenAt": "2026-11-07T00:05:52.369583+00:00",
+  "scrollMetricSQLiteReadback": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "artifactID": 13550343334,
+    "sourceSQLite": "iphone-performance-scroll-1/Performance.xcresult/database.sqlite3",
+    "sourceSQLiteSHA256": "1c6af40c91fd934148bd8b535b859a79b5a9f6f11e2ceb1f3501fa6a7a28691d",
+    "copy": "metric-sqlite-inspection/database.sqlite3",
+    "openedReadOnly": true,
+    "quickCheck": "ok",
+    "rows": [
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "displayName": "Memory Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "98.304,-212.992,131.072,344.064,-49.152",
+        "testCaseRun_fk": 1,
+        "samples": [
+          98.304,
+          -212.992,
+          131.072,
+          344.064,
+          -49.152
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      },
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "displayName": "Absolute Memory Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "116727.808,116678.656,116580.352,116940.8,117006.336",
+        "testCaseRun_fk": 1,
+        "samples": [
+          116727.808,
+          116678.656,
+          116580.352,
+          116940.8,
+          117006.336
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      },
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "displayName": "Memory Peak Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "116940.8,117202.944,116760.576,117022.72,117366.784",
+        "testCaseRun_fk": 1,
+        "samples": [
+          116940.8,
+          117202.944,
+          116760.576,
+          117022.72,
+          117366.784
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      },
+      {
+        "identifier": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+        "displayName": "Duration (Scroll_DraggingAndDeceleration)",
+        "unitOfMeasurement": "s",
+        "measurements": "2.5504891670000003,2.583890375,2.566587583,2.581787917,2.5986351250000004",
+        "testCaseRun_fk": 1,
+        "samples": [
+          2.5504891670000003,
+          2.583890375,
+          2.566587583,
+          2.581787917,
+          2.5986351250000004
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      }
+    ],
+    "requiredScrollDurationPresent": true,
+    "jsonExactSampleEquality": true,
+    "interpretation": "Independent read-only copy of original XCTest result metadata, not app-ledger data. Current presence or absence does not rewrite historical failures or establish their cause."
+  },
+  "scrollSignpostComparison": {
+    "diagnosticOnly": true,
+    "releaseAcceptance": false,
+    "previousChronologyPath": "/Users/palatis/Room in the Cart/.build/ScrollSignpostChronologyReview20261106/chronology.json",
+    "previousChronologySHA256": "80a0e1ea7df10ee6c7cab2dd0e1d439e4545ac31fd63e7e00273dcb27fde4c3e",
+    "currentReceiptProofSHA256": "90165f28d3c31e1600cb4076a3aa73cae1951a16b9d7ffec2260636414ffb395",
+    "runs": [
+      {
+        "candidate": "f117",
+        "requiredDurationSeriesPresent": true,
+        "instrumentedBoundaries": false,
+        "windows": [
+          {
+            "invocation": 0,
+            "postSwipeActivityGapSeconds": 2.639,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 1,
+            "postSwipeActivityGapSeconds": 1.235,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 2,
+            "postSwipeActivityGapSeconds": 1.153,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 3,
+            "postSwipeActivityGapSeconds": 1.155,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 4,
+            "postSwipeActivityGapSeconds": 1.158,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 5,
+            "postSwipeActivityGapSeconds": 1.407,
+            "eventCount": 2,
+            "pairCount": 1
+          }
+        ]
+      },
+      {
+        "candidate": "807",
+        "requiredDurationSeriesPresent": false,
+        "instrumentedBoundaries": false,
+        "windows": [
+          {
+            "invocation": 0,
+            "postSwipeActivityGapSeconds": 16.908,
+            "eventCount": 1,
+            "pairCount": 0
+          },
+          {
+            "invocation": 1,
+            "postSwipeActivityGapSeconds": 1.126,
+            "eventCount": 1,
+            "pairCount": 0
+          },
+          {
+            "invocation": 2,
+            "postSwipeActivityGapSeconds": 1.141,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 3,
+            "postSwipeActivityGapSeconds": 1.135,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 4,
+            "postSwipeActivityGapSeconds": 1.3,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 5,
+            "postSwipeActivityGapSeconds": 1.172,
+            "eventCount": 2,
+            "pairCount": 1
+          }
+        ]
+      },
+      {
+        "candidate": "775961d",
+        "requiredDurationSeriesPresent": true,
+        "instrumentedBoundaries": true,
+        "windows": [
+          {
+            "invocation": 0,
+            "postSwipeActivityGapSeconds": 3.5859999656677246,
+            "stopCallSeconds": 3.586425166666686,
+            "startCallSeconds": 0.0009696666667196041,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 1,
+            "postSwipeActivityGapSeconds": 1.2269999980926514,
+            "stopCallSeconds": 1.2261681666667528,
+            "startCallSeconds": 0.0003743750000921864,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 2,
+            "postSwipeActivityGapSeconds": 1.1710000038146973,
+            "stopCallSeconds": 1.1681489166667234,
+            "startCallSeconds": 0.00025379166663697106,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 3,
+            "postSwipeActivityGapSeconds": 1.1500000953674316,
+            "stopCallSeconds": 1.1488281666667035,
+            "startCallSeconds": 0.0003967500000499058,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 4,
+            "postSwipeActivityGapSeconds": 1.1440000534057617,
+            "stopCallSeconds": 1.1431525416667228,
+            "startCallSeconds": 0.00020612499997696432,
+            "eventCount": 2,
+            "pairCount": 1
+          },
+          {
+            "invocation": 5,
+            "postSwipeActivityGapSeconds": 1.128000020980835,
+            "stopCallSeconds": 1.1271401666666634,
+            "startCallSeconds": 0.0002640416666963574,
+            "eventCount": 2,
+            "pairCount": 1
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Previous runs have activity windows only; no retroactive measurement-call attribution.",
+      "The instrumented passing run is nonreproduction, not a fix or proof of causality.",
+      "Signpost pairs do not substitute for the required XCTest duration series."
+    ]
+  },
+  "measurementBoundaryDiagnostic": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "runID": 42309808686,
+    "diagnosticOnly": true,
+    "releaseAcceptance": false,
+    "status": "verified diagnostic receipts",
+    "limits": [
+      "Timestamp reads and buffering perturb timing. Public-call brackets are not internal XCTest collection boundaries.",
+      "Endpoint capture is bounded and cannot prove XCTest consumption or complete OS emission.",
+      "UTC anchors permit approximate correlation only; endpoint log precision and possible clock drift/jumps remain uncertain.",
+      "Observed first invocation is expected warm-up only after checking six-invocation shape; no sample is discarded or substituted."
+    ],
+    "inputs": {
+      "iphone-performance-scroll-1/attachments/manifest.json": "409d5d59a021ff64c1f85446b40b0e42e21f3e4a1aa731a4fb9f5c8ccc8578fe",
+      "iphone-performance-scroll-1/scroll-signpost-diagnostic.json": "982e9f7b44412ee0768e62d0801abaef463f9763f5d35d03b2826abffb601f4c",
+      "iphone-performance-scroll-1/attachments/869A5578-3502-409E-9FB5-78FB0B3C37B5.json": "6e9a80961ed2e566330b4010834a70d865ebc29c5847684346b80ff18d2f342e",
+      "metric-sqlite-inspection/database.sqlite3": "1c6af40c91fd934148bd8b535b859a79b5a9f6f11e2ceb1f3501fa6a7a28691d"
+    },
+    "signpostSummary": {
+      "schemaVersion": 2,
+      "diagnosticOnly": true,
+      "captureStatus": "ok",
+      "activityStatus": "ok",
+      "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.582
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.551
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.567
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.581
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.599
+            }
+          ]
+        }
+      ],
+      "endpointEvidence": {
+        "diagnosticOnly": true,
+        "maximumRetainedEvents": 128,
+        "marginSeconds": 5.0,
+        "timestampBasis": "seconds from first enclosing swipe activity start; not measurement boundaries",
+        "status": "retained",
+        "originUnixUTC": 1794009694.757,
+        "scopeStartOffsetSeconds": -6.185,
+        "scopeEndOffsetSeconds": 48.47,
+        "scopedEventCount": 24,
+        "retainedEventCount": 24,
+        "omittedEventCount": 0,
+        "ordering": "captured log order; tokens preserve equality, not unique gesture identity",
+        "windows": [
+          {
+            "invocationIndex": 0,
+            "swipeStartOffsetSeconds": 0.0,
+            "synthesisStartOffsetSeconds": 0.163,
+            "followingActivityStartOffsetSeconds": 6.459
+          },
+          {
+            "invocationIndex": 1,
+            "swipeStartOffsetSeconds": 9.892,
+            "synthesisStartOffsetSeconds": 10.134,
+            "followingActivityStartOffsetSeconds": 14.062
+          },
+          {
+            "invocationIndex": 2,
+            "swipeStartOffsetSeconds": 16.939,
+            "synthesisStartOffsetSeconds": 17.116,
+            "followingActivityStartOffsetSeconds": 21.019
+          },
+          {
+            "invocationIndex": 3,
+            "swipeStartOffsetSeconds": 24.77,
+            "synthesisStartOffsetSeconds": 24.973,
+            "followingActivityStartOffsetSeconds": 28.874
+          },
+          {
+            "invocationIndex": 4,
+            "swipeStartOffsetSeconds": 32.471,
+            "synthesisStartOffsetSeconds": 32.713,
+            "followingActivityStartOffsetSeconds": 36.6
+          },
+          {
+            "invocationIndex": 5,
+            "swipeStartOffsetSeconds": 39.444,
+            "synthesisStartOffsetSeconds": 39.639,
+            "followingActivityStartOffsetSeconds": 43.47
+          }
+        ],
+        "events": [
+          {
+            "offsetSeconds": -0.848,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": -0.831,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 0.287,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              0
+            ]
+          },
+          {
+            "offsetSeconds": 2.869,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              0
+            ]
+          },
+          {
+            "offsetSeconds": 7.452,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 8.452,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 10.269,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              1
+            ]
+          },
+          {
+            "offsetSeconds": 12.82,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              1
+            ]
+          },
+          {
+            "offsetSeconds": 14.986,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 15.97,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 17.252,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              2
+            ]
+          },
+          {
+            "offsetSeconds": 19.836,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              2
+            ]
+          },
+          {
+            "offsetSeconds": 21.688,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 22.669,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 25.152,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              3
+            ]
+          },
+          {
+            "offsetSeconds": 27.719,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              3
+            ]
+          },
+          {
+            "offsetSeconds": 29.719,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 30.702,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 32.871,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              4
+            ]
+          },
+          {
+            "offsetSeconds": 35.452,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              4
+            ]
+          },
+          {
+            "offsetSeconds": 37.138,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 38.12,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": []
+          },
+          {
+            "offsetSeconds": 39.737,
+            "kind": "begin",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              5
+            ]
+          },
+          {
+            "offsetSeconds": 42.336,
+            "kind": "end",
+            "processToken": "process-1",
+            "signpostToken": "signpost-1",
+            "windowIndices": [
+              5
+            ]
+          }
+        ]
+      },
+      "parsedEventCount": 102,
+      "candidateLineCount": 102,
+      "unparsedCandidateCount": 0,
+      "timeZoneOfLog": "UTC",
+      "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+      "matchedProcessCount": 1,
+      "status": "captured"
+    },
+    "boundaryAttachmentManifestEntry": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "deviceName": "iPhone 17",
+      "exportedFileName": "869A5578-3502-409E-9FB5-78FB0B3C37B5.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "scroll-measurement-boundaries_0_7201D0A2-FB36-415A-9999-591C311D29A7.json",
+      "timestamp": 1794009739.682
+    },
+    "boundaryReceipt": {
+      "boundaries": [
+        {
+          "afterGesture": 656.1546835,
+          "afterStartMeasuring": 653.2739555,
+          "afterStopMeasuring": 659.7411087500001,
+          "beforeGesture": 653.273955625,
+          "beforeStartMeasuring": 653.2729858333333,
+          "beforeStopMeasuring": 656.1546835833334,
+          "invocationIndex": 0
+        },
+        {
+          "afterGesture": 666.1177864583334,
+          "afterStartMeasuring": 663.1466535416668,
+          "afterStopMeasuring": 667.3439547916668,
+          "beforeGesture": 663.1466538333334,
+          "beforeStartMeasuring": 663.1462791666667,
+          "beforeStopMeasuring": 666.117786625,
+          "invocationIndex": 1
+        },
+        {
+          "afterGesture": 673.1313240833334,
+          "afterStartMeasuring": 670.2149798333334,
+          "afterStopMeasuring": 674.2994731666668,
+          "beforeGesture": 670.2149799166667,
+          "beforeStartMeasuring": 670.2147260416667,
+          "beforeStopMeasuring": 673.13132425,
+          "invocationIndex": 2
+        },
+        {
+          "afterGesture": 681.0063529583334,
+          "afterStartMeasuring": 678.0428859166667,
+          "afterStopMeasuring": 682.1551812083334,
+          "beforeGesture": 678.0428860000001,
+          "beforeStartMeasuring": 678.0424891666667,
+          "beforeStopMeasuring": 681.0063530416667,
+          "invocationIndex": 3
+        },
+        {
+          "afterGesture": 688.7385101250001,
+          "afterStartMeasuring": 685.736671,
+          "afterStopMeasuring": 689.8816627916667,
+          "beforeGesture": 685.7366710833334,
+          "beforeStartMeasuring": 685.736464875,
+          "beforeStopMeasuring": 688.73851025,
+          "invocationIndex": 4
+        },
+        {
+          "afterGesture": 695.6243686666667,
+          "afterStartMeasuring": 692.7191915416668,
+          "afterStopMeasuring": 696.7515089583334,
+          "beforeGesture": 692.7191916666667,
+          "beforeStartMeasuring": 692.7189275000001,
+          "beforeStopMeasuring": 695.6243687916667,
+          "invocationIndex": 5
+        }
+      ],
+      "clock": "ProcessInfo.systemUptime seconds; UTC anchors are approximate",
+      "diagnosticOnly": true,
+      "expectedInvocationCount": 6,
+      "finalClockAnchor": {
+        "unixUTC": 1794009739.669841,
+        "uptimeAfter": 698.1946479166667,
+        "uptimeBefore": 698.1946458333334
+      },
+      "initialClockAnchor": {
+        "unixUTC": 1794009693.567533,
+        "uptimeAfter": 652.09234025,
+        "uptimeBefore": 652.0923314166668
+      },
+      "invocationMapping": "Zero-based observed order. First is expected warm-up only when six invocations complete; no sample is discarded here.",
+      "limits": "Clock reads and buffering perturb timing. Calls are bracketed, not XCTest internal collection boundaries. No duration-series substitution or acceptance claim.",
+      "observedInvocationCount": 6,
+      "schemaVersion": 1
+    },
+    "clockCorrelation": {
+      "anchors": [
+        {
+          "name": "initialClockAnchor",
+          "bracketWidthSeconds": 8.833333254187892e-06,
+          "utcMinusUptimeLower": 1794009041.4751928,
+          "utcMinusUptimeUpper": 1794009041.4752016
+        },
+        {
+          "name": "finalClockAnchor",
+          "bracketWidthSeconds": 2.083333242808294e-06,
+          "utcMinusUptimeLower": 1794009041.475193,
+          "utcMinusUptimeUpper": 1794009041.4751952
+        }
+      ],
+      "offsetMidpointChangeSeconds": -3.337860107421875e-06,
+      "limits": "Intervals bracket each anchor only, not arbitrary intermediate wall-clock jumps. Initial-midpoint UTC estimates below are approximate, not guaranteed bounds."
+    },
+    "sixInvocationShapeVerified": true,
+    "invocations": [
+      {
+        "invocationIndex": 0,
+        "expectedRole": "warm-up",
+        "startCallSeconds": 0.0009696666667196041,
+        "gestureCallSeconds": 2.880727875000048,
+        "stopCallSeconds": 3.586425166666686,
+        "recordedSwipeActivitySeconds": 2.873000144958496,
+        "postSwipeActivityGapSeconds": 3.5859999656677246,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009694.7481833,
+          "afterStartMeasuring": 1794009694.749153,
+          "beforeGesture": 1794009694.749153,
+          "afterGesture": 1794009697.629881,
+          "beforeStopMeasuring": 1794009697.629881,
+          "afterStopMeasuring": 1794009701.216306
+        },
+        "swipeActivityStartUnixUTC": 1794009694.757,
+        "swipeActivityFinishUnixUTC": 1794009697.63,
+        "followingActivityStartUnixUTC": 1794009701.216,
+        "signpostWindowSummary": {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.582
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 294.847012,
+            "beforeStopCalledMilliseconds": 2585.880995
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2876.847029,
+            "beforeStopCalledMilliseconds": 3.880978
+          }
+        ]
+      },
+      {
+        "invocationIndex": 1,
+        "expectedRole": "measured swipe 1",
+        "startCallSeconds": 0.0003743750000921864,
+        "gestureCallSeconds": 2.9711326249999956,
+        "stopCallSeconds": 1.2261681666667528,
+        "recordedSwipeActivitySeconds": 2.943000078201294,
+        "postSwipeActivityGapSeconds": 1.2269999980926514,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009704.6214764,
+          "afterStartMeasuring": 1794009704.621851,
+          "beforeGesture": 1794009704.6218512,
+          "afterGesture": 1794009707.5929837,
+          "beforeStopMeasuring": 1794009707.592984,
+          "afterStopMeasuring": 1794009708.819152
+        },
+        "swipeActivityStartUnixUTC": 1794009704.649,
+        "swipeActivityFinishUnixUTC": 1794009707.592,
+        "followingActivityStartUnixUTC": 1794009708.819,
+        "signpostWindowSummary": {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.551
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 404.149055,
+            "beforeStopCalledMilliseconds": 2566.983938
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2955.148935,
+            "beforeStopCalledMilliseconds": 15.984058
+          }
+        ]
+      },
+      {
+        "invocationIndex": 2,
+        "expectedRole": "measured swipe 2",
+        "startCallSeconds": 0.00025379166663697106,
+        "gestureCallSeconds": 2.916344166666704,
+        "stopCallSeconds": 1.1681489166667234,
+        "recordedSwipeActivitySeconds": 2.9089999198913574,
+        "postSwipeActivityGapSeconds": 1.1710000038146973,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009711.6899233,
+          "afterStartMeasuring": 1794009711.6901772,
+          "beforeGesture": 1794009711.6901772,
+          "afterGesture": 1794009714.6065214,
+          "beforeStopMeasuring": 1794009714.6065216,
+          "afterStopMeasuring": 1794009715.7746706
+        },
+        "swipeActivityStartUnixUTC": 1794009711.696,
+        "swipeActivityFinishUnixUTC": 1794009714.605,
+        "followingActivityStartUnixUTC": 1794009715.776,
+        "signpostWindowSummary": {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 318.822861,
+            "beforeStopCalledMilliseconds": 2597.521544
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2902.822733,
+            "beforeStopCalledMilliseconds": 13.521671
+          }
+        ]
+      },
+      {
+        "invocationIndex": 3,
+        "expectedRole": "measured swipe 3",
+        "startCallSeconds": 0.0003967500000499058,
+        "gestureCallSeconds": 2.963466958333356,
+        "stopCallSeconds": 1.1488281666667035,
+        "recordedSwipeActivitySeconds": 2.9539999961853027,
+        "postSwipeActivityGapSeconds": 1.1500000953674316,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009719.5176864,
+          "afterStartMeasuring": 1794009719.5180833,
+          "beforeGesture": 1794009719.5180833,
+          "afterGesture": 1794009722.4815502,
+          "beforeStopMeasuring": 1794009722.4815505,
+          "afterStopMeasuring": 1794009723.6303785
+        },
+        "swipeActivityStartUnixUTC": 1794009719.527,
+        "swipeActivityFinishUnixUTC": 1794009722.481,
+        "followingActivityStartUnixUTC": 1794009723.631,
+        "signpostWindowSummary": {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.567
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 390.916586,
+            "beforeStopCalledMilliseconds": 2572.550535
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2957.916737,
+            "beforeStopCalledMilliseconds": 5.550385
+          }
+        ]
+      },
+      {
+        "invocationIndex": 4,
+        "expectedRole": "measured swipe 4",
+        "startCallSeconds": 0.00020612499997696432,
+        "gestureCallSeconds": 3.001839041666699,
+        "stopCallSeconds": 1.1431525416667228,
+        "recordedSwipeActivitySeconds": 2.9850001335144043,
+        "postSwipeActivityGapSeconds": 1.1440000534057617,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009727.2116623,
+          "afterStartMeasuring": 1794009727.2118683,
+          "beforeGesture": 1794009727.2118683,
+          "afterGesture": 1794009730.2137074,
+          "beforeStopMeasuring": 1794009730.2137074,
+          "afterStopMeasuring": 1794009731.3568602
+        },
+        "swipeActivityStartUnixUTC": 1794009727.228,
+        "swipeActivityFinishUnixUTC": 1794009730.213,
+        "followingActivityStartUnixUTC": 1794009731.357,
+        "signpostWindowSummary": {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.581
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 416.131735,
+            "beforeStopCalledMilliseconds": 2585.707426
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2997.131586,
+            "beforeStopCalledMilliseconds": 4.707575
+          }
+        ]
+      },
+      {
+        "invocationIndex": 5,
+        "expectedRole": "measured swipe 5",
+        "startCallSeconds": 0.0002640416666963574,
+        "gestureCallSeconds": 2.9051769999999806,
+        "stopCallSeconds": 1.1271401666666634,
+        "recordedSwipeActivitySeconds": 2.8980000019073486,
+        "postSwipeActivityGapSeconds": 1.128000020980835,
+        "estimatedUTCUsingInitialAnchor": {
+          "beforeStartMeasuring": 1794009734.1941247,
+          "afterStartMeasuring": 1794009734.1943889,
+          "beforeGesture": 1794009734.1943889,
+          "afterGesture": 1794009737.099566,
+          "beforeStopMeasuring": 1794009737.0995662,
+          "afterStopMeasuring": 1794009738.2267063
+        },
+        "swipeActivityStartUnixUTC": 1794009734.201,
+        "swipeActivityFinishUnixUTC": 1794009737.099,
+        "followingActivityStartUnixUTC": 1794009738.227,
+        "signpostWindowSummary": {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.599
+            }
+          ]
+        },
+        "endpointAlignmentUsingInitialAnchor": [
+          {
+            "kind": "begin",
+            "afterStartReturnedMilliseconds": 299.611092,
+            "beforeStopCalledMilliseconds": 2605.566263
+          },
+          {
+            "kind": "end",
+            "afterStartReturnedMilliseconds": 2898.611069,
+            "beforeStopCalledMilliseconds": 6.566286
+          }
+        ]
+      }
+    ],
+    "endpointWindowOriginsVerifiedAgainstSQLite": true,
+    "endpointSummaryIndependentlyRecomputed": true
+  },
+  "productTransport": {
+    "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+    "runID": 42309808686,
+    "productArtifactID": 13548986938,
+    "apiDigest": "sha256:22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f",
+    "bytes": 85645487,
+    "cases": {
+      "launch": {
+        "jobID": 128216207075,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "a0ec270f9e6f955e32abb1267f46dca7e9c4e36212d51250580572ae8667fb0a",
+        "requestedArtifactIDs": [
+          "13548986938"
+        ],
+        "downloadedDigests": [
+          "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+        ],
+        "expectedMetadataListed": true
+      },
+      "rendered": {
+        "jobID": 128216207159,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "929b5120c1ca5d79a6d70b50df1c1b7d22d9ce43bcb7d1d2c57785730d47f6eb",
+        "requestedArtifactIDs": [
+          "13548986938"
+        ],
+        "downloadedDigests": [
+          "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+        ],
+        "expectedMetadataListed": true
+      },
+      "scroll": {
+        "jobID": 128216207641,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "a69b0c541f0d0665931f55aadcd1e808eb2388504c406368de842bccc1a68d18",
+        "requestedArtifactIDs": [
+          "13548986938"
+        ],
+        "downloadedDigests": [
+          "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+        ],
+        "expectedMetadataListed": true
+      }
+    },
+    "scope": "Case restore logs identify the same product artifact and downloaded ZIP digest; independent archived product inventory is recorded separately.",
+    "allThreeCasesRestoredVerifiedProduct": true
+  }
+}

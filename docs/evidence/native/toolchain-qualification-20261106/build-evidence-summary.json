@@ -1,0 +1,55 @@
+{
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "runID": 42261730525,
+  "attempt": 1,
+  "artifactID": 13526139232,
+  "sha256": "5ec103d1430275659eeca1ca16e1f944dd0bf9d0435880fd7b1a30aa07a20d10",
+  "bytes": 329006,
+  "boundedZIPGuardPassed": true,
+  "failures": [],
+  "sourceManifestMatchesAll2276GitFiles": true,
+  "productManifestEntries": 440,
+  "debugInventory": {
+    "sha256": "1f5f4a17ba3865beed35b0effef1aa8800b0c27e1c7d73c9ecbda7500d9443c8",
+    "enabledCount": 652,
+    "disabledStoreKitCount": 15
+  },
+  "releaseInventory": {
+    "include": [
+      {
+        "case": "launch",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance"
+      },
+      {
+        "case": "rendered",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup"
+      },
+      {
+        "case": "scroll",
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+      }
+    ]
+  },
+  "releaseInventoryScope": "Hosted binary-symbol inventory result from unchanged planner, independently compared with exact expected three methods; product binary not downloaded.",
+  "cleanupVerified": true,
+  "independentEvidencePassed": true,
+  "releaseAcceptance": false,
+  "environment": {
+    "macOS": "26.6.2",
+    "macOSBuild": "25G83",
+    "imageVersion": "20261026.0455.2",
+    "Xcode": "26.4.1",
+    "XcodeBuild": "17E202",
+    "device": "iPhone 17",
+    "architecture": "arm64",
+    "iOS": "26.4.1",
+    "iOSBuild": "23E254a",
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-4"
+  },
+  "limits": [
+    "Native case results are still pending.",
+    "Frozen product bytes are metadata-only in independent collection; hosted source/product checks passed.",
+    "Cleanup commands and hosted absence check passed; retained raw post-delete inventory stdout is truncated.",
+    "New environment has no approved performance baseline; this is not release acceptance."
+  ]
+}

@@ -130,8 +130,8 @@ private struct PortionDraft: Identifiable {
 
 struct LedgerMealEditor: View {
     @ObservedObject var model: LedgerModel
-    let template: MealTemplate?
-    let chooseNow: Bool
+    @State private var context: LedgerMealEditContext
+    private var chooseNow: Bool { context.chooseNow }
     @Environment(\.dismiss) private var dismiss
     @State private var title: String
     @State private var servings: String
@@ -143,10 +143,11 @@ struct LedgerMealEditor: View {
     @State private var ingredients: [IngredientDraft]
     @State private var portions: [PortionDraft]
     @State private var validation: String?
-    @State private var reviewed: MealTemplate?
+    @State private var reviewToSave: LedgerMealSaveReview?
     @FocusState private var inputFocus: String?
     init(model: LedgerModel, template: MealTemplate?, chooseNow: Bool, servingsUnknown: Bool = false) {
-        self.model = model; self.template = template; self.chooseNow = chooseNow
+        self.model = model
+        _context = State(initialValue: model.mealEditContext(template: template, chooseNow: chooseNow))
         _title = State(initialValue: template?.title ?? "")
         _servings = State(initialValue: servingsUnknown ? "" : template.map { ledgerAmountInput($0.servings) } ?? "")
         _notes = State(initialValue: template?.notes ?? "")
@@ -159,7 +160,8 @@ struct LedgerMealEditor: View {
     }
     var body: some View {
         Form {
-            if let reviewed {
+            if let reviewToSave {
+                let reviewed = reviewToSave.candidate
                 Section(ledgerText("Review dinner")) {
                     Text(reviewed.title).font(.headline)
                     Text(ledgerFormat("Servings: %@", amountText(reviewed.servings)))
@@ -170,16 +172,18 @@ struct LedgerMealEditor: View {
                         }
                     }
                     Text(ledgerText(chooseNow ? "Choosing creates one undated dinner and its grocery needs. You can link them within existing list quantities afterward." : "Saving a usual dinner does not add groceries. Choosing it for a pickup creates a separate copy."))
-                    Button(ledgerText(chooseNow ? "Choose for this pickup" : "Save usual dinner")) { save(reviewed) }
+                    Button(ledgerText(chooseNow ? "Choose for this pickup" : "Save usual dinner")) {
+                        Task { if await model.saveReviewedMeal(reviewToSave) { dismiss() } }
+                    }
                         .buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                         .accessibilityIdentifier("ledgerSaveDinner")
-                    Button(ledgerText("Keep editing")) { self.reviewed = nil }.disabled(model.saving || model.hasPendingSave)
+                    Button(ledgerText("Keep editing")) { self.reviewToSave = nil }.disabled(model.saving || model.hasPendingSave)
                 }
             } else {
                 Section(ledgerText("Dinner")) {
                     TextField(ledgerText("Dinner title"), text: $title, axis: .vertical).focused($inputFocus, equals: "title")
                         .accessibilityIdentifier("ledgerDinnerTitle")
-                    TextField(ledgerText("Servings"), text: $servings).keyboardType(.decimalPad).focused($inputFocus, equals: "servings")
+                    TextField(ledgerText("Servings"), text: $servings).keyboardType(.numbersAndPunctuation).focused($inputFocus, equals: "servings")
                         .accessibilityIdentifier("ledgerDinnerServings")
                     TextField(ledgerText("Source URL, optional"), text: $source).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .focused($inputFocus, equals: "source")
@@ -187,15 +191,16 @@ struct LedgerMealEditor: View {
                     TextField(ledgerText("Hard exclusions, separated by commas"), text: $exclusions, axis: .vertical).focused($inputFocus, equals: "exclusions")
                 }.disabled(model.saving || model.hasPendingSave)
                 Section(ledgerText("Ingredients")) {
-                    ForEach($ingredients) { $ingredient in
+                    ForEach(ingredients) { ingredient in
+                        let fields = dinnerDraftBinding(ingredient, in: $ingredients)
                         VStack(alignment: .leading, spacing: 10) {
-                            TextField(ledgerText("Ingredient name"), text: $ingredient.name, axis: .vertical)
+                            TextField(ledgerText("Ingredient name"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
-                            LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                            LedgerQuantityFields(amount: fields.amount, unit: fields.unit,
                                                  amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
-                            TextField(ledgerText("Ingredient notes"), text: $ingredient.notes, axis: .vertical)
+                            TextField(ledgerText("Ingredient notes"), text: fields.notes, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).notes")
-                            TextField(ledgerText("Ingredient exclusions, separated by commas"), text: $ingredient.exclusions, axis: .vertical)
+                            TextField(ledgerText("Ingredient exclusions, separated by commas"), text: fields.exclusions, axis: .vertical)
                                 .focused($inputFocus, equals: "ingredient.\(ingredient.id).exclusions")
                             Button(ledgerText("Remove ingredient"), role: .destructive) { ingredients.removeAll { $0.id == ingredient.id } }
                         }.padding(.vertical, 6)
@@ -203,13 +208,14 @@ struct LedgerMealEditor: View {
                     Button(ledgerText("Add ingredient")) { ingredients.append(IngredientDraft()) }
                 }.disabled(model.saving || model.hasPendingSave)
                 Section(ledgerText("Named portions")) {
-                    ForEach($portions) { $portion in
+                    ForEach(portions) { portion in
+                        let fields = dinnerDraftBinding(portion, in: $portions)
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField(ledgerText("Who or what this is for"), text: $portion.name, axis: .vertical)
+                            TextField(ledgerText("Who or what this is for"), text: fields.name, axis: .vertical)
                                 .focused($inputFocus, equals: "portion.\(portion.id).name")
-                            TextField(ledgerText("Portions"), text: $portion.amount).keyboardType(.decimalPad)
+                            TextField(ledgerText("Portions"), text: fields.amount).keyboardType(.numbersAndPunctuation)
                                 .focused($inputFocus, equals: "portion.\(portion.id).amount")
-                            Toggle(ledgerText("Protect these portions"), isOn: $portion.protected)
+                            Toggle(ledgerText("Protect these portions"), isOn: fields.protected)
                             Button(ledgerText("Remove named portion"), role: .destructive) { portions.removeAll { $0.id == portion.id } }
                         }
                     }
@@ -250,29 +256,16 @@ struct LedgerMealEditor: View {
             }
             let minutes = leadTime.isEmpty ? nil : Int(leadTime)
             if !leadTime.isEmpty && minutes == nil { throw EntryError.invalidNumber }
+            let template = context.template
             let candidate = MealTemplate(id: template?.id ?? UUID(), title: title, servings: count, ingredients: needs, notes: notes,
                                          sourceURL: source.isEmpty ? nil : source, exclusions: separated(exclusions),
                                          revision: (template?.revision ?? -1) + 1, servingGroups: groups, leadTimeMinutes: minutes,
                                          completedSteps: completed.split(separator: "\n").map(String.init))
             try candidate.validate()
-            reviewed = candidate
+            reviewToSave = LedgerMealSaveReview(context: context, candidate: candidate)
             validation = nil
             inputFocus = nil
         } catch { validation = ledgerText("Enter a title, positive servings, and valid ingredient amounts. Check that ingredients respect your exclusions.") }
-    }
-    private func save(_ candidate: MealTemplate) {
-        Task {
-            let success: Bool
-            if chooseNow, let shop = model.shop {
-                success = await model.editShop(key: "manual-meal-\(candidate.id)", shopID: shop.id) { _ = try $0.chooseMeal(candidate) }
-            } else if !chooseNow {
-                success = await model.change(key: "template-\(candidate.id)") { workspace in
-                    if let index = workspace.mealTemplates.firstIndex(where: { $0.id == candidate.id }) { workspace.mealTemplates[index] = candidate }
-                    else { workspace.mealTemplates.append(candidate) }
-                }
-            } else { success = false }
-            if success { dismiss() }
-        }
     }
 }
 

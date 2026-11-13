@@ -1,0 +1,32 @@
+{
+  "receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/runs/queue-lost/receipt.json",
+    "sha256": "4c0633c66a286cbca5255783a8ec19723a48c374c1b37973d30d025b4003ecc4",
+    "mode": "exact-byte-copy"
+  },
+  "helper-provenance-manifest.json": {
+    "source": ".build/SafariQualificationNov08/proposal/manifest.json",
+    "sha256": "d36e5e55b1b7c0f951331f2efdf8015aefeb30a743420395d459e306bf6f8e20",
+    "mode": "exact-byte-copy"
+  },
+  "probe.js": {
+    "source": ".build/SafariQualificationNov08/proposal/probe.js",
+    "sha256": "aba06331ecf63d3191a0abce9722e9dc5496406125df4d172019776dd2359918",
+    "mode": "exact-byte-copy"
+  },
+  "observation.mjs": {
+    "source": ".build/SafariQualificationNov08/proposal/observation.mjs",
+    "sha256": "9895ac940211242d8ee357fe072a9fdca6b343729c0de3d033b0117b422c19a3",
+    "mode": "exact-byte-copy"
+  },
+  "verify-case.mjs": {
+    "source": ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "sha256": "180b6258f761fcdefefe316e7b19889b6c655e6c918d6cbbf0a303b1ea7ac26c",
+    "mode": "exact-byte-copy"
+  },
+  "verify-pin.mjs": {
+    "source": ".build/SafariQualificationNov08/proposal/verify-pin.mjs",
+    "sha256": "ce831e1967e495cb85953eecf3dbf54596c6ea2dc81b0b2e1de62109ab9e73de",
+    "mode": "exact-byte-copy"
+  }
+}

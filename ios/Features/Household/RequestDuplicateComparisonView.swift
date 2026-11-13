@@ -37,11 +37,12 @@ struct RequestDuplicateComparisonSection: View {
                     Text(requestDuplicateText("No matching name among the loaded requests yet. Other requests have not been checked."))
                         .foregroundStyle(.secondary)
                 }
+                Text(requestDuplicateText("Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome."))
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("household.duplicates.separateOutcomes")
                 ForEach(group.requests) { request in
                     RequestDuplicateComparisonRow(request: request, isSelected: request.id == requestID)
                 }
-                Text(requestDuplicateText("Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome."))
-                    .font(.footnote).foregroundStyle(.secondary)
                 if model.nextCursor != nil {
                     Text(requestDuplicateText("Only the loaded requests are shown. Check more requests to inspect the remaining pages."))
                         .font(.footnote).foregroundStyle(.secondary)

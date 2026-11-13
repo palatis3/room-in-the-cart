@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "B7C06557-2E53-4BAF-A963-A5F9866351C4",
+        "deviceName" : "RITC Scroll Witness Compatibility 20261106",
+        "exportedFileName" : "4999183A-C377-4749-B9AF-8EF5B890A504.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "scroll-report-window-witness_0_6A98ED09-98B4-4D48-B94D-1880C362BBAA.json",
+        "timestamp" : 1794018128.415
+      }
+    ],
+    "testIdentifier" : "ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+  }
+]

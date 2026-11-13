@@ -1,10 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if ! command -v node >/dev/null 2>&1 && [ -d .tools/node-v22.14.0-darwin-arm64/bin ]; then
-  export PATH="$PWD/.tools/node-v22.14.0-darwin-arm64/bin:$PATH"
+node_version="$(cat .node-version)"
+node_bin="$PWD/.tools/node-v${node_version}-darwin-arm64/bin"
+if [ -x "$node_bin/node" ]; then
+  export PATH="$node_bin:$PATH"
+fi
+if ! command -v node >/dev/null 2>&1 || [ "$(node --version)" != "v$node_version" ]; then
+  echo "Install Node $node_version from .node-version before running these checks." >&2
+  exit 1
 fi
 python3 scripts/generate_theme.py --check
+python3 scripts/test_theme_contrast.py
 python3 scripts/check_localization.py
 python3 scripts/test_check_localization.py
 python3 scripts/test_app_configuration.py
@@ -25,6 +32,6 @@ if [ "${RUN_UI_TESTS:-0}" = "1" ]; then
   result_bundle="${TEST_RESULT_BUNDLE:-.build/UITests-$(date +%Y%m%d-%H%M%S).xcresult}"
   xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
     -configuration Debug -destination "$IOS_SIMULATOR_DESTINATION" \
-    -derivedDataPath .build/DerivedData -resultBundlePath "$result_bundle" -collect-test-diagnostics never \
+    -derivedDataPath .build/DerivedData -resultBundlePath "$result_bundle" -collect-test-diagnostics on-failure \
     CODE_SIGN_IDENTITY=- test
 fi

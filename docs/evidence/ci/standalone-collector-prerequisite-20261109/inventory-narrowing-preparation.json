@@ -1,0 +1,41 @@
+{
+  "baseCommit": "759ee5ab80099b0ff02e259c614acfae882a4ee4",
+  "changedFiles": {
+    "scripts/app_scroll_observation/contract.json": {
+      "sha256": "3b195d91e0cd58ce4f44bf885d7cf82ed9ef1f838e1fc7c7fd30c3860dae4c60",
+      "bytes": 8036,
+      "mode": 420
+    },
+    "scripts/simulator_signpost_control/run.py": {
+      "sha256": "922ba68a34b621e20034b6b64ef326874213ddfedf12ed09ca6cf6c381481960",
+      "bytes": 20428,
+      "mode": 420
+    },
+    "scripts/simulator_signpost_control/runner.py": {
+      "sha256": "84afe10702f45e8f828872a60627517de5d0a098577fbcc9e4c8fea528f2d72c",
+      "bytes": 11135,
+      "mode": 420
+    },
+    "scripts/test_simulator_signpost_control.py": {
+      "sha256": "4f2ff9ad61195b5c334b53fa5c9b41b012c118162ec30419bd75d7e5905fa68f",
+      "bytes": 39642,
+      "mode": 420
+    }
+  },
+  "focusedControls": 75,
+  "exitCode": 0,
+  "controlLogSHA256": "e98d43572d921179efcffdb9e1a70eb7b43a844130bf8005a4c4fb9193be275a",
+  "evidenceReportSHA256": "acf2ae5ac0b6a7c77cb42c397e7ceb09d6844073dc3d0eaebc799bb5d106ffd1",
+  "patchSHA256": "c963e0e0a486636fe09d6e66d90c1230d06cc6dd04bc1acf220575e0caa4a23e",
+  "sourceManifestSHA256": "31522266d8916a941643601d77c33dd9fb712c20ec63f2cae8066fb429e6c19e",
+  "originalEvidenceUnchanged": true,
+  "toolHashesUnchanged": true,
+  "workflowUnchanged": true,
+  "collectorLimitsUnchanged": true,
+  "nativeExecuted": false,
+  "hostedDispatched": false,
+  "candidateQualified": false,
+  "releaseAcceptance": false,
+  "scope": "Post-boot-only inventory narrowing; both fresh queries share unchanged30s; empirical effect unverified.",
+  "completeCommittedPreflight": "Root pending"
+}

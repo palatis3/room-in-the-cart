@@ -1,0 +1,161 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071959058,
+  "cases": {
+    "scroll": {
+      "artifactID": 13440945610,
+      "sha256": "773f9971db7a34b33be062b8149b02c28e054293598140e24ff8e41d394401fe",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.583011792,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 113909.632,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 114155.392,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 114335.616,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "4172410afbac149dc922482a32c86d6fb35876d64dbd360e391018bf93ed8278",
+      "calibrationSHA256": "25daeef14d5e6d1df78c87e251303d27097ec6eb6c6bc10c8dfc300e626f964f",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "9594977eeb6ad93becb1b7c7c482d5804d2c32dca6cafa4497d00d573fdaa93c",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "attempt": 1
+    },
+    "launch": {
+      "artifactID": 13439988683,
+      "sha256": "a689a0390a7411197b5b0ebffab85a2b9c228c9b8e653bcabf71a90c63c852c4",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.107931709,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "4bebbeff121d20965e4eb1894065b1890317b55eebd3f4cb6e9b27c292418076",
+      "calibrationSHA256": "173de78317a49b2fa02b60c401b616c41b25318b33fae66896f13a0199bfeb0f",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null,
+      "attempt": 1
+    },
+    "rendered": {
+      "attempt": 2,
+      "artifactID": 13444964651,
+      "sha256": "c8994f2964d20a1248dafd8bd55e36103a3fc3218dfd1c017c70cce72787d3f0",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 3253.924208333274,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2445.121249999943,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "9a03087140036c758d93059720217e1bbc94905c53d151a9ea3e6e060daacd90",
+      "calibrationSHA256": "92fef91302cf26d1932e147a76242071129f001a3bdd24c7f0144ca4b8f2fec6",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "2a658f0c92e747becdefc2be908b0653302a9c6ba97942c4a471737e82fbda81",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "0645bf02-7910-4dfc-9775-1a759c949e21",
+          "31919828-8717-48c7-8838-4a34a0c38113",
+          "384ecdf1-e60d-426e-999b-91eca080337d",
+          "4489110b-4570-49c2-9362-8e3e4e2a11ef",
+          "4d3c40e0-c1a2-4697-8266-6186566777d9",
+          "55e7e434-d5bc-4caa-84c6-6e9d6454e8fd",
+          "56f58723-6ebe-4201-ae25-a9b4dff37eaa",
+          "574867a4-1ef8-4b66-b9ef-73bdd4e770ef",
+          "5a4cf4e8-d2eb-4b39-849e-6fef923c2101",
+          "63fc2897-921e-41da-a40c-37f836fffc5b",
+          "6ca4e4fb-2a21-4ea1-8568-5d43aa49ac22",
+          "7147751f-4daf-4583-84f3-4b25658175c2",
+          "82684623-4ff9-4c04-a417-d8e37d858966",
+          "9e6b2257-fce7-49b4-bad8-81e53709955f",
+          "ab1b2eff-93e9-43e2-b232-7dc2d56f579a",
+          "bfc13283-1f4c-4031-8810-fe7e066869c5",
+          "cf1f428b-e921-4a41-984b-72eaeea3e42d",
+          "d338df9d-ce20-40e7-9815-fd483b08ec3b",
+          "d4868a93-837e-491c-9656-d8eae7964ed4",
+          "d699858c-2d37-4096-948f-e36ab08815ab"
+        ]
+      },
+      "simulatorHitches": null
+    }
+  },
+  "limits": [
+    "Simulator evidence only; physical frame-smoothness acceptance remains separate.",
+    "Pickup SQLite was checked on the hosted runner. Its database is not retained, so local replay verifies metrics/attachments and reported baseline comparison, not a second database read."
+  ],
+  "renderedAttempt1": {
+    "jobID": 127409351392,
+    "status": "cancelled before runner acquisition",
+    "nativeTestsExecuted": 0,
+    "stepsExecuted": 0,
+    "runnerAssigned": false,
+    "annotations": [
+      {
+        "level": "failure",
+        "message": "The job was not acquired by Runner of type hosted even after multiple attempts"
+      },
+      {
+        "level": "notice",
+        "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+      },
+      {
+        "level": "notice",
+        "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+      },
+      {
+        "level": "notice",
+        "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+      }
+    ],
+    "retry": "One targeted retry attempt2 executed the previously unassigned rendered case and passed; original nonexecution retained."
+  },
+  "finalWorkflowConclusion": "success"
+}

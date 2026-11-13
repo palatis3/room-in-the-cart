@@ -6,7 +6,7 @@ import UIKit
 @testable import RoomInTheCart
 
 @MainActor final class RecordsMediaTests: XCTestCase {
-    private struct LedgerDocument: Codable { let formatVersion = 1; let workspace: LedgerWorkspace }
+    private struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
     private func location() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
@@ -16,7 +16,7 @@ import UIKit
     private func package() throws -> (ArchiveRecord, SourceMediaRecord) {
         let workspaceID = UUID()
         var shop = ShoppingLedger(title: "Tuesday")
-        let preview = shop.stageImport(text: "2 rice", source: .typed)
+        let preview = try shop.stageImport(text: "2 rice", source: .typed)
         _ = try shop.commitImport(preview, decisions: [preview.lines[0].id: .addNew], at: Date(timeIntervalSince1970: 100))
         let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
         let bytes = try RecordsNativeCodec.canonical(LedgerDocument(workspace: workspace))
@@ -30,8 +30,67 @@ import UIKit
         return (record, source)
     }
     private func model(_ record: ArchiveRecord, registry: RecoveryRegistry) -> RecordsToolsModel {
-        RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
     }
+    func testBackupRequiresEverySelectedRevisionAndTheReviewedAttachment() async throws {
+        let (first, _) = try package()
+        let (second, _) = try package()
+        let root = try location()
+        let registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
+        var records = [first, second]
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await tools.refresh()
+        tools.selectAll()
+        tools.generateRecoveryKey()
+
+        // The other document can still be read, but that alone is not the requested backup.
+        records[1].revision = "edited"
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertNil(tools.beginFileSave())
+        XCTAssertEqual(tools.selectedIDs, [RecordsToolsModel.selectionID(first)])
+
+        let attachment = try XCTUnwrap(first.media?.first)
+        let mediaID = RecordsToolsModel.mediaSelectionID(attachment, record: first)
+        tools.selectAll()
+        tools.selectedMediaIDs.insert(mediaID)
+        // A replacement with the same capture ID must receive its own disclosure.
+        records[0].media = [ArchiveMediaAttachment(id: attachment.id, kind: attachment.kind, data: Data([0]))]
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertFalse(tools.selectedMediaIDs.contains(mediaID))
+
+        records[0].media = first.media
+        await tools.refresh()
+        tools.selectedMediaIDs.insert(mediaID)
+        records[0].media = nil
+        await tools.prepareExport(.encryptedRecovery)
+        XCTAssertEqual(tools.error, .exportSelectionChanged)
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertFalse(tools.selectedMediaIDs.contains(mediaID))
+        // After reviewing the updated choices, both healthy records can be backed up.
+        await tools.prepareExport(.encryptedRecovery)
+        let data = try XCTUnwrap(tools.preparedDocument).data
+        let result = try EncryptedArchive.open(data, key: tools.recoveryKey)
+        XCTAssertEqual(Set(result.payload.records.map(\.revision)), Set(records.map(\.revision)))
+        XCTAssertNil(result.mediaManifest)
+
+        records[0].media = first.media
+        await tools.refresh()
+        tools.selectedMediaIDs.insert(mediaID)
+        await tools.prepareExport(.encryptedRecovery)
+        let pendingSave = try XCTUnwrap(tools.beginFileSave())
+        records[0].media = nil
+        await tools.refresh()
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertNil(tools.status)
+        await tools.finishFileSave(pendingSave, result: .success(()))
+        XCTAssertNil(tools.status)
+    }
+
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {
         let (record, source) = try package(), root = try location()
         let sourceRegistry = try RecoveryRegistry(url: root.appendingPathComponent("source.json"))
@@ -127,7 +186,7 @@ import UIKit
     func testLiveScopeChangeDuringValidationClearsPrivateExportAndStagedImport() async throws {
         let (record, _) = try package(), root = try location(), registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
         var generation = UUID(), invalidate = false
-        let tools = RecordsToolsModel(registry: registry, snapshot: { [record] }, validateNativePayload: { value in
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) }, validateNativePayload: { value in
             try RecordsNativeCodec.validate(value)
             if invalidate { generation = UUID() }
         }, openRecovered: { _ in }, beginAuthorization: {
@@ -166,13 +225,12 @@ import UIKit
         let file = folder.appendingPathComponent(source.id.uuidString.lowercased() + ".json"), corrupt = Data("corrupt optional evidence".utf8)
         try corrupt.write(to: file)
         let registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
-        var warnings: [RecordsUnavailableRecord] = []
         let tools = RecordsToolsModel(registry: registry, snapshot: {
             let listing = try await store.archiveListing(workspaceID: source.target.workspaceID, authorize: { true })
-            warnings = (0..<listing.unavailableCount).map { RecordsUnavailableRecord(origin: "media", recordID: String($0), title: "Source reference", reason: .unreadableStorage) }
+            let warnings = (0..<listing.unavailableCount).map { RecordsUnavailableRecord(origin: "media", recordID: String($0), title: "Source reference", reason: .unreadableStorage) }
             var native = base; native.media = nil
-            return [try RecordsMediaCodec.attaching(listing.records, to: native)]
-        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in }, unavailableRecords: { warnings })
+            return .init(records: [try RecordsMediaCodec.attaching(listing.records, to: native)], unavailable: warnings)
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await tools.refresh(); tools.selectAll(); tools.generateRecoveryKey()
         XCTAssertEqual(tools.currentRecords.count, 1); XCTAssertEqual(tools.unavailableRecords.count, 1)
         await tools.prepareExport(.encryptedRecovery)
@@ -248,7 +306,7 @@ import UIKit
             XCTAssertEqual(projection.parentRevision, original.revision)
             XCTAssertNoThrow(try RecordsNativeCodec.validate(projection))
         }
-        let exporter = RecordsToolsModel(registry: registry, snapshot: { projections },
+        let exporter = RecordsToolsModel(registry: registry, snapshot: { .init(records: projections) },
             validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
         await exporter.refresh(); exporter.selectAll(); exporter.generateRecoveryKey()
         // A prior selection cannot cause the discarded photo to travel with a new owner.
@@ -269,11 +327,13 @@ import UIKit
         let copyID = try XCTUnwrap(committed.records.first?.id)
         let tools = model(record, registry: registry)
         await tools.refresh(); XCTAssertNil(tools.actionOutcomeID)
-        await tools.deleteRecovered(.copy(copyID))
+        let reviewed = try XCTUnwrap(tools.reviewRecoveredDeletion(.copy(copyID), title: "Recovered copy"))
+        await tools.confirmDeletion(reviewed)
         let deletedOutcome = try XCTUnwrap(tools.actionOutcomeID)
         XCTAssertNil(tools.error); XCTAssertNotNil(tools.status)
-        await tools.deleteRecovered(.copy(copyID))
-        XCTAssertNotNil(tools.error); XCTAssertNil(tools.actionOutcomeID)
+        await tools.confirmDeletion(reviewed)
+        XCTAssertEqual(tools.error, .deletionSelectionChanged)
+        XCTAssertNotNil(tools.actionOutcomeID); XCTAssertNotEqual(tools.actionOutcomeID, deletedOutcome)
         await tools.undoRecoveredDeletion()
         XCTAssertNotNil(tools.actionOutcomeID); XCTAssertNotEqual(tools.actionOutcomeID, deletedOutcome)
         XCTAssertNil(tools.error)

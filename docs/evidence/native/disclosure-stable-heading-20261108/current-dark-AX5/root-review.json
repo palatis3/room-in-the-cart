@@ -1,0 +1,14 @@
+{
+  "status": "scoped pass reviewed",
+  "sourceManifestSHA256": "ffd68bf9a00de16e7be6c7d2121b2502da3b134626b5b3810cd65820434fd763",
+  "reviewedAtUTC": "2026-11-08T20:23:29.115546+00:00",
+  "screenshotsReviewed": 5,
+  "textAttachmentsReviewed": 8,
+  "observations": [
+    "All four C/E/E/C controls retain338x187.333point geometry, meaningful name and correct state.",
+    "At maximum accessibility text, heading stays three readable lines in both states instead of changing from two to three.",
+    "Expanded ordinary-facts capture shows full Family rice dinner name, date and4portions together after actual scrolling.",
+    "Full journey preserves the protected lunches, amounts, disabledApply and zero writes.",
+    "Scrolled captures verify selected targets, not simultaneous visibility of every form row. No physical/audit closure."
+  ]
+}

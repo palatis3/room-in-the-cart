@@ -79,6 +79,14 @@ enum HistoryReviewedWrite: Equatable {
         guard let id, ownedShops.contains(where: { $0.shopId.lowercased() == id.lowercased() }) else { return "" }
         return id
     }
+    var canEditSelectedPeriod: Bool {
+        guard canEdit, let period = selectedPeriod else { return false }
+        return ownsSources(of: period)
+    }
+    private func ownsSources(of period: HistorySavedBudgetPeriod) -> Bool {
+        let owned = Set(ownedShops.map { $0.shopId.lowercased() })
+        return period.period.shopIds.allSatisfy { owned.contains($0.lowercased()) }
+    }
     var canApply: Bool { canEdit && reviewed != nil && approved }
     var filteredObservations: [HistoryPriceObservation] { authorized ? observations.filter(filter.matches) : [] }
     func cancelReview() { reviewed = nil; approved = false }
@@ -108,7 +116,14 @@ enum HistoryReviewedWrite: Equatable {
             periods = page.periods; periodCursor = page.nextCursor
             storeEpoch = epoch; references = saved.observations.filter { $0.matches(current) }
             refreshReferences(); observationDraft.shopID = ownedCurrentShop(current.currentShopID)
-            if let candidate { try await authorize(candidate) }
+            if let candidate {
+                do { try await authorize(candidate) }
+                catch ClientError.service(let status, let code, _, _) where status == 404 && code == "unavailable" {
+                    // The write may need another pickup scope. Keep its private fields in
+                    // the store while the freshly fetched read-only records stay available.
+                    return
+                }
+            }
             guard live(start) else { return }; pending = candidate
         } catch { if live(start) { await fail(error) } }
     }
@@ -117,11 +132,19 @@ enum HistoryReviewedWrite: Equatable {
         busy = true; defer { busy = false }; let start = generation; let cursor = more ? ownedShopCursor : nil
         if !more { ownedShops = []; ownedShopCursor = nil; savedObservationIDs = []; seenShopCursors = [] }
         do {
-            let page = try await service.historyOwnedShops(cursor: cursor)
-            guard live(start) else { return }
-            try validatePage(ids: page.shops.map(\.shopId), existing: more ? ownedShops.map(\.shopId) : [], next: page.nextCursor, cursor: cursor, seen: seenShopCursors)
-            ownedShops += page.shops; ownedShopCursor = page.nextCursor; if let cursor { seenShopCursors.insert(cursor) }; refreshReferences()
+            try await fetchOwnedShops(cursor: cursor, generation: start)
         } catch { if live(start) { ownedShops = []; ownedShopCursor = nil; savedObservationIDs = []; await fail(error) } }
+    }
+    private func fetchOwnedShops(cursor: String?, generation start: UUID) async throws {
+        let page = try await service.historyOwnedShops(cursor: cursor)
+        guard live(start) else { throw ClientError.cancelled }
+        let existing = cursor == nil ? [] : ownedShops
+        if cursor == nil { seenShopCursors = [] }
+        try validatePage(ids: page.shops.map(\.shopId), existing: existing.map(\.shopId), next: page.nextCursor, cursor: cursor, seen: seenShopCursors)
+        ownedShops = existing + page.shops
+        ownedShopCursor = page.nextCursor
+        if let cursor { seenShopCursors.insert(cursor) }
+        refreshReferences()
     }
     func loadReadableShops(more: Bool = false) async {
         guard authorized, !busy, !more || readableShopCursor != nil else { return }
@@ -188,12 +211,39 @@ enum HistoryReviewedWrite: Equatable {
                 let value = try await service.savedBudgetPeriod(periodID: id)
                 guard live(start) else { return }; selectedPeriod = value
             }
+            if let selectedPeriod, !selectedPeriod.period.shopIds.isEmpty {
+                // A read grant can survive loss of shopper authority. Refresh ownership
+                // before offering an edit and include later pages for multi-shop plans.
+                ownedShops = []; ownedShopCursor = nil
+                try await fetchOwnedShops(cursor: nil, generation: start)
+                while !ownsSources(of: selectedPeriod), let cursor = ownedShopCursor {
+                    try await fetchOwnedShops(cursor: cursor, generation: start)
+                }
+            }
             notice = nil
         } catch { if live(start) { await fail(error) } }
     }
     func beginObservation() { guard canBeginObservation else { return }; observationDraft = .init(); observationDraft.shopID = ownedCurrentShop(currentShopID); selectedObservation = nil; cancelReview() }
-    func beginPeriod() { guard canEdit else { return }; periodDraft = .init(); if let id = currentShopID { periodDraft?.shopIDs = [id] }; selectedPeriod = nil; periodAnalysis = nil; cancelReview() }
-    func editSelectedPeriod() { guard canEdit, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
+    func beginPeriod() {
+        guard canEdit else { return }
+        var draft = HistoryPeriodDraft()
+        let id = ownedCurrentShop(currentShopID)
+        if !id.isEmpty { draft.shopIDs = [id] }
+        periodDraft = draft
+        selectedPeriod = nil
+        periodAnalysis = nil
+        cancelReview()
+    }
+    func canAssignPeriodShop(_ id: String) -> Bool {
+        guard canEdit, let draft = periodDraft, draft.shopIDs.count < 100,
+              !ownedCurrentShop(id).isEmpty else { return false }
+        return !draft.shopIDs.contains { $0.lowercased() == id.lowercased() }
+    }
+    func assignPeriodShop(_ id: String) {
+        guard canAssignPeriodShop(id) else { return }
+        periodDraft?.shopIDs.append(id)
+    }
+    func editSelectedPeriod() { guard canEditSelectedPeriod, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
     func reviewObservation() {
         guard canReviewObservation else { return }
         do { let value = try observationDraft.dto(); guard HistoryDate.date(value.observedAt)! <= Date().addingTimeInterval(300) else { throw HistoryDraftError.invalid }; reviewed = .observation(value); approved = false; notice = nil }
@@ -255,6 +305,16 @@ enum HistoryReviewedWrite: Equatable {
                 case .period(let intent): _ = try await service.executeBudgetPeriod(intent)
                 }
                 guard live(start) else { return }; confirmedID = value.id
+            } else {
+                // A delayed local cleanup also reveals the saved result.
+                do { try await authorize(value) }
+                catch {
+                    guard live(start) else { return }
+                    pending = nil; periodDraft = nil; selectedObservation = nil
+                    await fail(error)
+                    return
+                }
+                guard live(start) else { return }
             }
             try await store.complete(value, expectedEpoch: epoch)
             guard live(start) else { return }

@@ -1,0 +1,82 @@
+{
+  "exports": [
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-request-pack-failure_0_DB0C870B-FE37-466E-82D0-D65E8F79730B.png",
+        "payloadId": "0~NFl4J3-DXFfwrDVcez4ZUVzeaoOT-hyq_nX0f1Lnw02TFpHunjIemX18VAT5XxXQWPvjp9qAzVaBE6Qvkoolww==",
+        "timestamp": 1794142361.912,
+        "uuid": "EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24TypedFieldNov08/ios17-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24TypedFieldNov08/ios17-run/failure-review/png",
+        "--filter",
+        "S24-request-pack-failure_0_DB0C870B-FE37-466E-82D0-D65E8F79730B.png"
+      ],
+      "exitCode": 0,
+      "perFileCapBytes": 4000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "png/EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E.png",
+          "bytes": 96985,
+          "sha256": "e9a4d54ba89235ea108177aaa3ceee5823a5796474af5061e1909e8073809650"
+        },
+        {
+          "path": "png/manifest.json",
+          "bytes": 803,
+          "sha256": "ef91bea7a451eb77a4c49014962acd01c1ab50fd690d70bfc9fee5ecdbcf2a92"
+        }
+      ]
+    },
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-failure-accessibility-hierarchy_0_B8ABB9F9-9803-4597-B1DD-C01E8503F331.txt",
+        "payloadId": "0~YifHDCpVAPzx5u0zikq0_i2lIq_rpXHzNh2o4Jvktmf4sx3jlKXqAAWbmD_SWC5aQRi5_MxIOwzenX2aCIIjEA==",
+        "timestamp": 1794142362.632,
+        "uuid": "CD875378-272D-4821-B9E7-A02CA4DE9B1B"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24TypedFieldNov08/ios17-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24TypedFieldNov08/ios17-run/failure-review/txt",
+        "--filter",
+        "S24-failure-accessibility-hierarchy_0_B8ABB9F9-9803-4597-B1DD-C01E8503F331.txt"
+      ],
+      "exitCode": 0,
+      "perFileCapBytes": 4000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "txt/CD875378-272D-4821-B9E7-A02CA4DE9B1B.txt",
+          "bytes": 19796,
+          "sha256": "d6fbc93a7a21d500606852d99f04da922186ba9bcfc30764859e14bd519acb3e"
+        },
+        {
+          "path": "txt/manifest.json",
+          "bytes": 814,
+          "sha256": "a9f782439fab9c8278b9a75a0d70ec31204e2691de6bcaaa6528b61c324f4789"
+        }
+      ]
+    }
+  ],
+  "originalUnchanged": true,
+  "scope": "One exact failure PNG and hierarchy TXT; no video or full attachment export"
+}

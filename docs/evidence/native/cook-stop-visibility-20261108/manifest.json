@@ -1,0 +1,30 @@
+{
+  "interrupted-verification.json": {
+    "bytes": 558,
+    "sha256": "7c7f5a3944139a19d89f79bb7aa82021866b0a5bef79840acb6e0426a4ffffda"
+  },
+  "intentional-stop.json": {
+    "bytes": 995,
+    "sha256": "4bed2b3c99181a00c53049ed5f27d775ff34ed6e709263c7939911892b475f1a"
+  },
+  "interrupted-strict.txt": {
+    "bytes": 1987,
+    "sha256": "fca6d286cebff7a99b6747ca73563ee1a93589f1d2fea88897add18b35163533"
+  },
+  "README.md": {
+    "bytes": 1518,
+    "sha256": "8c3b289e936f5fe222eaf1c0d20ad670ec79ec88fae94120f355877c9d74f2c0"
+  },
+  "correction.patch": {
+    "bytes": 684,
+    "sha256": "0ba23534dea3a85f631752861ad431039850fe3695b20ffae48834ee7b1bcf1c"
+  },
+  "interrupted-run.json": {
+    "bytes": 2774,
+    "sha256": "5be6a1488f1f2547da66af6e3af3a6f66a9d42fe9269d804de208d246afe1820"
+  },
+  "candidate-source.json": {
+    "bytes": 104617,
+    "sha256": "6cd2a19a5153214a55ff97e57b166f415f14bd2d8bb642eadfcf0ffb643dedfe"
+  }
+}

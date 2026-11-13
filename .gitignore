@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .tools/
 .build/
+supabase/.temp/
 .swiftpm/
 DerivedData/
 *.xcuserstate

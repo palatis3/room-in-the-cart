@@ -1,0 +1,26 @@
+2026-11-08T04:14:04.5506500Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64d9f0d7b27c6c70566f318035c0156dee92b7c7:refs/remotes/pull/1/merge
+2026-11-08T04:14:10.3259170Z  * [new ref]         64d9f0d7b27c6c70566f318035c0156dee92b7c7 -> pull/1/merge
+2026-11-08T04:14:11.3629140Z HEAD is now at 64d9f0d Merge 15f216b01e41c111ec99bbd812419cec32e6a5e4 into 1a2530a7ad006b5939f87a08a1964b5fc863383e
+2026-11-08T04:14:11.4488790Z 64d9f0d7b27c6c70566f318035c0156dee92b7c7
+2026-11-08T04:17:52.6387530Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList]' started.
+2026-11-08T04:18:54.7728780Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList]' passed (62.124 seconds).
+2026-11-08T04:18:54.8178420Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence]' started.
+2026-11-08T04:23:44.1692200Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence]' passed (289.386 seconds).
+2026-11-08T04:23:44.1708760Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel]' started.
+2026-11-08T04:24:25.7192560Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel]' passed (41.570 seconds).
+2026-11-08T04:24:25.7225930Z Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' started.
+2026-11-08T04:26:26.7031710Z Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' passed (120.968 seconds).
+2026-11-08T04:26:26.7140350Z Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack]' started.
+2026-11-08T04:29:39.5249370Z Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack]' passed (192.835 seconds).
+2026-11-08T04:29:39.5291010Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testConfirmedComparisonDeletionSurvivesRestart]' started.
+2026-11-08T04:32:12.6284100Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testConfirmedComparisonDeletionSurvivesRestart]' passed (153.090 seconds).
+2026-11-08T04:32:12.6381060Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop]' started.
+2026-11-08T04:32:30.7513880Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop]' passed (18.137 seconds).
+2026-11-08T04:32:30.7575780Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' started.
+2026-11-08T04:44:30.8328730Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+2026-11-08T04:45:23.5993590Z Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+2026-11-08T04:45:24.6516720Z ** TEST EXECUTE FAILED **
+2026-11-08T04:45:32.7406560Z The XCTest test export recorded 0 runtime warning occurrences across 8 examined tests.
+2026-11-08T04:45:32.7407290Z The XCTest summary does not expose a runtime warnings field.
+2026-11-08T04:45:32.7432770Z XCTest log requires one successful result banner; found ['FAILED'].
+2026-11-08T04:45:32.8097750Z ##[error]Process completed with exit code 1.

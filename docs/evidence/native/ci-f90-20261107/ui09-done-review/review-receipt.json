@@ -1,0 +1,43 @@
+{
+  "status": "original-failure-investigated-no-justified-fix",
+  "run": 42428215935,
+  "attempt": 1,
+  "job": 128588297174,
+  "artifact": 13600243874,
+  "artifactSHA256": "8147db2595fee5d0dcf7f0aaa012f4138ae5e8c8ad22e8ba2100a8daa4191c45",
+  "nativePassed": 7,
+  "nativeSelected": 8,
+  "runtimeWarnings": 0,
+  "runnerRestarts": 1,
+  "firstMissSeconds": 165.52,
+  "firstMissImmediatelyAfter": "branch-field Done synthesized105.10/post-event wait105.43",
+  "appPID": 8951,
+  "runnerPID": 8535,
+  "firstCaseInShard": true,
+  "usableScreenshotOrVideo": false,
+  "sourceMethodsUnchanged": {
+    "testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence": true,
+    "fill": true,
+    "launch": true,
+    "restart": true,
+    "revealContent": true
+  },
+  "noSourceOrWorkflowEdits": true,
+  "noNativeRunOrSimulatorMutation": true,
+  "pristineMonitorEvidenceStillMatches": true,
+  "evidenceSHA256": {
+    "README.md": "c6b02d393ab7f66d0da6899439d3f678c9eb76116c41e9949ef07a80cab74432",
+    "artifact-receipt.json": "06e4fdc5e511aece22d09d9af52a327b3e10d0816e246ce4d1f06c32269ce844",
+    "source-manifest.json": "d0eabd3c268ddfb53638a6ee1c0069a197c0a987f5a33efc79f727d8509ad97f",
+    "source-diff.patch": "3f95445e79fc7547f87224dc0799e3951c3124bf90eb1fd6bad7bdabf1790532",
+    "unchanged-methods.json": "f3e0e21db32db4c1f7baa299e40d63a2bfb297e484e176be11a19b7501c1d519",
+    "activities.json": "7ba75bb186cdb32b899ea43260eb3904d864309607079dad32d3d8528cae0e93",
+    "wait-timeline.json": "0df7893ee62a045b8bea843954900c608901f10fcccdc1a6c845e4a39316d316",
+    "done-tap-boundaries.json": "f78164d529079d8d27cca7dacad596a70f04ed459f338bfcc6f06c2942917734",
+    "first-stall-keyboard-idle-excerpt.txt": "c82b95ae5ea5dab5c59a13c8ee044acddbcfe19e188ba9cc7b48b02d1e88455f",
+    "first-stall-runner-excerpt.txt": "b45d19a82f2c7f399a2be8f434cf2df7ae8c877ed7cd584b79fed99541e299fa",
+    "app-idle-events.txt": "336b0df70a1d930d5a45dd6038069c207ee342d67a3cdd53a0c68a93476cf415",
+    "timeout-stack-excerpt.txt": "b09371bc80cc1a1fe770d0f224d6dfc82a1406a9e1e2331c09e37bee1e32ca99",
+    "app-diagnostic-scan.json": "6d0fb8fbc158ae8100e9a4e2ee3b530deec2645fa1083312833200a598147517"
+  }
+}

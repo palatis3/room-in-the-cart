@@ -1,0 +1,97 @@
+762:     t =   245.92s Find the "Amount, optional" Any
+763:     t =   247.69s Checking `Expect predicate `value == "8"` for object "Amount, optional" TextField`
+764:     t =   247.69s     Find the "Amount, optional" TextField
+765:     t =   248.41s Find the "Amount, optional" TextField
+766:     t =   249.00s Checking existence of `"Review" Button`
+767:     t =   249.10s Find the "Review" Button
+768:     t =   249.23s Tap "Review" Button
+769:     t =   249.23s     Wait for dev.roominthecart.app.debug to idle
+770:     t =   249.24s     Find the "Review" Button
+771:     t =   249.38s     Check for interrupting elements affecting "Review" Button
+772:     t =   249.54s     Synthesize event
+773:     t =   249.85s     Wait for dev.roominthecart.app.debug to idle
+774:     t =   250.78s Checking existence of `"dinnerApply" Any`
+775:     t =   252.12s Find the Target Application 'dev.roominthecart.app.debug'
+776:     t =   252.52s Find the Target Application 'dev.roominthecart.app.debug'
+777:     t =   252.67s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 658.4) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 311.6) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+778:     t =   252.67s     Wait for dev.roominthecart.app.debug to idle
+779:     t =   252.93s     Find the Target Application 'dev.roominthecart.app.debug'
+780:     t =   253.07s     Check for interrupting elements affecting "Room in the Cart" Application
+781:     t =   253.21s     Synthesize event
+782:     t =   253.21s         Find the Target Application 'dev.roominthecart.app.debug'
+783:     t =   253.30s         Find the Target Application 'dev.roominthecart.app.debug'
+784:     t =   253.41s         Find the Target Application 'dev.roominthecart.app.debug'
+785:     t =   253.52s         Find the Target Application 'dev.roominthecart.app.debug'
+786:     t =   253.69s         Find the Target Application 'dev.roominthecart.app.debug'
+787:     t =   254.82s     Wait for dev.roominthecart.app.debug to idle
+788:     t =   255.73s Checking existence of `"dinnerApply" Any`
+789:     t =   256.54s Find the "dinnerApply" Any
+790:     t =   257.43s Tap "dinnerApply" Button
+791:     t =   257.43s     Wait for dev.roominthecart.app.debug to idle
+792:     t =   257.63s     Find the "dinnerApply" Button
+793:     t =   258.60s     Check for interrupting elements affecting "dinnerApply" Button
+794:     t =   258.86s     Synthesize event
+795:     t =   259.17s     Wait for dev.roominthecart.app.debug to idle
+796:     t =   261.84s Waiting 10.0s for "dinnerApply" Any to not exist
+797:     t =   262.87s     Checking `Expect predicate `existsNoRetry == 0` for object "dinnerApply" Any`
+798:     t =   262.87s         Checking existence of `"dinnerApply" Any`
+799:     t =   263.85s Checking existence of `"dinnerError" Any`
+800:     t =   264.94s Tap Button (First Match)
+801:     t =   264.94s     Wait for dev.roominthecart.app.debug to idle
+802:     t =   264.94s     Find the Button (First Match)
+803:     t =   265.16s     Check for interrupting elements affecting "BackButton" Button
+804:     t =   265.29s     Synthesize event
+805:     t =   265.65s     Wait for dev.roominthecart.app.debug to idle
+806:     t =   266.35s Checking existence of `StaticText (First Match)`
+807:     t =   266.72s Find the StaticText (First Match)
+808:     t =   266.99s Checking existence of `"dinnerGuests" Any`
+809:     t =   267.51s Find the "dinnerGuests" Any
+810:     t =   267.99s Tap "dinnerGuests" Button
+811:     t =   267.99s     Wait for dev.roominthecart.app.debug to idle
+812:     t =   268.00s     Find the "dinnerGuests" Button
+813:     t =   268.64s     Check for interrupting elements affecting "dinnerGuests" Button
+814:     t =   268.77s     Synthesize event
+815:     t =   269.11s     Wait for dev.roominthecart.app.debug to idle
+816:     t =   269.58s Waiting 8.0s for "Guests and protected portions" NavigationBar to exist
+817:     t =   270.67s     Checking `Expect predicate `existsNoRetry == 1` for object "Guests and protected portions" NavigationBar`
+818:     t =   270.67s         Checking existence of `"Guests and protected portions" NavigationBar`
+819:     t =   270.93s Checking existence of `"Current amount for this group" Any`
+820:     t =   272.93s Find the "Current amount for this group" Any
+821:     t =   273.97s Tap "Current amount for this group" TextField
+822:     t =   273.97s     Wait for dev.roominthecart.app.debug to idle
+823:     t =   273.98s     Find the "Current amount for this group" TextField
+824:     t =   274.64s     Check for interrupting elements affecting "Current amount for this group" TextField
+825:     t =   274.83s     Synthesize event
+826:     t =   275.29s     Wait for dev.roominthecart.app.debug to idle
+827:     t =   275.75s Find the "Current amount for this group" TextField
+828:     t =   276.69s Find the "Current amount for this group" TextField
+829:     t =   277.47s Type '' into "Current amount for this group" TextField
+830:     t =   277.47s     Wait for dev.roominthecart.app.debug to idle
+831:     t =   277.48s     Find the "Current amount for this group" TextField
+832:     t =   278.23s     Check for interrupting elements affecting "Current amount for this group" TextField
+833:     t =   278.38s     Synthesize event
+834:     t =   278.60s     Wait for dev.roominthecart.app.debug to idle
+835:     t =   278.61s Type '8' into "Current amount for this group" TextField
+836:     t =   278.61s     Wait for dev.roominthecart.app.debug to idle
+837:     t =   278.61s     Find the "Current amount for this group" TextField
+838:     t =   279.59s     Check for interrupting elements affecting "Current amount for this group" TextField
+839:     t =   279.78s     Synthesize event
+840:     t =   280.01s     Wait for dev.roominthecart.app.debug to idle
+841:     t =   280.01s Checking existence of `Button (First Match)`
+842:     t =   281.00s Checking existence of `"Current amount for this group" Any`
+843:     t =   282.28s Find the "Current amount for this group" Any
+844:     t =   285.81s Checking `Expect predicate `value == "8"` for object "Current amount for this group" TextField`
+845:     t =   285.81s     Find the "Current amount for this group" TextField
+846:     t =   290.04s     Capturing element debug description
+847: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/FreeJourneyUITests.swift:529: error: -[RoomInTheCartUITests.FreeJourneyUITests testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)") - Persisted or entered value for Current amount for this group must be 8
+848:     t =   290.98s Tear Down
+849:     t =   291.37s     Added attachment named 'Free-flow-failure'
+850:     t =   291.37s     Terminate dev.roominthecart.app.debug:17439
+851: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart]' failed (292.942 seconds).
+852: Test Suite 'FreeJourneyUITests' failed at 2026-11-07 08:09:24.746.
+853: 	 Executed 2 tests, with 1 failure (0 unexpected) in 374.569 (374.574) seconds
+854: Test Suite 'RoomInTheCartUITests' started at 2026-11-07 08:09:24.747.
+855: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testKnownComparisonSavesAndReopensWithItemOnlyLimit]' started.
+856:     t =     0.00s Start Test at 2026-11-07 08:09:24.749
+857:     t =     0.14s Set Up
+858:     t =     0.14s Open dev.roominthecart.app.debug

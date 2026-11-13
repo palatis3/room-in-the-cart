@@ -1,0 +1,70 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T18:35:37.910339+00:00",
+  "finishedAtUTC": "2026-11-08T18:47:55.016212+00:00",
+  "nativeExit": 65,
+  "sourceManifestSHA256": "3edd1ef0a08defb65ff1cc7b60882f157f4fd65702422df77cb2887a1731744d",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=D420C2CA-0E73-4213-9B96-1EB62EB061F6,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S24OtherMealsNov08/followup-r1/minimum17-run/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "on-failure",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts",
+    "test"
+  ],
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "systemVersion": {
+    "BuildID": "C789FCDA-4AAB-11EE-AE48-7EDEE72CB155",
+    "ProductBuildVersion": "21A328",
+    "ProductCopyright": "1983-2023 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "17.0"
+  },
+  "sourceUnchanged": true,
+  "device": [
+    {
+      "architecture": "arm64",
+      "deviceId": "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+      "deviceName": "RITC Cook Voice Minimum OS Nov08",
+      "modelName": "iPhone SE (3rd generation)",
+      "osBuildNumber": "21A328",
+      "osVersion": "17.0",
+      "platform": "iOS Simulator"
+    }
+  ],
+  "toolchain": {
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1"
+  },
+  "originalRunReceiptSHA256": "e2244540a80cc38a8fff057cf115fc52b50c4dedea0988e77ea7d1fb4872101b",
+  "originalResultManifestSHA256": "82493c45407b94abad5133acc1f04c6d6bab6cbfd2b5abe577c7013d130037a6",
+  "originalUnchanged": true
+}

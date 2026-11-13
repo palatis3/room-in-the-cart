@@ -137,6 +137,28 @@ final class CoreDomainTests: XCTestCase {
         XCTAssertNil(try quantity(1, unit: .count).converted(to: .gram, using: basis))
     }
 
+    func testStoredConversionLiteralsRoundTripAndMustMatchTheExactRate() throws {
+        let legacy = Data(#"{"sourceUnit":"cup","targetUnit":"gram","targetAmountPerSourceUnit":{"numerator":120,"denominator":1},"sourceNote":"Label"}"#.utf8)
+        let old = try JSONDecoder().decode(UnitBasis.self, from: legacy)
+        XCTAssertNoThrow(try old.validate())
+        let encoded = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(old)) as? [String: Any])
+        XCTAssertNil(encoded["sourceLiteral"]); XCTAssertNil(encoded["targetLiteral"])
+        func measured(_ source: String?, _ target: String?) -> UnitBasis {
+            UnitBasis(sourceUnit: old.sourceUnit, targetUnit: old.targetUnit,
+                      targetAmountPerSourceUnit: old.targetAmountPerSourceUnit, sourceNote: old.sourceNote,
+                      sourceLiteral: source, targetLiteral: target)
+        }
+        let complete = measured("⅔", "80.0")
+        let reopened = try JSONDecoder().decode(UnitBasis.self, from: JSONEncoder().encode(complete))
+        XCTAssertEqual(reopened, complete)
+        XCTAssertEqual(try quantity(2, unit: .cup).converted(to: .gram, using: reopened), try Rational(240))
+        XCTAssertNoThrow(try measured("1 1/2", "180.00").validate())
+        for invalid in [measured(nil, "80"), measured("⅔", nil), measured("⅔", "81"),
+                        measured("0", "0"), measured("-1", "120"), measured("1/0", "120"), measured("1 cup", "120")] {
+            XCTAssertThrowsError(try quantity(1, unit: .cup).converted(to: .gram, using: invalid))
+        }
+    }
+
     func testUnconvertibleConfirmedStockAndProtectedQuantityBlockCoverage() throws {
         let stock = try PackComparison.evaluate(request(need: quantity(10), stock: quantity(3, unit: .gram), yield: quantity(8)))
         XCTAssertEqual(stock.offerA.issues, [.atHomeConversionUnknown])

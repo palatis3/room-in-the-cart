@@ -1,0 +1,191 @@
+[
+  {
+    "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation",
+    "uuidCommandOutput": "UUID: C153116F-DD31-3FA9-89BB-04B47C1FA83D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation",
+      "-l",
+      "0",
+      "0x8d2288",
+      "0x8d3d14",
+      "0x8d43b8",
+      "0x8d4620"
+    ],
+    "symbols": {
+      "0x8d2288": "-[_NSThreadPerformInfo wait] (in Foundation) + 40",
+      "0x8d3d14": "__NSThread__start__ (in Foundation) + 716",
+      "0x8d43b8": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596",
+      "0x8d4620": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+    }
+  },
+  {
+    "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech",
+    "uuidCommandOutput": "UUID: 36A9A6AF-ED55-351F-9F47-2BF260E8B01B (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech",
+      "-l",
+      "0",
+      "0x26f94",
+      "0x27074",
+      "0x27154",
+      "0x276fc",
+      "0x2c844",
+      "0x2c9c0",
+      "0x334c8",
+      "0x37fa4",
+      "0x381b4",
+      "0x387e4",
+      "0x38ef8",
+      "0x390ac",
+      "0x39344"
+    ],
+    "symbols": {
+      "0x26f94": "0x00026f94 (in TextToSpeech) + 44",
+      "0x27074": "0x00027074 (in TextToSpeech) + 44",
+      "0x27154": "0x00027154 (in TextToSpeech) + 44",
+      "0x276fc": "0x000276fc (in TextToSpeech) + 48",
+      "0x2c844": "0x0002c844 (in TextToSpeech) + 300",
+      "0x2c9c0": "0x0002c9c0 (in TextToSpeech) + 60",
+      "0x334c8": "0x000334c8 (in TextToSpeech) + 116",
+      "0x37fa4": "0x00037fa4 (in TextToSpeech) + 100",
+      "0x381b4": "0x000381b4 (in TextToSpeech) + 100",
+      "0x387e4": "0x000387e4 (in TextToSpeech) + 116",
+      "0x38ef8": "0x00038ef8 (in TextToSpeech) + 116",
+      "0x390ac": "0x000390ac (in TextToSpeech) + 116",
+      "0x39344": "0x00039344 (in TextToSpeech) + 344"
+    }
+  },
+  {
+    "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib",
+    "uuidCommandOutput": "UUID: EC9ECF10-959D-3DA1-A055-6DE970159B9D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib",
+      "-l",
+      "0",
+      "0x17a8",
+      "0x10e6c",
+      "0x1131c",
+      "0x1c4b0",
+      "0x384a0"
+    ],
+    "symbols": {
+      "0x17a8": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24",
+      "0x10e6c": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40",
+      "0x1131c": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184",
+      "0x1c4b0": "_dispatch_client_callout (in libdispatch.dylib) + 12",
+      "0x384a0": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+    }
+  },
+  {
+    "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+    "uuidCommandOutput": "UUID: 4F6D050D-95EE-3A95-969C-3A98B29DF6FF (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+      "-l",
+      "0",
+      "0x8ccec",
+      "0x91c4c",
+      "0x920b0",
+      "0x92a78",
+      "0x92ed8",
+      "0x932ec",
+      "0x933a4"
+    ],
+    "symbols": {
+      "0x8ccec": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496",
+      "0x91c4c": "__CFRunLoopRun (in CoreFoundation) + 760",
+      "0x920b0": "__CFRunLoopRun (in CoreFoundation) + 1884",
+      "0x92a78": "__CFRunLoopDoSources0 (in CoreFoundation) + 220",
+      "0x92ed8": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12",
+      "0x932ec": "__CFRunLoopDoSource0 (in CoreFoundation) + 168",
+      "0x933a4": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ (in CoreFoundation) + 24"
+    }
+  },
+  {
+    "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices",
+    "uuidCommandOutput": "UUID: 4E5B0462-6170-3367-9475-4FF8B8DFE4E6 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices",
+      "-l",
+      "0",
+      "0x29bc"
+    ],
+    "symbols": {
+      "0x29bc": "GSEventRunModal (in GraphicsServices) + 116"
+    }
+  },
+  {
+    "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore",
+    "uuidCommandOutput": "UUID: 196154FF-BA04-33CD-9277-98F9AA0B7499 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore",
+      "-l",
+      "0",
+      "0x11aa574",
+      "0x11ae79c"
+    ],
+    "symbols": {
+      "0x11aa574": "-[UIApplication _run] (in UIKitCore) + 772",
+      "0x11ae79c": "UIApplicationMain (in UIKitCore) + 124"
+    }
+  },
+  {
+    "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI",
+    "uuidCommandOutput": "UUID: 719CF349-8C4A-3054-9536-23EB53648EE0 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI\n",
+    "symbolicationCommand": [
+      "/usr/bin/xcrun",
+      "atos",
+      "-arch",
+      "arm64",
+      "-o",
+      "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI",
+      "-l",
+      "0",
+      "0x54742c",
+      "0x7b9368",
+      "0x7b9620"
+    ],
+    "symbols": {
+      "0x54742c": "static App.main() (in SwiftUI) + 148",
+      "0x7b9368": "runApp<A>(_:) (in SwiftUI) + 180",
+      "0x7b9620": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+    }
+  }
+]

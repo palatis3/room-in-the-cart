@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName" : "iPhone 17",
+        "exportedFileName" : "A5F4FE31-C5C0-45E3-93B3-CC146F5972DE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared delivery failure_0_C52DDBCE-9279-4788-ABF1-2FBF22DAF6CE.png",
+        "timestamp" : 1794169248.14
+      }
+    ],
+    "testIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  }
+]

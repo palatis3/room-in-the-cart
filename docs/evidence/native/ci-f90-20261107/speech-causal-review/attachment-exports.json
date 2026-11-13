@@ -1,0 +1,107 @@
+[
+  {
+    "attachment": {
+      "rowid": 106,
+      "lifetime": "keepAlways",
+      "testIssue_fk": null,
+      "filenameOverride": "Shared delivery failure_0_96386057-6B49-4598-BDF7-51843457DE39.png",
+      "uuid": "72481017-2D90-4511-BC42-4195B3E9D3BA",
+      "activity_fk": 1929,
+      "name": "Shared delivery failure",
+      "uniformTypeIdentifier": "public.png",
+      "inActivityIdentifier": 0,
+      "xcResultKitPayloadRefId": "0~WAtgPL4o6BtL7HRd1ND4-RFWzciWLyMLUWLRhB-NRqdCjY_773pbvI1TojCcGgldWiIa13tjZclH5TqffIZwWg==",
+      "timestamp": 815796920.23,
+      "userInfo_fk": 38
+    },
+    "file": "exports/Shared delivery failure.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 322965,
+    "sha256": "31b06169d55069a4975e5901fb0a2f0d2c3046676184b213461d0f2868cff511"
+  },
+  {
+    "attachment": {
+      "rowid": 92,
+      "lifetime": "deleteOnSuccess",
+      "testIssue_fk": null,
+      "filenameOverride": "App UI hierarchy for dev.roominthecart.app_0_C32BBC3D-493A-478F-B5D7-B24D3E01C881.debug",
+      "uuid": "0C6F0534-A010-4D6C-86D1-D893CB9812A4",
+      "activity_fk": 1879,
+      "name": "App UI hierarchy for dev.roominthecart.app.debug",
+      "uniformTypeIdentifier": "public.plain-text",
+      "inActivityIdentifier": 0,
+      "xcResultKitPayloadRefId": "0~hAx4FqSjyw88dTT7JOBm2mgfk1fn05g_cEmxqtyNKMACKR2qn2DYkwgEDrweFEVlf5jL-953e5o_dfxmHYo3jw==",
+      "timestamp": 815796906.756,
+      "userInfo_fk": null
+    },
+    "file": "exports/App UI hierarchy for dev.roominthecart.app.debug.txt",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 20501,
+    "sha256": "94cf9720281469d673fdd016ff2d37a9a7c456b12130275aba7895fa04b87e72"
+  },
+  {
+    "attachment": {
+      "rowid": 89,
+      "lifetime": "deleteOnSuccess",
+      "testIssue_fk": null,
+      "filenameOverride": "Debug description for `\"delivery.cook.confirmDestination\" Switch`_0_D3FB15E0-FDB7-4C6D-8E44-3D7017CCCCE0.txt",
+      "uuid": "2315614C-D574-45F0-9ADD-0376D06BE0DA",
+      "activity_fk": 1870,
+      "name": "Debug description for `\"delivery.cook.confirmDestination\" Switch`",
+      "uniformTypeIdentifier": "public.plain-text",
+      "inActivityIdentifier": 0,
+      "xcResultKitPayloadRefId": "0~5dfFoQw8QFz4KZ7XY5CgATLKfiXnRIzQTie6bSuC5ZrAIb9O4YyuD7PlmTmxQVPJxseOD0lUZDfma8PV5zBdSw==",
+      "timestamp": 815796906.5699999,
+      "userInfo_fk": null
+    },
+    "file": "exports/Debug description for `\"delivery.cook.confirmDestination\" Switch`.txt",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 215,
+    "sha256": "de56db2048e19388cd69dab4ba5c7c77dca685f07bfca2b8a24b7905f60d39a2"
+  },
+  {
+    "attachment": {
+      "rowid": 104,
+      "lifetime": "deleteOnSuccess",
+      "testIssue_fk": null,
+      "filenameOverride": "Snapshot_0_6238A05A-B10C-4294-820A-44E72C366111",
+      "uuid": "985EC2D6-1B98-4453-A9DB-56C5729CE240",
+      "activity_fk": 1922,
+      "name": "kXCTAttachmentLegacySnapshot",
+      "uniformTypeIdentifier": "com.apple.dt.xctest.element-snapshot",
+      "inActivityIdentifier": 0,
+      "xcResultKitPayloadRefId": "0~_uXpZaMjrM48C9dqkOqYk8R9EFDzWM68mzJKChEcoAJvVkhdWPwgGhZmRGKwMP51OPKAqVsRclVxC2fT3CfaNA==",
+      "timestamp": 815796919.1689999,
+      "userInfo_fk": null
+    },
+    "file": "exports/kXCTAttachmentLegacySnapshot.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1365,
+    "sha256": "a0af470512161167ec40aca06e4e5e06bf926769664d67a491d9f1d69ee98888"
+  },
+  {
+    "attachment": {
+      "rowid": 105,
+      "lifetime": "deleteOnSuccess",
+      "testIssue_fk": null,
+      "filenameOverride": "SynthesizedEvent_1_6238A05A-B10C-4294-820A-44E72C366111",
+      "uuid": "08484D09-9F83-4C1F-8270-FF72E3A907E9",
+      "activity_fk": 1922,
+      "name": "kXCTAttachmentLegacySynthesizedEvent",
+      "uniformTypeIdentifier": "com.apple.dt.xctest.synthesized-event-record",
+      "inActivityIdentifier": 1,
+      "xcResultKitPayloadRefId": "0~oEHKcYoy51eW-yGcChCmSot-pjk33KoFMMo60-LhZm40lwcoeI-g1Jq7hwnfc-6BW-3tM7RcUr3-hOy5TZ0nhw==",
+      "timestamp": 815796919.4619999,
+      "userInfo_fk": 37
+    },
+    "file": "exports/kXCTAttachmentLegacySynthesizedEvent.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1903,
+    "sha256": "466bce3eb151ad77ddac39d19c4098d0b23b16f5fe793374261afd1a2e7df388"
+  }
+]

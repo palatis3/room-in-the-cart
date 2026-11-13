@@ -1,0 +1,32 @@
+{
+  "baseCommit": "46db47b4b370b9837675dd4eea151acf2a7ce2e2",
+  "patchSHA256": "e291d9fa995e1de25b3783a991cddef5e6426f8c215759c18a35b08eefd27252",
+  "inputsVerified": 180,
+  "newFiles": {
+    "service/src/recovery-contracts.ts": "676975ffded1b61cb719b88a637aaff06047bcbbb9eb43b1f0f743a1a3e26b87",
+    "service/src/recovery-domain.ts": "83fd4365cf051b78c6462d3ff61952186cc20dd515561376503c1a40d7601ae7",
+    "service/tests/recovery-allocation-regression.test.mjs": "ad37dd7c9c5797af8f27c375a7fe7891bdcc8f40b10d24a62590d577c9429966",
+    "service/tests/recovery-exclusion-regression.test.mjs": "77da61aef63d31a32dfccb3ecf9bfeff2e3f3ad0e3098c27234cd8e694e5550d",
+    "service/tests/recovery-fixture.mjs": "a4a83baef8c7b2c3de2cb76298bce253dbdd91b0c55ddd328bb5ec772deaed8a",
+    "service/tests/recovery-foundation.test.mjs": "6e82a5d9de633772b399a9752ed7f971028d1c0a59266aebeacd5bd57648e5af",
+    "service/tests/recovery-identity-regression.test.mjs": "1adf5d43c04e278ff6a14cc947f81258054ebfaa8315fc94aeb5dc04ef593756",
+    "service/tests/recovery-metadata-template.test.mjs": "165e96653530946ee431d2fd8dcf063f5d03f282cf7333703c1e5aeb805809be",
+    "service/tests/recovery-temporal-regression.test.mjs": "5c75010495123c0c54650ad8b58a9f5c23448f49b3129c64ef706df2d14a914e",
+    "service/tests/recovery-vector.json": "d7a21eeb0ac7682388588d63b83fac4312e6d1cc9df35f70cbfc7daf5121d817"
+  },
+  "build": {
+    "exit": 0,
+    "end": 1794044537.904969,
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "unit": {
+    "exit": 0,
+    "end": 1794044544.4117901,
+    "logSHA256": "4fe66256611117a52eece2e83b2ee619c763982f76436c4194fcb9555af31fa4"
+  },
+  "passed": 413,
+  "failed": 0,
+  "skipped": 1,
+  "skip": "Opt-in PostgreSQL durable billing/RLS/named-seats contract; no DB variables supplied",
+  "scope": "Pure recovery contracts, canonical supply/projection and preview; no server route, persistence, authorization or deployed behavior enabled."
+}

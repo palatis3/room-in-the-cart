@@ -10,7 +10,7 @@ import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {createHTTPServer} from '../dist/http.js';
 import {assertRuntimeRole,tokenHash} from '../dist/database.js';
 import {PrivacyService} from '../dist/privacy.js';
-import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
+import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 
 const runtimeURL=process.env.TEST_DATABASE_URL,adminURL=process.env.TEST_ADMIN_DATABASE_URL;
 if(!runtimeURL||!adminURL)throw new Error('Device authority tests require disposable real PostgreSQL runtime and admin URLs.');
@@ -100,6 +100,10 @@ test('actual guardian sees and revokes only verified children; revoked relations
 });
 test('current device uses separate sign out; repeated precise revocation preserves siblings, provider session, membership and shopper authority',async()=>{
   const f=await fixture(),current=f.actors.Organizer,target=await f.second('Organizer'),sibling=await f.second('Organizer');
+  const queuePath='/devices/current/request-queue';
+  const targetGrant=(await f.http(target,'PUT',queuePath,{enabled:true})).data.requestQueueGrant;
+  const siblingGrant=(await f.http(sibling,'PUT',queuePath,{enabled:true})).data.requestQueueGrant;
+  assert.ok(targetGrant&&siblingGrant);assert.notEqual(targetGrant,siblingGrant);
   const tw=await f.window(target),sw=await f.window(sibling),cookie=randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
   await admin.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at) VALUES($1,$2,$3,$4,$5,clock_timestamp()+interval \'1 hour\')',[f.h,tokenHash(cookie),target.memberId,target.deviceId,csrf]);
   const shopId=randomUUID();await admin.query("INSERT INTO ritc.shop(household_id,shop_id,shopper_id,quote) VALUES($1,$2,$3,'{}')",[f.h,shopId,current.memberId]);
@@ -107,6 +111,7 @@ test('current device uses separate sign out; repeated precise revocation preserv
   const calls=await Promise.all([f.http(current,'POST',revokedPath(target),targetBody(target)),f.http(current,'POST',revokedPath(target),targetBody(target))]);
   assert.equal(calls[0].status,200);assert.deepEqual(calls[0].data,calls[1].data);
   assert.equal((await f.http(target,'GET','/bootstrap')).status,403);
+  assert.deepEqual((await admin.query('SELECT device_id,grant_id FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rows,[{device_id:sibling.deviceId,grant_id:siblingGrant}]);
   const cookieResponse=await fetch(origin+'/v1/session',{headers:{Cookie:'ritc_session='+f.h+'.'+cookie}});assert.equal(cookieResponse.status,403);
   assert.equal((await f.http(sibling,'GET','/bootstrap')).status,200);assert.equal((await f.http(current,'GET','/bootstrap')).status,200);
   const rows=(await admin.query('SELECT window_id,revoked_at FROM ritc.replay_window WHERE household_id=$1 AND window_id=ANY($2::uuid[])',[f.h,[tw,sw]])).rows;
@@ -219,8 +224,9 @@ test('owner erasure drops only the erased member fence and restore reapplication
   await admin.query("UPDATE ritc.device SET session_id='erased' WHERE household_id=$1 AND member_id=$2",[f.h,a.memberId]);
   assert.deepEqual((await admin.query('SELECT member_id FROM ritc.device_enrollment_fence WHERE household_id=$1',[f.h])).rows.map(r=>r.member_id),[b.memberId]);
 });
-test('a legitimate separately leased privacy worker erases session fences while preserving another member fence',async()=>{
+test('a legitimate separately leased privacy worker erases session fences while preserving another member fence',async t=>{
   const f=await fixture(),a=f.actors.Contributor,b=f.actors.Helper,job=randomUUID(),lease=randomUUID();
+  t.after(()=>deferProfileOnlyDeletion(admin,job));
   for(const target of [a,b])assert.equal((await f.http('Organizer','POST',revokedPath(target),targetBody(target))).status,200);
   const choices=[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}];
   const token=await new SignJWT({session_id:a.sessionId,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(a.subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);

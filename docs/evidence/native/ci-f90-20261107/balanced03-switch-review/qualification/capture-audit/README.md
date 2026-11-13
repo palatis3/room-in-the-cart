@@ -1,0 +1,25 @@
+# Original S24 app-state trace recovered
+
+The original 225.71-second singleton passed 1/1 with zero XCTest runtime-warning occurrences. Its `native.log` contains no `S24_PACK_TRACE` lines, and `xcresulttool get log --type console` reports `No console log available`. Those observations remain preserved; neither meant the app's stdout was absent from the result bundle.
+
+`xcrun xcresulttool export diagnostics --path .build/S24TraceNov07/native.xcresult --output-path .build/S24TraceNov07/capture-audit/diagnostics` recovered the original app-specific `StandardOutputAndStandardError-dev.roominthecart.app.debug.txt`. The full export remains scratch only. That file is 173,425,249 bytes and 1,368,272 lines, SHA256 `4c5abfb6fdc8f377d864187a3d4511a1daab87c6a1d398c5ffbb786a43980d57`. No new app/simulator launch or native test was performed. A read-only get_app_container query occurred before recovery; no container files or unified-log history were needed afterward.
+
+Only 82 validated marker lines were extracted to `app-state-markers.txt` (verbatim marker text plus original source line number) and parsed into `app-state-markers.json`. All identify app PID 90958 and selector scope `-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]`. Fields are diagnostic event, monotonic uptime, process, fixed pack slot, ephemeral draft IDs and Boolean states; no text-field contents, account/household identifiers or product payload are extracted. `recovery-receipt.json` and the original bundle file manifest pin the evidence.
+
+## Observed continuity
+
+Each pack has 41 events, one stable draft ID, one setter entry and one setter return. Both first appear with matched=false. Pack A's native tap appears at 69.84 seconds in the test log; its setter-enter, setter-return and SwiftUI change appear at app stdout lines 465675–465677, all false→true. Pack B's single native tap is at 114.14 seconds; its corresponding three markers are at 812833–812835, all false→true. There is no observed draft-ID replacement or true→false transition. Both packs remain true through disappear→appear→disappear markers. All 82 marker uptimes are monotonic. `continuity.json` records the exact events.
+
+These first onAppear markers agree with the source's default matched=false; constructor initialization itself was not separately instrumented. Seventy `change` events include other draft-field changes with unchanged matched state; they do not log the fields' contents. This passing singleton demonstrates the enabled candidate trace captures actual binding and state events, not a repair for the original failure. Its execution history/toolchain differs from the original five-case prefix, and instrumentation can affect timing. The original issue remains unresolved. The original single-tap/readback assertions and full case remain unchanged.
+
+## Bounded severe-diagnostic scan
+
+`severe-diagnostic-scan.json` scans the entire exported app stdout for the repository's exact `BUG IN CLIENT OF libsqlite3.dylib:` signature, SQLITE_MISUSE/NULL-statement/corruption signatures, XCTest restart marker, uncaught-exception termination, fatal errors, EXC_BAD_ACCESS/EXC_CRASH, sanitizer and abort/segmentation-fault signatures. All six categories have zero matches. This is a bounded signature scan, not a claim that 173 MB of OS diagnostic chatter contains no warnings. The original strict XCTest warning/restart result is preserved separately.
+
+## Hosted retention and next use
+
+The existing `.github/workflows/ios-fixtures.yml` result upload runs with `always()` for non-Records fixtures, includes hidden files, and uploads the complete `.build/Tests*.xcresult` bundles with seven-day retention (lines212–226). `scripts/run_ios_test_shard.sh` uses `-collect-test-diagnostics never`; the recovered local run used that same flag. Therefore that flag does not, in this observed local toolchain, suppress app stdout inside the result bundle. The full bundle upload preserves the internal diagnostic object rather than needing a separately exported Diagnostics directory.
+
+No source, sink or workflow change is needed for this evidence path. After a hosted diagnostic run, download its original full result bundle and use `xcresulttool export diagnostics`, then extract validated scope-matching marker lines from the app-specific stdout. Require markers to be present and preserve an explicit unavailable result if that hosted toolchain omits them; this local recovery does not independently prove a future hosted toolchain's capture behavior. Do not infer trace success from a test pass or from the upload path alone.
+
+Prior keyboard diagnostics use opt-in OSLog event sinks and owned log collectors. They are unnecessary for recovering this run, and introducing them now would change the diagnostic candidate without evidence of a missing sink. Existing `DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE` source guards and opt-in fixture/scope checks remain untouched. No Release build was run or newly claimed here.

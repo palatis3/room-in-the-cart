@@ -1,0 +1,469 @@
+{
+  "source": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/fixture-dark-run/captures/png-0-1/A95ACE6C-C344-47FB-85EA-335D6162E484.png",
+  "PNG": {
+    "sRGBIntent": 0,
+    "width": 918,
+    "height": 150,
+    "bitDepth": 8,
+    "colorType": 2,
+    "channels": 3,
+    "allPixelsOpaque": true,
+    "chunkCRCsVerified": true,
+    "sha256": "0fcee3cebe90e99de9e91535366fe32b98fd1a72bda6f68d6f018ce4fe898ed3"
+  },
+  "roiExclusive": [
+    0,
+    0,
+    918,
+    150
+  ],
+  "backgroundRGB": [
+    28,
+    41,
+    35
+  ],
+  "backgroundPixels": 128061,
+  "roiPixels": 137700,
+  "foregroundMaskRule": "maximum RGB distance from dominant background >= 8",
+  "components": [
+    {
+      "boxExclusive": [
+        0,
+        0,
+        10,
+        1
+      ],
+      "pixelCount": 10,
+      "excludedReason": "crop-edge component"
+    },
+    {
+      "boxExclusive": [
+        908,
+        0,
+        918,
+        1
+      ],
+      "pixelCount": 10,
+      "excludedReason": "crop-edge component"
+    },
+    {
+      "boxExclusive": [
+        398,
+        55,
+        406,
+        63
+      ],
+      "pixelCount": 54,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        639,
+        55,
+        647,
+        63
+      ],
+      "pixelCount": 54,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        678,
+        55,
+        686,
+        63
+      ],
+      "pixelCount": 54,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        270,
+        56,
+        277,
+        94
+      ],
+      "pixelCount": 266,
+      "excludedReason": "caret-like or narrow glyph"
+    },
+    {
+      "boxExclusive": [
+        506,
+        56,
+        533,
+        95
+      ],
+      "pixelCount": 587,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        550,
+        56,
+        577,
+        95
+      ],
+      "pixelCount": 587,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        171,
+        58,
+        205,
+        94
+      ],
+      "pixelCount": 562,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        207,
+        66,
+        234,
+        104
+      ],
+      "pixelCount": 596,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        238,
+        66,
+        265,
+        104
+      ],
+      "pixelCount": 596,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        280,
+        66,
+        307,
+        104
+      ],
+      "pixelCount": 469,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        323,
+        66,
+        340,
+        94
+      ],
+      "pixelCount": 263,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        341,
+        66,
+        367,
+        95
+      ],
+      "pixelCount": 481,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        368,
+        66,
+        395,
+        94
+      ],
+      "pixelCount": 366,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        398,
+        66,
+        406,
+        94
+      ],
+      "pixelCount": 222,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        410,
+        66,
+        436,
+        95
+      ],
+      "pixelCount": 481,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        437,
+        66,
+        477,
+        94
+      ],
+      "pixelCount": 623,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        477,
+        66,
+        503,
+        95
+      ],
+      "pixelCount": 481,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        581,
+        66,
+        607,
+        95
+      ],
+      "pixelCount": 481,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        610,
+        66,
+        636,
+        95
+      ],
+      "pixelCount": 393,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        639,
+        66,
+        647,
+        94
+      ],
+      "pixelCount": 222,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        651,
+        66,
+        675,
+        95
+      ],
+      "pixelCount": 426,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        678,
+        66,
+        686,
+        94
+      ],
+      "pixelCount": 222,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        690,
+        66,
+        717,
+        95
+      ],
+      "pixelCount": 469,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        721,
+        66,
+        746,
+        94
+      ],
+      "pixelCount": 449,
+      "excludedReason": null
+    },
+    {
+      "boxExclusive": [
+        0,
+        149,
+        10,
+        150
+      ],
+      "pixelCount": 10,
+      "excludedReason": "crop-edge component"
+    },
+    {
+      "boxExclusive": [
+        908,
+        149,
+        918,
+        150
+      ],
+      "pixelCount": 10,
+      "excludedReason": "crop-edge component"
+    }
+  ],
+  "retainedComponents": 23,
+  "dominantCoreCandidate": {
+    "RGB": [
+      244,
+      245,
+      236
+    ],
+    "pixels": 6151,
+    "contrast": 13.746425261250582,
+    "componentsWithColor": 23,
+    "componentsWhereColorIsMode": 23
+  },
+  "coreCandidates": [
+    {
+      "RGB": [
+        244,
+        245,
+        236
+      ],
+      "pixels": 6151,
+      "contrast": 13.746425261250582,
+      "componentsWithColor": 23,
+      "componentsWhereColorIsMode": 23
+    },
+    {
+      "RGB": [
+        75,
+        85,
+        78
+      ],
+      "pixels": 129,
+      "contrast": 1.947471235212707,
+      "componentsWithColor": 7,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        37,
+        50,
+        44
+      ],
+      "pixels": 106,
+      "contrast": 1.129745909469223,
+      "componentsWithColor": 12,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        60,
+        71,
+        65
+      ],
+      "pixels": 94,
+      "contrast": 1.5600561094643028,
+      "componentsWithColor": 12,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        73,
+        83,
+        77
+      ],
+      "pixels": 89,
+      "contrast": 1.8893600917990856,
+      "componentsWithColor": 20,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        239,
+        240,
+        231
+      ],
+      "pixels": 86,
+      "contrast": 13.149134536870468,
+      "componentsWithColor": 18,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        233,
+        235,
+        226
+      ],
+      "pixels": 83,
+      "contrast": 12.543860993141449,
+      "componentsWithColor": 12,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        135,
+        142,
+        134
+      ],
+      "pixels": 78,
+      "contrast": 4.489167679946229,
+      "componentsWithColor": 6,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        72,
+        83,
+        76
+      ],
+      "pixels": 66,
+      "contrast": 1.881771878572555,
+      "componentsWithColor": 12,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        179,
+        183,
+        175
+      ],
+      "pixels": 46,
+      "contrast": 7.412290619813275,
+      "componentsWithColor": 9,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        242,
+        243,
+        234
+      ],
+      "pixels": 39,
+      "contrast": 13.505546098953015,
+      "componentsWithColor": 15,
+      "componentsWhereColorIsMode": 0
+    },
+    {
+      "RGB": [
+        240,
+        241,
+        232
+      ],
+      "pixels": 34,
+      "contrast": 13.267285465478121,
+      "componentsWithColor": 16,
+      "componentsWhereColorIsMode": 0
+    }
+  ],
+  "distributedColorSupport": true,
+  "sRGBProfileEstablished": true,
+  "requiredContrast": 4.5,
+  "assessment": "candidate meets 4.5:1; visual text-only and component review required",
+  "limits": [
+    "No automatic accessibility pass; verify crop contains the intended empty prompt, not entered text or another label.",
+    "No OCR. Component filters can exclude narrow letters and cannot prove a component is text.",
+    "Maximum/darkest pixel is deliberately not a passing criterion; caret/edges cannot qualify alone.",
+    "Candidate is the exact most frequent retained foreground RGB, requiring repeated component modes.",
+    "Antialiasing can bias the mode toward background; inspect candidate histogram before interpreting a failure.",
+    "No profile conversion; without explicit sRGB and absent ICC, numerical ratio is conditional on sRGB.",
+    "No image scaling, editing, native execution, or claims about other appearance/text-size states."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "commit": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "runID": 42215222404,
+  "artifactID": 13502161074,
+  "archivePath": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/iphone-performance-build-log-1.zip",
+  "sha256": "d3b4f6917bb8b8dc6c6518bbe989c7b223f3c7824e12f650ae6ec8af60659b35",
+  "archiveDigestReverified": true,
+  "logSHA256": "6741ec4c53b5db0a2e19b3c0dd8a2f35ef547801331552cbe0b67de4779000af",
+  "invocationFirstTwoLines": [
+    "Command line invocation:",
+    "    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance -configuration Release -destination \"platform=iOS Simulator,id=8C9F4118-331E-4250-B1FC-194972BA6726\" -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing"
+  ],
+  "evidenceSource": "/Users/palatis/Room in the Cart/docs/evidence/native/ci-0d33c11-20261106/core-final-audit.json",
+  "scope": "Build log provenance; compiled product bytes were not downloaded or reverified for this preparation."
+}

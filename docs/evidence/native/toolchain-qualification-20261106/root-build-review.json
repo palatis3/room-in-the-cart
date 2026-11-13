@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-06T18:04:51.579122+00:00",
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "runID": 42261730525,
+  "attempt": 1,
+  "rootIndependentSourceHashesAndModesMatched": 2276,
+  "artifactID": 13526139232,
+  "artifactBytes": 329006,
+  "artifactSHA256": "5ec103d1430275659eeca1ca16e1f944dd0bf9d0435880fd7b1a30aa07a20d10",
+  "productManifestEntries": 440,
+  "productBytesIndependentlyDownloaded": false,
+  "releaseAcceptance": false
+}

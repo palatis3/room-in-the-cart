@@ -1,0 +1,58 @@
+[
+  {
+    "label": "actor-change-pending",
+    "at": "2026-11-06T22:03:46.054Z",
+    "browser": "156.0.8078.79",
+    "origin": "http://127.0.0.1:55825",
+    "secureContext": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+    "online": true,
+    "language": "en",
+    "outbox": [
+      {
+        "id": "3378e367-0085-480f-8880-680952249236",
+        "scope": "fixture-house/fixture-member",
+        "clientKey": "3378e367-0085-480f-8880-680952249236",
+        "kind": "request.send",
+        "item": "Fictional private actor request"
+      }
+    ],
+    "signOutPending": null,
+    "text": "Waiting to send from this browser\n\nFictional Android household\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nPending requests\n\nFictional private actor request\n\nWaiting to send from this browser\n\nRetryRemove pending request\nYour requests\n\nNo requests yet.",
+    "width": 411,
+    "scrollWidth": 411,
+    "url": "http://127.0.0.1:55825/requests"
+  },
+  {
+    "label": "actor-change-fenced",
+    "at": "2026-11-06T22:03:55.618Z",
+    "browser": "156.0.8078.79",
+    "origin": "http://127.0.0.1:55825",
+    "secureContext": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+    "online": true,
+    "language": "en",
+    "outbox": [],
+    "signOutPending": null,
+    "text": "Access has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+    "width": 411,
+    "scrollWidth": 411,
+    "url": "http://127.0.0.1:55825/requests"
+  },
+  {
+    "label": "changed-actor-fresh-session",
+    "at": "2026-11-06T22:04:03.039Z",
+    "browser": "156.0.8078.79",
+    "origin": "http://127.0.0.1:55825",
+    "secureContext": true,
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+    "online": true,
+    "language": "en",
+    "outbox": [],
+    "signOutPending": null,
+    "text": "Access has ended. Ask your household for a new invitation.\n\nFictional Android household\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\n\nNo requests yet.",
+    "width": 411,
+    "scrollWidth": 411,
+    "url": "http://127.0.0.1:55825/requests"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "file": "Tests.log",
+    "bytes": 645037,
+    "sha256": "fdd6ce3e58606062f3335d0de9425a06ba30a3a35034a25fa8cbca34b78209ed",
+    "zipCRC": 2124272440,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-details.json",
+    "bytes": 5986,
+    "sha256": "c24df839b39b9384a17de082ce766b849afd258866e54c8f8c355a063fd82d93",
+    "zipCRC": 894660607,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-plan/contributor-balanced-03.txt",
+    "bytes": 1122,
+    "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+    "zipCRC": 3909865589,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-runtime-warnings.json",
+    "bytes": 184,
+    "sha256": "8ae08d078872d604777a3b47b9516196c1b0dd897187b57ff939bb71aa337ef6",
+    "zipCRC": 2856964476,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-summary.json",
+    "bytes": 1313,
+    "sha256": "9145e77e4e79035a9368bccd86cdf8a803e6280777b5277f051f48ae0f1e4fcc",
+    "zipCRC": 2447667540,
+    "CRCVerified": true
+  }
+]

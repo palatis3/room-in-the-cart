@@ -1,0 +1,10 @@
+{
+  "reviewedImages": {
+    "frame-request-235.95.png": "dd3867a55b650c601a3474b9de3f2fbe589b0a3d0a9156eb20d422ecd9133dcc",
+    "frame-request-247.93.png": "78703882b21064820d6406f8607d2e1c32af312ab7e2ea03081752f3223459a2"
+  },
+  "decodedFramesSHA256": "bdd27d003661ae1845f59bfd4bfc424f09dc8860f35bfc5fec5be092e10df526",
+  "observed": "First frame shows a dimmed frozen handoff with no share panel; second shows the share panel and visible X with placeholder icons.",
+  "interpretation": "The recording contains a held empty-overlay frame followed by a populated-panel transition. Capture stalls or unrecorded display changes are not excluded; exact readiness-deadline synchronization and Close hittability are unproven.",
+  "decision": "Preserve both failures and use correlated presentation/service diagnostics before a product or selector fix."
+}

@@ -1,0 +1,613 @@
+{
+  "scope": "S22.05 server payload and browser history privacy; read-only retained-evidence audit, no test/native/browser/network execution",
+  "atUTC": "2026-11-07T03:40:22.664038+00:00",
+  "localHEADAtReview": "5171a0ba4b22a4c5c8b27f45dc8ddc25a73484a3",
+  "conclusion": "Existing executed evidence proves pieces; full Back/Forward/BFCache revoked-scope transition remains unverified. No confirmed privacy bug from this review.",
+  "sourceBindings": {
+    "web/src/main.ts": {
+      "sha256": "e67039b610bab7a73d4f31a1684a37d51922ad9165f78b2df0c49bf9a7315a61",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": false,
+      "matchesStagingManifest": true
+    },
+    "web/src/app.ts": {
+      "sha256": "cfd69a7bfb01d69bb4539161b6b3a8109b24d32ee552f2f7f8e35fbfec303bb5",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": false,
+      "matchesStagingManifest": true
+    },
+    "web/src/api.ts": {
+      "sha256": "4f54087e3263b595a2cb542b7fe0062587c3b6407161f18d980d57b04c7302e7",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    },
+    "web/src/outbox.ts": {
+      "sha256": "f83f31e38909466fc80671abc47989b943f1ddf5dbf4a065407d7bb08fb98eb6",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": false,
+      "matchesStagingManifest": true
+    },
+    "web/src/browser-sign-out.ts": {
+      "sha256": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": null,
+      "matchesStagingManifest": true
+    },
+    "web/tests/client.test.mjs": {
+      "sha256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "matchesWeb120Manifest": true,
+      "matchesService178Manifest": false,
+      "matchesStagingManifest": true
+    },
+    "service/src/http.ts": {
+      "sha256": "26271ee8b3a87272c7e5f7246d4954700e9b2fe9adfea1142762907fd46fd559",
+      "matchesWeb120Manifest": null,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    },
+    "service/src/repository.ts": {
+      "sha256": "0d18c353c4a0c6cdf136f7a4b3968923be7835ecbd27b076dfa8a58c37eb9828",
+      "matchesWeb120Manifest": null,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    },
+    "service/tests/guardian.integration.mjs": {
+      "sha256": "ce39652d33fc8dfa56cfcff226a86b834fd4b336e89691f749d73c803d4beb80",
+      "matchesWeb120Manifest": null,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    },
+    "service/tests/service.integration.mjs": {
+      "sha256": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c",
+      "matchesWeb120Manifest": null,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    },
+    "service/tests/helper-review.integration.mjs": {
+      "sha256": "54a03acbd1c802f2769f93e731749345d7db62d6a2410174490bc7656bb30f39",
+      "matchesWeb120Manifest": null,
+      "matchesService178Manifest": true,
+      "matchesStagingManifest": true
+    }
+  },
+  "executedAssertions": [
+    {
+      "name": "invitation secrets leave URL before a request and never enter storage",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        30,
+        36
+      ],
+      "testBlockSHA256": "4c6b8d915953810823cfb2b0043c343a2c6e75477fbb68be0d3c43f785403d14",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        236
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Calls consumeInvitation on query+fragment tokens, expects fragment token returned, URL reduced to /invite and localStorage length0. Does not execute navigation or inspect past browser entries."
+    },
+    {
+      "name": "API is same-origin, no-store, CSRF protected; own projection discards private keys",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        50,
+        55
+      ],
+      "testBlockSHA256": "56d626adebc9c498042d6689df6f41e457d4a456fac18ef685d53d7d8770b04c",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        248
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Injects budgetMinor/otherAuthors into own-request response and asserts both discarded; command fetch options are same-origin, no-store, CSRF and no Authorization header. Does not seed a private-note marker or inspect browser history."
+    },
+    {
+      "name": "refresh hides the previous member as soon as the server reports a different or ended session",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        138,
+        155
+      ],
+      "testBlockSHA256": "308f0e5acfefd58e731bd872286c50f63704759c72a55b3355569dcd92522674",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        296
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Starts with own item; changes session to null or member-b; after app.start and during next recovery callback, prior own item is absent. Does not assert DOM while session request is still pending."
+    },
+    {
+      "name": "a command refusal hides private content even if the saved outbox cannot be removed",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        156,
+        180
+      ],
+      "testBlockSHA256": "e5f394662b4c9d0ee4ae8d37fdccd0aed1048a9f4302ab4d1934a33b4f27ef35",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        302
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "401/403 command refusal clears visible private/pending content despite local storage deletion failure; this is response handling, not navigation."
+    },
+    {
+      "name": "authorized Refresh clears an old mutation access denial without discarding storage warnings",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        195,
+        227
+      ],
+      "testBlockSHA256": "9fa71835ab2c11fff171156f3f77def18c17788d8aa726a9a92355ac784988c6",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        314
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Queues previous actor request, changes member, explicit Retry refuses any command and hides prior text/form; subsequent authorized Refresh clears stale ordinary denial but preserves cleanup warning."
+    },
+    {
+      "name": "revocation purges household display and exposes no cached request",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        240,
+        244
+      ],
+      "testBlockSHA256": "88ee877bf256a849ffc958aaf047c1ee27b1392b620a9f13eab6128d55bd2be3",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        332
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "After prior own request visible, explicit Refresh receives requests403; asserts prior item and household label absent and access-ended shown."
+    },
+    {
+      "name": "a cold reload under a different contributor cannot recover the previous queue",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        320,
+        335
+      ],
+      "testBlockSHA256": "cda18e761e6af253414b3734d65e2a2d3ef1984b0f42d98a66bab35b4e06cb90",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        380
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Fresh WebApp under different member cannot display or retry prior scoped queued request. No actual history traversal."
+    },
+    {
+      "name": "new sends reauthenticate and cannot publish a private draft as another member",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        385,
+        393
+      ],
+      "testBlockSHA256": "74d6f38011a9563eff00cad4e02739efc48c6f86eba3911ebbbdb36b2fce885e",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        416
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Changes actor after review; submit issues no command and removes private draft/household display."
+    },
+    {
+      "name": "revoked queue permission prevents replay even for the same household and member",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        403,
+        411
+      ],
+      "testBlockSHA256": "510d3a2589c8aea32cfe36d5e894e05271cf3f2498addb661e4cc842856f5752",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        428
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "After one failed original send, queue permission removed; Retry does not add a command call and removes queued wording."
+    },
+    {
+      "name": "failed sign-out clears private content and background reload cannot restore it",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        412,
+        419
+      ],
+      "testBlockSHA256": "3e54c32d2f44557a7e391698c4c4e634472d6dbf454233501e8d598c93fec519",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        434
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Failed logout clears private item/household; app.start while sign-out barrier active makes no additional session read; explicit retry later succeeds."
+    },
+    {
+      "name": "an interrupted sign-out stays private across a cold reload and retries with the current session",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        420,
+        437
+      ],
+      "testBlockSHA256": "1c0246097946351ee9e89bbde970b2dbc22509fa2acff04e41699a0818c08101",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        440
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Constructs new WebApp on same JSDOM window, verifies private text hidden and single localStorage marker, then rotated-CSRF explicit logout clears marker. Not browser BFCache."
+    },
+    {
+      "name": "expiry during Refresh keeps its current denial after the received-page response finishes",
+      "source": "web/tests/client.test.mjs",
+      "sourceLines": [
+        764,
+        779
+      ],
+      "testBlockSHA256": "b9ea5533d9cc516275723e5d51d83cc02ad05ae68afab8398013774f108b6e2a",
+      "wholeSourceSHA256": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "resultLines": [
+        650
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Helper/editor expiry during deferred received-suggestion refresh must retain access-ended and not repopulate private content. Not contributor navigation."
+    },
+    {
+      "name": "enrolled child submits only own request and never receives basket, budget, roster or another author request",
+      "source": "service/tests/guardian.integration.mjs",
+      "sourceLines": [
+        201,
+        208
+      ],
+      "testBlockSHA256": "ce76c8549715a312dab0ecc0e5d3dd1799025014995484be820a6759b419c749",
+      "wholeSourceSHA256": "ce39652d33fc8dfa56cfcff226a86b834fd4b336e89691f749d73c803d4beb80",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "resultLines": [
+        325
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Seeds adult and child requests plus3800-cap shop; child mine response exactly one own child item; serialized payload lacks Private adult item/capMinor/unitPrice/budget/guardian/parentEmail; members/shop/inbox/consents routes404. Private-note fixture marker not seeded."
+    },
+    {
+      "name": "withdrawal retires device/window/invite/claim generation and cannot be undone through HTTP or SQL",
+      "source": "service/tests/guardian.integration.mjs",
+      "sourceLines": [
+        105,
+        111
+      ],
+      "testBlockSHA256": "a2d1380c018cf7b446416cb957cf452c6033c86f5fef2f2bac2aad561d82f046",
+      "wholeSourceSHA256": "ce39652d33fc8dfa56cfcff226a86b834fd4b336e89691f749d73c803d4beb80",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "resultLines": [
+        263
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Revokes guardian consent, child bootstrap403, replay window retired and SQL cannot revive enrollment/device. New-server-access authority proof, not old-page lifecycle."
+    },
+    {
+      "name": "browser helper session stays bound to its selected grant and cannot fall back after revocation",
+      "source": "service/tests/service.integration.mjs",
+      "sourceLines": [
+        360,
+        372
+      ],
+      "testBlockSHA256": "44c277b4ffa938ac32ad47c92c04a854014598b3c133866f04d2ad9d31d15d47",
+      "wholeSourceSHA256": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "resultLines": [
+        701
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Creates two grants, browser session stays selected grant, direct other-grant current read404; selected grant revocation makes session403."
+    },
+    {
+      "name": "only shopper inbox includes author aliases; own requests and receipts remain minimal",
+      "source": "service/tests/service.integration.mjs",
+      "sourceLines": [
+        373,
+        379
+      ],
+      "testBlockSHA256": "391aa48b9d2f107c302f2e823c0eb79d1b466933e1b0ab946ace341ef882d80c",
+      "wholeSourceSHA256": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "resultLines": [
+        706
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Own send receipt and own requests lack authorAlias while shopper inbox has Sam. Narrow projection assertion, not exhaustive field-list test."
+    },
+    {
+      "name": "a selected shop excludes another shop\u2019s own request, cursor, command and prior receipt",
+      "source": "service/tests/helper-review.integration.mjs",
+      "sourceLines": [
+        94,
+        110
+      ],
+      "testBlockSHA256": "dc4000d7578b6225b85bac9b5b1bfe7e102e302e84aae27fc6940daa6da7809e",
+      "wholeSourceSHA256": "54a03acbd1c802f2769f93e731749345d7db62d6a2410174490bc7656bb30f39",
+      "wholeSourceMatchesExecutionManifest": true,
+      "result": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "resultLines": [
+        385
+      ],
+      "passedTAP": true,
+      "actualAssertionScope": "Selected-shop headers fence other-shop command/receipt/read/cursor; own list contains only selected-shop item."
+    }
+  ],
+  "retainedArtifactIntegrity": [
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/source-manifest.json",
+      "sha256": "c81b23e4989070a11a453de52dd203d323be2de81774e1e0fb0a7bb8b4382073",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log",
+      "sha256": "70c46fd0d370b4be7b317e16a07a35fb5837f6d16fb93ec597675baebcd5c3e6",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl",
+      "sha256": "f94fef66a92b114e59ff00108b6877919be415b06a526ca749db221fd5f28355",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/result.json",
+      "sha256": "bbabcd9438513d9baecfb26626220f1a86fbd9c52349673f2afdb14d74d67ad8",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/restart-result.json",
+      "sha256": "d44f49ce7348a4dec4db52c316d1cfc304e5b7b71e1010c9c3ad7eaa37156a13",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/verification.json",
+      "sha256": "b87321bfc8c648ac9f3fb408bb08684a1d753f27988e211e0c6aa876042304a2",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/source-manifest.json",
+      "sha256": "f144358b74de679f30bdc0fef8f6dd481fb1551278b92fbb6c672bbd3055b78d",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "sha256": "169003d81472cf43041ee1d0631353f9bd82db49d23a14b87a95f23c60d33e9f",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/observations-66716.json",
+      "sha256": "e68ed7a293498c46b95d961085d9d40270dc3b1d186197dd6eff3da5e63db518",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/observations-70331.json",
+      "sha256": "da3be94a50a51cffab5acf32b5bb296e5eef7f2616e982668c1b28488b0914da",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/verification.json",
+      "sha256": "f60145c7d82fc59b493c73beb5513095ad8d43c47c83d667133c99190ed57cdf",
+      "matchesRetainedManifest": true
+    },
+    {
+      "file": "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap",
+      "sha256": "ca5f46ac8da42fa3769f5a5e29458f6487346626076797582972ed3ab103badc",
+      "matchesRetainedManifest": true
+    }
+  ],
+  "androidObservations": [
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 1,
+      "label": "fresh-invite",
+      "at": "2026-11-06T21:40:17.377Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53847/invite",
+      "displayText": "Sign in to continue\n\nUse your email code. Signing in does not join a household.\n\nYour invitation stays on this page while you sign in.\n\nEmail address\nSend sign-in code",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 4,
+      "label": "contributor-joined",
+      "at": "2026-11-06T21:40:46.782Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53847/invite",
+      "displayText": "Fictional Android household\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\n\nNo requests yet.",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 8,
+      "label": "offline-cold",
+      "at": "2026-11-06T21:44:47.922Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53995/requests",
+      "displayText": "Could not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+      "outboxRows": 1,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 9,
+      "label": "online-recovered-unsent",
+      "at": "2026-11-06T21:45:03.394Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53995/requests",
+      "displayText": "Fictional Android household\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nPending requests\n\nFictional oat milk \u2014 no nuts\n\nWaiting to send from this browser\n\nRetryRemove pending request\nYour requests\n\nNo requests yet.",
+      "outboxRows": 1,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 18,
+      "label": "interrupted-signout",
+      "at": "2026-11-06T21:47:37.677Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53995/requests",
+      "displayText": "Sign-out could not be confirmed. Retry before sharing this browser.\n\nFinish signing out\nRetry sign-out",
+      "outboxRows": 0,
+      "signOutPending": "1"
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 19,
+      "label": "interrupted-signout-reload",
+      "at": "2026-11-06T21:47:38.483Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53995/requests",
+      "displayText": "Sign-out could not be confirmed. Retry before sharing this browser.\n\nFinish signing out\nRetry sign-out",
+      "outboxRows": 0,
+      "signOutPending": "1"
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 20,
+      "label": "confirmed-signout",
+      "at": "2026-11-06T21:47:51.402Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:53995/requests",
+      "displayText": "You are signed out.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 24,
+      "label": "helper-revoked",
+      "at": "2026-11-06T21:49:19.910Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:54580/view",
+      "displayText": "Access has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl",
+      "line": 37,
+      "label": "child-browser-restart",
+      "at": "2026-11-06T21:52:35.724Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:54867/child-invite",
+      "displayText": "Child invitation\n\nUse the email your guardian approved. Their current permission is checked before requesting a sign-in code.\n\nUse the child\u2019s own account. Do not share an adult\u2019s account or sign in as an adult to accept this invitation.\n\nInvitation code\nGuardian-approved child email\nRequest sign-in code\n\nInvitation details are not saved here. Keep the original invitation from your guardian.\n\nCheck current statusHelp",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl",
+      "line": 4,
+      "label": "fixed-actor-fenced",
+      "at": "2026-11-06T22:12:28.757Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:56369/requests",
+      "displayText": "Access has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl",
+      "line": 5,
+      "label": "fixed-authorized-refresh",
+      "at": "2026-11-06T22:12:29.286Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:56369/requests",
+      "displayText": "Fictional Android household\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\n\nNo requests yet.",
+      "outboxRows": 0,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl",
+      "line": 8,
+      "label": "contributor-restart-offline",
+      "at": "2026-11-06T22:13:13.624Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:56369/requests",
+      "displayText": "Could not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+      "outboxRows": 1,
+      "signOutPending": null
+    },
+    {
+      "file": "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl",
+      "line": 9,
+      "label": "contributor-restart-online-anonymous",
+      "at": "2026-11-06T22:13:26.712Z",
+      "browser": "156.0.8078.79",
+      "url": "http://127.0.0.1:56369/requests",
+      "displayText": "Sign in to continue\n\nUse your email code. Signing in does not join a household.\n\nEmail address\nSend sign-in code",
+      "outboxRows": 1,
+      "signOutPending": null
+    }
+  ],
+  "inputFiles": {
+    "docs/evidence/b11/android-recovery-flows-20261106/PLAN.md": "325ef70eecea7ddaf423e5bc3c192613b10dce62cfb9df55c38e3f43fcce75bf",
+    "docs/evidence/b11/android-recovery-flows-20261106/manifest.json": "053a5c34977a55e08a1ac0f89294653afd30e8fd24cab605217540cabd92f01f",
+    "docs/evidence/b11/android-recovery-flows-20261106/observations-66716.json": "e68ed7a293498c46b95d961085d9d40270dc3b1d186197dd6eff3da5e63db518",
+    "docs/evidence/b11/android-recovery-flows-20261106/observations-70331.json": "da3be94a50a51cffab5acf32b5bb296e5eef7f2616e982668c1b28488b0914da",
+    "docs/evidence/b11/android-recovery-flows-20261106/root-browser-observations.jsonl": "169003d81472cf43041ee1d0631353f9bd82db49d23a14b87a95f23c60d33e9f",
+    "docs/evidence/b11/android-recovery-flows-20261106/source-manifest.json": "f144358b74de679f30bdc0fef8f6dd481fb1551278b92fbb6c672bbd3055b78d",
+    "docs/evidence/b11/android-recovery-flows-20261106/verification.json": "f60145c7d82fc59b493c73beb5513095ad8d43c47c83d667133c99190ed57cdf",
+    "docs/evidence/b11/privacy-journal-capacity-20261104/sharedWire.tap": "ca5f46ac8da42fa3769f5a5e29458f6487346626076797582972ed3ab103badc",
+    "docs/evidence/b11/privacy-journal-capacity-20261104/source-manifest.json": "c6050acf9ca291d7b18609539b7183a0fd2823c90288090462a796a87e4fbe11",
+    "docs/evidence/b11/privacy-journal-capacity-20261104/validation.json": "33297d0253ef6a4a011b288aacf2571f8958fca83b9629ef618bccc59586229f",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/manifest.json": "6414c09aa4482fc4623ea3c77501db594ce248e908e6b729064d8195ee8707cf",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/restart-result.json": "d44f49ce7348a4dec4db52c316d1cfc304e5b7b71e1010c9c3ad7eaa37156a13",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/result.json": "bbabcd9438513d9baecfb26626220f1a86fbd9c52349673f2afdb14d74d67ad8",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/root-browser-observations.jsonl": "f94fef66a92b114e59ff00108b6877919be415b06a526ca749db221fd5f28355",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/source-manifest.json": "c81b23e4989070a11a453de52dd203d323be2de81774e1e0fb0a7bb8b4382073",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/verification.json": "b87321bfc8c648ac9f3fb408bb08684a1d753f27988e211e0c6aa876042304a2",
+    "docs/evidence/b11/web-stale-access-recovery-20261106/web-tests.log": "70c46fd0d370b4be7b317e16a07a35fb5837f6d16fb93ec597675baebcd5c3e6",
+    "docs/evidence/b11/web-stale-access-staging-20261106/source-manifest.json": "8196ad2ba13068f11d24a6f0d1b028a5a334b8e41ecba4796d8d006672e6e426",
+    "docs/evidence/b11/web-stale-access-staging-20261106/summary.json": "53f8a4bb1bef4d9c6273d4638909ee088aa9860137d83fcc24e38d60e90a2b97",
+    "docs/evidence/native/screen-acceptance-ledger-20261106/README.md": "b072fd020f5d27a2a645194d8bf0d9bbefb0ae2e4ac9439581cac338fde5625a",
+    "docs/evidence/native/screen-acceptance-ledger-20261106/ledger.json": "c45309cae230c29a98ade3749244a2be49d8557aab29db036c6380fcf5da89ba",
+    "docs/product/foundation-gen2.1/03-screens.md": "c8110a8f8f2d6f2d36f32305a158ecd9b2e1a34f998abbd79f38a95debf7c7e7",
+    "service/src/http.ts": "26271ee8b3a87272c7e5f7246d4954700e9b2fe9adfea1142762907fd46fd559",
+    "service/src/repository.ts": "0d18c353c4a0c6cdf136f7a4b3968923be7835ecbd27b076dfa8a58c37eb9828",
+    "service/tests/guardian.integration.mjs": "ce39652d33fc8dfa56cfcff226a86b834fd4b336e89691f749d73c803d4beb80",
+    "service/tests/helper-review.integration.mjs": "54a03acbd1c802f2769f93e731749345d7db62d6a2410174490bc7656bb30f39",
+    "service/tests/service.integration.mjs": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c",
+    "web/src/api.ts": "4f54087e3263b595a2cb542b7fe0062587c3b6407161f18d980d57b04c7302e7",
+    "web/src/app.ts": "cfd69a7bfb01d69bb4539161b6b3a8109b24d32ee552f2f7f8e35fbfec303bb5",
+    "web/src/browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "web/src/main.ts": "e67039b610bab7a73d4f31a1684a37d51922ad9165f78b2df0c49bf9a7315a61",
+    "web/src/outbox.ts": "f83f31e38909466fc80671abc47989b943f1ddf5dbf4a065407d7bb08fb98eb6",
+    "web/tests/client.test.mjs": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402"
+  },
+  "limits": [
+    "The original Android recovery bundle predates bb9cb7e; fixed actor/restart browser evidence and120web tests match current/deployed sources.",
+    "No retained Back/Forward/BFCache transition, pre-response DOM proof or delayed/offline reauthorization proof located.",
+    "Local service178 evidence uses real PostgreSQL/HTTP with synthetic identities/providers. Android evidence uses real emulator Chrome with synthetic loopback service.",
+    "Historical service source projection/router/assertion hashes match inspected current files, but no fresh full-service run or transitive deployment acceptance is claimed."
+  ]
+}

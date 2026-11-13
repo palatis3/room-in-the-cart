@@ -1,0 +1,26 @@
+{
+  "builtInfoPlistAndSimulatedEntitlementsRechecked": true,
+  "controllerFilesVerified": 8,
+  "copiedResultExportsUsed": true,
+  "noLiveDatabaseReadNeeded": true,
+  "onlySourceOverlayFile": [
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "originalResultBytes": 5927012,
+  "originalResultFileCount": 97,
+  "productFilesVerified": 179,
+  "reviewMethod": "Independent assertions over retained request/ack bytes, AX state, native event log, durable snapshots and frozen source/product hashes; no fresh native execution.",
+  "senderFilesVerified": 3,
+  "senderInstallExits": [
+    149,
+    0
+  ],
+  "senderSetupCorrection": "First install attempted while owned simulator was Shutdown; repeated after boot successfully before the only native test.",
+  "sourceFilesVerified": 459,
+  "uiOnlyTokenPlanVerifiedAgainstGeneratedPlan": true,
+  "v1AndV2BuildExits": [
+    0,
+    0
+  ],
+  "v1ToV2OnlyTestHelperChange": true
+}

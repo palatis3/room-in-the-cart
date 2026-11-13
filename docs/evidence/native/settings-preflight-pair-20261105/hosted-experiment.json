@@ -1,0 +1,78 @@
+{
+  "experimentCommit": "cfd42e45f0acc5a3125fb729133be74147b59d26",
+  "runtimeSource": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42109366497,
+  "status": "completed",
+  "originalFailurePreserved": true,
+  "productionHarnessChanged": false,
+  "pairValid": false,
+  "arms": {
+    "settings-prelaunch": {
+      "jobID": 127532537558,
+      "conclusion": "failure",
+      "failurePhase": "one public simctl Settings launch before XCTest",
+      "setup": {
+        "arm": "settings-prelaunch",
+        "started_utc": "2026-11-05T21:08:36.758486+00:00",
+        "meaning": "process launch only; accessibility readiness is not asserted",
+        "status": "launch_timed_out",
+        "exit_code": 124,
+        "duration_seconds": 120.28173,
+        "completed_utc": "2026-11-05T21:10:37.043127+00:00"
+      },
+      "testsStarted": 0,
+      "testsPassed": 0,
+      "testsFailed": 0,
+      "strictTestVerification": "not run; native step skipped after setup failure",
+      "actualTestOrderVerified": false,
+      "retryPresent": false,
+      "artifactID": 13453606023,
+      "artifactSHA256": "c54fd7e55504788ba24f9da90ccd4289c0d539933686704a5410f25f6ae1c8f0",
+      "artifactBytes": 72284,
+      "artifactDigestVerified": true,
+      "retainedProductAndHarnessIdentityRechecked": true,
+      "rawJobLogSHA256": "270ca1f9b0c98629f9348cde1fe9b429d6d6784d75cc27776a3966ff82ce1bd8",
+      "selectedCasesNotRun": 6
+    },
+    "unprelaunched": {
+      "jobID": 127532538115,
+      "conclusion": "success",
+      "setup": {
+        "arm": "unprelaunched",
+        "started_utc": "2026-11-05T21:08:23.361618+00:00",
+        "meaning": "process launch only; accessibility readiness is not asserted",
+        "status": "not_requested",
+        "exit_code": null,
+        "duration_seconds": 0.0
+      },
+      "testsStarted": 6,
+      "testsPassed": 6,
+      "testsFailed": 0,
+      "testsSkipped": 0,
+      "strictReplayExit": 0,
+      "actualTestOrderVerified": true,
+      "retryPresent": false,
+      "runtimeWarnings": 2,
+      "warningScope": "Two existing allowed Menu warnings in the separate meal-week selection case; Reduce Motion case has zero warnings.",
+      "reduceMotionCaseSeconds": 278.38,
+      "nativeSetupJourneyAndRestore": "Original untouched test passed after reading/enabling native setting, checking UIKit, exercising share cancellation/relaunch, and running teardown restoration. Raw teardown verifies switch value0; original helper also checks UIKit readback.",
+      "artifactID": 13455007106,
+      "artifactSHA256": "8962bc80a0507470d378553ddfb133b242bcfbe8edb9ab1ded712dd9bfd3ad90",
+      "artifactBytes": 20289097,
+      "artifactDigestVerified": true,
+      "retainedProductAndHarnessIdentityRechecked": true,
+      "inputIdentityMatchesOtherArm": true,
+      "rawJobLogSHA256": "63c0c9d169353ece8c68b36ae2c9b4d2333a6c4f4eeb28bd373d39cca9996498",
+      "rawTestLogSHA256": "ff3ab5ad8f7f697865791c65cbbf9b9af49832975dc211dde43c6bddb3129b17",
+      "caseLogSHA256": "c1717bcd4713377a90f52c1a7e72849721151147397aa53f2929aee0c8f99488"
+    }
+  },
+  "limits": [
+    "Prelaunch arm executed no tests after its120-second public process-launch timeout; pair cannot compare app outcomes.",
+    "Unchanged arm is one hosted nonreproduction of the original Settings-launch failure, not a reliability guarantee or root-cause explanation.",
+    "Original failed UI10 remains failed; no setup workaround, new retry, preference override or timeout extension is installed.",
+    "Actual test order, input identity and strict execution/warning checks independently replayed; separate hosted workers are not otherwise identical controlled environments."
+  ],
+  "rawEvidence": ".build/CIResearch20261105/experiments/settings-preflight-pair",
+  "conclusion": "failure"
+}

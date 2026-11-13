@@ -1,0 +1,27 @@
+{
+  "observedOwnerExit": -9,
+  "captureFinalReceiptPresent": false,
+  "nativeApproximateEndUTC": "2026-11-06T21:44:49.568743+00:00",
+  "exportStartedUTC": "2026-11-06T21:45:02.772040+00:00",
+  "interveningSeconds": 13.203297,
+  "sourceLocations": {
+    "signalHandler": "harness.py:291",
+    "boundedStreamWait": "harness.py:300",
+    "finalReceipt": "harness.py:309",
+    "cleanupReceiptOverwrite": "harness.py:323",
+    "parentStopAndImmediateEscalation": "harness.py:344-347"
+  },
+  "reportedHostedInterpreter": "CPython 3.15.2 (recorded executable path; its installed stdlib bytes were not retained)",
+  "upstreamSource": "https://github.com/python/cpython/blob/v3.15.2/Lib/subprocess.py#L2066-L2119",
+  "upstreamObservation": "The macOS kqueue wait catches OSError and falls back; InterruptedError subclasses OSError. A handler raising InterruptedError while control is waiting can therefore lose the first stop request inside that catch.",
+  "inference": "Consistent with first TERM being swallowed during the timed kqueue wait, followed by the parent 12-second timeout. The fallback signals owned processes and immediately kills the helper without a second grace period; this can prevent its final receipt. This is not proof of the exact suspended frame or the original consent failure cause.",
+  "receiptLimitation": "Later collect/cleanup calls overwrite capture-cleanup.json, so the retained final identityMatched=false values cannot reconstruct the earlier escalation.",
+  "followUpOnly": [
+    "Use a private stop exception outside the OSError hierarchy, or an explicit owned-child shutdown protocol.",
+    "Persist distinct append-only stop/escalation receipts and operation timestamps before signaling; retain each stage instead of overwriting.",
+    "Within one finite auxiliary shutdown budget, wait for owned child and helper completion after TERM; only then escalate matching still-live owned process groups. Never change native test actions, selectors or 720/900/40-minute limits.",
+    "First validate offline with a synthetic kqueue-like OSError catch and fake owned process objects; separately test clean TERM, delayed exit, timeout escalation, missing final receipt and PID identity mismatch. No hosted dispatch proposed now."
+  ],
+  "nativeOrHostedExecutionForInvestigation": false,
+  "appSourceChanges": false
+}

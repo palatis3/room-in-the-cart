@@ -1,0 +1,26 @@
+{
+  "sourceManifestSHA256": "d8a00ef301fa226be78bdc908543c949039c5f681c496ba8a27d34b6899f0dad",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "finishedAtUTC": "2026-11-08T19:39:58.531143+00:00",
+  "caseSeconds": 102.86,
+  "crashSHA256": "0449293738726abb9333f09cf8becc66ee7afe9a5b8435c799f387c2083c906a",
+  "sameFirst13FaultSymbolsAndOffsets": true,
+  "productBindings": [
+    {
+      "name": "RoomInTheCart",
+      "uuid": "34a7257b-fdc2-3d8e-8042-6a5d0fad0336",
+      "sha256": "ebb4b69d7d75f046393a8a86ff632d3670b7af59ee5d5e38854b20dc59119098",
+      "matchesRunProductsAndCrash": true
+    },
+    {
+      "name": "RoomInTheCart.debug.dylib",
+      "uuid": "bac5c549-a99c-30d6-877b-a96a357ac2d3",
+      "sha256": "27a0e766ee628b45e5eb4a283efc5306863781f68b61d8fdd1ae1566171aac53",
+      "matchesRunProductsAndCrash": true
+    }
+  ],
+  "result": "Failed at later accessibility query; no framework repair established"
+}

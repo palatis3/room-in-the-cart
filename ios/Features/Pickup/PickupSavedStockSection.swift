@@ -102,8 +102,12 @@ private struct PickupBatchReview: View {
                             ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                         }
                     }
-                    TextField(pTr("Confirmed usable amount"), text: $amount).keyboardType(.decimalPad).focused($amountFocused)
-                        .accessibilityIdentifier("stockReview.amount")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(pTr("Confirmed usable amount"))
+                        TextField(pTr("Confirmed usable amount"), text: $amount)
+                            .keyboardType(.numbersAndPunctuation).focused($amountFocused)
+                            .accessibilityIdentifier("stockReview.amount")
+                    }
                     Text(pTr(lot.usable.unit.rawValue))
                     DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
                     Toggle(pTr("Use this batch first"), isOn: $useFirst)
@@ -123,15 +127,7 @@ private struct PickupBatchReview: View {
                     if review.lot.useFirst == true { Text(pTr("Use this batch first")) }
                     if review.meals.isEmpty { Text(pTr("No reviewed meal depends on this batch.")) }
                     ForEach(review.meals) { effect in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(effect.need.name).font(.headline)
-                            if effect.need.priority == .protected { Text(pTr("set aside first")) }
-                            Text("\(pTr("Required")): \(pQuantity(effect.need.amount))")
-                            Text("\(pTr("Before this change")): \(coverage(effect.before))")
-                            Text("\(pTr("After this change")): \(coverage(effect.after))")
-                            Text("\(pTr("Allocation change")): \(delta(effect.before?.allocated, effect.after?.allocated, unit: effect.after?.unit ?? effect.need.amount.unit))")
-                            Text("\(pTr("Shortfall change")): \(delta(effect.before?.shortfall, effect.after?.shortfall, unit: effect.after?.unit ?? effect.need.amount.unit))")
-                        }.accessibilityElement(children: .combine)
+                        PickupStockMealEffectRow(effect: effect)
                             .accessibilityIdentifier("stockReview.meal." + effect.id.uuidString)
                     }
                     if !model.isCurrentStockLotReview(review, scope: currentScope) {
@@ -172,15 +168,6 @@ private struct PickupBatchReview: View {
     }
     private var currentScope: PickupStockReviewScope? { reviewSession.scope(for: presentation) }
     private func cancelPreview() { review = nil; effectsConfirmed = false }
-    private func coverage(_ value: StockDemandCoverage?) -> String {
-        let allocated = value.flatMap { value in value.allocated.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
-        let short = value.flatMap { value in value.shortfall.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
-        return "\(pTr("Allocated")): \(allocated) · \(pTr("Still short")): \(short)"
-    }
-    private func delta(_ before: Rational?, _ after: Rational?, unit: UnitOfMeasure) -> String {
-        guard let before, let after, let amount = try? max(before, after).subtracting(min(before, after)) else { return pTr("Unresolved") }
-        return (after == before ? "" : (after > before ? "+" : "−")) + pQuantity(amount, unit: unit)
-    }
     private func preview() {
         do {
             let target = carrying || lot.id == lot.foodID ? foodID ?? lot.id : lot.foodID
@@ -198,6 +185,30 @@ private struct PickupBatchReview: View {
             model.error = pTr((error as? PickupStockReviewError) == .stale
                 ? "Review the saved batch again before changing it." : "Check the confirmed food amounts and matching units.")
         }
+    }
+}
+
+struct PickupStockMealEffectRow: View {
+    let effect: PickupStockMealEffect
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(effect.need.name).font(.headline)
+            if effect.need.priority == .protected { Text(pTr("set aside first")) }
+            Text("\(pTr("Required")): \(pQuantity(effect.need.amount))")
+            Text("\(pTr("Before this change")): \(coverage(effect.before))")
+            Text("\(pTr("After this change")): \(coverage(effect.after))")
+            Text("\(pTr("Allocation change")): \(delta(effect.before?.allocated, effect.after?.allocated, unit: effect.after?.unit ?? effect.need.amount.unit))")
+            Text("\(pTr("Shortfall change")): \(delta(effect.before?.shortfall, effect.after?.shortfall, unit: effect.after?.unit ?? effect.need.amount.unit))")
+        }.accessibilityElement(children: .combine)
+    }
+    private func coverage(_ value: StockDemandCoverage?) -> String {
+        let allocated = value.flatMap { value in value.allocated.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
+        let short = value.flatMap { value in value.shortfall.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
+        return "\(pTr("Allocated")): \(allocated) · \(pTr("Still short")): \(short)"
+    }
+    private func delta(_ before: Rational?, _ after: Rational?, unit: UnitOfMeasure) -> String {
+        guard let before, let after, let amount = try? max(before, after).subtracting(min(before, after)) else { return pTr("Unresolved") }
+        return (after == before ? "" : (after > before ? "+" : "−")) + pQuantity(amount, unit: unit)
     }
 }
 
@@ -265,8 +276,15 @@ struct PickupNewStockSection: View {
                     ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
             }
-            TextField(pTr("Actual food or freezer batch"), text: $stockName).focused(field, equals: .stockName)
-            TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused(field, equals: .stockAmount)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(pTr("Actual food or freezer batch"))
+                TextField(pTr("Actual food or freezer batch"), text: $stockName).focused(field, equals: .stockName)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(pTr("Confirmed usable amount"))
+                TextField(pTr("Confirmed usable amount"), text: $stockAmount)
+                    .keyboardType(.numbersAndPunctuation).focused(field, equals: .stockAmount)
+            }
             Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Picker(pTr("Stock source"), selection: $stockSource) {
                 Text(pTr("Freezer")).tag(ConfirmedStockSource.freezer)

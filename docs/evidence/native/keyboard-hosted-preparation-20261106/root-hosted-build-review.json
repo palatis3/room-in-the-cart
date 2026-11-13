@@ -1,0 +1,15 @@
+{
+  "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+  "runID": 42309239002,
+  "buildJobID": 128206290465,
+  "buildConclusion": "success",
+  "rootRehashedOriginalEvidenceFiles": 58,
+  "rootVerifiedBuildArchiveDigest": "6a8f4697912817f7f3ae2ad623d4f3ae26daef3d263c7be60c9aa5ef9a0b64e9",
+  "rootComparedAll2348SourceHashesBeforeAndAfter": true,
+  "rootVerifiedFullCompiledPlanAndSixSelectorBytes": true,
+  "rootVerifiedToolchain": "Xcode26.3/17C529",
+  "rootVerifiedRuntimeBuild": "23C54",
+  "nativeTestExecution": "Not yet started at checkpoint; run job128212142250 admission-pending in sharedslot2",
+  "productArchiveLimitation": "Provider metadata/digest and hosted builder inner-tar receipt retained; product archive not downloaded or independently hashed by root. Execution restore must verify builder digest.",
+  "releaseAcceptance": false
+}

@@ -1,0 +1,14 @@
+{
+  "name": "RITC Cook Voice Minimum OS Nov08",
+  "udid": "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+  "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-17-0",
+  "deviceType": "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation",
+  "owner": "root cook voice minimum OS validation",
+  "createdAtUTC": "2026-11-08T10:27:26.723388+00:00",
+  "sourcePins": {
+    "ios/Features/Capture/LocalCookSpeech.swift": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+    "ios/Tests/CookReadbackTests.swift": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543"
+  },
+  "bootExit": 0,
+  "bootstatusExit": 0
+}

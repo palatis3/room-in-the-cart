@@ -1,0 +1,59 @@
+150: Test Suite 'All tests' started at 2026-11-07 12:24:25.165.
+151: Test Suite 'RoomInTheCartUITests.xctest' started at 2026-11-07 12:24:25.165.
+152: Test Suite 'SpeechUITests' started at 2026-11-07 12:24:25.166.
+153: Test Case '-[RoomInTheCartUITests.SpeechUITests testPublicSpeech]' started.
+154:     t =     0.00s Start Test at 2026-11-07 12:24:25.167
+155:     t =     0.03s Set Up
+156:     t =     0.03s Open org.local.speechControl
+157:     t =     0.03s     Launch org.local.speechControl
+158: 2026-11-07 12:24:25.316 xcodebuild[70702:22683161] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+159: 2026-11-07 12:24:25.316 xcodebuild[70702:22683161] [MT] IDELaunchParametersSnapshot: no debugger version
+160: 2026-11-07 12:24:25.324 xcodebuild[70702:22683161] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+161: objc[70739]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10c8f0310) and /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10c968398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+162:     t =     0.81s         Setting up automation session
+163:     t =     2.09s         Wait for org.local.speechControl to idle
+164:     t =     3.34s Waiting 10.0s for "Speak" Button to exist
+165:     t =     4.41s     Checking `Expect predicate `existsNoRetry == 1` for object "Speak" Button`
+166:     t =     4.41s         Checking existence of `"Speak" Button`
+167:     t =     4.46s Tap "Speak" Button
+168:     t =     4.46s     Wait for org.local.speechControl to idle
+169:     t =     4.46s     Find the "Speak" Button
+170:     t =     4.48s     Check for interrupting elements affecting "Speak" Button
+171:     t =     4.49s     Synthesize event
+172: <unknown>:0: warning: -[RoomInTheCartUITests.SpeechUITests testPublicSpeech] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+173:     t =     4.81s     Wait for org.local.speechControl to idle
+174:     t =     4.82s Waiting 10.0s for "Pause" Button to exist
+175:     t =     5.85s     Checking `Expect predicate `existsNoRetry == 1` for object "Pause" Button`
+176:     t =     5.85s         Checking existence of `"Pause" Button`
+177:     t =     5.86s Tap "Pause" Button
+178:     t =     5.86s     Wait for org.local.speechControl to idle
+179:     t =     5.86s     Find the "Pause" Button
+180:     t =     5.87s     Check for interrupting elements affecting "Pause" Button
+181:     t =     5.89s     Synthesize event
+182:     t =     6.19s     Wait for org.local.speechControl to idle
+183:     t =     6.19s Waiting 10.0s for "Resume" Button to exist
+184:     t =     7.27s     Checking `Expect predicate `existsNoRetry == 1` for object "Resume" Button`
+185:     t =     7.27s         Checking existence of `"Resume" Button`
+186:     t =     7.28s Tap "Resume" Button
+187:     t =     7.28s     Wait for org.local.speechControl to idle
+188:     t =     7.28s     Find the "Resume" Button
+189:     t =     7.29s     Check for interrupting elements affecting "Resume" Button
+190:     t =     7.30s     Synthesize event
+191:     t =     7.60s     Wait for org.local.speechControl to idle
+192:     t =     7.60s Waiting 10.0s for "Stop" Button to exist
+193:     t =     8.68s     Checking `Expect predicate `existsNoRetry == 1` for object "Stop" Button`
+194:     t =     8.68s         Checking existence of `"Stop" Button`
+195:     t =     8.69s Tap "Stop" Button
+196:     t =     8.69s     Wait for org.local.speechControl to idle
+197:     t =     8.69s     Find the "Stop" Button
+198:     t =     8.70s     Check for interrupting elements affecting "Stop" Button
+199:     t =     8.71s     Synthesize event
+200:     t =     9.01s     Wait for org.local.speechControl to idle
+201:     t =     9.01s Tear Down
+202: Test Case '-[RoomInTheCartUITests.SpeechUITests testPublicSpeech]' passed (9.260 seconds).
+203: Test Suite 'SpeechUITests' passed at 2026-11-07 12:24:34.427.
+204: 	 Executed 1 test, with 0 failures (0 unexpected) in 9.260 (9.261) seconds
+205: Test Suite 'RoomInTheCartUITests.xctest' passed at 2026-11-07 12:24:34.427.
+206: 	 Executed 1 test, with 0 failures (0 unexpected) in 9.260 (9.262) seconds
+207: Test Suite 'All tests' passed at 2026-11-07 12:24:34.428.
+208: 	 Executed 1 test, with 0 failures (0 unexpected) in 9.260 (9.263) seconds

@@ -1,0 +1,24 @@
+{
+  "sourceSHA256": "dd2061551f0a17609bf0a20db732f5f39b8fde9a95b225c7c46a31b09aa88d12",
+  "warnings": [
+    {
+      "title": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "startTimeEpoch": 1794160994.768,
+      "startTimeUTC": "2026-11-08T18:03:14.768000+00:00",
+      "isAssociatedWithFailure": false,
+      "attachmentCountInRetainedActivity": 0,
+      "noStackInThisActivity": true
+    },
+    {
+      "title": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "startTimeEpoch": 1794160994.859,
+      "startTimeUTC": "2026-11-08T18:03:14.859000+00:00",
+      "isAssociatedWithFailure": false,
+      "attachmentCountInRetainedActivity": 0,
+      "noStackInThisActivity": true
+    }
+  ],
+  "strictFirstFailure": "User-initiated warning expected one Complete Issue Description.txt; found0. Strict exit1 unchanged.",
+  "warningCountIsNotWaitCount": true,
+  "timestampsNotWaitDurations": true
+}

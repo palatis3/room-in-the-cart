@@ -1,0 +1,13 @@
+{
+  "observedConsoleOrder": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch",
+    "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+    "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+    "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+  ],
+  "matchesOriginalSelectorOrder": true,
+  "nativeLogSHA256": "0b41fa4b5ee49268479427fdc6268f8d9f824ab682a7f9ed0fdd03762684df78",
+  "canonicalTestSHA256": "1a8729509e7d403bacba77aad61276c4fb0d28cdddd1078d6db3bb740ef8f077"
+}

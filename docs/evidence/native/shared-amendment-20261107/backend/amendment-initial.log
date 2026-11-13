@@ -1,0 +1,73 @@
+TAP version 13
+# Subtest: retailer amendments preserve original placement, physical evidence and finances; exact lost-reply retry appends once
+not ok 1 - retailer amendments preserve original placement, physical evidence and finances; exact lost-reply retry appends once
+  ---
+  duration_ms: 228.316292
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/service/tests/order-amendments.integration.mjs:39:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        entries: [],
+        evidenceSource: 'shopper_reported',
+        nextCursor: null,
+        shopId: '7503b531-65d3-4ec0-a56e-73177f6b92c5',
+    ...
+          financialRevision: 0,
+    +     shopRevision: 4
+    -     shopRevision: 3
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    shopId: '7503b531-65d3-4ec0-a56e-73177f6b92c5'
+    sourceVersion:
+      shopRevision: 3
+      authorityEpoch: 1
+      financialRevision: 0
+    evidenceSource: 'shopper_reported'
+    entries:
+    nextCursor: ~
+  actual:
+    shopId: '7503b531-65d3-4ec0-a56e-73177f6b92c5'
+    sourceVersion:
+      shopRevision: 4
+      authorityEpoch: 1
+      financialRevision: 0
+    evidenceSource: 'shopper_reported'
+    entries:
+    nextCursor: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/order-amendments.integration.mjs:50:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: invalid evidence, stale chains, recycled identities and proposal-shaped writes cannot become confirmed orders
+ok 2 - invalid evidence, stale chains, recycled identities and proposal-shaped writes cannot become confirmed orders
+  ---
+  duration_ms: 104.030084
+  type: 'test'
+  ...
+# Subtest: current authority alone reads and records; reassignment fences successful retry and closed orders retain manual recording
+ok 3 - current authority alone reads and records; reassignment fences successful retry and closed orders retain manual recording
+  ---
+  duration_ms: 105.942042
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 639.610791

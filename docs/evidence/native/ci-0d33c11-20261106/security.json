@@ -1,0 +1,33 @@
+{
+  "sha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "merge": "2b572265a459f9282c70b2b97ed57a1072a5588f",
+  "tree": "010ac4de251cc9e3ea731458c0303b3d2427e35a",
+  "checkedAt": "2026-11-06T12:09:39.979918+00:00",
+  "runID": 42215222421,
+  "attempt": 1,
+  "analyses": [
+    {
+      "category": "/language:javascript-typescript",
+      "id": 2111682498,
+      "error": "",
+      "warning": "",
+      "rules_count": 87,
+      "results_count": 0
+    },
+    {
+      "category": "/language:actions",
+      "id": 2111679219,
+      "error": "",
+      "warning": "",
+      "rules_count": 17,
+      "results_count": 0
+    }
+  ],
+  "openPRAlerts": [],
+  "jobs": {
+    "CodeQL (actions)": "success",
+    "Dependency review": "success",
+    "CodeQL (javascript-typescript)": "success"
+  },
+  "scope": "JavaScript/TypeScript, Actions and dependency review; separate Swift proof verified in security-collection/evidence/swift-security.json"
+}

@@ -1,0 +1,151 @@
+diff --git a/ios/Features/Household/SharedCookHistoryView.swift b/ios/Features/Household/SharedCookHistoryView.swift
+index 957ff0c..b42b54a 100644
+--- a/ios/Features/Household/SharedCookHistoryView.swift
++++ b/ios/Features/Household/SharedCookHistoryView.swift
+@@ -24,31 +24,33 @@ struct SharedCookHistoryView: View {
+ 
+     var body: some View {
+         List {
+-            if allowed {
+-                Section(occurrence.meal.title) {
+-                    if failed {
+-                        Text(ht("Couldn’t load the saved cook instructions."))
+-                        Button(ht("Refresh")) { Task { await load() } }
+-                    } else if let copies {
+-                        if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
+-                        ForEach(copies) { copy in
+-                            NavigationLink {
+-                                SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
+-                            } label: {
+-                                VStack(alignment: .leading, spacing: 4) {
+-                                    Text(ht("Copy version") + " " + copy.version.formatted())
+-                                    if let date = serviceDate(copy.createdAt) { Text(date.formatted()).font(.subheadline) }
+-                                    Text(copy.language == "es" ? pTr("Español (EE. UU.)") : pTr("English (US)"))
+-                                        .font(.subheadline)
+-                                }
+-                            }.accessibilityIdentifier("delivery.cook.saved." + String(copy.version))
+-                        }
+-                    } else { ProgressView() }
++            Group {
++                if allowed {
++                    Section(occurrence.meal.title) {
++                        if failed {
++                            Text(ht("Couldn’t load the saved cook instructions."))
++                            Button(ht("Refresh")) { Task { await load() } }
++                        } else if let copies {
++                            if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
++                            ForEach(copies) { copy in
++                                NavigationLink {
++                                    SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
++                                } label: {
++                                    VStack(alignment: .leading, spacing: 4) {
++                                        Text(ht("Copy version") + " " + copy.version.formatted())
++                                        if let date = serviceDate(copy.createdAt) { Text(date.formatted()).font(.subheadline) }
++                                        Text(copy.language == "es" ? pTr("Español (EE. UU.)") : pTr("English (US)"))
++                                            .font(.subheadline)
++                                    }
++                                }.accessibilityIdentifier("delivery.cook.saved." + String(copy.version))
++                            }
++                        } else { ProgressView() }
++                    }
++                } else {
++                    Text(ht("Refresh deliveries and review the current record."))
+                 }
+-            } else {
+-                Text(ht("Refresh deliveries and review the current record."))
+-            }
+-        }
++            }.listRowBackground(Theme.surface)
++        }.workingSurface()
+         .navigationTitle(pTr("Saved cook notes"))
+         .task(id: page) { await load() }
+         .refreshable { await load() }
+@@ -127,7 +129,7 @@ private struct SharedCookSavedView: View {
+     }
+ 
+     var body: some View {
+-        Form {
++        WorkingForm {
+             if allowed {
+                 Section(occurrence.meal.title) {
+                     LabeledContent(ht("Copy version"), value: copy.version.formatted())
+diff --git a/ios/UITests/SharedDeliveryUITests.swift b/ios/UITests/SharedDeliveryUITests.swift
+index 42fb1d3..d2a64e1 100644
+--- a/ios/UITests/SharedDeliveryUITests.swift
++++ b/ios/UITests/SharedDeliveryUITests.swift
+@@ -12,6 +12,13 @@ import XCTest
+         app.terminate()
+     }
+ 
++    private func capture(_ name: String) {
++        let attachment = XCTAttachment(screenshot: app.screenshot())
++        attachment.name = name
++        attachment.lifetime = .keepAlways
++        add(attachment)
++    }
++
+     func testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart() {
+         exerciseConfirmedOrderRecovery(spanishLargestText: false)
+     }
+@@ -465,16 +472,34 @@ import XCTest
+             XCTAssertTrue(history.isHittable && app.frame.insetBy(dx: 0, dy: 12).contains(center))
+             history.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+             XCTAssertTrue(app.navigationBars["Saved cook notes"].waitForExistence(timeout: 5))
++            capture("Shared saved cook history")
+             tap(app.buttons["delivery.cook.saved.1"])
+             reveal(savedText)
+             XCTAssertEqual(savedText.label, reviewed)
++            capture("Shared dated cook copy")
+         }
+         openSavedCopy()
+         tap(app.buttons["delivery.cook.savedShare"])
+         let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed)
+-        close.tap()
++        func dismissReviewedShare() -> Bool {
++            let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
++            guard XCTWaiter.wait(for: [ready], timeout: 15) == .completed else {
++                XCTFail("The system share Close control did not become ready")
++                return false
++            }
++            close.tap()
++            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: close)
++            guard XCTWaiter.wait(for: [dismissed], timeout: 15) == .completed else {
++                let screen = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
++                screen.name = "Shared cook share did not dismiss after Close"; screen.lifetime = .keepAlways; add(screen)
++                let hierarchy = XCTAttachment(string: app.debugDescription)
++                hierarchy.name = "Shared cook post-Close hierarchy"; hierarchy.lifetime = .keepAlways; add(hierarchy)
++                XCTFail("The system share sheet remained after its Close tap")
++                return false
++            }
++            return true
++        }
++        guard dismissReviewedShare() else { return }
+ 
+         let recipient = app.textFields["delivery.cook.recipient"]
+         let check = app.buttons["delivery.cook.checkRecipient"], mark = app.buttons["delivery.cook.markSent"]
+@@ -502,9 +527,11 @@ import XCTest
+         assertFirstVersionSent()
+         let reviewCorrection = app.buttons["delivery.cook.reviewCorrection"]
+         tap(reviewCorrection)
+-        let manual = app.textFields["delivery.cook.fullCorrection"]
++        let manual = app.descendants(matching: .any).matching(identifier: "delivery.cook.fullCorrection").firstMatch
+         reveal(manual)
++        XCTAssertTrue(manual.elementType == .textField || manual.elementType == .textView)
+         XCTAssertEqual(manual.value as? String, reviewed)
++        capture("Shared full correction editor")
+         let shareCorrection = app.buttons["delivery.cook.shareCorrection"]
+         for _ in 0..<4 where !shareCorrection.exists { app.swipeUp() }
+         XCTAssertTrue(shareCorrection.exists)
+@@ -524,9 +551,7 @@ import XCTest
+         XCTAssertTrue(correction.label.contains("Uncovered by deliveries: 2 units"))
+         XCTAssertFalse(mark.exists)
+         tap(shareCorrection)
+-        let cancel = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+-        XCTAssertEqual(XCTWaiter.wait(for: [cancel], timeout: 15), .completed)
+-        close.tap()
++        guard dismissReviewedShare() else { return }
+         tap(check)
+         assertFirstVersionSent()
+     }

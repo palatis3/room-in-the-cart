@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "exitCode": 0,
+  "manifestSHA256": "11886e1e6613d6799d9fe5a6c69541776d9e0cba098a5f2be96cfabc4c3a58c7",
+  "patchSHA256": "bf888dd26cbaf442753b75a3a0dd6580eb6a654cd0dc7b549b3f3ee5d9c8385f",
+  "controls": 190,
+  "previousMethodsUnchanged": 178,
+  "logSHA256": "dfaa7a55b62bf52b4050b00946c396c72d92e11cc690613f105b11bcf8901d3c",
+  "canonicalAfter": {
+    "scripts/simulator_signpost_control/runner.py": "0f52883862fcc207c7a171a8367f21e680c76a792c441d9396c237f015fa3274",
+    "scripts/simulator_signpost_control/run.py": "9ac154c72194bb6e0b04481180b9c2ef6ee8d667b28f1139bcd05e1e1374b89a",
+    "scripts/test_simulator_signpost_control.py": "9317afea08e5903c746ed02fc7817c86a658bfbafa496ee636f35eb65f4da10b",
+    "scripts/app_scroll_observation/contract.json": "216efb4b30d9384828d9e002fe3ea3dba887c38e021c2641eddff14f6643db2f"
+  },
+  "scope": "Portable controls only; hosted helper transport and performance remain unqualified."
+}

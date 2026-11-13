@@ -1,0 +1,49 @@
+..............................
+======================================================================
+FAIL: test_meal_week_pickup_observed_idle_phase_keeps_identity_and_combined_cap (test_check_ios_test_results.RuntimeWarningTests) (mutation='mixed_paths', count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/.build/UI05MenuIdleReview20261107/scripts/test_check_ios_test_results.py", line 380, in test_meal_week_pickup_observed_idle_phase_keeps_identity_and_combined_cap
+    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * count,
+AssertionError: 'passed' != 'unexpected-warnings'
+- passed
++ unexpected-warnings
+
+
+======================================================================
+FAIL: test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap (test_check_ios_test_results.RuntimeWarningTests) (changes={'selector': 'RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/.build/UI05MenuIdleReview20261107/scripts/test_check_ios_test_results.py", line 329, in test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap
+    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
+AssertionError: 'passed' != 'unexpected-warnings'
+- passed
++ unexpected-warnings
+
+
+======================================================================
+FAIL: test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap (test_check_ios_test_results.RuntimeWarningTests) (changes={'selector': 'RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/.build/UI05MenuIdleReview20261107/scripts/test_check_ios_test_results.py", line 329, in test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap
+    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
+AssertionError: 'passed' != 'unexpected-warnings'
+- passed
++ unexpected-warnings
+
+
+======================================================================
+FAIL: test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap (test_check_ios_test_results.RuntimeWarningTests) (changes={'selector': 'RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/.build/UI05MenuIdleReview20261107/scripts/test_check_ios_test_results.py", line 329, in test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap
+    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
+AssertionError: 'passed' != 'unexpected-warnings'
+- passed
++ unexpected-warnings
+
+
+----------------------------------------------------------------------
+Ran 32 tests in 1.051s
+
+FAILED (failures=4)

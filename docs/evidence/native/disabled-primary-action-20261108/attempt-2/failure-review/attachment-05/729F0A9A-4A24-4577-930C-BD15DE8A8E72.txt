@@ -1,0 +1,187 @@
+Attributes: Button, 0x11b2dc910, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+Element subtree:
+ →Button, 0x11b2dc910, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+    StaticText, 0x11b2dca30, {{16.0, 674.3}, {370.0, 82.0}}, label: 'Accept idea'
+    Other, 0x11b2dcb50, {{32.0, 689.3}, {338.0, 52.0}}, Disabled
+Path to element:
+ →Application, 0x106536b70, pid: 56260, label: 'Room in the Cart'
+  ↳Window (Main), 0x1065387f0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x106539e50, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x106539f70, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x106539bb0, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x11b2cc980, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x11b2d4640, {{0.0, 0.0}, {402.0, 874.0}}
+        ↳Other, 0x11b2d70a0, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x11b2d71c0, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x11b2d72e0, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x11b2d7400, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x11b2d7520, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x11b2d7640, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x11b2d7ac0, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x11b2d7be0, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x11b2d7d00, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x11b2d7e20, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳CollectionView, 0x11b2d7f40, {{0.0, 0.0}, {402.0, 874.0}}
+                   ↳Cell, 0x11b2dc130, {{16.0, 674.3}, {370.0, 82.0}}
+                    ↳Other, 0x11b2dc5b0, {{16.0, 674.3}, {370.0, 82.0}}
+                     ↳Other, 0x11b2dc6d0, {{16.0, 674.3}, {370.0, 82.0}}
+                      ↳Other, 0x11b2dc7f0, {{16.0, 674.3}, {370.0, 82.0}}
+                       ↳Button, 0x11b2dc910, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11b5f0ff0, pid: 56260, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x11b70fe80, {{0.0, 0.0}, {402.0, 874.0}}
+      Window, 0x11b5efbb0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b7103c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5efcd0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b7104e0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5efdf0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b710120, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b710240, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b710600, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b710720, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5ef970, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11b710840, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5efa90, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b713050, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11b710960, {{0.0, 0.0}, {402.0, 874.0}}
+      TabBar, 0x11b711af0, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Tab Bar'
+      Other, 0x11b713170, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11b710b30, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b711c10, {{64.0, 791.0}, {274.0, 62.0}}
+      Other, 0x11b713290, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11b710c50, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b711d30, {{64.0, 791.0}, {94.0, 54.0}}
+      Other, 0x11b711e50, {{64.0, 791.0}, {274.0, 62.0}}
+      Other, 0x11b712630, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b7133b0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x106a55320, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11b710d70, {{0.0, 0.0}, {402.0, 874.0}}
+      Button, 0x11b711f70, {{68.0, 795.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Shop'
+      Button, 0x11b7121b0, {{154.0, 795.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Dinners', Selected
+      Button, 0x11b7123f0, {{240.0, 795.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Records'
+      Other, 0x11b712750, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b6123e0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x106a4dc00, {{0.0, 791.0}, {402.0, 83.0}}
+      NavigationBar, 0x11b710e90, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Dinner idea'
+      Other, 0x11b7111f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5ef730, {{0.0, 0.0}, {402.0, 874.0}}
+      Image, 0x11b712090, {{99.0, 802.3}, {31.7, 26.7}}, identifier: 'cart.fill', label: 'shopping cart'
+      Image, 0x11b7122d0, {{190.0, 798.7}, {21.7, 30.7}}, identifier: 'fork.knife', label: 'Food'
+      Image, 0x11b712510, {{272.7, 801.3}, {27.7, 27.3}}, identifier: 'clock.arrow.trianglehead.counterclockwise.rotate.90', label: 'clock.arrow.trianglehead.counterclockwise.rotate.90'
+      Other, 0x11b712870, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b712990, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x106a1a140, {{0.0, 791.0}, {402.0, 83.0}}
+      Button, 0x11b710fb0, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Dinner ideas'
+      StaticText, 0x11b7110d0, {{155.7, 73.7}, {90.3, 20.7}}, label: 'Dinner idea'
+      Other, 0x11b711310, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b5ef850, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b712ab0, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b712f30, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b711430, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b712bd0, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b712e10, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11b711550, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b712cf0, {{154.0, 795.0}, {94.0, 54.0}}
+      CollectionView, 0x11b711670, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11b711790, {{-16.0, -2550.3}, {434.0, 5178.7}}
+      Cell, 0x11b7118b0, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x11acf66c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11acf6a20, {{0.0, 0.0}, {402.0, 874.0}}
+      Cell, 0x11acf7e60, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11acf89a0, {{32.0, 673.3}, {338.0, 1.0}}
+      Cell, 0x11b610a10, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b611660, {{154.0, 755.3}, {216.0, 1.0}}
+      Cell, 0x11b611780, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x11b612080, {{32.0, 807.3}, {338.0, 1.0}}
+      Other, 0x11b6121a0, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 3 pages', value: 91%
+      Other, 0x11b7119d0, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x1064a88b0, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x11acf67e0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf6900, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf6b40, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf7680, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf7f80, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11acf82e0, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11b610b30, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b6111e0, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b6118a0, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x11b611c00, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x11b6122c0, {{396.0, 445.7}, {3.0, 310.7}}
+      Other, 0x1064a8090, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x1064a89d0, {{16.0, -211.7}, {370.0, 886.0}}
+      Image, 0x11acf6c60, {{-120.0, -166.0}, {642.0, 332.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x11acf6d80, {{0.0, 0.0}, {402.0, 106.0}}
+      Other, 0x11acf6ea0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf70e0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf7320, {{0.0, 0.0}, {402.0, 170.8}}
+      Image, 0x11acf77a0, {{-120.0, 731.0}, {642.0, 286.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x11acf78c0, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf7b00, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf80a0, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11acf8400, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11b610c50, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b611300, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b6119c0, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x11b611d20, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x1064a8790, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x1064a8af0, {{16.0, -211.7}, {370.0, 886.0}}
+      Other, 0x11acf6fc0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf7200, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf7440, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf7560, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x11acf79e0, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf7c20, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf7d40, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x11acf81c0, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11acf8520, {{16.0, 674.3}, {370.0, 82.0}}
+      Other, 0x11b6110c0, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b611420, {{16.0, 756.3}, {370.0, 52.0}}
+      Other, 0x11b611ae0, {{16.0, 808.3}, {370.0, 52.0}}
+      Other, 0x11b611e40, {{16.0, 808.3}, {370.0, 52.0}}
+      StaticText, 0x1064a8c10, {{32.0, -185.5}, {182.3, 20.3}}, label: 'Stock and whole packs'
+      StaticText, 0x1064a8d30, {{32.0, -153.2}, {323.3, 64.3}}, label: 'Only explicitly matched food is credited. Reviewing an idea leaves the shopping list and reservations unchanged.'
+      StaticText, 0x1064a8e50, {{32.0, -76.8}, {63.3, 20.3}}, label: 'Tortillas'
+      StaticText, 0x1064a8f70, {{32.0, -51.5}, {264.7, 20.3}}, label: 'Recipe needs: Quantity unresolved'
+      StaticText, 0x1064a9090, {{32.0, -26.2}, {332.3, 20.3}}, label: 'Confirmed stock free for this idea: Quantity unresolved'
+      StaticText, 0x1064a91b0, {{32.0, -0.8}, {255.7, 20.3}}, label: 'Still to cover: Quantity unresolved'
+      StaticText, 0x1064a92d0, {{32.0, 24.5}, {306.0, 20.3}}, label: 'Usable in one pack: Quantity unresolved'
+      StaticText, 0x11b4c6b90, {{32.0, 49.8}, {328.7, 20.3}}, label: 'Whole packs for the remainder: Unresolved'
+      StaticText, 0x1062a43d0, {{32.0, 75.2}, {246.0, 20.3}}, label: 'Estimated item cost: Unresolved'
+      Button, 0x1062a3b80, {{32.0, 112.3}, {263.0, 20.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60301', label: 'Review stock and pack for Tortillas'
+      StaticText, 0x1062a3330, {{32.0, 168.8}, {113.3, 20.3}}, label: 'Cooked beans'
+      StaticText, 0x1062a3750, {{32.0, 194.2}, {152.0, 20.3}}, label: 'Recipe needs: 1 cup'
+      StaticText, 0x106e4b020, {{32.0, 219.5}, {314.7, 20.3}}, label: 'Confirmed stock free for this idea: 0 cups'
+      StaticText, 0x106e4b590, {{32.0, 244.8}, {143.0, 20.3}}, label: 'Still to cover: 1 cup'
+      StaticText, 0x11afcec90, {{32.0, 270.2}, {306.0, 20.3}}, label: 'Usable in one pack: Quantity unresolved'
+      StaticText, 0x11b5eed50, {{32.0, 295.5}, {328.7, 20.3}}, label: 'Whole packs for the remainder: Unresolved'
+      StaticText, 0x11b5ed8f0, {{32.0, 320.8}, {246.0, 20.3}}, label: 'Estimated item cost: Unresolved'
+      Button, 0x11b5ef070, {{32.0, 358.0}, {313.0, 20.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60302', label: 'Review stock and pack for Cooked beans'
+      StaticText, 0x11b5ef190, {{32.0, 414.5}, {150.7, 20.3}}, label: 'Shredded cabbage'
+      StaticText, 0x11b5ef2b0, {{32.0, 439.8}, {152.0, 20.3}}, label: 'Recipe needs: 1 cup'
+      StaticText, 0x11b5ef3d0, {{32.0, 465.2}, {314.7, 20.3}}, label: 'Confirmed stock free for this idea: 0 cups'
+      StaticText, 0x106d25860, {{32.0, 490.5}, {143.0, 20.3}}, label: 'Still to cover: 1 cup'
+      StaticText, 0x1064a93f0, {{32.0, 515.8}, {306.0, 20.3}}, label: 'Usable in one pack: Quantity unresolved'
+      StaticText, 0x1064a9510, {{32.0, 541.2}, {328.7, 20.3}}, label: 'Whole packs for the remainder: Unresolved'
+      StaticText, 0x1064a9630, {{32.0, 566.5}, {246.0, 20.3}}, label: 'Estimated item cost: Unresolved'
+      Button, 0x1064a9750, {{32.0, 592.7}, {203.7, 42.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60303', label: 'Review stock and pack for Shredded cabbage'
+      Button, 0x11acf8640, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+      Button, 0x11b611540, {{16.0, 756.3}, {370.0, 52.0}}, label: 'Save editable draft'
+      Button, 0x11b611f60, {{16.0, 808.3}, {370.0, 52.0}}, label: 'Continue editing'
+      StaticText, 0x11acf8760, {{16.0, 674.3}, {370.0, 82.0}}, label: 'Accept idea'
+      Other, 0x11acf8880, {{32.0, 689.3}, {338.0, 52.0}}, Disabled
+    }
+    ↪︎Find: Elements matching predicate '"dinnerAcceptIdea" IN identifiers'
+      Output: {
+        Button, 0x11afca6f0, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x11b5df980, {{16.0, 674.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Accept idea', Disabled
+        }
+
+rowPaddingTap=(20.0, 715.3333333333334); topEdge=false

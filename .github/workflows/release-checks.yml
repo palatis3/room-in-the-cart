@@ -1,0 +1,218 @@
+name: Pre-release regression checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full reviewed commit SHA to qualify; must match the selected ref
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-preflight:
+    name: Validate source before native release work
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed release candidate
+        env:
+          REVIEWED_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess
+          candidate = os.environ.get("REVIEWED_CANDIDATE_SHA", "")
+          if re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
+              raise SystemExit("Release candidate must be a full lowercase commit SHA")
+          checkout = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if candidate != os.environ.get("GITHUB_SHA") or candidate != checkout:
+              raise SystemExit("Reviewed release candidate differs from the dispatched or checked-out revision")
+          print(f"Validated frozen release candidate {candidate}")
+          PY
+      - name: Check production metadata before allocating native runners
+        working-directory: scripts
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          from app_configuration import compiled_metadata, load_configuration, require_release_metadata
+
+          try:
+              config = load_configuration(Path(".."), "Release")
+              require_release_metadata(compiled_metadata(config, "Release"))
+          except (OSError, ValueError) as error:
+              raise SystemExit(str(error))
+          PYTHON
+      - name: Validate workflow syntax and expression references
+        shell: bash
+        run: |
+          yaml_env="$RUNNER_TEMP/ci-yaml"
+          python3 -m venv "$yaml_env"
+          "$yaml_env/bin/python" -m pip install --disable-pip-version-check --no-cache-dir \
+            --no-deps --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
+          echo "$yaml_env/bin" >> "$GITHUB_PATH"
+          lint_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$lint_dir"
+          curl --fail --silent --show-error --location \
+            --retry 3 --retry-max-time 90 --connect-timeout 10 --max-time 30 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$lint_dir/actionlint.tar.gz"
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
+            | (cd "$lint_dir" && sha256sum --check)
+          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
+          "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
+            --report .build/workflow-lint.json
+      - name: Reject known performance incompatibility before the full release batch
+        run: python3 scripts/check_release_performance_preflight.py
+      - name: Validate generated files, localization and CI test selection
+        run: |
+          python3 scripts/generate_theme.py --check
+          python3 scripts/check_localization.py
+          python3 scripts/generate_xcode_project.py --check
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          bash -n scripts/run_ios_test_shard.sh
+  core:
+    needs: source-preflight
+    name: Core build and tests
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    uses: ./.github/workflows/ci.yml
+    with:
+      require_release_metadata: true
+  security:
+    name: Source security
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/security.yml
+  diagnostics:
+    needs: source-preflight
+    name: Sanitizers and local billing
+    uses: ./.github/workflows/ios-deep.yml
+    with:
+      require_current_storekit: true
+  fixtures:
+    needs: source-preflight
+    name: Household and dinner regressions
+    uses: ./.github/workflows/ios-fixtures.yml
+  native-wire:
+    needs: source-preflight
+    name: Native Swift HTTPS integration
+    uses: ./.github/workflows/ios-native-wire.yml
+  performance:
+    needs: source-preflight
+    name: Release performance
+    uses: ./.github/workflows/ios-performance.yml
+    with:
+      enforce_baselines: true
+  staging-iphone:
+    needs: source-preflight
+    name: Installed iPhone app against staging
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - name: Select an iPhone for the staging scheme
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Test the staging service, Help and Support from the installed app
+        shell: bash
+        run: |
+          mkdir -p .build/staging-results
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Staging \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID,arch=arm64" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StagingDerivedData \
+            CODE_SIGN_IDENTITY=- -resultBundlePath .build/staging-results/staging.xcresult \
+            test 2>&1 | tee .build/staging-results/test.log
+      - name: Require all three staging checks and inspect runtime warnings
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          result=.build/staging-results
+          xcrun xcresulttool get test-results summary --path "$result/staging.xcresult" --compact > "$result/summary.json"
+          xcrun xcresulttool get test-results tests --path "$result/staging.xcresult" --compact > "$result/tests.json"
+          cat > "$result/selectors.txt" <<'TESTS'
+          RoomInTheCartTests/StagingServiceTests/testInstalledAppReachesItsStagingServiceAnonymously
+          RoomInTheCartUITests/StagingHelpUITests/testOnlineHelpOpensItsPageInSafari
+          RoomInTheCartUITests/StagingHelpUITests/testOnlineSupportOpensItsPageInSafari
+          TESTS
+          python3 scripts/check_ios_test_results.py --selectors "$result/selectors.txt" --expected-count 3 \
+            --summary "$result/summary.json" --tests "$result/tests.json" \
+            --result-bundle "$result/staging.xcresult" --test-log "$result/test.log"
+      - name: Preserve staging test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-iphone-results-${{ github.run_attempt }}
+          path: .build/staging-results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+  dependencies:
+    name: Existing dependencies (${{ matrix.package }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [service, web]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - name: Reject known high or critical vulnerabilities in the entire lockfile
+        working-directory: ${{ matrix.package }}
+        run: npm audit --package-lock-only --audit-level=high
+  release-checks:
+    name: Automated release gate
+    needs: [source-preflight, core, security, diagnostics, fixtures, native-wire, performance, staging-iphone, dependencies]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: read
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require every pre-release job to succeed
+        run: |
+          python3 - <<'PY'
+          import json, os
+          jobs = json.loads(os.environ["JOB_RESULTS"])
+          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          if failures:
+              raise SystemExit(f"Pre-release checks did not pass: {failures}")
+          PY
+      - name: Require current CodeQL analysis and no serious open findings
+        run: python3 scripts/check_release_code_scanning.py
+      - name: Record the checked commit
+        run: |
+          {
+            echo "Automated regression checks passed for $GITHUB_SHA."
+            echo
+            echo 'Signing, production configuration, live-provider acceptance and physical-device review are separate release requirements. This workflow does not upload to the App Store.'
+          } >> "$GITHUB_STEP_SUMMARY"

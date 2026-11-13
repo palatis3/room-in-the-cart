@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "reviewedAtUTC": "2026-11-08T18:15:13.635340+00:00",
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "reviewer": "root",
+  "scope": "Viewed all8original isolated textPNGs+fullstandardviewport; reviewed8framefirstlines. iPhoneSE3 iOS17.0/21A328 lightLarge+AX5.",
+  "findings": [
+    "Complete portions labels and digits visible without truncation.",
+    "Standard20.5ptframes/nativebody20.287;AX5label125.5multiline,value63.5/nativebody63.248.",
+    "Fullstandard screenshot retains40.69total,2.69overage,37.20before,1.99fee and both named dated protectedlunches together.",
+    "Native4.5pixelcontrast checks allpass."
+  ],
+  "limits": [
+    "One-digit crops are single glyphs; no multiglyph claim.",
+    "PhysicalVoiceOver and allrouteacceptance remain unqualified."
+  ]
+}

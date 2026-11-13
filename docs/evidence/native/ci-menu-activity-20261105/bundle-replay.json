@@ -1,0 +1,235 @@
+[
+  {
+    "bundle": "prior-ui-02",
+    "originalTestResult": "Failed",
+    "originalPassCount": 1,
+    "checkerExitCode": 1,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 2,
+      "detailExportCount": 2,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "8ff699123e1c1b59b71500bfaf607aa10e7e505c5c5ca5602a39e405b9a1a067",
+      "test-summary.json": "06d69dbcc613e4c89073a71648458be332223001e1e971a1acdb560fdc64400b",
+      "test-details.json": "fcf7169249c9390c04696775a030d6876b18547a8f25d894b88ae235921296f9",
+      "verification.log": "c36e38ff8c10bdbf453efe23b96b7ff1a2c8a9fb4be66fb981308edb8bc4b619"
+    }
+  },
+  {
+    "bundle": "prior-ui-04",
+    "originalTestResult": "Failed",
+    "originalPassCount": 4,
+    "checkerExitCode": 1,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 1,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 1,
+          "menuActivity": {
+            "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "9f93fea86af0119ac4f6818a84008d9539424b9d064db85d7b986ebd04f3dff1",
+      "test-summary.json": "70bba71adb1da8d29c5d5243266f31e2b379879c5b74bd5860d237c4ffd1cbe6",
+      "test-details.json": "01b794957af890275387e3ba7e25aed4250a8c132105bb7b0fdf8f120e52f52b",
+      "verification.log": "65173ee11cca9ef96b1f88cebae31869f891df8233e32a1c6e26eb68e61d2f45"
+    }
+  },
+  {
+    "bundle": "ui-04",
+    "originalTestResult": "Passed",
+    "originalPassCount": 6,
+    "checkerExitCode": 0,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 1,
+      "examinedTestCount": 6,
+      "detailExportCount": 6,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 1,
+          "menuActivity": {
+            "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "dc6ff9e546f8f2b07ac84561db3a18b442696320365b456398d328b00e797079",
+      "test-summary.json": "b51e1b37c8205572730f5acd7b4b832f605c1e65a23a97c2266da79eda778a3d",
+      "test-details.json": "8f0e0f83641ced98bc5cca68b5b85faf372566be2420f63ceecf83d14f07b618",
+      "verification.log": "2b5e5b61595261bb51e39130b6519e7c70704b4189c0aebbe85d56c367a486a7"
+    }
+  },
+  {
+    "bundle": "ui-06",
+    "originalTestResult": "Passed",
+    "originalPassCount": 6,
+    "checkerExitCode": 0,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 6,
+      "detailExportCount": 6,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "ab4ceb5c627d5b62eeb0e17f2819a038c6a648e90b23dd221c9bb6da9c2917c7",
+      "test-summary.json": "a565caa0242ba4bfd874e4802e8878b708d39d479294b6d1420a6aa1eaf12477",
+      "test-details.json": "ba5d41706dfc075cd66509c37f985ed60296541d7ba4fdbd506c8ec212c8c67a",
+      "verification.log": "e5c28878ed3756db216c912696b507b6c7a59af6e997bdfb5767239eb3ac45f5"
+    }
+  },
+  {
+    "bundle": "ui-10",
+    "originalTestResult": "Passed",
+    "originalPassCount": 6,
+    "checkerExitCode": 0,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 6,
+      "detailExportCount": 6,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "7a8e5a1c9c0c11e41bdce23751b8f2bb10665969b8cc013e53153b5e080770fd",
+      "test-summary.json": "dee236f66b966fe839fd6cec7dacc635ccd423b856e7502e86dde2c04075ca37",
+      "test-details.json": "801ea068c0d0f5d6dea08ca381b30015e43a13a0058a384f238c26fa09656a76",
+      "verification.log": "54d9d41886bc3b2f94517e9e764cd3490d4037f8d4610e2f7b02f08557668d38"
+    }
+  },
+  {
+    "bundle": "shared-store-quote",
+    "originalTestResult": "Failed",
+    "originalPassCount": 3,
+    "checkerExitCode": 1,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 6,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "activityExportCount": 3,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "evidenceSha256": {
+      "Tests.log": "26008c1c5d8fb8eceec73ff891f8de99153f7d9ecbdfe2936feaf14087c440ae",
+      "test-summary.json": "556db06ebb9d355e97943bb3f5b29213ae93a494620428ad4efa8f0c24f481c7",
+      "test-details.json": "7a76fc312deff466add362b1de854bba24a4c12a58c1ba51f65080818ac4ef6e",
+      "verification.log": "901d596a0bba3c89f956115b72566e9dc9e15e008984474327e97c75ee593050"
+    }
+  },
+  {
+    "bundle": "clean-ui-03",
+    "originalTestResult": "Passed",
+    "originalPassCount": 5,
+    "checkerExitCode": 0,
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "evidenceSha256": {
+      "Tests.log": "bc1924a992ac41cbe1ef91e307c1c25febdfe001f5f3632e018ac61d57200b3d",
+      "test-summary.json": "4cc0250eb78d9f2093d5b3e1e5c1461204eebb9b9377b8ae7f87c0409e3839b8",
+      "test-details.json": "7e82b5184ac5e3a094ff97799c4e5bb2f16336162dda124f48c9e483ca835629",
+      "verification.log": "37496b822a9b76cd6e8c3dfd7289fb12586d642e19c26e0ac2bb53893c444778"
+    }
+  }
+]

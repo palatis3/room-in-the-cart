@@ -1,0 +1,49 @@
+{
+  "scope": "Local Xcode27.1/iOS26.2(23C54) standalone witness compatibility only; no hosted26.3 qualification or fix for0d5 omission",
+  "testPassed": 1,
+  "testExpected": 1,
+  "nativeExit": 0,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "runnerRestarts": 0,
+  "elapsedSeconds": 228.49,
+  "buildWarnings": [
+    "Two AppIntents metadata-extraction skipped notices; no AppIntents.framework dependency",
+    "Two signed-binary stripping skipped notices for Widget and Share extensions"
+  ],
+  "sourceFiles": 459,
+  "productFiles": 163,
+  "sourcesAndProductsUnchanged": true,
+  "requiredScrollSamples": [
+    2.583126125,
+    2.5663787090000003,
+    2.583303958,
+    2.582466166,
+    2.583091292
+  ],
+  "requiredScrollMedianSeconds": 2.583091292,
+  "witness": {
+    "diagnosticOnly": true,
+    "maximumRetainedEvents": 128,
+    "omittedEvents": 0,
+    "reportCallbacks": 6,
+    "schemaVersion": 1,
+    "status": "recorded",
+    "totalEvents": 25,
+    "totalInstances": "7"
+  },
+  "endpointStatus": "captured",
+  "endpointCount": 24,
+  "correlationStatus": "observations-only",
+  "minimumEndMarginSeconds": 0.007701873779296875,
+  "maxAbsoluteClockDeltaDifferenceSeconds": 2.3851783935491255e-05,
+  "limits": [
+    "Five required scroll samples exist: instrumented nonreproduction, not original missing-series explanation.",
+    "Witness bounds belong to custom metric, not proof of built-in receipt.",
+    "Six report windows matched six gesture activities without ordinal warm-up assumption.",
+    "No hitch samples supplied on this simulator; no hardware claim.",
+    "No threshold changed or new hosted run dispatched."
+  ],
+  "correctsResultSHA256": "7da585b296ec0c68419162be1ac43c1c65ab5b7ae944e12cf32fe3256b6758c2",
+  "buildWarningCount": 4
+}

@@ -1,0 +1,14 @@
+Executed 3 of 3 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsAX5 | Passed | 168.52 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsSmall | Passed | 123.98 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsLarge | Passed | 120.29 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 8784 log lines (3 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests.
+

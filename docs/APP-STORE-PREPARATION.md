@@ -31,6 +31,40 @@ The [review draft](APP-STORE-LISTING-DRAFT.json) preserves the supplied English 
 
 Both drafts fit the current field limits. Review the Spanish wording and confirm that the submitted build supports every shared and paid claim. Support and privacy URLs still need verified publication, and the operator must supply the submission contact and copyright. [Version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information)
 
+## First-release notes for review
+
+**English (US)**
+
+Compare two grocery packs by how much usable food you need and what each choice will cost. As you plan your pickup, set aside lunch portions and see what’s left for dinner. When fewer groceries come home than you expected, review the shortage and choose what to carry into your next shopping list.
+
+**Spanish for the US storefront**
+
+Compara dos presentaciones del mismo alimento según la cantidad que necesitas y cuánto te costaría cada opción. Al planear la compra, aparta porciones para el almuerzo y revisa cuánto queda para la cena. Si al recoger el pedido recibes menos de lo previsto, revisa qué falta y elige qué agregar a tu próxima lista de compras.
+
+## TestFlight draft for the first internal build
+
+Use these notes with the signed build once the two walkthroughs have passed on that build. The support contact for this draft is hello@roominthecart.com. Confirm that feedback reaches the support owner before inviting testers.
+
+### English (US)
+
+**Beta description.** Plan a grocery pickup around the food your family needs. Compare pack sizes and prices, save the result, and keep a shopping list on your iPhone.
+
+**What to test**
+
+1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Compare a pack of 8 for $3.20 with a pack of 6 for $2.70. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
+2. Open Settings from a tab’s main screen, then Support. Review the support summary and choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
+3. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
+
+### Spanish for the US storefront
+
+**Descripción de la beta.** Planea tu compra según los alimentos que necesita tu familia. Compara tamaños de paquetes y precios, guarda el resultado y lleva la lista de compras en tu iPhone.
+
+**Qué probar**
+
+1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Compara un paquete de 8 por $3.20 con uno de 6 por $2.70. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
+2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Abre la hoja para compartir y elige Copiar. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
+3. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
+
 ## Feature claim ledger
 
 The following are draft claim boundaries, not permission to publish them while required launch services are unavailable. The complete Foundation scope remains the intended release; deferred setup is not evidence that shared or paid features are working in the distributed build.
@@ -47,7 +81,7 @@ The following are draft claim boundaries, not permission to publish them while r
 | Two-store comparison | Two entered quotes and separate trip cash/time; [five scoped native cases](evidence/native/connected-store-quotes/acceptance.json). | Say manually entered quotes. No fetched prices, universal cheapest-store finder or automatic routing. |
 | Household annual membership | StoreKit2 localized product, restore/manage, verified server entitlement and up to two named adult seats. | Actual Apple product and signed sandbox/TestFlight lifecycle. `$49.99/year` is a US research hypothesis, not the current storefront offer. |
 
-## Screenshot candidates and remaining scenes
+## Screenshot candidates
 
 Apple's currently retrieved [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) require at least one iPhone screenshot for the Dynamic Island medium display and allow 1–10 per device size. Accepted portrait sizes for that class include 1179×2556 and 1206×2622; use the exact final device/output size accepted by App Store Connect. Files must be JPEG/JPG/PNG without transparency. iPad assets are needed only if iPad support is added. Recheck the live specification at upload; do not reuse an old size checklist.
 
@@ -55,15 +89,15 @@ The November 4 Release simulator run captured both pack results and the saved Re
 
 Four additional iPhone 17 candidates show the same dated dinner and separate school-lunch reservation in List and Grid, in both languages. The meal-week manifest records the Release executable, the saved data read after relaunch, the simulator bundle cleanup and the source and output hashes. The final signed build and human language review remain open. [Meal-week capture manifest](app-store/screenshots/meal-week-manifest.json)
 
-Capture the remaining scenes with fictional data in the ordinary iPhone app. Keep the source/build, device, locale, date and displayed inputs with each asset. Verify every captured claim against the actual product behavior before submission.
+All six planned scenes now have English and US Spanish captures from the ordinary iPhone app with fictional data. Compare these with the signed release build before submission. The optional Household scene still needs a real storefront offer.
 
-| Draft frame | Real screen / visible point | Gate before capture |
+| Draft frame | What the screen shows | Capture status and remaining checks |
 |---|---|---|
 | 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Local bilingual draft captures are available. Match the final signed build and retain its known/unknown review evidence. |
-| 2. Review the whole pickup | S24 cereal request with current/proposed inclusive total, overage and two protected lunches. | Promoted current S24 pass plus configured review household. |
+| 2. Review the whole pickup | Previewing a $3.49 cereal request moves a $37.20 pickup to $40.69, $2.69 over the $38 cap. The preview also shows two protected school-lunch portions. | [English and US Spanish Release captures](app-store/screenshots/whole-pickup-preview-manifest.json) use a local synthetic household. The request stayed pending. Match the final signed build and complete human language review. |
 | 3. Plan dinners and keep lunch | Meal week with a named lunch reservation and a dated dinner. | Bilingual local List and Grid captures are available. Capture the additional unscheduled dinner if it is included in the final frame, then match the signed build. |
-| 4. Repair what came home | Actual usable amount, dependent shortage preview and current dated cook instruction. | Confirmed stock/arrival fixture; current allocation agrees with text. |
-| 5. Compare two entered trips | Quote comparison showing checkout and additional trip cash separately. | Exact equivalent commitments and known/unknown terms. |
+| 4. Repair what came home | Previewing 7 usable wraps against 6 saved reduces the Tuesday taco shortage from 2 wraps to 1. Both wraps set aside for lunch remain available. | [English and US Spanish Release captures](app-store/screenshots/repair-what-came-home-manifest.json) use a synthetic pickup. Leaving the preview preserved the saved receipt. Match the final signed build and complete human language review. |
+| 5. Compare two entered trips | For the same four dinner portions, the second pickup saves $3 at checkout, adds $4 and 18 minutes of travel, and costs $1 more overall. | [English and US Spanish Release captures](app-store/screenshots/two-store-trips-manifest.json) use saved whole-checkout quotes. Match the final signed build before submission. |
 | 6. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | The local bilingual Records captures are available. Check final system export and recovery on the distribution candidate. |
 | Optional 7. Household | Actual named-seat offer with real localized price/term, Restore and Manage. | Actual product/account configuration. A local `.storekit` price or unavailable offer is not a storefront screenshot. |
 

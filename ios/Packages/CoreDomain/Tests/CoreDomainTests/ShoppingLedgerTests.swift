@@ -29,7 +29,7 @@ final class ShoppingLedgerTests: XCTestCase {
         let existing = try ledger.addManualLine(name: "wraps", quantity: q(12))
         let trashed = try ledger.addManualLine(name: "WRAPS", quantity: q(12))
         try ledger.trash(lineID: trashed)
-        var preview = ledger.stageImport(text: "12 rice\n6 pasta\n2 bread", source: .paste)
+        var preview = try ledger.stageImport(text: "12 rice\n6 pasta\n2 bread", source: .paste)
         preview.lines[0].name = "Wraps"
         preview.lines[1].name = " wRAPS "
         preview.lines[2].name = "rice"
@@ -46,7 +46,7 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertThrowsError(try ShoppingLedger().refreshImportMatches(preview))
         _ = try ledger.addManualLine(name: "soap", quantity: q(1))
         XCTAssertThrowsError(try ledger.refreshImportMatches(preview))
-        var invalid = ledger.stageImport(text: "1 soap")
+        var invalid = try ledger.stageImport(text: "1 soap")
         invalid.lines[0].name = " "
         XCTAssertThrowsError(try ledger.refreshImportMatches(invalid))
     }
@@ -54,7 +54,7 @@ final class ShoppingLedgerTests: XCTestCase {
     func testStagingPreservesOriginalAndUnknownsWithoutMutation() throws {
         let ledger = ShoppingLedger()
         let text = "  12 wraps  \n• 1/2 cup flour\nMilk\n2 scoops rice\n- 2 kg potatoes\n1 fl oz vanilla"
-        let preview = ledger.stageImport(text: text, source: .paste)
+        let preview = try ledger.stageImport(text: text, source: .paste)
         XCTAssertEqual(preview.originalText, text)
         XCTAssertEqual(preview.lines.map(\.originalText), text.components(separatedBy: .newlines))
         XCTAssertEqual(preview.lines[0].quantity?.amount, try Rational(12))
@@ -69,12 +69,166 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.revision, 0)
     }
 
+    func testBilingualMeasuresMatchFoodWithoutChangingOriginalEvidence() throws {
+        for label in ["2 × 12 fl. oz. seltzer", "2 × 12fl.oz. seltzer", "2 × 12fl. oz. seltzer",
+                      "2 latas de 12 oz. líq. seltzer", "2 cans of seltzer, 12 fl. oz. each"] {
+            let row = try ShoppingLedger().stageImport(text: label).lines[0]
+            XCTAssertEqual(row.name, "seltzer", label)
+            XCTAssertEqual(row.originalPack?.amountPerPack?.unit, .fluidOunce, label)
+            XCTAssertEqual(row.quantity?.amount, try Rational(24), label)
+            XCTAssertEqual(row.originalText, label)
+        }
+        let mass = try ShoppingLedger().stageImport(text: "2 oz. St. André").lines[0]
+        XCTAssertEqual(mass.quantity?.unit, .ounce)
+        XCTAssertEqual(mass.name, "St. André")
+        var ledger = ShoppingLedger()
+        let first = try ledger.stageImport(text: "1 1/2 cups of arroz\n2 onzas de queso\n2 onzas líquidas de caldo sin sal\n1 kg De Cecco")
+        XCTAssertEqual(first.lines.map(\.name), ["arroz", "queso", "caldo sin sal", "De Cecco"])
+        XCTAssertEqual(first.lines.map { $0.quantity?.unit }, [.cup, .ounce, .fluidOunce, .kilogram])
+        XCTAssertEqual(first.lines[0].quantity?.amount, try Rational(3, 2))
+        try ledger.commitImport(first)
+        let repeatPaste = try ledger.stageImport(text: "1½ tazas de arroz", source: .paste)
+        let item = repeatPaste.lines[0]
+        XCTAssertEqual(item.duplicateLineIDs, [first.lines[0].proposedLineID])
+        let batch = try ledger.commitImport(repeatPaste, decisions: [item.id: .mergeDuplicate(first.lines[0].proposedLineID)])
+        ledger = try roundTrip(ledger)
+        XCTAssertEqual(try ledger.quantity(forLineID: first.lines[0].proposedLineID)?.amount, try Rational(3, 2))
+        XCTAssertEqual(ledger.contributions.last?.originalText, "1½ tazas de arroz")
+        try ledger.undoImport(batchID: batch)
+        XCTAssertEqual(ledger.contributions(forLineID: first.lines[0].proposedLineID).map(\.originalText), ["1 1/2 cups of arroz"])
+    }
+
+    func testUnsupportedMeasuresAndMalformedMixedAmountsStayUnresolved() throws {
+        let shop = ShoppingLedger()
+        for text in ["2 tbsp. cocoa", "2 fl. broth", "2 cucharadas de arroz", "2 cucharaditas de sal", "3 manojos de cilantro",
+                     "1 1/0 cups rice", "9223372036854775807 1/2 cups rice"] {
+            let row = try shop.stageImport(text: text).lines[0]
+            XCTAssertNil(row.quantity, text)
+            XCTAssertNotNil(row.unresolvedReason, text)
+            XCTAssertEqual(row.originalText, text)
+        }
+    }
+
+    func testPastedQuarterMeasuresPreserveProductsAndDoNotGuessMissingUnits() throws {
+        var shop = ShoppingLedger()
+        let text = "one and a quarter cups of rice\ntres cuartos de taza de leche\nuna taza y un cuarto de arroz\n3 quarters of milk\n2 Quarter Pounders\nOne Degree oats"
+        let preview = try shop.stageImport(text: text, source: .paste)
+        try shop.commitImport(preview)
+        XCTAssertEqual(preview.lines.map(\.name), ["rice", "leche", "arroz", "3 quarters of milk", "Quarter Pounders", "One Degree oats"])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.amount }, [try Rational(5, 4), try Rational(3, 4), try Rational(5, 4), nil, try Rational(2), nil])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.unit }, [.cup, .cup, .cup, nil, .count, nil])
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: "\n"))
+    }
+
+    func testPastedSecondMeasureUsesItsOwnUnitBeforeSaving() throws {
+        let text = "one pound and a half ounce of cheese\nuna taza y un cuarto de taza de arroz\n1 cup and a quarter of a pound of rice\nHalf Baked cookies"
+        var shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: text, source: .paste)
+        try shop.commitImport(preview)
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: "\n"))
+        XCTAssertEqual(preview.lines.map(\.name), ["cheese", "arroz", "rice", "Half Baked cookies"])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.amount }, [try Rational(33, 32), try Rational(5, 4), nil, nil])
+        XCTAssertEqual(shop.contributions.map { $0.quantity?.unit }, [.pound, .cup, nil, nil])
+        XCTAssertNotNil(preview.lines[2].unresolvedReason)
+    }
+
+    func testRangedImportsKeepUncertainAmountsOutOfSavedSupply() throws {
+        var shop = ShoppingLedger()
+        let examples = [
+            ("2 to 3 apples", "apples"), ("two to three apples", "apples"),
+            ("2 to thirty apples", "apples"), ("2 to one hundred and five apples", "apples"),
+            ("entre cien y doscientos limones", "limones"), ("twenty-five to thirty pears", "pears"),
+            ("veintidós a treinta y cinco manzanas", "manzanas"), ("2 -3 pears", "pears"), ("2– 3 pears", "pears"),
+            ("dos a tres manzanas", "manzanas"), ("entre dos y tres manzanas", "manzanas"),
+            ("2–3 cups of rice", "rice"), ("1/2 to 3/4 cup of rice", "rice"), ("1½–2kg rice", "rice"), ("2 packs of 6 to 8 wraps", "wraps"),
+            ("2 cajas de seis a ocho tortillas", "tortillas"),
+            ("2 packs of wraps, 6 to 8 oz each", "wraps"), ("2×6–8oz beans", "beans"), ("2–3oz Cup Noodles", "Cup Noodles"),
+            ("between two and three cups of rice", "rice"), ("dos o tres cajas de seis tortillas", "tortillas"),
+            ("2 6–8 oz cans of beans", "beans"), ("2 packs of 6 to 8 oz Cup Noodles", "Cup Noodles"),
+            ("2 latas de frijoles, seis a ocho onzas cada una", "frijoles"),
+            ("2 to 3 packs of 6 wraps", "wraps"), ("2 packs of 3 to 4 boxes of 6 wraps", "wraps")
+        ]
+        for (source, name) in examples {
+            let row = try XCTUnwrap(shop.stageImport(text: source).lines.first)
+            XCTAssertEqual(row.name, name, source)
+            XCTAssertNil(row.quantity, source)
+            XCTAssertNotNil(row.unresolvedReason, source)
+            XCTAssertEqual(row.originalText, source)
+        }
+        let ordinary = try XCTUnwrap(shop.stageImport(text: "2 cups of Half and Half").lines.first)
+        XCTAssertEqual(ordinary.name, "Half and Half")
+        XCTAssertEqual(ordinary.quantity?.amount, try Rational(2))
+        XCTAssertEqual(ordinary.quantity?.unit, .cup)
+        let unknownCount = try XCTUnwrap(shop.stageImport(text: "2 to 3 packs of 6 wraps").lines.first)
+        XCTAssertNil(unknownCount.originalPack?.count)
+        XCTAssertEqual(unknownCount.originalPack?.amountPerPack?.amount, try Rational(6))
+        try shop.commitImport(shop.stageImport(text: "two to three apples"))
+        XCTAssertNil(try shop.quantity(forLineID: XCTUnwrap(shop.lines.first?.id)))
+        let source = "2 packs of 6 to 8 wraps"
+        var preview = try shop.stageImport(text: source, source: .paste)
+        XCTAssertEqual(preview.lines[0].originalPack?.count, 2)
+        XCTAssertNil(preview.lines[0].originalPack?.amountPerPack)
+        preview.lines[0].quantity = Quantity(amount: try Rational(14), unit: .count, originalLiteral: "14")
+        preview.lines[0].unresolvedReason = nil
+        try shop.commitImport(preview)
+        let saved = try roundTrip(shop)
+        XCTAssertEqual(try saved.quantity(forLineID: preview.lines[0].proposedLineID)?.amount, try Rational(14))
+        XCTAssertEqual(saved.contributions.last?.originalText, source)
+        XCTAssertNil(saved.contributions.last?.originalPack?.amountPerPack)
+    }
+
+    func testPackLabelsKeepTheirExactContentsAndOriginalWordingAcrossImport() throws {
+        var shop = ShoppingLedger()
+        let text = "2 × 15 oz pinto beans\n2 cajas de 6 paquetes de 8 tortillas\n2 packs of 6 packs of wraps"
+        let preview = try shop.stageImport(text: text, source: .paste)
+        XCTAssertEqual(preview.lines.map(\.name), ["pinto beans", "tortillas", "wraps"])
+        XCTAssertEqual(preview.lines.map { $0.quantity?.amount }, [try Rational(30), try Rational(96), nil])
+        XCTAssertEqual(preview.lines.map { $0.quantity?.unit }, [.ounce, .count, nil])
+        XCTAssertNotNil(preview.lines[2].unresolvedReason)
+        XCTAssertEqual(preview.lines.map { $0.originalPack?.count }, [2, 2, 2])
+        XCTAssertEqual(preview.lines[0].originalPack?.amountPerPack?.amount, try Rational(15))
+        for wording in ["2x15 oz pinto beans", "2x15oz pinto beans", "2 packs × 15oz pinto beans",
+                        "2 15-ounce cans of pinto beans", "2 15 oz cans of pinto beans", "2 cans of pinto beans, 15 oz each",
+                        "2 latas de pinto beans (15 onzas cada una)"] {
+            let item = try shop.stageImport(text: wording).lines[0]
+            XCTAssertEqual(item.name, "pinto beans", wording)
+            XCTAssertEqual(item.quantity?.amount, try Rational(30), wording)
+            XCTAssertEqual(item.quantity?.unit, .ounce, wording)
+            XCTAssertEqual(item.originalPack?.count, 2, wording)
+            XCTAssertEqual(item.originalText, wording)
+        }
+        XCTAssertEqual(try shop.stageImport(text: "250g Product X15").lines[0].name, "Product X15")
+        XCTAssertNil(try shop.stageImport(text: "7UP").lines[0].quantity)
+        let mixed = try shop.stageImport(text: "1 1/2kg rice").lines[0]
+        XCTAssertEqual(mixed.name, "rice")
+        XCTAssertEqual(mixed.quantity?.amount, try Rational(3, 2))
+        XCTAssertEqual(mixed.quantity?.unit, .kilogram)
+        // The source line is stored verbatim even when a retailer label padded
+        // the gap between the measure and its product name.
+        var paddedShop = ShoppingLedger()
+        let padded = "2x15oz" + String(repeating: " ", count: 8_192 - "2x15ozbeans".utf8.count) + "beans"
+        let paddedPreview = try paddedShop.stageImport(text: padded)
+        try paddedShop.commitImport(paddedPreview)
+        XCTAssertEqual(paddedShop.contributions.first?.originalText, padded)
+        XCTAssertEqual(paddedShop.contributions.first?.quantity?.amount, try Rational(30))
+        XCTAssertEqual(paddedShop.contributions.first?.originalPack?.amountPerPack?.amount, try Rational(15))
+        let ambiguous = try shop.stageImport(text: "2 boxes of 3 packs of beans, 15 oz each").lines[0]
+        XCTAssertNil(ambiguous.quantity)
+        let batch = try shop.commitImport(preview)
+        shop = try roundTrip(shop)
+        XCTAssertEqual(shop.importBatches.first?.originalText, text)
+        XCTAssertEqual(shop.contributions.map(\.originalPack), preview.lines.map(\.originalPack))
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: .newlines))
+        try shop.undoImport(batchID: batch)
+        XCTAssertTrue(shop.search("").isEmpty)
+    }
+
     func testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent() throws {
         var ledger = ShoppingLedger()
-        let first = ledger.stageImport(text: "12 wraps", source: .paste)
+        let first = try ledger.stageImport(text: "12 wraps", source: .paste)
         let firstBatch = try ledger.commitImport(first, at: instant)
         let lineID = try XCTUnwrap(ledger.lines.first?.id)
-        let second = ledger.stageImport(text: "12 wraps", source: .paste)
+        let second = try ledger.stageImport(text: "12 wraps", source: .paste)
         XCTAssertEqual(second.lines[0].duplicateLineIDs, [lineID])
         let unchanged = ledger
         XCTAssertThrowsError(try ledger.commitImport(second)) { error in
@@ -98,7 +252,7 @@ final class ShoppingLedgerTests: XCTestCase {
     func testExplicitAdditionalPasteAddsQuantityAndUndoIsIsolated() throws {
         var ledger = ShoppingLedger()
         let staple = try ledger.addManualLine(name: "wraps", quantity: q(12), at: instant)
-        let preview = ledger.stageImport(text: "12 wraps\n4 apples", source: .paste)
+        let preview = try ledger.stageImport(text: "12 wraps\n4 apples", source: .paste)
         let batch = try ledger.commitImport(preview, decisions: [preview.lines[0].id: .addToLine(staple)], at: instant)
         XCTAssertEqual(try ledger.quantity(forLineID: staple)?.amount, try Rational(24))
         let unrelated = try ledger.addManualLine(name: "soap", quantity: q(1), at: instant)
@@ -111,9 +265,85 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger, undone)
     }
 
+    func testAdditionalImportNeedsAnOpenLineAndPreservesCompletedEvidence() throws {
+        for checked in [true, false] {
+            var ledger = ShoppingLedger()
+            let line = try ledger.addManualLine(name: "wraps", quantity: q(12))
+            if checked { try ledger.setChecked(lineID: line, checked: true, at: instant) }
+            else { try ledger.handle(lineID: line, by: "Mia", at: instant) }
+            let preview = try ledger.stageImport(text: "1 pear\n12 wraps", source: .paste)
+            let entry = preview.lines[1]
+            let before = ledger
+            XCTAssertThrowsError(try ledger.commitImport(preview, decisions: [entry.id: .addToLine(line)])) {
+                XCTAssertEqual($0 as? LedgerError, .incompatibleMatch)
+            }
+            XCTAssertEqual(ledger, before)
+
+            let merge = [entry.id: ImportResolution.mergeDuplicate(line)]
+            let batch = try ledger.commitImport(preview, decisions: merge)
+            ledger = try roundTrip(ledger)
+            XCTAssertEqual(try ledger.commitImport(preview, decisions: merge), batch)
+            XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, try Rational(12))
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+            try ledger.undoImport(batchID: batch)
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+            let fresh = try ledger.stageImport(text: "12 wraps")
+            try ledger.commitImport(fresh, decisions: [fresh.lines[0].id: .addNew])
+            let newLine = try XCTUnwrap(ledger.lines.last)
+            XCTAssertFalse(newLine.isChecked)
+            XCTAssertFalse(newLine.isHandled)
+            XCTAssertNotEqual(newLine.id, line)
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+        }
+    }
+
+    func testImportOptionsTrackOriginalSuppliesAndEarlierDecisions() throws {
+        var ledger = ShoppingLedger()
+        let target = try ledger.addManualLine(name: "flour", quantity: q(1, unit: .kilogram))
+        let preview = try ledger.stageImport(text: "500 g flour\n500 g flour\n1 kg flour\n1 cup flour\nflour")
+        let rows = preview.lines
+        let decisions: [UUID: ImportResolution] = [rows[0].id: .addToLine(target)]
+        let choices = ledger.importMatchOptions(for: preview, decisions: decisions)
+        let both = ImportMatchOption(lineID: target, canMerge: true, canAdd: true)
+        let add = ImportMatchOption(lineID: target, canMerge: false, canAdd: true)
+        let neither = ImportMatchOption(lineID: target, canMerge: false, canAdd: false)
+        XCTAssertEqual(choices[rows[0].id], [add])
+        XCTAssertEqual(choices[rows[1].id], [both])
+        XCTAssertEqual(choices[rows[2].id], [both])
+        XCTAssertEqual(choices[rows[3].id], [neither])
+        XCTAssertEqual(choices[rows[4].id], [neither])
+        XCTAssertEqual(ledger.importMatchOptions(for: preview, decisions: [rows[0].id: .skip])[rows[1].id], [add])
+        let earlier = rows[0].proposedLineID
+        XCTAssertEqual(ledger.importMatchOptions(for: preview, decisions: [rows[0].id: .addNew])[rows[1].id],
+                       [add, ImportMatchOption(lineID: earlier, canMerge: true, canAdd: true)])
+        var edited = preview
+        edited.lines[0].exclusions = ["flour"]
+        let editedOptions = ledger.importMatchOptions(for: edited, decisions: decisions)
+        XCTAssertEqual(editedOptions[rows[0].id], [neither])
+        XCTAssertEqual(editedOptions[rows[1].id], [add])
+        try ledger.setChecked(lineID: target, checked: true)
+        XCTAssertTrue(ledger.importMatchOptions(for: preview, decisions: decisions).isEmpty)
+        let fresh = try ledger.stageImport(text: "1000 g flour")
+        XCTAssertEqual(ledger.importMatchOptions(for: fresh, decisions: [:])[fresh.lines[0].id],
+                       [ImportMatchOption(lineID: target, canMerge: true, canAdd: false)])
+    }
+
+    func testCommittedAdditionalImportCanReplayAfterLineHandled() throws {
+        var ledger = ShoppingLedger()
+        let line = try ledger.addManualLine(name: "wraps", quantity: q(12))
+        let preview = try ledger.stageImport(text: "3 wraps")
+        let decisions = [preview.lines[0].id: ImportResolution.addToLine(line)]
+        let batch = try ledger.commitImport(preview, decisions: decisions)
+        try ledger.handle(lineID: line, by: "Mia")
+        ledger = try roundTrip(ledger)
+        let saved = ledger
+        XCTAssertEqual(try ledger.commitImport(preview, decisions: decisions), batch)
+        XCTAssertEqual(ledger, saved)
+    }
+
     func testTwoDuplicatesInSamePreviewRequireChoiceAndCanMergeOrAdd() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: "12 wraps\n12 wraps")
+        let preview = try ledger.stageImport(text: "12 wraps\n12 wraps")
         XCTAssertEqual(preview.lines[1].duplicateLineIDs, [preview.lines[0].proposedLineID])
         XCTAssertThrowsError(try ledger.commitImport(preview))
         XCTAssertEqual(ledger.revision, 0)
@@ -122,22 +352,54 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.contributions.count, 2)
         XCTAssertEqual(try ledger.quantity(forLineID: preview.lines[0].proposedLineID)?.amount, try Rational(12))
         var additional = ShoppingLedger()
-        let again = additional.stageImport(text: "12 wraps\n12 wraps")
+        let again = try additional.stageImport(text: "12 wraps\n12 wraps")
         try additional.commitImport(again, decisions: [again.lines[1].id: .addNew])
         XCTAssertEqual(additional.search("").count, 2)
     }
 
     func testStalePreviewRejectedEvenWhenCallerErasesDuplicateHints() throws {
         var ledger = ShoppingLedger()
-        var preview = ledger.stageImport(text: "12 wraps")
+        var preview = try ledger.stageImport(text: "12 wraps")
         _ = try ledger.addManualLine(name: "soap", quantity: q(1))
         let unchanged = ledger
         XCTAssertThrowsError(try ledger.commitImport(preview)) { XCTAssertEqual($0 as? LedgerError, .stalePreview) }
         XCTAssertEqual(ledger, unchanged)
-        preview = ledger.stageImport(text: "12 wraps\n12 wraps")
+        preview = try ledger.stageImport(text: "12 wraps\n12 wraps")
         preview.lines[1].duplicateLineIDs = []
         XCTAssertThrowsError(try ledger.commitImport(preview))
         XCTAssertEqual(ledger, unchanged)
+    }
+
+    func testRemovingOneLinkedMealPreservesPriorTombstonesAndOtherSources() throws {
+        var ledger = ShoppingLedger()
+        let line = try ledger.addManualLine(name: "wraps", quantity: q(12), at: instant)
+        let manual = try source(ledger, lineID: line)
+        let target = try ledger.chooseMeal(taco(), at: instant)
+        let targetNeed = try mealSource(ledger, occurrenceID: target)
+        try ledger.linkContribution(contributionID: targetNeed, within: manual, quantity: q(6), at: instant)
+        let other = try ledger.chooseMeal(taco(4), at: instant)
+        let otherNeed = try mealSource(ledger, occurrenceID: other)
+        try ledger.linkContribution(contributionID: otherNeed, within: manual, quantity: q(4), at: instant)
+        let lunch = try ledger.addProtectedNeed(name: "wraps", quantity: q(2), purpose: "Lunch", within: manual, at: instant)
+        let before = ledger, removal = instant.addingTimeInterval(60)
+        XCTAssertEqual(before.lines.filter { $0.trashedAt != nil }.count, 3)
+        try ledger.removeMeal(occurrenceID: target, at: removal)
+        XCTAssertEqual(ledger.lines, before.lines, "Previously linked-away rows retain their original tombstone dates; active manual supply survives")
+        XCTAssertEqual(ledger.contributions.filter { $0.id != targetNeed }, before.contributions.filter { $0.id != targetNeed })
+        XCTAssertEqual(ledger.mealOccurrences.filter { $0.id != target }, before.mealOccurrences.filter { $0.id != target })
+        XCTAssertEqual(ledger.allocations, before.allocations.filter { $0.demandContributionID != targetNeed })
+        XCTAssertEqual(Set(ledger.contributions(forLineID: line).map(\.id)), [manual, otherNeed, lunch])
+        XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, try Rational(12))
+        var expectedSource = try XCTUnwrap(before.contributions.first { $0.id == targetNeed })
+        expectedSource.removedAt = removal
+        XCTAssertEqual(ledger.contributions.first { $0.id == targetNeed }, expectedSource)
+        var expectedMeal = try XCTUnwrap(before.mealOccurrences.first { $0.id == target })
+        expectedMeal.removedAt = removal
+        XCTAssertEqual(ledger.mealOccurrences.first { $0.id == target }, expectedMeal)
+        XCTAssertEqual(ledger.revision, before.revision + 1)
+        try ledger.validate()
+        let reopened: ShoppingLedger = try roundTrip(ledger)
+        XCTAssertEqual(reopened, ledger)
     }
 
     func testTacosLunchAndManualStapleConserveSourcesAcrossRemoval() throws {
@@ -185,7 +447,7 @@ final class ShoppingLedgerTests: XCTestCase {
 
     func testUndoOriginalImportRetainsLinkedMealAndLunchAsDemands() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: "12 wraps")
+        let preview = try ledger.stageImport(text: "12 wraps")
         let batch = try ledger.commitImport(preview)
         let line = try XCTUnwrap(ledger.lines.first?.id)
         let imported = try source(ledger, lineID: line)
@@ -203,11 +465,11 @@ final class ShoppingLedgerTests: XCTestCase {
 
     func testDuplicateAliasCannotDoubleReservationCapacityAndUndoRehomesSurvivors() throws {
         var ledger = ShoppingLedger()
-        let first = ledger.stageImport(text: "12 wraps")
+        let first = try ledger.stageImport(text: "12 wraps")
         let originalBatch = try ledger.commitImport(first)
         let line = try XCTUnwrap(ledger.lines.first?.id)
         let original = try source(ledger, lineID: line)
-        let second = ledger.stageImport(text: "12 wraps")
+        let second = try ledger.stageImport(text: "12 wraps")
         try ledger.commitImport(second, decisions: [second.lines[0].id: .mergeDuplicate(line)])
         let alias = second.lines[0].id
         let occurrence = try ledger.chooseMeal(taco(8))
@@ -229,7 +491,7 @@ final class ShoppingLedgerTests: XCTestCase {
         let manualLine = try ledger.addManualLine(name: "wraps", quantity: q(12))
         let manual = try source(ledger, lineID: manualLine)
         for _ in 0..<3 {
-            let preview = ledger.stageImport(text: "12 wraps")
+            let preview = try ledger.stageImport(text: "12 wraps")
             try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(manualLine)])
         }
         XCTAssertEqual(ledger.contributions(forLineID: manualLine).count, 4)
@@ -355,7 +617,7 @@ final class ShoppingLedgerTests: XCTestCase {
         let unchanged = ledger
         XCTAssertThrowsError(try ledger.chooseMeal(excluded))
         XCTAssertEqual(ledger, unchanged)
-        var preview = ledger.stageImport(text: "1 kg flour")
+        var preview = try ledger.stageImport(text: "1 kg flour")
         preview.lines[0].quantity = try q(1, unit: .cup)
         XCTAssertThrowsError(try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(flour)]))
         XCTAssertEqual(ledger, unchanged)
@@ -366,11 +628,47 @@ final class ShoppingLedgerTests: XCTestCase {
         let line = try ledger.addManualLine(name: "wraaps", quantity: q(12))
         let originalText = ledger.contributions[0].originalText
         try ledger.updateLine(lineID: line, name: "wraps", notes: "Corrected", aisle: "Bread")
-        let preview = ledger.stageImport(text: "12 wraps")
+        let preview = try ledger.stageImport(text: "12 wraps")
         try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(line)])
         XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, try Rational(12))
         XCTAssertEqual(ledger.contributions[0].originalText, originalText)
         XCTAssertEqual(ledger.contributions[0].productName, "wraps")
+    }
+
+    func testRetailerTermsKeepDisplacedObservationsAndRejectStaleReview() throws {
+        let original = ShopBasis(branch: "West", mode: .pickup, slot: instant, timeZoneIdentifier: "America/New_York",
+            cap: Money(minorUnits: 3800), knownFees: .zero,
+            retailerPreview: .init(total: Money(minorUnits: 3670), source: "Retailer page", capturedAt: instant,
+                                   includedCharges: ["Service, delivery", "Tax"]))
+        let changes: [(inout ShopBasis) -> Void] = [
+            { $0.branch = "East" }, { $0.slot = nil }, { $0.mode = .delivery },
+            { $0.timeZoneIdentifier = "America/Chicago" }, { $0.capScope = .dinnersOnly }
+        ]
+        for change in changes {
+            var ledger = ShoppingLedger(basis: original)
+            var proposed = original
+            change(&proposed)
+            let revision = ledger.revisionID
+            try ledger.updateBasis(proposed, reviewing: revision)
+            XCTAssertNil(ledger.basis.retailerPreview); XCTAssertNil(ledger.basis.knownFees)
+            let restored = try roundTrip(ledger)
+            XCTAssertEqual(restored.revisions.last?.previousRetailerBasis, original)
+            XCTAssertThrowsError(try ledger.updateBasis(original, reviewing: revision))
+            XCTAssertEqual(ledger, restored)
+        }
+        var ledger = ShoppingLedger(basis: original)
+        var newCap = original
+        newCap.cap = Money(minorUnits: 4000); newCap.fixedReserve = .zero
+        try ledger.updateBasis(newCap)
+        XCTAssertEqual(ledger.basis.retailerPreview, original.retailerPreview)
+        XCTAssertEqual(ledger.basis.knownFees, .zero); XCTAssertNil(ledger.revisions.last?.previousRetailerBasis)
+
+        var confirmed = newCap
+        confirmed.branch = "East"
+        confirmed.retailerPreview = .init(total: nil, source: "East app", capturedAt: instant, includedCharges: [])
+        try ledger.updateBasis(confirmed, evidenceFor: confirmed.retailerTerms, reviewing: ledger.revisionID)
+        XCTAssertEqual(ledger.basis, confirmed, "A freshly entered zero fee remains an observed zero")
+        XCTAssertEqual(try roundTrip(ledger).revisions.last?.previousRetailerBasis, newCap)
     }
 
     func testRetailerPreviewStoresScopeAndUnknownFactsWithoutInventingTotals() throws {
@@ -393,7 +691,7 @@ final class ShoppingLedgerTests: XCTestCase {
     func testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown() throws {
         var ledger = ShoppingLedger()
         let line = try ledger.addManualLine(name: "wraps", quantity: q(0))
-        let preview = ledger.stageImport(text: "0 wraps")
+        let preview = try ledger.stageImport(text: "0 wraps")
         try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(line)])
         XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, .zero)
     }
@@ -402,7 +700,7 @@ final class ShoppingLedgerTests: XCTestCase {
         var ledger = ShoppingLedger()
         let line = try ledger.addManualLine(name: "rice", quantity: q(1, unit: .kilogram))
         let manual = try source(ledger, lineID: line)
-        let preview = ledger.stageImport(text: "1000 g rice")
+        let preview = try ledger.stageImport(text: "1000 g rice")
         try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(line)])
         _ = try ledger.addProtectedNeed(name: "rice", quantity: q(250, unit: .gram), purpose: "Lunch", within: manual)
         XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, .one)
@@ -428,7 +726,7 @@ final class ShoppingLedgerTests: XCTestCase {
 
     func testRemoveIndividualMealAndImportContributionPreservesOtherSources() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: "12 wraps\n4 apples")
+        let preview = try ledger.stageImport(text: "12 wraps\n4 apples")
         let batch = try ledger.commitImport(preview)
         try ledger.removeContribution(contributionID: preview.lines[1].id)
         XCTAssertEqual(ledger.search("").map(\.name), ["wraps"])
@@ -495,7 +793,7 @@ final class ShoppingLedgerTests: XCTestCase {
             edges[0]["quantity"] = quantity; json["allocations"] = edges
         }
         XCTAssertThrowsError(try overallocated.validate())
-        let preview = ledger.stageImport(text: "12 wraps")
+        let preview = try ledger.stageImport(text: "12 wraps")
         try ledger.commitImport(preview, decisions: [preview.lines[0].id: .mergeDuplicate(line)])
         let cycle = try tampered(ledger) { json in
             var edges = json["allocations"] as! [[String: Any]]

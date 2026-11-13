@@ -1,0 +1,639 @@
+{
+  "selector": "ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()",
+  "sharedHostedRunner": {
+    "image": "macos-15-arm64 20261028.0489.1",
+    "hostOS": "macOS 15.8.2 (24H232)",
+    "region": "westus",
+    "provider": "MacCloud"
+  },
+  "hostedProducts": {
+    "artifactId": 13378137522,
+    "workflowRunId": 41944207879,
+    "githubZipSHA256": "f3bcefa0f3e5748bc6189e67f60b3305c0c9f03d1f67c736687a3529edca82e6",
+    "downloadedZipSHA256": "f3bcefa0f3e5748bc6189e67f60b3305c0c9f03d1f67c736687a3529edca82e6",
+    "tarSHA256": "79ec736c3c420b6461676c5496d6ad7c944c0bf85d21fb167cc92c9038c70947",
+    "fixtureSHA256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "controlProducts": {
+    "artifactId": 13371434542,
+    "workflowRunId": 41930998637,
+    "githubZipSHA256": "b584963a6dbd5579a3f19679993e9f16f69b6c19362ef8a5ef3d141a1ee92fd8",
+    "downloadedZipSHA256": "b584963a6dbd5579a3f19679993e9f16f69b6c19362ef8a5ef3d141a1ee92fd8",
+    "tarSHA256": "8fc4448575373e7454085a2f4687b6b2dc513bd7ff5d495f0985cab1ce31ae21"
+  },
+  "testRunPropertyListMatches": true,
+  "hostedFailureEvidenceZipSHA256": "7b3fa0c77bd1a91809b99a9e348b90b7c46f89ff7c824ee6967540e78035a4bc",
+  "hostedScreenshotObservation": "All three final screenshots display fixture rows m005x through m010x.",
+  "runs": [
+    {
+      "name": "calibration-1",
+      "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+      "githubRunId": 41930998637,
+      "githubJobId": 126933923966,
+      "toolchain": "Xcode 26.3\nBuild version 17C529",
+      "environment": "RoomInTheCart-Performance \u00b7 Built with macOS 15.8.2",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "testResult": "Passed",
+      "rawEvidenceSHA256": {
+        "Performance.log": "eaecffc583251b379d45a435d101a285206c3341e0c1ad6a0a395bd6cd90defe",
+        "metrics.json": "311e606b525c94360aa2f49a55e00c6918a3fe22bd68714d9183f19957b01e33",
+        "test-summary.json": "8ac73baff55cb29fa27d7b31f8094fa80fd759a4ace8240e1db2126f1fb4eb26",
+        "test-details.json": "7a7e67269e352c1b970da3861a40ba8ae634995346e96816c3f72a6e351b8a07"
+      },
+      "swiftReportedMetrics": {
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+          108846.976,
+          108846.976,
+          108928.896,
+          108994.432,
+          109125.504
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+          109289.344,
+          109158.272,
+          109191.04,
+          109256.576,
+          109305.728
+        ],
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": [
+          2.5837615,
+          2.583409541,
+          2.566337833,
+          2.5991544170000003,
+          2.5666581670000004
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+          -131.072,
+          0,
+          49.152,
+          49.152,
+          131.072
+        ]
+      },
+      "scrollDurationSampleCount": 5,
+      "scrollDurationMentionedInTextLog": true,
+      "hitchMetrics": [],
+      "gestureActivities": [
+        {
+          "label": "XCTest warm-up",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 7.4,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 6.64
+        },
+        {
+          "label": "XCTest sample 1",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.254,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.876
+        },
+        {
+          "label": "XCTest sample 2",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.243,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.953
+        },
+        {
+          "label": "XCTest sample 3",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.181,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 4.008
+        },
+        {
+          "label": "XCTest sample 4",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.425,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.919
+        },
+        {
+          "label": "XCTest sample 5",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.293,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.884
+        }
+      ],
+      "medianSwipeActivityToNextAccessibilityActivitySeconds": 4.254,
+      "notes": "XCTest activity times include event synthesis and accessibility waits. They are not scroll duration or hitch measurements."
+    },
+    {
+      "name": "calibration-2",
+      "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+      "githubRunId": 41930998637,
+      "githubJobId": 126944797249,
+      "toolchain": "Xcode 26.3\nBuild version 17C529",
+      "environment": "RoomInTheCart-Performance \u00b7 Built with macOS 15.8.2",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "testResult": "Passed",
+      "rawEvidenceSHA256": {
+        "Performance.log": "880abe2444d4194ad927b2c50aa6ce38e1bdb02bd466e8d95a6580d6e592993c",
+        "metrics.json": "5d0417bcbaada2e16c3b77402500b44d0e56cfd5bc9e1d8a821d5f4003ba91ab",
+        "test-summary.json": "11e44985fa8da9b456bd50c6e0a06737aa38270997ca70c4202a278d9dc72d9a",
+        "test-details.json": "9cc6453632167af4f74844e6c5d0bbec6a68eb778b9e4f2a4274635461cdf3e9"
+      },
+      "swiftReportedMetrics": {
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+          119283.776,
+          119644.224,
+          119939.136,
+          119742.528,
+          119464
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+          119300.16,
+          119939.136,
+          120037.44,
+          120184.896,
+          120021.056
+        ],
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": [
+          2.6126792500000002,
+          2.5677293750000003,
+          2.583579292,
+          2.583535292,
+          2.56629975
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+          409.6,
+          16.384,
+          212.992,
+          -114.688,
+          -245.76
+        ]
+      },
+      "scrollDurationSampleCount": 5,
+      "scrollDurationMentionedInTextLog": true,
+      "hitchMetrics": [],
+      "gestureActivities": [
+        {
+          "label": "XCTest warm-up",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 6.407,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 5.581
+        },
+        {
+          "label": "XCTest sample 1",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.807,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 4.3
+        },
+        {
+          "label": "XCTest sample 2",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.368,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.989
+        },
+        {
+          "label": "XCTest sample 3",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.315,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.926
+        },
+        {
+          "label": "XCTest sample 4",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.179,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.958
+        },
+        {
+          "label": "XCTest sample 5",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.271,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 4.02
+        }
+      ],
+      "medianSwipeActivityToNextAccessibilityActivitySeconds": 4.315,
+      "notes": "XCTest activity times include event synthesis and accessibility waits. They are not scroll duration or hitch measurements."
+    },
+    {
+      "name": "hosted-failure",
+      "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+      "githubRunId": 41944207879,
+      "githubJobId": 126976693791,
+      "toolchain": "Xcode 26.3\nBuild version 17C529",
+      "environment": "RoomInTheCart-Performance \u00b7 Built with macOS 15.8.2",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "testResult": "Passed",
+      "rawEvidenceSHA256": {
+        "Performance.log": "da5976a36e10d12faaf5103bb73c194596e600f9123fe993cf61984329a18ef3",
+        "metrics.json": "af0edb313e3dc7890b36cb98bbfe7f2eafea5baf3272659a03277e1e6eae2636",
+        "test-summary.json": "3d846d445addd7e929560dc662f0293bb380e44a1a21ef09229ab7efdee6b999",
+        "test-details.json": "ea95ee8b2996b94631a55b24641f52c29edbac5210a31ac6f1fc091a9aa44126"
+      },
+      "swiftReportedMetrics": {
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+          110469.056,
+          109682.624,
+          110092.224,
+          109977.536,
+          109944.768
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+          -770.048,
+          311.296,
+          -180.224,
+          -131.072,
+          -98.304
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+          109387.712,
+          109682.624,
+          109600.704,
+          109535.168,
+          109535.168
+        ]
+      },
+      "scrollDurationSampleCount": 0,
+      "scrollDurationMentionedInTextLog": false,
+      "hitchMetrics": [],
+      "gestureActivities": [
+        {
+          "label": "XCTest warm-up",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 5.532,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 5.389
+        },
+        {
+          "label": "XCTest sample 1",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.034,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.89
+        },
+        {
+          "label": "XCTest sample 2",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.12,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.952
+        },
+        {
+          "label": "XCTest sample 3",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.111,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.851
+        },
+        {
+          "label": "XCTest sample 4",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.024,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.845
+        },
+        {
+          "label": "XCTest sample 5",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.263,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.946
+        }
+      ],
+      "medianSwipeActivityToNextAccessibilityActivitySeconds": 4.111,
+      "notes": "XCTest activity times include event synthesis and accessibility waits. They are not scroll duration or hitch measurements."
+    },
+    {
+      "name": "local-exact-hosted-product-replay",
+      "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+      "githubRunId": null,
+      "githubJobId": null,
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "environment": "RoomInTheCart-Performance \u00b7 Built with macOS 27.2",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "689F8B18-2F38-4650-BD85-600B99F09C43",
+            "deviceName": "RITC Scroll Instrumentation f0e2ac3 20261105",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C52",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "testResult": "Passed",
+      "rawEvidenceSHA256": {
+        "Performance.log": "6ae2466283167b6d40fe7e0658c3b85cdf08a5e4a19b05590c045d6db8021609",
+        "metrics.json": "41a9debeb6e45cd0d548a5b2014426accadec22ec8ae095760324d06cf44bd4c",
+        "test-summary.json": "ff2ce094af4b224ec155b755f62f5ef916055c52e4c75f9bb995ee84279af608",
+        "test-details.json": "ca81c203e53d41ca894913003e517731288cb29295ae6652843894c876d01d59"
+      },
+      "swiftReportedMetrics": {
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+          98274.352,
+          98225.2,
+          98520.112,
+          98782.256,
+          99028.016
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+          0,
+          16.384,
+          65.536,
+          65.536,
+          147.456
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+          97963.056,
+          97930.288,
+          98274.352,
+          98536.496,
+          98864.176
+        ]
+      },
+      "scrollDurationSampleCount": 0,
+      "scrollDurationMentionedInTextLog": false,
+      "hitchMetrics": [],
+      "gestureActivities": [
+        {
+          "label": "XCTest warm-up",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.427,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 4.324
+        },
+        {
+          "label": "XCTest sample 1",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.943,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.844
+        },
+        {
+          "label": "XCTest sample 2",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.964,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.851
+        },
+        {
+          "label": "XCTest sample 3",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.984,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.855
+        },
+        {
+          "label": "XCTest sample 4",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.938,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.816
+        },
+        {
+          "label": "XCTest sample 5",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.999,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.859
+        }
+      ],
+      "medianSwipeActivityToNextAccessibilityActivitySeconds": 3.964,
+      "notes": "XCTest activity times include event synthesis and accessibility waits. They are not scroll duration or hitch measurements.",
+      "localUnifiedLogWindowDiagnostics": {
+        "measuredPairCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "observedPairDurationsSeconds": [
+          2.582,
+          2.6,
+          2.567,
+          2.582,
+          2.581
+        ],
+        "evidenceSHA256": "2a404230062cff1518415ad0405c3963c304ad40a6454e7e2c76c096f246b06e"
+      },
+      "independentStoreReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "5580dcf8e042772e85757163de6685642a3def3a6d85132c61f4c9cc80b04bb6",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      }
+    },
+    {
+      "name": "local-exact-calibration-product-control",
+      "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+      "githubRunId": null,
+      "githubJobId": null,
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "environment": "RoomInTheCart-Performance \u00b7 Built with macOS 27.2",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "65097A21-C4A0-43C9-91A6-DFE0C01DF02B",
+            "deviceName": "RITC Scroll Instrumentation 1fd Control 20261105",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C52",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "testResult": "Passed",
+      "rawEvidenceSHA256": {
+        "Performance.log": "b009ad578da4f81033f3bdb59543e7d0ecb50d8b6e2772f0afc175b2096d4fb3",
+        "metrics.json": "8a05e8d549893c9a642ad27d4a71011190f34a23d0157c83837e9f69c7eaa6c6",
+        "test-summary.json": "104d66de67b6fdaf769f1fc685a30d95fbca0233e0f73d328218eec927f38892",
+        "test-details.json": "964d14eb8853e20355f47709e655490fc6b8be10eed72d6a7faa1b68adcb4bf9"
+      },
+      "swiftReportedMetrics": {
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+          98831.432,
+          99191.88,
+          99519.56,
+          101551.176,
+          101387.336
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+          442.368,
+          131.072,
+          147.456,
+          -163.84,
+          -65.536
+        ],
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+          98831.432,
+          99011.656,
+          99355.72,
+          101076.04,
+          101010.504
+        ]
+      },
+      "scrollDurationSampleCount": 0,
+      "scrollDurationMentionedInTextLog": false,
+      "hitchMetrics": [],
+      "gestureActivities": [
+        {
+          "label": "XCTest warm-up",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 4.413,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 4.306
+        },
+        {
+          "label": "XCTest sample 1",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.909,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.809
+        },
+        {
+          "label": "XCTest sample 2",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.923,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.807
+        },
+        {
+          "label": "XCTest sample 3",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.907,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.805
+        },
+        {
+          "label": "XCTest sample 4",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.909,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.801
+        },
+        {
+          "label": "XCTest sample 5",
+          "gesture": "Swipe up CollectionView at {{0.0, 276.0}, {402.0, 598.0}}",
+          "nextActivity": "Checking existence of `\"Saved on this iPhone\" StaticText`",
+          "swipeActivityToNextAccessibilityActivitySeconds": 3.876,
+          "eventSynthesisToNextAccessibilityActivitySeconds": 3.779
+        }
+      ],
+      "medianSwipeActivityToNextAccessibilityActivitySeconds": 3.909,
+      "notes": "XCTest activity times include event synthesis and accessibility waits. They are not scroll duration or hitch measurements.",
+      "localUnifiedLogWindowDiagnostics": {
+        "measuredPairCounts": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "observedPairDurationsSeconds": [
+          2.583,
+          2.583,
+          2.584,
+          2.583,
+          2.567
+        ],
+        "evidenceSHA256": "e8005efc889ecb57c939df71190d11fb831936420741d82f2c30f40edaab1c26"
+      },
+      "independentStoreReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "a95e6d5d9fe2e37b209b10152b6e69ca0cb30ca9125b1ca11d53aa1ba6ccc1e7",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "completedAtUTC": "2026-11-08T14:57:53.425091+00:00",
+  "commands": [
+    "python3 scripts/generate_theme.py --check",
+    "python3 scripts/check_localization.py",
+    "python3 scripts/generate_xcode_project.py --check",
+    "python3 scripts/test_ui_automation_contract.py"
+  ],
+  "exitCode": 0,
+  "sourceManifestSHA256": "be308a336e69d2b316df79efd8d71ff3e3e9824b516c0091934bd05f2ea9462d",
+  "outputs": [
+    "Theme tokens verified",
+    "Localization checks passed:26 catalogs,4306 en/es entries,4007 literal source keys,matching format arguments",
+    "Project generation check passed (no output)",
+    "UI automation contract:1 test passed"
+  ],
+  "limits": "Localization structure excludes43 dynamic helper expressions and117 runtime SwiftUI compositions; human US-Spanish review remains."
+}

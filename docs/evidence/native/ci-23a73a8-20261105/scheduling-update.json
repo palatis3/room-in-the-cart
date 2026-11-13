@@ -1,0 +1,25 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894668,
+  "evidenceClasses": {
+    "strictAcceptedPassingCases": 33,
+    "rawPassingCasesInsideFailedArtifacts": 15,
+    "failedCensoredTimeoutsNotPassingMeasurements": 2,
+    "failedReadinessAssertionNotPassingMeasurement": 1,
+    "noFreshCompletedTimingCases": 0,
+    "compiledOrdinaryUI": 51,
+    "compiledModels": 580,
+    "coverageComplete": false
+  },
+  "appliedChange": "Update33 strict-accepted passing duration weights only; ten UI groups and all guards/timeouts unchanged.",
+  "independentChecks": [
+    "33timings equal rounded-up strict evidence",
+    "Other weights and defaults unchanged",
+    "Compiled631-case inventory unchanged by new weights",
+    "Existing6 planner tests passed"
+  ],
+  "reportSHA256": "aee72b7b80b36d3ec65ac7e99153f394bf8afc3d6a7a727400a36a2f5ded7f5f",
+  "comparisonSHA256": "5cfa62faac8b4dce0b6b0b3b7f345009ae8e553722404997e55dc56143d9be7d",
+  "patchSHA256": "aa0d9069868bbd451503e032ce7154b8d8cf4a39462a7613a3d3e66397fba469",
+  "limitations": "No demonstrated wall-time improvement. Observed peak4 although max5; workflow queues compete. Failed/raw-pass durations were sensitivity inputs only, never promoted to acceptance or passing weights."
+}

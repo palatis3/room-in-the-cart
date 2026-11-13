@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "tests": 193,
+  "passed": 190,
+  "expectedSkipped": [
+    "HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres",
+    "HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres",
+    "HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres"
+  ],
+  "failures": 0,
+  "sourceFiles": 100,
+  "sourceManifestSHA256": "6035e6f8d2b9171c11cb5358295e6f40242b3a65dfda80a51546f4b71121e79e",
+  "log": "/Users/palatis/Room in the Cart/.build/TrackingWriteNativeNov10/r2/swift-test.log",
+  "logSHA256": "f99a8888122b7455b0471f14843838f7f2237cba1a66994e5d8a3b7a99771ae1",
+  "installationSHA256": "e4ea7cedc399f2c684a3a50fd87b39a2014dcf8ebd4a4ecb3cb44334570dccce",
+  "fullPackageFreshBuild": true,
+  "scope": "Tracking native read/write contracts, authenticated dispatch, durable retry and session-safe exact-row cleanup; controlled HTTP tests, not real-service wire or UI qualification.",
+  "realServiceWireQualified": false,
+  "nativeUIQualified": false,
+  "productionEnabled": false
+}

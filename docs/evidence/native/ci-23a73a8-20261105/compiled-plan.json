@@ -1,0 +1,112 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T12:02:17.872050+00:00",
+  "run": 42021894668,
+  "artifact": {
+    "id": 13413020923,
+    "name": "iphone-test-products-1",
+    "sha256": "0f27cbafa7d1746038c49b308c92f352c1480716b3d9a950cf30875263ef111e",
+    "githubDigestVerified": true
+  },
+  "compiledInventory": {
+    "models": 580,
+    "ordinaryUI": 51,
+    "uiGroups": 10
+  },
+  "independentPlannerReplay": "Every generated manifest and selector file is byte-identical to the hosted compiled plan.",
+  "productHashes": {
+    "Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun": "77926a4df6196a6798e34ccd4a5f2041b28d3e5609caceeede07783b7a8d7742",
+    "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "b73b2cf60ebad6a998cf9c5295f7d63153f93d63ebb4b5f487f5b5d3c294666a",
+    "Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": "f4105835935f268c49dcc0dadcde1a4308a02e2059884dbddc67fe4bd9232e27",
+    "Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "4856a19f9aa68bf5a25b0d714f47ad2c61e981114fa3fda22f57928eba16fda7"
+  },
+  "planHashes": {
+    "ui-01.txt": "0b52dc9e849314278fdd2f4fef7bad3d90666c7e82845780235b9ca6a77b5c71",
+    "ui-03.txt": "72f37a2b2e26870041bdfb203d9b7bb610ee50c5d8c5d4719cdbf1703233ebd0",
+    "ui-02.txt": "32d18311e5301cffbdac1f3d5ccaeb75bf833cd6c40934066cdc0b3600452d2d",
+    "ui-06.txt": "6b353be39dcd78d1345722e63586db0fc3fd06ecae2fc9e8e986ad99e02fd39f",
+    "ui-07.txt": "13651d9086a9e42a201c3d676d1b6b40e62d916ef99edf11177a2f65ad33679c",
+    "ui-05.txt": "f5b23571a703353695f8d14704143fb846d77df0a513a3805f14e962e7bb8af0",
+    "test-enumeration.json": "43651384f9795e7a64796de48f854f82dca719314d66a0372afadf054474a95d",
+    "ui-10.txt": "7b2da31487a2cf5eb5a26bff209641a214ceb070cb544459c52673ebe911a8a7",
+    "ui-04.txt": "d37a655d1b80e16dc8491548718de626d820dc7ad1cfdec0b941026ae7ab673b",
+    "models.txt": "7203da011a4231c137be1d736770c8deb4bbbc489cfcb8ee7d3b8f17fd160cc6",
+    "manifest.json": "cc670b494745a54ba882a185204705b3e2b7b7cd1a1d41e85284fc3284337991",
+    "ui-09.txt": "7be8626fc5b70690dc199016ebc03c0ce55cf6cab3ac2ebcf9f2a056bb13df0b",
+    "ui-08.txt": "27dd8b34c40e1f46f0e65319ab7e17c3dc4c6734e157454b671e3afcbddbb182"
+  },
+  "uiGroups": {
+    "ui-01": [
+      "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave"
+    ],
+    "ui-02": [
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+      "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+      "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+    ],
+    "ui-03": [
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+      "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+    ],
+    "ui-04": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+    ],
+    "ui-05": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+      "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+      "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+    ],
+    "ui-06": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+      "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+      "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+      "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart"
+    ],
+    "ui-07": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+      "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+    ],
+    "ui-08": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+      "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+      "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+      "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+    ],
+    "ui-09": [
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+    ],
+    "ui-10": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+      "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+      "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+    ]
+  },
+  "limits": "Build/inventory proof only; model and UI execution remain pending. Final candidate-wide acceptance is not established."
+}

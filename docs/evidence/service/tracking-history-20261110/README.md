@@ -1,0 +1,7 @@
+# Tracking history correction
+
+The expanded real Swift/HTTPS/PostgreSQL run found that tracking history returned503: chained SQL USING joins left two shop_id columns before the revision join. The native first-adoption Undo could not load its history. The original run passed18Node cases and58Swift scenarios; one of each failed and same-ID rebind was not reached. [Original failure](first-fault.json) preserves the exact source and result hashes; the stopped private fixture remains local.
+
+History now uses explicit household, shop and operation matches. Two real HTTP regressions verify empty and retained history, content-free metadata, same-household and cross-household shop isolation, reversed-operation status and denied nonshopper access. Fresh strict TypeScript,753offline tests and352PostgreSQL tests pass, with one expected offline database-only skip and three optional browser skips. The267inputs,151compiled entries and original tools/dependencies remained unchanged. [Backend verification](backend-verification.json).
+
+The unchanged19Node/60Swift wire successor passes with zero failures/skips, including the original failing history/Undo and previously unexecuted rebind. Root independently verified all366source inputs,151compiled entries and the complete60scenario receipts; PostgreSQL stopped and successful private state was removed. [Native wire verification](native-wire-verification.json). This does not qualify the pending tracking UI, new compound/request Undo implementation, final combined release or deployment.

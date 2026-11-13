@@ -1,0 +1,103 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "runID": 42176801822,
+  "jobID": 127757026472,
+  "attempt": 1,
+  "workflowID": 407500252,
+  "branch": "codex/diagnostic-keyboard-d0b0b12",
+  "head": "169613bfabeb00355649f96d6bc88ad91064f708",
+  "hostedConclusion": "success",
+  "selected": 1,
+  "passed": 1,
+  "durationSeconds": 53.247,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "environment": "Xcode26.3/17C529; iOS26.2/23C54; fresh iPhone17",
+  "verificationFile": "verification.json",
+  "artifacts": {
+    "keyboard-events-1": {
+      "artifactID": 13484227125,
+      "sha256": "8db6da6d34f0558a93b71e8e37bc5eaa4cc583fa4c899c81ba3b6101520a170d",
+      "digestVerified": true,
+      "compressedBytes": 1020752,
+      "members": 74,
+      "expandedBytes": 2573004
+    },
+    "keyboard-products-1": {
+      "artifactID": 13484396727,
+      "sha256": "9dc1a1a53b645f00a666c9f08f1286eced4ede0a45c19f91456ac9fe6845e545",
+      "digestVerified": true,
+      "compressedBytes": 51830824,
+      "members": 1,
+      "expandedBytes": 51830640
+    }
+  },
+  "eventCounts": {
+    "events.log": 23,
+    "events-export.log": 23
+  },
+  "streamAndPersistedEventSequenceIdentical": true,
+  "healthyChronology": [
+    {
+      "event": "stock.reset.amount",
+      "secondsRelativeToDone": -0.961325
+    },
+    {
+      "event": "done.enter",
+      "secondsRelativeToDone": 0.0
+    },
+    {
+      "event": "done.exit",
+      "secondsRelativeToDone": 0.000169
+    },
+    {
+      "event": "keyboard.willHide",
+      "secondsRelativeToDone": 0.04198
+    },
+    {
+      "event": "textField.endEditing",
+      "secondsRelativeToDone": 0.051692
+    },
+    {
+      "event": "stock.focus.off",
+      "secondsRelativeToDone": 0.066493
+    },
+    {
+      "event": "focusIndicator.off",
+      "secondsRelativeToDone": 0.066842
+    },
+    {
+      "event": "keyboard.didHide",
+      "secondsRelativeToDone": 0.704355
+    },
+    {
+      "event": "stock.toggle.setter.true",
+      "secondsRelativeToDone": 3.357308
+    }
+  ],
+  "sameEventNamesAndOrderAsLocalXcode271": true,
+  "noRecordedResetAfterIdentitySetter": true,
+  "animationCompletionTimeoutLogOccurrences": 0,
+  "originalFailure": {
+    "proof": "../ci-d0b0b12-20261106/stock-identity-failure.json",
+    "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+    "jobID": 127681902052,
+    "artifactID": 13475213172,
+    "result": "Identity switch remained0 after Done and switch idle waits; failed before stale-meal mutation.",
+    "originalFailurePreserved": true,
+    "instrumentedFailureReproduced": false
+  },
+  "captureLimits": [
+    "23 events agree between live log stream and bounded persisted25-minute export; stream alive at stop, export exit0.",
+    "Logs contain getpwuid_r did not find a match for uid501; live capture termination by signal15 is the harness stop.",
+    "Agreement is evidence of captured chronology, not a guarantee that Unified Logging delivered every app event.",
+    "Original failed run had no event instrumentation, so this pass cannot distinguish lost tap, delayed focus, or post-toggle reset in that original failure.",
+    "Event-only instrumentation can alter timing; one successful diagnostic does not establish a fix or release acceptance.",
+    "No claim about the separate quote-entry timeout or standalone control experiment."
+  ],
+  "hostedOwnedSimulatorCleanupStep": "success",
+  "actions": "Collected one pre-dispatched diagnostic; no source edits, retries, dispatches, pushes, or local native actions. Collector and verifier exited.",
+  "rootIndependentReview": "Root replayed source/product manifest verification and strict xcresult validation successfully. No retry, product execution or acceptance relabeling.",
+  "scratchDirectory": ".build/KeyboardDiagnostic20261106/hosted-run42176801822"
+}

@@ -1,0 +1,38 @@
+{
+  "typedOnlyFailurePreserved": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "durationSeconds": 210.55224096775055
+  },
+  "finalIOS17": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 1,
+    "passed": 1,
+    "secondsRounded": 286.68,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "rootVisualReview": "completed"
+  },
+  "finalIOS26": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 2,
+    "passed": 2,
+    "runtime": "iOS26.2 build23C54 light/Large",
+    "caseDurationsSecondsRounded": [
+      198.21,
+      94.13
+    ],
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "sourceAndOriginalUnchanged": true
+  },
+  "onlyTestFileChangedFrom": "7be0075393c7eeffe756853028524656cf7f853d",
+  "frameworkCausalRepairClaimed": false,
+  "wholeAppMinimumIOSAcceptanceClaimed": false,
+  "physicalVoiceOverVerified": false,
+  "noNativeBuildTestSimulatorActionByPublisher": true
+}

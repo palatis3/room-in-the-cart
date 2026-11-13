@@ -1,0 +1,33 @@
+{
+  "scope": "Changed supply Done target; interrupted after repeated waits in earlier unchanged dinner editor",
+  "sourceManifestSHA256": "a377471b37302d1007a72901810936ac1445fc18731afd1b42c642cdfd222cbf",
+  "nativeExit": 75,
+  "strictExit": 1,
+  "qualificationPassed": false,
+  "animationIdleMessages": 4,
+  "firstObservedIdleMessageSeconds": 93.6,
+  "precedingDoneTapSeconds": 33.11,
+  "affectedEarlierField": "Amount, optional",
+  "firstSupplySheetReached": false,
+  "newSupplyTargetSizeVerified": false,
+  "requiredEvidenceComplete": false,
+  "interruption": {
+    "signal": "SIGINT",
+    "requestedAtUTC": "2026-11-08T23:03:01.993832+00:00",
+    "reason": "Qualification requires zero animation-idle misses; repeated misses occurred before changed supply sheet. Stop known-failed diagnostic early, preserve interrupted failure, do not claim complete journey."
+  },
+  "nativeElapsedSeconds": 315.012044417,
+  "reportedCaseDurationSeconds": 0,
+  "reportedCaseDurationUsable": false,
+  "buildElapsedSeconds": 23.160041334000002,
+  "originalUnchanged": true,
+  "preservedInputsFinally": true,
+  "oldEvidenceFinally": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "exactPinnedFilesVerified": true,
+    "resultTreeVerified": true
+  },
+  "sourceUnchanged": true,
+  "xcodeCancellationDiagnostic": "Xcode emitted an internal cancellation assertion after SIGINT; not classified as an app crash."
+}

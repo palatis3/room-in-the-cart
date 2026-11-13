@@ -1,0 +1,18 @@
+{
+  "simulator": "A37FB5B8-67B6-4485-B5E3-C18D6D85E1E6",
+  "time": 1794027706.827919,
+  "operations": [
+    {
+      "operation": "shutdown",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "operation": "delete",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

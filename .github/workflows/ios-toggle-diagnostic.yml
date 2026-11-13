@@ -1,0 +1,112 @@
+name: Standalone Form toggle diagnostic
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact 40-character SHA of the selected workflow ref
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    concurrency:
+      group: ritc-macos-slot-4
+      queue: max
+      cancel-in-progress: false
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
+    runs-on: xcode-27
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
+      EVENT_SHA: ${{ github.sha }}
+      EVENT_NAME: ${{ github.event_name }}
+      EVIDENCE: ${{ github.workspace }}/.build/form-toggle-diagnostic
+      PRODUCTS: ${{ github.workspace }}/.build/form-toggle-products/Build/Products
+    steps:
+      - name: Require an immutable candidate identity
+        run: |
+          python3 - <<'PY'
+          import os, re
+          candidate = os.environ['EXPECTED_SHA']
+          if not re.fullmatch('[0-9a-f]{40}', candidate):
+              raise SystemExit('An exact candidate SHA is required')
+          if os.environ['EVENT_NAME'] == 'workflow_dispatch' and candidate != os.environ['EVENT_SHA']:
+              raise SystemExit('Dispatch candidate must match the selected workflow ref SHA')
+          PY
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - name: Verify source and hosted environment; create a fresh simulator
+        run: bash diagnostics/swiftui-toggle/require-environment.sh
+      - name: Build and freeze standalone products
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          xcodebuild -project diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj \
+            -scheme FormToggleDiagnostic -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -parallel-testing-enabled NO -jobs 2 \
+            -derivedDataPath .build/form-toggle-products CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee "$EVIDENCE/Build.log"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          files = {}
+          for root in [Path('diagnostics/swiftui-toggle'), Path(os.environ['PRODUCTS'])]:
+              for path in sorted(root.rglob('*')):
+                  if path.is_file():
+                      files[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+          (Path(os.environ['EVIDENCE']) / 'source-products-sha256.json').write_text(json.dumps(files, indent=2) + '\n')
+          PY
+          tar -czf "$EVIDENCE/source.tar.gz" diagnostics/swiftui-toggle scripts/check_ios_test_results.py
+          tar -czf "$EVIDENCE/products.tar.gz" -C .build/form-toggle-products/Build Products
+      - name: Boot the dedicated simulator
+        timeout-minutes: 8
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+      - name: Run the single control with normal XCTest idle behavior
+        timeout-minutes: 17
+        run: bash diagnostics/swiftui-toggle/run-test.sh
+      - name: Shut down the owned simulator
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, uuid
+          from pathlib import Path
+          root = Path(os.environ['EVIDENCE'])
+          path = root / 'simulator-id.txt'
+          if not path.exists():
+              raise SystemExit(0)  # Environment checks failed before device creation.
+          device = path.read_text().strip()
+          try:
+              uuid.UUID(device)
+          except ValueError:
+              (root / 'cleanup-status.json').write_text(json.dumps({
+                  'status': 'unavailable', 'reason': 'Simulator creation returned no valid owned UUID'}) + '\n')
+              raise SystemExit('Cannot clean up without an exact owned simulator UUID')
+          inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j']))
+          matches = [x for group in inventory['devices'].values() for x in group if x['udid'] == device]
+          if len(matches) != 1:
+              raise SystemExit('Owned diagnostic simulator is missing or ambiguous')
+          code = 0 if matches[0]['state'] == 'Shutdown' else subprocess.run(['xcrun', 'simctl', 'shutdown', device]).returncode
+          (root / 'cleanup-status.json').write_text(json.dumps({'simulatorID': device, 'exitCode': code}) + '\n')
+          raise SystemExit(code)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: standalone-form-toggle-${{ github.run_attempt }}
+          path: .build/form-toggle-diagnostic/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error

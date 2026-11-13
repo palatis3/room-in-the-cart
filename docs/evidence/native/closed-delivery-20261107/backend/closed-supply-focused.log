@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: durable named reservations bind exact group, predecessor and authority through corrections and release
+ok 1 - durable named reservations bind exact group, predecessor and authority through corrections and release
+  ---
+  duration_ms: 891.057958
+  type: 'test'
+  ...
+# Subtest: closed pickup accepts late amended-line arrivals and earlier corrections without reopening orders or changing money
+ok 2 - closed pickup accepts late amended-line arrivals and earlier corrections without reopening orders or changing money
+  ---
+  duration_ms: 447.361
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1561.75325

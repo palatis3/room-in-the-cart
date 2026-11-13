@@ -1,0 +1,52 @@
+{
+  "status": "passed-scoped",
+  "recordedAtUTC": "2026-11-08T03:47:33.798906+00:00",
+  "case": "queue-evicted",
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "frozenManifestAndHelpersVerified": true,
+  "verifierExit": 0,
+  "verifierCommand": [
+    ".tools/node-v22.23.4-darwin-arm64/bin/node",
+    ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "queue-evicted",
+    ".build/SafariQualificationNov08/proposal/runs/queue-evicted/receipt.json"
+  ],
+  "receiptSHA256": "8a845c6f0c6cd32739a55f59aac01644e415c55893aae17448e8f6b021fa8c5f",
+  "observationPhases": [
+    "queued",
+    "evicted",
+    "final"
+  ],
+  "pendingCommandSHA256": "df82284df7df720c95d3cfc1f8510972765f58dea41f783cdc663e60b784b570",
+  "supplementalAssertions": {
+    "oneBeforeEffectDrop": true,
+    "queuedOneStoredCommand": true,
+    "oneExplicitFixtureEvictionObservation": true,
+    "zeroRowsImmediatelyAfterFixtureEviction": true,
+    "finalExactMissingStatus": true,
+    "finalOnlineContributorFormReadyNotBusy": true,
+    "finalNoPendingMarkerOrRetry": true,
+    "noAutomaticResendOrEffectAcrossEvictionAndRefresh": true
+  },
+  "counts": {
+    "commandAttempts": 1,
+    "commandEffects": 0,
+    "rowsA": 0,
+    "rowsB": 0
+  },
+  "rootVisualObservation": "Actual product Refresh showed the exact missing-pending notice. Lower UI had no pending/Retry and Your requests displayed No requests yet. Root clicked final evidence capture and observed completion.",
+  "cleanup": {
+    "rootReportedExecSession": 83178,
+    "rootReportedServerPID": 8917,
+    "rootReportedStopExit": 0,
+    "port": 52252,
+    "independentConnectResult": 61,
+    "independentPortState": "ECONNREFUSED"
+  },
+  "identity": "same root-owned iPhone17 Simulator/iOS26.2 MobileSafari as ../owned-simulator-safari.json",
+  "visualEvidence": "Root Device Hub CUA transcript only; no standalone PNG/video export",
+  "scope": "Explicit fixture IndexedDB deletion on a fresh task origin; real Safari/product refresh; not OS-initiated storage eviction or global Safari storage denial",
+  "unexecutedQueueCases": [
+    "queue-revoked"
+  ]
+}

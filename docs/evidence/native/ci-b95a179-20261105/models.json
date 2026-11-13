@@ -1,0 +1,13 @@
+{
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "runID": 42113018695,
+  "artifactID": 13457487774,
+  "artifactDigest": "sha256:45eb3e5ff50808669610d2d97b8a4f87d2a13ed3e7ee6807354f9e30e1afd8f2",
+  "digestVerified": true,
+  "strictReplayExit": 0,
+  "selected": 599,
+  "passed": 599,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0
+}

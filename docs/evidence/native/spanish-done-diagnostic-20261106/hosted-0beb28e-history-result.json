@@ -1,0 +1,211 @@
+{
+  "runID": 42211149900,
+  "attempt": 1,
+  "workflowID": 407500252,
+  "head": "0beb28ecb6637a8f12e6be851781dcb38625f19c",
+  "conclusion": "success",
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "strict": {
+    "selected": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 0,
+    "independentExit": 0,
+    "checkerBase": "b359d0743c2db77bb81a00a1c7e69036aa12ab77"
+  },
+  "casesInActualOrder": [
+    {
+      "case": [
+        "FreeJourneyUITests",
+        "testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel"
+      ],
+      "startLine": 18,
+      "markers": [],
+      "terminations": [
+        {
+          "pid": 8872,
+          "line": 160,
+          "markerCount": 0
+        }
+      ],
+      "outcome": "passed",
+      "endLine": 161,
+      "durationSeconds": 108.236
+    },
+    {
+      "case": [
+        "PickupOfferUITests",
+        "testSavedOfferReopensAndUpdatesResponseAfterRestart"
+      ],
+      "startLine": 165,
+      "markers": [],
+      "terminations": [
+        {
+          "pid": 12816,
+          "line": 1258,
+          "markerCount": 0
+        },
+        {
+          "pid": 26060,
+          "line": 1888,
+          "markerCount": 0
+        },
+        {
+          "pid": 32816,
+          "line": 2284,
+          "markerCount": 0
+        }
+      ],
+      "outcome": "passed",
+      "endLine": 2285,
+      "durationSeconds": 583.582
+    },
+    {
+      "case": [
+        "RoomInTheCartUITests",
+        "testConfirmedComparisonDeletionSurvivesRestart"
+      ],
+      "startLine": 2289,
+      "markers": [
+        "SDD_RUNNER|before|7129|1217.5297380833333",
+        "SDD_RUNNER|after|7129|1218.4058327916669"
+      ],
+      "terminations": [
+        {
+          "pid": 37348,
+          "line": 2694,
+          "markerCount": 2
+        },
+        {
+          "pid": 42032,
+          "line": 2715,
+          "markerCount": 2
+        }
+      ],
+      "outcome": "passed",
+      "endLine": 2716,
+      "durationSeconds": 142.188
+    },
+    {
+      "case": [
+        "RoomInTheCartUITests",
+        "testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "startLine": 2717,
+      "markers": [
+        "SDD_RUNNER|before|7129|1379.5138225416667",
+        "SDD_RUNNER|after|7129|1380.6441307500002"
+      ],
+      "terminations": [
+        {
+          "pid": 42626,
+          "line": 2990,
+          "markerCount": 2
+        },
+        {
+          "pid": 47409,
+          "line": 3074,
+          "markerCount": 2
+        }
+      ],
+      "outcome": "passed",
+      "endLine": 3075,
+      "durationSeconds": 152.031
+    }
+  ],
+  "source": {
+    "harnessFiles": 533,
+    "originalProductSourceFiles": 528,
+    "verifiedProductManifestFiles": 238,
+    "productSource": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+    "sourcePreservation": true,
+    "newProductArchiveUploaded": false
+  },
+  "toolchain": "Xcode26.3/17C529",
+  "runtime": "iOS26.2/23C54",
+  "runtimeReadbacks": 2,
+  "capture": {
+    "complete": true,
+    "independentReplayPassed": true,
+    "events": 243,
+    "processIDs": [
+      37348,
+      42626,
+      47409
+    ],
+    "targetPID": 42626,
+    "runnerMarkerSeconds": 1.1303082083334175,
+    "stillsDecoded": 2,
+    "screenBytes": 22272514,
+    "firstFrameTimeKnown": false,
+    "stillsExposureTimeKnown": false,
+    "videoFullyDecoded": true,
+    "decodedFrames": 1332,
+    "videoDurationSeconds": 127.57166666666667,
+    "dimensions": [
+      "1206x2622"
+    ],
+    "rootVisualReview": {
+      "reviewedRequestedFrameSeconds": [
+        40,
+        43,
+        44,
+        45
+      ],
+      "observations": [
+        "At actual video time39.198s, B quantity is6, B price is still empty, and the keyboard is absent.",
+        "At42.997\u201344.992s, B price receives focus, its keyboard appears and price2 is entered.",
+        "Both retained stills show quantity6 and price2 with keyboard absent; later scrolling reveals the comparison action above the tab bar."
+      ],
+      "limit": "Video and runner clocks are not synchronized. Requested still/frame times are not exposure times. This does not demonstrate the original stalled state."
+    }
+  },
+  "prefixTrajectoryEquivalent": false,
+  "prefixLimitation": "Exact source/selectors/order are retained, but the original failed approval now passed and the remainder of PickupOffer ran. This changes prior activity, duration, and app restarts before Spanish. Therefore this is nonreproduction under a changed observed prefix, not matched-trajectory causal evidence or a fix.",
+  "ledger": {
+    "rows": 25,
+    "allRecordedSucceededWithinDeadlines": true,
+    "maxCommandSeconds": 69.537789583,
+    "incompleteOnExternalHardKill": true
+  },
+  "artifact": {
+    "run": 42211149900,
+    "attempt": 1,
+    "head": "0beb28ecb6637a8f12e6be851781dcb38625f19c",
+    "artifactID": 13499834148,
+    "name": "spanish-done-original-ui02-history-1",
+    "archiveBytes": 41595503,
+    "sha256": "02b0b4c00099d3cbc17f51a63ce22e8471d65dd1e393a5d8230a78447d1c188b",
+    "digestVerified": true,
+    "members": 114,
+    "expandedBytes": 43609969,
+    "oversizedMembers": [],
+    "limits": {
+      "archiveBytes": 256000000,
+      "memberBytes": 50000000,
+      "totalBytes": 1000000000,
+      "members": 50000,
+      "maxCompressionRatio": 1000
+    },
+    "extracted": true
+  },
+  "shutdownExit": 0,
+  "deleted": false,
+  "collectorStopped": true,
+  "priorFailuresPreserved": true,
+  "causalConclusion": null,
+  "evidenceSHA256": {
+    "summary.json": "51ff1a9a46946a36d251ca20ff8b3f12fec98ad64fdb973b6038e2f4abfa94a4",
+    "verification.json": "fd3283286605208163e4d274fc244a7437a8a96f0d3ac8da028b486486e91a53",
+    "independent-strict.log": "e69a3ad8f5d8647e23679099e968a4c83d5163d4525fa0aa216a250f1b4a1188",
+    "independent-summary.json": "70684ba51d52a029c7f6a74bd9c3852fbba8c5292bdffe174fe6d08cc063ae50",
+    "independent-case-sequence.json": "4ae45ade3093a4d6113482401633fc815aef7ecf82c3916fd23a2b5863419ffd",
+    "control-ledger-summary.json": "3c7272014e31d19109d2540e2001b988fe844339cc19e8b7f1a8902fe812ef66",
+    "video-inspection/video-inspection.json": "13e987b3af86712073604e81cf9d0585d06152d8459aecc755ce9def6b68708b",
+    "spanish-done-original-ui02-history-1/spanish-done-history/screen.mp4": "1be12b202f12180f8b6cff3f71fc7f8fd99ce729080bb65bedb3cc9785d9dbb2"
+  },
+  "scratchDirectory": ".build/SpanishDoneDiagnostic20261106/history-hosted-0beb28e",
+  "nextDecision": "Publish the combined main candidate with five separately verified local corrections and boot guard. Keep all original failures open; do not add diagnostic overlays, change toolchain, relax gates or retry this history observation."
+}

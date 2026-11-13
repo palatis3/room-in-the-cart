@@ -1,0 +1,10 @@
+{
+  "status": "scoped pass reviewed",
+  "sourceManifestSHA256": "8d0eb48f5f54f1ac22b43a01966509d9637b34ec88d9f13a06d3a145967f5d1a",
+  "scope": "Unchanged cook-copy journey under fixture-only logging; saved history, dated copy and full correction editor reviewed. A passing diagnostic is not a hosted failure repair.",
+  "files": {
+    "inspection/0-screens/2B99016A-39C5-4BFE-A94F-4893E1CCE133.png": "9336120084dc90284d45c017899139f813b64a36ca088a6f2d8f5282afa5e364",
+    "inspection/0-screens/57962DAC-EF83-453A-9238-816AE2194111.png": "4643ba6f1b0aa4230853b549e1ad3c36588a151f54f923c35045d50fef937359",
+    "inspection/0-screens/0E5552AC-4E26-40C5-8415-F1851EC64927.png": "c5872d63bf466fd91f99102552381bf91786317ca48507261bcd0a94c1bc61a1"
+  }
+}

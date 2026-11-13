@@ -1,0 +1,13 @@
+Executed 2 of 2 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite | Passed | 216.87 |
+| RoomInTheCartUITests/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling | Passed | 194.90 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 2977 log lines (2 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 2 examined tests.
+

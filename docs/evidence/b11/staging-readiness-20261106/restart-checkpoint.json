@@ -1,0 +1,31 @@
+{
+  "timestampUTC": "2026-11-06T03:21:30.226519+00:00",
+  "backupCaptured": true,
+  "actualSelectedRestoreVerified": true,
+  "backupAndRestoreImagesDetached": true,
+  "restoreServersStopped": true,
+  "upgradePreparedOnly": true,
+  "localCollectorsStopped": [
+    31242,
+    31255,
+    33469
+  ],
+  "hostedRunsNotCancelled": true,
+  "durableRecoveryEvidenceDirectory": "restart-evidence-20261106",
+  "durableFilesSHA256": {
+    "native_backup.py": "5eee2c22be6f4050de12826a9707d221bf1465bdea3bffe99e48461ae6351871",
+    "TokenBridge.swift": "7d2de2d407dd64489f2347ac62cfa89580b297f245bd9103b6797bb93a04ea4e",
+    "capture-config-07.json": "dfb58083fcf0eae655ce64c296bc1eea0713eddee00bfdd1eff60a7cff843497",
+    "restore_actual.py": "12534128d3bb5ceb08751dba1c57998dbd69b04b9f6ca92102c5addcfa9b9f23",
+    "restore-actual-config-04.json": "94279c7832bf59b033aa0c3e15901eb33ec39d23b1a74ef6b402cf831062449d",
+    "source-schema-facts.json": "ef9fba82f24396a068ccd499650ff6fcde2a73410725c3379bd15cd58a723928",
+    "toc-timezone-review.json": "1a707482a8ce71dceb9ecd12219930df26843c18a8aaf7a59bf41f3a21a763b2",
+    "actual-restore-fix-review.json": "d82c0f0d6ee6253fc7ef85d560aeebfdcdfc5c1d7437572c99bc0d0d0c9605bc",
+    "actual-restore-metadata-review.json": "990666308867cdbab2728f2863de784997e6c0e003eddb6bf02a3ddee39887b9",
+    "actual-restore-review.json": "f54516dbfa9e786d04ea83b063de303ef7995dfa102eaf63a851d5076b251379",
+    "upgrade_actual.py": "493120c45c678616943689e77440ed338e6b687bc84ac3246a4b8540cdedc59d",
+    "upgrade-actual-config.json": "27d06d20567c11b4b9320ca72874b780228077fa0fd11e198cb311e4bcfa0b9e",
+    "actual-upgrade-review.json": "f46a6970a57c0070de19c9b425b8050031fed5fb34dad9a89372a35ce6a078e8",
+    "CAPTURE-REVIEW.md": "0042ba05ff848c30df4596d875250cc3946b1aa8a4ffdf0ebdf0d558a4940bad"
+  }
+}

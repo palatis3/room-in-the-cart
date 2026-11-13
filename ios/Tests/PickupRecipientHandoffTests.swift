@@ -49,6 +49,7 @@ final class PickupRecipientHandoffTests: XCTestCase {
         let saved = await model.change { $0.notes.append(note) }
         XCTAssertTrue(saved)
         let copy = try XCTUnwrap(model.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        XCTAssertNil(model.handoffCopy(channel: .cook, versionID: note.id, language: "es-US"))
         let retailerOpened = await model.recordHandoff(.shareOpened, snapshot: first)
         let cookOpened = await model.recordCookShare(.shareOpened, copy: copy)
         XCTAssertTrue(retailerOpened && cookOpened)
@@ -58,7 +59,23 @@ final class PickupRecipientHandoffTests: XCTestCase {
         XCTAssertNotEqual(first.id, replacement.id)
         let stale = await model.recordHandoff(.shareOpened, snapshot: first)
         XCTAssertFalse(stale)
+        let previousShop = try XCTUnwrap(model.journey)
         let other = try await freeze(UUID())
+        let unchangedRevision = model.journey?.revision
+        let staleFreeze = await model.freeze(reviewing: previousShop)
+        XCTAssertFalse(staleFreeze)
+        XCTAssertEqual(model.journey?.revision, unchangedRevision)
+        let actor = UUID()
+        let stalePlacement = await model.reportPlaced(reviewing: replacement, by: actor)
+        let staleReopen = await model.reopenDraft(reviewing: replacement)
+        XCTAssertFalse(stalePlacement)
+        XCTAssertFalse(staleReopen)
+        XCTAssertEqual(model.journey?.basket?.phase, .frozen)
+        XCTAssertEqual(model.frozenSnapshot, other)
+        model.selectedID = shopID
+        let obsoleteRevision = await model.reportPlaced(reviewing: first, by: actor)
+        XCTAssertFalse(obsoleteRevision)
+        model.selectedID = other.basketID
 
         let cancelled = await model.recordHandoff(.shareCancelled, snapshot: first)
         let completed = await model.recordCookShare(.shareCompleted, copy: copy, destination: "fixture share destination")
@@ -67,8 +84,19 @@ final class PickupRecipientHandoffTests: XCTestCase {
         XCTAssertEqual(model.frozenSnapshot, other)
         XCTAssertTrue(model.journey?.cookShareEvents.isEmpty == true)
 
+        let placed = await model.reportPlaced(reviewing: other, by: actor)
+        let repeated = await model.reportPlaced(reviewing: other, by: actor)
+        let staleAfterPlacement = await model.reportPlaced(reviewing: first, by: actor)
+        XCTAssertTrue(placed && repeated)
+        XCTAssertFalse(staleAfterPlacement)
         let restored = PickupModel(databaseURL: url)
         await restored.load()
+        let placements = try XCTUnwrap(restored.journeys.first(where: { $0.id == other.basketID })?.basket?.placements)
+        XCTAssertEqual(placements.map(\.reportedByLocalActorID), [actor])
+        XCTAssertEqual(placements.map(\.snapshotID), [other.id])
+        let retailerText = HandoffCopy.retailer(other, language: "en-US").fullText
+        XCTAssertFalse(retailerText.contains(actor.uuidString))
+        XCTAssertTrue(retailerText.contains("Beans"))
         let pickup = try XCTUnwrap(restored.journeys.first { $0.id == shopID })
         let basket = try XCTUnwrap(pickup.basket)
         XCTAssertEqual(basket.handoffActions.filter { $0.kind == .shareCancelled }.map(\.snapshotID), [first.id])
@@ -120,6 +148,83 @@ final class PickupRecipientHandoffTests: XCTestCase {
         try await reopened.deleteArchived(id: shopID, expectedRevision: XCTUnwrap(listing.records.first?.revision), operationID: UUID())
         let afterErase = PickupModel(databaseURL: url); await afterErase.load()
         XCTAssertNil(afterErase.journey)
+    }
+
+    @MainActor func testOneFrozenRetailerVersionKeepsSeparateRecipientLanguagesAndAcknowledgments() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let at = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-12T17:00:00Z"))
+        let model = PickupModel(databaseURL: url, clock: { at })
+        let context = CheckoutContext(storeID: "Store", branchID: "Branch", mode: .pickup, slot: "Evening",
+            commitmentsID: shopID, observedAt: at, source: "Private checkout")
+        let beans = BasketLine(id: UUID(), name: "Frijoles — two 15 oz cans, no salt added",
+            quantity: Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2"), expectedCost: .exact(.zero))
+        let oats = BasketLine(id: UUID(), name: "Avena",
+            quantity: Quantity(amount: try Rational(3, 2), unit: .cup, originalLiteral: "1½"), expectedCost: .unknown(reason: "PRIVATE"))
+        let started = await model.start(from: [beans, oats], shopID: shopID, context: context)
+        let quoted = await model.setQuote(.init(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
+        let frozen = await model.freeze()
+        XCTAssertTrue(started && quoted && frozen)
+        let version = try XCTUnwrap(model.frozenSnapshot?.id)
+        let en = try XCTUnwrap(model.handoffCopy(channel: .retailer, versionID: version, language: "en-US"))
+        let es = try XCTUnwrap(model.handoffCopy(channel: .retailer, versionID: version, language: "es-US"))
+        for (copy, title, month, revision, units, cups) in [
+            (en, "Reviewed pickup", "November", "Revision", "2 units", "3/2 cups"),
+            (es, "Compra revisada", "noviembre", "Revisión", "2 unidades", "3/2 tazas")
+        ] {
+            XCTAssertTrue(copy.fullText.hasPrefix(title))
+            XCTAssertTrue(copy.fullText.contains(month))
+            XCTAssertTrue(copy.fullText.contains("\(revision) \(copy.revision)"))
+            for line in ["\(beans.name) — \(units)", "Avena — \(cups)"] {
+                XCTAssertTrue(copy.fullText.contains(line))
+                XCTAssertTrue(copy.pieces?.contains { $0.text == line } == true)
+            }
+            XCTAssertFalse(copy.fullText.contains("PRIVATE"))
+        }
+
+        func record(_ copy: HandoffCopy, for recipient: String = "Ana", acknowledge: Bool = false) async throws -> Bool {
+            let revision = try XCTUnwrap(model.journey?.revision)
+            return await model.markRecipient(copy, recipient: recipient, acknowledge: acknowledge, reviewedRevision: revision)
+        }
+        let sentEnglish = try await record(en)
+        let englishAcknowledged = try await record(en, acknowledge: true)
+        let benSent = try await record(en, for: "Ben")
+        XCTAssertTrue(sentEnglish && englishAcknowledged && benSent)
+        let englishSend = try XCTUnwrap(model.journey?.lastSend(.retailer, recipient: "Ana"))
+        XCTAssertNotNil(englishSend.acknowledgedAt)
+        let beforeSpanish = try XCTUnwrap(model.journey)
+        XCTAssertEqual(model.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: beforeSpanish.revision), .full(es.fullText))
+        let unsentAck = try await record(es, acknowledge: true)
+        XCTAssertFalse(unsentAck)
+        XCTAssertEqual(model.journey, beforeSpanish)
+
+        let sentSpanish = try await record(es)
+        XCTAssertTrue(sentSpanish)
+        let spanishSend = try XCTUnwrap(model.journey?.lastSend(.retailer, recipient: "Ana"))
+        XCTAssertEqual(spanishSend.language, "es-US")
+        XCTAssertNil(spanishSend.acknowledgedAt)
+        let markedRevision = try XCTUnwrap(model.journey?.revision)
+        let duplicate = try await record(es)
+        XCTAssertTrue(duplicate)
+        XCTAssertEqual(model.journey?.revision, markedRevision)
+        let spanishAck = try await record(es, acknowledge: true)
+        XCTAssertTrue(spanishAck)
+        let restored = PickupModel(databaseURL: url)
+        await restored.load()
+        let history = try XCTUnwrap(restored.journey)
+        XCTAssertEqual(history.recipientSends?.count, 3)
+        XCTAssertTrue(history.recipientSends?.contains(englishSend) == true)
+        XCTAssertEqual(history.lastSend(.retailer, recipient: "Ana")?.language, "es-US")
+        XCTAssertNotNil(history.lastSend(.retailer, recipient: "Ana")?.acknowledgedAt)
+        XCTAssertNil(history.lastSend(.retailer, recipient: "Ben")?.acknowledgedAt)
+        XCTAssertEqual(restored.reviewedCorrection(en, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: history.revision), .full(en.fullText))
+        XCTAssertEqual(restored.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: true, reviewedRevision: history.revision),
+            .changes(added: [], removed: [], unresolved: ["Avena · Confirmar el precio"]))
+        XCTAssertEqual(restored.reviewedCorrection(es, recipient: "Ana", destinationConfirmed: true,
+            privateWordingConfirmed: false, paid: false, reviewedRevision: history.revision), .full(es.fullText))
     }
 
     @MainActor func testSpanishCookUsesOnlyTheSelectedRecipientsLastExplicitVersionAndLiveSeat() async throws {
@@ -194,4 +299,104 @@ final class PickupRecipientHandoffTests: XCTestCase {
         XCTAssertFalse(delta.text(current: current).contains("PRIVATE"))
         XCTAssertEqual(model.reviewedCorrection(current, recipient: "Other store", destinationConfirmed: true, privateWordingConfirmed: false, paid: true, reviewedRevision: rev), .full(current.fullText))
     }
+    @MainActor func testCancelledCookPreviewAndSharePreserveExistingRecipientBaselines() async throws {
+        let at = Date(timeIntervalSince1970: 1_800_000_000)
+        let zone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url, clock: { at })
+        let q = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2")
+        let need = UrgentMealNeed(id: UUID(), food: "Beans", meal: "Soup", required: q,
+                                 available: q, due: at.addingTimeInterval(3600), confirmedAt: at)
+        let started = await model.addUrgent(need); XCTAssertTrue(started)
+        func saveCurrentCopy() async throws -> HandoffCopy {
+            let source = try XCTUnwrap(model.cookJourney)
+            var note = PickupCookNote(id: UUID(),
+                text: PickupCookProjection.text(journey: source, allocation: model.allocation, result: nil,
+                    language: "en-US", at: at, timeZone: zone),
+                language: "en-US", createdAt: at, revision: source.revision)
+            note.reviewedHandoff = .init(pieces: PickupCookProjection.pieces(journey: source,
+                allocation: model.allocation, language: "en-US", timeZone: zone),
+                timeZoneID: zone.identifier, includesBudget: false, customWording: false, budget: nil)
+            let saved = await model.change { $0.notes.append(note) }; XCTAssertTrue(saved)
+            return try XCTUnwrap(model.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        }
+        let original = try await saveCurrentCopy()
+        for recipient in ["Ana", "Ben"] {
+            let sent = await model.markRecipient(original, recipient: recipient, acknowledge: false,
+                reviewedRevision: try XCTUnwrap(model.journey?.revision))
+            XCTAssertTrue(sent)
+        }
+        let acknowledged = await model.markRecipient(original, recipient: "Ana", acknowledge: true,
+            reviewedRevision: try XCTUnwrap(model.journey?.revision))
+        XCTAssertTrue(acknowledged)
+        let anaBaseline = try XCTUnwrap(model.journey?.lastSend(.cook, recipient: "Ana"))
+        let benBaseline = try XCTUnwrap(model.journey?.lastSend(.cook, recipient: "Ben"))
+        XCTAssertNotNil(anaBaseline.acknowledgedAt)
+        XCTAssertNil(benBaseline.acknowledgedAt)
+        XCTAssertEqual(anaBaseline.versionID, original.versionID)
+
+        let repair = PickupRepair(id: UUID(), needID: need.id, instruction: "Warm the beans; save the broth.",
+            createdAt: at, extraTripAgreed: false, repeatMealAgreed: false, elapsedMinutes: 10, due: need.due)
+        let changed = await model.change { $0.repairs.append(repair) }; XCTAssertTrue(changed)
+        let beforePreview = try XCTUnwrap(model.journey)
+        var abandoned: String? = PickupCookProjection.text(journey: beforePreview, allocation: model.allocation,
+            result: nil, language: "en-US", at: at, timeZone: zone)
+        XCTAssertTrue(try XCTUnwrap(abandoned).contains(repair.instruction))
+        abandoned = nil
+        XCTAssertNil(abandoned)
+        XCTAssertEqual(model.journey, beforePreview, "Abandoning an unsaved projection has zero mutation")
+
+        let current = try await saveCurrentCopy()
+        XCTAssertNotEqual(current.versionID, original.versionID)
+        XCTAssertTrue(model.isCurrent(current))
+        let beforeShare = try XCTUnwrap(model.journey)
+        let correction = try XCTUnwrap(model.reviewedCorrection(current, recipient: "Ana",
+            destinationConfirmed: true, privateWordingConfirmed: false, paid: true,
+            reviewedRevision: beforeShare.revision))
+        guard case let .changes(added, removed, _) = correction else { return XCTFail("Expected comparison with Ana's existing copy") }
+        XCTAssertTrue(added.contains { $0.contains(repair.instruction) })
+        XCTAssertTrue(removed.isEmpty)
+        XCTAssertEqual(model.journey, beforeShare)
+        let opened = await model.recordCookShare(.shareOpened, copy: current)
+        let cancelled = await model.recordCookShare(.shareCancelled, copy: current)
+        XCTAssertTrue(opened && cancelled)
+        let afterShare = try XCTUnwrap(model.journey)
+        let events = Array(afterShare.cookShareEvents.dropFirst(beforeShare.cookShareEvents.count))
+        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(Set(events.map(\.id)).count, 2)
+        XCTAssertEqual(events.map(\.noteID), [current.versionID, current.versionID])
+        XCTAssertEqual(events.map(\.action), [.shareOpened, .shareCancelled])
+        XCTAssertEqual(events.map(\.occurredAt), [at, at])
+        XCTAssertTrue(events.allSatisfy { $0.destination == nil })
+        var expected = beforeShare
+        expected.revision += 2; expected.savedAt = at; expected.cookShareEvents += events
+        XCTAssertEqual(afterShare, expected, "Only the two share audit events and their revisions may change")
+        XCTAssertEqual(afterShare.lastSend(.cook, recipient: "Ana"), anaBaseline)
+        XCTAssertEqual(afterShare.lastSend(.cook, recipient: "Ben"), benBaseline)
+        XCTAssertEqual(afterShare.notes, beforeShare.notes)
+        XCTAssertEqual(model.selectedID, beforeShare.id)
+        let reopened = PickupModel(databaseURL: url, clock: { at })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, afterShare)
+        XCTAssertEqual(reopened.journey?.lastSend(.cook, recipient: "Ana"), anaBaseline)
+
+        // Positive control: explicit recipient confirmation of the same new copy
+        // advances only Ana's baseline and still does not claim acknowledgment.
+        let sent = await reopened.markRecipient(current, recipient: "Ana", acknowledge: false,
+            reviewedRevision: afterShare.revision)
+        XCTAssertTrue(sent)
+        let newBaseline = try XCTUnwrap(reopened.journey?.lastSend(.cook, recipient: "Ana"))
+        XCTAssertEqual(newBaseline.versionID, current.versionID)
+        XCTAssertNil(newBaseline.acknowledgedAt)
+        XCTAssertEqual(reopened.journey?.lastSend(.cook, recipient: "Ben"), benBaseline)
+        XCTAssertEqual(reopened.journey?.recipientSends?.filter { $0.versionID == original.versionID },
+                       beforeShare.recipientSends?.filter { $0.versionID == original.versionID })
+        XCTAssertEqual(reopened.journey?.recipientSends?.count, (beforeShare.recipientSends?.count ?? 0) + 1)
+        var expectedSent = afterShare
+        expectedSent.revision += 1; expectedSent.savedAt = at
+        expectedSent.recipientSends = (afterShare.recipientSends ?? []) + [newBaseline]
+        XCTAssertEqual(reopened.journey, expectedSent)
+    }
+
 }

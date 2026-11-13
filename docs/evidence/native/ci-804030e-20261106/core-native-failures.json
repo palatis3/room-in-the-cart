@@ -1,0 +1,226 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379454,
+  "attempt": 1,
+  "scope": "Observed native failures preserved; no rerun, timeout relaxation, or replacement with local control. XCTest implicit runner restarts are strict lifecycle failures and do not constitute manual retries.",
+  "groups": {
+    "ui-06": {
+      "artifact": {
+        "artifactID": 13539283383,
+        "sha256": "c5333d9b6daa0d469372b13837dd2981971b79cd284d8d704905d3724406f022",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+          "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+          "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+        ],
+        "selected": 5,
+        "passed": 4,
+        "failed": 1,
+        "skipped": 0,
+        "strictReplayExit": 1,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "ed4c3b8f99c13c064b4e40593271339d1ab47598640a42972f35ce2b04f2bcac"
+      },
+      "testFailures": [
+        {
+          "failureText": "Test exceeded execution time allowance of 12 minutes",
+          "targetName": "RoomInTheCartUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+          "testName": "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending()"
+        }
+      ],
+      "runtimeExpected": true,
+      "startOrderMatches": true,
+      "implicitRunnerRestartLines": [
+        1514
+      ],
+      "rawLifecycleFailures": [
+        "XCTest restarted its runner at log line 1514.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ],
+      "synchronizationDiagnosticsByCase": {
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": [
+          {
+            "line": 1425,
+            "text": "    t =   187.11s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1436,
+            "text": "    t =   248.13s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1446,
+            "text": "    t =   309.96s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1456,
+            "text": "    t =   371.95s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1464,
+            "text": "    t =   433.21s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1481,
+            "text": "    t =   497.17s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1486,
+            "text": "    t =   558.52s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1489,
+            "text": "    t =   618.59s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1495,
+            "text": "    t =   679.53s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1501,
+            "text": "    t =   740.69s App animations complete notification not received, will attempt to continue."
+          }
+        ]
+      },
+      "caseCompletions": [
+        {
+          "selector": "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+          "completion": "passed (337.128 seconds).",
+          "durationSeconds": 337.128
+        },
+        {
+          "selector": "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+          "completion": null,
+          "durationSeconds": null
+        },
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+          "completion": "passed (93.544 seconds).",
+          "durationSeconds": 93.544
+        },
+        {
+          "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+          "completion": "passed (117.161 seconds).",
+          "durationSeconds": 117.161
+        },
+        {
+          "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke",
+          "completion": "passed (135.153 seconds).",
+          "durationSeconds": 135.153
+        }
+      ],
+      "sourceLog": ".build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-06-1/Tests.log",
+      "sourceLogSHA256": "ed4c3b8f99c13c064b4e40593271339d1ab47598640a42972f35ce2b04f2bcac",
+      "sourceSummarySHA256": "7a9ab871a38a6daa38bc296fc4f8f6eb6eda28b6131b6ab9a6ea4f54e9804710",
+      "failureExcerpt": [
+        {
+          "line": 1500,
+          "text": "Test Case '-[RoomInTheCartUITests.ContextualReminderUITests testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides."
+        },
+        {
+          "line": 1514,
+          "text": "Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches."
+        }
+      ]
+    },
+    "ui-10": {
+      "artifact": {
+        "artifactID": 13539417665,
+        "sha256": "5856976416b6333272a10a67b7767749525e44f3dcabcdc66337a5e2f3d27f84",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+          "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+          "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+        ],
+        "selected": 6,
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "strictReplayExit": 1,
+        "runtimeWarnings": 2,
+        "rawLogSHA256": "be51b0d760ca049b39b05eef361d4f549af5904df181bd3262c4ec10ae6f3c5e"
+      },
+      "testFailures": [
+        {
+          "failureText": "XCTUnwrap failed: expected non-nil value of type \"XCUIElement\" - The system share sheet Close control did not become ready. Optional(Attributes: Application, 0x10aeefd00, pid: 14894, label: 'Room in the Cart'",
+          "targetName": "RoomInTheCartUITests",
+          "testIdentifier": 2,
+          "testIdentifierString": "FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+          "testName": "testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()"
+        }
+      ],
+      "runtimeExpected": true,
+      "startOrderMatches": true,
+      "implicitRunnerRestartLines": [
+        1573
+      ],
+      "rawLifecycleFailures": [
+        "XCTest logged a failure for RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced at log line 1275.",
+        "XCTest restarted its runner at log line 1573.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced; found ['start', 'non-passing or unrecognized completion'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ],
+      "synchronizationDiagnosticsByCase": {},
+      "caseCompletions": [
+        {
+          "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+          "completion": "passed (272.763 seconds).",
+          "durationSeconds": 272.763
+        },
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+          "completion": "failed (231.405 seconds).",
+          "durationSeconds": 231.405
+        },
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "completion": "passed (87.100 seconds).",
+          "durationSeconds": 87.1
+        },
+        {
+          "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+          "completion": "passed (157.309 seconds).",
+          "durationSeconds": 157.309
+        },
+        {
+          "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+          "completion": "passed (23.292 seconds).",
+          "durationSeconds": 23.292
+        },
+        {
+          "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+          "completion": "passed (178.136 seconds).",
+          "durationSeconds": 178.136
+        }
+      ],
+      "sourceLog": ".build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-10-1/Tests.log",
+      "sourceLogSHA256": "be51b0d760ca049b39b05eef361d4f549af5904df181bd3262c4ec10ae6f3c5e",
+      "sourceSummarySHA256": "233403aca9e5296b3edf198b1f91c48d9fc3929a907fb1133f76564d40201d17",
+      "failureExcerpt": [
+        {
+          "line": 1275,
+          "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/FreeJourneyUITests.swift:161: error: -[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced] : XCTUnwrap failed: expected non-nil value of type \"XCUIElement\" - The system share sheet Close control did not become ready. Optional(Attributes: Application, 0x10aeefd00, pid: 14894, label: 'Room in the Cart'"
+        },
+        {
+          "line": 1573,
+          "text": "Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches."
+        }
+      ]
+    }
+  },
+  "interpretation": {
+    "ui-06": "Saved-offer deadline reminder timed out at the original 720-second allowance, with ten approximately 60-second animation-completion synchronization notifications in this case. Largest-type/dark comparison passed 135.153 seconds this attempt; prior failure remains preserved.",
+    "ui-10": "Reduce Motion share cancellation failed because the Close control did not become ready; the diagnostic hierarchy includes header.closeButton but does not establish readiness/hittability. No animation-completion timeout diagnostics were observed in this shard."
+  }
+}

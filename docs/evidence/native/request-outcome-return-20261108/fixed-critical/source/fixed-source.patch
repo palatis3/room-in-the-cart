@@ -1,0 +1,620 @@
+diff --git a/ios/Features/Household/HouseholdInboxModel.swift b/ios/Features/Household/HouseholdInboxModel.swift
+index cb7475b..80b537a 100644
+--- a/ios/Features/Household/HouseholdInboxModel.swift
++++ b/ios/Features/Household/HouseholdInboxModel.swift
+@@ -132,6 +132,21 @@ enum ShopperDelivery: Equatable {
+         guard authorized, !busy, pending == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
+         return (!preview.requiresOverageAcceptance || acceptOverage) && (!preview.requiresUnknownAcceptance || acceptUnknown)
+     }
++    /// A receipt alone is insufficient: the original inbox row must have refreshed
++    /// under the same shopper authority before its decision sheet can return.
++    var confirmedDecisionRequestID: String? {
++        guard authorized, !busy, pending == nil, case .confirmed(let receipt) = delivery,
++              receipt.kind == "request.apply", receipt.shopId == shopID, receipt.shopRevision > 0,
++              ["added", "deferred", "dismissed", "handled"].contains(receipt.disposition),
++              let shop, shop.shopId == shopID, shop.authorityEpoch == receipt.authorityEpoch,
++              shop.shopRevision >= receipt.shopRevision,
++              let requestID = receipt.requestId, let revision = receipt.requestRevision, revision > 0,
++              let request = requests.first(where: { $0.id == requestID && $0.shopId == shopID }),
++              request.revision >= revision,
++              ["added", "deferred", "dismissed", "handled", "withdrawn"].contains(request.status),
++              request.revision > revision || request.status == receipt.disposition else { return nil }
++        return requestID
++    }
+     func hasPossibleDuplicate(_ request: OwnRequest) -> Bool {
+         requests.filter { $0.originalItem.localizedCaseInsensitiveCompare(request.originalItem) == .orderedSame }.count > 1
+     }
+@@ -165,15 +180,46 @@ enum ShopperDelivery: Equatable {
+                 }
+                 reviewedCurrentFacts = pending != nil
+             }
+-        } catch { await handle(error, start: start) }
++        } catch {
++            if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply" {
++                await handleConfirmedRefresh(error, start: start)
++            } else { await handle(error, start: start) }
++        }
+     }
+     private func refreshFacts(start: UUID) async throws {
+         let value = try await service.shopperShop(shopID: shopID)
+-        let page = try await service.shopperInbox(shopID: shopID)
++        var page = try await service.shopperInbox(shopID: shopID)
+         guard start == generation else { throw ClientError.cancelled }
+         guard value.shopId == shopID, page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
++        let target: String?
++        if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply", receipt.shopId == shopID {
++            target = receipt.requestId
++        } else { target = nil }
++        var refreshed = page.requests
++        var seenIDs = Set(refreshed.map(\.id))
++        var seenCursors = Set<String>()
++        guard seenIDs.count == refreshed.count else { throw ClientError.invalidResponse }
++        // Keep the original request reachable even when it was on a later page.
++        // Publish no partial result while locating its durable outcome.
++        while let target, !refreshed.contains(where: { $0.id == target }), let cursor = page.nextCursor {
++            guard seenCursors.insert(cursor).inserted else { throw ClientError.invalidResponse }
++            page = try await service.shopperInbox(shopID: shopID, cursor: cursor)
++            guard start == generation else { throw ClientError.cancelled }
++            guard page.requests.allSatisfy({ $0.shopId == shopID && seenIDs.insert($0.id).inserted }) else {
++                throw ClientError.invalidResponse
++            }
++            refreshed += page.requests
++        }
++        if target != nil {
++            let latest = try await service.shopperShop(shopID: shopID)
++            guard start == generation else { throw ClientError.cancelled }
++            guard latest.shopId == value.shopId, latest.shopRevision == value.shopRevision,
++                  latest.authorityEpoch == value.authorityEpoch else {
++                throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil)
++            }
++        }
+         forgetDeferred()
+-        shop = value; requests = page.requests; nextCursor = page.nextCursor; invalidatePreview()
++        shop = value; requests = refreshed; nextCursor = page.nextCursor; invalidatePreview()
+         if let selected { self.selected = requests.first { $0.id == selected.id } }
+     }
+     func select(_ request: OwnRequest) {
+@@ -295,15 +341,7 @@ enum ShopperDelivery: Equatable {
+             guard start == generation else { return }
+             shop = nil; requests = []; nextCursor = nil
+             do { try await refreshFacts(start: start) }
+-            catch {
+-                guard start == generation else { return }
+-                switch error as? ClientError {
+-                case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
+-                    await handle(error, start: start)
+-                case .cancelled: break
+-                default: notice = ht("The decision was confirmed. Refresh requests to see the latest state.")
+-                }
+-            }
++            catch { await handleConfirmedRefresh(error, start: start) }
+         } catch {
+             guard start == generation else { return }
+             if pending != nil {
+@@ -328,6 +366,15 @@ enum ShopperDelivery: Equatable {
+         generation = UUID(); authorized = false; shop = nil; requests = []; selected = nil; nextCursor = nil
+         pending = nil; delivery = .none; notice = nil; clarification = ""; lineItem = ""; price = ""; linkedLineID = ""; invalidatePreview()
+     }
++    private func handleConfirmedRefresh(_ error: Error, start: UUID) async {
++        guard start == generation else { return }
++        switch error as? ClientError {
++        case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
++            await handle(error, start: start)
++        case .cancelled: break
++        default: notice = ht("The decision was confirmed. Refresh requests to see the latest state.")
++        }
++    }
+     private func handle(_ error: Error, start: UUID) async {
+         guard start == generation else { return }
+         if let input = error as? ShopperInputError { notice = input.message; return }
+diff --git a/ios/Features/Household/HouseholdInboxView.swift b/ios/Features/Household/HouseholdInboxView.swift
+index ea133ad..e53c512 100644
+--- a/ios/Features/Household/HouseholdInboxView.swift
++++ b/ios/Features/Household/HouseholdInboxView.swift
+@@ -15,54 +15,74 @@ struct ShopperInboxContent: View {
+     @ObservedObject var model: HouseholdInboxModel
+     @State private var decisionRequest: OwnRequest?
+     @State private var lastRequestID: String?
++    @State private var confirmedReturnID: String?
+     @AccessibilityFocusState private var focusedRequest: String?
++    @AccessibilityFocusState private var focusedOutcome: String?
+     var body: some View {
+-        List {
+-            if model.authorized {
+-                ShopperDeliverySection(model: model)
+-                if model.canReviewDeferred, model.pending == nil {
+-                    NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
+-                        .accessibilityIdentifier("household.deferred.open")
+-                }
+-                Section {
+-                    Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
+-                    Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
+-                        .foregroundStyle(.secondary)
+-                }
+-                Section(ht("Requests for this shop")) {
+-                    ForEach(model.duplicateRequestGroups) { group in
+-                        if group.hasPossibleDuplicates { RequestDuplicateGroupHeading(group: group) }
+-                        ForEach(group.requests) { request in
+-                            Button {
+-                                lastRequestID = request.id; decisionRequest = request
+-                            } label: {
++        ScrollViewReader { scroll in
++            List {
++                if model.authorized {
++                    ShopperDeliverySection(model: model)
++                    if model.canReviewDeferred, model.pending == nil {
++                        NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
++                            .accessibilityIdentifier("household.deferred.open")
++                    }
++                    Section {
++                        Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
++                        Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
++                            .foregroundStyle(.secondary)
++                    }
++                    Section(ht("Requests for this shop")) {
++                        ForEach(model.duplicateRequestGroups) { group in
++                            if group.hasPossibleDuplicates { RequestDuplicateGroupHeading(group: group) }
++                            ForEach(group.requests) { request in
+                                 VStack(alignment: .leading, spacing: 6) {
+-                                    Text(request.originalItem).font(.headline)
+-                                    if let alias = request.authorAlias { Text(alias).font(.subheadline) }
+-                                    if let quantity = request.ownQuantity { Text(quantity) }
+-                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
++                                    Button {
++                                        confirmedReturnID = nil; focusedOutcome = nil
++                                        lastRequestID = request.id; decisionRequest = request
++                                    } label: {
++                                        VStack(alignment: .leading, spacing: 6) {
++                                            Text(request.originalItem).font(.headline)
++                                            if let alias = request.authorAlias { Text(alias).font(.subheadline) }
++                                            if let quantity = request.ownQuantity { Text(quantity) }
++                                            if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
++                                            Text(householdTime(request.receivedAt)).font(.caption)
++                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
++                                            .contentShape(Rectangle())
++                                    }.disabled(model.busy || model.pending != nil)
++                                        .accessibilityIdentifier("household.request.\(request.id)")
++                                        .accessibilityFocused($focusedRequest, equals: request.id)
+                                     Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
+-                                    Text(householdTime(request.receivedAt)).font(.caption)
+-                                }
+-                            }.disabled(model.busy || model.pending != nil)
+-                                .accessibilityIdentifier("household.request.\(request.id)")
+-                                .accessibilityFocused($focusedRequest, equals: request.id)
++                                        .accessibilityIdentifier("household.request.outcome.\(request.id)")
++                                        .accessibilityFocused($focusedOutcome, equals: request.id)
++                                }.accessibilityElement(children: .contain)
++                                    .id(request.id)
++                            }
+                         }
++                        if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
++                        if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
+                     }
+-                    if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
+-                    if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
+-                }
+-                if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.inbox.notice") } }
+-                if model.busy { ProgressView(ht("Checking service…")) }
+-            } else { Text(ht("Shopper access has ended. Return to household settings.")) }
+-        }.task { await model.load() }
+-        .sheet(item: $decisionRequest, onDismiss: {
+-            model.cancelReview(); focusedRequest = lastRequestID
+-        }) { request in
+-            NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
+-                .presentationDetents([.large])
++                    if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.inbox.notice") } }
++                    if model.busy { ProgressView(ht("Checking service…")) }
++                } else { Text(ht("Shopper access has ended. Return to household settings.")) }
++            }.task { await model.load() }
++            .sheet(item: $decisionRequest, onDismiss: {
++                model.cancelReview()
++                if let id = confirmedReturnID, model.confirmedDecisionRequestID == id {
++                    scroll.scrollTo(id, anchor: .center)
++                    focusedRequest = nil; focusedOutcome = id
++                } else { focusedRequest = lastRequestID }
++            }) { request in
++                NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
++                    .presentationDetents([.large])
++            }
++            .onChange(of: model.confirmedDecisionRequestID) { _, id in
++                guard let id, decisionRequest?.id == id else { return }
++                confirmedReturnID = id
++                decisionRequest = nil
++            }
++            .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
+         }
+-        .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
+     }
+ }
+ private struct DeferredRequestsView: View {
+@@ -240,6 +260,11 @@ struct HouseholdRequestDecisionView: View {
+                         }
+                     }
+                 }
++                if case .confirmed(let receipt) = model.delivery, receipt.kind == "request.apply",
++                   receipt.requestId == request.id, model.confirmedDecisionRequestID == nil {
++                    Button(ht("Refresh requests")) { Task { await model.load() } }
++                        .accessibilityIdentifier("household.decision.refreshOutcome")
++                }
+                 if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.decision.notice") } }
+                 if model.busy { ProgressView(ht("Checking service…")) }
+             } else { Text(ht("Shopper access has ended. Return to household settings.")) }
+diff --git a/ios/Tests/HouseholdRequestPackReviewTests.swift b/ios/Tests/HouseholdRequestPackReviewTests.swift
+index 89c2efa..a3ab03d 100644
+--- a/ios/Tests/HouseholdRequestPackReviewTests.swift
++++ b/ios/Tests/HouseholdRequestPackReviewTests.swift
+@@ -77,6 +77,203 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
+         await model.apply(); XCTAssertEqual(server.commandCount,1); XCTAssertEqual(server.lineCount,1)
+         await model.apply(); XCTAssertEqual(server.commandCount,1)
+     }
++    @MainActor func testConfirmedApplyWaitsForRefreshedOriginalOutcomeBeforeReturning() async throws {
++        let (model, server, url) = try await setup()
++        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++        model.price = "3.00"; await model.review()
++        let held = HeldS24OutcomeResponse()
++        defer { S24FixtureProtocol.intercept = nil; held.release() }
++        let arrived = expectation(description: "Confirmed Apply is refreshing its original request")
++        S24FixtureProtocol.intercept = { task in
++            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++            held.hold(task); arrived.fulfill(); return true
++        }
++        let apply = Task { await model.apply() }
++        await fulfillment(of: [arrived], timeout: 3)
++        guard case .confirmed = model.delivery else { return XCTFail("Expected durable receipt before inbox refresh") }
++        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
++        XCTAssertTrue(model.requests.isEmpty, "The old row cannot supply the outcome focus")
++        S24FixtureProtocol.intercept = nil; held.release()
++        await apply.value
++        XCTAssertFalse(model.busy)
++        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
++        XCTAssertEqual(model.requests.first?.status, "added")
++        XCTAssertEqual(model.requests.first?.revision, 2)
++        await model.apply()
++        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
++        model.clear(); XCTAssertNil(model.confirmedDecisionRequestID)
++    }
++
++    @MainActor func testConfirmedApplyRefreshFailureWaitsForSuccessfulRefresh() async throws {
++        let (model, server, url) = try await setup()
++        defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++        model.price = "3.00"; await model.review()
++        S24FixtureProtocol.intercept = { task in
++            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++            task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut)); return true
++        }
++        await model.apply()
++        guard case .confirmed = model.delivery else { return XCTFail("The accepted decision must stay confirmed") }
++        XCTAssertFalse(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
++        XCTAssertTrue(model.requests.isEmpty)
++        S24FixtureProtocol.intercept = nil
++        await model.load()
++        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
++        XCTAssertEqual(model.requests.first?.status, "added")
++        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
++    }
++
++    @MainActor func testConfirmedApplyFindsOriginalOutcomeOnLaterInboxPage() async throws {
++        let (model, server, url) = try await setup()
++        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++        model.price = "3.00"; await model.review()
++        let held = HeldS24OutcomeResponse()
++        defer { S24FixtureProtocol.intercept = nil; held.release() }
++        let arrived = expectation(description: "Original confirmed request is on the second inbox page")
++        S24FixtureProtocol.intercept = { task in
++            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++            if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
++            else { held.hold(task); arrived.fulfill() }
++            return true
++        }
++        let apply = Task { await model.apply() }
++        await fulfillment(of: [arrived], timeout: 3)
++        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
++        XCTAssertTrue(model.requests.isEmpty, "A partial page cannot replace the original outcome")
++        held.release()
++        await apply.value
++        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
++        XCTAssertEqual(model.requests.map(\.id), [s24OtherRequestID, S24FixtureServer.requestID])
++        XCTAssertEqual(model.requests.last?.status, "added")
++        XCTAssertNil(model.nextCursor)
++        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
++    }
++
++    @MainActor func testOutcomePageCycleOrShopChangePreservesReceiptWithoutPublishingPartialRows() async throws {
++        for cycle in [true, false] {
++            let (model, server, url) = try await setup()
++            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++            model.price = "3.00"; await model.review()
++            S24FixtureProtocol.intercept = { task in
++                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++                if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
++                else if cycle {
++                    let page: [String: Any] = ["requests": [], "nextCursor": s24OtherRequestID]
++                    let bytes = try! JSONSerialization.data(withJSONObject: page)
++                    finishS24OutcomeResponse(task, status: 200, data: bytes)
++                } else {
++                    server.advanceSource()
++                    task.finishResponse()
++                }
++                return true
++            }
++            await model.apply()
++            guard case .confirmed = model.delivery else { return XCTFail("Refresh failure must preserve the durable receipt") }
++            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
++            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
++            // Repeated failed Refresh must not claim that the decision is unconfirmed.
++            await model.load()
++            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
++            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
++            S24FixtureProtocol.intercept = nil
++            await model.load()
++            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
++            XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
++        }
++    }
++
++    @MainActor func testOutcomeReturnRequiresKnownStateAndAllowsNewerDurableOutcome() async throws {
++        for (status, revision, canReturn) in [("unexpected", 2, false), ("pending", 2, false),
++                                             ("deferred", 2, false), ("deferred", 3, true), ("withdrawn", 3, true)] {
++            let (model, server, url) = try await setup()
++            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++            model.price = "3.00"; await model.review()
++            S24FixtureProtocol.intercept = { task in
++                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++                do {
++                    let (_, bytes) = try server.respond(task.request)
++                    var page = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
++                    var rows = try XCTUnwrap(page["requests"] as? [[String: Any]])
++                    rows[0]["status"] = status; rows[0]["revision"] = revision; page["requests"] = rows
++                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
++                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
++                return true
++            }
++            await model.apply()
++            XCTAssertEqual(model.confirmedDecisionRequestID, canReturn ? S24FixtureServer.requestID : nil,
++                           "Outcome \(status) at revision \(revision)")
++        }
++    }
++
++    @MainActor func testAccessEndsDuringConfirmedRefreshWithoutAnOutcomeReturn() async throws {
++        let (model, server, url) = try await setup()
++        defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++        model.price = "3.00"; await model.review()
++        XCTAssertNil(model.confirmedDecisionRequestID)
++        S24FixtureProtocol.intercept = { task in
++            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
++            finishS24OutcomeResponse(task, status: 403, data: Data())
++            return true
++        }
++        await model.apply()
++        XCTAssertFalse(model.authorized); XCTAssertNil(model.confirmedDecisionRequestID)
++        XCTAssertNil(model.shop); XCTAssertTrue(model.requests.isEmpty)
++        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
++    }
++
++    @MainActor func testUnrelatedReceiptAndChangedAuthorityCannotReturnToDecisionOutcome() async throws {
++        let replacements: [[String: Any]] = [
++            ["kind": "request.clarify"], ["kind": "request.carry"],
++            ["requestId": UUID().uuidString], ["authorityEpoch": 2],
++            ["requestRevision": 3], ["shopRevision": 3], ["requestRevision": 0], ["shopRevision": 0],
++            ["disposition": "unexpected"], ["disposition": "clarified"]
++        ]
++        for replacement in replacements {
++            let (model, server, url) = try await setup()
++            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++            model.price = "3.00"; await model.review()
++            S24FixtureProtocol.intercept = { task in
++                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
++                do {
++                    let (_, bytes) = try server.respond(task.request)
++                    var receipt = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
++                    receipt.merge(replacement) { _, changed in changed }
++                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: receipt))
++                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
++                return true
++            }
++            await model.apply()
++            XCTAssertNil(model.confirmedDecisionRequestID, "Mismatched receipt: \(replacement)")
++            XCTAssertEqual(model.requests.first?.status, "added")
++        }
++    }
++
++    @MainActor func testLostReplyAndConflictDoNotReturnEvenWhenRefreshedRowHasOutcome() async throws {
++        for conflict in [false, true] {
++            let (model, server, url) = try await setup()
++            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
++            model.price = "3.00"; await model.review()
++            S24FixtureProtocol.intercept = { task in
++                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
++                if conflict {
++                    finishS24OutcomeResponse(task, status: 409, data: Data("{\"error\":{\"code\":\"stale_base\"}}".utf8))
++                } else {
++                    // The service commits once, but the app never receives its receipt.
++                    _ = try? server.respond(task.request)
++                    task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut))
++                }
++                return true
++            }
++            await model.apply()
++            XCTAssertEqual(model.delivery, conflict ? .needsReview : .waiting)
++            XCTAssertNotNil(model.pending); XCTAssertNil(model.confirmedDecisionRequestID)
++            S24FixtureProtocol.intercept = nil
++            await model.load()
++            XCTAssertEqual(model.requests.first?.status, conflict ? "pending" : "added")
++            XCTAssertNil(model.confirmedDecisionRequestID)
++        }
++    }
++
+     @MainActor func testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment() async throws {
+         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
+         let scope=try XCTUnwrap(model.packReviewScope)
+@@ -107,3 +304,33 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
+         model.clear(); XCTAssertFalse(model.usePackSelection(selection)); XCTAssertNil(model.packReviewScope)
+     }
+ }
++
++private final class HeldS24OutcomeResponse: @unchecked Sendable {
++    private let lock = NSLock()
++    private var task: S24FixtureProtocol?
++    func hold(_ value: S24FixtureProtocol) { lock.lock(); task = value; lock.unlock() }
++    func release() {
++        lock.lock(); let value = task; task = nil; lock.unlock()
++        value?.finishResponse()
++    }
++}
++private func finishS24OutcomeResponse(_ task: S24FixtureProtocol, status: Int, data: Data) {
++    let response = HTTPURLResponse(url: task.request.url!, statusCode: status, httpVersion: nil,
++                                   headerFields: ["Content-Type": "application/json"])!
++    task.client?.urlProtocol(task, didReceive: response, cacheStoragePolicy: .notAllowed)
++    task.client?.urlProtocol(task, didLoad: data)
++    task.client?.urlProtocolDidFinishLoading(task)
++}
++
++private let s24OtherRequestID = "77777777-7777-4777-8777-777777777777"
++private func finishS24FirstOutcomePage(_ task: S24FixtureProtocol, server: S24FixtureServer) {
++    do {
++        let (_, bytes) = try server.respond(task.request)
++        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
++        var other = try XCTUnwrap((original["requests"] as? [[String: Any]])?.first)
++        other["requestId"] = s24OtherRequestID; other["originalItem"] = "Other request"
++        other["revision"] = 1; other["status"] = "pending"; other["ownActionAllowed"] = true
++        let page: [String: Any] = ["requests": [other], "nextCursor": s24OtherRequestID]
++        finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
++    } catch { task.client?.urlProtocol(task, didFailWithError: error) }
++}
+diff --git a/ios/UITests/HouseholdRequestPackUITests.swift b/ios/UITests/HouseholdRequestPackUITests.swift
+index 0ac8997..3ba2156 100644
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -49,7 +49,7 @@ import XCTest
+         tap(retry)
+         XCTAssertTrue(successor.waitForExistence(timeout: 8))
+         XCTAssertTrue(successor.label.contains("From an earlier pickup"))
+-        XCTAssertTrue(successor.label.contains("Received, waiting for review"))
++        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
+         XCTAssertEqual(app.buttons.matching(identifier: successor.identifier).count, 1)
+         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+@@ -81,9 +81,7 @@ import XCTest
+         tap(element("household.decision.review"))
+         assertElementContains("household.decision.after-total", "$4.25")
+         tap(apply)
+-        tap(element("household.decision.cancel"))
+-        XCTAssertTrue(successor.waitForExistence(timeout: 5))
+-        XCTAssertTrue(successor.label.contains("Added"))
++        assertReturnedToConfirmedRequest()
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
+         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
+     }
+@@ -113,7 +111,8 @@ import XCTest
+         try assertReadableContrast(guidance)
+         tap(element("household.decision.cancel"))
+         let request = element("household.request.44444444-4444-4444-8444-444444444444")
+-        XCTAssertTrue(request.waitForExistence(timeout: 5)); XCTAssertTrue(request.label.contains("Received, waiting for review"))
++        XCTAssertTrue(request.waitForExistence(timeout: 5))
++        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
+         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+         tap(element("fixture.s24.end-access"))
+@@ -282,18 +281,24 @@ import XCTest
+         capture("S24-actual-household-preview-before-overage-approval")
+         enableSwitch("household.decision.overage")
+         reveal(apply); XCTAssertTrue(apply.isEnabled); tap(apply)
+-        let confirmations = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Decision confirmed by the household"))
+-        // The inbox behind the sheet displays the same receipt. Require the
+-        // visible sheet receipt, rather than the covered parent's first match.
+-        let visibleReceipt = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+-            confirmations.allElementsBoundByIndex.contains { $0.exists && $0.isHittable }
+-        }, object: nil)
+-        XCTAssertEqual(XCTWaiter.wait(for: [visibleReceipt], timeout: 10), .completed)
+-        capture("S24-actual-decision-receipt")
+-        tap(element("household.decision.cancel"))
++        assertReturnedToConfirmedRequest()
++        capture("S23-updated-original-request-after-confirmed-apply")
+         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
+-        capture("S24-request-returned-once-after-sheet-dismissal")
++        capture("S23-request-returned-once-without-manual-dismissal")
++    }
++    private func assertReturnedToConfirmedRequest(file: StaticString = #filePath, line: UInt = #line) {
++        let cancel = element("household.decision.cancel")
++        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)
++        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed,
++                       "Confirmed Apply must return without another Cancel tap", file: file, line: line)
++        let request = element("household.request.44444444-4444-4444-8444-444444444444")
++        let outcome = element("household.request.outcome.44444444-4444-4444-8444-444444444444")
++        // Do not scroll here: returning from the sheet must expose the original row.
++        XCTAssertTrue(request.exists && request.isHittable, file: file, line: line)
++        XCTAssertTrue(outcome.exists && outcome.isHittable, file: file, line: line)
++        XCTAssertEqual(outcome.label, "Added to the plan", file: file, line: line)
++        XCTAssertEqual(app.buttons.matching(identifier: request.identifier).count, 1, file: file, line: line)
+     }
+     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
+diff --git a/ios/UITests/RequestDuplicateComparisonUITests.swift b/ios/UITests/RequestDuplicateComparisonUITests.swift
+index 55457f5..100c4d6 100644
+--- a/ios/UITests/RequestDuplicateComparisonUITests.swift
++++ b/ios/UITests/RequestDuplicateComparisonUITests.swift
+@@ -37,8 +37,14 @@ import XCTest
+         tap(element("household.decision.review"))
+         let apply = element("household.decision.apply")
+         tap(apply)
+-        assertVisible("Decision confirmed by the household")
+-        closeDecision()
++        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
++                                                object: element("household.decision.cancel"))
++        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
++        expectsDecisionSheet = false
++        let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444441")
++        XCTAssertTrue(sam.exists && sam.isHittable)
++        XCTAssertTrue(outcome.exists && outcome.isHittable)
++        XCTAssertEqual(outcome.label, "Saved for next shop")
+         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 1")
+         XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
+         tap(app.buttons["Load more requests"])
+@@ -51,6 +57,46 @@ import XCTest
+         assertComparisonValue("outcome",request:"lee",value:"Received, waiting for review",contains:true)
+         capture("S23-one-decision-keeps-other-request-pending")
+     }
++    func testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling() {
++        launch(language: "en", locale: "en_US")
++        let loadedFirstPage = XCTNSPredicateExpectation(
++            predicate: NSPredicate(format: "label == %@", "Fixture loaded requests: 2"),
++            object: element("fixture.s23.loaded"))
++        XCTAssertEqual(XCTWaiter.wait(for: [loadedFirstPage], timeout: 5), .completed)
++        tap(app.buttons["Load more requests"])
++        XCTAssertEqual(element("fixture.s23.loaded").label, "Fixture loaded requests: 4")
++        let lee = element("household.request.a4444444-4444-4444-8444-444444444443")
++        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 0")
++        openRequest(lee, step: "Lee-originally-on-page-two")
++        assertComparisonValue("selection", request: "lee", value: "Deciding this request")
++        assertComparisonValue("amount", request: "lee", value: "2 boxes for the school snack drive")
++        tap(element("household.decision.review"))
++        tap(element("household.decision.apply"))
++        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
++                                                object: element("household.decision.cancel"))
++        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
++        expectsDecisionSheet = false
++        let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444443")
++        // No reveal, tap or scrolling after Apply may make these assertions pass.
++        XCTAssertTrue(lee.exists && lee.isHittable)
++        XCTAssertTrue(lee.label.contains("Lee") && lee.label.contains("2 boxes for the school snack drive"))
++        XCTAssertTrue(outcome.exists && outcome.isHittable)
++        XCTAssertEqual(outcome.label, "Saved for next shop")
++        XCTAssertEqual(app.buttons.matching(identifier: lee.identifier).count, 1)
++        XCTAssertEqual(element("fixture.s23.loaded").label, "Fixture loaded requests: 4")
++        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 1")
++        XCTAssertEqual(element("fixture.s23.lines").label, "Fixture saved lines: 1")
++        capture("S23-later-page-Lee-returned-to-durable-outcome-without-scroll")
++
++        // After proving the return location, inspect the refreshed sibling outcomes.
++        openRequest(lee, step: "Lee-after-own-confirmed-outcome")
++        assertComparisonValue("outcome", request: "sam", value: "Received, waiting for review", contains: true)
++        assertComparisonValue("outcome", request: "pat", value: "Handled", contains: true)
++        assertComparisonValue("outcome", request: "lee", value: "Saved for next shop", contains: true)
++        closeDecision()
++        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 1")
++        XCTAssertEqual(element("fixture.s23.lines").label, "Fixture saved lines: 1")
++    }
+     func testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison() {
+         launch(language:"es",locale:"es_US",largeType:true)
+         let sam = element("household.request.a4444444-4444-4444-8444-444444444441")

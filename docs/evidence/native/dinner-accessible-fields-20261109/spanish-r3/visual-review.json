@@ -1,0 +1,207 @@
+{
+  "sourceManifestSHA256": "1173047f5a367d44384a7d64919ab117c85bc45929f880d266eee5ae707f1573",
+  "locale": "es_US",
+  "contentSize": "accessibility-extra-extra-extra-large",
+  "scope": "11 retained screenshots and 10 geometry/target records",
+  "recordedVerification": {
+    "startedAt": "2026-11-09T03:40:37.015042+00:00",
+    "nativeExit": 65,
+    "sourceSHA256": "1173047f5a367d44384a7d64919ab117c85bc45929f880d266eee5ae707f1573",
+    "strictExit": 1,
+    "screensExportExit": 0,
+    "geometryExportExit": 0,
+    "scrollExportExit": 0,
+    "failureExportExit": 0,
+    "headingExportExit": 0,
+    "animationIdleMessages": 0,
+    "requiredEvidenceComplete": true,
+    "headingEvidenceComplete": true,
+    "journeyPassed": false,
+    "finishedAt": "2026-11-09T03:40:46.783184+00:00",
+    "originalUnchanged": true,
+    "sourceUnchanged": true
+  },
+  "journeyPassed": false,
+  "persistenceVerified": false,
+  "findings": [
+    {
+      "topic": "ingredient identity and amounts",
+      "finding": "Both amount geometry records use ingredient.60FAD324-EDB2-472A-B387-829051D60301.amount. Clear retains exact whitespace; restore retains 4. Screens show Tortillas and unidades for clearing, and 4 with unidades after restoration. No cabbage/cups substitution remains in these records."
+    },
+    {
+      "topic": "ingredient label visibility",
+      "finding": "Cantidad, opcional and Notas del ingrediente wrap without ellipsis in fully visible sampled portions. Tortillas is fully readable. Nombre del ingrediente and the full exclusions wording are partly outside the viewport or under chrome; Remove ingredient is not shown. These captures cannot qualify all ingredient labels or removal wording."
+    },
+    {
+      "topic": "supply heading",
+      "finding": "The complete body heading Revisar el abastecimiento del ingrediente is visibly rendered, with a line-break hyphen within abastecimiento. The native inline navigation title remains ellipsized. Full AX text is not a claim of full inline rendering."
+    },
+    {
+      "topic": "supply values and purpose",
+      "finding": "Before/after pairs show complete wrapping purpose labels Cantidad aprovechable por paquete, Precio por paquete en USD, and Fuente de la información, with values 8, 2.50 and Bag label retained. Bag has a spellcheck underline, not truncation."
+    },
+    {
+      "topic": "Done and navigation",
+      "finding": "All five before images show complete Listo separately below native navigation and apart from Back or Cancelar. All five after images show no keyboard or Listo. Geometry confirms editor/sheet retained, 115.333 by 63.333 point Done frame, a contained 44 by 44 region and five sparse center/top/bottom/left/right samples. Done begins 8 points below navigation."
+    },
+    {
+      "topic": "remaining observed truncation",
+      "finding": "The full-heading screenshot visibly ellipsizes the selected value of the matched-food picker (rendered as Sin c...rmada). The full picker label wraps, but its selection is not fully rendered in this capture. This existing adjacent control is not covered by a global visual pass."
+    }
+  ],
+  "limits": [
+    "Original journey failed: native65/strict1; 720-second allowance expired at app relaunch. No overall journey pass or post-relaunch persistence/empty-list qualification.",
+    "Only the 11 retained screenshots and 10 geometry/target records were reviewed. No new exports, native execution or source changes.",
+    "Geometry samples do not qualify every point of a touch target; Cancel target size, VoiceOver traversal, other devices/OS versions, dark mode and long input values are not independently qualified.",
+    "Viewport clipping/transparent native chrome in scrolled screenshots does not by itself prove unreachability; unobserved text is not counted as visually complete."
+  ],
+  "evidence": [
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplySource-after_0_63B77F57-40E2-4C03-B03C-A54A67649CB6.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/2EAAC13C-7820-409B-862B-AF83AD5BD614.png",
+      "sha256": "35d662af66202b61e6d755b8f6db6c17bc8e5ff45db9389f1406e3b85253e3b6",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplySource-before_0_8F899356-1377-4864-8615-ECC028128A29.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/4D13755D-6AE1-4E00-890E-A436250EF386.png",
+      "sha256": "64521137e9d9b36d58c6dbcd7e018e14c3a811b95a18546d1f4e44ff37a1e24c",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplyPrice-after_0_5E2E2A02-D980-47F6-96D9-7CB0C65EB4BE.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/3A32653F-D6F2-438E-8552-ED3F4D66F85F.png",
+      "sha256": "1a30a1869a671ad9f83373a7ec4466e012d58154dfb39e18655e42350e77b95e",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplyPrice-before_0_79588914-AE3A-47FF-8ED9-AF4409A6CB8E.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/ED7C25A0-CA59-4774-A315-24B8F1F332C5.png",
+      "sha256": "d3a6695ff96af2c51476ec7c86408b126d596852337eb3e451c1d7da3c151612",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplyYield-after_0_6EA21E3F-44D4-4E82-AF0D-85B130D126F5.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/2177255D-5D4C-4C36-BAB1-BE88DACA3FB8.png",
+      "sha256": "949cfa2010ac16a34376cef4f8898d48eaa664255203579e0c66d2de7bcb89c4",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-supply-Done-ideaSupplyYield-before_0_2B3E3BC6-567A-4A88-948D-066CC0AB7456.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/9C5900D3-A325-4FB9-BB02-56D66F2241B7.png",
+      "sha256": "2440061652391b92066456a22c7098970da68d6b3631b022661fae78498e0218",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-idea-Done-restored-amount-after_0_ADEB1881-130B-4A12-8F26-36B10E1EB32C.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/EC561DB4-3A5E-488D-B645-E3EE1C556F60.png",
+      "sha256": "33828138d5161cf0ec301cd065028286fd5efbc6211653e505ecdf8188cba922",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-idea-Done-restored-amount-before_0_14D460B3-0709-45A9-ADF1-4F66D4E9AA5B.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/06D2E4CD-62D8-4DD4-9D77-0618C5B9DA6D.png",
+      "sha256": "a80b801269d5a1448c9ba6f19be9aee78272b07c5f03f567609ab2b3b4b5f665",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-idea-Done-cleared-amount-after_0_B45B9DAD-2415-44E4-A893-AB9130B147E1.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/D08F0BC8-2BB0-4724-A5CC-BEF0AA9CB0E3.png",
+      "sha256": "3aaa55d5a0d30d7bdc516f1be81b32510c9e33c6e0bcfa67a36ae5956b3980a8",
+      "reviewed": true
+    },
+    {
+      "kind": "screens",
+      "name": "Dinner-idea-Done-cleared-amount-before_0_0ACFAE8E-EC01-49CB-91D6-36A305B2DF16.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/screens/E75FEA4E-0D2A-40A7-964A-3393646A95F9.png",
+      "sha256": "2bf34b601cf0fd36276086b773a50629940cb463a2877f9f600d55af5edf13ad",
+      "reviewed": true
+    },
+    {
+      "kind": "heading",
+      "name": "Dinner-supply-full-heading_0_9742F8F9-4470-43F0-95F4-F49D6A345B44.png",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/heading/E605333C-63A7-443F-BE58-84F9EE2D9158.png",
+      "sha256": "c4a19cd68d2dbbeb013c4e14236fb804992fb9d6582ede56ae1ec65864f937a1",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplySource-geometry_0_6CBF8919-2B1D-47FD-B809-D74D87B9A731.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/09514542-CDBE-4E14-A264-75C2AAD60EDF.txt",
+      "sha256": "8b1457d1f643326cadb1d2f4e8e7d640b4df755f15398a9f349fdefaed6a63b3",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplySource-target-before_0_8DE1CBD9-86A8-4A61-B6BD-43B1FC9F5014.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/E3E4C59F-209D-401C-A1FB-72819A9994FF.txt",
+      "sha256": "a8c0a1063854c247f8b6d0f4e2b9928e6102516bb9e69489cf83a203175701d6",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplyPrice-geometry_0_CE34CD82-D643-4B55-B119-50CB9D8331DB.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/ED2CE7CB-885A-43BC-8AAB-6D5A607C1986.txt",
+      "sha256": "133e974cfabbc137b8df03af438796c4a79574bda12f408463947b4b78a64e42",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplyPrice-target-before_0_51292723-2BED-4FF5-B1A6-F86F5302574B.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/8AC13836-9C36-4B17-8D65-829B06CF0E01.txt",
+      "sha256": "07f052e6887408685278f71a5f1b62ca567e9f93b0bfca1bb2e046133095a97b",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplyYield-geometry_0_A1C82D62-6856-4838-B48D-D7063D375271.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/ADF8EDDC-B41B-41BB-90CA-339BB4130FC2.txt",
+      "sha256": "547c77e29c3611d958dcd4e4a9e41f6619d43a9b923d51909f9ed5d6c0af7d86",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-supply-Done-ideaSupplyYield-target-before_0_7566448F-AEDC-4956-B560-FB743D0CAD60.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/AA393445-B64C-4B11-AED0-5918E851A897.txt",
+      "sha256": "c6fbd9be53cb487cd492f8f2797ed72193a851b31a7fd7ac5d375c771f6d8a80",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-idea-Done-restored-amount-geometry_0_4C4381CF-1BF3-49B9-A6BB-8CB093CC087D.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/9E3E3854-32EE-4BB0-A9A1-0F1050788023.txt",
+      "sha256": "fb6436ae96af629666c38cbdc0f8575f85eb06e26754cf7d30ba7cb352895770",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-idea-Done-restored-amount-target-before_0_B1144A27-A344-4CE9-91A9-B792876965FE.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/2A7AA68E-41E3-45ED-B900-A298A90C1E3B.txt",
+      "sha256": "855ea1b1551667a814ea3fa193e837464a45aeeff6228a6fdcc955559735ba52",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-idea-Done-cleared-amount-geometry_0_4B67180A-04D8-4D84-8890-88EFE4F2C0B0.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/F5E9270D-EF2F-42D7-A8C9-7783A9BFC853.txt",
+      "sha256": "a99b0651649906f415b8f07f04e38beac2979f9a3601a269a77d7021b192a6cd",
+      "reviewed": true
+    },
+    {
+      "kind": "geometry",
+      "name": "Dinner-idea-Done-cleared-amount-target-before_0_9A26B11E-E9BC-48A3-8557-0EA2202BFD7F.txt",
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/geometry/8E19E5FF-EC6C-4983-9FAB-26C0ACB81338.txt",
+      "sha256": "6eb1af49b9bceb5abce0f37a026bd3db7eaad1f50181d87adc7afd0e4cb90109",
+      "reviewed": true
+    }
+  ]
+}

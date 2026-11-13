@@ -1,0 +1,114 @@
+{
+  "captures": [
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-cereal-checkout-with-two-named-protected-lunches_0_87709D3F-92A6-47E9-A6D2-803996AC22A9.png",
+        "payloadId": "0~7Y6hHaqipahVeH9LeYTeY47fQ_V6BSmWF3i09F7JJv2rZ-1zsb9gI1b5463L8m05kJaT65SoqHaGjnQdeYZdyQ==",
+        "timestamp": 1794144810.916,
+        "uuid": "F90FB69F-204E-4BBB-B431-38D8E8DD4984"
+      },
+      "path": "png-0-0/F90FB69F-204E-4BBB-B431-38D8E8DD4984.png",
+      "sha256": "efaa20d25fffcb06626e0c314fb5f11d410f5a9a5ea83eda339bb7ae71977020",
+      "bytes": 326089,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-shopper-access-ended-clears-private-context_0_7BEB4584-5506-447A-BAFC-AD1761D05486.png",
+        "payloadId": "0~CaRu7RBFn-KFMDVePB0TAcIicKNAv6xe45HQuSrU5uMHdTuwj5YyjjAqqM2aQ7aJz9v1N3T3CH5uyRBJzBh99w==",
+        "timestamp": 1794144820.554,
+        "uuid": "1BD55162-C27B-4993-974D-C62BDB5908F6"
+      },
+      "path": "png-0-1/1BD55162-C27B-4993-974D-C62BDB5908F6.png",
+      "sha256": "c42c85b64316f57ff120be740f90ef9c7572761bfad1da944d165c05ec9b09af",
+      "bytes": 132159,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S23-shopper-itemized-checkout-details_0_AFCFCAA3-F8C7-4477-A28B-8E563703E9C6.png",
+        "payloadId": "0~ZHGIRlM3PHREVkbxRSBGVyRIgOP7bAbMNasdyaljan5zjU4W7y8q3MB1WFD08UJ-0ipxGLkNp6E530UnEmhONA==",
+        "timestamp": 1794145081.646,
+        "uuid": "DD3358CC-F55C-48FA-B01D-AC37D6A2457D"
+      },
+      "path": "png-1-0/DD3358CC-F55C-48FA-B01D-AC37D6A2457D.png",
+      "sha256": "06926c4076e217500af60f4b4e467137422d063a6f1e7e53c4d2c5b1567a7ad8",
+      "bytes": 281986,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text Sam\u2019s wrap lunch_0_0507EE08-1C63-40DF-B5FF-743A4064F13B.png",
+        "payloadId": "0~brMh-nrJi_2GIRVf-QdvR2yQDHGouLUvnX7-2n9UKmtz_R6iiltUcAmSNtP1NtXU3uC35NOYNAa9fRYr_j86Gw==",
+        "timestamp": 1794144906.3,
+        "uuid": "6CB83E42-AF5B-4F5A-94A4-8ED166F1C176"
+      },
+      "path": "png-2-0/6CB83E42-AF5B-4F5A-94A4-8ED166F1C176.png",
+      "sha256": "c299b3af8795f2df511171cdb7b18ef806bf4cd666e1766672e7ad7d7745d374",
+      "bytes": 289203,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text Mia\u2019s wrap lunch_0_141A57EA-522D-47B4-A7DF-D6EF091B5501.png",
+        "payloadId": "0~yBt85apMkhwdLwX5eiBI5kEqnLTJiJrB9hODN7kmkYW1y-rpXFlXorQ9adMQ7OoY4LjLmjIqB3HtCw3zet6CbQ==",
+        "timestamp": 1794144912.564,
+        "uuid": "DD6B98A3-B748-4B11-A032-D732D089746F"
+      },
+      "path": "png-2-1/DD6B98A3-B748-4B11-A032-D732D089746F.png",
+      "sha256": "ec6ff635a7fd878948c128d3bef8e794e8b97ad5850720950e5dd36d1d171b3a",
+      "bytes": 297009,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text review actions_0_90D3FB20-4944-40AD-ADB7-31097904BE9C.png",
+        "payloadId": "0~PgvTYnAqztmGNFFyNAxAKF7sLNjIyr25WT4Gm4XEXr1Q2tS73F1jwX9_Pt9ty9AOxT_zGdB4TikmKFKo-Ld6ug==",
+        "timestamp": 1794144925.86,
+        "uuid": "747338B6-55E7-4BBF-8FFA-BEF5FC26B21B"
+      },
+      "path": "png-2-2/747338B6-55E7-4BBF-8FFA-BEF5FC26B21B.png",
+      "sha256": "45eb600aa679a96a30900fbe2657ea58b78d6ed95f7f746338245331154033b6",
+      "bytes": 248922,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-visible-without-expanding-details_0_24A3E363-E77E-414C-854D-DE951276EDC3.png",
+        "payloadId": "0~0PA7HqgHPBoS6UVEzMsHxfC11d2rKcgw_4RVi4t6g_ZQHTelqp_UOo_d2rB9B6yhYkEzTzXVKHtsLpnk8uCERA==",
+        "timestamp": 1794144975.652,
+        "uuid": "434F6C14-31BF-4639-838D-25A4691710B2"
+      },
+      "path": "png-3-0/434F6C14-31BF-4639-838D-25A4691710B2.png",
+      "sha256": "a70bb7b0630f9c79be8ece0951eb4aeede559519c5d7411120eaa8263ff2f10a",
+      "bytes": 305796,
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "perFileLimitBytes": 4000000,
+  "timeoutPerCommandSeconds": 45,
+  "visualReview": "pending root",
+  "collectionCorrection": {
+    "initialExpected": 8,
+    "actualExpected": 7,
+    "reason": "Return screenshot belongs to unselected primary pack case, not selected carryover case. Four actual case activity records and source contain exactly seven matching captures. All exports succeeded before final count assertion.",
+    "originalScriptSHA256": "3b5ef4f4e953e212895866075dac907db873212ca323fa02acf264c2c1bec229",
+    "followup": "Receipt reconstructed only from retained successful exports/activities and exact source; no reexport or app/test rerun."
+  }
+}

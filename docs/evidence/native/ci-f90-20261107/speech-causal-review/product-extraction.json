@@ -1,0 +1,179 @@
+{
+  "originalMember": "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+  "bytes": 73826192,
+  "sha256": "0174a433032b227c30aa08cd11cc00d3c19ddf37ae7edb9b2fffb6529b871571",
+  "fullArchiveAPIHashVerified": true,
+  "exactMemberException": {
+    "path": "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+    "bytes": 73826192,
+    "authorizedBy": "root"
+  },
+  "scope": "Only exact app dylib extracted; safe prefix inventory; full pinned ZIP hash verified; no downloaded code executed",
+  "tarPrefixInventory": [
+    {
+      "name": "._Products",
+      "bytes": 172,
+      "type": "file"
+    },
+    {
+      "name": "Products",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+      "bytes": 9430,
+      "type": "file"
+    },
+    {
+      "name": "Products/._Debug-iphonesimulator",
+      "bytes": 172,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RecordArchive.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartShare.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RecordArchive.o",
+      "bytes": 1397904,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/LocalStore.o",
+      "bytes": 485152,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/DeviceSurfaces.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/DeviceSurfaces.o",
+      "bytes": 1215688,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartShare.appex",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartTests.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartWidget.appex",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/CoreDomain.o",
+      "bytes": 11889264,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/._PackageFrameworks",
+      "bytes": 172,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/PackageFrameworks",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/HouseholdClient.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/LocalStore.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/CoreDomain.swiftmodule",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/HouseholdClient.o",
+      "bytes": 19420088,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/_CodeSignature",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/en.lproj",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/es.lproj",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/Metadata.appintents",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns",
+      "bytes": 0,
+      "type": "directory"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/AppIcon60x60@2x.png",
+      "bytes": 15760,
+      "type": "file"
+    },
+    {
+      "name": "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "bytes": 73826192,
+      "type": "file"
+    }
+  ]
+}

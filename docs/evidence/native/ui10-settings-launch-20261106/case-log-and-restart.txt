@@ -1,0 +1,80 @@
+1278: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' started.
+1279:     t =     0.00s Start Test at 2026-11-07 01:52:36.957
+1280:     t =     0.09s Set Up
+1281:     t =     0.10s Open com.apple.Preferences
+1282:     t =     0.10s     Launch com.apple.Preferences
+1283: <unknown>:0: error: -[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced] : Failed to launch com.apple.Preferences: Timed out attempting to launch app.
+1284:     t =    46.40s         Setting up automation session
+1285:     t =    49.73s         Wait for com.apple.Preferences to idle
+1286:     t =    55.78s Waiting 3.0s for "Reduce Motion" Switch to exist
+1287:     t =    56.80s     Checking `Expect predicate `existsNoRetry == 1` for object "Reduce Motion" Switch`
+1288:     t =    56.80s         Checking existence of `"Reduce Motion" Switch`
+1289:     t =    57.37s         Capturing element debug description
+1290:     t =    57.80s     Checking `Expect predicate `existsNoRetry == 1` for object "Reduce Motion" Switch`
+1291:     t =    57.80s         Checking existence of `"Reduce Motion" Switch`
+1292:     t =    57.92s         Capturing element debug description
+1293:     t =    58.78s     Checking `Expect predicate `existsNoRetry == 1` for object "Reduce Motion" Switch`
+1294:     t =    58.78s         Checking existence of `"Reduce Motion" Switch`
+1295:     t =    58.83s         Capturing element debug description
+1296:     t =    58.84s     Checking existence of `"Reduce Motion" Switch`
+1297:     t =    58.87s Collecting debug information to assist test failure triage
+1298:     t =    58.87s     Requesting snapshot of accessibility hierarchy for app with pid 24424
+1299:     t =    59.02s Checking existence of `"Motion" StaticText`
+1300:     t =    59.09s Checking existence of `"Accessibility" StaticText`
+1301:     t =    59.16s Find the "Accessibility" StaticText
+1302:     t =    59.31s Checking existence of `"Accessibility" StaticText`
+1303:     t =    59.37s Find the "Accessibility" StaticText
+1304:     t =    59.44s Tap "Accessibility" StaticText
+1305:     t =    59.44s     Wait for com.apple.Preferences to idle
+1306:     t =    59.44s     Find the "Accessibility" StaticText
+1307:     t =    59.49s     Check for interrupting elements affecting "Accessibility" StaticText
+1308:     t =    59.61s Waiting 8.0s for "Motion" StaticText to exist
+1309:     t =    60.62s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1310:     t =    60.62s         Checking existence of `"Motion" StaticText`
+1311:     t =    60.66s         Capturing element debug description
+1312:     t =    61.67s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1313:     t =    61.67s         Checking existence of `"Motion" StaticText`
+1314:     t =    61.73s         Capturing element debug description
+1315:     t =    62.66s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1316:     t =    62.67s         Checking existence of `"Motion" StaticText`
+1317:     t =    62.73s         Capturing element debug description
+1318:     t =    63.67s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1319:     t =    63.67s         Checking existence of `"Motion" StaticText`
+1320:     t =    63.71s         Capturing element debug description
+1321:     t =    64.64s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1322:     t =    64.64s         Checking existence of `"Motion" StaticText`
+1323:     t =    64.81s         Capturing element debug description
+1324:     t =    65.62s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1325:     t =    65.62s         Checking existence of `"Motion" StaticText`
+1326:     t =    65.72s         Capturing element debug description
+1327:     t =    66.67s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1328:     t =    66.71s         Checking existence of `"Motion" StaticText`
+1329:     t =    66.79s         Capturing element debug description
+1330:     t =    67.63s     Checking `Expect predicate `existsNoRetry == 1` for object "Motion" StaticText`
+1331:     t =    67.64s         Checking existence of `"Motion" StaticText`
+1332:     t =    67.76s         Capturing element debug description
+1333:     t =    67.76s     Checking existence of `"Motion" StaticText`
+1334:     t =    67.82s Collecting debug information to assist test failure triage
+1335:     t =    67.82s     Requesting snapshot of accessibility hierarchy for app with pid 24424
+1336:     t =    68.79s Tear Down
+1337:     t =    69.13s     Added attachment named 'Free-flow-failure'
+1338: 2026-11-07 01:53:46.408617+0000 RoomInTheCartUITests-Runner[9096:33841] [general] *** Assertion failure in -[RoomInTheCartUITests.FreeJourneyUITests _caughtUnhandledDeveloperExceptionPermittingControlFlowInterruptions:caughtInterruptionException:whileExecutingBlock:], XCTestCase+IssueHandling.m:273
+1339: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' failed (69.548 seconds).
+1340: 2026-11-07 01:53:46.504475+0000 RoomInTheCartUITests-Runner[9096:33841] [Default] Flushing outgoing messages to the IDE with timeout 600.00s
+1341: 2026-11-07 01:53:46.574616+0000 RoomInTheCartUITests-Runner[9096:57357] [Default] Received confirmation that IDE processed remaining outgoing messages
+1342: 2026-11-07 01:53:51.491338+0000 RoomInTheCartUITests-Runner[26566:77342] [Default] Running tests...
+1343:     t =      nans Interface orientation changed to Portrait
+1344: 
+1345: Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+1346: 
+1347: Test Suite 'Selected tests' started at 2026-11-07 01:53:55.576.
+1348: Test Suite 'RoomInTheCartUITests.xctest' started at 2026-11-07 01:53:55.578.
+1349: Test Suite 'FreeJourneyUITests' started at 2026-11-07 01:53:55.579.
+1350: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testNextShopCanCancelThenOpenOneFreshShoppingList]' started.
+1351:     t =     0.00s Start Test at 2026-11-07 01:53:55.583
+1352:     t =     0.09s Set Up
+1353:     t =     0.11s Open dev.roominthecart.app.debug
+1354:     t =     0.11s     Launch dev.roominthecart.app.debug
+1355:     t =     2.07s         Setting up automation session
+1356:     t =     4.29s         Wait for dev.roominthecart.app.debug to idle
+1357:     t =     7.66s Waiting 15.0s for "Shop" Button to exist

@@ -1,0 +1,20 @@
+{
+  "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+  "sha256": "ef59fad44155ad6cfc8c773cf5194f40e759695dbe2b6c0ebb4c52d4a13a625b",
+  "bytes": 302690,
+  "exportExit": 0,
+  "activitySHA256": "f70d67291367ddf5881f8c46ed0b65e1ae3347028464db56a58dee8526d10e2f",
+  "mainCaptureReceiptSHA256": "b1db4688623fb604f165118e5035dc936b28c0f113a59634ebbf4e7b0f878712",
+  "activityMetadataUnchanged": true,
+  "mainCaptureReceiptUnchanged": true,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "inspectionCopyOnly": true,
+  "activityExportRepeated": false,
+  "main16TargetsReexported": false,
+  "attachmentName": "S24-cereal-checkout-with-two-named-protected-lunches_0_F5F2465D-E7AC-4BC1-B49A-A8D341CFFF2C.png",
+  "attachmentUUID": "2A05DDEC-C079-47B9-AC5F-47C435C127B1",
+  "timestamp": 1794161239.735,
+  "sourceReceiptSHA256": "7da34daa2bc3cf31d37d15196359629e099490c81839667852a0dbbb5982c0c7",
+  "publicPath": "images/standard-checkout-and-two-lunches.png"
+}

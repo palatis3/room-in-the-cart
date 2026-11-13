@@ -1,0 +1,2709 @@
+TAP version 13
+# Subtest: renewal order uses purchase and signature authority rather than longest expiry
+ok 1 - renewal order uses purchase and signature authority rather than longest expiry
+  ---
+  duration_ms: 0.951875
+  type: 'test'
+  ...
+# Subtest: expiry, grace, retry and revoked access are evaluated against the trusted clock
+ok 2 - expiry, grace, retry and revoked access are evaluated against the trusted clock
+  ---
+  duration_ms: 0.327291
+  type: 'test'
+  ...
+# Subtest: offline cache never exceeds subscription end or five-minute verified lease
+ok 3 - offline cache never exceeds subscription end or five-minute verified lease
+  ---
+  duration_ms: 13.223042
+  type: 'test'
+  ...
+# Subtest: server configuration is absent by default and incomplete / local-Xcode configuration fails closed
+ok 4 - server configuration is absent by default and incomplete / local-Xcode configuration fails closed
+  ---
+  duration_ms: 0.957208
+  type: 'test'
+  ...
+# Subtest: seat command rejects more than two, duplicates, extras and invalid revision; verify rejects client purchaser claims
+ok 5 - seat command rejects more than two, duplicates, extras and invalid revision; verify rejects client purchaser claims
+  ---
+  duration_ms: 3.405417
+  type: 'test'
+  ...
+# Subtest: PostgreSQL durable billing / RLS / named seats contract
+ok 6 - PostgreSQL durable billing / RLS / named seats contract # SKIP
+  ---
+  duration_ms: 0.519042
+  type: 'test'
+  ...
+# Subtest: official Apple verifier rejects unsigned and forged JWS instead of trusting payload fields
+ok 7 - official Apple verifier rejects unsigned and forged JWS instead of trusting payload fields
+  ---
+  duration_ms: 37.2295
+  type: 'test'
+  ...
+# Subtest: unconfigured authentication denies every identity
+ok 8 - unconfigured authentication denies every identity
+  ---
+  duration_ms: 17.491417
+  type: 'test'
+  ...
+# Subtest: JWT configuration requires HTTPS and an explicit audience
+ok 9 - JWT configuration requires HTTPS and an explicit audience
+  ---
+  duration_ms: 0.362125
+  type: 'test'
+  ...
+# Subtest: canonical receipts bind all ordered array and scalar values independent of object key order
+ok 10 - canonical receipts bind all ordered array and scalar values independent of object key order
+  ---
+  duration_ms: 11.862458
+  type: 'test'
+  ...
+# Subtest: retains exact permitted signed method otp
+ok 11 - retains exact permitted signed method otp
+  ---
+  duration_ms: 13.187125
+  type: 'test'
+  ...
+# Subtest: retains exact permitted signed method password
+ok 12 - retains exact permitted signed method password
+  ---
+  duration_ms: 1.822083
+  type: 'test'
+  ...
+# Subtest: retains exact permitted signed method oauth
+ok 13 - retains exact permitted signed method oauth
+  ---
+  duration_ms: 1.253458
+  type: 'test'
+  ...
+# Subtest: retains exact permitted signed method sso/saml
+ok 14 - retains exact permitted signed method sso/saml
+  ---
+  duration_ms: 1.943209
+  type: 'test'
+  ...
+# Subtest: method comes from the same latest valid event, not earlier OTP or JWT iat
+ok 15 - method comes from the same latest valid event, not earlier OTP or JWT iat
+  ---
+  duration_ms: 1.47
+  type: 'test'
+  ...
+# Subtest: equal-time events retain original order while timestamp remains identical
+ok 16 - equal-time events retain original order while timestamp remains identical
+  ---
+  duration_ms: 2.133167
+  type: 'test'
+  ...
+# Subtest: absent or invalid permitted evidence does not invent a method/time
+ok 17 - absent or invalid permitted evidence does not invent a method/time
+  ---
+  duration_ms: 4.402292
+  type: 'test'
+  ...
+# Subtest: literal allowed method is required; signed arrays and objects cannot become method evidence
+ok 18 - literal allowed method is required; signed arrays and objects cannot become method evidence
+  ---
+  duration_ms: 4.709375
+  type: 'test'
+  ...
+# Subtest: malformed and out-of-window timestamps cannot stamp any allowed method
+ok 19 - malformed and out-of-window timestamps cannot stamp any allowed method
+  ---
+  duration_ms: 87.363333
+  type: 'test'
+  ...
+# Subtest: fresh JWT iat and user metadata never substitute for an actual signed AMR event
+ok 20 - fresh JWT iat and user metadata never substitute for an actual signed AMR event
+  ---
+  duration_ms: 6.777792
+  type: 'test'
+  ...
+# Subtest: email provider uses fixed documented endpoints and never follows provider redirects
+ok 21 - email provider uses fixed documented endpoints and never follows provider redirects
+  ---
+  duration_ms: 26.914667
+  type: 'test'
+  ...
+# Subtest: email provider rejects secret credentials, arbitrary paths and malformed/oversized upstream responses
+ok 22 - email provider rejects secret credentials, arbitrary paths and malformed/oversized upstream responses
+  ---
+  duration_ms: 3.144291
+  type: 'test'
+  ...
+# Subtest: provider errors are fixed public codes and do not expose upstream text or credentials
+ok 23 - provider errors are fixed public codes and do not expose upstream text or credentials
+  ---
+  duration_ms: 2.078375
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: s05-defer-coffee-retains-salsa-and-fee-waiver
+ok 24 - independent checkout vector: s05-defer-coffee-retains-salsa-and-fee-waiver
+  ---
+  duration_ms: 1.462708
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: s05-defer-coffee-and-salsa-restores-pickup-fee
+ok 25 - independent checkout vector: s05-defer-coffee-and-salsa-restores-pickup-fee
+  ---
+  duration_ms: 0.372292
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: cereal-over-cap
+ok 26 - independent checkout vector: cereal-over-cap
+  ---
+  duration_ms: 0.205125
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: existing-box-linked-once
+ok 27 - independent checkout vector: existing-box-linked-once
+  ---
+  duration_ms: 0.26525
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: fee-reversal-still-29-cents-over
+ok 28 - independent checkout vector: fee-reversal-still-29-cents-over
+  ---
+  duration_ms: 0.0985
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: price-and-fee-unknown
+ok 29 - independent checkout vector: price-and-fee-unknown
+  ---
+  duration_ms: 0.176417
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: fee-unknown-never-under
+ok 30 - independent checkout vector: fee-unknown-never-under
+  ---
+  duration_ms: 0.09225
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: item-cap-cannot-certify-whole-pickup
+ok 31 - independent checkout vector: item-cap-cannot-certify-whole-pickup
+  ---
+  duration_ms: 0.075834
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: dinner-cap-not-whole-checkout-cap
+ok 32 - independent checkout vector: dinner-cap-not-whole-checkout-cap
+  ---
+  duration_ms: 0.49125
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: unpriced-original-lines-remain-unknown
+ok 33 - independent checkout vector: unpriced-original-lines-remain-unknown
+  ---
+  duration_ms: 0.595209
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: threshold-uses-only-eligible-goods
+ok 34 - independent checkout vector: threshold-uses-only-eligible-goods
+  ---
+  duration_ms: 0.242291
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: tax-deposit-discount-all-included
+ok 35 - independent checkout vector: tax-deposit-discount-all-included
+  ---
+  duration_ms: 0.070542
+  type: 'test'
+  ...
+# Subtest: typed command boundary rejects forged actors, totals and unrecognized command kinds
+ok 36 - typed command boundary rejects forged actors, totals and unrecognized command kinds
+  ---
+  duration_ms: 13.820041
+  type: 'test'
+  ...
+# Subtest: five delivered portions serve two protected lunches and three of four dinner portions
+ok 37 - five delivered portions serve two protected lunches and three of four dinner portions
+  ---
+  duration_ms: 4.593625
+  type: 'test'
+  ...
+# Subtest: a protected group can switch lots to keep another meal covered without changing its reserved amount
+ok 38 - a protected group can switch lots to keep another meal covered without changing its reserved amount
+  ---
+  duration_ms: 0.552875
+  type: 'test'
+  ...
+# Subtest: unverified food, exclusions, old meal revisions, and incompatible units supply no coverage
+ok 39 - unverified food, exclusions, old meal revisions, and incompatible units supply no coverage
+  ---
+  duration_ms: 0.797
+  type: 'test'
+  ...
+# Subtest: an unknown protected quantity holds only its matched food and never fabricates a group split
+ok 40 - an unknown protected quantity holds only its matched food and never fabricates a group split
+  ---
+  duration_ms: 0.520708
+  type: 'test'
+  ...
+# Subtest: mixed units remain exact and meals missing requirements stay visible
+ok 41 - mixed units remain exact and meals missing requirements stay visible
+  ---
+  duration_ms: 0.319917
+  type: 'test'
+  ...
+# Subtest: every three-meal/three-lot matching pattern preserves the best protected-first coverage and conserves each lot
+ok 42 - every three-meal/three-lot matching pattern preserves the best protected-first coverage and conserves each lot
+  ---
+  duration_ms: 39.748666
+  type: 'test'
+  ...
+# Subtest: an explicitly entered prohibition blocks its named food in English and Spanish
+ok 43 - an explicitly entered prohibition blocks its named food in English and Spanish
+  ---
+  duration_ms: 0.54125
+  type: 'test'
+  ...
+# Subtest: a partially itemized multi-group requirement holds the total once until the protected split is known
+ok 44 - a partially itemized multi-group requirement holds the total once until the protected split is known
+  ---
+  duration_ms: 0.215833
+  type: 'test'
+  ...
+# Subtest: confirmed zero is distinct from waiting for a usable count
+ok 45 - confirmed zero is distinct from waiting for a usable count
+  ---
+  duration_ms: 0.541667
+  type: 'test'
+  ...
+# Subtest: a corrected five-portion delivery keeps two named lunches and shows three of four plates covered
+ok 46 - a corrected five-portion delivery keeps two named lunches and shows three of four plates covered
+  ---
+  duration_ms: 1.17875
+  type: 'test'
+  ...
+# Subtest: ordinary named food can reroute flexible protected coverage without shifting a protected reservation
+ok 47 - ordinary named food can reroute flexible protected coverage without shifting a protected reservation
+  ---
+  duration_ms: 0.485167
+  type: 'test'
+  ...
+# Subtest: named amounts report exact converted fractions and remain held back for unknown protected needs
+ok 48 - named amounts report exact converted fractions and remain held back for unknown protected needs
+  ---
+  duration_ms: 0.220375
+  type: 'test'
+  ...
+# Subtest: KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+ok 49 - KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+  ---
+  duration_ms: 9.847375
+  type: 'test'
+  ...
+# Subtest: organization webhook scope accepts only null product, product scope only its exact product
+ok 50 - organization webhook scope accepts only null product, product scope only its exact product
+  ---
+  duration_ms: 0.807
+  type: 'test'
+  ...
+# Subtest: documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+ok 51 - documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+  ---
+  duration_ms: 33.621291
+  type: 'test'
+  ...
+# Subtest: ambiguous PV reply is never retried and 202 is never considered verified proof
+ok 52 - ambiguous PV reply is never retried and 202 is never considered verified proof
+  ---
+  duration_ms: 1.606583
+  type: 'test'
+  ...
+# Subtest: OAuth rejects oversized/invalid token replies without returning provider content
+ok 53 - OAuth rejects oversized/invalid token replies without returning provider content
+  ---
+  duration_ms: 1.07875
+  type: 'test'
+  ...
+# Subtest: definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+ok 54 - definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+  ---
+  duration_ms: 3.132584
+  type: 'test'
+  ...
+# Subtest: entered credits and holds do not double-subtract or become spending
+ok 55 - entered credits and holds do not double-subtract or become spending
+  ---
+  duration_ms: 4.987834
+  type: 'test'
+  ...
+# Subtest: posted cash is inside an inclusive expectation and unresolved review stays conditional
+ok 56 - posted cash is inside an inclusive expectation and unresolved review stays conditional
+  ---
+  duration_ms: 0.526417
+  type: 'test'
+  ...
+# Subtest: period reservation transfers count once and already-excluded reserve is explanatory only
+ok 57 - period reservation transfers count once and already-excluded reserve is explanatory only
+  ---
+  duration_ms: 0.607917
+  type: 'test'
+  ...
+# Subtest: eligible week is the ISO UTC closure week, including year boundaries
+ok 58 - eligible week is the ISO UTC closure week, including year boundaries
+  ---
+  duration_ms: 1.079041
+  type: 'test'
+  ...
+# Subtest: tie, late, known, wrong and unchanged outcomes never produce benefit
+ok 59 - tie, late, known, wrong and unchanged outcomes never produce benefit
+  ---
+  duration_ms: 0.204209
+  type: 'test'
+  ...
+# Subtest: measurement allowlist rejects grocery data, client identity/week and billing claims
+ok 60 - measurement allowlist rejects grocery data, client identity/week and billing claims
+  ---
+  duration_ms: 3.167833
+  type: 'test'
+  ...
+# Subtest: worker credentials are explicit and different from application credentials
+ok 61 - worker credentials are explicit and different from application credentials
+  ---
+  duration_ms: 2.404
+  type: 'test'
+  ...
+# Subtest: remote worker TLS and limits cannot be overridden by PostgreSQL URL options
+ok 62 - remote worker TLS and limits cannot be overridden by PostgreSQL URL options
+  ---
+  duration_ms: 0.871042
+  type: 'test'
+  ...
+# Subtest: local disposable sockets are explicit and cannot be used in the deployment
+ok 63 - local disposable sockets are explicit and cannot be used in the deployment
+  ---
+  duration_ms: 0.425208
+  type: 'test'
+  ...
+# Subtest: aborted call never acquires a connection; a late pool lease is discarded without SQL
+ok 64 - aborted call never acquires a connection; a late pool lease is discarded without SQL
+  ---
+  duration_ms: 12.46525
+  type: 'test'
+  ...
+# Subtest: aborting an issued query discards its lease and blocks its late COMMIT continuation
+ok 65 - aborting an issued query discards its lease and blocks its late COMMIT continuation
+  ---
+  duration_ms: 7.868
+  type: 'test'
+  ...
+# Subtest: a completed lease cannot be reused and concurrent queries cannot enter the pg queue
+ok 66 - a completed lease cannot be reused and concurrent queries cannot enter the pg queue
+  ---
+  duration_ms: 0.9595
+  type: 'test'
+  ...
+# Subtest: nested phases preserve the original deadline and actually abort a stalled phase signal
+ok 67 - nested phases preserve the original deadline and actually abort a stalled phase signal
+  ---
+  duration_ms: 25.82275
+  type: 'test'
+  ...
+# Subtest: expired intent rejection cannot be turned into a late acceptance COMMIT
+ok 68 - expired intent rejection cannot be turned into a late acceptance COMMIT
+  ---
+  duration_ms: 22.021333
+  type: 'test'
+  ...
+# Subtest: reviewed deletion input and retention are snapshotted before asynchronous provider checks
+ok 69 - reviewed deletion input and retention are snapshotted before asynchronous provider checks
+  ---
+  duration_ms: 3.769459
+  type: 'test'
+  ...
+# Subtest: durable-port calls receive live server-owned phase contexts; invalid status capability cannot reconcile
+ok 70 - durable-port calls receive live server-owned phase contexts; invalid status capability cannot reconcile
+  ---
+  duration_ms: 3.676
+  type: 'test'
+  ...
+# Subtest: a cancelled ambiguous COMMIT starts no observation; its original receipt can still recover
+ok 71 - a cancelled ambiguous COMMIT starts no observation; its original receipt can still recover
+  ---
+  duration_ms: 3.970542
+  type: 'test'
+  ...
+# Subtest: provider abort reaches an actual fetch body and never starts the subsequent DELETE
+ok 72 - provider abort reaches an actual fetch body and never starts the subsequent DELETE
+  ---
+  duration_ms: 22.822417
+  type: 'test'
+  ...
+# Subtest: normal HTTP body completion leaves the deletion context active through the response
+ok 73 - normal HTTP body completion leaves the deletion context active through the response
+  ---
+  duration_ms: 19.082625
+  type: 'test'
+  ...
+# Subtest: disconnecting HTTP after its full body aborts the private call without crashing the server
+ok 74 - disconnecting HTTP after its full body aborts the private call without crashing the server
+  ---
+  duration_ms: 8.427666
+  type: 'test'
+  ...
+# Subtest: disconnect during bearer authentication prevents a late lifecycle continuation
+ok 75 - disconnect during bearer authentication prevents a late lifecycle continuation
+  ---
+  duration_ms: 6.11325
+  type: 'test'
+  ...
+# Subtest: disconnect during browser authentication prevents a late lifecycle continuation
+ok 76 - disconnect during browser authentication prevents a late lifecycle continuation
+  ---
+  duration_ms: 6.064417
+  type: 'test'
+  ...
+# Subtest: disconnect during scoped-cookie authentication prevents a late lifecycle continuation
+ok 77 - disconnect during scoped-cookie authentication prevents a late lifecycle continuation
+  ---
+  duration_ms: 6.451292
+  type: 'test'
+  ...
+# Subtest: legacy one-argument writer and owner fence still produce a verifiable durable journal
+ok 78 - legacy one-argument writer and owner fence still produce a verifiable durable journal
+  ---
+  duration_ms: 110.384792
+  type: 'test'
+  ...
+# Subtest: already ended caller operations dispatch no SQL or filesystem mutation and do not poison a healthy writer
+    # Subtest: beforeCommit:abort
+    ok 1 - beforeCommit:abort
+      ---
+      duration_ms: 49.58875
+      type: 'test'
+      ...
+    # Subtest: beforeCommit:deadline
+    ok 2 - beforeCommit:deadline
+      ---
+      duration_ms: 53.930709
+      type: 'test'
+      ...
+    # Subtest: afterCommit:abort
+    ok 3 - afterCommit:abort
+      ---
+      duration_ms: 125.937167
+      type: 'test'
+      ...
+    # Subtest: afterCommit:deadline
+    ok 4 - afterCommit:deadline
+      ---
+      duration_ms: 94.635041
+      type: 'test'
+      ...
+    # Subtest: acknowledgeJob:abort
+    ok 5 - acknowledgeJob:abort
+      ---
+      duration_ms: 92.525375
+      type: 'test'
+      ...
+    # Subtest: acknowledgeJob:deadline
+    ok 6 - acknowledgeJob:deadline
+      ---
+      duration_ms: 53.200958
+      type: 'test'
+      ...
+    1..6
+ok 79 - already ended caller operations dispatch no SQL or filesystem mutation and do not poison a healthy writer
+  ---
+  duration_ms: 470.990917
+  type: 'test'
+  ...
+# Subtest: queueing cannot refresh an absolute deadline, including caller context mutation while queued
+ok 80 - queueing cannot refresh an absolute deadline, including caller context mutation while queued
+  ---
+  duration_ms: 122.697833
+  type: 'test'
+  ...
+# Subtest: queued cancellation stays bound to the original signal and dispatches no later job lookup
+ok 81 - queued cancellation stays bound to the original signal and dispatches no later job lookup
+  ---
+  duration_ms: 89.3525
+  type: 'test'
+  ...
+# Subtest: abort during committed-source read prevents append and allows a safe exact retry after read settles
+ok 82 - abort during committed-source read prevents append and allows a safe exact retry after read settles
+  ---
+  duration_ms: 61.228459
+  type: 'test'
+  ...
+# Subtest: connection arriving after abort is released unused rather than dispatching the queued source read
+ok 83 - connection arriving after abort is released unused rather than dispatching the queued source read
+  ---
+  duration_ms: 142.430334
+  type: 'test'
+  ...
+# Subtest: aborted acknowledgement connection acquisition never dispatches SQL even after durable commit/head
+ok 84 - aborted acknowledgement connection acquisition never dispatches SQL even after durable commit/head
+  ---
+  duration_ms: 90.451792
+  type: 'test'
+  ...
+# Subtest: issued fsync can finish after abort/deadline, but cannot dispatch checkpoint/COMMIT or permit a fresh writer
+    # Subtest: abort
+    ok 1 - abort
+      ---
+      duration_ms: 91.638791
+      type: 'test'
+      ...
+    # Subtest: deadline
+    ok 2 - deadline
+      ---
+      duration_ms: 140.824334
+      type: 'test'
+      ...
+    1..2
+ok 85 - issued fsync can finish after abort/deadline, but cannot dispatch checkpoint/COMMIT or permit a fresh writer
+  ---
+  duration_ms: 233.224916
+  type: 'test'
+  ...
+# Subtest: cancellation injected before first append side effect leaves writer usable without a tail
+ok 86 - cancellation injected before first append side effect leaves writer usable without a tail
+  ---
+  duration_ms: 38.820917
+  type: 'test'
+  ...
+# Subtest: cancellation after synced intent and before checkpoint poisons tail and never claims COMMIT
+ok 87 - cancellation after synced intent and before checkpoint poisons tail and never claims COMMIT
+  ---
+  duration_ms: 50.875209
+  type: 'test'
+  ...
+# Subtest: acknowledgement already dispatched with durable commit/head may finish late, without a false successful caller result
+ok 88 - acknowledgement already dispatched with durable commit/head may finish late, without a false successful caller result
+  ---
+  duration_ms: 55.871708
+  type: 'test'
+  ...
+# Subtest: job reconciliation stops before another event after an already-dispatched acknowledgement aborts
+ok 89 - job reconciliation stops before another event after an already-dispatched acknowledgement aborts
+  ---
+  duration_ms: 105.692042
+  type: 'test'
+  ...
+# Subtest: only an omitted legacy context opts out; malformed explicit contexts cannot bypass admission
+ok 90 - only an omitted legacy context opts out; malformed explicit contexts cannot bypass admission
+  ---
+  duration_ms: 42.4595
+  type: 'test'
+  ...
+# Subtest: real adapter: admitted intent precedes source commit, observation/head precedes exact SQL acknowledgement; existing canonical verifier restores
+ok 91 - real adapter: admitted intent precedes source commit, observation/head precedes exact SQL acknowledgement; existing canonical verifier restores
+  ---
+  duration_ms: 98.553
+  type: 'test'
+  ...
+# Subtest: real adapter: only fixed-source progress for the requested job is admitted and canonical restore validates it
+ok 92 - real adapter: only fixed-source progress for the requested job is admitted and canonical restore validates it
+  ---
+  duration_ms: 74.691125
+  type: 'test'
+  ...
+# Subtest: real adapter: completed retries across instances reuse immutable identity and original acknowledgement after later heads
+ok 93 - real adapter: completed retries across instances reuse immutable identity and original acknowledgement after later heads
+  ---
+  duration_ms: 38.845083
+  type: 'test'
+  ...
+# Subtest: real adapter: valid status reconciliation with zero unacknowledged events remains a safe repeatable no-op
+ok 94 - real adapter: valid status reconciliation with zero unacknowledged events remains a safe repeatable no-op
+  ---
+  duration_ms: 20.951375
+  type: 'test'
+  ...
+# Subtest: real adapter: missing job cannot pass empty status reconciliation
+ok 95 - real adapter: missing job cannot pass empty status reconciliation
+  ---
+  duration_ms: 1.433125
+  type: 'test'
+  ...
+# Subtest: real adapter: concurrent independent instances never admit duplicate event transitions
+ok 96 - real adapter: concurrent independent instances never admit duplicate event transitions
+  ---
+  duration_ms: 7.004916
+  type: 'test'
+  ...
+# Subtest: real adapter: one event ID cannot change its digest or job on retry
+    # Subtest: digest
+    ok 1 - digest
+      ---
+      duration_ms: 15.0915
+      type: 'test'
+      ...
+    # Subtest: job
+    ok 2 - job
+      ---
+      duration_ms: 8.746458
+      type: 'test'
+      ...
+    1..2
+ok 97 - real adapter: one event ID cannot change its digest or job on retry
+  ---
+  duration_ms: 24.5925
+  type: 'test'
+  ...
+# Subtest: real adapter: strict content-free runtime payload validation precedes remote reservation
+    # Subtest: outer unknown
+    ok 1 - outer unknown
+      ---
+      duration_ms: 2.079166
+      type: 'test'
+      ...
+    # Subtest: payload unknown
+    ok 2 - payload unknown
+      ---
+      duration_ms: 1.461416
+      type: 'test'
+      ...
+    # Subtest: acceptance unknown
+    ok 3 - acceptance unknown
+      ---
+      duration_ms: 1.101917
+      type: 'test'
+      ...
+    # Subtest: attestation unknown
+    ok 4 - attestation unknown
+      ---
+      duration_ms: 1.302834
+      type: 'test'
+      ...
+    # Subtest: snapshot unknown
+    ok 5 - snapshot unknown
+      ---
+      duration_ms: 1.365958
+      type: 'test'
+      ...
+    # Subtest: duplicate target
+    ok 6 - duplicate target
+      ---
+      duration_ms: 0.971833
+      type: 'test'
+      ...
+    # Subtest: event mismatch
+    ok 7 - event mismatch
+      ---
+      duration_ms: 0.900583
+      type: 'test'
+      ...
+    # Subtest: policy mismatch
+    ok 8 - policy mismatch
+      ---
+      duration_ms: 0.828417
+      type: 'test'
+      ...
+    # Subtest: unknown progress kind
+    ok 9 - unknown progress kind
+      ---
+      duration_ms: 0.700833
+      type: 'test'
+      ...
+    1..9
+ok 98 - real adapter: strict content-free runtime payload validation precedes remote reservation
+  ---
+  duration_ms: 11.653583
+  type: 'test'
+  ...
+# Subtest: real adapter: wrong receipt boundary or signature cannot complete a phase
+    # Subtest: signature
+    ok 1 - signature
+      ---
+      duration_ms: 4.012833
+      type: 'test'
+      ...
+    # Subtest: namespace
+    ok 2 - namespace
+      ---
+      duration_ms: 5.583166
+      type: 'test'
+      ...
+    # Subtest: key
+    ok 3 - key
+      ---
+      duration_ms: 4.255875
+      type: 'test'
+      ...
+    # Subtest: head
+    ok 4 - head
+      ---
+      duration_ms: 6.268709
+      type: 'test'
+      ...
+    # Subtest: generation
+    ok 5 - generation
+      ---
+      duration_ms: 3.781792
+      type: 'test'
+      ...
+    # Subtest: record
+    ok 6 - record
+      ---
+      duration_ms: 3.482625
+      type: 'test'
+      ...
+    # Subtest: stored
+    ok 7 - stored
+      ---
+      duration_ms: 5.898
+      type: 'test'
+      ...
+    # Subtest: unknown
+    ok 8 - unknown
+      ---
+      duration_ms: 3.312541
+      type: 'test'
+      ...
+    1..8
+ok 99 - real adapter: wrong receipt boundary or signature cannot complete a phase
+  ---
+  duration_ms: 37.280125
+  type: 'test'
+  ...
+# Subtest: real adapter: authenticated stale active head is rejected for a fresh challenge and generation
+ok 100 - real adapter: authenticated stale active head is rejected for a fresh challenge and generation
+  ---
+  duration_ms: 5.793042
+  type: 'test'
+  ...
+# Subtest: real adapter: constructor snapshots pins and caller event across awaited source/authority work
+ok 101 - real adapter: constructor snapshots pins and caller event across awaited source/authority work
+  ---
+  duration_ms: 5.371833
+  type: 'test'
+  ...
+# Subtest: real adapter: returned source event must match exact requested event ID
+ok 102 - real adapter: returned source event must match exact requested event ID
+  ---
+  duration_ms: 7.105458
+  type: 'test'
+  ...
+# Subtest: real adapter: returned unacknowledged event and acceptance must match requested job
+    # Subtest: event
+    ok 1 - event
+      ---
+      duration_ms: 12.4545
+      type: 'test'
+      ...
+    # Subtest: acceptance
+    ok 2 - acceptance
+      ---
+      duration_ms: 14.5945
+      type: 'test'
+      ...
+    1..2
+ok 103 - real adapter: returned unacknowledged event and acceptance must match requested job
+  ---
+  duration_ms: 27.332542
+  type: 'test'
+  ...
+# Subtest: real adapter: unknown committed source remains quarantined without acknowledgement or head reset
+ok 104 - real adapter: unknown committed source remains quarantined without acknowledgement or head reset
+  ---
+  duration_ms: 5.945208
+  type: 'test'
+  ...
+# Subtest: real adapter: accepted remote mutation with lost response stays durably blocked across reconstruction
+    # Subtest: begin
+    ok 1 - begin
+      ---
+      duration_ms: 1.385791
+      type: 'test'
+      ...
+    # Subtest: reserve
+    ok 2 - reserve
+      ---
+      duration_ms: 2.447125
+      type: 'test'
+      ...
+    # Subtest: put
+    ok 3 - put
+      ---
+      duration_ms: 2.748834
+      type: 'test'
+      ...
+    # Subtest: publish
+    ok 4 - publish
+      ---
+      duration_ms: 4.205666
+      type: 'test'
+      ...
+    1..4
+ok 105 - real adapter: accepted remote mutation with lost response stays durably blocked across reconstruction
+  ---
+  duration_ms: 11.10075
+  type: 'test'
+  ...
+# Subtest: real adapter: pre-aborted or expired calls initiate no remote mutation or source acknowledgement
+    # Subtest: before:abort
+    ok 1 - before:abort
+      ---
+      duration_ms: 2.217833
+      type: 'test'
+      ...
+    # Subtest: before:deadline
+    ok 2 - before:deadline
+      ---
+      duration_ms: 0.859042
+      type: 'test'
+      ...
+    # Subtest: after:abort
+    ok 3 - after:abort
+      ---
+      duration_ms: 4.252416
+      type: 'test'
+      ...
+    # Subtest: after:deadline
+    ok 4 - after:deadline
+      ---
+      duration_ms: 6.330292
+      type: 'test'
+      ...
+    # Subtest: job:abort
+    ok 5 - job:abort
+      ---
+      duration_ms: 5.372917
+      type: 'test'
+      ...
+    # Subtest: job:deadline
+    ok 6 - job:deadline
+      ---
+      duration_ms: 5.021667
+      type: 'test'
+      ...
+    1..6
+ok 106 - real adapter: pre-aborted or expired calls initiate no remote mutation or source acknowledgement
+  ---
+  duration_ms: 24.689542
+  type: 'test'
+  ...
+# Subtest: real adapter: cancellation during a remote phase forwards actual signal and starts no next phase
+    # Subtest: reserve
+    ok 1 - reserve
+      ---
+      duration_ms: 4.103458
+      type: 'test'
+      ...
+    # Subtest: put
+    ok 2 - put
+      ---
+      duration_ms: 2.323375
+      type: 'test'
+      ...
+    # Subtest: publish
+    ok 3 - publish
+      ---
+      duration_ms: 2.394333
+      type: 'test'
+      ...
+    1..3
+ok 107 - real adapter: cancellation during a remote phase forwards actual signal and starts no next phase
+  ---
+  duration_ms: 9.154708
+  type: 'test'
+  ...
+# Subtest: real adapter: automatic deadline aborts the actual in-flight transport signal
+ok 108 - real adapter: automatic deadline aborts the actual in-flight transport signal
+  ---
+  duration_ms: 47.662042
+  type: 'test'
+  ...
+# Subtest: real adapter: successful remote phase arriving after caller abort initiates no next side effect
+    # Subtest: reserve
+    ok 1 - reserve
+      ---
+      duration_ms: 7.656542
+      type: 'test'
+      ...
+    # Subtest: put
+    ok 2 - put
+      ---
+      duration_ms: 3.360959
+      type: 'test'
+      ...
+    # Subtest: publish
+    ok 3 - publish
+      ---
+      duration_ms: 5.473375
+      type: 'test'
+      ...
+    1..3
+ok 109 - real adapter: successful remote phase arriving after caller abort initiates no next side effect
+  ---
+  duration_ms: 17.19125
+  type: 'test'
+  ...
+# Subtest: real adapter: cancellation during exact committed-record read cannot initiate SQL acknowledgement
+ok 110 - real adapter: cancellation during exact committed-record read cannot initiate SQL acknowledgement
+  ---
+  duration_ms: 8.645292
+  type: 'test'
+  ...
+# Subtest: real adapter: generation fence makes delayed immutable PUT inert and ordinary writer cannot reset origin
+ok 111 - real adapter: generation fence makes delayed immutable PUT inert and ordinary writer cannot reset origin
+  ---
+  duration_ms: 7.278041
+  type: 'test'
+  ...
+# Subtest: real adapter: cancellation during committed source work prevents initiating acknowledgement
+ok 112 - real adapter: cancellation during committed source work prevents initiating acknowledgement
+  ---
+  duration_ms: 17.565834
+  type: 'test'
+  ...
+# Subtest: real adapter: an acknowledgement sent after durable commit may safely complete after caller abort
+ok 113 - real adapter: an acknowledgement sent after durable commit may safely complete after caller abort
+  ---
+  duration_ms: 19.564917
+  type: 'test'
+  ...
+# Subtest: real adapter: unpinned signing key is rejected before any remote mutation
+ok 114 - real adapter: unpinned signing key is rejected before any remote mutation
+  ---
+  duration_ms: 0.91075
+  type: 'test'
+  ...
+# Subtest: real adapter: authority verifier accepts only a distinct pinned public Ed25519 key
+    # Subtest: private KeyObject
+    ok 1 - private KeyObject
+      ---
+      duration_ms: 7.36275
+      type: 'test'
+      ...
+    # Subtest: private PEM
+    ok 2 - private PEM
+      ---
+      duration_ms: 1.569667
+      type: 'test'
+      ...
+    # Subtest: writer and witness are same key
+    ok 3 - writer and witness are same key
+      ---
+      duration_ms: 0.924
+      type: 'test'
+      ...
+    1..3
+ok 115 - real adapter: authority verifier accepts only a distinct pinned public Ed25519 key
+  ---
+  duration_ms: 11.070292
+  type: 'test'
+  ...
+# Subtest: real adapter: canonical chain limits refuse new immutable PUT at 10000 records or 32 MiB
+    # Subtest: records
+    ok 1 - records
+      ---
+      duration_ms: 2.065083
+      type: 'test'
+      ...
+    # Subtest: bytes
+    ok 2 - bytes
+      ---
+      duration_ms: 1.731708
+      type: 'test'
+      ...
+    1..2
+ok 116 - real adapter: canonical chain limits refuse new immutable PUT at 10000 records or 32 MiB
+  ---
+  duration_ms: 4.057083
+  type: 'test'
+  ...
+# Subtest: real adapter: an unrelated valid admitted receipt cannot release the held event claim
+ok 117 - real adapter: an unrelated valid admitted receipt cannot release the held event claim
+  ---
+  duration_ms: 28.892833
+  type: 'test'
+  ...
+# Subtest: real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+    # Subtest: recovery
+    ok 1 - recovery
+      ---
+      duration_ms: 5.635875
+      type: 'test'
+      ...
+    # Subtest: sealed
+    ok 2 - sealed
+      ---
+      duration_ms: 7.530334
+      type: 'test'
+      ...
+    # Subtest: active
+    ok 3 - active
+      ---
+      duration_ms: 13.016334
+      type: 'test'
+      ...
+    1..3
+ok 118 - real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+  ---
+  duration_ms: 27.21725
+  type: 'test'
+  ...
+# Subtest: real adapter: authority fence after publish but before response prevents completing beforeCommit
+ok 119 - real adapter: authority fence after publish but before response prevents completing beforeCommit
+  ---
+  duration_ms: 6.733708
+  type: 'test'
+  ...
+# Subtest: real adapter: changed same-job committed acceptance must match its original admitted receipt before progress PUT
+    # Subtest: content
+    ok 1 - content
+      ---
+      duration_ms: 18.948625
+      type: 'test'
+      ...
+    # Subtest: target
+    ok 2 - target
+      ---
+      duration_ms: 29.270875
+      type: 'test'
+      ...
+    1..2
+ok 120 - real adapter: changed same-job committed acceptance must match its original admitted receipt before progress PUT
+  ---
+  duration_ms: 48.540792
+  type: 'test'
+  ...
+# Subtest: real adapter: lost guard completion response permits safe exact retry after durable receipt
+ok 121 - real adapter: lost guard completion response permits safe exact retry after durable receipt
+  ---
+  duration_ms: 11.774458
+  type: 'test'
+  ...
+# Subtest: real receipt verifier: independent authenticated receipt validates; private witness material or signer reuse rejects
+    # Subtest: private KeyObject
+    ok 1 - private KeyObject
+      ---
+      duration_ms: 0.157917
+      type: 'test'
+      ...
+    # Subtest: private PEM
+    ok 2 - private PEM
+      ---
+      duration_ms: 0.259542
+      type: 'test'
+      ...
+    # Subtest: same signer/witness key
+    ok 3 - same signer/witness key
+      ---
+      duration_ms: 0.139708
+      type: 'test'
+      ...
+    1..3
+ok 122 - real receipt verifier: independent authenticated receipt validates; private witness material or signer reuse rejects
+  ---
+  duration_ms: 7.748042
+  type: 'test'
+  ...
+# Subtest: real adapter: independently signed wrong ticket identity, generation, namespace, head or deadline causes no PUT
+    # Subtest: objectKey
+    ok 1 - objectKey
+      ---
+      duration_ms: 4.15175
+      type: 'test'
+      ...
+    # Subtest: generation
+    ok 2 - generation
+      ---
+      duration_ms: 2.875083
+      type: 'test'
+      ...
+    # Subtest: deadline
+    ok 3 - deadline
+      ---
+      duration_ms: 3.002584
+      type: 'test'
+      ...
+    # Subtest: identity
+    ok 4 - identity
+      ---
+      duration_ms: 3.257333
+      type: 'test'
+      ...
+    # Subtest: previousHead
+    ok 5 - previousHead
+      ---
+      duration_ms: 3.205792
+      type: 'test'
+      ...
+    # Subtest: unknown
+    ok 6 - unknown
+      ---
+      duration_ms: 3.090333
+      type: 'test'
+      ...
+    1..6
+ok 123 - real adapter: independently signed wrong ticket identity, generation, namespace, head or deadline causes no PUT
+  ---
+  duration_ms: 20.227167
+  type: 'test'
+  ...
+# Subtest: ambiguous append/sync failure poisons writer until explicit fenced source reconciliation
+ok 124 - ambiguous append/sync failure poisons writer until explicit fenced source reconciliation
+  ---
+  duration_ms: 275.182959
+  type: 'test'
+  ...
+# Subtest: pre-write failure also closes that writer, but a verified empty restart is safe
+ok 125 - pre-write failure also closes that writer, but a verified empty restart is safe
+  ---
+  duration_ms: 137.54925
+  type: 'test'
+  ...
+# Subtest: stalled external intent cannot retain the acceptance transaction indefinitely
+ok 126 - stalled external intent cannot retain the acceptance transaction indefinitely
+  ---
+  duration_ms: 5025.404792
+  type: 'test'
+  ...
+# Subtest: restore semantic schema accepts exact content-free source scope
+ok 127 - restore semantic schema accepts exact content-free source scope
+  ---
+  duration_ms: 19.5835
+  type: 'test'
+  ...
+# Subtest: semantic rejects duplicate targets
+ok 128 - semantic rejects duplicate targets
+  ---
+  duration_ms: 0.963667
+  type: 'test'
+  ...
+# Subtest: semantic rejects unknown attestation email
+ok 129 - semantic rejects unknown attestation email
+  ---
+  duration_ms: 1.205708
+  type: 'test'
+  ...
+# Subtest: semantic rejects unknown grocery field
+ok 130 - semantic rejects unknown grocery field
+  ---
+  duration_ms: 1.345292
+  type: 'test'
+  ...
+# Subtest: semantic rejects foreign effect
+ok 131 - semantic rejects foreign effect
+  ---
+  duration_ms: 1.660708
+  type: 'test'
+  ...
+# Subtest: semantic rejects wrong member key
+ok 132 - semantic rejects wrong member key
+  ---
+  duration_ms: 0.410625
+  type: 'test'
+  ...
+# Subtest: semantic rejects adult binding identity mismatch
+ok 133 - semantic rejects adult binding identity mismatch
+  ---
+  duration_ms: 0.488667
+  type: 'test'
+  ...
+# Subtest: semantic rejects child kind substitution
+ok 134 - semantic rejects child kind substitution
+  ---
+  duration_ms: 1.284041
+  type: 'test'
+  ...
+# Subtest: semantic rejects duplicate effects
+ok 135 - semantic rejects duplicate effects
+  ---
+  duration_ms: 3.638083
+  type: 'test'
+  ...
+# Subtest: semantic rejects inverted retention policy
+ok 136 - semantic rejects inverted retention policy
+  ---
+  duration_ms: 1.72425
+  type: 'test'
+  ...
+# Subtest: semantic rejects unknown payload field
+ok 137 - semantic rejects unknown payload field
+  ---
+  duration_ms: 0.724167
+  type: 'test'
+  ...
+# Subtest: semantic rejects unchanged effect
+ok 138 - semantic rejects unchanged effect
+  ---
+  duration_ms: 0.407583
+  type: 'test'
+  ...
+# Subtest: status expiry/cleanup race returns404 after valid first receipt read
+ok 139 - status expiry/cleanup race returns404 after valid first receipt read
+  ---
+  duration_ms: 3.267709
+  type: 'test'
+  ...
+# Subtest: actual writer checkpoints intent and commit before source acknowledgement, then fences exact head
+ok 140 - actual writer checkpoints intent and commit before source acknowledgement, then fences exact head
+  ---
+  duration_ms: 229.525583
+  type: 'test'
+  ...
+# Subtest: authentic checkpointed chain reopens and new records extend its exact hash
+ok 141 - authentic checkpointed chain reopens and new records extend its exact hash
+  ---
+  duration_ms: 143.089416
+  type: 'test'
+  ...
+# Subtest: startup rejects an invalid signature even when checkpoint was repinned to those bytes
+ok 142 - startup rejects an invalid signature even when checkpoint was repinned to those bytes
+  ---
+  duration_ms: 30.82575
+  type: 'test'
+  ...
+# Subtest: startup rejects a validly signed fork against the original independent checkpoint
+ok 143 - startup rejects a validly signed fork against the original independent checkpoint
+  ---
+  duration_ms: 25.3905
+  type: 'test'
+  ...
+# Subtest: startup rejects an authentic prefix whose independent checkpoint pins a later head
+ok 144 - startup rejects an authentic prefix whose independent checkpoint pins a later head
+  ---
+  duration_ms: 9.303083
+  type: 'test'
+  ...
+# Subtest: an existing journal cannot acquire a new independent checkpoint on startup
+ok 145 - an existing journal cannot acquire a new independent checkpoint on startup
+  ---
+  duration_ms: 15.198083
+  type: 'test'
+  ...
+# Subtest: startup binds every checkpoint origin field and rejects signed chain gaps
+    # Subtest: lineage
+    ok 1 - lineage
+      ---
+      duration_ms: 10.384459
+      type: 'test'
+      ...
+    # Subtest: schemaDigest
+    ok 2 - schemaDigest
+      ---
+      duration_ms: 33.539125
+      type: 'test'
+      ...
+    # Subtest: configurationId
+    ok 3 - configurationId
+      ---
+      duration_ms: 23.868125
+      type: 'test'
+      ...
+    # Subtest: signed chain gap
+    ok 4 - signed chain gap
+      ---
+      duration_ms: 22.973958
+      type: 'test'
+      ...
+    1..4
+ok 146 - startup binds every checkpoint origin field and rejects signed chain gaps
+  ---
+  duration_ms: 92.042792
+  type: 'test'
+  ...
+# Subtest: startup rejects signed invalid event dependencies before any acknowledgement
+    # Subtest: commit_after_rollback
+    ok 1 - commit_after_rollback
+      ---
+      duration_ms: 20.924709
+      type: 'test'
+      ...
+    # Subtest: commit_without_intent
+    ok 2 - commit_without_intent
+      ---
+      duration_ms: 33.407209
+      type: 'test'
+      ...
+    # Subtest: progress_without_acceptance
+    ok 3 - progress_without_acceptance
+      ---
+      duration_ms: 17.485625
+      type: 'test'
+      ...
+    1..3
+ok 147 - startup rejects signed invalid event dependencies before any acknowledgement
+  ---
+  duration_ms: 72.358667
+  type: 'test'
+  ...
+# Subtest: normal startup quarantines both committed and unresolved uncheckpointed tails
+    # Subtest: commit
+    ok 1 - commit
+      ---
+      duration_ms: 25.082958
+      type: 'test'
+      ...
+    # Subtest: intent
+    ok 2 - intent
+      ---
+      duration_ms: 21.412166
+      type: 'test'
+      ...
+    1..2
+ok 148 - normal startup quarantines both committed and unresolved uncheckpointed tails
+  ---
+  duration_ms: 46.950833
+  type: 'test'
+  ...
+# Subtest: explicit recovery requires a fenced fixed source, while normal writes reject a fenced source
+    # Subtest: recovery with unfenced source
+    ok 1 - recovery with unfenced source
+      ---
+      duration_ms: 14.281583
+      type: 'test'
+      ...
+    # Subtest: write with fenced source
+    ok 2 - write with fenced source
+      ---
+      duration_ms: 75.039208
+      type: 'test'
+      ...
+    # Subtest: write with a fenced checkpoint
+    ok 3 - write with a fenced checkpoint
+      ---
+      duration_ms: 45.428458
+      type: 'test'
+      ...
+    1..3
+ok 149 - explicit recovery requires a fenced fixed source, while normal writes reject a fenced source
+  ---
+  duration_ms: 135.372209
+  type: 'test'
+  ...
+# Subtest: explicit recovery proves each uncheckpointed commit against fixed source before advancing head
+ok 150 - explicit recovery proves each uncheckpointed commit against fixed source before advancing head
+  ---
+  duration_ms: 59.280708
+  type: 'test'
+  ...
+# Subtest: recovery rejects absent or conflicting fixed-source commits without repinning bytes
+    # Subtest: absent
+    ok 1 - absent
+      ---
+      duration_ms: 23.030458
+      type: 'test'
+      ...
+    # Subtest: digest
+    ok 2 - digest
+      ---
+      duration_ms: 12.802584
+      type: 'test'
+      ...
+    # Subtest: payload
+    ok 3 - payload
+      ---
+      duration_ms: 17.237708
+      type: 'test'
+      ...
+    1..3
+ok 151 - recovery rejects absent or conflicting fixed-source commits without repinning bytes
+  ---
+  duration_ms: 53.725542
+  type: 'test'
+  ...
+# Subtest: recovery cannot promote a rollback contradicted by committed fixed-source evidence
+ok 152 - recovery cannot promote a rollback contradicted by committed fixed-source evidence
+  ---
+  duration_ms: 19.512208
+  type: 'test'
+  ...
+# Subtest: unresolved recovered intent stays unverifiable until fenced source proves rollback
+ok 153 - unresolved recovered intent stays unverifiable until fenced source proves rollback
+  ---
+  duration_ms: 83.910542
+  type: 'test'
+  ...
+# Subtest: fenced recovery reconciles a matching durable acceptance intent with committed source
+ok 154 - fenced recovery reconciles a matching durable acceptance intent with committed source
+  ---
+  duration_ms: 56.706333
+  type: 'test'
+  ...
+# Subtest: a terminal rollback cannot be reopened by either beforeCommit or afterCommit
+ok 155 - a terminal rollback cannot be reopened by either beforeCommit or afterCommit
+  ---
+  duration_ms: 16.469791
+  type: 'test'
+  ...
+# Subtest: owner-only key, checkpoint, journal, and directory permissions are enforced
+    # Subtest: privateKeyPath
+    ok 1 - privateKeyPath
+      ---
+      duration_ms: 22.281333
+      type: 'test'
+      ...
+    # Subtest: checkpointPath
+    ok 2 - checkpointPath
+      ---
+      duration_ms: 12.584666
+      type: 'test'
+      ...
+    # Subtest: file
+    ok 3 - file
+      ---
+      duration_ms: 8.996375
+      type: 'test'
+      ...
+    # Subtest: directory
+    ok 4 - directory
+      ---
+      duration_ms: 13.546667
+      type: 'test'
+      ...
+    1..4
+ok 156 - owner-only key, checkpoint, journal, and directory permissions are enforced
+  ---
+  duration_ms: 58.095375
+  type: 'test'
+  ...
+# Subtest: a second writer cannot take an existing lock and does not remove the first lock
+ok 157 - a second writer cannot take an existing lock and does not remove the first lock
+  ---
+  duration_ms: 69.493416
+  type: 'test'
+  ...
+# Subtest: canonical serialization sorts object keys, preserves arrays, and has a stable SHA-256
+ok 158 - canonical serialization sorts object keys, preserves arrays, and has a stable SHA-256
+  ---
+  duration_ms: 2.348042
+  type: 'test'
+  ...
+# Subtest: complete signed authorization/progress chain yields only committed events and exact raw bundle digest
+ok 159 - complete signed authorization/progress chain yields only committed events and exact raw bundle digest
+  ---
+  duration_ms: 21.9715
+  type: 'test'
+  ...
+# Subtest: resolved rollback contributes no committed authorization or progress
+ok 160 - resolved rollback contributes no committed authorization or progress
+  ---
+  duration_ms: 4.159167
+  type: 'test'
+  ...
+# Subtest: noncanonical NDJSON spelling and duplicate keys are rejected before use
+    # Subtest: leading whitespace
+    ok 1 - leading whitespace
+      ---
+      duration_ms: 1.6015
+      type: 'test'
+      ...
+    # Subtest: trailing whitespace
+    ok 2 - trailing whitespace
+      ---
+      duration_ms: 0.776917
+      type: 'test'
+      ...
+    # Subtest: unsorted keys
+    ok 3 - unsorted keys
+      ---
+      duration_ms: 0.250958
+      type: 'test'
+      ...
+    # Subtest: duplicate outer key
+    ok 4 - duplicate outer key
+      ---
+      duration_ms: 0.219542
+      type: 'test'
+      ...
+    # Subtest: duplicate event key
+    ok 5 - duplicate event key
+      ---
+      duration_ms: 0.513542
+      type: 'test'
+      ...
+    # Subtest: duplicate payload key
+    ok 6 - duplicate payload key
+      ---
+      duration_ms: 0.473416
+      type: 'test'
+      ...
+    # Subtest: duplicate data key
+    ok 7 - duplicate data key
+      ---
+      duration_ms: 0.365166
+      type: 'test'
+      ...
+    # Subtest: Unicode escape alias
+    ok 8 - Unicode escape alias
+      ---
+      duration_ms: 0.190667
+      type: 'test'
+      ...
+    1..8
+ok 161 - noncanonical NDJSON spelling and duplicate keys are rejected before use
+  ---
+  duration_ms: 6.360916
+  type: 'test'
+  ...
+# Subtest: unknown fields in signed protocol envelopes and pinned heads fail closed
+    # Subtest: record
+    ok 1 - record
+      ---
+      duration_ms: 1.326208
+      type: 'test'
+      ...
+    # Subtest: event
+    ok 2 - event
+      ---
+      duration_ms: 0.640917
+      type: 'test'
+      ...
+    # Subtest: payload
+    ok 3 - payload
+      ---
+      duration_ms: 0.557875
+      type: 'test'
+      ...
+    # Subtest: head
+    ok 4 - head
+      ---
+      duration_ms: 0.418541
+      type: 'test'
+      ...
+    1..4
+ok 162 - unknown fields in signed protocol envelopes and pinned heads fail closed
+  ---
+  duration_ms: 3.365541
+  type: 'test'
+  ...
+# Subtest: signed event ID and payload digest conflicts are rejected
+    # Subtest: envelope eventId differs
+    ok 1 - envelope eventId differs
+      ---
+      duration_ms: 0.513958
+      type: 'test'
+      ...
+    # Subtest: payloadDigest differs
+    ok 2 - payloadDigest differs
+      ---
+      duration_ms: 0.660667
+      type: 'test'
+      ...
+    1..2
+ok 163 - signed event ID and payload digest conflicts are rejected
+  ---
+  duration_ms: 1.409834
+  type: 'test'
+  ...
+# Subtest: a rehashed payload with an old signature remains unauthorized
+ok 164 - a rehashed payload with an old signature remains unauthorized
+  ---
+  duration_ms: 2.749375
+  type: 'test'
+  ...
+# Subtest: pinned signing key and key ID are independent required checks
+    # Subtest: valid signature by unpinned Ed25519 key
+    ok 1 - valid signature by unpinned Ed25519 key
+      ---
+      duration_ms: 0.632916
+      type: 'test'
+      ...
+    # Subtest: wrong configured public key
+    ok 2 - wrong configured public key
+      ---
+      duration_ms: 0.588167
+      type: 'test'
+      ...
+    # Subtest: signed unknown key ID
+    ok 3 - signed unknown key ID
+      ---
+      duration_ms: 0.531042
+      type: 'test'
+      ...
+    # Subtest: wrong pinned key ID
+    ok 4 - wrong pinned key ID
+      ---
+      duration_ms: 0.243291
+      type: 'test'
+      ...
+    # Subtest: non-Ed25519 key type
+    ok 5 - non-Ed25519 key type
+      ---
+      duration_ms: 0.672792
+      type: 'test'
+      ...
+    1..5
+ok 165 - pinned signing key and key ID are independent required checks
+  ---
+  duration_ms: 3.2355
+  type: 'test'
+  ...
+# Subtest: interior removal, reorder, duplication, sequence gaps, and bad links fail
+    # Subtest: remove interior
+    ok 1 - remove interior
+      ---
+      duration_ms: 0.609
+      type: 'test'
+      ...
+    # Subtest: reorder interior
+    ok 2 - reorder interior
+      ---
+      duration_ms: 0.512166
+      type: 'test'
+      ...
+    # Subtest: duplicate interior
+    ok 3 - duplicate interior
+      ---
+      duration_ms: 0.740583
+      type: 'test'
+      ...
+    # Subtest: signed sequence gap
+    ok 4 - signed sequence gap
+      ---
+      duration_ms: 0.677167
+      type: 'test'
+      ...
+    # Subtest: signed wrong previousHash
+    ok 5 - signed wrong previousHash
+      ---
+      duration_ms: 0.694667
+      type: 'test'
+      ...
+    1..5
+ok 166 - interior removal, reorder, duplication, sequence gaps, and bad links fail
+  ---
+  duration_ms: 4.068584
+  type: 'test'
+  ...
+# Subtest: an authentic earlier prefix is valid only for its own head and cannot satisfy the final pinned head
+ok 167 - an authentic earlier prefix is valid only for its own head and cannot satisfy the final pinned head
+  ---
+  duration_ms: 5.645708
+  type: 'test'
+  ...
+# Subtest: a completely signed competing branch cannot satisfy the independently pinned final head
+ok 168 - a completely signed competing branch cannot satisfy the independently pinned final head
+  ---
+  duration_ms: 2.756
+  type: 'test'
+  ...
+# Subtest: unresolved intent and invalid commit/rollback dependencies never authorize events
+    # Subtest: unresolved intent
+    ok 1 - unresolved intent
+      ---
+      duration_ms: 0.6005
+      type: 'test'
+      ...
+    # Subtest: acceptance without intent
+    ok 2 - acceptance without intent
+      ---
+      duration_ms: 0.608292
+      type: 'test'
+      ...
+    # Subtest: rollback without intent
+    ok 3 - rollback without intent
+      ---
+      duration_ms: 1.125833
+      type: 'test'
+      ...
+    # Subtest: rollback digest changed
+    ok 4 - rollback digest changed
+      ---
+      duration_ms: 0.989625
+      type: 'test'
+      ...
+    # Subtest: commit after rollback
+    ok 5 - commit after rollback
+      ---
+      duration_ms: 4.008292
+      type: 'test'
+      ...
+    # Subtest: rollback after commit
+    ok 6 - rollback after commit
+      ---
+      duration_ms: 0.934417
+      type: 'test'
+      ...
+    # Subtest: new intent after rollback
+    ok 7 - new intent after rollback
+      ---
+      duration_ms: 1.201209
+      type: 'test'
+      ...
+    # Subtest: commit digest changed
+    ok 8 - commit digest changed
+      ---
+      duration_ms: 1.119375
+      type: 'test'
+      ...
+    1..8
+ok 169 - unresolved intent and invalid commit/rollback dependencies never authorize events
+  ---
+  duration_ms: 11.440833
+  type: 'test'
+  ...
+# Subtest: duplicate intents, commits, and accepted jobs fail even with correct signatures and head
+    # Subtest: intent
+    ok 1 - intent
+      ---
+      duration_ms: 0.755375
+      type: 'test'
+      ...
+    # Subtest: commit
+    ok 2 - commit
+      ---
+      duration_ms: 0.877708
+      type: 'test'
+      ...
+    # Subtest: accepted job
+    ok 3 - accepted job
+      ---
+      duration_ms: 1.071375
+      type: 'test'
+      ...
+    1..3
+ok 170 - duplicate intents, commits, and accepted jobs fail even with correct signatures and head
+  ---
+  duration_ms: 2.984791
+  type: 'test'
+  ...
+# Subtest: every progress kind requires preceding committed acceptance of its exact job
+    # Subtest: target_erased has no acceptance
+    ok 1 - target_erased has no acceptance
+      ---
+      duration_ms: 0.383458
+      type: 'test'
+      ...
+    # Subtest: target_erased precedes later acceptance
+    ok 2 - target_erased precedes later acceptance
+      ---
+      duration_ms: 0.8265
+      type: 'test'
+      ...
+    # Subtest: target_erased has another job acceptance
+    ok 3 - target_erased has another job acceptance
+      ---
+      duration_ms: 0.96275
+      type: 'test'
+      ...
+    # Subtest: source_pending has no acceptance
+    ok 4 - source_pending has no acceptance
+      ---
+      duration_ms: 0.484959
+      type: 'test'
+      ...
+    # Subtest: source_pending precedes later acceptance
+    ok 5 - source_pending precedes later acceptance
+      ---
+      duration_ms: 1.055083
+      type: 'test'
+      ...
+    # Subtest: source_pending has another job acceptance
+    ok 6 - source_pending has another job acceptance
+      ---
+      duration_ms: 1.274292
+      type: 'test'
+      ...
+    # Subtest: source_completed has no acceptance
+    ok 7 - source_completed has no acceptance
+      ---
+      duration_ms: 0.467125
+      type: 'test'
+      ...
+    # Subtest: source_completed precedes later acceptance
+    ok 8 - source_completed precedes later acceptance
+      ---
+      duration_ms: 0.918917
+      type: 'test'
+      ...
+    # Subtest: source_completed has another job acceptance
+    ok 9 - source_completed has another job acceptance
+      ---
+      duration_ms: 1.214667
+      type: 'test'
+      ...
+    1..9
+ok 171 - every progress kind requires preceding committed acceptance of its exact job
+  ---
+  duration_ms: 8.251375
+  type: 'test'
+  ...
+# Subtest: rolled-back acceptance does not authorize subsequent progress
+ok 172 - rolled-back acceptance does not authorize subsequent progress
+  ---
+  duration_ms: 1.211542
+  type: 'test'
+  ...
+# Subtest: terminal rollback prevents reopening progress events that otherwise need no intent
+    # Subtest: target_erased
+    ok 1 - target_erased
+      ---
+      duration_ms: 2.689459
+      type: 'test'
+      ...
+    # Subtest: source_pending
+    ok 2 - source_pending
+      ---
+      duration_ms: 1.538958
+      type: 'test'
+      ...
+    # Subtest: source_completed
+    ok 3 - source_completed
+      ---
+      duration_ms: 1.275583
+      type: 'test'
+      ...
+    1..3
+ok 173 - terminal rollback prevents reopening progress events that otherwise need no intent
+  ---
+  duration_ms: 5.800084
+  type: 'test'
+  ...
+# Subtest: all pinned origin fields bind both head and every signed payload
+    # Subtest: lineage head/config mismatch
+    ok 1 - lineage head/config mismatch
+      ---
+      duration_ms: 0.108583
+      type: 'test'
+      ...
+    # Subtest: lineage payload/config mismatch
+    ok 2 - lineage payload/config mismatch
+      ---
+      duration_ms: 0.168458
+      type: 'test'
+      ...
+    # Subtest: schemaDigest head/config mismatch
+    ok 3 - schemaDigest head/config mismatch
+      ---
+      duration_ms: 0.0655
+      type: 'test'
+      ...
+    # Subtest: schemaDigest payload/config mismatch
+    ok 4 - schemaDigest payload/config mismatch
+      ---
+      duration_ms: 0.144084
+      type: 'test'
+      ...
+    # Subtest: configurationId head/config mismatch
+    ok 5 - configurationId head/config mismatch
+      ---
+      duration_ms: 0.058333
+      type: 'test'
+      ...
+    # Subtest: configurationId payload/config mismatch
+    ok 6 - configurationId payload/config mismatch
+      ---
+      duration_ms: 0.132042
+      type: 'test'
+      ...
+    1..6
+ok 174 - all pinned origin fields bind both head and every signed payload
+  ---
+  duration_ms: 1.203125
+  type: 'test'
+  ...
+# Subtest: unfenced, missing, future-version, wrong sequence, or wrong hash heads fail
+    # Subtest: unfenced
+    ok 1 - unfenced
+      ---
+      duration_ms: 0.361958
+      type: 'test'
+      ...
+    # Subtest: missing
+    ok 2 - missing
+      ---
+      duration_ms: 0.351375
+      type: 'test'
+      ...
+    # Subtest: future version
+    ok 3 - future version
+      ---
+      duration_ms: 0.182625
+      type: 'test'
+      ...
+    # Subtest: sequence
+    ok 4 - sequence
+      ---
+      duration_ms: 0.763833
+      type: 'test'
+      ...
+    # Subtest: hash
+    ok 5 - hash
+      ---
+      duration_ms: 0.719083
+      type: 'test'
+      ...
+    1..5
+ok 175 - unfenced, missing, future-version, wrong sequence, or wrong hash heads fail
+  ---
+  duration_ms: 2.934791
+  type: 'test'
+  ...
+# Subtest: empty, oversized, or over-count bundles fail within fixed limits
+    # Subtest: empty
+    ok 1 - empty
+      ---
+      duration_ms: 0.188083
+      type: 'test'
+      ...
+    # Subtest: more than 32 MiB
+    ok 2 - more than 32 MiB
+      ---
+      duration_ms: 4.311334
+      type: 'test'
+      ...
+    # Subtest: more than 10,000 records
+    ok 3 - more than 10,000 records
+      ---
+      duration_ms: 1.821708
+      type: 'test'
+      ...
+    1..3
+ok 176 - empty, oversized, or over-count bundles fail within fixed limits
+  ---
+  duration_ms: 6.896417
+  type: 'test'
+  ...
+# Subtest: truncation, ambiguous line framing, BOM, and incomplete JSON fail
+    # Subtest: missing final LF
+    ok 1 - missing final LF
+      ---
+      duration_ms: 0.131958
+      type: 'test'
+      ...
+    # Subtest: partial final record with LF
+    ok 2 - partial final record with LF
+      ---
+      duration_ms: 0.666083
+      type: 'test'
+      ...
+    # Subtest: missing complete suffix
+    ok 3 - missing complete suffix
+      ---
+      duration_ms: 0.444375
+      type: 'test'
+      ...
+    # Subtest: internal blank line
+    ok 4 - internal blank line
+      ---
+      duration_ms: 0.441583
+      type: 'test'
+      ...
+    # Subtest: CRLF
+    ok 5 - CRLF
+      ---
+      duration_ms: 0.164416
+      type: 'test'
+      ...
+    # Subtest: extra terminal LF
+    ok 6 - extra terminal LF
+      ---
+      duration_ms: 4.139375
+      type: 'test'
+      ...
+    # Subtest: UTF-8 BOM
+    ok 7 - UTF-8 BOM
+      ---
+      duration_ms: 0.102542
+      type: 'test'
+      ...
+    1..7
+ok 177 - truncation, ambiguous line framing, BOM, and incomplete JSON fail
+  ---
+  duration_ms: 7.609875
+  type: 'test'
+  ...
+# Subtest: malformed UTF-8 must not normalize into an authentic signed bundle
+ok 178 - malformed UTF-8 must not normalize into an authentic signed bundle
+  ---
+  duration_ms: 0.862667
+  type: 'test'
+  ...
+# Subtest: signature base64url is a unique canonical encoding, including unused final bits
+ok 179 - signature base64url is a unique canonical encoding, including unused final bits
+  ---
+  duration_ms: 0.670333
+  type: 'test'
+  ...
+# Subtest: reauthentication derives only from a signed authentication method, never refreshed iat or user metadata
+ok 180 - reauthentication derives only from a signed authentication method, never refreshed iat or user metadata
+  ---
+  duration_ms: 15.001917
+  type: 'test'
+  ...
+# Subtest: privileged account deletion is fixed-origin, exact-subject, hard delete and verifies absence
+ok 181 - privileged account deletion is fixed-origin, exact-subject, hard delete and verifies absence
+  ---
+  duration_ms: 28.259417
+  type: 'test'
+  ...
+# Subtest: missing Apple revocation or mismatched provider subjects never claim deletion
+ok 182 - missing Apple revocation or mismatched provider subjects never claim deletion
+  ---
+  duration_ms: 3.736708
+  type: 'test'
+  ...
+# Subtest: unpinned protected lunch precedes a required dinner reservation
+ok 183 - unpinned protected lunch precedes a required dinner reservation
+  ---
+  duration_ms: 68.071708
+  type: 'test'
+  ...
+# Subtest: excluded pinned dinner gets no allocation and consumes no lunch supply
+ok 184 - excluded pinned dinner gets no allocation and consumes no lunch supply
+  ---
+  duration_ms: 6.339792
+  type: 'test'
+  ...
+# Subtest: known arrival with unknown received quantity remains representable and unusable
+ok 185 - known arrival with unknown received quantity remains representable and unusable
+  ---
+  duration_ms: 4.140833
+  type: 'test'
+  ...
+# Subtest: a short full pin cannot borrow a second delivery after lunch takes priority
+ok 186 - a short full pin cannot borrow a second delivery after lunch takes priority
+  ---
+  duration_ms: 3.433334
+  type: 'test'
+  ...
+# Subtest: partial pin allows only its unreserved remainder to use another delivery
+ok 187 - partial pin allows only its unreserved remainder to use another delivery
+  ---
+  duration_ms: 0.997458
+  type: 'test'
+  ...
+# Subtest: protected exclusion conflict consumes nothing before a valid required pin
+ok 188 - protected exclusion conflict consumes nothing before a valid required pin
+  ---
+  duration_ms: 0.816625
+  type: 'test'
+  ...
+# Subtest: after protected needs, required pinned dinner precedes unpinned required dinner
+ok 189 - after protected needs, required pinned dinner precedes unpinned required dinner
+  ---
+  duration_ms: 0.943125
+  type: 'test'
+  ...
+# Subtest: unrelated physical pin and protected allocation survive another dinner recovery
+ok 190 - unrelated physical pin and protected allocation survive another dinner recovery
+  ---
+  duration_ms: 6.444
+  type: 'test'
+  ...
+# Subtest: known quantity without arrival instant also stays unavailable until reviewed
+ok 191 - known quantity without arrival instant also stays unavailable until reviewed
+  ---
+  duration_ms: 2.381
+  type: 'test'
+  ...
+# Subtest: reservation list order cannot change which protected or pinned need eats first
+ok 192 - reservation list order cannot change which protected or pinned need eats first
+  ---
+  duration_ms: 2.429916
+  type: 'test'
+  ...
+# Subtest: five observed freezer portions plus an independent delivery cover two lunches and four dinners once
+ok 193 - five observed freezer portions plus an independent delivery cover two lunches and four dinners once
+  ---
+  duration_ms: 42.527875
+  type: 'test'
+  ...
+# Subtest: explicit stock observation head supersedes older evidence even when unknown, stale-identity, or future
+ok 194 - explicit stock observation head supersedes older evidence even when unknown, stale-identity, or future
+  ---
+  duration_ms: 11.527167
+  type: 'test'
+  ...
+# Subtest: manual, retail and carried aliases cannot manufacture or duplicate a physical source
+ok 195 - manual, retail and carried aliases cannot manufacture or duplicate a physical source
+  ---
+  duration_ms: 5.127833
+  type: 'test'
+  ...
+# Subtest: carry needs an explicit selection, original shop history, and that shop’s real supply seal
+ok 196 - carry needs an explicit selection, original shop history, and that shop’s real supply seal
+  ---
+  duration_ms: 4.119333
+  type: 'test'
+  ...
+# Subtest: opaque foreign holds protect exact fractions, unknown holds lock the lot, and incompatible units reject
+ok 197 - opaque foreign holds protect exact fractions, unknown holds lock the lot, and incompatible units reject
+  ---
+  duration_ms: 6.295917
+  type: 'test'
+  ...
+# Subtest: explicit new recipe need may match independent foods while excluded or incompatible sources remain visible
+ok 198 - explicit new recipe need may match independent foods while excluded or incompatible sources remain visible
+  ---
+  duration_ms: 10.635791
+  type: 'test'
+  ...
+# Subtest: flexible multi-food match can move without starving a later single-source need
+ok 199 - flexible multi-food match can move without starving a later single-source need
+  ---
+  duration_ms: 1.325
+  type: 'test'
+  ...
+# Subtest: unknown protected amounts reserve their matched sources; an unsplit group total stays singular and unresolved
+ok 200 - unknown protected amounts reserve their matched sources; an unsplit group total stays singular and unresolved
+  ---
+  duration_ms: 1.517875
+  type: 'test'
+  ...
+# Subtest: a captured preview stales on a revised pantry seal or newly committed foreign food
+ok 201 - a captured preview stales on a revised pantry seal or newly committed foreign food
+  ---
+  duration_ms: 5.375
+  type: 'test'
+  ...
+# Subtest: ungrouped and unplanned recorded meals stay readable; a replacement cannot abandon a named commitment
+ok 202 - ungrouped and unplanned recorded meals stay readable; a replacement cannot abandon a named commitment
+  ---
+  duration_ms: 1.88425
+  type: 'test'
+  ...
+# Subtest: manual stock converts compatible units exactly and never gains implicit food-ID eligibility
+ok 203 - manual stock converts compatible units exactly and never gains implicit food-ID eligibility
+  ---
+  duration_ms: 1.0585
+  type: 'test'
+  ...
+# Subtest: two shops may issue the same observation key without borrowing each other’s arrival
+ok 204 - two shops may issue the same observation key without borrowing each other’s arrival
+  ---
+  duration_ms: 1.0905
+  type: 'test'
+  ...
+# Subtest: mixed-case saved restriction matches an explicit canonical exclusion tag before pinned allocation
+ok 205 - mixed-case saved restriction matches an explicit canonical exclusion tag before pinned allocation
+  ---
+  duration_ms: 39.868542
+  type: 'test'
+  ...
+# Subtest: legacy saved exclusion text is checked against entered food labels without treating it as a tag ID
+ok 206 - legacy saved exclusion text is checked against entered food labels without treating it as a tag ID
+  ---
+  duration_ms: 12.935709
+  type: 'test'
+  ...
+# Subtest: case accent and punctuation comparison preserves the original saved text
+ok 207 - case accent and punctuation comparison preserves the original saved text
+  ---
+  duration_ms: 5.425125
+  type: 'test'
+  ...
+# Subtest: saved phrases match the reviewed ingredient label even when canonical food label is generic
+ok 208 - saved phrases match the reviewed ingredient label even when canonical food label is generic
+  ---
+  duration_ms: 2.669542
+  type: 'test'
+  ...
+# Subtest: token matching does not infer ingredient families or partial-word exclusions
+ok 209 - token matching does not infer ingredient families or partial-word exclusions
+  ---
+  duration_ms: 4.079042
+  type: 'test'
+  ...
+# Subtest: exclusion tags remain case-insensitive exact terms rather than food-name identity matches
+ok 210 - exclusion tags remain case-insensitive exact terms rather than food-name identity matches
+  ---
+  duration_ms: 1.039083
+  type: 'test'
+  ...
+# Subtest: S08 six usable minus two protected leaves four for tacos
+ok 211 - S08 six usable minus two protected leaves four for tacos
+  ---
+  duration_ms: 36.340792
+  type: 'test'
+  ...
+# Subtest: S09 replace Wednesday preserves Tuesday shortage and protected lunches
+ok 212 - S09 replace Wednesday preserves Tuesday shortage and protected lunches
+  ---
+  duration_ms: 11.0575
+  type: 'test'
+  ...
+# Subtest: latest usable correction to seven replaces previous observation
+ok 213 - latest usable correction to seven replaces previous observation
+  ---
+  duration_ms: 6.348709
+  type: 'test'
+  ...
+# Subtest: duplicate observation replay is rejected; cannot create extra batch
+ok 214 - duplicate observation replay is rejected; cannot create extra batch
+  ---
+  duration_ms: 1.582458
+  type: 'test'
+  ...
+# Subtest: distinct second delivery survives
+ok 215 - distinct second delivery survives
+  ---
+  duration_ms: 2.774583
+  type: 'test'
+  ...
+# Subtest: same delivery identity cannot be copied under another source or revision
+ok 216 - same delivery identity cannot be copied under another source or revision
+  ---
+  duration_ms: 1.543583
+  type: 'test'
+  ...
+# Subtest: same import origin cannot be copied by changing review digest
+ok 217 - same import origin cannot be copied by changing review digest
+  ---
+  duration_ms: 1.116875
+  type: 'test'
+  ...
+# Subtest: foreign tenant observation and unknown food identity reject
+ok 218 - foreign tenant observation and unknown food identity reject
+  ---
+  duration_ms: 1.461417
+  type: 'test'
+  ...
+# Subtest: future arrival or confirmation stays unavailable
+ok 219 - future arrival or confirmation stays unavailable
+  ---
+  duration_ms: 5.770167
+  type: 'test'
+  ...
+# Subtest: arrival correction invalidates old usable confirmation until re-reviewed
+ok 220 - arrival correction invalidates old usable confirmation until re-reviewed
+  ---
+  duration_ms: 2.072875
+  type: 'test'
+  ...
+# Subtest: unknown arrival does not become zero or confirmed stock
+ok 221 - unknown arrival does not become zero or confirmed stock
+  ---
+  duration_ms: 3.03225
+  type: 'test'
+  ...
+# Subtest: usable cannot exceed actual received quantity
+ok 222 - usable cannot exceed actual received quantity
+  ---
+  duration_ms: 0.813791
+  type: 'test'
+  ...
+# Subtest: orphan, fork and wrong-source correction fail closed
+ok 223 - orphan, fork and wrong-source correction fail closed
+  ---
+  duration_ms: 1.825625
+  type: 'test'
+  ...
+# Subtest: actual late delivery provides current physical food while on-time replacement remains infeasible
+ok 224 - actual late delivery provides current physical food while on-time replacement remains infeasible
+  ---
+  duration_ms: 2.061292
+  type: 'test'
+  ...
+# Subtest: same name is not food identity
+ok 225 - same name is not food identity
+  ---
+  duration_ms: 1.57525
+  type: 'test'
+  ...
+# Subtest: stale heads, target and reused need/revision rejected
+ok 226 - stale heads, target and reused need/revision rejected
+  ---
+  duration_ms: 5.475125
+  type: 'test'
+  ...
+# Subtest: reservation target and protected group mutation reject
+ok 227 - reservation target and protected group mutation reject
+  ---
+  duration_ms: 8.156084
+  type: 'test'
+  ...
+# Subtest: fallback may not borrow another meals food
+ok 228 - fallback may not borrow another meals food
+  ---
+  duration_ms: 1.604666
+  type: 'test'
+  ...
+# Subtest: five portions cannot cover four plates and two protected lunches
+ok 229 - five portions cannot cover four plates and two protected lunches
+  ---
+  duration_ms: 2.090875
+  type: 'test'
+  ...
+# Subtest: exact mass conversion 500 g equals half kg; cross dimension not counted
+ok 230 - exact mass conversion 500 g equals half kg; cross dimension not counted
+  ---
+  duration_ms: 7.254125
+  type: 'test'
+  ...
+# Subtest: unknown commitment inventory prevents feasibility
+ok 231 - unknown commitment inventory prevents feasibility
+  ---
+  duration_ms: 1.832875
+  type: 'test'
+  ...
+# Subtest: unknown elapsed time and uncompleted marinating remain conditional
+ok 232 - unknown elapsed time and uncompleted marinating remain conditional
+  ---
+  duration_ms: 6.282334
+  type: 'test'
+  ...
+# Subtest: trip/repeat agreement bound to exact intent; trip adds no stock
+ok 233 - trip/repeat agreement bound to exact intent; trip adds no stock
+  ---
+  duration_ms: 12.165417
+  type: 'test'
+  ...
+# Subtest: saved ingredient restrictions retained by group and canonical food tags block
+ok 234 - saved ingredient restrictions retained by group and canonical food tags block
+  ---
+  duration_ms: 1.837584
+  type: 'test'
+  ...
+# Subtest: current corrected supply updates projection without rewriting recovery snapshot
+ok 235 - current corrected supply updates projection without rewriting recovery snapshot
+  ---
+  duration_ms: 1.565208
+  type: 'test'
+  ...
+# Subtest: strict commands reject arbitrary basis, authorization and money blobs
+ok 236 - strict commands reject arbitrary basis, authorization and money blobs
+  ---
+  duration_ms: 5.102125
+  type: 'test'
+  ...
+# Subtest: strict arrival/usable/import commands require exact mapping references
+ok 237 - strict arrival/usable/import commands require exact mapping references
+  ---
+  duration_ms: 2.38525
+  type: 'test'
+  ...
+# Subtest: oversubscribed or duplicate pinned edges reject
+ok 238 - oversubscribed or duplicate pinned edges reject
+  ---
+  duration_ms: 1.65775
+  type: 'test'
+  ...
+# Subtest: replacement food identity must exist in the canonical shop scope
+ok 239 - replacement food identity must exist in the canonical shop scope
+  ---
+  duration_ms: 1.057375
+  type: 'test'
+  ...
+# Subtest: later evidence does not change earlier projection digest until available
+ok 240 - later evidence does not change earlier projection digest until available
+  ---
+  duration_ms: 2.530625
+  type: 'test'
+  ...
+# Subtest: due date, zone, portion total and protected needs are exact commitments
+ok 241 - due date, zone, portion total and protected needs are exact commitments
+  ---
+  duration_ms: 6.881583
+  type: 'test'
+  ...
+# Subtest: preview digest ignores harmless clock ticks but binds evidence and timing change
+ok 242 - preview digest ignores harmless clock ticks but binds evidence and timing change
+  ---
+  duration_ms: 6.770292
+  type: 'test'
+  ...
+# Subtest: projection exposes exact source allocation edges in each need unit
+ok 243 - projection exposes exact source allocation edges in each need unit
+  ---
+  duration_ms: 0.67225
+  type: 'test'
+  ...
+# Subtest: canonical basis cannot drop global or named-group exclusions from effective needs
+ok 244 - canonical basis cannot drop global or named-group exclusions from effective needs
+  ---
+  duration_ms: 0.440959
+  type: 'test'
+  ...
+# Subtest: portable JSON fixture matches the exact reviewed Tuesday/Wednesday projection
+ok 245 - portable JSON fixture matches the exact reviewed Tuesday/Wednesday projection
+  ---
+  duration_ms: 37.848167
+  type: 'test'
+  ...
+# Subtest: identity correction cannot relabel old usable confirmation as the new food
+ok 246 - identity correction cannot relabel old usable confirmation as the new food
+  ---
+  duration_ms: 50.21425
+  type: 'test'
+  ...
+# Subtest: explicit arrival and usable reconfirmation under corrected identity creates current supply
+ok 247 - explicit arrival and usable reconfirmation under corrected identity creates current supply
+  ---
+  duration_ms: 6.73975
+  type: 'test'
+  ...
+# Subtest: new-identity usable confirmation cannot refer to the old-identity arrival
+ok 248 - new-identity usable confirmation cannot refer to the old-identity arrival
+  ---
+  duration_ms: 3.384291
+  type: 'test'
+  ...
+# Subtest: future or zero identity revisions reject rather than acquiring current identity
+ok 249 - future or zero identity revisions reject rather than acquiring current identity
+  ---
+  duration_ms: 6.771166
+  type: 'test'
+  ...
+# Subtest: unchanged source identity keeps original usable supply and never renames history
+ok 250 - unchanged source identity keeps original usable supply and never renames history
+  ---
+  duration_ms: 2.754417
+  type: 'test'
+  ...
+# Subtest: a fabricated named template cannot acquire accepted provenance or bypass repeat review
+ok 251 - a fabricated named template cannot acquire accepted provenance or bypass repeat review
+  ---
+  duration_ms: 45.441334
+  type: 'test'
+  ...
+# Subtest: even a known template ID is rejected without canonical accepted version and scaled definition
+ok 252 - even a known template ID is rejected without canonical accepted version and scaled definition
+  ---
+  duration_ms: 2.236333
+  type: 'test'
+  ...
+# Subtest: Free manual editable-source metadata remains exact in the replacement projection
+ok 253 - Free manual editable-source metadata remains exact in the replacement projection
+  ---
+  duration_ms: 16.298333
+  type: 'test'
+  ...
+# Subtest: protected ingredient instructions cannot be silently edited during dinner recovery
+ok 254 - protected ingredient instructions cannot be silently edited during dinner recovery
+  ---
+  duration_ms: 7.088916
+  type: 'test'
+  ...
+# Subtest: note and source changes are bound into target and exact reviewed intent digests
+ok 255 - note and source changes are bound into target and exact reviewed intent digests
+  ---
+  duration_ms: 11.597542
+  type: 'test'
+  ...
+# Subtest: manual repeat is an explicit canonical occurrence choice requiring agreement
+ok 256 - manual repeat is an explicit canonical occurrence choice requiring agreement
+  ---
+  duration_ms: 11.960958
+  type: 'test'
+  ...
+# Subtest: native UTF-8 metadata bounds reject oversized text without silently truncating it
+ok 257 - native UTF-8 metadata bounds reject oversized text without silently truncating it
+  ---
+  duration_ms: 6.989333
+  type: 'test'
+  ...
+# Subtest: physically available late food covers still-open needs without changing their saved deadlines
+ok 258 - physically available late food covers still-open needs without changing their saved deadlines
+  ---
+  duration_ms: 71.693833
+  type: 'test'
+  ...
+# Subtest: late currently available fallback food is physical coverage, never on-time feasibility
+ok 259 - late currently available fallback food is physical coverage, never on-time feasibility
+  ---
+  duration_ms: 8.516
+  type: 'test'
+  ...
+# Subtest: future evidence stays unavailable even for overdue open needs
+ok 260 - future evidence stays unavailable even for overdue open needs
+  ---
+  duration_ms: 2.555041
+  type: 'test'
+  ...
+# Subtest: unknown deadline remains explicit without erasing physical food coverage
+ok 261 - unknown deadline remains explicit without erasing physical food coverage
+  ---
+  duration_ms: 3.19525
+  type: 'test'
+  ...
+# Subtest: optional reviewed evidence retains exact selected source and quantities; legacy manual omits it
+ok 262 - optional reviewed evidence retains exact selected source and quantities; legacy manual omits it
+  ---
+  duration_ms: 10.876125
+  type: 'test'
+  ...
+# Subtest: reviewed choice must match price, label, count, exact ceil and confirmed available limit
+ok 263 - reviewed choice must match price, label, count, exact ceil and confirmed available limit
+  ---
+  duration_ms: 3.027333
+  type: 'test'
+  ...
+# Subtest: same-dimension exact conversions and null prices are validated without inventing price
+ok 264 - same-dimension exact conversions and null prices are validated without inventing price
+  ---
+  duration_ms: 0.210708
+  type: 'test'
+  ...
+# Subtest: metadata cannot attach to links, contributor-like decisions, or unbounded malformed fields
+ok 265 - metadata cannot attach to links, contributor-like decisions, or unbounded malformed fields
+  ---
+  duration_ms: 0.979959
+  type: 'test'
+  ...
+# Subtest: remote database configuration verifies TLS even if URL requests disabled SSL
+ok 266 - remote database configuration verifies TLS even if URL requests disabled SSL
+  ---
+  duration_ms: 0.919083
+  type: 'test'
+  ...
+# Subtest: only loopback fixture databases can run without TLS
+ok 267 - only loopback fixture databases can run without TLS
+  ---
+  duration_ms: 0.419209
+  type: 'test'
+  ...
+# Subtest: forwarded addresses are trusted only within the Vercel runtime and malformed metadata fails closed
+ok 268 - forwarded addresses are trusted only within the Vercel runtime and malformed metadata fails closed
+  ---
+  duration_ms: 6.531917
+  type: 'test'
+  ...
+# Subtest: deadline validates the entered instant in the scheduled zone, including distinct clock repetitions
+ok 269 - deadline validates the entered instant in the scheduled zone, including distinct clock repetitions
+  ---
+  duration_ms: 37.528
+  type: 'test'
+  ...
+# Subtest: a date-only move preserves all other facts and never silently extends a deadline
+ok 270 - a date-only move preserves all other facts and never silently extends a deadline
+  ---
+  duration_ms: 1.200375
+  type: 'test'
+  ...
+# Subtest: sealed deadline and zone reach every recovery need and govern elapsed preparation without mutating the order
+ok 271 - sealed deadline and zone reach every recovery need and govern elapsed preparation without mutating the order
+  ---
+  duration_ms: 28.3865
+  type: 'test'
+  ...
+# Subtest: named reservations are deducted before exact usable whole packs, with price unresolved
+ok 272 - named reservations are deducted before exact usable whole packs, with price unresolved
+  ---
+  duration_ms: 8.508333
+  type: 'test'
+  ...
+# Subtest: unknown stock, pack, yield or required amount blocks coverage and approval
+ok 273 - unknown stock, pack, yield or required amount blocks coverage and approval
+  ---
+  duration_ms: 2.346625
+  type: 'test'
+  ...
+# Subtest: excluded ingredient blocks approval until replaced or removed; accents and case cannot bypass
+ok 274 - excluded ingredient blocks approval until replaced or removed; accents and case cannot bypass
+  ---
+  duration_ms: 0.538125
+  type: 'test'
+  ...
+# Subtest: zero stock is explicit evidence; reserved amounts never create negative stock credit
+ok 275 - zero stock is explicit evidence; reserved amounts never create negative stock credit
+  ---
+  duration_ms: 0.537
+  type: 'test'
+  ...
+# Subtest: invalid yield, duplicate ingredient identity and invented private price fields fail closed
+ok 276 - invalid yield, duplicate ingredient identity and invented private price fields fail closed
+  ---
+  duration_ms: 2.060542
+  type: 'test'
+  ...
+# Subtest: write binds exact shop authority and separates save from approval
+ok 277 - write binds exact shop authority and separates save from approval
+  ---
+  duration_ms: 2.779916
+  type: 'test'
+  ...
+# Subtest: fractional cups and named reserves use exact arithmetic through usable pack yield
+ok 278 - fractional cups and named reserves use exact arithmetic through usable pack yield
+  ---
+  duration_ms: 0.784375
+  type: 'test'
+  ...
+# Subtest: fractional packs, ounce and fluid ounce stay distinct without unit conversion or rounding
+ok 279 - fractional packs, ounce and fluid ounce stay distinct without unit conversion or rounding
+  ---
+  duration_ms: 0.783917
+  type: 'test'
+  ...
+# Subtest: invalid fractions fail closed and unrepresentable exact previews stay unresolved
+ok 280 - invalid fractions fail closed and unrepresentable exact previews stay unresolved
+  ---
+  duration_ms: 1.819125
+  type: 'test'
+  ...
+# Subtest: reviewed exclusion phrases match whole words in entered ingredient names in either language
+ok 281 - reviewed exclusion phrases match whole words in entered ingredient names in either language
+  ---
+  duration_ms: 0.736166
+  type: 'test'
+  ...
+# Subtest: optional reviewed meal planning details retain their bounds and leave legacy plans unchanged
+ok 282 - optional reviewed meal planning details retain their bounds and leave legacy plans unchanged
+  ---
+  duration_ms: 2.738375
+  type: 'test'
+  ...
+# Subtest: meal-wide restrictions cover protected whole meals and individually protected portions
+ok 283 - meal-wide restrictions cover protected whole meals and individually protected portions
+  ---
+  duration_ms: 0.9845
+  type: 'test'
+  ...
+# Subtest: separates item, checkout, incremental trip and elapsed time
+ok 284 - separates item, checkout, incremental trip and elapsed time
+  ---
+  duration_ms: 33.03725
+  type: 'test'
+  ...
+# Subtest: unknown travel keeps the winner open and yields a conditional break-even
+ok 285 - unknown travel keeps the winner open and yields a conditional break-even
+  ---
+  duration_ms: 2.308709
+  type: 'test'
+  ...
+# Subtest: unreviewed charges leave checkout and winner unknown
+ok 286 - unreviewed charges leave checkout and winner unknown
+  ---
+  duration_ms: 0.14825
+  type: 'test'
+  ...
+# Subtest: unavailable or unknown availability gives no winner
+ok 287 - unavailable or unknown availability gives no winner
+  ---
+  duration_ms: 1.809459
+  type: 'test'
+  ...
+# Subtest: unmatched quantities and multistore packages are incomparable
+ok 288 - unmatched quantities and multistore packages are incomparable
+  ---
+  duration_ms: 0.165625
+  type: 'test'
+  ...
+# Subtest: ties and missing minutes remain explicit
+ok 289 - ties and missing minutes remain explicit
+  ---
+  duration_ms: 0.095917
+  type: 'test'
+  ...
+# Subtest: each cap uses its own scope and excludes incremental travel
+ok 290 - each cap uses its own scope and excludes incremental travel
+  ---
+  duration_ms: 0.878542
+  type: 'test'
+  ...
+# Subtest: missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+ok 291 - missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+  ---
+  duration_ms: 0.235083
+  type: 'test'
+  ...
+# Subtest: unknown eligibility preserves conditional deltas but withholds winner and break-even
+ok 292 - unknown eligibility preserves conditional deltas but withholds winner and break-even
+  ---
+  duration_ms: 0.906417
+  type: 'test'
+  ...
+# Subtest: either option can have extra travel and cents stay exact at the accepted bound
+ok 293 - either option can have extra travel and cents stay exact at the accepted bound
+  ---
+  duration_ms: 0.997125
+  type: 'test'
+  ...
+1..293
+# tests 444
+# suites 0
+# pass 443
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 5970.226917

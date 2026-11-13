@@ -1,0 +1,43 @@
+{
+  "semanticRoleCorrection": true,
+  "light": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 3,
+    "passed": 3,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "PNGCount": 6,
+    "rootVisualReview": "completed"
+  },
+  "dark": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 3,
+    "passed": 3,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "PNGCount": 6,
+    "rootVisualReview": "completed"
+  },
+  "Release": {
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "configuration": "Unsigned arm64 generic iPhone Release",
+    "sourceManifestSHA256": "ad32a9a313a2f2763c9513adaa62513800d48ceaad1145d8cf66205ed9af6ff1",
+    "sourceUnchanged": true,
+    "preservedProductsUnchanged": true,
+    "finishedAtUTC": "2026-11-08T13:24:41.261559+00:00",
+    "physicalOrDistributionAcceptance": false
+  },
+  "audit41FindingsClosed": false,
+  "wholeAppAcceptanceClaimed": false,
+  "physicalVoiceOverVerified": false,
+  "newMinimumIOS17StylingQualification": false,
+  "nativeOrResultToolsByPublisher": false,
+  "sourceEditsByPublisher": false,
+  "remainingDesignGaps": "remaining-design-gaps.json",
+  "fullS24AcceptanceClosed": false
+}

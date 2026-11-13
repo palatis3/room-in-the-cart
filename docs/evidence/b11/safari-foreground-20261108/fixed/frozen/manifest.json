@@ -1,0 +1,57 @@
+{
+  "status": "fixed-foreground-prepared-not-executed",
+  "scope": [
+    "foreground-same",
+    "foreground-revoked"
+  ],
+  "derivativeOf": {
+    "manifestIdentity": "161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414",
+    "manifestPath": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/manifest.json",
+    "manifestSHA256": "6b608d2cc7019a3a871faddb6db73da67b59ca38afc5d7c8269ebb3f8a7933b3"
+  },
+  "verifiedBuild": {
+    "commit": "58419f9822b26a93820c2f4cfa4a45e7cd257a11",
+    "receipt": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-fixed/build-receipt.json",
+    "sha256": "076e56f429de76022c4e8e3f994a7ace2478e62044839f62d8d63ebf970b0015"
+  },
+  "bundle": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-GykSVZ9a.js": "2cba5fdc7fa659a1d91c6a68e83598783aeb6acdd2c1ce465bf261b508aff5e2",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "8cb81feedc84fcbddb59b09044cb9f10dd2dafc2d54be50ed7e558b32620dc6b"
+  },
+  "source": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "d74c7761859fced292053af0ee5aecd924ab0b4c665427e80eda3b557c35d5e3",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "4ba02ec6b83d18aeab12062f0665b053a5ad4065f04bac28e97570ffdf8f07ac",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518"
+  },
+  "helpers": {
+    "README.md": "953b828b15d661b3e31019bcea1787574050877438110b32dcbbd81d66aad7f7",
+    "fixture.mjs": "c526e26180cd74198f45d90113742b39e49d695e5e325b9b1864d883008515f5",
+    "fixture.test.mjs": "6ca3efae0c6ce8cb3435272617aa1576dd53c97c39ca538753974e3e957b18ee",
+    "foreground.test.mjs": "7dde7858ae096616ba4a3f3e61e0b7af93e4473324a14b62dcdcdad536882212",
+    "observation.mjs": "7b717f12fa68004bd1c319717343720e2b4247024a0986c91428fbd16c4f9626",
+    "original-negative-control.mjs": "70909f9108e3b38ed3901d0622240b911e8c1d136850871ff42cfee8abf90233",
+    "pin.mjs": "70d5391ce69539272012091a4c481eba50b5a1ecd8aa803943bc41b61915b219",
+    "probe.js": "350f326ccc09be60fbf78f3b25d444a795d534754fbec3cf932f0b300d7e3782",
+    "probe.test.mjs": "6d2c2ca4378f4ddb0b3133ff23bc21836a23bb0ff0105f245070c0c400649cc6",
+    "review-regressions-original-shapes.mjs": "399eed74d5dc4ad6fd70751320719bb69225aca76cce12c25ec70754b3ff19ec",
+    "review-regressions.mjs": "54eec87fdaaa1851274500b0afa0ff1620380aac8ef0ff5fb91f8e21a219a77b",
+    "review-regressions.test.mjs": "0722d0f11be835526c242dc1defb322d9dc0e06c3115d0b216de8058581380aa",
+    "server.mjs": "a17e7d8b0365ba3013f3b92d6bd74524606d642a619f6a89111f743989304979",
+    "verify-case.mjs": "b3941f7212b62108b220d85528a2da7d8c1e642fde523081fa4ffa0f496eeb36",
+    "verify-foreground.mjs": "583710e9ed83782ea0d4300a78decbf2d1aa4744775bcbcaf656f4f350f179b2",
+    "verify-pin.mjs": "fe80e355a75da6ea538087c268da983a4b31b358a86bdcb80b70eb399de0d93f"
+  },
+  "identity": "9d8302a00fde50e5e137166a52bd4496745f69e348e23acd974a3a43f794f5ba"
+}

@@ -1,0 +1,64 @@
+2078:     t =   207.37s     Check for interrupting elements affecting "ideaSupplyYield" TextField
+2079:     t =   207.51s     Synthesize event
+2080:     t =   207.81s     Wait for dev.roominthecart.app.debug to idle
+2081:     t =   208.53s Type '8' into "ideaSupplyYield" TextField
+2082:     t =   208.53s     Wait for dev.roominthecart.app.debug to idle
+2083:     t =   208.54s     Find the "ideaSupplyYield" TextField
+2084:     t =   208.95s     Check for interrupting elements affecting "ideaSupplyYield" TextField
+2085:     t =   209.13s     Synthesize event
+2086:     t =   209.36s     Wait for dev.roominthecart.app.debug to idle
+2087:     t =   209.37s Checking existence of `Button (First Match)`
+2088:     t =   209.48s Find the Button (First Match)
+2089:     t =   209.62s Tap "Done" Button
+2090:     t =   209.62s     Wait for dev.roominthecart.app.debug to idle
+2091:     t =   209.62s     Find the "Done" Button
+2092:     t =   209.74s     Check for interrupting elements affecting "Done" Button
+2093:     t =   209.88s     Synthesize event
+2094:     t =   210.19s     Wait for dev.roominthecart.app.debug to idle
+2095:     t =   270.22s App animations complete notification not received, will attempt to continue.
+2096:     t =   270.23s Checking existence of `"ideaSupplyPrice" Any`
+2097:     t =   270.49s Find the "ideaSupplyPrice" Any
+2098:     t =   270.75s Tap "ideaSupplyPrice" TextField
+2099:     t =   270.75s     Wait for dev.roominthecart.app.debug to idle
+2100:     t =   330.78s App animations complete notification not received, will attempt to continue.
+2123:     t =   633.30s App animations complete notification not received, will attempt to continue.
+2124:     t =   633.30s Checking existence of `"ideaSupplySource" Any`
+2125:     t =   633.61s Find the "ideaSupplySource" Any
+2126:     t =   633.88s Tap "ideaSupplySource" TextField
+2127:     t =   633.88s     Wait for dev.roominthecart.app.debug to idle
+2128:     t =   693.91s App animations complete notification not received, will attempt to continue.
+2129:     t =   693.91s     Find the "ideaSupplySource" TextField
+2130:     t =   694.16s     Check for interrupting elements affecting "ideaSupplySource" TextField
+2131:     t =   694.29s     Synthesize event
+2132:     t =   694.59s     Wait for dev.roominthecart.app.debug to idle
+2133: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+2134:     t =   754.62s App animations complete notification not received, will attempt to continue.
+2135:     t =   754.63s Type 'Bag label' into "ideaSupplySource" TextField
+2136:     t =   754.63s     Wait for dev.roominthecart.app.debug to idle
+3358:     t =   231.12s     Synthesize event
+3359:     t =   231.42s     Wait for dev.roominthecart.app.debug to idle
+3360:     t =   231.88s Checking existence of `StaticText (First Match)`
+3361:     t =   232.01s Find the StaticText (First Match)
+3362:     t =   232.16s Checking existence of `StaticText (First Match)`
+3363:     t =   232.28s Find the StaticText (First Match)
+3364:     t =   232.41s Checking existence of `StaticText (First Match)`
+3365:     t =   232.54s Find the StaticText (First Match)
+3366:     t =   232.68s Find the Target Application 'dev.roominthecart.app.debug'
+3367:     t =   232.89s Added attachment named 'Primera-compra-paquete-revisado'
+3368:     t =   232.89s Checking existence of `StaticText (First Match)`
+3369:     t =   233.01s Find the StaticText (First Match)
+3370:     t =   233.16s Find the "dinnerAcceptIdea" Button
+3371:     t =   234.40s     Find the "dinnerAcceptIdea" Button (retry 1)
+3372:     t =   235.71s     Find the "dinnerAcceptIdea" Button (retry 2)
+3373:     t =   235.90s     Collecting debug information to assist test failure triage
+3374:     t =   235.90s         Requesting snapshot of accessibility hierarchy for app with pid 58651
+3375:     t =   235.99s     Requesting snapshot of accessibility hierarchy for app with pid 58651
+3376:     t =   236.09s     Requesting snapshot of accessibility hierarchy for app with pid 58651
+3377: <unknown>:0: error: -[RoomInTheCartUITests.FreeJourneyUITests testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval] : Failed to get matching snapshot: No matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '"dinnerAcceptIdea" IN identifiers'`, given input App element pid: 58651
+3378:     t =   236.21s Tear Down
+3379:     t =   236.36s     Added attachment named 'Free-flow-failure'
+3380:     t =   236.36s         Terminate dev.roominthecart.app.debug:58651
+3381: 2026-11-08 10:43:57.927 xcodebuild[55921:26008970] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+3382: 2026-11-08 10:43:57.927 xcodebuild[55921:26008970] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+3383: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval]' failed (238.386 seconds).
+3384: Test Suite 'FreeJourneyUITests' failed at 2026-11-08 10:43:59.930.

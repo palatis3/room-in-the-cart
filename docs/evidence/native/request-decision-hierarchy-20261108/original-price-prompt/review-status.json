@@ -1,0 +1,10 @@
+{
+  "status": "Root independently reran the reviewed measurement script; measurement.json is byte-identical to the original agent result",
+  "sourcePNGHashMatchesPublishedOriginal": true,
+  "reportedRenderedContrast": 1.7233924684533595,
+  "scope": "Original light standard-text empty price prompt only",
+  "rootProposedFollowup": "Completed separately: final workingTextField substitution, carried-journey light/dark1/1 each, two independently reproduced actual field measurements, unsigned Release/bundle check",
+  "followupExecutionOrAcceptanceClaimed": "See final-followup for scoped completed results; original measurement remains unchanged",
+  "original41AuditLedgerClosureOrCountChangeClaimed": false,
+  "measurementReexecutedByPublisher": false
+}

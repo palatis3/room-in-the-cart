@@ -11,13 +11,25 @@ struct HelpConfiguration: Equatable, Sendable {
     let operatorName: String?
     var supportEmailAddress: String? { supportEmailURL.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.path } }
 
-    static func fromBundle(_ bundle: Bundle = .main) -> Self {
-        Self(helpURL: pageURL(bundle.object(forInfoDictionaryKey: "HelpURL") as? String),
-             privacyURL: pageURL(bundle.object(forInfoDictionaryKey: "PrivacyPolicyURL") as? String),
-             termsURL: pageURL(bundle.object(forInfoDictionaryKey: "TermsOfUseURL") as? String),
-             supportURL: pageURL(bundle.object(forInfoDictionaryKey: "SupportURL") as? String),
-             supportEmailURL: emailURL(bundle.object(forInfoDictionaryKey: "SupportEmail") as? String),
-             operatorName: displayOperatorName(bundle.object(forInfoDictionaryKey: "OperatorName") as? String))
+    static func fromBundle(_ bundle: Bundle = .main, language: String = Bundle.main.preferredLocalizations.first ?? "en") -> Self {
+        let service = pageURL(bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String)
+        func page(_ key: String) -> URL? {
+            guard let url = pageURL(bundle.object(forInfoDictionaryKey: key) as? String) else { return nil }
+            // The companion's four public routes accept a language override.
+            // An explicit query or another operator-owned site has its own URL contract.
+            guard let service, url.host?.lowercased() == service.host?.lowercased(),
+                  (url.port ?? 443) == (service.port ?? 443),
+                  ["/help", "/support", "/privacy", "/terms"].contains(url.path),
+                  var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  components.percentEncodedQuery == nil else { return url }
+            let spanish = Locale(identifier: language).language.languageCode?.identifier == "es"
+            components.queryItems = [URLQueryItem(name: "lang", value: spanish ? "es" : "en")]
+            return components.url
+        }
+        return Self(helpURL: page("HelpURL"), privacyURL: page("PrivacyPolicyURL"),
+                    termsURL: page("TermsOfUseURL"), supportURL: page("SupportURL"),
+                    supportEmailURL: emailURL(bundle.object(forInfoDictionaryKey: "SupportEmail") as? String),
+                    operatorName: displayOperatorName(bundle.object(forInfoDictionaryKey: "OperatorName") as? String))
     }
 
     static func displayOperatorName(_ raw: String?) -> String? {

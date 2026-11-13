@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "EA1B87FF-1980-4C84-AED9-E4F199FEC229.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-disabled-accept-label-interior_0_8DC0AC77-9BB2-4042-8C96-1A7D3CD81DD8.png",
+        "timestamp" : 1794156165.992
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  }
+]

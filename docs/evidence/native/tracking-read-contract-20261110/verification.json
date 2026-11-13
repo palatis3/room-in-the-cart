@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "tests": 168,
+  "passed": 165,
+  "failures": 0,
+  "skipped": [
+    "-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]",
+    "-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]",
+    "-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]"
+  ],
+  "sourceCount": 91,
+  "sourceUnchanged": true,
+  "execution": "/Users/palatis/Room in the Cart/.build/TrackingReadNativeNov10/r1/execution.json",
+  "executionSHA256": "88e97a918e7a8f0f04756273e3a481e0592db39b564e607db16d927413bbe957",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/TrackingReadNativeNov10/r1/source-after.json",
+  "sourceManifestSHA256": "3e9a556f074aace9cddda7c78c4538de4487da418313e30d912e3a08c87f745c",
+  "log": "/Users/palatis/Room in the Cart/.build/TrackingReadNativeNov10/r1/swift-test.log",
+  "logSHA256": "bf9de980e369187f32c9e2cf0bee7d2d1022e763528465090bbc6615ac94c1b5",
+  "scope": "Full HouseholdClient macOS package regression. No simulator, authenticated tracking service wire, screens, write transport or production activation claimed."
+}

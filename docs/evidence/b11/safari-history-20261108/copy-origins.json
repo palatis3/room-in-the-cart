@@ -1,0 +1,49 @@
+{
+  "history-same-receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/runs/history-same-interactive/receipt.json",
+    "sha256": "a70bdcd552cb4d049c4815288430aaa4e4d648156d18a5b8a9beebe66c6a7aa5",
+    "mode": "exact-byte-copy"
+  },
+  "helper-provenance-manifest.json": {
+    "source": ".build/SafariQualificationNov08/proposal/manifest.json",
+    "sha256": "d36e5e55b1b7c0f951331f2efdf8015aefeb30a743420395d459e306bf6f8e20",
+    "mode": "exact-byte-copy"
+  },
+  "verified-build-inputs.json": {
+    "source": ".build/StagingCandidate042Nov08/verified-inputs.json",
+    "sha256": "6e451cf0e6ea29e497635680ff241f1d2c5032ae28e2e7de166d0392ed61d7d4",
+    "mode": "exact-byte-copy"
+  },
+  "owned-simulator-safari.json": {
+    "source": ".build/SafariQualificationNov08/execution-metadata/owned-simulator-safari.json",
+    "sha256": "678c7688b4c77f49a2e2a86f34154564ef3b044b0eeb1d0cd17d1dbfc6b5b8e2",
+    "mode": "exact-byte-copy"
+  },
+  "setup-failure-boundary.json": {
+    "source": ".build/SafariQualificationNov08/execution-metadata/listener-setup-boundary.json",
+    "sha256": "241d6022ab3216305c6a05c70999b12465bdd67b7eee52f90023dfb52457ecdb",
+    "mode": "exact-byte-copy"
+  },
+  "setup-failure-receipt.json": {
+    "source": ".build/SafariQualificationNov08/execution-metadata/original-closed-stdin-receipt.json",
+    "sha256": "83a554367fd53e68e14b34a0820869f9b5085476c82fe48bbacdae7212e288b6",
+    "mode": "exact-byte-copy"
+  },
+  "preparation-receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/preparation-receipt.json",
+    "sha256": "cfc67ac8d849a63a46f2b150e7f0d17740b8a9697d036b3f42f6b8a56800185a",
+    "mode": "exact-byte-copy"
+  },
+  "observation-initial.json": {
+    "source": "history-same-receipt.json#observations/initial",
+    "mode": "exact-JSON-object-projection"
+  },
+  "observation-held.json": {
+    "source": "history-same-receipt.json#observations/held",
+    "mode": "exact-JSON-object-projection"
+  },
+  "observation-final.json": {
+    "source": "history-same-receipt.json#observations/final",
+    "mode": "exact-JSON-object-projection"
+  }
+}

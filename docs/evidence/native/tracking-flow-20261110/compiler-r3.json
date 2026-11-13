@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "scope": "App/model/UI test target compilation after redacted-binding correction",
+  "sourceFiles": 660,
+  "seconds": 39.103,
+  "sourceManifestSHA256": "1f9c461e256e46597c93fbcbdcb93c18b72a6532aa66cd0b6334171bacc554cd",
+  "logSHA256": "c46b90252eb72b4e2654168135b14c061fd4e1a5d021d963b6a591c0ae9c0f03",
+  "runtimeStatus": "Not executed: preparation attributed eight helper-review tests to the wrong class; compiled selector guard rejected before execution. Corrected runtime-only successor pending.",
+  "originalResult": "/Users/palatis/Room in the Cart/.build/TrackingFlowUIQualificationNov10/r3/Build.xcresult"
+}

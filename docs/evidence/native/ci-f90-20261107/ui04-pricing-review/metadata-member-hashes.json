@@ -1,0 +1,30 @@
+[
+  {
+    "file": "Tests.xcresult/Info.plist",
+    "bytes": 715,
+    "sha256": "de72c380edf24d4a7bde71385f7560f50d3833528d698148c3f33ee52487ed44",
+    "zipCRC": 3523305645,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/database.sqlite3",
+    "bytes": 933888,
+    "sha256": "990f6534308d08298093b1196ff66ecbf6938bda164a87b27c8ce26afa88844e",
+    "zipCRC": 1462440455,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~A_GWKDsIq2Gq4II1SMVP3tk6qLaYC58k4EntdhkDCSZyVc97CfslFwUu3S4VZq5evvBMYflVuOezAATT-l4PTA==",
+    "bytes": 2268,
+    "sha256": "b93893b3fa58fd681b3fa1a493b3ce81c6e8d7add881083c7d0bf1da30571e63",
+    "zipCRC": 3435106749,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~A_GWKDsIq2Gq4II1SMVP3tk6qLaYC58k4EntdhkDCSZyVc97CfslFwUu3S4VZq5evvBMYflVuOezAATT-l4PTA==",
+    "bytes": 265,
+    "sha256": "1489df5b0f11595cd105ca69c6aa4b19a2af088105a6d3386bcf418590ec955f",
+    "zipCRC": 740967855,
+    "CRCVerified": true
+  }
+]

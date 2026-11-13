@@ -1,0 +1,56 @@
+{
+  "collectedAtUTC": "2026-11-08T14:12:35.545161+00:00",
+  "source": "/Users/palatis/Library/Developer/CoreSimulator/Devices/4C7FAE04-D40B-4ADC-8F75-1366C09B1695/data/Containers/Data/Application/8E0BA516-3BCB-4D7B-83B8-7C7CCBD1D447/tmp/ui09-animation-39312.ndjson",
+  "sha256": "e36d3b6059450641b4789a456f84b1c746774d919a632971655821516012e7ff",
+  "bytes": 114620,
+  "sourceUnchanged": true,
+  "birthTimeUTC": "2026-11-08T14:09:15.913071+00:00",
+  "modifiedTimeUTC": "2026-11-08T14:10:20.312441+00:00",
+  "targetCase": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+  "PID": 39312,
+  "caseStart": {
+    "event": "caseMarker",
+    "observedUTC": "2026-11-08T14:08:25.318426+00:00",
+    "elapsedSeconds": 136.451951708,
+    "test": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+    "state": "started",
+    "logByteOffset": 42166,
+    "logLineBytes": 130
+  },
+  "caseEnd": {
+    "event": "caseMarker",
+    "observedUTC": "2026-11-08T14:10:33.767397+00:00",
+    "elapsedSeconds": 264.90004575,
+    "test": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+    "state": "passed",
+    "logByteOffset": 93662,
+    "logLineBytes": 147
+  },
+  "processPresent": {
+    "event": "processPresent",
+    "observedUTC": "2026-11-08T14:08:25.615231+00:00",
+    "elapsedSeconds": 136.74877895799997,
+    "pid": 39312,
+    "executableRelativeToOwnedDevice": "data/Containers/Bundle/Application/EAC8BE6A-3F9F-46DC-986D-77F5BD5C198C/RoomInTheCart.app/RoomInTheCart",
+    "logByteOffsetObserved": 42953,
+    "psMS": 224.4965830000183
+  },
+  "processAbsent": {
+    "event": "processAbsent",
+    "observedUTC": "2026-11-08T14:10:34.008785+00:00",
+    "elapsedSeconds": 265.141429667,
+    "pid": 39312,
+    "executableRelativeToOwnedDevice": "data/Containers/Bundle/Application/EAC8BE6A-3F9F-46DC-986D-77F5BD5C198C/RoomInTheCart.app/RoomInTheCart",
+    "logByteOffsetObserved": 94543,
+    "psMS": 181.966999999986
+  },
+  "rows": 33,
+  "footer": {
+    "bytesBeforeFooter": 114473,
+    "droppedRecords": 0,
+    "event": "sinkFinished",
+    "mainThreadEncodeMaxMS": 0.9947082726284862,
+    "writeMaxMS": 1.5696249902248383
+  },
+  "collectionScope": "Exact completed target-case metadata only after nativecasepassed/appPIDabsent/footerclosed. Entire8-case run remains active; no xcresult inspection or native actions."
+}

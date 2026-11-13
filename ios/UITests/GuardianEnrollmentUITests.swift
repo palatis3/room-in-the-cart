@@ -112,6 +112,52 @@ import XCTest
         let screenshot = XCTAttachment(screenshot:app.screenshot()); screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
         let accessibility = XCTAttachment(string:app.debugDescription); accessibility.name = name + " accessibility"; accessibility.lifetime = .keepAlways; add(accessibility)
     }
+    func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
+        app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","--guardian-fixture-root",
+            "--reset-guardian-root-fixture","--household-first-sign-in","-AppleLanguages","(en)","-AppleLocale","en_US"]
+        app.launch()
+        let settings = app.buttons["settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout:15))
+        settings.tap()
+        tap("Household requests")
+        type("Email", "shopper@example.invalid")
+        tap("Email me a code")
+        type("Email sign-in code", "123456")
+        tap("Verify code")
+
+        // Nothing else is tapped between verification and choosing the household.
+        let family = app.buttons["Fixture family"]
+        XCTAssertTrue(family.waitForExistence(timeout:10))
+        XCTAssertFalse(family.isEnabled)
+        XCTAssertEqual(app.switches["Keep my existing work private on this phone"].value as? String,"0")
+        XCTAssertEqual(app.tabBars.count,0)
+        XCTAssertFalse(app.buttons["settings"].exists)
+        capture("First sign-in continued to household with consent off")
+        toggle("Keep my existing work private on this phone")
+        XCTAssertTrue(family.isEnabled)
+        tap("Fixture family")
+        XCTAssertTrue(app.buttons["Refresh household"].waitForExistence(timeout:10))
+        XCTAssertEqual(app.tabBars.count,0)
+        XCTAssertFalse(app.staticTexts["Fictional adult private item"].exists)
+
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for:.runningBackground,timeout:8))
+        app.activate()
+        let unlock = app.buttons["Unlock private workspace"]
+        XCTAssertTrue(unlock.waitForExistence(timeout:10))
+        XCTAssertFalse(family.exists)
+        XCTAssertEqual(app.tabBars.count,0)
+        app.buttons["Household requests"].tap()
+        XCTAssertTrue(app.buttons["Unlock household access"].waitForExistence(timeout:5))
+        XCTAssertFalse(family.exists)
+
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-guardian-root-fixture" }
+        app.launch()
+        XCTAssertTrue(unlock.waitForExistence(timeout:10))
+        XCTAssertFalse(family.exists)
+        XCTAssertEqual(app.tabBars.count,0)
+    }
     func testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess() { rootLifecycle(synthetic:false) }
     func testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData() { rootLifecycle(synthetic:true) }
     private func rootLifecycle(synthetic: Bool) {

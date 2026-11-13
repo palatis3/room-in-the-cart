@@ -1,0 +1,46 @@
+{
+  "README.md": {
+    "bytes": 2055,
+    "sha256": "3fac34223347da85ab57db181f3e4debf2a29864504e68241d3ea34cb077df82"
+  },
+  "terminal-receipt.json": {
+    "bytes": 2634,
+    "sha256": "f08496860d2af1da99c9ff81192674b21d6feb92d9e397c92936dbdbf30546ab"
+  },
+  "terminal-job-log-excerpts.txt": {
+    "bytes": 3811,
+    "sha256": "8478bd64e6ce98c15742fd49cf74dae4493afe7fa7812f03b65de5b775f79eba"
+  },
+  "successor/workflow-lint.json": {
+    "bytes": 2052,
+    "sha256": "0aee3ca5e4c9fb4f9afc6f542cd884b6e95de602da95f65cec457bb04ccd7977"
+  },
+  "successor/offline-validation.json": {
+    "bytes": 255,
+    "sha256": "1a133103de559d3217f46017e211189d74d35f6875b297433eb3c6725c0a5d32"
+  },
+  "successor/r3-change-review.json": {
+    "bytes": 1173,
+    "sha256": "d1fa142215202bc78b9b08342c0579912e52fd8f4f55d2f60067775a5e1cf16a"
+  },
+  "successor/successor.patch": {
+    "bytes": 10079,
+    "sha256": "14d91a6685f5280f189c1de8c6f9bad1094b0b65713bfada6a9c88630c72d27d"
+  },
+  "successor/dispatch.json": {
+    "bytes": 602,
+    "sha256": "a48193f2f12204db2315edf01eb210175c5eec7490df839f8ed5be5a2dd82932"
+  },
+  "successor/setup-offline-validation.json": {
+    "bytes": 123,
+    "sha256": "fc1315e2ba10a239d7be21c32d71d221854b7b2ba832dce03a8110688a2e6b5d"
+  },
+  "successor/validate_setup_offline.py": {
+    "bytes": 10600,
+    "sha256": "4927cecb1100bbbe9e4c760fd3448f9730d2e88c36382049bb973bdb8c7618c7"
+  },
+  "successor/validate_offline.py": {
+    "bytes": 11582,
+    "sha256": "b8708012347eafa90c2eaef1e45ed56638d14ff583fbd57660165633e170a67b"
+  }
+}

@@ -1,0 +1,646 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Accepted request changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted request changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios de solicitudes aceptadas"
+          }
+        }
+      }
+    },
+    "Added": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadida"
+          }
+        }
+      }
+    },
+    "After the original acceptance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After the original acceptance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de la aceptación original"
+          }
+        }
+      }
+    },
+    "Apply complete request Undo once": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply complete request Undo once"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer la solicitud completa una vez"
+          }
+        }
+      }
+    },
+    "Before the original acceptance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before the original acceptance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de la aceptación original"
+          }
+        }
+      }
+    },
+    "Checking complete request change…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking complete request change…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando el cambio completo de la solicitud…"
+          }
+        }
+      }
+    },
+    "Clarified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clarified"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aclarada"
+          }
+        }
+      }
+    },
+    "Complete bound and unbound partition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete bound and unbound partition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distribución completa de fuentes vinculadas y sin vincular"
+          }
+        }
+      }
+    },
+    "Complete checkout comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete checkout comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación completa del total de compra"
+          }
+        }
+      }
+    },
+    "Confirmed. The complete request acceptance was undone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed. The complete request acceptance was undone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado. Se deshizo la aceptación completa de la solicitud."
+          }
+        }
+      }
+    },
+    "Current request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud actual"
+          }
+        }
+      }
+    },
+    "Deferred": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deferred"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pospuesta"
+          }
+        }
+      }
+    },
+    "Earlier request acceptances": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier request acceptances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptaciones de solicitudes anteriores"
+          }
+        }
+      }
+    },
+    "Every remaining basket item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every remaining basket item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los artículos restantes de la cesta"
+          }
+        }
+      }
+    },
+    "Food after Undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food after Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos después de deshacer"
+          }
+        }
+      }
+    },
+    "Food before Undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food before Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos antes de deshacer"
+          }
+        }
+      }
+    },
+    "I accept the displayed checkout overage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept the displayed checkout overage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto el exceso mostrado sobre el límite de compra"
+          }
+        }
+      }
+    },
+    "I accept the displayed unknown costs or limited checkout scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept the displayed unknown costs or limited checkout scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto los costos desconocidos o el alcance limitado de compra que se muestran"
+          }
+        }
+      }
+    },
+    "Legacy food remains untracked; quantities and available supply are not inferred.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legacy food remains untracked; quantities and available supply are not inferred."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos anteriores siguen sin seguimiento; no se deducen cantidades ni existencias disponibles."
+          }
+        }
+      }
+    },
+    "Link being removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link being removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vínculo que se eliminará"
+          }
+        }
+      }
+    },
+    "Next pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próxima recogida"
+          }
+        }
+      }
+    },
+    "Original carry source request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original carry source request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud de origen del traslado original"
+          }
+        }
+      }
+    },
+    "Original carry source shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original carry source shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra de origen del traslado original"
+          }
+        }
+      }
+    },
+    "Original carry target request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original carry target request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud de destino del traslado original"
+          }
+        }
+      }
+    },
+    "Original carry target shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original carry target shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra de destino del traslado original"
+          }
+        }
+      }
+    },
+    "Original decision: add packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original decision: add packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión original: añadir paquetes"
+          }
+        }
+      }
+    },
+    "Original decision: link existing packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original decision: link existing packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión original: vincular paquetes existentes"
+          }
+        }
+      }
+    },
+    "Pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente"
+          }
+        }
+      }
+    },
+    "Prepare exact request Undo review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare exact request Undo review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar la revisión exacta para deshacer la solicitud"
+          }
+        }
+      }
+    },
+    "Request outcome and exact link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request outcome and exact link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultado de la solicitud y vínculo exacto"
+          }
+        }
+      }
+    },
+    "Restored request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud restaurada"
+          }
+        }
+      }
+    },
+    "Review complete request Undo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review complete request Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer la solicitud completa"
+          }
+        }
+      }
+    },
+    "Review every remaining whole pack. Unknown legacy food stays untracked even when a usable amount is entered.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review every remaining whole pack. Unknown legacy food stays untracked even when a usable amount is entered."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa todos los paquetes enteros restantes. Los alimentos anteriores desconocidos siguen sin seguimiento aunque se introduzca una cantidad utilizable."
+          }
+        }
+      }
+    },
+    "The accepted link will be removed; no replacement link is created.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The accepted link will be removed; no replacement link is created."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminará el vínculo aceptado; no se creará otro en su lugar."
+          }
+        }
+      }
+    },
+    "The quote terms stay unchanged. Removing or restoring items can still change the checkout total and fee.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The quote terms stay unchanged. Removing or restoring items can still change the checkout total and fee."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las condiciones del presupuesto se mantienen. Eliminar o restaurar artículos puede cambiar el total de compra y el cargo."
+          }
+        }
+      }
+    },
+    "The request Undo is not confirmed. Check every remaining pack and review again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The request Undo is not confirmed. Check every remaining pack and review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado que se deshiciera la solicitud. Comprueba todos los paquetes restantes y vuelve a revisar."
+          }
+        }
+      }
+    },
+    "This acceptance cannot currently be undone. No historical facts were restored.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This acceptance cannot currently be undone. No historical facts were restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta aceptación no se puede deshacer ahora. No se han restaurado datos históricos."
+          }
+        }
+      }
+    },
+    "This also reverses the complete initial food adoption, including its manual assertions, relationships and mappings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also reverses the complete initial food adoption, including its manual assertions, relationships and mappings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto también revierte la configuración inicial completa de los alimentos, incluidas sus confirmaciones manuales, relaciones y correspondencias."
+          }
+        }
+      }
+    },
+    "This pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta recogida"
+          }
+        }
+      }
+    },
+    "Undo restores the exact accepted request outcome and link together with its complete basket and food changes. Later unrelated facts remain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo restores the exact accepted request outcome and link together with its complete basket and food changes. Later unrelated facts remain."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer restaura el resultado exacto de la solicitud aceptada y su vínculo, junto con todos sus cambios de cesta y alimentos. Se conservan los datos posteriores no relacionados."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

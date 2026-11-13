@@ -1,0 +1,33 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x1192444b0, {{32.0, 646.5}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+Element subtree:
+ →StaticText, 0x1192444b0, {{32.0, 646.5}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+Path to element:
+ →Application, 0x10a05a4a0, pid: 42894, label: 'Room in the Cart'
+  ↳Window (Main), 0x119260fb0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1191a9ea0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1191aa0e0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x1191aa200, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x1191aa320, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x1191aa440, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x1191aa560, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x1191aa680, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x1191aad40, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x1191aae60, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x1191aaf80, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x1191ab0a0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x1191ab1c0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x1191ad800, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x1191adc80, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x1191adda0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x1191adec0, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x1192444b0, {{32.0, 646.5}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x119447840, pid: 42894, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 42894, elementOrHash.elementID: 4850786960.385
+    Output: {
+      StaticText, 0x119348030, {{32.0, 646.5}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+    }

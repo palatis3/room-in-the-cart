@@ -1,0 +1,21 @@
+{
+  "status": "portable_controls_passed",
+  "tests": 245,
+  "failures": 0,
+  "canonicalChangedFiles": {
+    ".github/workflows/ios-performance.yml": "310dce3ff0ef0fb4c75e31d20f0cf7a7b50393c5bba1b0f63390b35472ce9218",
+    "scripts/app_scroll_observation/contract.json": "84c0958d9500f5eecf84fe308517cb8202cca27b624be78a9b56715869e06cd6",
+    "scripts/simulator_signpost_control/run.py": "924c1584bc9e7f0aac5134f56d4d8a66cc4d0ebafe733f64e53f14ee6ce63ae9",
+    "scripts/simulator_signpost_control/runner.py": "a3677e09c92a647e1bc65db3bd12d6163514f5df4c3708a0232ba64f3eb4cc50",
+    "scripts/test_simulator_signpost_control.py": "6f52db9b5881599d180b1bed98e3a7381b3a1ff81e9908dab2e03187936863ba"
+  },
+  "candidateManifestSHA256": "065f1d084f334505849039cb8bae1161b217d5aa6e6884ab9c0d7c8aaa3646b2",
+  "candidatePatchSHA256": "fa5d51cc03af2b785858bd5caab4eb2ba8984d7dbe4051a18564e9c5de3627bd",
+  "rootLog": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/direct-inventory-root-controls.log",
+  "rootLogSHA256": "ca5438d97f3b82fef52746c4f7b594d2504e5f0f1f97b134a4e1a5492efb78c8",
+  "scope": "Explicit hosted helper opt-in bypasses reviewed launcher only for fresh read-only runtime/owned-device inventory. Local/default behavior and all deadlines remain unchanged.",
+  "reviewCorrection": "Original unconditional preflight rejected local1174.9.2; r2 adds default-false hosted-only selection.",
+  "hostedExecuted": false,
+  "fullWorkflowProfilesQualified": false,
+  "appOrPerformanceAcceptance": false
+}

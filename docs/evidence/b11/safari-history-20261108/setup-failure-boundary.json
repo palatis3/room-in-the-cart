@@ -1,0 +1,35 @@
+{
+  "status": "setup-failure-preserved-not-a-history-test",
+  "recordedAtUTC": "2026-11-08T03:19:07.750069+00:00",
+  "original": {
+    "case": "history-same",
+    "serverPID": 3368,
+    "execSession": 74497,
+    "sourceReceipt": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/proposal/runs/history-same/receipt.json",
+    "receiptSHA256": "83a554367fd53e68e14b34a0820869f9b5085476c82fe48bbacdae7212e288b6",
+    "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+    "origin": "http://127.0.0.1:51017",
+    "observationCount": 1,
+    "observationPhases": [
+      "initial"
+    ],
+    "commandCounts": {
+      "commandAttempts": 0,
+      "commandEffects": 0,
+      "rowsA": 1,
+      "rowsB": 1
+    },
+    "setupFailure": "Root started the interactive stdin-control server without tty:true; stdin was closed. Root reported no Back action attempted.",
+    "termination": "Root reports original server PID3368 stopped cleanly; exec74497 terminal exit0.",
+    "retainedNativeObservation": "Root reports initial ownA wording and exact unsent draft verified in real Safari before the setup failure. This is not history/BFCache acceptance."
+  },
+  "successor": {
+    "case": "history-same-interactive",
+    "serverPID": 4003,
+    "execSession": 59250,
+    "origin": "http://127.0.0.1:51184",
+    "invocationRequirement": "functions.exec tools.exec_command with tty:true; preserve returned session_id for stdin control.",
+    "ownership": "Root owns listener, stdin, Safari actions and stop. Subagent did not send controls, launch app or navigate."
+  },
+  "scope": "Metadata + immutable copy of stopped original synthetic receipt only; no active receipt snapshots or arbitrary Safari website data."
+}

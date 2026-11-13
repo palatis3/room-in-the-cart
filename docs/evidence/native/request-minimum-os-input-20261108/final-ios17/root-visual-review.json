@@ -1,0 +1,20 @@
+{
+  "status": "root reviewed",
+  "reportedAtUTC": "2026-11-08T13:06:25.303139+00:00",
+  "image": "final-ios17/return-capture/png/23BF4B1A-FEB7-4404-A826-953E52868AC7.png",
+  "sha256": "2bc322c9092552fa9899db52f366aa0ce4bfc5703d454c093013bacfa1a57390",
+  "displayDimensions": [
+    750,
+    1334
+  ],
+  "observations": [
+    "Original Wraps for lunch, Sam,8wraps,date and Added to the plan are fully visible after sheet dismissal.",
+    "Fixture applied decision/saved line counters are1/1.",
+    "Upper receipt is partly above viewport after return scroll."
+  ],
+  "limits": [
+    "Review establishes expected return location, not visibility of all content simultaneously.",
+    "Physical VoiceOver focus, whole-app minimum-iOS acceptance and framework causality remain unverified."
+  ],
+  "reviewer": "Root, based on exact exported PNG"
+}

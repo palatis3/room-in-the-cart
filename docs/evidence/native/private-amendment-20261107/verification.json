@@ -1,0 +1,100 @@
+{
+  "requirement": "Foundation 2.1 S06/D09 independently retailer-confirmed amendments with original placed-order history",
+  "baseCommit": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "scope": "Private iPhone pickup flow; no hosted schema or service change.",
+  "behavior": [
+    "Original frozen order, quote and placement remain immutable.",
+    "Review quantity changes, removed items and separately identified new items before recording the retailer reference, confirmation time and local reporter.",
+    "Preserve actual receipts, usable food, needs, cash and closed-pickup state. Never interpret amended ordered quantities as arrivals.",
+    "Reject stale or wrong-actor confirmations; retry an authorized blocked SQLite save exactly once.",
+    "Keep cancelled-line offer history and exact earlier retries, while excluding cancelled items from new offers and deadline reminders.",
+    "Display amended history from Records without enabling its editor or switching the active shop."
+  ],
+  "native": {
+    "device": "iPhone SE (3rd generation) simulator, iOS 17.0",
+    "amendmentAndRecords": {
+      "modelTests": 689,
+      "uiTests": [
+        "testRetailerConfirmedAmendmentChangesTheOrderAndKeepsItsPlacedSnapshotAfterRestart",
+        "testStillCheckingOutAndReportedOrderKeepTheReviewedSnapshotAfterRestart"
+      ],
+      "passed": 691,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "2af16a548bae947ec9ef1339c6026c079cef7e40d01d00151138d920e8e9c8ca",
+      "strictSHA256": "d347e5985d91cb6c45c49a71537ffcadab81d41d3268bf1b74d73bb2398e0407"
+    },
+    "finalCancellationAndExistingOffer": {
+      "modelTests": 690,
+      "uiTests": [
+        "testSavedOfferReopensAndUpdatesResponseAfterRestart"
+      ],
+      "passed": 691,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "e13528b23c0513a640502833dde39e3720ae4a78efbedbe18bf5dedb8d53d16e",
+      "strictSHA256": "05c49850b07392b5c6a59c369758e5f941d44ee79285e7eb6e9ae5c56ff81625"
+    },
+    "scopeNote": "The amendment/Records run preceded the cancellation-offer follow-up. The corrected run includes all six new model tests and the ordinary saved-offer regression on the final product source.",
+    "firstFinalAttempt": {
+      "passedModels": 690,
+      "failedUI": 1,
+      "reason": "The test requested BackButton on iOS 17; the actual navigation button was labelled Shop. The destination screen was correct.",
+      "summarySHA256": "dbc58c01ba5e0501413a05f99f24b47e3ce35fe06fb8e2cfa5bb4bb32d94026b",
+      "fix": "Query the visible Shop destination label with the newer BackButton identifier as fallback; preserve all product assertions."
+    }
+  },
+  "syntheticSQLiteAfterFirstAmendmentWalkthrough": {
+    "originalOrdered": 2,
+    "amendedOrdered": 5,
+    "effectiveLedgerOrdered": 5,
+    "confirmedAmendments": 1,
+    "physicalReceipts": 0,
+    "usableObservations": 0,
+    "settlementEntries": 0,
+    "amendmentReferencesOriginalPlacement": true,
+    "originalPlacementReferencesFrozenSnapshot": true,
+    "reporterMatchesInstallation": true
+  },
+  "packageTests": {
+    "passed": 433,
+    "skipped": 3,
+    "skipReason": "Opt-in wire cases run through separate integration.",
+    "counts": {
+      "CoreDomain": 195,
+      "DeviceSurfaces": 30,
+      "HouseholdClient": 101,
+      "LocalStore": 74,
+      "RecordArchive": 33
+    }
+  },
+  "pythonTestsPassed": 215,
+  "releaseBuild": {
+    "destination": "generic iPhone",
+    "architecture": "arm64",
+    "configuration": "Release",
+    "signed": false,
+    "verified": "Executable, assets, privacy, environment and embedded extensions.",
+    "receiptSHA256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76"
+  },
+  "localization": {
+    "catalogEntries": 4259,
+    "literalSourceKeys": 3960,
+    "status": "Structural English/US Spanish checks passed; human Spanish review remains outstanding."
+  },
+  "sourceSHA256": {
+    "ios/Features/Pickup/Pickup.xcstrings": "5588ff8a83cba5b857c6486330023fbfd9cfbacacb3edaebe1cdef395fccc3b1",
+    "ios/Features/Pickup/PickupAmendment.swift": "7155bef60c3e3c772cc035333f9f7131839a75372a9ebc3df8566fcfdf7d6da2",
+    "ios/Features/Pickup/PickupAmendmentView.swift": "edbddee9091803ff0ee814ecbf2b085d6f061107a4794e65a1b5ccc3013fd0b4",
+    "ios/Features/Pickup/PickupHomeView.swift": "7a8975abb0eb0344868a617e11ab2a53b553641282940081665bd717bdbc26f5",
+    "ios/Features/Pickup/PickupModel.swift": "a83549ca6f66570bbfe6d40f6cf293fc6bf8d341b976c7fc4a4f7883efefeb5f",
+    "ios/Features/Pickup/PickupOfferEditorView.swift": "2ce28f3a0da860789dc65c2db2b82ba4d1d90ab291f838fc97ae0711ad4a023c",
+    "ios/Features/Pickup/PickupOfferReview.swift": "f0cf24117e4bd0bd3bfcb0da670a80217e2768247d39540431f532aea9769db5",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/Checkout.swift": "d6a7ad935336fef81749592700fdceaf6c9c1b5f6899ae4f792b023be3c556d0",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/Pickup.swift": "305a1c96b0910a2ade937ed4b2dd2e84fc9539f8e261b26c5f03d922cd75bd83",
+    "ios/RoomInTheCart.xcodeproj/project.pbxproj": "4c80edc5cea91d0d3bffa5bc37b4a1023972187918d6d8b3499042a07d0527a4",
+    "ios/Tests/PickupAmendmentTests.swift": "7ce48ed0d6ebd3bfa3a3087879de0541e0593411c94dcd600f1d02e9a6b626b4",
+    "ios/UITests/PickupOfferUITests.swift": "519a8886a9669911588ea20e4ddc68e7e245953947a5d1be4da9afb16d99b78a"
+  },
+  "remaining": "Hosted verification of the next source batch, the separate speech runtime warning, provider setup and release acceptance remain open."
+}

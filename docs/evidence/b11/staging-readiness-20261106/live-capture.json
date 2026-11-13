@@ -1,0 +1,66 @@
+{
+  "observedUTC": "2026-11-06T03:08:24.124732+00:00",
+  "project": "uwjxrotnocxxomqdetzk",
+  "capture": "capture-20261106-07",
+  "actualLiveCapture": true,
+  "fullDatabaseExit": 0,
+  "selectedDumpScope": [
+    "ritc",
+    "public",
+    "auth"
+  ],
+  "selectedTables": 58,
+  "appRows": 0,
+  "registryEntries": 8,
+  "authRows": 82,
+  "managedCounts": {
+    "storage.objects": 0,
+    "storage.buckets": 0,
+    "vault.secrets": 0
+  },
+  "allCaptureHashesVerifiedBeforeAndAfterReadOnlyReopen": true,
+  "backupMountedReadOnly": true,
+  "temporaryPasswordFileRemoved": true,
+  "clientTLS": {
+    "client_sslmode": "verify-full",
+    "client_tls": "SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off, ALPN: none)",
+    "certificate_authority_sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+    "backend_reported_tls": false,
+    "scope": "Verified client-to-session-pooler TLS; server catalog describes a separate managed hop."
+  },
+  "files": {
+    "app-public-auth.dump": {
+      "bytes": 260496,
+      "sha256": "0f418a3fd891b9da157705c77b36a1dfc1661d95638346dc1dfd87790cb12d3d"
+    },
+    "roles.sql": {
+      "bytes": 7163,
+      "sha256": "7dce850fb91ada151c173bf5d9b9b079e6e724143250025549fc9cde278fee8a"
+    },
+    "source-inventory.json": {
+      "bytes": 66471,
+      "sha256": "0163ce99c7323c04469b33b774b4c52b422b1b9cf5d2f9631a9adfd89565d515"
+    },
+    "source-roles.json": {
+      "bytes": 14892,
+      "sha256": "2b4a995480a93c5ad85edfa25de18909dadfbf31f623326694ae2bb4bd114065"
+    },
+    "source-bootstrap.json": {
+      "bytes": 31,
+      "sha256": "b8e090f0ef7f56dd6cd11d696444e3c688ad954170ea1f1f42a20b17fa7f9eec"
+    },
+    "connection-security.json": {
+      "bytes": 391,
+      "sha256": "7bf10f085a6cdf5223b1e45d76aae897b2d1dcbb2e4638bc67dcdac27dee913e"
+    },
+    "full-database.dump": {
+      "bytes": 546781,
+      "sha256": "807b8818691da8a55b2d2039efc4e1405e296a4945a3efc40c881f699e0908c5"
+    }
+  },
+  "restoreVerified": false,
+  "limitations": [
+    "role/global and external-provider captures require separately controlled quiet window",
+    "Supabase Storage bytes, Vault keys, provider configuration and service internals are not verified restored"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "scope": "Spanish iPhone SE3 iOS17.0 light Large complete dinner journey only",
+  "rootViewedPNGs": 5,
+  "labels": "Complete centered labels in both states on small screen. Outline/fill states distinct and full native row padding preserved. Screenshot shows relevant controls reachable above tab bar.",
+  "measurements": {
+    "disabled": {
+      "contrast": 15.213849827934512,
+      "RGB": [
+        23,
+        41,
+        37
+      ],
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "components": 12,
+      "source": "png-0-3/EA1B87FF-1980-4C84-AED9-E4F199FEC229.png"
+    },
+    "enabled": {
+      "contrast": 8.297771630528558,
+      "RGB": [
+        255,
+        255,
+        255
+      ],
+      "background": [
+        25,
+        88,
+        72
+      ],
+      "components": 12,
+      "source": "png-0-7/A1E67644-F321-479B-90E6-4E39D3493806.png"
+    }
+  },
+  "nativeAndStrict": {
+    "passed": 1,
+    "warnings": 0,
+    "idleMessages": 0,
+    "runnerRestarts": 0,
+    "durationSeconds": 215.38
+  },
+  "interaction": "Disabled center and top-padding attempts retain disabled; enabled top-padding activates once; restart finds one saved library dinner and empty shopping list.",
+  "sourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "remaining": "Minimum17 shared-request fixture; English animation timeout; physical assistive; final Release"
+}

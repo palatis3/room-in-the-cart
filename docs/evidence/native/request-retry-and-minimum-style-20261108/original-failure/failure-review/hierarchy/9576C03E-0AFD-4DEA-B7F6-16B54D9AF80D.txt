@@ -1,0 +1,87 @@
+Optional(Attributes: Application, 0x10662ded0, pid: 74039, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x10662ded0, pid: 74039, label: 'Room in the Cart'
+    Window (Main), 0x10669a1a0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x10669c2d0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x10669beb0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x10669c6f0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x10669ba90, {{0.0, 0.0}, {375.0, 667.0}}
+              StaticText, 0x106696550, {{83.8, 20.0}, {207.5, 20.5}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 2'
+              StaticText, 0x10669d9f0, {{107.8, 42.5}, {159.5, 20.5}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+              Button, 0x10669db10, {{82.5, 65.0}, {210.0, 20.5}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+              StaticText, 0x10669dc30, {{1.0, 85.5}, {373.0, 13.5}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 0; busy: false; selected: none; choice: defer; price: ; preview: none; notice: The service could not confirm this decision. Retry the pending decision to avoid a duplicate.'
+              Other, 0x10669dd50, {{0.0, 106.0}, {375.0, 561.0}}
+                NavigationBar, 0x10669de70, {{0.0, 106.0}, {375.0, 96.0}}, identifier: 'S24 request decision'
+                  StaticText, 0x10669df90, {{16.0, 153.5}, {334.5, 41.0}}, label: 'S24 request decision'
+                Other, 0x10669e0b0, {{0.0, 106.0}, {375.0, 561.0}}
+                  Other, 0x10669e1d0, {{0.0, 106.0}, {375.0, 561.0}}
+                    Other, 0x10669e2f0, {{0.0, 106.0}, {375.0, 561.0}}
+                      Other, 0x10669e410, {{0.0, 106.0}, {375.0, 561.0}}
+                        CollectionView, 0x10669e530, {{0.0, 106.0}, {375.0, 561.0}}
+                          Other, 0x10669e650, {{-16.0, -920.0}, {407.0, 1315.5}}
+                          Cell, 0x10669e770, {{16.0, 202.0}, {343.0, 67.5}}
+                            Other, 0x10669e890, {{16.0, 202.0}, {343.0, 67.5}}
+                              Other, 0x10669e9b0, {{16.0, 202.0}, {343.0, 67.5}}
+                            Other, 0x10669ead0, {{16.0, 202.0}, {343.0, 67.5}}
+                              Other, 0x10669ebf0, {{16.0, 202.0}, {343.0, 67.5}}
+                                Other, 0x10669ed10, {{16.0, 202.0}, {343.0, 67.5}}
+                                  Image, 0x10669ee30, {{35.0, 215.0}, {22.0, 22.0}}, label: 'Selected', Selected
+                                  StaticText, 0x10669ef50, {{16.0, 202.0}, {343.0, 67.5}}, label: 'Decision confirmed by the household'
+                          Cell, 0x10669f070, {{16.0, 269.5}, {343.0, 44.0}}
+                            Other, 0x10669f190, {{16.0, 269.5}, {343.0, 44.0}}
+                              Other, 0x10669f2b0, {{16.0, 269.5}, {343.0, 44.0}}
+                            Other, 0x10669f3d0, {{16.0, 269.5}, {343.0, 44.0}}
+                              Other, 0x10669f4f0, {{16.0, 269.5}, {343.0, 44.0}}
+                                Other, 0x10669f610, {{16.0, 269.5}, {343.0, 44.0}}
+                                  StaticText, 0x10669f730, {{16.0, 269.5}, {343.0, 44.0}}, label: 'Ready for review in this pickup'
+                          Other, 0x10669f850, {{76.0, 269.0}, {283.0, 0.5}}
+                          Cell, 0x10669f970, {{16.0, 313.5}, {343.0, 64.5}}
+                            Other, 0x10669fa90, {{16.0, 313.5}, {343.0, 64.5}}
+                              Other, 0x10669fbb0, {{16.0, 313.5}, {343.0, 64.5}}
+                            Other, 0x10669fcd0, {{16.0, 313.5}, {343.0, 64.5}}
+                              Other, 0x10669fdf0, {{16.0, 313.5}, {343.0, 64.5}}
+                                Other, 0x10669ff10, {{16.0, 313.5}, {343.0, 64.5}}
+                                  StaticText, 0x1066a0030, {{16.0, 313.5}, {343.0, 64.5}}, label: 'This records a household decision. It does not place an order with the retailer.'
+                          Other, 0x1066a0150, {{32.0, 313.0}, {327.0, 0.5}}
+                          Other, 0x1066a0270, {{-16.0, 395.5}, {407.0, 79.0}}
+                          Cell, 0x1066a0390, {{16.0, 413.0}, {343.0, 44.0}}
+                            Other, 0x1066a04b0, {{16.0, 413.0}, {343.0, 44.0}}
+                              Other, 0x1066a05d0, {{16.0, 413.0}, {343.0, 44.0}}
+                            Other, 0x1066a06f0, {{16.0, 413.0}, {343.0, 44.0}}
+                              Other, 0x1066a0810, {{16.0, 413.0}, {343.0, 44.0}}
+                                Other, 0x1066a0930, {{16.0, 413.0}, {343.0, 44.0}}
+                                  Button, 0x1066a0a50, {{16.0, 413.0}, {343.0, 44.0}}, identifier: 'household.deferred.open', label: 'Saved from earlier pickups'
+                                    StaticText, 0x1066a0b70, {{32.0, 424.8}, {202.5, 20.5}}, label: 'Saved from earlier pickups'
+                                    Image, 0x1066a0c90, {{335.0, 429.0}, {7.0, 12.0}}
+                          Other, 0x1066a0db0, {{-16.0, 474.5}, {407.0, 165.5}}
+                          Cell, 0x1066a0ed0, {{16.0, 492.0}, {343.0, 44.0}}
+                            Other, 0x1066a0ff0, {{16.0, 492.0}, {343.0, 44.0}}
+                              Other, 0x1066a1110, {{16.0, 492.0}, {343.0, 44.0}}
+                            Other, 0x1066a1230, {{16.0, 492.0}, {343.0, 44.0}}
+                              Other, 0x1066a1350, {{16.0, 492.0}, {343.0, 44.0}}
+                                Other, 0x1066a1470, {{16.0, 492.0}, {343.0, 44.0}}
+                                  Button, 0x1066a1590, {{16.0, 492.0}, {343.0, 44.0}}, label: 'Refresh requests'
+                          Cell, 0x1066a16b0, {{16.0, 536.0}, {343.0, 86.5}}
+                            Other, 0x1066a17d0, {{16.0, 536.0}, {343.0, 86.5}}
+                              Other, 0x1066a18f0, {{16.0, 536.0}, {343.0, 86.5}}
+                            Other, 0x1066a1a10, {{16.0, 536.0}, {343.0, 86.5}}
+                              Other, 0x1066a1b30, {{16.0, 536.0}, {343.0, 86.5}}
+                                Other, 0x1066a1c50, {{16.0, 536.0}, {343.0, 86.5}}
+                                  StaticText, 0x1066a1d70, {{16.0, 536.0}, {343.0, 86.5}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+                          Other, 0x1066a1e90, {{32.0, 535.5}, {327.0, 0.5}}
+                          Other, 0x1066a1fb0, {{-16.0, 640.0}, {407.0, 100.5}}
+                          Cell, 0x1066a20d0, {{16.0, 640.0}, {343.0, 39.0}}
+                            Other, 0x1066a21f0, {{16.0, 640.0}, {343.0, 39.0}}
+                            Other, 0x1066a2310, {{16.0, 640.0}, {343.0, 39.0}}
+                              Other, 0x1066a2430, {{16.0, 640.0}, {343.0, 39.0}}
+                                Other, 0x1066a2550, {{16.0, 640.0}, {343.0, 39.0}}
+                                  StaticText, 0x1066a2670, {{16.0, 640.0}, {343.0, 39.0}}, label: 'Requests for this shop'
+                          Other, 0x1066a2790, {{342.0, 202.0}, {30.0, 465.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+Path to element:
+ →Application, 0x10662ded0, pid: 74039, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x104f5d110, pid: 74039, label: 'Room in the Cart'
+  }
+)

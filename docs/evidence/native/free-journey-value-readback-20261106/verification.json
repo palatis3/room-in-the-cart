@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-06T13:17:44.451501+00:00",
+  "baselineHostedCandidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "strictPassed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "durationSeconds": 383.69,
+  "sourceFilesVerified": 514,
+  "productsVerified": 179,
+  "runtimeBuild": "23C54",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "ownedSimulator": "BD7D98E5-AE94-4B2F-B61F-7677BC5B50CA",
+  "ownedSimulatorDeleted": true,
+  "preflight": {
+    "base": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+    "changedPath": "ios/UITests/FreeJourneyUITests.swift",
+    "baseSHA256": "a5f72d6c4bab058b8e1aa0eb5fb22b8579d9bd9e45e25d61b75806206a3e79bc",
+    "candidateSHA256": "b3dc1d03c808aae5638fbeb326be107306bea621791fbec711e7eb309d716f7d",
+    "patchSHA256": "b40a6d7def2a819d42e87a2d72a5a69ad1170afa22f710077da4b0380ccba20b",
+    "onlyAddedBoundedExactValueWait": true,
+    "allOriginalTypingCallsAndAssertionsPreserved": true,
+    "valueRetyped": false,
+    "productSourcesChanged": false,
+    "perValueWaitSeconds": 5,
+    "caseTimeoutsSeconds": [
+      720,
+      900
+    ],
+    "fullJourneySelected": true,
+    "localToolchainDifferentFromHosted": true,
+    "hostedFailurePreserved": true
+  },
+  "scope": "Complete original Free journey with one bounded exact-value wait after each adjacent-field typing action; product source and original business/restart assertions unchanged.",
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3.",
+    "Hosted0d33c11 failure remains retained; this is not hosted acceptance for the follow-up.",
+    "Late full-label screenshot supports settling wait but does not distinguish final input delivery from accessibility readback lag."
+  ],
+  "evidenceSHA256": {
+    "Tests.log": "6aa8b3da83444c888141a6de33033bfe8ae010002eb4cb29a5fb1050dd5a2bab",
+    "strict.log": "0431b497e3e7212fa122d6f0481cad26e2c3e8098b2e6986aaa72aa01d125cc3",
+    "test-summary.json": "92ccfe56277285ab182a0e91d29999e603caee5079f0e3911ef14f082471f1ad",
+    "test-details.json": "eec2f09b664c9fb0f72b3eb098d3d044192e8676f3f231d0f077da234435a05a",
+    "source-sha256.json": "559605c6ac56e7ea27458334c6333db21cec4b41858b318906a5a650e21508e3",
+    "product-sha256.json": "9990fa0917a754f64afc60d1f6a78de3ea2fdaa205fb05af9a46e05d6c66c2a4",
+    "frozen-inputs-unchanged.json": "f1c405d0ae92d064ecb5666a609e13071b5086dbc6165494b575745e3dfc3a18",
+    "boot.log": "67b958d4929bbe0ca99db7220294d8f6e2083a53a55245a5e2438dcd339cd13a"
+  }
+}

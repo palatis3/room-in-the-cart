@@ -1,0 +1,197 @@
+Application, 0x10547e010, pid: 92432, label: 'Room in the Cart' <App element pid: 92432>
+  Window (Main), 0x10547c010, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4781550528.4>
+    Other, 0x1054808d0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4780576096.5>
+      Other, 0x1054809f0, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4780579088.6>
+        Other, 0x105480630, {{-327.0, -580.1}, {1029.0, 1830.2}} <AX element pid: 92432, elementOrHash.elementID: 4781820560.149>
+        Other, 0x105480750, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4781544240.7>
+          Other, 0x105480b10, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 105553169909632.8>
+            Other, 0x105480c30, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4781588784.9>
+              NavigationBar, 0x105480d50, {{16.0, 48.3}, {343.0, 87.8}}, identifier: 'What came home' <AX element pid: 92432, elementOrHash.elementID: 4781589728.10>
+                Button, 0x105480e70, {{16.0, 48.3}, {62.7, 40.2}}, label: 'Shared household shop' <AX element pid: 92432, elementOrHash.elementID: 105553151733712.98>
+                StaticText, 0x105480f90, {{30.6, 91.7}, {252.0, 37.5}}, label: 'What came home' <AX element pid: 92432, elementOrHash.elementID: 4781898560.99>
+              Other, 0x1054810b0, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4781611568.11>
+                Other, 0x1054811d0, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4784949024.13>
+                  Other, 0x1054812f0, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4303637072.100>
+                    Other, 0x105481410, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 105553169915232.101>
+                      CollectionView, 0x105481530, {{16.0, 30.0}, {343.0, 610.1}} <AX element pid: 92432, elementOrHash.elementID: 4942565888.102>
+                        Other, 0x105481650, {{1.4, -1084.1}, {372.3, 2659.9}} <AX element pid: 92432, elementOrHash.elementID: 4782088272.103>
+                        Cell, 0x105481770, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782056496.104>
+                          Other, 0x105481890, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782057984.114>
+                            Other, 0x1054819b0, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782058464.124>
+                          Other, 0x105481ad0, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782055808.115>
+                            Other, 0x105481bf0, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4790807040.125>
+                              Other, 0x105481d10, {{30.6, 136.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 105553169908192.134>
+                                Button, 0x105481e30, {{30.6, 136.1}, {313.7, 40.2}}, identifier: 'delivery.financial', label: 'Shared financial evidence' <AX element pid: 92432, elementOrHash.elementID: 105553169910272.139>
+                                  StaticText, 0x105481f50, {{45.3, 146.8}, {178.4, 18.8}}, label: 'Shared financial evidence' <AX element pid: 92432, elementOrHash.elementID: 105553169916192.144>
+                                  Image, 0x105482070, {{322.4, 150.7}, {6.4, 11.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169914752.145>
+                        Cell, 0x105482190, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303949472.105>
+                          Other, 0x1054822b0, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303956352.116>
+                            Other, 0x1054823d0, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303956832.126>
+                          Other, 0x1054824f0, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303940272.117>
+                            Other, 0x105482610, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4942703104.127>
+                              Other, 0x105482730, {{30.6, 176.3}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 105553169913152.135>
+                                Button, 0x105482850, {{30.6, 176.3}, {313.7, 40.2}}, label: 'Add a delivery' <AX element pid: 92432, elementOrHash.elementID: 105553169917472.140>
+                        Other, 0x105482970, {{45.3, 175.9}, {299.1, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4782084464.106>
+                        Cell, 0x105482a90, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303990544.107>
+                          Other, 0x105482bb0, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303992448.118>
+                            Other, 0x105482cd0, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303992928.128>
+                          Other, 0x105482df0, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303991568.119>
+                            Other, 0x105482f10, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4942205440.129>
+                              Other, 0x105483030, {{30.6, 216.6}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 105553169912832.136>
+                                Button, 0x105483150, {{30.6, 216.6}, {313.7, 40.2}}, label: 'Delivered food by meal' <AX element pid: 92432, elementOrHash.elementID: 105553169909952.141>
+                        Other, 0x105483270, {{45.3, 216.1}, {299.1, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4303921792.108>
+                        Cell, 0x105483390, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4304001248.109>
+                          Other, 0x1054834b0, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303995888.120>
+                            Other, 0x1054835d0, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4304012320.130>
+                          Other, 0x1054836f0, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4303989840.121>
+                            Other, 0x105483810, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4942153216.131>
+                              Other, 0x105483930, {{30.6, 256.8}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 105553169916352.137>
+                                StaticText, 0x105483a50, {{30.6, 256.8}, {313.7, 40.2}}, label: 'No deliveries recorded yet.' <AX element pid: 92432, elementOrHash.elementID: 105553169913312.142>
+                        Other, 0x105483b70, {{45.3, 256.4}, {299.1, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4304015008.110>
+                        Cell, 0x105483c90, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782060288.111>
+                          Other, 0x105483db0, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782083456.122>
+                            Other, 0x105483ed0, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782084064.132>
+                          Other, 0x105483ff0, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4782061296.123>
+                            Other, 0x105484110, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 4790915584.133>
+                              Other, 0x105484230, {{30.6, 297.1}, {313.7, 40.2}} <AX element pid: 92432, elementOrHash.elementID: 105553169915392.138>
+                                Button, 0x105484350, {{30.6, 297.1}, {313.7, 40.2}}, label: 'Refresh deliveries' <AX element pid: 92432, elementOrHash.elementID: 105553169917312.143>
+                        Other, 0x105484470, {{45.3, 296.6}, {299.1, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4304019024.112>
+                        Other, 0x105484590, {{328.8, 88.5}, {27.4, 551.5}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 92432, elementOrHash.elementID: 4782039696.113>
+    Other, 0x1054846b0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4780705312.146>
+      Other, 0x1054847d0, {{-375.0, -667.0}, {1125.0, 2001.0}} <AX element pid: 92432, elementOrHash.elementID: 4782115344.147>
+      Other, 0x1054848f0, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4780644224.148>
+        Other, 0x105484a10, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4780693664.150>
+          Other, 0x105484b30, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4780698560.151>
+            Other, 0x105484c50, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4781888240.152>
+              Other, 0x105484d70, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169940096.153>
+                Other, 0x105484e90, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4781686432.154>
+                  NavigationBar, 0x105484fb0, {{0.0, 40.0}, {375.0, 56.0}}, identifier: 'Dated copy' <AX element pid: 92432, elementOrHash.elementID: 4781686864.155>
+                    Button, 0x1054850d0, {{0.0, 46.0}, {68.5, 44.0}}, label: 'Saved cook notes' <AX element pid: 92432, elementOrHash.elementID: 105553152611488.244>
+                    StaticText, 0x1054851f0, {{142.5, 58.0}, {90.5, 20.5}}, label: 'Dated copy' <AX element pid: 92432, elementOrHash.elementID: 4782323120.594>
+                  Other, 0x105485310, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4782002960.156>
+                    Other, 0x105485430, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4781885472.159>
+                      Other, 0x105485550, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4782108576.595>
+                        Other, 0x105485670, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169988448.596>
+                          CollectionView, 0x105485790, {{0.0, 40.0}, {375.0, 627.0}} <AX element pid: 92432, elementOrHash.elementID: 4791846912.597>
+                            Other, 0x1054858b0, {{-16.0, -1867.5}, {407.0, 2101.0}} <AX element pid: 92432, elementOrHash.elementID: 4785215072.598>
+                            Cell, 0x1054859d0, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 4785020528.601>
+                              Other, 0x105485af0, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 4785420976.608>
+                                Other, 0x105485c10, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 4785423248.613>
+                              Other, 0x105485d30, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 4785473920.609>
+                                Other, 0x105485e50, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 4799104000.614>
+                                  Other, 0x105485f70, {{16.0, -530.5}, {343.0, 702.5}} <AX element pid: 92432, elementOrHash.elementID: 105553169972224.617>
+                                    StaticText, 0x10306f6b0, {{16.0, -530.5}, {343.0, 702.5}}, identifier: 'delivery.cook.savedText', label: 'Cook instructions — Lunch wraps
+November 8, 2026
+Portions: 2
+Protected portions
+Serving group: School lunch · Portions: 2 · Protected portions
+
+Meal deadline: Unknown
+Meal exclusions: peanuts
+Preparation time in minutes: 120
+Completed preparation steps: 
+Beans soaked
+
+Ingredient: Tortillas
+Ingredient exclusions: sesame
+Serving group: School lunch
+Protected portions
+Ingredient quantity: 2 units
+Covered by deliveries: 0 units
+Uncovered by deliveries: 2 units
+Amount set aside: None recorded
+No delivery has been matched to this ingredient.
+
+These counts use confirmed deliveries for this order. Protected portions are counted first.
+Checked at: November 7, 2026 at 12:00:00 PM UTC
+Delivery revision: 0
+Meal revision: 1' <AX element pid: 92432, elementOrHash.elementID: 105553169971104.621>
+                            Cell, 0x10306f110, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782192336.622>
+                              Other, 0x103094440, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4781893520.628>
+                                Other, 0x10308adf0, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782353440.637>
+                              Other, 0x103089b10, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4781818608.629>
+                                Other, 0x103096cb0, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4792404480.638>
+                                  Other, 0x103096dd0, {{16.0, 172.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553170020896.644>
+                                    Button, 0x103096ef0, {{16.0, 172.0}, {343.0, 44.0}}, identifier: 'delivery.cook.savedShare', label: 'Share dated copy' <AX element pid: 92432, elementOrHash.elementID: 105553170020736.648>
+                                      Image, 0x103097010, {{36.5, 181.0}, {19.0, 26.0}}, label: 'Share' <AX element pid: 92432, elementOrHash.elementID: 105553170020416.653>
+                                      StaticText, 0x103097130, {{36.5, 181.0}, {173.5, 26.0}}, label: 'Share dated copy' <AX element pid: 92432, elementOrHash.elementID: 105553170020576.654>
+                            Other, 0x103097250, {{32.0, 171.5}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4785455712.602>
+                            Other, 0x103097370, {{-16.0, 233.5}, {407.0, 2479.5}} <AX element pid: 92432, elementOrHash.elementID: 4781031600.623>
+                            Cell, 0x103097490, {{16.0, 233.5}, {343.0, 39.0}} <AX element pid: 92432, elementOrHash.elementID: 4785437840.599>
+                              Other, 0x1030975b0, {{16.0, 233.5}, {343.0, 39.0}} <AX element pid: 92432, elementOrHash.elementID: 4785436736.604>
+                              Other, 0x1030976d0, {{16.0, 233.5}, {343.0, 39.0}} <AX element pid: 92432, elementOrHash.elementID: 4785435856.605>
+                                Other, 0x1030977f0, {{16.0, 233.5}, {343.0, 39.0}} <AX element pid: 92432, elementOrHash.elementID: 4799842816.610>
+                                  Other, 0x103097910, {{16.0, 233.5}, {343.0, 39.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169987008.615>
+                                    StaticText, 0x103097a30, {{16.0, 233.5}, {343.0, 39.0}}, label: 'Recipient and version' <AX element pid: 92432, elementOrHash.elementID: 105553170042464.649>
+                            Cell, 0x103097b50, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173848272.624>
+                              Other, 0x103097c70, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4304026336.630>
+                                Other, 0x103097d90, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173867360.639>
+                              Other, 0x103097eb0, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4304285872.631>
+                                Other, 0x103097fd0, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4943665664.640>
+                                  Other, 0x1030980f0, {{16.0, 272.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553170021376.645>
+                                    TextField, 0x103098210, {{16.0, 272.5}, {343.0, 44.0}}, identifier: 'delivery.cook.recipient', placeholderValue: 'Recipient (for explicit sent history)', value: Fixture cook <AX element pid: 92432, elementOrHash.elementID: 4943689216.650>
+                            Cell, 0x103098330, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782193344.625>
+                              Other, 0x103098450, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782345760.632>
+                                Other, 0x103098570, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782513520.641>
+                              Other, 0x103098690, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782325856.633>
+                                Other, 0x1030987b0, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4792373248.642>
+                                  Other, 0x1030988d0, {{16.0, 316.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553170021696.646>
+                                    Button, 0x1030989f0, {{16.0, 316.5}, {343.0, 44.0}}, identifier: 'delivery.cook.checkRecipient', label: 'Check previous send' <AX element pid: 92432, elementOrHash.elementID: 105553170021536.651>
+                            Other, 0x103098b10, {{32.0, 316.0}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 5173894240.626>
+                            Cell, 0x103098c30, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4781864352.666>
+                              Other, 0x103098d50, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782271456.670>
+                                Other, 0x103098e70, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4781865840.674>
+                              Other, 0x103098f90, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782506576.671>
+                                Other, 0x1030990b0, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4791824384.675>
+                                  Other, 0x1030991d0, {{16.0, 360.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169995072.678>
+                                    StaticText, 0x1030992f0, {{32.0, 372.2}, {190.5, 20.5}}, label: 'Last version marked sent' <AX element pid: 92432, elementOrHash.elementID: 105553169998272.680>
+                                    StaticText, 0x103099410, {{16.0, 360.5}, {343.0, 44.0}}, identifier: 'delivery.cook.lastSent', label: 'Last version marked sent, 1' <AX element pid: 92432, elementOrHash.elementID: 105553169991872.681>
+                            Other, 0x103099530, {{32.0, 360.0}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 5173949392.667>
+                            Cell, 0x103099650, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782516736.668>
+                              Other, 0x103099770, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782518624.672>
+                                Other, 0x103099890, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782519104.676>
+                              Other, 0x1030999b0, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4782517744.673>
+                                Other, 0x103099ad0, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4792507904.677>
+                                  Other, 0x103099bf0, {{16.0, 404.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553170043744.679>
+                                    StaticText, 0x103099d10, {{16.0, 404.5}, {343.0, 44.0}}, label: '11/8/2026, 5:37 AM' <AX element pid: 92432, elementOrHash.elementID: 105553170044864.682>
+                            Other, 0x103099e30, {{32.0, 404.0}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4782519504.669>
+                            Cell, 0x103099f50, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173973632.683>
+                              Other, 0x10309a070, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173910912.689>
+                                Other, 0x10309a190, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173938320.695>
+                              Other, 0x10309a2b0, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 5173974640.690>
+                                Other, 0x10309a3d0, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4943800832.696>
+                                  Other, 0x10309a4f0, {{16.0, 448.5}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169787040.701>
+                                    StaticText, 0x10309a610, {{16.0, 448.5}, {343.0, 44.0}}, label: 'Last marked sent' <AX element pid: 92432, elementOrHash.elementID: 105553169783040.704>
+                                    Button, 0x10309a730, {{332.5, 464.0}, {10.5, 13.5}}, identifier: 'collapsed' <AX element pid: 92432, elementOrHash.elementID: 105553169788640.705>
+                            Other, 0x10309a850, {{32.0, 448.0}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 5173881280.684>
+                            Cell, 0x10309a970, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 4782472720.685>
+                              Other, 0x10309aa90, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 4782509136.691>
+                                Other, 0x10309abb0, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 4781796240.697>
+                              Other, 0x10309acd0, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 4782373520.692>
+                                Other, 0x10309adf0, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 4791800320.698>
+                                  Other, 0x10309af10, {{16.0, 492.5}, {343.0, 64.5}} <AX element pid: 92432, elementOrHash.elementID: 105553169775776.702>
+                                    Switch, 0x10309b030, {{16.0, 492.5}, {343.0, 64.5}}, identifier: 'delivery.cook.confirmDestination', label: 'I know the previous copy went to this recipient', value: 0 <AX element pid: 92432, elementOrHash.elementID: 105553169775616.706>
+                                      StaticText, 0x10309b150, {{32.0, 503.5}, {254.0, 42.5}}, label: 'I know the previous copy went to this recipient' <AX element pid: 92432, elementOrHash.elementID: 105553169783680.708>
+                                      Switch, 0x10309b270, {{294.0, 509.5}, {51.0, 31.0}}, value: 0 <AX element pid: 92432, elementOrHash.elementID: 4782223840.709>
+                            Other, 0x10309b390, {{32.0, 492.0}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4782212528.686>
+                            Cell, 0x10309b4b0, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4785212784.687>
+                              Other, 0x10309b5d0, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4784967600.693>
+                                Other, 0x10309b6f0, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4785009600.699>
+                              Other, 0x10309b810, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4785080192.694>
+                                Other, 0x10309b930, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 4798789120.700>
+                                  Other, 0x10309ba50, {{16.0, 557.0}, {343.0, 44.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169774496.703>
+                                    Button, 0x10309bb70, {{16.0, 557.0}, {343.0, 44.0}}, identifier: 'delivery.cook.reviewCorrection', label: 'Review correction' <AX element pid: 92432, elementOrHash.elementID: 105553169775936.707>
+                            Other, 0x10309bc90, {{32.0, 556.5}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 4781273616.688>
+                            Cell, 0x10309bdb0, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 4781242848.711>
+                              Other, 0x10309bed0, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 4781315632.713>
+                                Other, 0x10309bff0, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 4781316112.715>
+                              Other, 0x10309c110, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 4781199888.714>
+                                Other, 0x10309c230, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 4749254144.716>
+                                  Other, 0x10309c350, {{16.0, 601.0}, {343.0, 704.0}} <AX element pid: 92432, elementOrHash.elementID: 105553169760032.717>
+                                    TextView, 0x10309c470, {{32.0, 612.0}, {311.0, 682.0}}, identifier: 'delivery.cook.fullCorrection', value: Cook instructions ... <AX element pid: 92432, elementOrHash.elementID: 4749255680.718>
+                            Other, 0x10309c590, {{32.0, 600.5}, {327.0, 0.5}} <AX element pid: 92432, elementOrHash.elementID: 5174118752.712>
+                            Other, 0x10309c6b0, {{342.0, 96.0}, {30.0, 571.0}}, label: 'Vertical scroll bar, 4 pages', value: 47% <AX element pid: 92432, elementOrHash.elementID: 4785117424.603>
+  Window, 0x10309c7d0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4799318016.429>
+    Other, 0x10309c8f0, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4782286032.431>
+      Other, 0x10309ca10, {{0.0, 0.0}, {375.0, 667.0}} <AX element pid: 92432, elementOrHash.elementID: 4782252112.433>
+      Other, 0x10309cb30, {{0.0, 667.0}, {375.0, 216.0}} <AX element pid: 92432, elementOrHash.elementID: 4781795264.434>

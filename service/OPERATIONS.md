@@ -4,6 +4,14 @@ The application and operations function use different PostgreSQL logins and pool
 
 With the default settings, privacy maintenance retires completed receipts at their persisted dates. Processing pending deletions requires the explicit worker flag and verified [privacy runtime configuration](API-PRIVACY.md#runtime-configuration). Review the provider, approved numeric horizons and independent restore drill before enabling it.
 
+## Suspend public service before recovery
+
+Set `SERVICE_MAINTENANCE=true` on a reviewed deployment to reject every application and HTTP operations request with 503, `Cache-Control: no-store` and `Retry-After: 60`. This includes health, bearer/cookie sessions, direct API function routes and the scheduled maintenance endpoint. The gate runs before pool, identity, provider, worker or request-body processing. Only absence or the exact value `false` enables normal service; any other value fails closed. Static Help, privacy and support pages may remain available. Migration and recovery/operations CLI commands remain intentional manual paths and are not suspended by this HTTP gate.
+
+The setting is captured when a function runtime starts. On Vercel, an environment edit requires a new deployment; it does not change earlier immutable deployments. Prepare and verify a maintenance candidate before enabling migration 042 features. Verify direct deployment URLs, alias targets and existing deployment protection separately. A gate in the new deployment cannot retroactively suspend an older URL. Do not promote application 041 after amendment use: its successful delivery response omits amended line identities. A write-only pause is insufficient because those reads are incomplete.
+
+During recovery, retain schema 042 and its erasure fences, deny public reads and writes, and repair forward. A database restore requires reconciliation of later writes and replay of the separately retained deletion journal before reopening access. Privacy acceptance/processing flags affect deletion jobs only and are not a whole-service outage switch. An intentional full worker freeze must also avoid operator CLI invocations; do not discard pending jobs or leases.
+
 ## Credentials and deployment configuration
 
 Apply the reviewed migrations with the migration administrator. Deletion processing requires migration 028 and a registered source and authority. Provision a dedicated login that inherits `ritc_worker`; it must not inherit `ritc_app`, own the database/schema/tables, be superuser, or bypass RLS. Do not grant it raw table privileges. Store its URL separately as `WORKER_DATABASE_URL`, and keep the application login in `DATABASE_URL`. The runtime rejects a matching application username and independently verifies the connected role.
@@ -22,7 +30,7 @@ Each invocation uses a fixed batch of 25, a 10-second auth-loop budget, an 8-sec
 
 ## Operator CLI
 
-Use Node 22.14 and install/build the service first. Load credentials from the deployment secret manager into the process environment; do not paste them into command history, an issue, or this document.
+Use Node 22.23.5 and install/build the service first. Load credentials from the deployment secret manager into the process environment; do not paste them into command history, an issue, or this document.
 
 ```sh
 npm --prefix service ci --ignore-scripts

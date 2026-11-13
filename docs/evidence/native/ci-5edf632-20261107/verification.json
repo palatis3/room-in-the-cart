@@ -1,0 +1,68 @@
+{
+  "remoteCandidate": "5edf6325499459d59f944844419a250212a13b86",
+  "scope": "Local repair verification for three hosted failures and a diagnostic comparison for the shared-cook runtime warning. Hosted Xcode 26.3 and local Xcode 27.1.",
+  "recipe": {
+    "localCommit": "c9a0e37",
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084567/job/128533766037",
+    "checks": "Exact original source URL, notes, three servings and six wraps persisted; four servings and eight wraps after the weekly edit. One meal and its grocery proposal were read before applying.",
+    "localResult": "4 passed, zero warnings. A controlled accessibility delay reproduced an expired value check with the exact URL present before and after.",
+    "localVerificationSHA256": "8ed3eee4c2c5ca8b67f3af77f65eec5c5bd3b3081055a520e217dae47c800fc1"
+  },
+  "renderedSearch": {
+    "localCommit": "a374924",
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084600/job/128534393323",
+    "checks": "The exact post-restart search field value and matching row or empty result share the existing eight-second result deadline. The timed 20 searches and 20 checkoffs remain separate from this interaction.",
+    "localResult": "1 passed, zero warnings. The local Release run retained 500 rows and all 20 checked identities. The original test also passed on a fresh local fixture. Hosted timing thresholds still require the hosted environment.",
+    "localVerificationSHA256": "e83e4887a6aa4fcb0997530b1fb950ea56496698d9dd8d24db30e5175d7c2426"
+  },
+  "keyboard": {
+    "localCommits": [
+      "1f25ec6",
+      "caf9025"
+    ],
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128536408228",
+    "checks": "Five fresh editors each received one tap. Each positive run kept the amount at 3 and dismissed both Done and the keyboard. Each observed target was 44 \u00d7 44 points. One deliberate tap inside the field kept the keyboard and Done visible and failed the center check.",
+    "localResult": "3 stock-review tests passed, zero warnings. The extra minimum-size assertions passed the five-point test in a separate run.",
+    "localVerificationSHA256": "9ae338f13e525aa4a57caa37df5814550382f93a1e7b90d526e9942b43c52027"
+  },
+  "sharedCookReadback": {
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128548155266",
+    "hosted": "Five functional cases passed. The strict checker failed on a runtime issue during the edited cook readback, 0.566 seconds after Play completed. The issue lacked the description attachment and symbolized frames. Session and process logs did not recover the blocking stack.",
+    "local": "A replay on iPhone 17, iOS 26.2 reproduced a warning between Play and Pause. A standalone speech control reached natural completion and reproduced the same 20 framework frames. Audio-session activation alone and voice lookup alone did not reproduce the issue.",
+    "status": "Hosted stack attribution remains open. The runtime warning still fails the gate.",
+    "localVerificationSHA256": "4a02799907dba4d5d8e7a1081fd5e683bcea3f56f8cc0a2614aff09cea50c0c7"
+  },
+  "sharedCookShare": {
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128547664830",
+    "observed": "The stock and purchase test reached the cook preview and tapped Share, then failed after waiting 15 seconds for Close. Its retained screenshot shows dimmed content with the remote controls absent.",
+    "change": "Both private and shared-copy tests now use the existing two-stage system-share readiness check. Presentation must begin within 15 seconds, then a usable Close must appear within 45 seconds. Failure captures the screen and actual wait duration.",
+    "local": "The unchanged hosted-revision app passed this case locally in 193.68 seconds. The updated shared test passed in 144.43 seconds, and the private cancellation regression passed on iOS 17 in 89.35 seconds. Each had zero recorded runtime warnings.",
+    "limit": "The exact hosted delay did not reproduce locally. A new hosted run is required to verify the updated wait there.",
+    "sharedStrictSHA256": "4bcadf4b8866835fd7d32871e30ff9a3af4693528c40a8db6a66374b90c97a0c",
+    "privateStrictSHA256": "78f4730a3f1f89cdc038edd179009b8026cbe2d0873c182e30b1fe8e6815ea00"
+  },
+  "storeQuoteEntry": {
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128555653479",
+    "hosted": "The original test timed out at 720 seconds during second-store entry. Repeated 60-second animation waits followed dismissing the keyboard between consecutive fields.",
+    "change": "Enter contiguous quote fields in one keyboard session, assert every entered value, and require Done before reviewing each store total and trip assumptions.",
+    "local": "Passed in 374.97 seconds against the exact published app with its original libraries, zero runtime warnings and zero missing animation-completion notifications. All six review stages completed, including private proposal separation and explicit shopper adoption.",
+    "excludedAttempt": "The first local setup mixed the original app with newer libraries and failed at launch with a missing symbol. The corrected replay loaded the original libraries.",
+    "limit": "The underlying cause of the original hosted animation wait is unresolved. Updated driver requires hosted confirmation.",
+    "binarySHA256": {
+      "RoomInTheCart": {
+        "archive": "4dee2bce2c21e03b6e254956d265c7b83b3decef1b578c6c4e345323a11c2025",
+        "installed": "4dee2bce2c21e03b6e254956d265c7b83b3decef1b578c6c4e345323a11c2025"
+      },
+      "RoomInTheCart.debug.dylib": {
+        "archive": "b22fc10f3cdc4423773a10d5d233bbce1505c6f3cac1b00163efda7195d78eb7",
+        "installed": "b22fc10f3cdc4423773a10d5d233bbce1505c6f3cac1b00163efda7195d78eb7"
+      },
+      "Info.plist": {
+        "archive": "704b7d126853d08c8712fd5b3855759af185d20deb29162ff77dad33d4427c4d",
+        "installed": "704b7d126853d08c8712fd5b3855759af185d20deb29162ff77dad33d4427c4d"
+      }
+    },
+    "sourceSHA256": "d2cc50ba2e19bfed8cbba324250220ca1d576c775d6e8640ce85b53eea127628",
+    "verificationSHA256": "a42ced63db3083ae7c3746dde8b4438eaabd35bfe3e6968de7377e228f04a9f8"
+  }
+}

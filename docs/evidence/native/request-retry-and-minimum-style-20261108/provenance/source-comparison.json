@@ -1,0 +1,28 @@
+{
+  "priorSourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "currentSourceManifestSHA256": "24fc718e4ad3173ede4888f4ba9eccac148869e7cad3b1a30481773933a411ca",
+  "fileCount": 556,
+  "unchangedCount": 553,
+  "changed": {
+    "ios/Features/Household/HouseholdInboxModel.swift": {
+      "prior": "dbb2a316625ced9b52737501c8f1ab8a773c1a7d11bdf268c05081712772120a",
+      "current": "11d83f35d1bcaa4573166a45b06fc11d1141cb545f13fa8ca926a48600f51428"
+    },
+    "ios/Tests/HouseholdRequestPackReviewTests.swift": {
+      "prior": "d34c113d51d1c92086dfef8e32552a330440ed89906888568f8382eabd85b2ec",
+      "current": "50784333780fde0d04edb685631f1872a6497bdd4e62fb3421edb359bc44c202"
+    },
+    "ios/UITests/HouseholdRequestPackUITests.swift": {
+      "prior": "5a3e3283a66a0d163310633b1c597d86dcc58a188265bbc1b5c670eb3636a1c2",
+      "current": "bec66901e1dcdee2f58909f94bf940e0ae8f1977f856cc94e1847b0c873d57d6"
+    }
+  },
+  "unchangedRelevantStyleAndOrdinaryTest": {
+    "ios/App/Theme.swift": "4174c99c9b823b19ccd7fcc71c6edfd64a57da852999f5942dc512e9eb1f5568",
+    "ios/Features/Household/HouseholdInboxView.swift": "774e70c9484c705476413e92c2262a72b8cacb72b547d098afd9847070d31e35",
+    "ios/Features/Dinners/DinnerIdeaSupplyViews.swift": "c734eedc6975b608329c65c505fae3c92cffa0d970fc8c380e7c4f93f505c6b4",
+    "ios/UITests/FreeJourneyUITests.swift": "1750639fb0b644df25f70b872a35f74a8acecb064ab2423e597b780cc3deb558",
+    "ios/Features/Dinners/DinnerEditors.swift": "491a8526cac233ee5414c9822fdbbe9d59c2efeb9e35e2a9b67e4cad1f711792"
+  },
+  "scope": "Exact prior minimum-ordinary source/run retained; no assertion that its full source equals the later current model source."
+}

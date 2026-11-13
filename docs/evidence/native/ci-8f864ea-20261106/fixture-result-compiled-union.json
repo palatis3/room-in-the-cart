@@ -1,0 +1,117 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "attempt": 2,
+  "compiledSelectorUnionMatchesAll45SourceCases": true,
+  "compiledUniqueCount": 45,
+  "sourceCount": 45,
+  "shards": {
+    "contributor-balanced-02": [
+      "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+      "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+      "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+      "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+      "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+    ],
+    "contributor-balanced-05": [
+      "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+      "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+      "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+    ],
+    "contributor-balanced-01": [
+      "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+      "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+      "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+    ],
+    "contributor-balanced-04": [
+      "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+      "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+      "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+      "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+    ],
+    "contributor-balanced-03": [
+      "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+      "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+      "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+      "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+    ],
+    "RecordsMediaUITests": [
+      "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto"
+    ],
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": [
+      "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+    ],
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": [
+      "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+    ],
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": [
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+    ],
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": [
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+    ],
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": [
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+    ],
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": [
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+    ],
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": [
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+    ],
+    "DinnerDecisionSheetUITests": [
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+    ]
+  },
+  "provenance": [
+    {
+      "profile": "contributor",
+      "artifactID": 13520780878,
+      "artifactSHA256": "0d60309d5b729e3905ca610cbaea7833fe4bc28fa9118bc4b8079e9e0b5f8d7e",
+      "planFileSHA256": {
+        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de",
+        "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.txt": "76c844050eca114fcf16267969780963d9ce646f1c5f64df275be91f46180287",
+        "test-enumeration.json": "ff55cbac0b386d1ecc2d84f85e35784e5333e8c1f7394f66d26bbf8cffdf768b",
+        "contributor-balanced-05.txt": "325d833ac7f0eb087cf91e1191ffb97d9dbe922ac8f195ed6717e61543216304",
+        "contributor-balanced-04.txt": "4516f4ca681b7823d59aa54e20247f3bab55faf0119531a134be56281a8b84d0",
+        "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.txt": "d5edad5d51c5465106f511e1d854157a60c633f6a6a358b3a9677f96e1efe50c",
+        "contributor-balanced-01.txt": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a",
+        "contributor-balanced-03.txt": "b7af3df1d3a3ff1fa9a29720fb612170a315b322883b32199e21631029b66507",
+        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889",
+        "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt": "0481679dfa40ef7aae745cdf4af797f613e7c9d2ff779ae98fe106b4b05359fe",
+        "contributor-balanced-02.txt": "a1c7c40d5a429d6f57a85ee8b5e39cdfefa842e028be492c0157fa285ec98034",
+        "RecordsMediaUITests.txt": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b",
+        "manifest.json": "cfad55cc6c410deed282cff65d6d19bf40f6a75050a1a9c5a40619225ba67122",
+        "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt": "18490653592a3d155fb4595c559cf5429ef83a3bffa302e4b8e2053a5b99b946",
+        "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.txt": "bd19dd89da11f05ee96a89a88301f749dc95d554477430d3230f030e826eb249"
+      }
+    },
+    {
+      "profile": "dinner",
+      "artifactID": 13522502689,
+      "artifactSHA256": "8b829ed82af7fa26d1e26974a4f83aca8d9f87ddfb6ec34d076c9379ee303967",
+      "planFileSHA256": {
+        "test-enumeration.json": "690e570bf8260800113c6b282376ade1064c7593c480d0c782f6925ac0bef168",
+        "DinnerDecisionSheetUITests.txt": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74",
+        "manifest.json": "acd16e775e4f3d0b26cff902288c64824b84ff1ae96a71d825a57b608ac5ff31"
+      }
+    }
+  ],
+  "scope": "Both profiles independently replayed from attempt2 result artifacts; contributor product archive not downloaded/read."
+}

@@ -1,0 +1,188 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "captureQualified": false,
+  "expectedEventsProven": false,
+  "eventParsing": "pending_actual_export_schema",
+  "startedEpoch": 1794246537.5084648,
+  "readinessObserved": true,
+  "processes": [
+    {
+      "label": "simctl-spawn",
+      "argv": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/simctl",
+        "spawn",
+        "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+        "/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/r1/SignpostControl",
+        "/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/capture-r3",
+        "ad82ea15764a435781aa14a0c0630503",
+        "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+        "dev.roominthecart.collectorcontrol.85b8546477f743a88c1356d17ea53a03"
+      ],
+      "executableSHA256": "ae4278fb72ecdbf17675011db81b85235acb1bfeffcfe812d01d87a0f42329ea",
+      "spawnEpoch": 1794246537.512932,
+      "signals": [],
+      "pid": 59992,
+      "binding": {
+        "pid": 59992,
+        "parentPID": 59991,
+        "uid": 501,
+        "startTimeMicros": 1794246537513336,
+        "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+      },
+      "exitCode": 0,
+      "terminalVerified": true
+    },
+    {
+      "label": "tracer",
+      "argv": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "record",
+        "--template",
+        "Logging",
+        "--device",
+        "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+        "--attach",
+        "60002",
+        "--time-limit",
+        "5s",
+        "--output",
+        "/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/capture-r3/control.trace",
+        "--notify-tracing-started",
+        "dev.roominthecart.collectorcontrol.start.23ba9559742c42f792a6d5e580378669"
+      ],
+      "executableSHA256": "1820e9bafac5a8710535a63c43716094d28fbbc7eb39839277bf2ddd53b12e29",
+      "spawnEpoch": 1794246538.292212,
+      "signals": [],
+      "pid": 60003,
+      "binding": {
+        "pid": 60003,
+        "parentPID": 59991,
+        "uid": 501,
+        "startTimeMicros": 1794246538293233,
+        "executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace"
+      },
+      "exitCode": 0,
+      "terminalVerified": true
+    },
+    {
+      "label": "toc",
+      "argv": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/capture-r3/control.trace",
+        "--toc"
+      ],
+      "executableSHA256": "1820e9bafac5a8710535a63c43716094d28fbbc7eb39839277bf2ddd53b12e29",
+      "spawnEpoch": 1794246556.547329,
+      "signals": [],
+      "pid": 60070,
+      "binding": {
+        "pid": 60070,
+        "parentPID": 59991,
+        "uid": 501,
+        "startTimeMicros": 1794246556548096,
+        "executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace"
+      },
+      "exitCode": 0,
+      "terminalVerified": true
+    }
+  ],
+  "limits": {
+    "startupSeconds": 15,
+    "recordSeconds": 5,
+    "finalizationSeconds": 30,
+    "exportSeconds": 10,
+    "cleanupSecondsPerProcess": 7,
+    "traceBytes": 67108864,
+    "logBytesEach": 1048576,
+    "files": 2048
+  },
+  "preparedSources": {
+    "control.py": "2bbd07517e4a64075d3ab204356f260e8568f18a929dc158a88f834cdb04f281",
+    "host_control.py": "fc0796fd253452daf63ec5d68f08cfdb793df380c93ce663ab05932b0bbf6964",
+    "SignpostControl.swift": "1ec318a10289c90585c1961e72e739f43ffeb83bc9914e0cdd691903fe57513e"
+  },
+  "scope": "Standalone iOS Simulator helper and Logging transport only",
+  "simulatorUDID": "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+  "nonce": "ad82ea15764a435781aa14a0c0630503",
+  "helperLifetimeSeconds": 60,
+  "helperBindingSeconds": 5,
+  "simctlLaunchIdentity": {
+    "launcher": "/Applications/Xcode.app/Contents/Developer/usr/bin/simctl",
+    "launcherSHA256": "c8e73954e91dc5b6e9d7a84a185f3503368b586558c2b464dbe913e9bf0ab336",
+    "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl",
+    "executableSHA256": "ae4278fb72ecdbf17675011db81b85235acb1bfeffcfe812d01d87a0f42329ea",
+    "reviewedFinalExec": "exec \"/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl\" \"${@}\""
+  },
+  "notificationControlPassed": true,
+  "subsystem": "dev.roominthecart.collectorcontrol.85b8546477f743a88c1356d17ea53a03",
+  "notification": "dev.roominthecart.collectorcontrol.start.23ba9559742c42f792a6d5e580378669",
+  "expected": {
+    "category": "OwnedControl",
+    "events": [
+      "ControlBefore",
+      "ControlAfter"
+    ],
+    "intervals": [
+      "ControlInterval1",
+      "ControlInterval2",
+      "ControlInterval3"
+    ]
+  },
+  "helperInitialStatus": {
+    "compiledForSimulator": true,
+    "nonce": "ad82ea15764a435781aa14a0c0630503",
+    "parentPID": 32647,
+    "pid": 60002,
+    "simulatorRoot": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot",
+    "simulatorUDID": "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+    "stage": "waiting",
+    "subsystem": "dev.roominthecart.collectorcontrol.85b8546477f743a88c1356d17ea53a03",
+    "uid": 501
+  },
+  "helper": {
+    "binding": {
+      "pid": 60002,
+      "parentPID": 32647,
+      "uid": 501,
+      "startTimeMicros": 1794246537846102,
+      "executable": "/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/r1/SignpostControl"
+    },
+    "executableSHA256": "76639ba0396dc9ec551ca701035a82f526390e19fed9b8486bf108d33c303a84",
+    "signals": [],
+    "terminalVerified": true
+  },
+  "readinessEpoch": 1794246542.5446599,
+  "emissionReleasedEpoch": 1794246542.547006,
+  "helperEmissionStatus": {
+    "compiledForSimulator": true,
+    "nonce": "ad82ea15764a435781aa14a0c0630503",
+    "parentPID": 32647,
+    "pid": 60002,
+    "simulatorRoot": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot",
+    "simulatorUDID": "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+    "stage": "emitted",
+    "subsystem": "dev.roominthecart.collectorcontrol.85b8546477f743a88c1356d17ea53a03",
+    "uid": 501
+  },
+  "helperFinalStatus": {
+    "compiledForSimulator": true,
+    "nonce": "ad82ea15764a435781aa14a0c0630503",
+    "parentPID": 32647,
+    "pid": 60002,
+    "simulatorRoot": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot",
+    "simulatorUDID": "A50C91FC-4966-47FF-A8CB-7640FBD513EB",
+    "stage": "finished",
+    "subsystem": "dev.roominthecart.collectorcontrol.85b8546477f743a88c1356d17ea53a03",
+    "uid": 501
+  },
+  "outcome": "exported_pending_event_schema_review",
+  "notificationCancelStatus": [
+    0,
+    0
+  ],
+  "allOwnedProcessesTerminal": true,
+  "finishedEpoch": 1794246559.258004
+}

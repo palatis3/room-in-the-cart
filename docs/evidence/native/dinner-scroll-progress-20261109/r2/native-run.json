@@ -1,0 +1,50 @@
+{
+  "phase": "spanish-ax5",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/dd/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=858A2244-001F-4BAD-AFE0-A6E7AF02F41A,arch=arm64",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/native.xcresult",
+    "-parallel-testing-enabled",
+    "NO",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+    "test-without-building"
+  ],
+  "sourceSHA256": "0d80786c427546b979f4b303376cc03be0218e62d2766bbd6e40c04818138ac3",
+  "device": [
+    [
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+      {
+        "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/858A2244-001F-4BAD-AFE0-A6E7AF02F41A/data",
+        "dataPathSize": 3514781696,
+        "logPath": "/Users/palatis/Library/Logs/CoreSimulator/858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "udid": "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "lastUsedAt": "2026-11-08T11:10:25Z",
+        "isAvailable": true,
+        "logPathSize": 479232,
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+        "state": "Booted",
+        "name": "RITC S24 Current Audit Nov08"
+      }
+    ]
+  ],
+  "contentSize": "accessibility-extra-extra-extra-large",
+  "startedAt": "2026-11-09T02:31:21.758880+00:00",
+  "pid": 10852,
+  "nativeExit": 65,
+  "elapsedSeconds": 632.785880958,
+  "finishedAt": "2026-11-09T02:41:54.550244+00:00",
+  "sourceUnchanged": true,
+  "productsUnchanged": true
+}

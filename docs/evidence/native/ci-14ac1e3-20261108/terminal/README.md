@@ -1,0 +1,11 @@
+# Original 14ac1e3 cohort: terminal
+
+All six workflows finished on original PR head `14ac1e39021eaa2047e21bd3ac24328e6b36a068`, attempt1. Deep Checks, Release Performance, Native Swift HTTPS/PostgreSQL and Security passed. Core and Fixtures failed on the already-recorded issues; there was no newly discovered failure category in the final jobs. [Final snapshot](snapshot.json)
+
+Core executed all68 ordinary UI tests:66passed and2failed. UI01 failed during the first app launch handshake; UI08 timed out waiting for keyboard-related animation idleness. The red aggregate CI gate follows these failures and is not an additional defect. All seven other Core prerequisite groups passed. UI05’s original six cases confirm its exact-value correction; UI10 passed allseven. [Core receipt](core-receipt.json)
+
+Fixtures selected69 unique tests across17jobs. All66 executed native cases passed, including the final Dinner Decision Sheet5/5. Three contributor-balanced-01 cases never started because simulator migration failed. Strictly accepted jobs account for61cases; the five native-passing cook/recovery/closeout cases remain in a failed warning-verification job with unavailable detailed warning counts. Do not call these five warning-clean or all69passed. [Exact fixture inventory and scope](fixture-inventory.json) · [Boot failure](boot-failure.json) · [Cook warning failure](cook-warning-failure.json)
+
+The evidence covers original hosted logs/artifact metadata and bounded original plan extraction. Records uses its sanitized report only; no full Records archive or media was retrieved. Zero warning statements apply only to the scoped accepted reports. Private originals, exact excerpts and hash-linked prior failure receipts remain under `.build/CI14AC1E3Nov08/`. [Copy provenance](copy-provenance.json)
+
+The cohort has four underlying failure categories: launch handshake, animation-idle timeout, simulator migration and speech warning validation. These are CI findings, not four established application defects. Local test-helper, diagnostic-retention and owned-simulator changes are separate unpublished work at this checkpoint. This cohort does not establish combined green or App Store acceptance.

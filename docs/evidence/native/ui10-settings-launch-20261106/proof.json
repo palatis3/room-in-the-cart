@@ -1,0 +1,32 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "artifactID": 13555821539,
+  "archiveSHA256": "24c0c34a38089567c09aa0653ea25719e31ad2aafb2a603382da7a93592ef5fc",
+  "failedSelector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+  "passed": 5,
+  "failed": 1,
+  "runtimeWarnings": 0,
+  "strictReplayExit": 1,
+  "durationSeconds": 69.54823911190033,
+  "failure": "Failed to launch com.apple.Preferences: Timed out attempting to launch app.",
+  "phase": "Initial reduceMotionSwitch(in:) invocation at source112, settings.activate at207. This precedes reading original preference, registering teardown restoration and entering exerciseRetailerShareCancellation; app/share/Close assertions were not reached in this case.",
+  "chronology": {
+    "caseStartUTC": "2026-11-07T01:52:36.957Z",
+    "initialPreferencesOpenAndLaunchSeconds": 0.1,
+    "launchFailureLogLine": 1283,
+    "postFailureAutomationSessionSeconds": 46.4,
+    "reduceMotionSwitchWaitSeconds": 55.78,
+    "accessibilityTapSeconds": 59.44,
+    "motionWaitSeconds": 59.61,
+    "tearDownSeconds": 68.79,
+    "failureAttachmentSeconds": 69.13,
+    "implicitRunnerRestartLogLine": 1345
+  },
+  "limits": [
+    "Runtime warning count0 is separate from the explicit Settings launch timeout and XCTest internal assertion/runner restart.",
+    "XCTest implicitly restarted its runner; collector did not retry or dispatch. Subsequent different cases ran once.",
+    "This does not reproduce804 share Close readiness failure; that assertion was not reached. No app behavior or underlying Settings launch cause inferred."
+  ],
+  "rawLogSHA256": "1572848b799f9616c82e2d2a6ca30c92a268633b4dbe5cbd28abbe327ac9f3f4",
+  "sourceSHA256": "44b99fdf50ef9d62a962f52d1e48cea3c32c836719de668976fb9b9cc3236256"
+}

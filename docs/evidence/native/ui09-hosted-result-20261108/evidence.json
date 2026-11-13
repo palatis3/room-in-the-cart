@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "headSha": "2397704ca4392281d396c152b40e350b60c0183e",
+  "baseSha": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "runId": 42497538157,
+  "jobId": 128783033016,
+  "runAttempt": 1,
+  "runUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42497538157",
+  "conclusion": "failure",
+  "failureCategory": "observer process discovery timeout",
+  "native": {
+    "startedUTC": "2026-11-08T16:07:25.597959+00:00",
+    "finishedUTC": "2026-11-08T16:27:55.020342+00:00",
+    "exit": 0,
+    "selected": 8,
+    "executed": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "nativePID": 12260,
+    "strictExit": 0,
+    "stopReason": null,
+    "exactSelectorOrder": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+    ],
+    "caseDurationsSeconds": {
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": 289.85,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence": 213.09,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate": 188.42,
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment": 138.31,
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext": 125.12,
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval": 117.35,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable": 66.53,
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens": 14.8
+    },
+    "targetPassedSeconds": 188.42,
+    "recordedTestExportRuntimeWarnings": 0,
+    "runtimeWarningSummaryFieldAvailable": false,
+    "animationIdleMessagesObserved": 0,
+    "runnerRestartsObserved": 0,
+    "analyzedConsoleLines": 4331,
+    "sourcesUnchanged": true,
+    "productsUnchanged": true
+  },
+  "appearance": {
+    "status": "unavailable",
+    "observedUTC": "2026-11-08T16:07:08.379821+00:00",
+    "elapsedSeconds": 33.18727583400005,
+    "totalBudgetSeconds": 30,
+    "values": {},
+    "errors": [
+      {
+        "key": "appearance",
+        "kind": "TimeoutExpired",
+        "exitCode": null
+      }
+    ],
+    "notAttempted": [
+      "content_size",
+      "increase_contrast"
+    ],
+    "expectedDefaults": {
+      "appearance": "light",
+      "content_size": "large",
+      "increase_contrast": "disabled"
+    },
+    "observedDifferences": {},
+    "defaultsMatch": null,
+    "acceptanceInvariant": false,
+    "settingsChanged": false,
+    "interpretation": "Optional appearance metadata; unknown is not evidence of expected values or simulator readiness."
+  },
+  "observer": {
+    "collectorStartedAtUtc": "2026-11-08T16:07:11.743339+00:00",
+    "collectorFinishedAtUtc": "2026-11-08T16:07:17.019065+00:00",
+    "nativeStartedAtUtc": "2026-11-08T16:07:25.597959+00:00",
+    "collectorEndedBeforeNativeLaunchSeconds": 8.578894,
+    "successfulProcessPolls": 0,
+    "recordedEvents": 1,
+    "targetStartedObserved": false,
+    "targetEndedObserved": false,
+    "targetPIDs": [],
+    "probesPreserved": 0,
+    "transportSealed": false,
+    "captureStatus": "unavailable",
+    "collectorError": "TimeoutExpired: Command '['/bin/ps', '-ww', '-axo', 'pid=,comm=']' timed out after 2 seconds",
+    "interpretation": "The first process-list attempt timed out before native launch. The observer did not reach target admission."
+  },
+  "observerSource": {
+    "path": "diagnostics/ui09-hosted/collect.py",
+    "sha256": "07d1fadd2ba4f78869b66a1c1fc192b98c6ce48be2a386c580c70ab201360434",
+    "processDiscoveryLine": 138,
+    "exceptionStopsCollectorLine": 260
+  },
+  "artifact": {
+    "id": 13624324133,
+    "name": "ui09-a305-observer-42497538157-1",
+    "bytes": 90234429,
+    "githubReportedDigest": "sha256:84ba1d8ef4f31100e9e3f1e671eb2eded12a51b60008956322b240d83897b2f2",
+    "totalRangeBytes": 32451,
+    "fullArchiveDownloaded": false,
+    "fullArchiveDigestIndependentlyVerified": false,
+    "transportCollections": [
+      {
+        "collection": "small-terminal-members",
+        "rangeBytes": 17148,
+        "privateRangeReceiptSHA256": "48a6054dd65b304957ff404e3bea5a1a55df962826298eea44a4ea1fa66bcfa4"
+      },
+      {
+        "collection": "small-observer-members",
+        "rangeBytes": 15303,
+        "privateRangeReceiptSHA256": "43dbd20da2953eaf4baecba24490a01a030a02c41808a6bae6282ac66fc115f4"
+      }
+    ],
+    "members": [
+      {
+        "file": "appearance.json",
+        "bytes": 703,
+        "sha256": "b9743b692c3fc8dbbfff2c764459c485d00db0367f79533b3756ba40198c19c6",
+        "zipCRC": 232768689,
+        "CRCVerified": true,
+        "retainedPath": "original/appearance.json"
+      },
+      {
+        "file": "run.json",
+        "bytes": 3391,
+        "sha256": "86ab7cea6730c85dd5d6f442a826bd05bcb31a9cb3c609f8646437379dafe628",
+        "zipCRC": 1413927800,
+        "CRCVerified": true,
+        "retainedPath": "original/run.json"
+      },
+      {
+        "file": "strict-exit.json",
+        "bytes": 16,
+        "sha256": "3e42a2ad3dbeab9d1167d20261ad6305bdea31103ffc09c30f25558345966de2",
+        "zipCRC": 589578118,
+        "CRCVerified": true,
+        "retainedPath": "original/strict-exit.json"
+      },
+      {
+        "file": "strict.log",
+        "bytes": 1652,
+        "sha256": "202c24363201d65691419d34d51a26999c5b11c806a3c355f9ac7467d676d570",
+        "zipCRC": 2168365184,
+        "CRCVerified": true,
+        "retainedPath": "original/strict.log"
+      },
+      {
+        "file": "observer/events.ndjson",
+        "bytes": 453,
+        "sha256": "067bc47f3d33ff10bdca16414f0fdea338300672a5041bf0511c9f3c4ad24204",
+        "zipCRC": 878210697,
+        "CRCVerified": true,
+        "retainedPath": "original/observer/events.ndjson"
+      },
+      {
+        "file": "observer/receipt.json",
+        "bytes": 660,
+        "sha256": "95d48cd9e9311bf6b864fae3665fb17ba600b3e51d55b6bdc81f89c43510908b",
+        "zipCRC": 3937244072,
+        "CRCVerified": true,
+        "retainedPath": "original/observer/receipt.json"
+      }
+    ]
+  },
+  "originalPrivateTerminalDiagnosisSHA256": "43edc3ba4a59ad8750eb2ecd530f5458d13b3a1f8cbb858b2b2ef91467f1261f",
+  "originalPrivateTerminalReceiptSHA256": "6951a113143acdb861d9af1890c2a5e7187f1cd08ac20eaba5b07e94657c895d",
+  "scope": "Byte-exact small ZIP members with independent CRC-32 and SHA-256 checks. Native strict acceptance and capture completeness are separate. The instrumented pass is one nonreproduction of the original UI09 timeout."
+}

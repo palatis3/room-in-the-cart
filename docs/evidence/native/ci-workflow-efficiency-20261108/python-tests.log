@@ -1,0 +1,21 @@
+..............................................................................................................................................................FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+..FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+..FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+FrontBoard could not find the Debug test host. Installing it before a second enumeration.
+...................................................................................
+----------------------------------------------------------------------
+Ran 245 tests in 6.370s
+
+OK
+Using RITC-CI-42-2-ios-tests-ui-01-63a9a8c7-0a4d-4ea8-bc5f-f75bcb6910dd simulator (22222222-2222-4222-8222-222222222222)
+Using RITC-CI-42-2-ios-tests-ui-01-0d654053-ce5b-42ca-af42-2845273ed68d simulator (22222222-2222-4222-8222-222222222222)
+Using RITC-CI-42-2-ios-tests-ui-01-aaa4f8a1-065d-4ac8-8dc0-413c7b719fb4 simulator (22222222-2222-4222-8222-222222222222)
+Owned CI simulator cleanup: deleted
+Owned CI simulator cleanup: already-absent
+Using iPhone 17 simulator (11111111-1111-4111-8111-111111111111)
+Using RITC-CI-42-2-ios-tests-ui-01-caba059a-7259-4e4d-be67-5b56e9cb67ab simulator (22222222-2222-4222-8222-222222222222)
+Owned CI simulator cleanup: deleted
+No simulator ownership receipt; no device cleanup attempted.
+Using RITC-CI-42-2-ios-tests-ui-01-096689f4-588e-401f-a725-dbd3d33aee78 simulator (22222222-2222-4222-8222-222222222222)

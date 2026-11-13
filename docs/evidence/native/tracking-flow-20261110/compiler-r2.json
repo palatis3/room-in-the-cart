@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "scope": "Incremental arm64 app, model and UI test target compilation; runtime tests not run",
+  "sourceFiles": 660,
+  "seconds": 90.79,
+  "receiptSHA256": "9a08559c4d93e8f360d34ace2281de892c941b8c95dbef3faefc57c32a785275",
+  "sourceManifestSHA256": "d62925a8079c41d1f2ef9f41394163a85fbffd48365c547fdaeff0b25051457f",
+  "logSHA256": "8daae59537eb4356c31a11ec0d42a6110a1b8146d56b4587635a86bc96a3572d",
+  "laterPrivacyCorrectionRequiresSuccessorBuild": true
+}

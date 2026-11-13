@@ -1,0 +1,44 @@
+{
+  "sourceManifestSHA256": "80ac0da5e0b9ad919e985a244e0d3811a9c32fe9165c091c8bc58e9d9c289aa4",
+  "executionManifestSHA256": "a55bb8cb477edfd6b239c4a181145841775bf3c67d0b251214d87c3d68048b18",
+  "build": {
+    "nativeExit": 0,
+    "compiledAppCheckExit": 0,
+    "nativeElapsedSeconds": 24.175310958
+  },
+  "test": {
+    "nativeExit": 65,
+    "nativeElapsedSeconds": 171.039075916,
+    "nativeStartedAtUTC": "2026-11-09T00:00:42.499910+00:00",
+    "nativeFinishedAtUTC": "2026-11-09T00:03:33.537201+00:00"
+  },
+  "caseSeconds": 145.0,
+  "strictExit": 1,
+  "animationIdleMessages": 0,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "preservedInputsUnchanged": true,
+  "qualificationPassed": false,
+  "centerInteractionPassed": true,
+  "topSampleDismissedKeyboard": false,
+  "AXFrame": [
+    338,
+    62,
+    44,
+    44
+  ],
+  "topSample": [
+    360,
+    62
+  ],
+  "priorAutomaticAXFrame": [
+    314,
+    66,
+    68,
+    36
+  ],
+  "topBeforeScreenshotReviewed": true,
+  "allThreeGeometryRecordsReviewed": true,
+  "supplyReached": false,
+  "boundariesRequireReview": true
+}

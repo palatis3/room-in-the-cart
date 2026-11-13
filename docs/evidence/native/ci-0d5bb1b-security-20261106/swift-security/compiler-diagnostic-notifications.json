@@ -1,0 +1,376 @@
+[
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/CaptureReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 0
+          },
+          "region": {
+            "startLine": 23,
+            "startColumn": 31,
+            "endColumn": 32
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/CaptureReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 0
+          },
+          "region": {
+            "startLine": 185,
+            "startColumn": 31,
+            "endColumn": 32
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/CaptureReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 0
+          },
+          "region": {
+            "startLine": 116,
+            "startColumn": 17,
+            "endColumn": 18
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find 'PhotosPicker' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message cannot find 'PhotosPicker' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/CaptureReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 0
+          },
+          "region": {
+            "startLine": 85,
+            "startColumn": 17,
+            "endColumn": 18
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/CaptureReviewView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 16,
+            "startColumn": 31,
+            "endColumn": 32
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 285,
+            "startColumn": 36,
+            "endColumn": 37
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find type 'PhotosPickerItem' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 65,
+            "startColumn": 21,
+            "endColumn": 22
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 153,
+            "startColumn": 13,
+            "endColumn": 14
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find 'PhotosPicker' in scope"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot find 'PhotosPicker' in scope"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 153,
+            "startColumn": 56,
+            "endColumn": 57
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot infer contextual base in reference to member 'images'"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot infer contextual base in reference to member 'images'"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Capture/ScanReviewView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 1
+          },
+          "region": {
+            "startLine": 153,
+            "startColumn": 88,
+            "endColumn": 89
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot infer contextual base in reference to member 'current'"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Capture/ScanReviewView.swift with error message cannot infer contextual base in reference to member 'current'"
+      }
+    }
+  },
+  {
+    "locations": [
+      {
+        "physicalLocation": {
+          "artifactLocation": {
+            "uri": "ios/Features/Membership/MembershipView.swift",
+            "uriBaseId": "%SRCROOT%",
+            "index": 2
+          },
+          "region": {
+            "startLine": 78,
+            "startColumn": 41,
+            "endColumn": 42
+          }
+        }
+      }
+    ],
+    "message": {
+      "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Membership/MembershipView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+    },
+    "level": "none",
+    "descriptor": {
+      "id": "swift/diagnostics/extraction-errors",
+      "index": 0,
+      "toolComponent": {
+        "index": 0
+      }
+    },
+    "properties": {
+      "formattedMessage": {
+        "text": "Compiler error in /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Features/Membership/MembershipView.swift with error message the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions"
+      }
+    }
+  }
+]

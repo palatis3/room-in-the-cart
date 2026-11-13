@@ -19,7 +19,8 @@ import DeviceSurfaces
     func shop(_ id: UUID) -> ShoppingLedger? { scope == nil ? nil : ledger.workspace.shops.first { $0.id == id } }
     func stage(_ entry: SelectedTextEntry, shopID: UUID) throws -> StagedListImport {
         guard let shop = shop(shopID) else { throw SurfaceError.unavailable }
-        return shop.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id)
+        return try shop.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id,
+                                    maximumLines: SelectedTextInbox.maximumLines)
     }
     func reload() async throws {
         guard let scope = scope, let start = generation else { throw SurfaceError.unavailable }

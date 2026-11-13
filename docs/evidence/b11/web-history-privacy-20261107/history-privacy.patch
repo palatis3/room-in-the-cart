@@ -1,0 +1,113 @@
+--- a/web/src/app.ts
++++ b/web/src/app.ts
+@@ -26,6 +26,10 @@
+   private draft = blank();
+   private review = false;
+   private busy = false;
++  private historySuspended = false;
++  private historyAway = false;
++  private historyGeneration = 0;
++  private historyResumePending = false;
+   private notice = '';
+   private failurePurpose:'load'|'mutation'|null=null;
+   private language:Language;
+@@ -58,8 +62,11 @@
+   }
+   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
+     if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
+-    try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
+-    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
++    const historyGeneration=this.historyGeneration;
++    try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
++    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
++      if(this.historyResumePending){this.historyResumePending=false;void this.start();}
++    }
+   }
+   private supportedRoute():boolean {
+     const path=this.root.ownerDocument.defaultView?.location.pathname??'/';
+@@ -67,7 +74,18 @@
+     return ['/requests','/invite','/view'].includes(path.endsWith('/')?path.slice(0,-1):path);
+   }
+   private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
++  suspendForHistory():void {
++    // Remove private DOM before the browser can retain a history snapshot. Keep
++    // unsent work in memory until a fresh session confirms the same scope.
++    this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
++  }
++  resumeFromHistory():void {
++    this.historyAway=false;
++    if(this.busy){this.historyResumePending=true;return;}
++    void this.start();
++  }
+   async start():Promise<void> {
++    if(this.historyAway)return;
+     if(!this.supportedRoute()){this.render();return;}
+     if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
+     await this.run(()=>this.load(),'load');
+@@ -201,6 +219,7 @@
+     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
+     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
+     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
++    if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
+     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
+     const context=this.el('section');context.append(this.el('p',this.session.household.label));
+     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
+--- a/web/src/main.ts
++++ b/web/src/main.ts
+@@ -12,6 +12,8 @@
+   const app=new WebApp(root,undefined,undefined,token);
+   void app.start();
+   window.setInterval(()=>app.checkExpiry(),1000);
++  window.addEventListener('pagehide',()=>app.suspendForHistory());
++  window.addEventListener('pageshow',event=>{if(event.persisted)app.resumeFromHistory();});
+   window.addEventListener('online',()=>void app.start());
+   window.addEventListener('storage',event=>{if(event.key===browserSignOutKey&&event.newValue==='1')void app.start();});
+   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void app.start();});
+--- /dev/null
++++ b/web/tests/history-lifecycle.test.mjs
+@@ -0,0 +1,45 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import {JSDOM} from 'jsdom';
++import {IDBFactory} from 'fake-indexeddb';
++import {ApiError} from '../dist/api.js';
++import {Outbox} from '../dist/outbox.js';
++import {WebApp} from '../dist/app.js';
++const session=(actor='a',role='contributor')=>({authenticated:true,role,household:{id:'household-'+actor,label:'Household '+actor},memberId:'member-'+actor,shopId:'shop-'+actor,replayWindow:{id:'window-'+actor,expiresAt:'2099-01-01T00:00:00Z'},csrf:'csrf',enrolled:true,queueConsent:false,...(['helper','editor'].includes(role)?{grantId:'grant-'+actor}:{})});
++const row=()=>({requestId:'request-a',shopId:'shop-a',revision:1,originalItem:'PRIVATE OWN REQUEST',ownQuantity:null,authoredAt:'2026-11-06T12:00:00Z',receivedAt:'2026-11-06T12:00:01Z',route:'current',status:'pending',ownActionAllowed:true,clarification:null,followupTo:null});
++const settle=async root=>{const end=Date.now()+1500;do{await new Promise(r=>setTimeout(r,5));assert.ok(Date.now()<end);}while(root.querySelector('main')?.getAttribute('aria-busy')==='true');};
++async function setup(t,overrides={}){
++ const dom=new JSDOM('<div id="app"></div>',{url:'https://fixture.test/requests'});t.after(()=>dom.window.close());
++ const root=dom.window.document.getElementById('app');
++ const api={session:async()=>session(),requests:async()=>[row()],authState:async()=>({available:false,authenticated:false,csrf:null}),receivedProposals:async()=>({proposals:[],nextCursor:null}),...overrides};
++ const app=new WebApp(root,api,new Outbox(new IDBFactory()));await app.start();return {app,api,root,dom};
++}
++function draft(dom){const input=dom.window.document.getElementById('item');input.value='UNSENT PRIVATE DRAFT';input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));}
++test('history suspension hides own request and draft until delayed same-actor authority succeeds',async t=>{
++ const {app,api,root,dom}=await setup(t);draft(dom);let release;
++ api.session=()=>new Promise(r=>release=()=>r(session()));
++ app.suspendForHistory();assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);assert.equal(root.querySelector('#item'),null);
++ app.resumeFromHistory();assert.equal(root.querySelector('#item'),null);release();await settle(root);
++ assert.match(root.textContent,/PRIVATE OWN REQUEST/);assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
++});
++test('history network failure stays closed; explicit fresh authorization recovers the same-actor draft',async t=>{
++ const {app,api,root,dom}=await setup(t);draft(dom);
++ api.session=async()=>{throw new ApiError('network',0);};app.suspendForHistory();app.resumeFromHistory();await settle(root);
++ assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);assert.equal(root.querySelector('#item'),null);assert.match(root.textContent,/Could not load/);
++ api.session=async()=>session();await app.start();assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
++});
++test('changed actor on history return clears the previous draft and request',async t=>{
++ const {app,api,root,dom}=await setup(t);draft(dom);app.suspendForHistory();api.session=async()=>session('b');api.requests=async()=>[];
++ app.resumeFromHistory();await settle(root);assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);assert.equal(root.querySelector('#item').value,'');
++});
++test('history restore during an existing load waits and then revalidates instead of uncovering stale content',async t=>{
++ const {app,api,root}=await setup(t);let release,reads=0;
++ api.requests=()=>new Promise(r=>release=()=>r([row()]));const previous=app.start();await new Promise(r=>setTimeout(r,0));
++ app.suspendForHistory();app.resumeFromHistory();api.session=async()=>{reads++;throw new ApiError('access_ended',403);};release();await previous;await settle(root);
++ assert.equal(reads,1);assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);assert.match(root.textContent,/Access has ended/);
++});
++for(const role of ['helper','editor'])test(`${role} history return remains closed after revocation`,async t=>{
++ const {app,api,root}=await setup(t,{session:async()=>session('a',role),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Shop a',revision:1,asOf:'2026-11-06T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:role==='editor',instructions:[{item:'PRIVATE COOK INSTRUCTION',amount:null,action:'Prepare'}]})});
++ assert.match(root.textContent,/PRIVATE COOK INSTRUCTION/);app.suspendForHistory();api.session=async()=>{throw new ApiError('access_ended',403);};app.resumeFromHistory();await settle(root);
++ assert.doesNotMatch(root.textContent,/PRIVATE COOK INSTRUCTION|Household a/);assert.equal(root.querySelector('#correction'),null);assert.equal(root.querySelector('#item'),null);
++});

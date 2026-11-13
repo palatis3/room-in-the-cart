@@ -1,0 +1,37 @@
+{
+  "run.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/run.json",
+    "sha256": "5d1f97805fead32112c4407af4e8232be15224686ebf212a299b975b2f7c63f6",
+    "bytes": 2604
+  },
+  "selectors.txt": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/selectors.txt",
+    "sha256": "c228bc929b98639a835dc4779e596288f65f7b1472da5e7df0a44a7120faac3d",
+    "bytes": 496
+  },
+  "inspection/verification.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/inspection/verification.json",
+    "sha256": "9b4c9e09b273b0ccb684045d3e2b8df0138c158418bd6c7183fdb8c002f802f7",
+    "bytes": 175
+  },
+  "inspection/strict.txt": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/inspection/strict.txt",
+    "sha256": "556caf2b846fb5713571698902aa12a78b3865aaad5a6de96eba3330d70d06e8",
+    "bytes": 1139
+  },
+  "inspection/summary.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/inspection/summary.json",
+    "sha256": "52e9433e25ad5cee86dea6d18aa2d60febc9969724f0c53ec1c052063124a683",
+    "bytes": 1021
+  },
+  "inspection/tests.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/inspection/tests.json",
+    "sha256": "b9ada4861bbc94c791eab3485d742ebeeca32204aefddb5a6f8053a59d21b56a",
+    "bytes": 4218
+  },
+  "inspection/test-runtime-warnings.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-regression-run/inspection/test-runtime-warnings.json",
+    "sha256": "46c491959346fd2623729293bd2f1520d6e0cce6856177b586e8fca8fee2dfc2",
+    "bytes": 179
+  }
+}

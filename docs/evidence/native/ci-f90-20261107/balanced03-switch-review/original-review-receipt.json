@@ -1,0 +1,91 @@
+{
+  "sourceCommit": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "run": 42428215965,
+  "job": 128575557708,
+  "artifact": 13599104299,
+  "archiveAPISHA256": "6dd0afced63ef9b8781e4f87f8f184e3b42619fb4bae88949ff27340ca9403d4",
+  "fullArchiveHashLocallyVerified": false,
+  "sources": [
+    {
+      "file": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "sha256": "be9803f5d7eb091fa4852367aceb3e7c6909840c23c880acef462ddd1a30b17f",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/Features/Household/HouseholdRequestPackReviewView.swift",
+      "sha256": "036aff257576516e5a6a70f7da2f99cb953933339e8a11eb1bab356ab13c1710",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxModel.swift",
+      "sha256": "9cf99b2a172f00ef8ab61513323955f67690801acea7bfa5c5ede13c4d7aea65",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "sha256": "4a51c6d3463fa44732c9bd248a4186d481e5aa53d71f8dd000f78b6931c756d6",
+      "byteIdenticalToF90": true
+    }
+  ],
+  "pristineMemberCountVerified": 22,
+  "exportedAttachmentHashes": [
+    {
+      "file": "exports/S24-failure-preview-diagnostics.txt",
+      "bytes": 131,
+      "sha256": "b6646881c9c1e82e3478dcffd537b640a5eb156898c5ce9ad3323f588bcc84d9"
+    },
+    {
+      "file": "exports/S24-failure-accessibility-hierarchy.txt",
+      "bytes": 22643,
+      "sha256": "514c8c955abefa87b06ffdb299a18b661e40d359b379b8eada4fc249a1ec2f15"
+    },
+    {
+      "file": "exports/S24-request-pack-failure.png",
+      "bytes": 251188,
+      "sha256": "11585410148b4b465ee7c677ca032df4b41a790c566afc5412554b9aa7a4d57d"
+    },
+    {
+      "file": "exports/kXCTAttachmentLegacySnapshot.snapshot",
+      "bytes": 1211,
+      "sha256": "29e252bfe5f0de78e4d3db10471070848f34dea18012295c01f2abc9bbfd6dd2"
+    },
+    {
+      "file": "exports/kXCTAttachmentLegacySynthesizedEvent.snapshot",
+      "bytes": 1903,
+      "sha256": "d498268a2d53410d7b1f85a8d08cb77e8c40c95c12f711af052f4e6627218c72"
+    }
+  ],
+  "session": {
+    "case": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "sourceFile": "Session-RoomInTheCartUITests-2026-11-08_012703-DATPi3.log",
+    "sourceBytes": 65697738,
+    "sourceSHA256": "49a50aae7b7ee6f90ed76df9541c5cca98c44b3372dd0de5db0673e32ff9d0b8"
+  },
+  "tap": {
+    "point": [
+      356.4,
+      222.5
+    ],
+    "nestedSwitchFrame": [
+      309,
+      208.7,
+      63,
+      28
+    ],
+    "outerSwitchFrame": [
+      16,
+      186.3,
+      370,
+      72.3
+    ],
+    "appTouchCompletedUTC": "2026-11-08T01:42:11.845Z",
+    "readback": "0"
+  },
+  "correctionPrepared": false,
+  "nativeExecutionPerformed": false
+}

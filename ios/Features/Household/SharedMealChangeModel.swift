@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreDomain
 import HouseholdClient
 
 struct SharedMealChangeScope: Hashable {
@@ -14,7 +15,7 @@ struct SharedMealChangeScope: Hashable {
     }
 }
 protocol SharedMealChangesServing: Sendable {
-    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent
+    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent
     func sharedMealChanges(shopID: UUID) async throws -> SharedMealChangePage
     func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent
     func authorizeSharedMealChange(_ intent: SharedMealChangeIntent) async throws
@@ -22,7 +23,7 @@ protocol SharedMealChangesServing: Sendable {
     func dismissSharedMealChange(_ proposal: SharedMealChangePage.Proposal, page: SharedMealChangePage) async throws
 }
 extension SharedMealChangesServing {
-    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent { throw ClientError.configuration }
+    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent { throw ClientError.configuration }
 }
 extension HouseholdService: SharedMealChangesServing {}
 
@@ -70,11 +71,12 @@ extension HouseholdService: SharedMealChangesServing {}
         let start = generation; busy = true; review = nil; notice = nil
         defer { if current(start) { busy = false } }
         do {
+            try SharedMealGroupAmounts.validate(meal)
             let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: occurrenceID, meal: meal, reason: reason)
             guard current(start), scope.matches(intent) else { return }; review = intent
         } catch { fail(error, start: start) }
     }
-    func prepareNew(idea: SharedMealIdeaPage.Idea, day: String) async {
+    func prepareNew(idea: SharedMealIdeaPage.Idea, day: String?) async {
         guard live, !busy, !hasPending, epoch != nil else { return }
         let start = generation; busy = true; review = nil; notice = nil
         defer { if current(start) { busy = false } }
@@ -145,7 +147,7 @@ extension HouseholdService: SharedMealChangesServing {}
         let start = generation; busy = true; notice = nil
         defer { if current(start) { busy = false } }
         do {
-            try meal.validatePlanning()
+            try SharedMealGroupAmounts.validate(meal)
             let latest = try await service.sharedMealChanges(shopID: scope.shopID)
             guard current(start), latest.shopper, latest.phase == "draft", latest.shopRevision == page.shopRevision,
                   latest.authorityEpoch == page.authorityEpoch, latest.meals.contains(original) else { throw ClientError.configuration }
@@ -172,11 +174,59 @@ extension HouseholdService: SharedMealChangesServing {}
             notice = ht("The household confirmed this proposal. Saving the local receipt failed; retry cleanup with the same proposal.")
             return
         }
+        if error is SharedMealGroupAmounts.Mismatch {
+            notice = ht("Group amounts must add up to the ingredient total in the same unit. Review each amount; quantities are not scaled automatically.")
+            return
+        }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _), .service(status: 403, code: _, correlationID: _, retryAfter: _):
             page = nil; pending = nil; notice = ht("Shared meal access changed. Refresh the household before continuing.")
         default:
             notice = ht("The proposal result is not confirmed. Refresh shared status or retry the exact saved proposal.")
+        }
+    }
+}
+
+extension SharedMealPlanning {
+    /// Remove only the draft facts selected by the adult. Other allocations and
+    /// ingredient totals stay exact; review still validates any remaining mismatch.
+    mutating func removeProposedIngredient(_ id: UUID) {
+        guard ingredients.contains(where: { $0.id == id }) else { return }
+        ingredients.removeAll { $0.id == id }
+        bindings?.removeAll { $0.ingredientId == id }
+    }
+
+    mutating func setProposedGroup(_ groupID: UUID, for ingredientID: UUID, included: Bool) {
+        guard let index = ingredients.firstIndex(where: { $0.id == ingredientID }),
+              groups.contains(where: { $0.id == groupID }) else { return }
+        if included {
+            if !ingredients[index].groupIds.contains(groupID) { ingredients[index].groupIds.append(groupID) }
+        } else {
+            ingredients[index].groupIds.removeAll { $0 == groupID }
+            bindings?.removeAll { $0.ingredientId == ingredientID && $0.groupId == groupID }
+        }
+    }
+}
+
+/// Match the server's explicit-allocation total before a proposal is retained.
+/// This checks entered facts; it does not infer shares or normalize their units.
+enum SharedMealGroupAmounts {
+    struct Mismatch: Error {}
+    static func validate(_ meal: SharedMeal) throws {
+        try meal.validatePlanning()
+        guard let planning = meal.planning else { return }
+        let bindings = planning.bindings ?? []
+        guard Set(bindings.map { [$0.groupId, $0.ingredientId] }).count == bindings.count else { throw Mismatch() }
+        for ingredient in planning.ingredients {
+            let amounts = bindings.filter { $0.ingredientId == ingredient.id }
+            guard !amounts.isEmpty else { continue }
+            guard let quantity = ingredient.quantity, amounts.allSatisfy({ $0.quantity.unit == quantity.unit }) else { throw Mismatch() }
+            var sum = Rational.zero
+            for allocation in amounts {
+                guard !allocation.quantity.originalLiteral.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Mismatch() }
+                sum = try sum.adding(Rational(Int64(allocation.quantity.amount.numerator), Int64(allocation.quantity.amount.denominator)))
+            }
+            guard sum == (try Rational(Int64(quantity.amount.numerator), Int64(quantity.amount.denominator))) else { throw Mismatch() }
         }
     }
 }

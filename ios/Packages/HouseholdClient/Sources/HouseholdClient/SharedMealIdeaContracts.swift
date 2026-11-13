@@ -40,9 +40,13 @@ public struct SharedMealIdeaAmount: Codable, Equatable, Sendable, ExpressibleByI
 
 /// Household-entered evidence only. Never populated from a device-private food or decision store.
 public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
-    public struct Reservation: Codable, Equatable, Sendable {
+    public struct Reservation: Codable, Equatable, Identifiable, Sendable {
+        /// Editor identity only; saved evidence and comparisons remain name/amount based.
+        public let id = UUID()
         public var name: String; public var amount: SharedMealIdeaAmount
+        private enum CodingKeys: String, CodingKey { case name, amount }
         public init(name: String, amount: SharedMealIdeaAmount) { self.name = name; self.amount = amount }
+        public static func == (lhs: Self, rhs: Self) -> Bool { lhs.name == rhs.name && lhs.amount == rhs.amount }
     }
     public struct Ingredient: Codable, Equatable, Identifiable, Sendable {
         public var id: UUID; public var name: String; public var required: SharedMealIdeaAmount?; public var unit: String
@@ -68,6 +72,22 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
         self.title = title; self.source = source; self.servings = servings; self.minutes = minutes
         self.assumedExtras = assumedExtras; self.exclusions = exclusions; self.ingredients = ingredients
     }
+    /// Match the service's trimmed draft before a save, review or lost-reply comparison.
+    public func normalizedForSave() -> Self {
+        func trim(_ text: String) -> String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+        var copy = self
+        copy.title = trim(title)
+        copy.exclusions = exclusions.map(trim).filter { !$0.isEmpty }
+        copy.assumedExtras = assumedExtras.map(trim).filter { !$0.isEmpty }
+        for i in copy.ingredients.indices {
+            copy.ingredients[i].name = trim(ingredients[i].name)
+            copy.ingredients[i].evidence = trim(ingredients[i].evidence)
+            for r in copy.ingredients[i].reservations.indices {
+                copy.ingredients[i].reservations[r].name = trim(ingredients[i].reservations[r].name)
+            }
+        }
+        return copy
+    }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(title, forKey: .title); try c.encode(source, forKey: .source); try c.encode(servings, forKey: .servings)
@@ -87,14 +107,15 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
                   i.usableNumerator == nil || i.usableDenominator == nil || i.usableNumerator! <= i.usableDenominator! else { throw ClientError.configuration }
         }
     }
-    public func proposedMeal(day: String) throws -> SharedMeal {
+    public func proposedMeal(day: String?) throws -> SharedMeal {
         try validate()
         let ingredients = ingredients.map { i in
             SharedMealPlanning.Ingredient(id: i.id, name: i.name,
                 quantity: i.required.map { .init(amount: .init(numerator: $0.numerator, denominator: $0.denominator), unit: i.unit, originalLiteral: "\($0.text) \(i.unit)") }, groupIds: [], exclusions: [])
         }
         let value = SharedMeal(title: title, day: day, kind: "dinner", portions: servings, protected: false,
-                               planning: .init(groups: [], ingredients: ingredients))
+                               planning: .init(groups: [], ingredients: ingredients,
+                                               exclusions: exclusions.isEmpty ? nil : exclusions, leadTimeMinutes: minutes))
         try value.validatePlanning(); return value
     }
 }

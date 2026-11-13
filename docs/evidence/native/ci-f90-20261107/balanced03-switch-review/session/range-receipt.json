@@ -1,0 +1,240 @@
+{
+  "artifactID": 13599104299,
+  "requests": [
+    {
+      "file": "0001.bin",
+      "start": 54480651,
+      "end": 54480672,
+      "bytes": 22,
+      "sha256": "56abccd2a63b57c92aa448e9085c9bbe35fae330729f0532674918587b32af2c"
+    },
+    {
+      "file": "0002.bin",
+      "start": 54480631,
+      "end": 54480650,
+      "bytes": 20,
+      "sha256": "fc53253275d1717032d0ede4b9b1630c1f46396a9e33ec8785d6fba54a4c0365"
+    },
+    {
+      "file": "0003.bin",
+      "start": 54439952,
+      "end": 54480650,
+      "bytes": 40699,
+      "sha256": "93ad972c7be3e0963acd9577d566b38be7ba9f1fe46a09ec3a6cc704ab70854c"
+    },
+    {
+      "file": "0004.bin",
+      "start": 1420004,
+      "end": 1420033,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0005.bin",
+      "start": 1420034,
+      "end": 1420148,
+      "bytes": 115,
+      "sha256": "eb19d6b87bd242f799e6064d5a96e0ab0f115363ac232d8bbd41accecaafe93f"
+    },
+    {
+      "file": "0006.bin",
+      "start": 1420149,
+      "end": 1420355,
+      "bytes": 207,
+      "sha256": "0e6c03d82bbb9aa5fe38d74fef6e92fd25d4876a9ad44114fc70c4f2939ef028"
+    },
+    {
+      "file": "0007.bin",
+      "start": 53897269,
+      "end": 53897298,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0008.bin",
+      "start": 53897299,
+      "end": 53897413,
+      "bytes": 115,
+      "sha256": "31aacf393cdb650f2156d764e5e96eaed2ee3aff212e9226fdaf1840deb50c54"
+    },
+    {
+      "file": "0009.bin",
+      "start": 53897414,
+      "end": 53897617,
+      "bytes": 204,
+      "sha256": "5c2baff79a4b235569e54552fff020c94197184330af814481d3d64b383487c6"
+    },
+    {
+      "file": "0010.bin",
+      "start": 42437758,
+      "end": 42437787,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0011.bin",
+      "start": 42437788,
+      "end": 42437902,
+      "bytes": 115,
+      "sha256": "fe4c27c2f1eed7d69a9f54f4cc1f4d51442dfa6906c946fb9db1c12d6b3e6ca0"
+    },
+    {
+      "file": "0012.bin",
+      "start": 42437903,
+      "end": 42438004,
+      "bytes": 102,
+      "sha256": "001b84faa04f736a2664b5c17b365c404174580800368084f3d578caaa75b954"
+    },
+    {
+      "file": "0013.bin",
+      "start": 53910739,
+      "end": 53910768,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0014.bin",
+      "start": 53910769,
+      "end": 53910883,
+      "bytes": 115,
+      "sha256": "92a975b7a9b70720965e47d900fd3dbc75eb730610d64edaf15be319de8175f2"
+    },
+    {
+      "file": "0015.bin",
+      "start": 53910884,
+      "end": 53911021,
+      "bytes": 138,
+      "sha256": "55b94c0ea8b7272796b2d541d410497cbbb4681f7fd1584eb0612765938d10f8"
+    },
+    {
+      "file": "0016.bin",
+      "start": 2914050,
+      "end": 2914079,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0017.bin",
+      "start": 2914080,
+      "end": 2914194,
+      "bytes": 115,
+      "sha256": "286579c692e2060a7f8e169e3b35d1f438be984444ce4bdd8b27d76be5833f9c"
+    },
+    {
+      "file": "0018.bin",
+      "start": 2914195,
+      "end": 2914343,
+      "bytes": 149,
+      "sha256": "7ce8635aa871147c792a6e34b5a188f59b604223793d039b42e738647a653a06"
+    },
+    {
+      "file": "0019.bin",
+      "start": 53899737,
+      "end": 53899766,
+      "bytes": 30,
+      "sha256": "6bac9503d8511cd6dbc36b7130b7eee762d2ec5064bdcae1722d8127b91bdb3e"
+    },
+    {
+      "file": "0020.bin",
+      "start": 53899767,
+      "end": 53899881,
+      "bytes": 115,
+      "sha256": "60c2b25a3453ec99334f5473dd88759fece7465856c66767cb4bf14e7b57c2cb"
+    },
+    {
+      "file": "0021.bin",
+      "start": 53899882,
+      "end": 53900085,
+      "bytes": 204,
+      "sha256": "e82ba2682a012c07df7131719c5e4369c25d2c2384729bd9e4b8846273e8e7cf"
+    },
+    {
+      "file": "0022.bin",
+      "start": 50486233,
+      "end": 50486262,
+      "bytes": 30,
+      "sha256": "981beb05fe6464dfbe64c93c72085ba31e13e368b06f4c540d18205f7f8d2c35"
+    },
+    {
+      "file": "0023.bin",
+      "start": 50486263,
+      "end": 50486377,
+      "bytes": 115,
+      "sha256": "622d32cc87a5e6a46600881976323d17f2097aebeedcaf33a0a8b30f752d8937"
+    },
+    {
+      "file": "0024.bin",
+      "start": 50486378,
+      "end": 51534953,
+      "bytes": 1048576,
+      "sha256": "c8a335f84644e5946e8b4095d5392211ab7cdbe42df4af111ebe368730119c17"
+    },
+    {
+      "file": "0025.bin",
+      "start": 51534954,
+      "end": 51539049,
+      "bytes": 4096,
+      "sha256": "de065ee2ea1f6a16b5168278f0fc848956af6ee36f018e3d554299664a66f68d"
+    },
+    {
+      "file": "0026.bin",
+      "start": 51539050,
+      "end": 52583761,
+      "bytes": 1044712,
+      "sha256": "392d5021c5e9a2ca31ce4cd242f46bf2211ee8bc021cec4e8b2e89cda3c78763"
+    },
+    {
+      "file": "0027.bin",
+      "start": 52583762,
+      "end": 52587857,
+      "bytes": 4096,
+      "sha256": "eac9b2e08a3764e803089c89dc2e97a450e9ec4c2881f5b20d3c272c9616dbdf"
+    },
+    {
+      "file": "0028.bin",
+      "start": 52587858,
+      "end": 53632485,
+      "bytes": 1044628,
+      "sha256": "5c7ca63e3eab516e2f5dcbf445e5f30e8bb22492107ab91fecb7d9ce96bc6ffd"
+    },
+    {
+      "file": "0029.bin",
+      "start": 53632486,
+      "end": 53636581,
+      "bytes": 4096,
+      "sha256": "a1698c12c6c4e0688d1a4cea21091670c7de74ade93b963c32db210377fae93b"
+    },
+    {
+      "file": "0030.bin",
+      "start": 53636582,
+      "end": 53890364,
+      "bytes": 253783,
+      "sha256": "7def89d5dfd10628a1adb09bb970abaad387deb2561be611505be6092cd9abbd"
+    },
+    {
+      "file": "0031.bin",
+      "start": 53922053,
+      "end": 53922082,
+      "bytes": 30,
+      "sha256": "981beb05fe6464dfbe64c93c72085ba31e13e368b06f4c540d18205f7f8d2c35"
+    },
+    {
+      "file": "0032.bin",
+      "start": 53922083,
+      "end": 53922197,
+      "bytes": 115,
+      "sha256": "3dab4ff332b444ca683ed0f29287508b044e4459694ff5ddcc5a9042783d20ec"
+    },
+    {
+      "file": "0033.bin",
+      "start": 53922198,
+      "end": 53922200,
+      "bytes": 3,
+      "sha256": "e9238ddb2b450e586127f0c74344099c6803b19375718f54f3f2056089002fc8"
+    }
+  ],
+  "totalBytes": 3446895,
+  "fullArchiveDownloaded": false,
+  "fullArchiveAPIHashVerified": false,
+  "scope": "Declared diagnostic directory metadata and one exact-invocation XCTest Session log only."
+}

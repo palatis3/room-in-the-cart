@@ -1,0 +1,20 @@
+{
+  "recordedAtUTC": "2026-11-08T14:20:06.424844+00:00",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "passedCases": 8,
+  "wrapperStatusPreserved": "failed original-preservation guard",
+  "difference": "database.sqlite3 appeared during result inspection; no pre-existing result file or native-log hash changed. No deletion, repeat export or native rerun.",
+  "addedFile": {
+    "bytes": 946176,
+    "sha256": "abae2096810cc5057813db8525f3c9d8dd66a30e708efcb0a85d1da37f6245fb"
+  },
+  "preinspectionFiles": 79,
+  "preinspectionFileSetRestoredAndVerified": true,
+  "restoredCopy": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/preinspection-result-preservation/native.xcresult",
+  "originalPostinspectionBundlePreserved": true,
+  "sourceUnchanged": true,
+  "acceptance": "Passing instrumented original-source baseline only; original CI stall unresolved.",
+  "productsUnchanged": true,
+  "productFilesVerified": 196
+}

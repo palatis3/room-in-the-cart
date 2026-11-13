@@ -1,0 +1,210 @@
+{
+  "copiedFiles": [
+    {
+      "path": "typed-only-failure/selectors.txt",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/selectors.txt",
+      "bytes": 120,
+      "sha256": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45"
+    },
+    {
+      "path": "typed-only-failure/inspection/verification.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/inspection/verification.json",
+      "bytes": 270,
+      "sha256": "fc250a59d1780d9dac154dad4d25db373d83a43e93a6f8d55ffe3a74660c09cc"
+    },
+    {
+      "path": "typed-only-failure/inspection/strict.txt",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/inspection/strict.txt",
+      "bytes": 1255,
+      "sha256": "9b2b32fe1ce41100a99a9f59d52378b9fd31ae9cde5de7405f9af9aedb8f574b"
+    },
+    {
+      "path": "typed-only-failure/inspection/summary.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/inspection/summary.json",
+      "bytes": 4887,
+      "sha256": "860ad6b436f7ada7dc87b375841e389fcba7d39df058ffb4ec6997b5eed2a39f"
+    },
+    {
+      "path": "typed-only-failure/inspection/tests.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/inspection/tests.json",
+      "bytes": 5606,
+      "sha256": "1183861e37f19f081086b1a71280ce5fe7916cb0b5c4297dd5864895cdd6d0a3"
+    },
+    {
+      "path": "typed-only-failure/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb"
+    },
+    {
+      "path": "final-ios17/selectors.txt",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/selectors.txt",
+      "bytes": 120,
+      "sha256": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45"
+    },
+    {
+      "path": "final-ios17/inspection/verification.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/inspection/verification.json",
+      "bytes": 269,
+      "sha256": "30557781b3247c8769223af360861500827fc4a40ad9722086d9e18c23d8a233"
+    },
+    {
+      "path": "final-ios17/inspection/strict.txt",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/inspection/strict.txt",
+      "bytes": 697,
+      "sha256": "6329820839bbd1a11b6467a6342a22bb2f5e29fe6b724bcbd68a01d10fe1f685"
+    },
+    {
+      "path": "final-ios17/inspection/summary.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/inspection/summary.json",
+      "bytes": 1039,
+      "sha256": "855db2a25a7ab5d9089dc88e85f1eb1378a9cf19ccf03b94ed085a884e9d4b68"
+    },
+    {
+      "path": "final-ios17/inspection/tests.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/inspection/tests.json",
+      "bytes": 1870,
+      "sha256": "9f3123a20e8b784d94a505ebd4e082aacfb6afe2a58e1086412d0f11a9f6292f"
+    },
+    {
+      "path": "final-ios17/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb"
+    },
+    {
+      "path": "typed-only-failure/failure-review/activity-receipt.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/activity-receipt.json",
+      "bytes": 1256,
+      "sha256": "9b1cd08c63d9b5e3a83d25873f0a98476f24cdab459df3571caf0f68ed5a60de"
+    },
+    {
+      "path": "typed-only-failure/failure-review/receipt.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/receipt.json",
+      "bytes": 3051,
+      "sha256": "9e8e85c5d7f15fdb6d7ac988300045efae7bd0b6976e240cd8940229ebb1bfde"
+    },
+    {
+      "path": "typed-only-failure/failure-review/review.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/review.json",
+      "bytes": 7273,
+      "sha256": "32c83d7344acec4db721c1529074f6dfed3a2aff94a34c089cdf1e961343f3c6"
+    },
+    {
+      "path": "typed-only-failure/failure-review/scroll-excerpt.txt",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/scroll-excerpt.txt",
+      "bytes": 1313,
+      "sha256": "bb4d1bb05e0e717e9304ff8ab172fafd425d410ee9e9ff0900022491356712b4"
+    },
+    {
+      "path": "typed-only-failure/failure-review/png/EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E.png",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/png/EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E.png",
+      "bytes": 96985,
+      "sha256": "e9a4d54ba89235ea108177aaa3ceee5823a5796474af5061e1909e8073809650"
+    },
+    {
+      "path": "typed-only-failure/failure-review/png/manifest.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/png/manifest.json",
+      "bytes": 803,
+      "sha256": "ef91bea7a451eb77a4c49014962acd01c1ab50fd690d70bfc9fee5ecdbcf2a92"
+    },
+    {
+      "path": "typed-only-failure/failure-review/txt/CD875378-272D-4821-B9E7-A02CA4DE9B1B.txt",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/txt/CD875378-272D-4821-B9E7-A02CA4DE9B1B.txt",
+      "bytes": 19796,
+      "sha256": "d6fbc93a7a21d500606852d99f04da922186ba9bcfc30764859e14bd519acb3e"
+    },
+    {
+      "path": "typed-only-failure/failure-review/txt/manifest.json",
+      "originalPath": ".build/S24TypedFieldNov08/ios17-run/failure-review/txt/manifest.json",
+      "bytes": 814,
+      "sha256": "a9f782439fab9c8278b9a75a0d70ec31204e2691de6bcaaa6528b61c324f4789"
+    },
+    {
+      "path": "final-ios17/return-capture/activity-receipt.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/return-capture/activity-receipt.json",
+      "bytes": 942,
+      "sha256": "b7ea5372b05793f066914fabe094360c896536ecf1da5bf60cbbffd2e3eb188c"
+    },
+    {
+      "path": "final-ios17/return-capture/receipt.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/return-capture/receipt.json",
+      "bytes": 1412,
+      "sha256": "1911aa93631d056dcbe17b11747b84466da16f759eec96e625c3da3d924292a9"
+    },
+    {
+      "path": "final-ios17/return-capture/png/manifest.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/return-capture/png/manifest.json",
+      "bytes": 829,
+      "sha256": "c4fa61c41ddb398403fe544834b129b3278302e5d7b058e548e8212c4db7be17"
+    },
+    {
+      "path": "final-ios17/return-capture/png/23BF4B1A-FEB7-4404-A826-953E52868AC7.png",
+      "originalPath": ".build/S24VisibleFieldNov08/ios17-run/return-capture/png/23BF4B1A-FEB7-4404-A826-953E52868AC7.png",
+      "bytes": 143416,
+      "sha256": "2bc322c9092552fa9899db52f366aa0ce4bfc5703d454c093013bacfa1a57390"
+    },
+    {
+      "path": "source/preparation.json",
+      "originalPath": ".build/S24VisibleFieldNov08/preparation.json",
+      "bytes": 1596,
+      "sha256": "b15a9b2b845425aa6d9377f96a68f66f5588d395177e786540ad02d5dd3e5c10"
+    },
+    {
+      "path": "source/fixed-source-manifest.json",
+      "originalPath": ".build/S24VisibleFieldNov08/fixed-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc"
+    },
+    {
+      "path": "source/baseline-source-manifest.json",
+      "originalPath": ".build/S24VisibleFieldNov08/baseline-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "d8935f41e0cc374eb022d93f25d86427b6c340bcf2eb4f1bdc71e49c9b3d31f2"
+    },
+    {
+      "path": "source/test-only.patch",
+      "originalPath": ".build/S24VisibleFieldNov08/test-only.patch",
+      "bytes": 3138,
+      "sha256": "f9b1ec5f79ae8518691cd76e01bdb2bd8fb339a904a85cd92270a39ce3f25c6d"
+    },
+    {
+      "path": "final-ios26/selectors.txt",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/selectors.txt",
+      "bytes": 232,
+      "sha256": "5ee9aae41f5dde27016aedb42e41f73718d11ef660be10546026c8ffbe26d10d"
+    },
+    {
+      "path": "final-ios26/inspection/verification.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/inspection/verification.json",
+      "bytes": 269,
+      "sha256": "483940b00df6cc924a7b7cb0465c84d2e983c44db9cdf3071b65b007c693bb8b"
+    },
+    {
+      "path": "final-ios26/inspection/strict.txt",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/inspection/strict.txt",
+      "bytes": 830,
+      "sha256": "d25c7ea21f131ad4481bccb247a7af17e3b10f469d019698e55bcb80c89727ad"
+    },
+    {
+      "path": "final-ios26/inspection/summary.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/inspection/summary.json",
+      "bytes": 1021,
+      "sha256": "9840074991a77c8bc702fd94eccece3d8c9c0a9ea984288737b566c075cba969"
+    },
+    {
+      "path": "final-ios26/inspection/tests.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/inspection/tests.json",
+      "bytes": 2491,
+      "sha256": "13b22c04e7275fe35ade906a525b0275f5764d6c3a1c38c8a251a7561fb78d6c"
+    },
+    {
+      "path": "final-ios26/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24VisibleFieldNov08/ios26-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8"
+    }
+  ],
+  "allOriginalCopiedInputsUnchanged": true,
+  "projectionPolicy": "All run-summary.json files omit huge productManifest/device-size inventory and bind exact original private run.json by SHA256. Only completed runs inspected."
+}

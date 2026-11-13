@@ -1,0 +1,15 @@
+{
+  "runID": 42309808686,
+  "head": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "verifiedFrozenFiles": 367,
+  "freezeSHA256": "5742c9a804ef408d9320e19584548b6e9a3f529968f09668a4b4dc68c1617a0b",
+  "nativeCases": 3,
+  "runtimeWarnings": 0,
+  "scrollSamples": 5,
+  "scrollMedianSeconds": 2.581787917,
+  "scrollLimitSeconds": 3.25,
+  "fourMetricRowsWithFiveMatchingJSONSamples": true,
+  "boundaryInterpretation": "Public stopMeasuring call spans account for this successful run gaps; not retrospective causation for 807",
+  "instrumentedNonreproduction": true,
+  "releaseAcceptance": false
+}

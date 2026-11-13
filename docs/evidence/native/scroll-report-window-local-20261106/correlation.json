@@ -1,0 +1,112 @@
+{
+  "diagnosticOnly": true,
+  "status": "observations-only",
+  "issues": [],
+  "reports": [
+    {
+      "instanceOrdinal": "2",
+      "startUnixUTC": 1794018093.150776,
+      "endUnixUTC": 1794018095.953448,
+      "suppliedMonotonicSeconds": 2.802648458,
+      "dateMinusMonotonicSeconds": 2.368975085431657e-05,
+      "overlappingActivityIndices": [
+        0
+      ],
+      "endpointStartMarginSeconds": 0.21122407913208008,
+      "endpointEndMarginSeconds": 0.009448051452636719,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    },
+    {
+      "instanceOrdinal": "3",
+      "startUnixUTC": 1794018099.635798,
+      "endUnixUTC": 1794018102.4357018,
+      "suppliedMonotonicSeconds": 2.799880541,
+      "dateMinusMonotonicSeconds": 2.332862890641607e-05,
+      "overlappingActivityIndices": [
+        1
+      ],
+      "endpointStartMarginSeconds": 0.20920205116271973,
+      "endpointEndMarginSeconds": 0.007701873779296875,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    },
+    {
+      "instanceOrdinal": "4",
+      "startUnixUTC": 1794018105.694809,
+      "endUnixUTC": 1794018108.537401,
+      "suppliedMonotonicSeconds": 2.842568916,
+      "dateMinusMonotonicSeconds": 2.3084961303876383e-05,
+      "overlappingActivityIndices": [
+        2
+      ],
+      "endpointStartMarginSeconds": 0.2661910057067871,
+      "endpointEndMarginSeconds": 0.00940084457397461,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    },
+    {
+      "instanceOrdinal": "5",
+      "startUnixUTC": 1794018111.857146,
+      "endUnixUTC": 1794018114.653582,
+      "suppliedMonotonicSeconds": 2.796412542,
+      "dateMinusMonotonicSeconds": 2.352939587391134e-05,
+      "overlappingActivityIndices": [
+        3
+      ],
+      "endpointStartMarginSeconds": 0.20385408401489258,
+      "endpointEndMarginSeconds": 0.009582042694091797,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    },
+    {
+      "instanceOrdinal": "6",
+      "startUnixUTC": 1794018117.9167361,
+      "endUnixUTC": 1794018120.74232,
+      "suppliedMonotonicSeconds": 2.825560083,
+      "dateMinusMonotonicSeconds": 2.3851783935491255e-05,
+      "overlappingActivityIndices": [
+        4
+      ],
+      "endpointStartMarginSeconds": 0.2292640209197998,
+      "endpointEndMarginSeconds": 0.014319896697998047,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    },
+    {
+      "instanceOrdinal": "7",
+      "startUnixUTC": 1794018124.10095,
+      "endUnixUTC": 1794018127.038415,
+      "suppliedMonotonicSeconds": 2.937441625,
+      "dateMinusMonotonicSeconds": 2.3327468872125223e-05,
+      "overlappingActivityIndices": [
+        5
+      ],
+      "endpointStartMarginSeconds": 0.34405016899108887,
+      "endpointEndMarginSeconds": 0.010414838790893555,
+      "numericallyContained": true,
+      "edgeWithinOneMillisecond": false
+    }
+  ],
+  "limits": "Witness report bounds do not establish built-in collector bounds or receipt. UTC clock jumps and delivery delay are not bounded. No warm-up identity is inferred.",
+  "instancesWithoutReports": [
+    {
+      "instanceOrdinal": "1",
+      "lifecycle": [
+        "created"
+      ]
+    }
+  ],
+  "unmatchedActivityIndices": [],
+  "reportCount": 6,
+  "inputs": [
+    {
+      "path": ".build/ScrollReportWindowWitness20261106/witness-attachment/4999183A-C377-4749-B9AF-8EF5B890A504.json",
+      "sha256": "722befe152cff2aaaf790f81044597d304a6aac6de5b8a64e77339b185c63244"
+    },
+    {
+      "path": ".build/ScrollReportWindowWitness20261106/scroll-signpost-diagnostic.json",
+      "sha256": "75fc1c736261f9406f1e6820667f45eb90fb22a0e29fdfce4b8b3eb5958cbed4"
+    }
+  ]
+}

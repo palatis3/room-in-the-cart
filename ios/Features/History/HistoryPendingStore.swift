@@ -24,6 +24,7 @@ struct HistoryStoredState: Codable, Equatable, Sendable {
     var pending: [HistoryPendingWrite] = []
     var observations: [HistoryStoredReference] = []
     var familyDecisions: FamilyDecisionCache?
+    var financialChanges: [ShopperFinancialIntent]?
     var sharedMealChanges: [SharedMealChangeIntent]?
 }
 protocol HistoryPersisting: Sendable {
@@ -104,6 +105,25 @@ actor HistoryPendingStore: HistoryPersisting {
         state.familyDecisions = cache
         try write(state)
     }
+    func stageFinancial(_ intent: ShopperFinancialIntent, expectedEpoch: UUID) throws {
+        guard generation == expectedEpoch else { throw ClientError.cancelled }
+        var state = try read()
+        if let existing = state.financialChanges?.first(where: {
+            $0.subject == intent.subject && $0.householdID == intent.householdID && $0.memberID == intent.memberID && $0.shopID == intent.shopID
+        }) {
+            guard existing == intent else { throw ClientError.configuration }
+            return
+        }
+        state.financialChanges = (state.financialChanges ?? []) + [intent]
+        try write(state)
+    }
+    func finishFinancial(_ intent: ShopperFinancialIntent, expectedEpoch: UUID) throws {
+        guard generation == expectedEpoch else { throw ClientError.cancelled }
+        var state = try read()
+        guard state.financialChanges?.contains(intent) == true else { throw ClientError.cancelled }
+        state.financialChanges?.removeAll { $0 == intent }
+        try write(state)
+    }
     func stageMealChange(_ intent: SharedMealChangeIntent, expectedEpoch: UUID) throws {
         guard generation == expectedEpoch else { throw ClientError.cancelled }
         try intent.validate()
@@ -123,6 +143,7 @@ actor HistoryPendingStore: HistoryPersisting {
         generation = UUID()
         var state = try read()
         state.pending.removeAll { $0.householdID == householdID && $0.subject == subject }
+        state.financialChanges?.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.sharedMealChanges?.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.observations.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.familyDecisions?.pending.removeAll { $0.householdID == householdID && $0.subject == subject }

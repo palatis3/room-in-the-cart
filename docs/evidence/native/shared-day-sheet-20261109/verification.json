@@ -1,0 +1,141 @@
+{
+  "scope": "Final English/Spanish shared-meal date sheet at ordinary/AX5 text; not full combined, minimum-OS or release acceptance",
+  "sourceManifest": {
+    "path": ".build/SharedMealDaySheetNov09/execution-r6/source.json",
+    "sha256": "eb4b6e7985938b990edff722328eddc2a36289b0a5c3826752f8d9a9d931e0bd"
+  },
+  "productsManifest": {
+    "path": ".build/SharedMealDaySheetNov09/execution-r6/build-debug/products.json",
+    "sha256": "c5b9d4500c3e377905c44d1d138a1d9ffd9cd4b7a73090d13d38dc090cc5d327"
+  },
+  "canonicalNativeInputsMatch": true,
+  "nativeInputCount": 562,
+  "inputSHA256": {
+    "ios/Features/Household/Household.xcstrings": "15a373a85d1f6e2def859d377c314c951a2a76077f486d92521bc0d476308d05",
+    "ios/Features/Household/HouseholdShopView.swift": "ae607e3d4c2ee5b10aee633bbe9991e645f12c9f076021276f631f434446ba8e",
+    "ios/Features/Household/SharedMealViews.swift": "e69ad99ab5a6dd250511e91abaf9dcce3e9b73a01054aef479e914290a9ec574",
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift": "25a06947d1ea8046614420ccfe62b0d0435736a1d5bb1ea69d42104fa8180f45",
+    "ios/UITests/SharedMealChangeUITests.swift": "78e1f1660938470b8b4952535b51ad99b3140bca4359a09e2acf2f676f21a0f5",
+    "ios/UITests/SharedMealCivilDateUITests.swift": "d2b97a426ded776230182468431a2962c4d6ee47be3e55f04b6f92a4016d042c",
+    "scripts/test_plan_ios_fixture_tests.py": "90aba6b3d2aff2e4e236f7429315a8e79a11a196a64ebe8f5434d335c4c25f10"
+  },
+  "build": {
+    "path": ".build/SharedMealDaySheetNov09/execution-r6/build-debug/run.json",
+    "sha256": "efeebc2d21957524ce2c0a8678e5ad94699a01c57754010246921b1150f25921",
+    "exitCode": 0,
+    "bundleExitCode": 0,
+    "elapsedSeconds": 22.76001425
+  },
+  "runs": [
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/spanish-ax5-first/run.json",
+      "sha256": "19adee337fcad62f427f7866c0659d2e196c224aa9dbb42f4a09053c8af91276",
+      "testCount": 1,
+      "nativeExitCode": 0,
+      "strictExitCode": 0,
+      "elapsedSeconds": 36.52287066700001,
+      "summary": {
+        "path": ".build/SharedMealDaySheetNov09/execution-r6/spanish-ax5-first/summary.json",
+        "sha256": "c6847f563275db740cec3097c7f1fe77cd73df9031ed1a6c7c039a7ea5b8bbc8"
+      },
+      "strictLog": {
+        "path": ".build/SharedMealDaySheetNov09/execution-r6/spanish-ax5-first/strict.log",
+        "sha256": "7ea37d3423109668757a6bda5c1c1243ad9a2db2c6bf395902688cad8708d9e6"
+      },
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishDaySheetRemainsUsableAtLargestTextSize"
+      ]
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/run.json",
+      "sha256": "f9a1b58365cc68ff70e7e6f9cebb3e89f8cb5f7825842f9f93bf20a43d7147e5",
+      "testCount": 3,
+      "nativeExitCode": 0,
+      "strictExitCode": 0,
+      "elapsedSeconds": 116.93697212500001,
+      "summary": {
+        "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/summary.json",
+        "sha256": "3f5e2ea5c502691c35cf5474243aceda5153d3a90d311dc0dfcae70f6b07ceaa"
+      },
+      "strictLog": {
+        "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/strict.log",
+        "sha256": "3b5c73ed1db5c57c22fba18e4b3a8689a169fc76edaa399d9a4b765406e0e8a2"
+      },
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishDaySheetRemainsUsableAtLargestTextSize",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishDaySheetStagesCancelAndConfirmWithoutLosingCivilIdentity",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishDaySheetStagesCancelAndConfirmWithoutLosingCivilIdentity"
+      ]
+    }
+  ],
+  "reviewedScreenshots": [
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/spanish-ax5-first/inspection/attachments/8818990F-C85A-41C4-861A-497B62200B99.png",
+      "sha256": "8057efc4f51f78cef1623e018e9ac66579a4023a754e5fb5318f8956f9e066e5",
+      "name": "shared-civil-day-sheet-selected-es-AX5_0_EC83243D-06EB-4DFF-8A05-4815D4045DA6.png",
+      "reviewed": "Localized full date, native calendar or wheels, Cancel and confirmation readable; no overlapping calendar header or duplicate wrapping wheel label."
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/inspection/attachments/D2EA8F25-89AA-4856-80EF-57D9DC7BAFBE.png",
+      "sha256": "dd83ffa615f025b732f1e37e0acb55b2754358558833c0bdfb3b13340c77ba18",
+      "name": "shared-civil-day-sheet-selected-en-AX5_0_7D99731F-6E13-4A11-B35A-AE3B5E85F37A.png",
+      "reviewed": "Localized full date, native calendar or wheels, Cancel and confirmation readable; no overlapping calendar header or duplicate wrapping wheel label."
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/inspection/attachments/BB400B49-3568-4B6F-A350-1EEA73569FC9.png",
+      "sha256": "17eef32573cd5c26661d7b8f7d33fc189fa9c150039d7d225c7d0c74b2d048fd",
+      "name": "shared-civil-day-sheet-selected-en-default_0_5C34A3B9-D6B2-46F5-A03A-92105274B594.png",
+      "reviewed": "Localized full date, native calendar or wheels, Cancel and confirmation readable; no overlapping calendar header or duplicate wrapping wheel label."
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r6/final-sheet-regression/inspection/attachments/DC18D6A8-AB07-4632-A845-321312A25260.png",
+      "sha256": "10e0882dd9bcdb81b7def6bf3e4f8483814fc38b994555565275cb4ae4ce1be6",
+      "name": "shared-civil-day-sheet-selected-es-default_0_929A18A0-554F-4FBF-A3CC-A5A41C8ABFFD.png",
+      "reviewed": "Localized full date, native calendar or wheels, Cancel and confirmation readable; no overlapping calendar header or duplicate wrapping wheel label."
+    }
+  ],
+  "historicalReceipts": [
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r1/day-sheet-first/run.json",
+      "sha256": "93d66d82a3cf3ed0aaea74debf8f28fe0aa7040c26673949626b00175f5ce8f4"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r2/day-sheet-regression/run.json",
+      "sha256": "765c55c398e76b69310b5c57c6f32865edd14600b70ac5e8decd618a6da9e612"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r3/day-sheet-ax5-first/run.json",
+      "sha256": "fbbd55ca1e23a640ca2938b4c9c02566c49e9cc84f911323eea4dd874949e039"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r4/build-debug/run.json",
+      "sha256": "d7cd16291fee669d4926a092843f9d55ed93d77e65b6da551d4209fae8a9f2c3"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r4/build-debug/bundle-verification-r2/receipt.json",
+      "sha256": "4e6fc8f1acb574f90fed1a329c50b7877b601fa92607717a4bbea6007dc6b48a"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r4/day-sheet-ax5-first/run.json",
+      "sha256": "95f3a278ac5caccf14be7224caeb565bf52aaddd0eea4fc8e49f2d536e85c7ea"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r4/day-sheet-regression-r2/run.json",
+      "sha256": "3725bd64908812ef64452823e955c2b70baf74b8f4fdb5186b68891540ee551f"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r5/wheel-ax5-first/run.json",
+      "sha256": "9db56471d4c90862afadb771ba7b4d3d1edcbf39d532eaa742d14ce21449d2ea"
+    },
+    {
+      "path": ".build/SharedMealDaySheetNov09/execution-r5/wheel-and-default-regression/run.json",
+      "sha256": "ff38acf2505a49eecadb485ff67a7d5c2833785532cd3ff77f9256591522040c"
+    }
+  ],
+  "workflowValidation": {
+    "path": ".build/WorkflowTimingNov09/validation-r2/receipt.json",
+    "sha256": "497c5a3566335937a8f57f51f430d46ab060c4c5b6034abc7dc3a60a9d8b530b"
+  },
+  "releaseAcceptance": false,
+  "createdUTC": "2026-11-09T19:03:59.651668+00:00"
+}

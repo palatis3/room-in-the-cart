@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "counts": {
+    "authStarts": 1,
+    "verifies": 1,
+    "redeems": 1,
+    "activations": 1,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "note": "Fresh invite completed; launching shell did not retain stdin. Stop this owned server and use a separate primed origin for recovery controls. This is a harness issue, not an application failure."
+}

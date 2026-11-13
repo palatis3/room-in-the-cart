@@ -1,0 +1,28 @@
+{
+  "scope": "Full existing Swift HTTPS/PostgreSQL wire roster plus creation Undo Cancel/lost reply/relaunch retry/privacy/authority scenarios",
+  "nodePassed": 16,
+  "swiftPassed": 50,
+  "failed": 0,
+  "skipped": 0,
+  "newCreationScenarios": [
+    "operation-undo-meal-create-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "operation-undo-meal-create-apply-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "operation-undo-meal-create-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "operation-undo-meal-create-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "operation-undo-meal-create-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres"
+  ],
+  "sourceInputsVerified": 342,
+  "compilerInputsReused": 80,
+  "compiledEntriesVerified": 149,
+  "resultEntriesVerified": 203,
+  "sourceManifestSHA256": "1e098953efdad88138b36b09a06c4297c03a53f34dbdefdfd056516aa71a7b22",
+  "compiledManifestSHA256": "445cc98718010cba4cbbc66eec9f5bc61a9ba5dff35cc7855c8392b845ad9eaa",
+  "resultManifestSHA256": "d316301cccaa399b70e206608b135d243f2667ca61ee8336ceab7f2d80e77aa9",
+  "rootReceipt": ".build/SharedDemandGraphNov09/root-created-meal-operation-undo-wire-r1/receipt.json",
+  "rootReceiptSHA256": "e295a7e82c5d8b444ed57edaad748de775d7c3beefa8d4bf21599345f28fde88",
+  "log": ".build/SharedDemandGraphNov09/root-created-meal-operation-undo-wire-r1/combined-wire.log",
+  "logSHA256": "e13421ef067db1feea833c386e824197c2118152a032853754e05ad40405201d",
+  "postgresStopped": true,
+  "privateStateRetained": false,
+  "releaseAcceptance": false
+}

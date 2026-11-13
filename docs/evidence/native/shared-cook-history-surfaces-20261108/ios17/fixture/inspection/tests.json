@@ -1,0 +1,99 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+      "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+      "modelName" : "iPhone SE (3rd generation)",
+      "osBuildNumber" : "21A328",
+      "osVersion" : "17.0",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "3m 8s",
+                  "durationInSeconds" : 188.55592608451843,
+                  "name" : "testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "46s",
+                  "durationInSeconds" : 46.85907804965973,
+                  "name" : "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "1m 46s",
+                  "durationInSeconds" : 106.22566998004913,
+                  "name" : "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "50s",
+                  "durationInSeconds" : 50.01497495174408,
+                  "name" : "testShopperReviewsExactEditedCookWordingBeforeReadback()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "XCTAssertTrue failed - Unable to reveal \"delivery.cook.fullCorrection\" TextField",
+                      "nodeType" : "Failure Message",
+                      "sourceLocation" : {
+                        "filePath" : "/Users/palatis/Room in the Cart/ios/UITests/SharedDeliveryUITests.swift",
+                        "lineNumber" : 506
+                      }
+                    }
+                  ],
+                  "duration" : "1m 42s",
+                  "durationInSeconds" : 102.72647893428802,
+                  "name" : "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+                  "nodeType" : "Test Case",
+                  "result" : "Failed"
+                }
+              ],
+              "name" : "SharedDeliveryUITests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests",
+              "nodeType" : "Test Suite",
+              "result" : "Failed"
+            }
+          ],
+          "name" : "RoomInTheCartUITests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests",
+          "nodeType" : "UI test bundle",
+          "result" : "Failed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Failed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

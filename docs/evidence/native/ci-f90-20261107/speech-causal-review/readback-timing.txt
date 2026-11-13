@@ -1,0 +1,71 @@
+1360:     t =    39.08s     Find the "delivery.cook.confirmReadback" Button
+1361:     t =    39.13s     Check for interrupting elements affecting "delivery.cook.confirmReadback" Button
+1362:     t =    39.21s     Synthesize event
+1363:     t =    39.51s     Wait for dev.roominthecart.app.debug to idle
+1364:     t =    40.27s Waiting 3.0s for "capture.readback.play" Button to exist
+1365:     t =    41.31s     Checking `Expect predicate `existsNoRetry == 1` for object "capture.readback.play" Button`
+1366:     t =    41.31s         Checking existence of `"capture.readback.play" Button`
+1367:     t =    41.40s Find the "capture.readback.play" Button
+1368:     t =    41.48s Find the "capture.readback.play" Button
+1369:     t =    41.53s Find the "Stop readback" Button
+1370:     t =    41.58s Checking existence of `StaticText (First Match)`
+1371:     t =    41.87s Waiting 3.0s for "capture.readback.play" Button to exist
+1372:     t =    42.91s     Checking `Expect predicate `existsNoRetry == 1` for object "capture.readback.play" Button`
+1373:     t =    42.91s         Checking existence of `"capture.readback.play" Button`
+1374:     t =    42.96s Find the "capture.readback.play" Button
+1375:     t =    43.08s Tap "capture.readback.play" Button
+1376:     t =    43.08s     Wait for dev.roominthecart.app.debug to idle
+1377:     t =    43.08s     Find the "capture.readback.play" Button
+1378:     t =    43.16s     Check for interrupting elements affecting "capture.readback.play" Button
+1379:     t =    43.22s     Synthesize event
+1380:     t =    43.54s     Wait for dev.roominthecart.app.debug to idle
+1381:     t =    44.61s Checking existence of `"Pause readback" Button`
+1382:     t =    44.80s Checking existence of `"Pause readback" Button`
+1383:     t =    44.88s Waiting 3.0s for "Pause readback" Button to exist
+1384:     t =    45.91s     Checking `Expect predicate `existsNoRetry == 1` for object "Pause readback" Button`
+1385:     t =    45.91s         Checking existence of `"Pause readback" Button`
+1386:     t =    45.98s Find the "Pause readback" Button
+1387:     t =    46.09s Tap "Pause readback" Button
+1388:     t =    46.09s     Wait for dev.roominthecart.app.debug to idle
+1389:     t =    46.10s     Find the "Pause readback" Button
+1390:     t =    46.63s     Check for interrupting elements affecting "Pause readback" Button
+1391:     t =    46.71s     Synthesize event
+1392:     t =    47.00s     Wait for dev.roominthecart.app.debug to idle
+1393:     t =    47.00s Waiting 3.0s for "Resume readback" Button to exist
+1394:     t =    48.04s     Checking `Expect predicate `existsNoRetry == 1` for object "Resume readback" Button`
+1395:     t =    48.04s         Checking existence of `"Resume readback" Button`
+1396:     t =    48.11s Find the "Resume readback" Button
+1397:     t =    48.23s Tap "Resume readback" Button
+1398:     t =    48.23s     Wait for dev.roominthecart.app.debug to idle
+1399:     t =    48.24s     Find the "Resume readback" Button
+1400:     t =    48.32s     Check for interrupting elements affecting "Resume readback" Button
+1401:     t =    48.40s     Synthesize event
+1402:     t =    48.71s     Wait for dev.roominthecart.app.debug to idle
+1403:     t =    48.72s Waiting 3.0s for "Stop readback" Button to exist
+1404:     t =    49.74s     Checking `Expect predicate `existsNoRetry == 1` for object "Stop readback" Button`
+1405:     t =    49.74s         Checking existence of `"Stop readback" Button`
+1406:     t =    49.86s Find the "Stop readback" Button
+1407:     t =    50.03s Tap "Stop readback" Button
+1408:     t =    50.04s     Wait for dev.roominthecart.app.debug to idle
+1409:     t =    50.04s     Find the "Stop readback" Button
+1410:     t =    50.19s     Check for interrupting elements affecting "Stop readback" Button
+1411:     t =    50.34s     Synthesize event
+1412:     t =    50.67s     Wait for dev.roominthecart.app.debug to idle
+1413:     t =    50.68s Checking existence of `StaticText (First Match)`
+1414:     t =    51.70s Waiting 3.0s for "Edit cook wording" Button to exist
+1415:     t =    52.74s     Checking `Expect predicate `existsNoRetry == 1` for object "Edit cook wording" Button`
+1416:     t =    52.74s         Checking existence of `"Edit cook wording" Button`
+1417:     t =    52.87s Find the "Edit cook wording" Button
+1418:     t =    53.06s Tap "Edit cook wording" Button
+1419:     t =    53.06s     Wait for dev.roominthecart.app.debug to idle
+1420:     t =    53.07s     Find the "Edit cook wording" Button
+1421:     t =    53.19s     Check for interrupting elements affecting "Edit cook wording" Button
+1422:     t =    53.32s     Synthesize event
+1423:     t =    53.65s     Wait for dev.roominthecart.app.debug to idle
+1424:     t =    54.08s Waiting 3.0s for "Editable cook instruction" TextView to exist
+1425:     t =    55.11s     Checking `Expect predicate `existsNoRetry == 1` for object "Editable cook instruction" TextView`
+1426:     t =    55.11s         Checking existence of `"Editable cook instruction" TextView`
+1427:     t =    55.23s Find the "Editable cook instruction" TextView
+1428:     t =    55.42s Tap "Editable cook instruction" TextView
+1429:     t =    55.42s     Wait for dev.roominthecart.app.debug to idle
+1430:     t =    55.42s     Find the "Editable cook instruction" TextView

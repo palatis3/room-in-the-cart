@@ -1,0 +1,24 @@
+2026-11-08T02:55:51.3542280Z 	 Executed 5 tests, with 0 failures (0 unexpected) in 0.021 (0.024) seconds
+2026-11-08T02:55:51.3543280Z 	 Executed 195 tests, with 0 failures (0 unexpected) in 6.899 (6.986) seconds
+2026-11-08T02:55:51.3544250Z 	 Executed 195 tests, with 0 failures (0 unexpected) in 6.899 (6.994) seconds
+2026-11-08T02:56:30.3930610Z 	 Executed 30 tests, with 0 failures (0 unexpected) in 0.647 (0.672) seconds
+2026-11-08T02:56:30.3936260Z 	 Executed 30 tests, with 0 failures (0 unexpected) in 0.647 (0.672) seconds
+2026-11-08T02:56:30.3939990Z 	 Executed 30 tests, with 0 failures (0 unexpected) in 0.647 (0.676) seconds
+2026-11-08T02:57:41.9213330Z Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildContinuityProjectionRequiresVerifiedUserAndStrictIssuerSubjectSession]' started.
+2026-11-08T02:57:41.9214460Z Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildContinuityProjectionRequiresVerifiedUserAndStrictIssuerSubjectSession]' passed (0.006 seconds).
+2026-11-08T02:57:42.6237630Z 	 Executed 105 tests, with 0 failures (0 unexpected) in 2.321 (2.363) seconds
+2026-11-08T02:57:42.6253380Z 	 Executed 108 tests, with 3 tests skipped and 0 failures (0 unexpected) in 2.326 (2.369) seconds
+2026-11-08T02:57:47.6977290Z 	 Executed 108 tests, with 3 tests skipped and 0 failures (0 unexpected) in 2.326 (2.374) seconds
+2026-11-08T02:58:20.5129220Z 	 Executed 34 tests, with 0 failures (0 unexpected) in 0.919 (0.942) seconds
+2026-11-08T02:58:25.3158170Z 	 Executed 40 tests, with 0 failures (0 unexpected) in 1.133 (1.146) seconds
+2026-11-08T02:58:25.3159190Z 	 Executed 74 tests, with 0 failures (0 unexpected) in 2.051 (2.088) seconds
+2026-11-08T02:58:25.3160140Z 	 Executed 74 tests, with 0 failures (0 unexpected) in 2.051 (2.091) seconds
+2026-11-08T02:58:59.6968880Z 	 Executed 12 tests, with 0 failures (0 unexpected) in 0.212 (0.225) seconds
+2026-11-08T02:58:59.7011200Z 	 Executed 21 tests, with 0 failures (0 unexpected) in 0.704 (0.711) seconds
+2026-11-08T02:58:59.7012260Z 	 Executed 33 tests, with 0 failures (0 unexpected) in 0.916 (0.936) seconds
+2026-11-08T02:58:59.7013190Z 	 Executed 33 tests, with 0 failures (0 unexpected) in 0.916 (0.942) seconds
+2026-11-08T02:59:05.6777040Z CoreDomain: 195 passed, 0 deliberately skipped
+2026-11-08T02:59:05.6779320Z DeviceSurfaces: 30 passed, 0 deliberately skipped
+2026-11-08T02:59:05.6780990Z HouseholdClient: 105 passed, 3 deliberately skipped
+2026-11-08T02:59:05.6782390Z LocalStore: 74 passed, 0 deliberately skipped
+2026-11-08T02:59:05.6783490Z RecordArchive: 33 passed, 0 deliberately skipped

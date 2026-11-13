@@ -1,0 +1,23 @@
+{
+  "sourceFilesVerified": 556,
+  "sourceManifestSHA256": "e103f77342879bcc93477c4f9cbb2d5a03d2cbd19c481bc909d8b3585a43f5ee",
+  "exactPatchSHA256": "269c0d1421fa433d7c9b871bdf10e1819685ce7ceec2478f552d409a7ecc5fa1",
+  "changedFilesSHA256": {
+    "ios/Features/Household/Household.xcstrings": "7bccf06383e882cb095ea60a725bb9eaf0ab8f0a74931c07eb9b25a48b9b7cf3",
+    "ios/Features/Household/HouseholdInboxView.swift": "b63ea38d622257dc129a791a19d0aae0278f0b1de95401388b3d29bbdc3c2ddb",
+    "ios/Features/Household/HouseholdRequestMealContext.swift": "564f84d92cce23ba01f35c4fafe6a4df7098be2bc3529c54d2521df2cbfe2633",
+    "ios/UITests/HouseholdRequestPackUITests.swift": "104eaed7ccde88b8ed16261aa1133835fbf0b93ad3efa80580da5a4b7cf589eb"
+  },
+  "localizationCheckSHA256": "f67de4397176653c5ba3c703ad4bcb4399b0ae5411b9d82b28fc11cc26cb26bb",
+  "scope": "Current English fixed-fee and unknown-price/valid-Apply cases; no runtime threshold-fee, Spanish, minimum-iOS17 or physical VoiceOver qualification.",
+  "collectorCorrection": {
+    "initialExpected": 8,
+    "actualExpected": 7,
+    "reason": "Return screenshot belongs to unselected primary pack case, not selected carryover case. Four actual case activity records and source contain exactly seven matching captures. All exports succeeded before final count assertion.",
+    "originalScriptSHA256": "3b5ef4f4e953e212895866075dac907db873212ca323fa02acf264c2c1bec229",
+    "followup": "Receipt reconstructed only from retained successful exports/activities and exact source; no reexport or app/test rerun."
+  },
+  "retainedPrivateOriginalCollector": ".build/S24DecisionHierarchyNov08/export-captures-original.py",
+  "retainedOriginalCollectorHashVerified": true,
+  "noCollectorReexecutionByPublisher": true
+}

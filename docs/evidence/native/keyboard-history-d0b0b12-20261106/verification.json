@@ -1,0 +1,157 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "head": "e0fc658e49aa105712ee43b2e94f96b1cbd5f5e3",
+  "binarySourceCommit": "169613bfabeb00355649f96d6bc88ad91064f708",
+  "sourceRunID": 42176801822,
+  "runID": 42181706949,
+  "attempt": 1,
+  "hostedIdentity": {
+    "EXPECTED_SHA": "e0fc658e49aa105712ee43b2e94f96b1cbd5f5e3",
+    "GITHUB_RUN_ID": "42181706949",
+    "GITHUB_RUN_ATTEMPT": "1",
+    "ImageOS": "macos15",
+    "ImageVersion": "20261028.0489.1",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "runtimeBuild": "23C54",
+    "simulatorID": "29BC236D-A924-43BE-BAC0-90B41997E2F0",
+    "simulatorName": "RITC Keyboard history 42181706949-a41e916c-e674-407c-a115-8270439c68c4",
+    "sourceCommit": "169613bfabeb00355649f96d6bc88ad91064f708",
+    "sourceRunID": 42176801822,
+    "diagnosticOnly": true,
+    "releaseAcceptance": false
+  },
+  "allTrackedHarnessHashesMatchCommit": true,
+  "harnessSourceCount": 2117,
+  "originalSource525MatchesExactGitAndPriorProof": true,
+  "runtimeSourceMatchesPreservedBinarySource": true,
+  "product238ManifestMatchesPriorIndependentlyHashedArchive": true,
+  "hostedPreAndPostFreezeVerified": true,
+  "selectorBytesMatchOriginal": true,
+  "selected": 6,
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "actualOrderMatchesOriginal": true,
+  "cases": [
+    {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+      "startLine": 17,
+      "pids": [
+        13931
+      ],
+      "onboarding": [
+        {
+          "line": 387,
+          "text": "    t =    74.03s Dismiss the identified bilingual keyboard onboarding card"
+        },
+        {
+          "line": 389,
+          "text": "    t =    74.63s     Added attachment named 'Bilingual-keyboard-card-before-dismissal'"
+        },
+        {
+          "line": 399,
+          "text": "    t =    76.91s     Added attachment named 'Bilingual-keyboard-card-dismissed'"
+        }
+      ],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.ContributorRequestUITests testSpanishLargeTextReviewStartsAtTheOriginalWording]' passed (151.268 seconds)."
+      ],
+      "eventPIDs": []
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+      "startLine": 980,
+      "pids": [
+        19922
+      ],
+      "onboarding": [],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.ContributorRequestUITests testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest]' passed (400.721 seconds)."
+      ],
+      "eventPIDs": []
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "startLine": 2861,
+      "pids": [
+        36212,
+        36919,
+        39972
+      ],
+      "onboarding": [],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.MeasurementUITests testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal]' passed (98.018 seconds)."
+      ],
+      "eventPIDs": []
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "startLine": 3261,
+      "pids": [
+        40293,
+        40819,
+        42676
+      ],
+      "onboarding": [],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.MeasurementUITests testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped]' passed (65.515 seconds)."
+      ],
+      "eventPIDs": []
+    },
+    {
+      "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+      "startLine": 3592,
+      "pids": [
+        43417
+      ],
+      "onboarding": [],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.StockReviewUITests testChangedMealRevisionDisablesPreviewWithoutApplyingBatch]' passed (37.297 seconds)."
+      ],
+      "eventPIDs": [
+        43417
+      ]
+    },
+    {
+      "selector": "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+      "startLine": 3749,
+      "pids": [
+        44473,
+        46846
+      ],
+      "onboarding": [],
+      "stalls": [],
+      "outcomes": [
+        "Test Case '-[RoomInTheCartUITests.StockReviewUITests testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart]' passed (81.714 seconds)."
+      ],
+      "eventPIDs": [
+        44473
+      ]
+    }
+  ],
+  "eventCounts": {
+    "events.log": 46,
+    "events-export.log": 0
+  },
+  "sameEventSequence": false,
+  "sameEventMultiset": false,
+  "malformedEventLines": {
+    "events.log": [],
+    "events-export.log": []
+  },
+  "captureAliveBeforeStop": "1",
+  "persistedExportExit": "0",
+  "analysisExit": "1",
+  "hostedAnalysisErrors": [
+    "Live and persisted diagnostic captures are incomplete or disagree; inspect raw logs."
+  ],
+  "observedAt": "2026-11-06T07:58:24.173102+00:00"
+}

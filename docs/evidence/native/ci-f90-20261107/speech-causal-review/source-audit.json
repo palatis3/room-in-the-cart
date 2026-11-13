@@ -1,0 +1,32 @@
+[
+  {
+    "file": "ios/Features/Household/SharedCookHistoryView.swift",
+    "sha256": "0e85741fd30ec1007a762f752f6d21b9e05bf6fc0e0235e3ca57d02b771d6d52",
+    "identicalToF90": true
+  },
+  {
+    "file": "ios/Features/Capture/LocalCookSpeech.swift",
+    "sha256": "020a623f674f55fb595d4d7131d23dae7dd606bc4f32f4c92786a42737c880b3",
+    "identicalToF90": true
+  },
+  {
+    "file": "ios/Features/Capture/CookReadbackModel.swift",
+    "sha256": "e37edd16f7f23a15d1d7fdab2b0a010a9a33a4f8af51e874b182ed937cb553b8",
+    "identicalToF90": true
+  },
+  {
+    "file": "ios/Features/Capture/CookReadbackView.swift",
+    "sha256": "7cc39b277f05f301ba84615c55dfdba8a04d29e8df0db6988f1402a6d4d137cd",
+    "identicalToF90": true
+  },
+  {
+    "selector": "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+    "bodySHA256": "b77554abec84b92bae9830f42829fcafc83362c1d79b28f55537775d31683189",
+    "identicalToF90": true
+  },
+  {
+    "selector": "testShopperReviewsExactEditedCookWordingBeforeReadback",
+    "bodySHA256": "6a2f1c5fbac7486da37c3087631b8f1204c29b2191021a7f1e12939cec9d25cc",
+    "identicalToF90": true
+  }
+]

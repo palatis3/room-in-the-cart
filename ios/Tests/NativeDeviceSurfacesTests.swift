@@ -95,7 +95,7 @@ import DeviceSurfaces
         let bridge = SurfaceImportBridge(inbox: inbox, journal: journal, port: port, clock: { self.now })
         let originalResult = try await bridge.open(entry, shopID: port.value.id)
         let original = try XCTUnwrap(originalResult)
-        var invalid = original; invalid.preview = port.value.stageImport(text: "12 wraps", source: .selectedText)
+        var invalid = original; invalid.preview = try port.value.stageImport(text: "12 wraps", source: .selectedText)
         XCTAssertThrowsError(try journal.save(invalid, replacing: original))
         XCTAssertEqual(try journal.read(entry.id), original)
     }
@@ -109,6 +109,49 @@ import DeviceSurfaces
         try journal.prune(pendingIDs: [entry.id], now: entry.receipt.expiresAt)
         XCTAssertNil(try journal.read(entry.id))
     }
+    func testChangingPickupRequiresCurrentReviewAndNeverRedirectsConfirmedAttempts() async throws {
+        let (inbox, journal, port, entry, _) = try await fixture()
+        let bridge = SurfaceImportBridge(inbox: inbox, journal: journal, port: port, clock: { self.now })
+        let originalShop = port.value.id
+        let initial = try await bridge.open(entry, shopID: originalShop)
+        let first = try XCTUnwrap(initial)
+        var saved = first
+        saved.decisions[first.preview.lines[0].id] = .skip
+        try bridge.saveReview(saved, replacing: first)
+        let otherShop = ShoppingLedger()
+        port.value = otherShop
+        do {
+            _ = try await bridge.open(entry, shopID: otherShop.id)
+            XCTFail("A new destination must not replace saved choices without confirmation")
+        } catch SurfaceImportDestinationConflict.replaceReview(let previous) {
+            XCTAssertEqual(previous, saved)
+        }
+        do {
+            _ = try await bridge.open(entry, shopID: otherShop.id, replacing: first)
+            XCTFail("An older confirmation must not overwrite the newer saved review")
+        } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        XCTAssertEqual(try journal.read(entry.id), saved)
+        let moved = try await bridge.open(entry, shopID: otherShop.id, replacing: saved)
+        let fresh = try XCTUnwrap(moved)
+        XCTAssertEqual(fresh.id, first.id)
+        XCTAssertEqual(fresh.preview.shopID, otherShop.id)
+        XCTAssertEqual(fresh.preview.originalText, saved.preview.originalText)
+        XCTAssertTrue(Set(fresh.preview.lines.map(\.id)).isDisjoint(with: first.preview.lines.map(\.id)))
+        XCTAssertTrue(fresh.preview.lines.allSatisfy { fresh.decisions[$0.id] == .addNew })
+        port.failureBeforeCommit = true
+        do { try await bridge.commit(fresh); XCTFail("Expected an interrupted save") } catch {}
+        for attempt in 0...1 {
+            if attempt == 1 { _ = try await bridge.refreshReview(entry.id) }
+            do {
+                _ = try await bridge.open(entry, shopID: originalShop)
+                XCTFail("Keep both interrupted and refreshed attempts bound to their original pickup")
+            } catch SurfaceImportDestinationConflict.recoverOriginalPickup {}
+        }
+        XCTAssertTrue(port.value.importBatches.isEmpty)
+        let pending = try await inbox.pending(now: now)
+        XCTAssertEqual(pending, [entry])
+    }
+
     func testExplicitStaleReviewRetainsOperationAndPriorConfirmedAttempt() async throws {
         let (inbox, journal, port, entry, _) = try await fixture()
         let bridge = SurfaceImportBridge(inbox: inbox, journal: journal, port: port, clock: { self.now })
@@ -177,7 +220,7 @@ import DeviceSurfaces
     func shop(_ id: UUID) -> ShoppingLedger? { value.id == id ? value : nil }
     func stage(_ entry: SelectedTextEntry, shopID: UUID) throws -> StagedListImport {
         stageCalls += 1
-        return value.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id)
+        return try value.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id)
     }
     func reload() async throws {}
     func commit(_ draft: SurfaceImportDraft) async throws {

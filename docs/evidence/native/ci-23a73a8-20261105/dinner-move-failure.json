@@ -1,0 +1,34 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894668,
+  "jobID": 127231602017,
+  "shard": "ui-05",
+  "artifactID": 13416961957,
+  "sha256": "f9fd56e0af127c62273e0fc10f92fef2404db7bfbedfaa22266ffba84cc0513a",
+  "githubDigestVerified": true,
+  "selected": 6,
+  "passed": 5,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "runtimeWarnings": 0,
+  "failure": [
+    {
+      "failureText": "Test exceeded execution time allowance of 12 minutes",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 3,
+      "testIdentifierString": "FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+      "testName": "testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence()"
+    }
+  ],
+  "observedSequence": [
+    "Keyboard Done tap at164.21s; post-event idle starts165.63s",
+    "First missing-animation notification at225.70s",
+    "Protected amount tap/type/dismiss and Purpose tap each encounter repeated60-second animation waits",
+    "Test reaches720-second default execution limit before completing reservation setup; native runner restarts and later cases pass."
+  ],
+  "interpretation": "Animation-idle failure is observed; product versus XCTest/runtime cause is not established. No timeout, animation-idle setting, test body or allowance is changed. Dot/Lumpy owns read-only triage; root owns native lane.",
+  "rawLogSHA256": "5f307dcb8162ca0016fdce0484309c89862a9d89185d2b097ff0464f6ab88172",
+  "strictReplaySHA256": "e251d89fc47798a7e784f170391fb324d39b8b0c65ad2a9fa8fefbbef64f904c"
+}

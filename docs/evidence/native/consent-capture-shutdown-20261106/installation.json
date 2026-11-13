@@ -1,0 +1,23 @@
+{
+  "base": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "localCommit": "9e9b3644385673507be49f3483c7c6a77e9c5b5c",
+  "branch": "codex/diagnose-consent-history-804030e",
+  "patchSHA256": "8f08b735b93d605934389dc9003d54d0d9bfa8f5078025e8318bd019f71c6a7b",
+  "independentRootTests": {
+    "passed": 57,
+    "failed": 0
+  },
+  "overlayIndexVerified": true,
+  "unchanged": [
+    "app sources",
+    "workflow",
+    "selectors",
+    "native actions and limits",
+    "parser"
+  ],
+  "parentStopBudgetSeconds": 17,
+  "childStopBudgetSeconds": 10,
+  "pushed": false,
+  "hostedExecution": false,
+  "scope": "Collector-only local fix; previous failure cause and complete logging remain unproven."
+}

@@ -1,0 +1,13 @@
+# Fence late selected-text import completions
+
+The containing app could publish an old review again after backgrounding had cleared its private presentation. A confirmed import awaited the real ledger save; the changed session caused the bridge to throw, and addReviewedList's catch then reloaded the old journal into the published draft without checking the starting nonce. This behavior predates the separate cancellation fix.
+
+The correction records the presentation nonce and checks it after the awaited success and before handling an error. A stale completion leaves the current presentation alone. It does not cancel a confirmed ledger transaction, delete its journal, discard the inbox entry or acknowledge an unverified receipt. Returning explicitly can still reconcile the saved import.
+
+The regression uses the existing injected ledger clock to call background at a deterministic boundary: after the review is confirmed in the journal, before the SQLite save is awaited. A retained Combine observer records transient nonnil draft publications, so a later cleanup cannot hide the failure. On the original product, the single case fails exactly at that republishing assertion (0.479 seconds, zero runtime warnings). The test does not rely on sleeps or a task-scheduling race.
+
+After correction, all 31 tests in the composition, import bridge and actual-ledger recovery classes pass with strict exit 0, zero runtime warnings and no restart. The new test verifies the cleared presentation, retained committing journal and pending inbox receipt, one actual ledger import, then explicit foreground/review acknowledgment with unchanged revision and no duplicate. All 457 tracked iOS source files remained unchanged during the run. Compiler diagnostics are counted separately in root-review.json; this is not a warning-free-build claim.
+
+Local environment: Xcode 27.1 / 27A9275; iPhone 17 / iOS 26.2 / 23C54. This is model/SQLite and published-state evidence, not a physical background gesture, process kill or demonstrated cross-account disclosure. The source review found no blocking regression. The same nonce check covers other presentation resets in code, but every authority-change interleaving is not claimed tested.
+
+Original results, logs, source snapshots and exact invocation remain under `.build/SelectedTextCompletionScope20261106/`; freeze paths refer there. Exports and strict replay used separate inspection copies. The temporary simulator FDC5ECC8-8DCF-4E3E-A8AB-18A1B27E12C2 was removed and the protected preview left untouched. No root native process remains. The current hosted 0d5bb1b cohort does not contain this local correction.

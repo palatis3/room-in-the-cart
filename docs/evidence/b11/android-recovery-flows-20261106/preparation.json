@@ -1,0 +1,39 @@
+{
+  "status": "prepared; actual Android execution pending root",
+  "scratchHarnessTests": {
+    "passed": 9,
+    "failed": 0,
+    "log": "offline-tests.log"
+  },
+  "existingWebAndChildTests": {
+    "passed": 86,
+    "failed": 0,
+    "log": "existing-offline-tests.log"
+  },
+  "syntaxChecked": [
+    "server.mjs",
+    "browser-probes.mjs"
+  ],
+  "listenerStarted": false,
+  "browserConnected": false,
+  "emulatorConnected": false,
+  "sourceOrGitMutated": false,
+  "bundle": "Frozen existing staging-matching five-file build; current source/compiled/test inputs independently pinned",
+  "fixturePolicy": "Synthetic adapter of retained own-request/sign-out fixtures, unchanged committed child fixture import, real production API/WebApp/Outbox used by offline tests",
+  "filesSHA256": {
+    "source-manifest.json": "f144358b74de679f30bdc0fef8f6dd481fb1551278b92fbb6c672bbd3055b78d",
+    "verify-pin.mjs": "f77ab57aa98fd84e1ef8d3bf725dbbb5dd0cb4f096f298883e3178e384ade009",
+    "offline-tests.log": "addeb4f2a81429a8643a76d47d1ef745450b82a8a49f1309eb8c22908494bda7",
+    "browser-probes.mjs": "65d09c829c2874eadece5afb08621e741095422d5ff3ddd933c7cccc6a9eb55f",
+    "fixture.mjs": "4534b41d3d86f6ea79281b47731f0ed3b6bb21d9fad3318bc4ce11f93dbae82d",
+    "existing-offline-tests.log": "bbc906a76ec453a46c5574c165563b0a42bbb248b575d25425645e7d14f40887",
+    "fixture.test.mjs": "942899e1ccc42389e7311e3ba9a01437e9fa4e690e09833c81b0bdb2241416bd",
+    "server.mjs": "0c994b173edfea61bc2c19a536efbd515ba88cf173848c9e20f2e412cc420822",
+    "PLAN.md": "325ef70eecea7ddaf423e5bc3c192613b10dce62cfb9df55c38e3f43fcce75bf",
+    "bundle/icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "bundle/index.html": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f",
+    "bundle/apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "bundle/assets/index-j3N1cbKn.js": "a8730142344357900ec1abc54a75a68f17a3b8d4ef57b727604e7330ee1152c6",
+    "bundle/assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee"
+  }
+}

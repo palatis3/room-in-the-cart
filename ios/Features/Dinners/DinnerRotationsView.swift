@@ -45,17 +45,18 @@ struct DinnerRotationEditor: View {
         Form {
             Section {
                 TextField(dinnerText("Rotation name"), text: $title)
-                ForEach($entries) { $entry in
+                ForEach(entries) { entry in
+                    let fields = dinnerDraftBinding(entry, in: $entries)
                     VStack(alignment: .leading, spacing: 8) {
-                        Picker(dinnerText("Accepted dinner"), selection: $entry.acceptedDinnerID) {
+                        Picker(dinnerText("Accepted dinner"), selection: fields.acceptedDinnerID) {
                             Text(dinnerText("Select dinner")).tag(UUID?.none)
                             ForEach(model.state.acceptedDinners) { Text($0.template.title).tag(Optional($0.id)) }
                         }
-                        Picker(dinnerText("Night relative to week start"), selection: $entry.offset) {
+                        Picker(dinnerText("Night relative to week start"), selection: fields.offset) {
                             Text(dinnerText("Unscheduled")).tag(-1)
                             ForEach(0..<7) { Text(dinnerFormat("Day %d", $0 + 1)).tag($0) }
                         }
-                        Toggle(dinnerText("Pin this dinner"), isOn: $entry.pinned)
+                        Toggle(dinnerText("Pin this dinner"), isOn: fields.pinned)
                         Button(dinnerText("Remove rotation entry"), role: .destructive) { entries.removeAll { $0.id == entry.id } }
                     }.padding(.vertical, 6)
                 }

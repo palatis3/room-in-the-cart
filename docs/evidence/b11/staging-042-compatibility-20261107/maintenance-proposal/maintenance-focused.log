@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: only explicit false or absent resumes serving; invalid values fail closed
+ok 1 - only explicit false or absent resumes serving; invalid values fail closed
+  ---
+  duration_ms: 1.24325
+  type: 'test'
+  ...
+# Subtest: local application rejects every route and method before inspecting any other configuration
+ok 2 - local application rejects every route and method before inspecting any other configuration
+  ---
+  duration_ms: 108.656625
+  type: 'test'
+  ...
+# Subtest: incomplete request body cannot postpone maintenance response
+ok 3 - incomplete request body cannot postpone maintenance response
+  ---
+  duration_ms: 3.46175
+  type: 'test'
+  ...
+# Subtest: operations and cron gate precedes authentication, path checks, body and runtime construction
+ok 4 - operations and cron gate precedes authentication, path checks, body and runtime construction
+  ---
+  duration_ms: 22.281375
+  type: 'test'
+  ...
+# Subtest: real TCP negative control: off reaches database startup, enabled gate never connects
+ok 5 - real TCP negative control: off reaches database startup, enabled gate never connects
+  ---
+  duration_ms: 11.193125
+  type: 'test'
+  ...
+# Subtest: absent and false preserve operations authentication rather than opening privileged access
+ok 6 - absent and false preserve operations authentication rather than opening privileged access
+  ---
+  duration_ms: 6.478708
+  type: 'test'
+  ...
+# Subtest: actual deployed API modules use the same pre-startup gate including direct function paths
+ok 7 - actual deployed API modules use the same pre-startup gate including direct function paths
+  ---
+  duration_ms: 357.669417
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 971.0135

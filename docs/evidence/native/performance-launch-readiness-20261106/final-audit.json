@@ -1,0 +1,1485 @@
+{
+  "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+  "runID": 42304515547,
+  "attempt": 1,
+  "conclusion": "failure",
+  "source": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "base": "f117439994835e0090376f4a29d81c478a6b86b4",
+    "changedFiles": [
+      "ios/UITests/ReleasePerformanceUITests.swift"
+    ],
+    "insertions": 4,
+    "deletions": 0,
+    "overlaySHA256": "5324d11a1a98171790cf7645093c2d0223d1bb5a989d1df484fc1f2a2e22673e",
+    "frozenVerifierInputs": 155,
+    "unchangedParentVerifierInputs": 154,
+    "expectedDispatch": {
+      "workflow": "ios-performance.yml",
+      "ref": "codex/verify-performance-readiness-f117439",
+      "enforce_baselines": true
+    },
+    "scope": "Exact f117 plus four-line explicit Shop readiness wait in test helper. Application source, fixture, strict/performance checkers, approved baseline, compiled planner, setup helper and workflow unchanged. Prior failed run remains frozen."
+  },
+  "verifierInputsRehashed": 155,
+  "allVerifierInputsUnchanged": true,
+  "priorFreezesReverified": {
+    "core-collection": {
+      "sha256": "ae63230b336dfcfb9f5233230e709364c697f65bab2b7bd8a80269a2686ac4ec",
+      "files": 3138,
+      "allUnchanged": true
+    },
+    "deep-recovery-attempt2": {
+      "sha256": "48eddb1df9eb0634316066ec70d0a4965c55ab8a58e07e996cc9101094b6a18d",
+      "files": 268,
+      "allUnchanged": true
+    },
+    "performance-setup-f117439": {
+      "sha256": "56d431ee346583a4f22dd0e94ffeb7e45ab68c5ff668ad8772caca89aa8709c5",
+      "files": 357,
+      "allUnchanged": true
+    }
+  },
+  "archives": {
+    "iphone-performance-launch-1": {
+      "artifactID": 13547350298,
+      "archive": "iphone-performance-launch-1.zip",
+      "sha256": "c0da5a255ba4255b67d030e069d2640a94e56d092914ebaa64edfbe07628d2bb",
+      "bytes": 86022,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42304515547,
+        "attempt": 1,
+        "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+        "artifactID": 13547350298,
+        "name": "iphone-performance-launch-1",
+        "apiSize": 86022,
+        "apiDigest": "sha256:c0da5a255ba4255b67d030e069d2640a94e56d092914ebaa64edfbe07628d2bb",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "c0da5a255ba4255b67d030e069d2640a94e56d092914ebaa64edfbe07628d2bb",
+        "digestVerified": true,
+        "members": 45,
+        "expandedBytes": 327453,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 45
+    },
+    "iphone-performance-rendered-1": {
+      "artifactID": 13546539752,
+      "archive": "iphone-performance-rendered-1.zip",
+      "sha256": "3a22a43a330fffeba5c61bcf8afefe8004d6e0d724e2ff6e0fd05d80e99521b5",
+      "bytes": 7771013,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42304515547,
+        "attempt": 1,
+        "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+        "artifactID": 13546539752,
+        "name": "iphone-performance-rendered-1",
+        "apiSize": 7771013,
+        "apiDigest": "sha256:3a22a43a330fffeba5c61bcf8afefe8004d6e0d724e2ff6e0fd05d80e99521b5",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "3a22a43a330fffeba5c61bcf8afefe8004d6e0d724e2ff6e0fd05d80e99521b5",
+        "digestVerified": true,
+        "members": 56,
+        "expandedBytes": 8404766,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 56
+    },
+    "iphone-performance-build-log-1": {
+      "artifactID": 13545573483,
+      "archive": "iphone-performance-build-log-1.zip",
+      "sha256": "c3ea31035736a85a8fbf8aee784baab79dd956b897085bda196ab13225279b9c",
+      "bytes": 61444,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42304515547,
+        "attempt": 1,
+        "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+        "artifactID": 13545573483,
+        "name": "iphone-performance-build-log-1",
+        "apiSize": 61444,
+        "apiDigest": "sha256:c3ea31035736a85a8fbf8aee784baab79dd956b897085bda196ab13225279b9c",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "c3ea31035736a85a8fbf8aee784baab79dd956b897085bda196ab13225279b9c",
+        "digestVerified": true,
+        "members": 1,
+        "expandedBytes": 1122067,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 1
+    },
+    "iphone-performance-scroll-1": {
+      "artifactID": 13547605002,
+      "archive": "iphone-performance-scroll-1.zip",
+      "sha256": "1b521f32bcd4fe497b6a149986aab5671115bfbf967072d7d191b2c1ac35594b",
+      "bytes": 4920144,
+      "apiDigestAndSizeMatched": true,
+      "guard": {
+        "runID": 42304515547,
+        "attempt": 1,
+        "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+        "artifactID": 13547605002,
+        "name": "iphone-performance-scroll-1",
+        "apiSize": 4920144,
+        "apiDigest": "sha256:1b521f32bcd4fe497b6a149986aab5671115bfbf967072d7d191b2c1ac35594b",
+        "extracted": true,
+        "limits": {
+          "archive": 256000000,
+          "member": 50000000,
+          "total": 1000000000,
+          "members": 50000,
+          "ratio": 1000
+        },
+        "sha256": "1b521f32bcd4fe497b6a149986aab5671115bfbf967072d7d191b2c1ac35594b",
+        "digestVerified": true,
+        "members": 48,
+        "expandedBytes": 5306156,
+        "oversizedMembers": []
+      },
+      "originalExtractionPristine": true,
+      "membersReverified": 48
+    },
+    "iphone-performance-products-1": {
+      "artifactID": 13546716858,
+      "archive": "performance-compiled/products.zip",
+      "sha256": "d6bb83b8bde08c28a7a7b603399bfc8999b630f380b0e36e1663eb2dc77919f2",
+      "bytes": 85606145,
+      "apiDigestAndSizeMatched": true
+    }
+  },
+  "expectedArtifactCount": 5,
+  "compiledInventory": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "runID": 42304515547,
+    "artifactID": 13546716858,
+    "archiveSHA256": "d6bb83b8bde08c28a7a7b603399bfc8999b630f380b0e36e1663eb2dc77919f2",
+    "digestVerified": true,
+    "binarySHA256": "592d72887e401d334955da002d238df0ba289e3785bea92d6cfaf27f80ecb0c6",
+    "compiledMatrix": {
+      "include": [
+        {
+          "case": "launch",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+          "macos_slot": 0
+        },
+        {
+          "case": "rendered",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+          "macos_slot": 1
+        },
+        {
+          "case": "scroll",
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+          "macos_slot": 2
+        }
+      ]
+    },
+    "scope": "Read-only symbol inspection of optimized test bundle using pinned candidate planner; no binary execution.",
+    "compiledPlists": {
+      "Products/Release-iphonesimulator/RoomInTheCart.app/Info.plist": {
+        "sha256": "c0903cdf42451cabc7aad5d63f533c3d485bce3fdc2ee4fe35ae6e2cb02d1c41",
+        "DTXcodeBuild": "17C529",
+        "DTSDKBuild": "23C57",
+        "DTPlatformVersion": "26.2"
+      },
+      "Products/Release-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/Info.plist": {
+        "sha256": "7684e6d5ae998047ae4255b53de3953bbf0c0ad420144dba88a08b89e14f60a0",
+        "DTXcodeBuild": "17C529",
+        "DTSDKBuild": "23C57",
+        "DTPlatformVersion": "26.2"
+      }
+    },
+    "xctestruns": [
+      {
+        "member": "Products/RoomInTheCart-Performance_iphonesimulator26.2-arm64-x86_64.xctestrun",
+        "sha256": "eba63c28e16c343caebf0e007afb7d15c428bc7c3fffdce8357f6f1f38c9458d"
+      }
+    ],
+    "archiveMembers": 298,
+    "archiveDeclaredBytes": 357526536
+  },
+  "outcomes": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "runID": 42304515547,
+    "jobs": [
+      {
+        "id": 128190353091,
+        "name": "Build optimized iPhone test products",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004083,
+        "started_at": "2026-11-06T22:24:54Z",
+        "completed_at": "2026-11-06T22:35:56Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T22:24:55Z",
+            "completed_at": "2026-11-06T22:24:56Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T22:24:56Z",
+            "completed_at": "2026-11-06T22:25:00Z"
+          },
+          {
+            "name": "Check performance evidence validation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T22:25:00Z",
+            "completed_at": "2026-11-06T22:25:02Z"
+          },
+          {
+            "name": "Record Xcode and select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T22:25:02Z",
+            "completed_at": "2026-11-06T22:25:27Z"
+          },
+          {
+            "name": "Build the Release app and dedicated performance tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T22:25:27Z",
+            "completed_at": "2026-11-06T22:35:26Z"
+          },
+          {
+            "name": "Check the compiled XCTest inventory and plan performance jobs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T22:35:26Z",
+            "completed_at": "2026-11-06T22:35:31Z"
+          },
+          {
+            "name": "Verify and package Release test products",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T22:35:31Z",
+            "completed_at": "2026-11-06T22:35:44Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T22:35:44Z",
+            "completed_at": "2026-11-06T22:35:49Z"
+          },
+          {
+            "name": "Retain Release build log",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T22:35:49Z",
+            "completed_at": "2026-11-06T22:35:50Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-06T22:35:50Z",
+            "completed_at": "2026-11-06T22:35:51Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-06T22:35:51Z",
+            "completed_at": "2026-11-06T22:35:53Z"
+          }
+        ],
+        "logSHA256": "04fc5638a184cdae942c10ed49f83ffd81a5d34bef3adb85bc07733580743ded",
+        "checkoutCommits": [
+          "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true
+      },
+      {
+        "id": 128195108552,
+        "name": "Release performance (rendered)",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004084,
+        "started_at": "2026-11-06T22:36:00Z",
+        "completed_at": "2026-11-06T22:52:32Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T22:36:01Z",
+            "completed_at": "2026-11-06T22:36:03Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T22:36:03Z",
+            "completed_at": "2026-11-06T22:36:07Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T22:36:07Z",
+            "completed_at": "2026-11-06T22:36:15Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T22:36:15Z",
+            "completed_at": "2026-11-06T22:36:20Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T22:36:20Z",
+            "completed_at": "2026-11-06T22:37:00Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T22:37:00Z",
+            "completed_at": "2026-11-06T22:40:44Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T22:40:44Z",
+            "completed_at": "2026-11-06T22:51:49Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T22:51:49Z",
+            "completed_at": "2026-11-06T22:51:58Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T22:51:58Z",
+            "completed_at": "2026-11-06T22:51:59Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T22:51:59Z",
+            "completed_at": "2026-11-06T22:52:06Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T22:52:06Z",
+            "completed_at": "2026-11-06T22:52:10Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T22:52:10Z",
+            "completed_at": "2026-11-06T22:52:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-06T22:52:11Z",
+            "completed_at": "2026-11-06T22:52:30Z"
+          }
+        ],
+        "logSHA256": "a437a2ff00a8595ff16862d90c7283b416217502019f4e4b7733265334548f29",
+        "checkoutCommits": [
+          "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      },
+      {
+        "id": 128195108662,
+        "name": "Release performance (scroll)",
+        "status": "completed",
+        "conclusion": "failure",
+        "runner_id": 1000004085,
+        "started_at": "2026-11-06T22:36:00Z",
+        "completed_at": "2026-11-06T22:49:33Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T22:36:00Z",
+            "completed_at": "2026-11-06T22:36:01Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T22:36:01Z",
+            "completed_at": "2026-11-06T22:36:07Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T22:36:07Z",
+            "completed_at": "2026-11-06T22:36:14Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T22:36:14Z",
+            "completed_at": "2026-11-06T22:36:18Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T22:36:18Z",
+            "completed_at": "2026-11-06T22:37:28Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T22:37:28Z",
+            "completed_at": "2026-11-06T22:40:26Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T22:40:26Z",
+            "completed_at": "2026-11-06T22:48:43Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T22:48:43Z",
+            "completed_at": "2026-11-06T22:48:48Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-06T22:48:48Z",
+            "completed_at": "2026-11-06T22:48:58Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 10,
+            "started_at": "2026-11-06T22:48:58Z",
+            "completed_at": "2026-11-06T22:48:59Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T22:48:59Z",
+            "completed_at": "2026-11-06T22:49:02Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T22:49:02Z",
+            "completed_at": "2026-11-06T22:49:03Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-06T22:49:03Z",
+            "completed_at": "2026-11-06T22:49:31Z"
+          }
+        ],
+        "logSHA256": "62fe7c18ac55ebd09e504090cddf01a2958433684b20989af9747642b113e9d0",
+        "checkoutCommits": [
+          "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      },
+      {
+        "id": 128195108733,
+        "name": "Release performance (launch)",
+        "status": "completed",
+        "conclusion": "success",
+        "runner_id": 1000004086,
+        "started_at": "2026-11-06T22:36:00Z",
+        "completed_at": "2026-11-06T22:48:06Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T22:36:01Z",
+            "completed_at": "2026-11-06T22:36:02Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T22:36:02Z",
+            "completed_at": "2026-11-06T22:36:07Z"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T22:36:07Z",
+            "completed_at": "2026-11-06T22:36:15Z"
+          },
+          {
+            "name": "Restore Release products and record the toolchain",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T22:36:15Z",
+            "completed_at": "2026-11-06T22:36:19Z"
+          },
+          {
+            "name": "Select an iPhone simulator",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-06T22:36:19Z",
+            "completed_at": "2026-11-06T22:36:39Z"
+          },
+          {
+            "name": "Boot and verify a fresh Release installation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T22:36:39Z",
+            "completed_at": "2026-11-06T22:38:53Z"
+          },
+          {
+            "name": "Run one Release performance case",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-06T22:38:53Z",
+            "completed_at": "2026-11-06T22:47:25Z"
+          },
+          {
+            "name": "Export available XCTest metrics, attachments and test results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-06T22:47:26Z",
+            "completed_at": "2026-11-06T22:47:38Z"
+          },
+          {
+            "name": "Capture scroll signpost diagnostic",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T22:47:38Z",
+            "completed_at": "2026-11-06T22:47:38Z"
+          },
+          {
+            "name": "Require exact test execution and complete performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-06T22:47:38Z",
+            "completed_at": "2026-11-06T22:47:39Z"
+          },
+          {
+            "name": "Retain Release performance evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-06T22:47:39Z",
+            "completed_at": "2026-11-06T22:47:43Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T22:47:43Z",
+            "completed_at": "2026-11-06T22:47:45Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-11-06T22:47:45Z",
+            "completed_at": "2026-11-06T22:48:04Z"
+          }
+        ],
+        "logSHA256": "9388bcf9a2b13d7ccb1627d4bd56d995e8fc77dda37957317e4652963728268a",
+        "checkoutCommits": [
+          "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8"
+        ],
+        "checkoutExpected": true,
+        "pinnedDeveloperPathObserved": true,
+        "observedBaselineEnforcementValues": [
+          "true"
+        ],
+        "explicitBaselineEnforcementObserved": true
+      }
+    ],
+    "cases": {
+      "rendered": {
+        "jobID": 128195108552,
+        "conclusion": "success",
+        "runnerID": 1000004084,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T22:40:44Z",
+          "completed_at": "2026-11-06T22:51:49Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T22:51:59Z",
+          "completed_at": "2026-11-06T22:52:06Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "rendered",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 109.443
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 40.357
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 2.603
+            },
+            {
+              "stage": "seed-pasteboard",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 69.655
+            }
+          ]
+        },
+        "setupReceiptSHA256": "04384b850d7519c4a2141849661a9aad7252e13fe3bc3889244d3d7779a9017e",
+        "stageOrderVerified": true
+      },
+      "scroll": {
+        "jobID": 128195108662,
+        "conclusion": "failure",
+        "runnerID": 1000004085,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T22:40:26Z",
+          "completed_at": "2026-11-06T22:48:43Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 10,
+          "started_at": "2026-11-06T22:48:58Z",
+          "completed_at": "2026-11-06T22:48:59Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "scroll",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 112.701
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 56.773
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 1.188
+            },
+            {
+              "stage": "seed-pasteboard",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 4.505
+            }
+          ]
+        },
+        "setupReceiptSHA256": "c167d676cee07cc729733c35295d2e5648510301f3ee9ee1b1156f5209bf9f10",
+        "stageOrderVerified": true
+      },
+      "launch": {
+        "jobID": 128195108733,
+        "conclusion": "success",
+        "runnerID": 1000004086,
+        "setupReceiptPresent": true,
+        "nativeStep": {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T22:38:53Z",
+          "completed_at": "2026-11-06T22:47:25Z"
+        },
+        "validationStep": {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T22:47:38Z",
+          "completed_at": "2026-11-06T22:47:39Z"
+        },
+        "resultBundlePresent": true,
+        "setupReceipt": {
+          "schemaVersion": 1,
+          "case": "launch",
+          "status": "passed",
+          "stages": [
+            {
+              "stage": "boot",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 122.897
+            },
+            {
+              "stage": "list-installed-apps",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 8.777
+            },
+            {
+              "stage": "verify-app-absent",
+              "status": "passed",
+              "exitCode": 0,
+              "elapsedSeconds": 0.055
+            }
+          ]
+        },
+        "setupReceiptSHA256": "c4ec3cf3db729608ecc5753800261ae8434243cde67191acfb7ee61eea78b919",
+        "stageOrderVerified": true
+      }
+    },
+    "allAvailableCheckoutLogsExpected": true,
+    "scope": "Explicit setup stages and baseline-enforcement evidence remain separate from native/measurement/persistence gates. Missing or interrupted evidence is not a pass."
+  },
+  "nativeExecution": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "attempt": 1,
+    "results": {
+      "iphone-performance-launch-1": {
+        "artifact": "iphone-performance-launch-1",
+        "summarySHA256": "a8968dce8177685ee527d4d93e8d5750e07896a780adee8b129cc61610f5735c",
+        "rawLogSHA256": "8302d65ae5486f0b41309e6647a59e9375b49bf702c35daaa1a3b0a27495822e",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+            "startLine": 18,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (78.698 seconds).",
+            "endLine": 71,
+            "durationSeconds": 78.698
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      },
+      "iphone-performance-rendered-1": {
+        "artifact": "iphone-performance-rendered-1",
+        "summarySHA256": "65e522d46726b752a299437c28391ad5ce5c78dc4dca7f383c6507ad5641b4aa",
+        "rawLogSHA256": "0902a2ef5052d5564b1968842e535eca63b6a9f50b4d98bb1eda9b8a4d614f5e",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+            "startLine": 20,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (579.745 seconds).",
+            "endLine": 1426,
+            "durationSeconds": 579.745
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      },
+      "iphone-performance-scroll-1": {
+        "artifact": "iphone-performance-scroll-1",
+        "summarySHA256": "f212893a0d978f7c4c02c8c2e97525795e0a89bc4ed70de15a0ba389c3b5f011",
+        "rawLogSHA256": "7083e7d054ddef534588a3795ab6fa795f00147b4d60f84db72e06eae7d88f8a",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 1,
+        "startCount": 1,
+        "exactStartOrder": [
+          "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": true,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+            "startLine": 20,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (380.515 seconds).",
+            "endLine": 520,
+            "durationSeconds": 380.515
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      }
+    },
+    "expectedResultGroups": 3,
+    "scope": "Exact runtime and raw-log lifecycle from preserved original artifacts; strict warning verification recorded separately. Model test execution order is recorded, not required to equal the selector-file order.",
+    "complete": true,
+    "allReportedExpected": true,
+    "allReportedLifecyclesPassed": true
+  },
+  "performance": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "runID": 42304515547,
+    "cases": {
+      "launch": {
+        "attempt": 1,
+        "artifactID": 13547350298,
+        "sha256": "c0da5a255ba4255b67d030e069d2640a94e56d092914ebaa64edfbe07628d2bb",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "passed",
+        "independentSidecarNotAcceptance": true,
+        "failures": [],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "passed",
+        "sidecarSHA256": "fa91d0246bb1d5678a26ce41b628086236f805e911a232dbe91326b909afd720",
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "complete",
+        "metricIdentifiers": [
+          "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+        ],
+        "comparisons": {
+          "responsiveLaunchMedianSeconds": {
+            "measured": 4.450739458,
+            "maximum": 5.5,
+            "passed": true
+          }
+        },
+        "calibrationSHA256": "6f161817f1e25c0dbd0d676c1916716b1e393bf5304d701a85e805c7edf8c2dd",
+        "simulatorHitches": null,
+        "rawLogSHA256": "8302d65ae5486f0b41309e6647a59e9375b49bf702c35daaa1a3b0a27495822e",
+        "acceptancePassed": true
+      },
+      "scroll": {
+        "attempt": 1,
+        "artifactID": 13547605002,
+        "sha256": "1b521f32bcd4fe497b6a149986aab5671115bfbf967072d7d191b2c1ac35594b",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "failed required measurement structure",
+        "independentSidecarNotAcceptance": true,
+        "failures": [
+          "ValueError: Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+        ],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "failed",
+        "measurementError": "ValueError: Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+        "sidecarSHA256": "39ae4accdc84ea935694c72d4cad11e5568fbf9cddeb6db82b51e2d113cbef94",
+        "hostedPickupStructuralStatus": "passed",
+        "hostedPickupReadback": {
+          "sqliteQuickCheck": "ok",
+          "revision": 2,
+          "payloadSHA256": "0b20b5c83e8a7ce0227b850cdb246245d96815e84a713ceb481cd7a7239f225b",
+          "lineCount": 500,
+          "contributionCount": 500,
+          "importCount": 1,
+          "source": "paste",
+          "checkedCount": 0,
+          "checkedRowIDs": []
+        },
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "incomplete",
+        "rawLogSHA256": "7083e7d054ddef534588a3795ab6fa795f00147b4d60f84db72e06eae7d88f8a",
+        "acceptancePassed": false
+      },
+      "rendered": {
+        "attempt": 1,
+        "artifactID": 13546539752,
+        "sha256": "3a22a43a330fffeba5c61bcf8afefe8004d6e0d724e2ff6e0fd05d80e99521b5",
+        "digestVerified": true,
+        "strictReplayExit": 0,
+        "measurementReplay": "passed",
+        "independentSidecarNotAcceptance": true,
+        "failures": [],
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": 0,
+        "environment": {
+          "osVersion": "26.2",
+          "osBuildNumber": "23C54",
+          "modelName": "iPhone 17",
+          "architecture": "arm64",
+          "xcode": "Xcode 26.3\nBuild version 17C529",
+          "buildConfiguration": "Release",
+          "testConfiguration": "Test Scheme Action"
+        },
+        "runtimeExpected": true,
+        "independentMeasurementStructure": "passed",
+        "sidecarSHA256": "f6f3b8b8063a3ec50c425ba3f0f588c8f761f89ff7b64a90efb9a511a8556047",
+        "hostedPickupStructuralStatus": "passed",
+        "hostedPickupReadback": {
+          "sqliteQuickCheck": "ok",
+          "revision": 22,
+          "payloadSHA256": "1add3df7111da39be2343d98d752c18b2f3b87798f6c4c2f8a352abcd793edc9",
+          "lineCount": 500,
+          "contributionCount": 500,
+          "importCount": 1,
+          "source": "paste",
+          "checkedCount": 20,
+          "checkedRowIDs": [
+            "06433885-9ebc-4aec-959e-095df5639d38",
+            "1bce4ac3-4808-42c7-a6c8-1003801ffc31",
+            "27eb5b03-1aec-4a83-a06c-730e4a52417d",
+            "31487ec8-4cec-4296-bef7-097fa7112847",
+            "3689cb1a-f970-4f81-91de-4a87ccab46f3",
+            "41c6c251-7783-4837-878a-1392af732f4d",
+            "475e85df-77e6-4d8b-ac0b-af93ac481524",
+            "4c2b0ccb-9b44-4f00-9d9b-f775fb1f3218",
+            "4eef5c78-a482-4bab-858e-8292d0e5ef97",
+            "5c874ffd-313f-4aaa-9fa7-6bceb99d4ac8",
+            "5fdc2b88-6805-4bdf-a755-8e23825c6435",
+            "6346d6a1-7d48-4fe0-9663-764c318ee353",
+            "a5bbad07-ec55-47d6-8a4e-ac80ebd8610e",
+            "b43f5d8a-c6f7-490d-85f6-b221b22833c6",
+            "c8554ea8-6f6e-4c94-8e40-e927a941c37b",
+            "d46602d4-2531-4157-bb84-8de506c3486c",
+            "d9e61ae4-6f8e-4c97-add0-81ed9a86d785",
+            "dd47ccaa-0475-469d-8c51-91740cceb29b",
+            "fa5678cf-cdc0-45da-8719-a0298fcdc105",
+            "fdce065d-18fa-43a6-8e80-0de6f2ddcc17"
+          ]
+        },
+        "sidecarConsistentWithIndependentChecks": true,
+        "sidecarStatus": "complete",
+        "comparisons": {
+          "searchP95Milliseconds": {
+            "measured": 3176.173666666614,
+            "maximum": 4750,
+            "passed": true
+          },
+          "checkP95Milliseconds": {
+            "measured": 2654.8135833332935,
+            "maximum": 3750,
+            "passed": true
+          }
+        },
+        "calibrationSHA256": "0aa470c13b002331c2f3f27cc8987b1a7180945f10f193d460360917920b5ce6",
+        "simulatorHitches": null,
+        "rawLogSHA256": "0902a2ef5052d5564b1968842e535eca63b6a9f50b4d98bb1eda9b8a4d614f5e",
+        "acceptancePassed": true
+      }
+    },
+    "limits": [
+      "Simulator evidence only. Hosted SQLite readback is verified from retained independent sidecar/report fields, not a second local raw database read. Structural sidecar success never substitutes for missing metrics or baseline acceptance."
+    ]
+  },
+  "timing": {
+    "runCreatedAt": "2026-11-06T22:24:49Z",
+    "terminalAPIUpdatedAt": "2026-11-06T22:52:33Z",
+    "wallToTerminalAPIUpdateSeconds": 1664.0,
+    "jobs": [
+      {
+        "jobID": 128190353091,
+        "name": "Build optimized iPhone test products",
+        "reportedJobStartedAt": "2026-11-06T22:24:54Z",
+        "reportedJobCompletedAt": "2026-11-06T22:35:56Z",
+        "firstStepStartedAt": "2026-11-06T22:24:55Z",
+        "lastStepCompletedAt": "2026-11-06T22:35:53Z",
+        "runnerStepSpanSeconds": 658.0,
+        "runCreationToFirstStepSeconds": 6.0
+      },
+      {
+        "jobID": 128195108552,
+        "name": "Release performance (rendered)",
+        "reportedJobStartedAt": "2026-11-06T22:36:00Z",
+        "reportedJobCompletedAt": "2026-11-06T22:52:32Z",
+        "firstStepStartedAt": "2026-11-06T22:36:01Z",
+        "lastStepCompletedAt": "2026-11-06T22:52:30Z",
+        "runnerStepSpanSeconds": 989.0,
+        "runCreationToFirstStepSeconds": 672.0
+      },
+      {
+        "jobID": 128195108662,
+        "name": "Release performance (scroll)",
+        "reportedJobStartedAt": "2026-11-06T22:36:00Z",
+        "reportedJobCompletedAt": "2026-11-06T22:49:33Z",
+        "firstStepStartedAt": "2026-11-06T22:36:00Z",
+        "lastStepCompletedAt": "2026-11-06T22:49:31Z",
+        "runnerStepSpanSeconds": 811.0,
+        "runCreationToFirstStepSeconds": 671.0
+      },
+      {
+        "jobID": 128195108733,
+        "name": "Release performance (launch)",
+        "reportedJobStartedAt": "2026-11-06T22:36:00Z",
+        "reportedJobCompletedAt": "2026-11-06T22:48:06Z",
+        "firstStepStartedAt": "2026-11-06T22:36:01Z",
+        "lastStepCompletedAt": "2026-11-06T22:48:04Z",
+        "runnerStepSpanSeconds": 723.0,
+        "runCreationToFirstStepSeconds": 672.0
+      }
+    ],
+    "scope": "Runner spans use first/last steps; job started_at is not execution time. Dependency/admission/provider wait remains combined unless retained snapshots prove boundaries."
+  },
+  "collectorErrors": [],
+  "allScopedPerformanceGatesPassed": false,
+  "releaseAcceptance": false,
+  "scope": [
+    "Setup receipts, native execution, metrics, saved-pickup structural readback and approved-baseline outcomes are separate gates.",
+    "Hosted SQLite report fields and exact attachment identities are verified; no raw app-ledger database downloaded.",
+    "All xcresulttool inspection used working copies, with original ZIPs and extracted members rehashed.",
+    "Earlier original804 setup failure and earlier missing-scroll-series failures remain preserved; setup success alone does not resolve a missing metric.",
+    "No retry, dispatch, source/Git edit or native app/test execution by collector."
+  ],
+  "frozenAt": "2026-11-06T22:53:47.328753+00:00",
+  "scrollMetricSQLiteReadback": {
+    "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+    "artifactID": 13547605002,
+    "sourceSQLite": "iphone-performance-scroll-1/Performance.xcresult/database.sqlite3",
+    "sourceSQLiteSHA256": "ba2d0c735aacb9a941fd4f842b897ab6f701d7bce8a306e081b003c9e67b9f65",
+    "copy": "metric-sqlite-inspection/database.sqlite3",
+    "openedReadOnly": true,
+    "quickCheck": "ok",
+    "rows": [
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "displayName": "Memory Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "-376.832,65.536,114.688,-81.92,-163.84",
+        "testCaseRun_fk": 1,
+        "samples": [
+          -376.832,
+          65.536,
+          114.688,
+          -81.92,
+          -163.84
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      },
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "displayName": "Absolute Memory Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "108830.592,109010.816,109223.808,109256.576,109158.272",
+        "testCaseRun_fk": 1,
+        "samples": [
+          108830.592,
+          109010.816,
+          109223.808,
+          109256.576,
+          109158.272
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      },
+      {
+        "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "displayName": "Memory Peak Physical (app)",
+        "unitOfMeasurement": "kB",
+        "measurements": "109518.72,109256.576,109420.416,109649.792,109633.408",
+        "testCaseRun_fk": 1,
+        "samples": [
+          109518.72,
+          109256.576,
+          109420.416,
+          109649.792,
+          109633.408
+        ],
+        "sampleCount": 5,
+        "matchesJSON": true
+      }
+    ],
+    "requiredScrollDurationPresent": false,
+    "jsonExactSampleEquality": true,
+    "interpretation": "Independent read-only copy of original XCTest result metadata, not app-ledger data. Current presence or absence does not rewrite historical failures or establish their cause."
+  },
+  "scrollSignpostComparison": {
+    "scope": "Bounded comparison of two already-retained diagnostic receipts; no new execution or raw log capture. Activity intervals are not XCTest measurement boundaries. Pair counts cannot replace the required five-sample XCTest metric or establish cause.",
+    "runs": [
+      {
+        "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+        "diagnosticPath": ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-scroll-1/scroll-signpost-diagnostic.json",
+        "sha256": "18f731a106a6a4d09e0dbb5518f750759a023fc57e226e849e4eee787010a853",
+        "diagnosticStatus": "captured",
+        "captureStatus": "ok",
+        "activityStatus": "ok",
+        "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+        "windows": [
+          {
+            "case": "warm-up",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.598
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 1",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.584
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 2",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 3",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 4",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.584
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 5",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.584
+              }
+            ]
+          }
+        ],
+        "requiredXCTestMeasurementOutcome": "passed",
+        "parsedEventCount": 102,
+        "candidateLineCount": 102,
+        "unparsedCandidateCount": 0,
+        "matchedProcessCount": 1
+      },
+      {
+        "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+        "diagnosticPath": ".build/CIResearch20261106/performance-readiness-807aa3c/iphone-performance-scroll-1/scroll-signpost-diagnostic.json",
+        "sha256": "1d7be830f3858bca6b671ddfd74213063c850063950fe6cf8ee4c69eabe3e267",
+        "diagnosticStatus": "incomplete_windows",
+        "captureStatus": "ok",
+        "activityStatus": "ok",
+        "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+        "windows": [
+          {
+            "case": "warm-up",
+            "eventCount": 1,
+            "pairCount": 0,
+            "pairs": []
+          },
+          {
+            "case": "measured swipe 1",
+            "eventCount": 1,
+            "pairCount": 0,
+            "pairs": []
+          },
+          {
+            "case": "measured swipe 2",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.577
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 3",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.6
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 4",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.567
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 5",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.58
+              }
+            ]
+          }
+        ],
+        "requiredXCTestMeasurementOutcome": "failed required measurement structure",
+        "parsedEventCount": 100,
+        "candidateLineCount": 100,
+        "unparsedCandidateCount": 0,
+        "matchedProcessCount": 1
+      }
+    ],
+    "firstTwoWindowCountsEqual": false,
+    "interpretation": "The missing pair in warm-up and measured swipe 1 is unique to 807 among these two retained receipts: f117 has 2 events/1 pair in every one of six windows; 807 has 1 event/0 pairs in the first two and 2 events/1 pair in the remaining four. Both captures/activity exports report ok with zero unparsed candidate lines. This is an observed discriminator, not a causal conclusion."
+  }
+}

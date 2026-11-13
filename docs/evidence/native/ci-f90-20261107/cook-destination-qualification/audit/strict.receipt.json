@@ -1,0 +1,22 @@
+{
+  "command": [
+    "python3",
+    "scripts/check_ios_test_results.py",
+    "--selectors",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/selectors.txt",
+    "--summary",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/summary.json",
+    "--tests",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/tests.json",
+    "--result-bundle",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/inspection.xcresult",
+    "--test-log",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/native.log",
+    "--expected-count",
+    "5"
+  ],
+  "exit": 1,
+  "fileSizeLimit": 10000000,
+  "stdoutSHA256": "a5ded7188ad0c1ab4ffc0b1d7ef6dc6b918e068680f2c1a018bcca6ee87124d4",
+  "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

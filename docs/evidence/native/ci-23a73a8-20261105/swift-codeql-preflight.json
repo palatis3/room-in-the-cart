@@ -1,0 +1,156 @@
+{
+  "status": "local-preflight-validated-hosted-analysis-pending",
+  "originalCandidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "scope": "Move settings resolution before CodeQL initialization; all app and package runtime compilation remains after initialization with uncached legacy driver, Release arm64 -Onone; required analysis and original timeouts unchanged.",
+  "baselineFailure": "30-minute traced compile timeout; no source compiler hang established.",
+  "localPreflight": {
+    "exit": 0,
+    "scriptSHA256": "4d65829d7df139ec9444af5e123478427ad8ad38cb1f906dd7e05c7e632fb3b5",
+    "logSHA256": "9532b38e565ab05b0b894b15e10de61dc803e7c6c9c480a4bf70fd0a5767ee4f",
+    "xcode": "27.1 local; hosted remains 26.3",
+    "compiledRuntimeSources": false
+  },
+  "guardValidation": {
+    "actual_source_tree": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/swift-codeql-preflight-local/source",
+    "actual_metadata_files": 34,
+    "actual_metadata_inventory_sha256": "0314567d25ea991dea0bd83713243e179d21aa63371e246544d52ae5fca916e8",
+    "actual_guard_result": {
+      "exit": 0,
+      "stdout": "No pre-existing app/package compiled products; permitted only recognized PIF JSON in DerivedData/Build.",
+      "stderr": ""
+    },
+    "original_metadata_unchanged": true,
+    "positive_injected_product_cases": [
+      {
+        "case": "object",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/Release-iphoneos/CoreDomain.o [compiled product suffix]"
+      },
+      {
+        "case": "static_archive",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/Release-iphoneos/libCoreDomain.a [compiled product suffix]"
+      },
+      {
+        "case": "swift_module_file",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/CoreDomain.swiftmodule [compiled product suffix]"
+      },
+      {
+        "case": "swift_module_directory",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/CoreDomain.swiftmodule [product bundle]"
+      },
+      {
+        "case": "framework",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/CoreDomain.framework [product bundle]"
+      },
+      {
+        "case": "xcframework",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/CoreDomain.xcframework [product bundle]"
+      },
+      {
+        "case": "app",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/RoomInTheCart.app [product bundle]"
+      },
+      {
+        "case": "extension",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/RoomInTheCartWidget.appex [product bundle]"
+      },
+      {
+        "case": "xcarchive",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Archives/RoomInTheCart.xcarchive [product bundle]"
+      },
+      {
+        "case": "executable",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/RoomInTheCart [executable output]"
+      },
+      {
+        "case": "mach_o_without_executable_bit",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/RoomInTheCart [compiled binary header]"
+      },
+      {
+        "case": "unknown_json_outside_pif",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/XCBuildData/other.json [unrecognized Build output]"
+      },
+      {
+        "case": "unknown_extensionless_file",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Products/Release-iphoneos/AppBinary [unrecognized Build output]"
+      },
+      {
+        "case": "malformed_pif",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/XCBuildData/PIFCache/target/TARGET@v11_hash=injected-json [unrecognized Build output]"
+      },
+      {
+        "case": "binary_named_as_pif",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/XCBuildData/PIFCache/target/TARGET@v11_hash=injected-json [compiled binary header]"
+      },
+      {
+        "case": "executable_json_named_as_pif",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/XCBuildData/PIFCache/target/TARGET@v11_hash=injected-json [executable output]"
+      },
+      {
+        "case": "package_object",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/CoreDomain.build/Quantity.o [compiled product suffix]"
+      },
+      {
+        "case": "package_module",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/CoreDomain.swiftmodule [compiled product suffix]"
+      },
+      {
+        "case": "package_module_directory",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/CoreDomain.swiftmodule [product bundle]"
+      },
+      {
+        "case": "package_framework",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/CoreDomain.framework [product bundle]"
+      },
+      {
+        "case": "package_archive_without_suffix",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/Archive [compiled binary header]"
+      },
+      {
+        "case": "package_executable",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/Helper [executable output]"
+      },
+      {
+        "case": "package_renamed_mach_o",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: ios/Packages/CoreDomain/.build/release/cache.json [compiled binary header]"
+      },
+      {
+        "case": "metadata_symlink",
+        "result": "rejected",
+        "message": "Swift CodeQL requires uncompiled app/package sources; found: .build/SwiftCodeQLDerivedData/Build/Intermediates.noindex/XCBuildData/PIFCache/target/TARGET@v11_hash=linked-json [symlink]"
+      }
+    ],
+    "yaml": "Ruby Psych parsed",
+    "shell": "all run steps pass bash -n",
+    "native_build_test_simulator_invocations": 0,
+    "sha256": {
+      "guard.proposed.py": "e69b4abafd728cc3fc72edf7517dd2b0f14a26dd8d42e4469ffb92de7cd1df4c",
+      "guard-only.patch": "c973dcbb9fb70e62c79b2fdffb74522be27062e663da03dc0ba4ce49c8c08a1c",
+      "proposal.patch": "75e246763cafd4f21504fdc13b53dc2c68dd2a540a4c216e2e32fd0aaf31e51d",
+      "ci.proposed.yml": "9386efd53c505159a9710afd74c732aa7cc346890f5e6bba15d50f48668b5a5e"
+    }
+  },
+  "limitation": "Local settings query and injected-product checks do not prove fresh hosted CodeQL completion or semantic coverage."
+}

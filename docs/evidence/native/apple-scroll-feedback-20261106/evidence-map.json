@@ -1,0 +1,619 @@
+{
+  "status": "Prepared locally; not submitted",
+  "requiredMetric": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+  "primaryEvidence": [
+    {
+      "role": "original failure",
+      "commit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "runID": 42234316869,
+      "jobID": 127963291831,
+      "attempt": 1,
+      "artifactID": 13515972039,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-8f864ea/core-collection/iphone-performance-scroll-1.zip",
+      "archiveSHA256": "993b790f763440eb3b61e37baf31e11a915dfafee8646d69dd84f47061e493e2",
+      "archiveDigestReverified": true,
+      "archiveBytes": 5016878,
+      "packagedFiles": [
+        {
+          "path": "original-8f/metrics.json",
+          "archiveMember": "metrics.json",
+          "sha256": "f9bf210d25ac6439accf3fd8ae2213a5848defbc8a57c80a39305c18e7bfa50c",
+          "byteIdentical": true
+        },
+        {
+          "path": "original-8f/test-summary.json",
+          "archiveMember": "test-summary.json",
+          "sha256": "4881a2c0f3c75edcdb25de22d55e8563afcbbb0f70bd20f2dc994960eaffe712",
+          "byteIdentical": true
+        },
+        {
+          "path": "original-8f/toolchain.txt",
+          "archiveMember": "toolchain.txt",
+          "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+          "byteIdentical": true
+        }
+      ],
+      "deviceAndConfiguration": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "toolchain": "Xcode 26.3\nBuild version 17C529",
+      "testResult": {
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "result": "Passed"
+      },
+      "startUTC": "2026-11-06T15:15:56.375000+00:00",
+      "finishUTC": "2026-11-06T15:23:12.209000+00:00",
+      "series": [
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+          "unit": "kB",
+          "samples": [
+            104783.744,
+            104423.296,
+            104685.44,
+            105930.624,
+            105783.168
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+          "unit": "kB",
+          "samples": [
+            -376.832,
+            180.224,
+            -16.384,
+            -81.92,
+            81.92
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+          "unit": "kB",
+          "samples": [
+            104079.232,
+            104292.224,
+            104357.76,
+            105537.408,
+            105553.792
+          ]
+        }
+      ],
+      "originalXCTestDatabase": {
+        "originalArchiveMember": "Performance.xcresult/database.sqlite3",
+        "originalArchiveMemberSHA256": "a1fecc1a20ff77974549280625e3dc31f82f06c34f5f54a8faa7e992c6014455",
+        "query": "SELECT identifier, unitOfMeasurement, measurements FROM PerformanceMetrics",
+        "readOnly": true,
+        "rows": [
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+            "unit": "kB",
+            "measurementsText": "104783.744,104423.296,104685.44,105930.624,105783.168"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+            "unit": "kB",
+            "measurementsText": "-376.832,180.224,-16.384,-81.92,81.92"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+            "unit": "kB",
+            "measurementsText": "104079.232,104292.224,104357.76,105537.408,105553.792"
+          }
+        ],
+        "requiredScrollSeriesPresent": false
+      },
+      "originalConsoleLogSHA256": "fb23cd4f8fb5fe94be637019d4773be0142db70dad31f0bd4388dab8a9700d6c",
+      "consoleReportedMetricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute"
+      ],
+      "csvEvidence": [
+        {
+          "archiveMember": "metrics-csv/495E89A8-A32D-480F-B617-A2DB2593EC80.csv",
+          "sha256": "8aca5585194d9b076f8e911f55703d0e5befe30441cc2a0762832f1abf280003",
+          "packagedPath": "original-8f/metrics.csv",
+          "containsScrollDuration": false
+        }
+      ],
+      "diagnosticSummarySHA256": "07eecbdf29d5b2429983b3b4a133cbc3b06d720c666064f346fcf07316cbe2d5",
+      "requiredScrollSeriesPresent": false,
+      "allRetainedSeriesHaveFiveSamples": true,
+      "summaryEnvironmentDescription": "RoomInTheCart-Performance \u00b7 Built with macOS 15.8.2"
+    },
+    {
+      "role": "passing comparator",
+      "commit": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "runID": 42215222404,
+      "jobID": 127888885720,
+      "attempt": 1,
+      "artifactID": 13502513337,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/iphone-performance-scroll-1.zip",
+      "archiveSHA256": "e8511c7e1defecc4d6b4a2ea1e9bc51cf3654abf831a9f5264da229b14593ccc",
+      "archiveDigestReverified": true,
+      "archiveBytes": 4952129,
+      "packagedFiles": [
+        {
+          "path": "comparator-0d33/metrics.json",
+          "archiveMember": "metrics.json",
+          "sha256": "f560d7a32d33d5473b65aa1a12c2e289dc5eabc10e1b9649fcd61b339d6e32b1",
+          "byteIdentical": true
+        },
+        {
+          "path": "comparator-0d33/test-summary.json",
+          "archiveMember": "test-summary.json",
+          "sha256": "c6956cb47d5a88beea6ca1dd4e7ffd8eca171325509ab0e979bfed8f84e6ce52",
+          "byteIdentical": true
+        },
+        {
+          "path": "comparator-0d33/toolchain.txt",
+          "archiveMember": "toolchain.txt",
+          "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+          "byteIdentical": true
+        }
+      ],
+      "deviceAndConfiguration": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "toolchain": "Xcode 26.3\nBuild version 17C529",
+      "testResult": {
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "result": "Passed"
+      },
+      "startUTC": "2026-11-06T12:33:22.079000+00:00",
+      "finishUTC": "2026-11-06T12:41:13.763000+00:00",
+      "series": [
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+          "unit": "kB",
+          "samples": [
+            108158.848,
+            108355.456,
+            108420.992,
+            108535.68,
+            108666.752
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+          "unit": "kB",
+          "samples": [
+            108355.456,
+            108519.296,
+            108699.52,
+            108797.824,
+            108945.28
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+          "unit": "s",
+          "samples": [
+            2.5789600000000004,
+            2.565552667,
+            2.583267875,
+            2.5816098750000003,
+            2.5663605410000003
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+          "unit": "kB",
+          "samples": [
+            114.688,
+            147.456,
+            32.768,
+            16.384,
+            49.152
+          ]
+        }
+      ],
+      "originalXCTestDatabase": {
+        "originalArchiveMember": "Performance.xcresult/database.sqlite3",
+        "originalArchiveMemberSHA256": "8bfc4e6cedbe1eda0c036bbc94bf28d348b2228a3d208e693d1cb4a0608a5817",
+        "query": "SELECT identifier, unitOfMeasurement, measurements FROM PerformanceMetrics",
+        "readOnly": true,
+        "rows": [
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+            "unit": "kB",
+            "measurementsText": "108158.848,108355.456,108420.992,108535.68,108666.752"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+            "unit": "kB",
+            "measurementsText": "108355.456,108519.296,108699.52,108797.824,108945.28"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+            "unit": "s",
+            "measurementsText": "2.5789600000000004,2.565552667,2.583267875,2.5816098750000003,2.5663605410000003"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+            "unit": "kB",
+            "measurementsText": "114.688,147.456,32.768,16.384,49.152"
+          }
+        ],
+        "requiredScrollSeriesPresent": true
+      },
+      "originalConsoleLogSHA256": "0f2eb0dc62f55daf6c1e189bbe76a1d94507d58b9d39f4b689787569043e127e",
+      "consoleReportedMetricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical"
+      ],
+      "csvEvidence": [
+        {
+          "archiveMember": "metrics-csv/84518539-55B2-4B20-9F3E-B88E6F4D269F.csv",
+          "sha256": "f7c924aa51c3dd32ed944c857ad1675d4e85a8ced67cfbdbf16e2394ba6cb3b2",
+          "packagedPath": "comparator-0d33/metrics.csv",
+          "containsScrollDuration": true
+        }
+      ],
+      "diagnosticSummarySHA256": "b86622ebc509488ff3645912ee4fe266a3db4b1555d3da1b6ddd1ea24c5b6c75",
+      "requiredScrollSeriesPresent": true,
+      "allRetainedSeriesHaveFiveSamples": true,
+      "summaryEnvironmentDescription": "RoomInTheCart-Performance \u00b7 Built with macOS 15.8.2"
+    },
+    {
+      "role": "additional unwrapped omission on newer toolchain",
+      "commit": "5376a01227d9ccf2cba53123b7887c83531088de",
+      "runID": 42261730525,
+      "jobID": 128057841463,
+      "attempt": 1,
+      "artifactID": 13526949819,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/ReleaseToolchainQualification20261106/hosted-5376a01/qualification-scroll-1.zip",
+      "archiveSHA256": "06b89fd235aa764d0afcfc2d5d6e3f848c72ce860476d5be0db47d2a738c7db5",
+      "archiveDigestReverified": true,
+      "archiveBytes": 6979454,
+      "packagedFiles": [
+        {
+          "path": "qualification-5376/metrics.json",
+          "archiveMember": "scroll/metrics.json",
+          "sha256": "9d675775757a99f74f6927233a9496a18dfb668027f0a63b1243ab4ea716f07f",
+          "byteIdentical": true
+        },
+        {
+          "path": "qualification-5376/test-summary.json",
+          "archiveMember": "scroll/test-summary.json",
+          "sha256": "5d9da5de9a20f20d6292745511ce263b3f4c2d9a1e053a741341b741048cf6af",
+          "byteIdentical": true
+        },
+        {
+          "path": "qualification-5376/toolchain.txt",
+          "archiveMember": "scroll/toolchain.txt",
+          "sha256": "bbe969e3e1760bbc982b73129dcb3b303aa7e410a7a6d7f666d20df96e601bdf",
+          "byteIdentical": true
+        }
+      ],
+      "deviceAndConfiguration": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "1F7ED7FC-A398-4E9F-80F3-5511D30687C3",
+            "deviceName": "RITC qualification scroll 4640dabc-1287-4a43-8663-9f6187b27948",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23E254a",
+            "osVersion": "26.4.1",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "toolchain": "Xcode 26.4.1\nBuild version 17E202",
+      "testResult": {
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "result": "Passed"
+      },
+      "startUTC": "2026-11-06T17:59:42.894000+00:00",
+      "finishUTC": "2026-11-06T18:09:38.062000+00:00",
+      "series": [
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+          "unit": "kB",
+          "samples": [
+            106568.128,
+            106863.04,
+            107223.488,
+            107141.568,
+            107108.8
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+          "unit": "kB",
+          "samples": [
+            81.92,
+            147.456,
+            196.608,
+            32.768,
+            0
+          ]
+        },
+        {
+          "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+          "unit": "kB",
+          "samples": [
+            106469.824,
+            106863.04,
+            107092.416,
+            107059.648,
+            107026.88
+          ]
+        }
+      ],
+      "originalXCTestDatabase": {
+        "originalArchiveMember": "scroll/Tests.xcresult/database.sqlite3",
+        "originalArchiveMemberSHA256": "c3549a3a5a8ec52e8b7f38e596b39e573af39e4a2b7de82c887423aa7f00e7d3",
+        "query": "SELECT identifier, unitOfMeasurement, measurements FROM PerformanceMetrics",
+        "readOnly": true,
+        "rows": [
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+            "unit": "kB",
+            "measurementsText": "106568.128,106863.04,107223.488,107141.568,107108.8"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+            "unit": "kB",
+            "measurementsText": "81.92,147.456,196.608,32.768,0.0"
+          },
+          {
+            "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+            "unit": "kB",
+            "measurementsText": "106469.824,106863.04,107092.416,107059.648,107026.88"
+          }
+        ],
+        "requiredScrollSeriesPresent": false
+      },
+      "originalConsoleLogSHA256": "36ecb21bbe39e50454a1c10b64701974fa6c197fda6810a5342cf34e8ea90dd2",
+      "consoleReportedMetricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute"
+      ],
+      "csvEvidence": [
+        {
+          "archiveMember": "scroll/metrics-csv/F7D97C75-DCCB-4131-A6D2-F16C65C87954.csv",
+          "sha256": "b7e4b6c4f81ae69c25019c00f91e9aad26dbb1a35ccdf7c40406a493c6fbd2d4",
+          "packagedPath": "qualification-5376/metrics.csv",
+          "containsScrollDuration": false
+        }
+      ],
+      "requiredScrollSeriesPresent": false,
+      "allRetainedSeriesHaveFiveSamples": true,
+      "summaryEnvironmentDescription": "RoomInTheCart-Performance \u00b7 Built with macOS 26.7.2"
+    }
+  ],
+  "sourceProvenance": {
+    "ios/UITests/ReleasePerformanceUITests.swift": {
+      "8f864eafc3887ea16be996124d55fa2ca2708706": {
+        "gitBlob": "8f0de7e881b296ad8eb74f34f452e6f20527663b",
+        "sha256": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b"
+      },
+      "0d33c11d43a97d670bf56d104d3260cad9b3f202": {
+        "gitBlob": "8f0de7e881b296ad8eb74f34f452e6f20527663b",
+        "sha256": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b"
+      },
+      "5376a01227d9ccf2cba53123b7887c83531088de": {
+        "gitBlob": "8f0de7e881b296ad8eb74f34f452e6f20527663b",
+        "sha256": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b"
+      }
+    },
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": {
+      "8f864eafc3887ea16be996124d55fa2ca2708706": {
+        "gitBlob": "d3554222e9082d640c3d7762be5a9e52a725c8db",
+        "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+      },
+      "0d33c11d43a97d670bf56d104d3260cad9b3f202": {
+        "gitBlob": "d3554222e9082d640c3d7762be5a9e52a725c8db",
+        "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+      },
+      "5376a01227d9ccf2cba53123b7887c83531088de": {
+        "gitBlob": "d3554222e9082d640c3d7762be5a9e52a725c8db",
+        "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+      }
+    },
+    ".github/workflows/ios-performance.yml": {
+      "8f864eafc3887ea16be996124d55fa2ca2708706": {
+        "gitBlob": "8fada161320f7d79e6270719b55389800ef72497",
+        "sha256": "850c7c73584e1574fcba5cc282b890620b29b18c557983164b113b445b67b5c6"
+      },
+      "0d33c11d43a97d670bf56d104d3260cad9b3f202": {
+        "gitBlob": "8fada161320f7d79e6270719b55389800ef72497",
+        "sha256": "850c7c73584e1574fcba5cc282b890620b29b18c557983164b113b445b67b5c6"
+      },
+      "5376a01227d9ccf2cba53123b7887c83531088de": {
+        "gitBlob": "915ade59e56691ef9cd47fdea14413af44f7065c",
+        "sha256": "1d052d3fc06a1dcf326de6728569f2529e77c6db957ab6948638ae18f4125683"
+      }
+    },
+    "scripts/check_ios_performance.py": {
+      "8f864eafc3887ea16be996124d55fa2ca2708706": {
+        "gitBlob": "5eaaeef76e12ec5321ce1ebacb239fa11ea5b1ab",
+        "sha256": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38"
+      },
+      "0d33c11d43a97d670bf56d104d3260cad9b3f202": {
+        "gitBlob": "5eaaeef76e12ec5321ce1ebacb239fa11ea5b1ab",
+        "sha256": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38"
+      },
+      "5376a01227d9ccf2cba53123b7887c83531088de": {
+        "gitBlob": "5eaaeef76e12ec5321ce1ebacb239fa11ea5b1ab",
+        "sha256": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38"
+      }
+    },
+    "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme": {
+      "8f864eafc3887ea16be996124d55fa2ca2708706": {
+        "gitBlob": "0cfe1f33df4cb5bb84a7e863d620e3cf7a4bf03c",
+        "sha256": "a3fe899890ef4b04ee3a30fe29775123d6152d0eeaff976122f8749b3611b886"
+      },
+      "0d33c11d43a97d670bf56d104d3260cad9b3f202": {
+        "gitBlob": "0cfe1f33df4cb5bb84a7e863d620e3cf7a4bf03c",
+        "sha256": "a3fe899890ef4b04ee3a30fe29775123d6152d0eeaff976122f8749b3611b886"
+      },
+      "5376a01227d9ccf2cba53123b7887c83531088de": {
+        "gitBlob": "0cfe1f33df4cb5bb84a7e863d620e3cf7a4bf03c",
+        "sha256": "a3fe899890ef4b04ee3a30fe29775123d6152d0eeaff976122f8749b3611b886"
+      }
+    },
+    "excerpt": {
+      "path": "UnwrappedScrollExcerpt.swift",
+      "originalFileLineRanges": [
+        [
+          153,
+          184
+        ],
+        [
+          247,
+          252
+        ]
+      ],
+      "verbatimExcerptSHA256": "5f8ce3da70cb4a1fcdc028e7091e752b3b986788828e74daf477b0ecc201dd7c",
+      "fullTestFileIdenticalAcrossAllThreeCommits": true
+    }
+  },
+  "buildProvenance": [
+    {
+      "commit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+      "runID": 42234316869,
+      "artifactID": 13514080141,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-8f864ea/core-collection/iphone-performance-build-log-1.zip",
+      "sha256": "2f5bf041e2867ba91ef0a67cbb431a6aefc07d1e11cb5408ba0ab1797cc3b94d",
+      "archiveDigestReverified": true,
+      "logSHA256": "62f945c8ae60997e6c2b78138a4ea3e387d393314d45d42d5cc776a717340d8c",
+      "invocationFirstTwoLines": [
+        "Command line invocation:",
+        "    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance -configuration Release -destination \"platform=iOS Simulator,id=BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06\" -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing"
+      ],
+      "evidenceSource": "/Users/palatis/Room in the Cart/docs/evidence/native/ci-8f864ea-20261106/core-deep-performance-audit.json",
+      "scope": "Build log provenance; compiled product bytes were not downloaded or reverified for this preparation."
+    },
+    {
+      "commit": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "runID": 42215222404,
+      "artifactID": 13502161074,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/iphone-performance-build-log-1.zip",
+      "sha256": "d3b4f6917bb8b8dc6c6518bbe989c7b223f3c7824e12f650ae6ec8af60659b35",
+      "archiveDigestReverified": true,
+      "logSHA256": "6741ec4c53b5db0a2e19b3c0dd8a2f35ef547801331552cbe0b67de4779000af",
+      "invocationFirstTwoLines": [
+        "Command line invocation:",
+        "    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance -configuration Release -destination \"platform=iOS Simulator,id=8C9F4118-331E-4250-B1FC-194972BA6726\" -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing"
+      ],
+      "evidenceSource": "/Users/palatis/Room in the Cart/docs/evidence/native/ci-0d33c11-20261106/core-final-audit.json",
+      "scope": "Build log provenance; compiled product bytes were not downloaded or reverified for this preparation."
+    },
+    {
+      "commit": "5376a01227d9ccf2cba53123b7887c83531088de",
+      "runID": 42261730525,
+      "artifactID": 13526139232,
+      "archivePath": "/Users/palatis/Room in the Cart/.build/ReleaseToolchainQualification20261106/hosted-5376a01/qualification-build-evidence-1.zip",
+      "sha256": "5ec103d1430275659eeca1ca16e1f944dd0bf9d0435880fd7b1a30aa07a20d10",
+      "archiveDigestReverified": true,
+      "environment": {
+        "macOS": "26.6.2",
+        "macOSBuild": "25G83",
+        "imageVersion": "20261026.0455.2",
+        "Xcode": "26.4.1",
+        "XcodeBuild": "17E202",
+        "device": "iPhone 17",
+        "architecture": "arm64",
+        "iOS": "26.4.1",
+        "iOSBuild": "23E254a",
+        "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-4"
+      },
+      "scope": "Retained source/product manifest qualification; product binaries not downloaded for independent preparation."
+    }
+  ],
+  "excludedFromReproductionCount": [
+    {
+      "role": "not a missing-series reproduction: test never ran",
+      "source": "docs/evidence/native/ci-804030e-20261106/scroll-pretest-setup-failure.json",
+      "sourceSHA256": "796bc0227bc203406ec6d5d172107f9821ae2b8b26b0790a9cd5aeae2b538ca6",
+      "identity": {
+        "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+        "runID": 42272379490,
+        "attempt": 1,
+        "jobID": 128083892445,
+        "artifactID": 13537130251,
+        "archiveSHA256": "a9c289fa64247b5fa31fd83d9cf0329633b703deb948b2a3801d928c5fa97c29",
+        "executedNativeTests": 0,
+        "classification": "pre-test setup timeout after bootstatus reported Finished"
+      }
+    },
+    {
+      "role": "not the original issue: rejected forwarding wrapper on Xcode 27.1",
+      "source": "docs/evidence/native/scroll-report-probe-20261106/REVIEW.md",
+      "sourceSHA256": "2b8bd3e904dc4b1b3b6a807df441e7b48fe7b8e60a236cf628649dc8696b93be",
+      "identity": {
+        "xcode": "27.1",
+        "xcodeBuild": "27A9275",
+        "iOS": "26.2",
+        "iOSBuild": "23C54",
+        "frozenWrapperSourceSHA256": "cae07fc0191c062fcc92a25b675e0ee2fdb716f6995372bc52864ce5a9769bfe",
+        "localLogSHA256": "a276ce8a3487cbe5065bf60094289f6eac2206828fd96a1bb791dd73943c9309",
+        "result": "null archive-search dates, MXMOSSignpostMetric _constructProbe assertion, then manualStop exception; metrics []"
+      }
+    }
+  ],
+  "privacyScope": "Only scroll test metadata, metric tables, console/build invocation excerpts, fictional fixture and minimal code are packaged. No raw Records, credentials, app-ledger databases, images, opaque xcresult objects, or unrelated test artifacts copied. Original ZIPs are referenced, not duplicated or uploaded.",
+  "limitations": [
+    "No new native execution, hosted action, download or Git mutation.",
+    "Source identity and artifact provenance are evidence, not proof of deterministic reproduction or collector root cause.",
+    "Original archived XCTest metric database was read with SQLite mode=ro; temporary copy deleted. No native xcresulttool invoked.",
+    "No fresh sysdiagnose or standalone minimized app is provided.",
+    "UIKit diagnostic summaries do not prove collector receipt or true measurement boundaries.",
+    "Qualification build metadata labels macOS 26.6.2/25G83; its XCTest environmentDescription says Built with macOS 26.7.2. These differently sourced descriptions are retained without assuming they describe the same layer."
+  ]
+}

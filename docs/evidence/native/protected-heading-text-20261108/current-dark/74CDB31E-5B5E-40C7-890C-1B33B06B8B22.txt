@@ -1,0 +1,1 @@
+label=Protected meal commitments; frame=(32.0, 524.6666666666665, 327.0, 187.33333333333314); viewport=(0.0, 144.0, 402.0, 714.0); lineHeight=63.248046875; requiredBounds=(0.0, 0.0, 326.8448933362961, 187.248046875)

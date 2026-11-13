@@ -1,0 +1,212 @@
+[
+  {
+    "path": "captures/center-after.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/0CC78E06-357F-4B24-B253-44189960468B.png",
+    "sha256": "2d1167ba7bd8b10746d0c7ffc042989d63287be63d0c0423b115a8f5917a757e",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "0CC78E06-357F-4B24-B253-44189960468B.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-center-after_0_2F113BCD-9D5F-4D86-A934-4533174CB37A.png",
+      "timestamp": 1794129647.286
+    }
+  },
+  {
+    "path": "captures/center-result.json",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/B7828A57-C0EC-4082-A9F4-01E159B373F1.json",
+    "sha256": "bb0d8ff7cc9afd98ddc03272ddfd985f09b6a1b0a00142d2d84c7ea194535f62",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "B7828A57-C0EC-4082-A9F4-01E159B373F1.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-center-result_0_749D2840-2FC6-4357-8E44-A37DD1704BB6.json",
+      "timestamp": 1794129647.123
+    }
+  },
+  {
+    "path": "captures/center-before.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/CF0B8F04-61E4-4505-9A7D-6F6675E3E41D.png",
+    "sha256": "9f1f1af274ca1d46e63d615d52276fdd37716eb64378b0073592166cd6584ac0",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "CF0B8F04-61E4-4505-9A7D-6F6675E3E41D.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-center-before_0_E3A48AC7-DD0F-4FDF-8067-14237FA6BD70.png",
+      "timestamp": 1794129646.299
+    }
+  },
+  {
+    "path": "captures/topLeft-after.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/957EBF1B-3F56-4816-A0D0-CA03D5112982.png",
+    "sha256": "9230941607fd965e3a24e482a0c1169067537bd6108ac06c09081f21ed56a739",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "957EBF1B-3F56-4816-A0D0-CA03D5112982.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topLeft-after_0_4A05E17F-797F-476B-861D-C6B95AD7977A.png",
+      "timestamp": 1794129660.301
+    }
+  },
+  {
+    "path": "captures/topLeft-result.json",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/175337D8-4D6E-4E53-BEE1-1D9A0B7038E4.json",
+    "sha256": "e7dfdc4777fdb0f05d57c41e9af24ec105eec2e808bad551d8a909ca42ac7276",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "175337D8-4D6E-4E53-BEE1-1D9A0B7038E4.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topLeft-result_0_44050A24-81AC-4039-93F1-BF06906B89F0.json",
+      "timestamp": 1794129660.121
+    }
+  },
+  {
+    "path": "captures/topLeft-before.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/1E161636-58D2-48E2-A49D-5D2E23D05182.png",
+    "sha256": "9f1f1af274ca1d46e63d615d52276fdd37716eb64378b0073592166cd6584ac0",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "1E161636-58D2-48E2-A49D-5D2E23D05182.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topLeft-before_0_406553CC-D554-4EC7-B23E-DC36D4F96419.png",
+      "timestamp": 1794129659.313
+    }
+  },
+  {
+    "path": "captures/topRight-after.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/3705F9A2-5BD9-418C-9484-BB7B549A0C33.png",
+    "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "3705F9A2-5BD9-418C-9484-BB7B549A0C33.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topRight-after_0_65B8CE9B-3AFB-4E01-860D-A0CBB874FFE1.png",
+      "timestamp": 1794129673.002
+    }
+  },
+  {
+    "path": "captures/topRight-result.json",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/C275DA76-F827-4613-91E7-8BEECE376C83.json",
+    "sha256": "a512a3a8ba029ac6b8a03a58b466b9ba751036e37ccd6ef497f587ea66094ea9",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "C275DA76-F827-4613-91E7-8BEECE376C83.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topRight-result_0_0078C113-D269-4BCE-8A67-69D4B54A4853.json",
+      "timestamp": 1794129672.836
+    }
+  },
+  {
+    "path": "captures/topRight-before.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/2B1D350B-86A9-4B93-B909-89FF8AEB5453.png",
+    "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "2B1D350B-86A9-4B93-B909-89FF8AEB5453.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-topRight-before_0_EE3FEAA6-2C21-49E6-9A72-ECC771B1196A.png",
+      "timestamp": 1794129672.004
+    }
+  },
+  {
+    "path": "captures/bottomLeft-after.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/17D52889-CCCC-49B3-A341-58341F5E0204.png",
+    "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "17D52889-CCCC-49B3-A341-58341F5E0204.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomLeft-after_0_BEF4D7F8-186D-41E5-87AB-AD2D806AB12F.png",
+      "timestamp": 1794129685.527
+    }
+  },
+  {
+    "path": "captures/bottomLeft-result.json",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/14341675-B87B-4B79-AB8B-EE3F8FF015BA.json",
+    "sha256": "33b5ea22252a4adbaaef3c95c61450060ef25ba8f0396262b0d65d10ffa67652",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "14341675-B87B-4B79-AB8B-EE3F8FF015BA.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomLeft-result_0_3255566E-86DE-46F7-91D7-2CF862475131.json",
+      "timestamp": 1794129685.354
+    }
+  },
+  {
+    "path": "captures/bottomLeft-before.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/49FC4985-4709-44AC-9149-3E64428506A1.png",
+    "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "49FC4985-4709-44AC-9149-3E64428506A1.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomLeft-before_0_C552588E-1524-47AF-BEE2-4CB0D5A2A9EE.png",
+      "timestamp": 1794129684.538
+    }
+  },
+  {
+    "path": "captures/bottomRight-after.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/A5706537-B148-425A-A790-8C920E69C187.png",
+    "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "A5706537-B148-425A-A790-8C920E69C187.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomRight-after_0_22624CD6-0870-4DD0-BF6A-783F4D27929F.png",
+      "timestamp": 1794129698.193
+    }
+  },
+  {
+    "path": "captures/bottomRight-result.json",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/C04688BB-3CC0-4A90-838F-C269EE3CC04F.json",
+    "sha256": "9862e47fe140477ca1ea665e093abf0adc25d52ec6501782b626c9baa4fa4a93",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "C04688BB-3CC0-4A90-838F-C269EE3CC04F.json",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomRight-result_0_2613689E-4C29-4BF0-9DCE-FE81C4F0E093.json",
+      "timestamp": 1794129698.032
+    }
+  },
+  {
+    "path": "captures/bottomRight-before.png",
+    "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/07B44626-8E04-4F23-BE9D-8ACB9EB844C8.png",
+    "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "07B44626-8E04-4F23-BE9D-8ACB9EB844C8.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Done-target-bottomRight-before_0_390A25DE-7616-4411-8F75-561A41F11C46.png",
+      "timestamp": 1794129697.225
+    }
+  }
+]

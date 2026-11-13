@@ -1,0 +1,20 @@
+{
+  "id": 13599499470,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5OTQ5OTQ3MA==",
+  "name": "iphone-results-ui-07-1",
+  "size_in_bytes": 79094316,
+  "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13599499470",
+  "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13599499470/zip",
+  "expired": false,
+  "digest": "sha256:48a37ed6a15b6b366b9dd0d5a3746dd5afd1a9d447fba17bfda6d03e5622cc0a",
+  "created_at": "2026-11-08T02:01:07Z",
+  "updated_at": "2026-11-08T02:01:07Z",
+  "expires_at": "2026-11-15T02:01:00Z",
+  "workflow_run": {
+    "id": 42428215935,
+    "repository_id": 1445928007,
+    "head_repository_id": 1445928007,
+    "head_branch": "codex/parallel-ios-ci",
+    "head_sha": "f90ad75a2e561891b2014ecb234d19639bcaed4c"
+  }
+}

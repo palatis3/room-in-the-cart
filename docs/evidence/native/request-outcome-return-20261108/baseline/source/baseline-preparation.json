@@ -1,0 +1,8 @@
+{
+  "head": "8f5adbf47217aa29f23f80f1d31e5d01a612b02c",
+  "createdAtUTC": "2026-11-08T11:33:26.856973+00:00",
+  "sourceFiles": 556,
+  "archiveSHA256": "12a175ff783a38e9d2aba1d4e1849e0081c1b14bf07a5eed23cb848e7989c5f5",
+  "scope": "Exact committed ios tree; no test overlay or native execution yet",
+  "freeBytes": 15317532672
+}

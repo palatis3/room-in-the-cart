@@ -6,6 +6,7 @@ final class HouseholdRequestMealContextTests: XCTestCase {
     @MainActor private func setup(includeMealFacts: Bool = true) async throws -> (HouseholdInboxModel, S24FixtureServer, URL) {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
         let server = S24FixtureServer(cerealScenario: true, includeMealFacts: includeMealFacts)
+        addTeardownBlock { server.close() }
         let model = try await s24FixtureModel(server: server, outboxURL: url)
         model.select(try XCTUnwrap(model.requests.first))
         model.choice = .add; model.price = "3.49"
@@ -59,10 +60,10 @@ final class HouseholdRequestMealContextTests: XCTestCase {
         let (model, server, url) = try await setup()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let held = HeldS24PreviewResponse()
-        defer { S24FixtureProtocol.intercept = nil; held.release() }
+        defer { server.intercept = nil; held.release() }
         for changed in [false, true] {
             let arrived = expectation(description: "S24 preview waiting for the field commit")
-            S24FixtureProtocol.intercept = { task in
+            server.intercept = { task in
                 guard task.request.url?.path.hasSuffix("/previews") == true else { return false }
                 held.hold(task); arrived.fulfill(); return true
             }
@@ -71,7 +72,7 @@ final class HouseholdRequestMealContextTests: XCTestCase {
             XCTAssertTrue(model.busy)
             let committedPrice = changed ? "3.50" : model.price
             model.price = committedPrice
-            S24FixtureProtocol.intercept = nil; held.release()
+            server.intercept = nil; held.release()
             await review.value
             if changed {
                 XCTAssertNil(model.preview); XCTAssertNil(model.requestMealContext)
@@ -83,6 +84,40 @@ final class HouseholdRequestMealContextTests: XCTestCase {
             }
         }
         XCTAssertEqual(server.previewCount, 3); XCTAssertEqual(server.commandCount, 0)
+    }
+
+    @MainActor func testHeldReviewKeepsOriginatingServerAfterAnotherFixtureIsCreated() async throws {
+        let (first, firstServer, firstURL) = try await setup()
+        defer { try? FileManager.default.removeItem(at: firstURL.deletingLastPathComponent()) }
+        let held = HeldS24PreviewResponse()
+        defer { firstServer.intercept = nil; held.release() }
+        let arrived = expectation(description: "Original cereal preview is held")
+        firstServer.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/previews") == true else { return false }
+            held.hold(task); arrived.fulfill(); return true
+        }
+        let firstReview = Task { await first.review() }
+        await fulfillment(of: [arrived], timeout: 3)
+        XCTAssertTrue(first.busy); XCTAssertEqual(firstServer.previewCount, 1)
+
+        let secondServer = S24FixtureServer()
+        addTeardownBlock { secondServer.close() }
+        let secondURL = firstURL.deletingLastPathComponent().appendingPathComponent("wraps-outbox.json")
+        let second = try await s24FixtureModel(server: secondServer, outboxURL: secondURL)
+        second.select(try XCTUnwrap(second.requests.first)); second.choice = .add; second.price = "1.25"
+        await second.review()
+        XCTAssertEqual(second.preview?.after.totalMinor, 125)
+        secondServer.intercept = { _ in XCTFail("A held cereal response must not use the newer fixture's interceptor"); return false }
+        firstServer.intercept = { _ in XCTFail("Resuming a bound response must not reread a replaced interceptor"); return false }
+        held.release()
+        await firstReview.value
+        XCTAssertFalse(first.busy)
+        XCTAssertEqual(first.preview?.before.totalMinor, 3720)
+        XCTAssertEqual(first.preview?.after.totalMinor, 4069)
+        XCTAssertEqual(first.preview?.after.overCapMinor, 269)
+        XCTAssertNotNil(first.requestMealContext)
+        XCTAssertEqual(firstServer.previewCount, 2); XCTAssertEqual(secondServer.previewCount, 1)
+        XCTAssertEqual(firstServer.commandCount, 0); XCTAssertEqual(secondServer.commandCount, 0)
     }
 
     @MainActor func testMissingMealsStayUnknownWhileKnownEmptyMealsStayEmpty() async throws {

@@ -1,0 +1,66 @@
+{
+  "recordedAtUTC": "2026-11-08T12:02:53.673996+00:00",
+  "results": [
+    {
+      "command": "python3 scripts/generate_theme.py --check",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/check_localization.py",
+      "exitCode": 0,
+      "scope": "26 catalogs,4304 en/es entries,4005 literal keys;43 dynamic helper expressions/117 compositions and human Spanish remain outside static proof"
+    },
+    {
+      "command": "python3 scripts/generate_xcode_project.py --check",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_ui_automation_contract.py",
+      "exitCode": 0,
+      "tests": 1
+    },
+    {
+      "command": ".tools/node-v22.23.4-darwin-arm64/bin/node docs/evidence/b11/safari-editor-foreground-20261108/verify-evidence.mjs",
+      "exitCode": 0,
+      "scope": "public immutable Safari receipt verification only"
+    },
+    {
+      "command": "python3 scripts/test_plan_ios_fixture_tests.py",
+      "exitCode": 0,
+      "tests": 16,
+      "initialResult": {
+        "failed": 1,
+        "passed": 15,
+        "cause": "Inventory expectation was 69 after the new later-page test made it 70."
+      },
+      "correction": "Expected inventory 70; assert new later-page selector appears exactly once in contributor-balanced-01. Production planner unchanged."
+    }
+  ],
+  "nativeActions": 0,
+  "finalDisclosureFollowupChecks": {
+    "recordedAtUTC": "2026-11-08T12:40:02.253043+00:00",
+    "sourceManifest": ".build/S24OutcomeReturnNov08/disclosure-input-followup/fixed-source-manifest.json",
+    "results": [
+      {
+        "command": "python3 scripts/generate_xcode_project.py --check",
+        "exitCode": 0
+      },
+      {
+        "command": "python3 scripts/test_ui_automation_contract.py",
+        "tests": 1,
+        "exitCode": 0
+      },
+      {
+        "command": "python3 scripts/test_plan_ios_tests.py",
+        "tests": 6,
+        "exitCode": 0
+      },
+      {
+        "command": "python3 -m unittest discover -s scripts -p test_discover_ios_tests.py",
+        "tests": 7,
+        "exitCode": 0
+      }
+    ],
+    "note": "Direct execution of test_discover_ios_tests.py loaded definitions only; the subsequent unittest discovery above executed its7cases with mocked native commands."
+  }
+}

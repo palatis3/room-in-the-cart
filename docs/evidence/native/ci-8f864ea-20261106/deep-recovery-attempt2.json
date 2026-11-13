@@ -1,0 +1,131 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234316853,
+  "attempt": 2,
+  "conclusion": "success",
+  "frozenVerifierInputs": 148,
+  "allVerifierHashesMatch": true,
+  "newExecutions": [
+    {
+      "id": 127977132168,
+      "name": "sanitizers (thread)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000003965,
+      "started_at": "2026-11-06T15:34:11Z",
+      "completed_at": "2026-11-06T15:38:13Z"
+    },
+    {
+      "id": 127977132463,
+      "name": "storekit (en, US English \u2014 local StoreKit)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000003974,
+      "started_at": "2026-11-06T15:52:54Z",
+      "completed_at": "2026-11-06T16:13:02Z"
+    }
+  ],
+  "inheritedSuccessfulJobs": {
+    "sanitizers (address)": {
+      "oldJobID": 127947892255,
+      "newAPIJobID": 127977192465,
+      "executionFieldsUnchanged": [
+        "started_at",
+        "completed_at",
+        "steps",
+        "runner_id",
+        "runner_name",
+        "conclusion"
+      ]
+    },
+    "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)": {
+      "oldJobID": 127947892281,
+      "newAPIJobID": 127977146698,
+      "executionFieldsUnchanged": [
+        "started_at",
+        "completed_at",
+        "steps",
+        "runner_id",
+        "runner_name",
+        "conclusion"
+      ]
+    }
+  },
+  "archives": {
+    "storekit-en-2": {
+      "artifactID": 13519254845,
+      "bytes": 448881,
+      "sha256": "d1eca2d85391ad335b69bc61b31aebf1940950209f71e7065c744c99f9609e31"
+    },
+    "swift-thread-2": {
+      "artifactID": 13517264484,
+      "bytes": 29484,
+      "sha256": "8a3662905aa1c1b08b03d18aabaa5ee181df41a4ef029f5d4bd572a921410469"
+    }
+  },
+  "missingArchives": [],
+  "billing": {
+    "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "runID": 42234316853,
+    "locales": {
+      "en": {
+        "artifactID": 13519254845,
+        "sha256": "d1eca2d85391ad335b69bc61b31aebf1940950209f71e7065c744c99f9609e31",
+        "digestVerified": true,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "configurations": [
+          "US English \u2014 local StoreKit"
+        ],
+        "failures": [],
+        "hostedJSONExportsPresent": true
+      }
+    }
+  },
+  "threadSanitizer": {
+    "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "checks": {
+      "swift-thread-2": {
+        "runID": 42234316853,
+        "artifactID": 13517264484,
+        "sha256": "8a3662905aa1c1b08b03d18aabaa5ee181df41a4ef029f5d4bd572a921410469",
+        "strictReplayExit": 0,
+        "passed": 389,
+        "expectedNativeWireSkips": 3,
+        "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+      }
+    }
+  },
+  "runtime": {
+    "devices": [
+      {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      }
+    ],
+    "allExpected": true,
+    "summarySHA256": "daeaa976674e388be47524814f4b290f4dd229dde47c7524476bf47f58793875"
+  },
+  "collector": {
+    "head": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "runID": 42234316853,
+    "attempt": 2,
+    "terminal": true,
+    "conclusion": "success",
+    "collected": [
+      "storekit-en-2",
+      "swift-thread-2"
+    ],
+    "missing": [],
+    "collectorFailures": []
+  },
+  "scope": "Only the two root-authorized runner-acquisition recovery jobs; original attempt1 failures remain frozen separately. No retry or hosted mutation by collector."
+}

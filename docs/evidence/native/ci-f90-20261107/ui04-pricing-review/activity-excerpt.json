@@ -1,0 +1,53 @@
+{
+  "caseURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "caseRun": {
+    "rowid": 3,
+    "repetitionPolicy_fk": null,
+    "skipNotice_fk": null,
+    "testSuiteRun_fk": 1,
+    "duration": 336.63618099689484,
+    "result": "Failure",
+    "dynamicTestParameters_fk": null,
+    "orderInTestSuiteRun": 2,
+    "testCase_fk": 3
+  },
+  "sourceMetadataSHA256": "b79e459c40a8980038b4724b6105e3e1393799e21b99cd952ca27f98145ce69c",
+  "timeBasis": "CFAbsoluteTime since2001; add978307200 for Unix epoch.",
+  "events": [
+    {
+      "title": "Added attachment named 'Free-whole-packs-saved-for-checkout-review'",
+      "startTimeCF": 815793155.625,
+      "relativeSeconds": 221.11
+    },
+    {
+      "title": "Tap \"Apply reviewed checkout copy\" Button",
+      "startTimeCF": 815793173.984,
+      "relativeSeconds": 239.469
+    },
+    {
+      "title": "Tap \"Review whole checkout\" Button",
+      "startTimeCF": 815793176.44,
+      "relativeSeconds": 241.925
+    },
+    {
+      "title": "Type 'Family market' into \"Store\" TextField",
+      "startTimeCF": 815793181.2060001,
+      "relativeSeconds": 246.691
+    },
+    {
+      "title": "Type 'Main branch' into \"Branch\" TextField",
+      "startTimeCF": 815793184.592,
+      "relativeSeconds": 250.077
+    },
+    {
+      "title": "Type 'Tuesday 5 PM' into \"Pickup or delivery slot\" TextField",
+      "startTimeCF": 815793187.3299999,
+      "relativeSeconds": 252.815
+    },
+    {
+      "title": "Added attachment named 'Free-flow-failure'",
+      "startTimeCF": 815793269.6830001,
+      "relativeSeconds": 335.168
+    }
+  ]
+}

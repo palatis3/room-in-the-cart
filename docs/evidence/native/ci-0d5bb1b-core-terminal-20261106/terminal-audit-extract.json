@@ -1,0 +1,706 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runs": [
+    {
+      "runID": 42316648565,
+      "workflowID": 407156471,
+      "conclusion": "failure",
+      "createdAt": "2026-11-07T00:11:01Z",
+      "terminalAPIUpdatedAt": "2026-11-07T02:22:59Z",
+      "wallSeconds": 7918.0
+    },
+    {
+      "runID": 42316648633,
+      "workflowID": 407500254,
+      "conclusion": "success",
+      "createdAt": "2026-11-07T00:11:01Z",
+      "terminalAPIUpdatedAt": "2026-11-07T00:37:57Z",
+      "wallSeconds": 1616.0
+    },
+    {
+      "runID": 42316648635,
+      "workflowID": 407500253,
+      "conclusion": "failure",
+      "createdAt": "2026-11-07T00:11:01Z",
+      "terminalAPIUpdatedAt": "2026-11-07T01:40:42Z",
+      "wallSeconds": 5381.0
+    },
+    {
+      "runID": 42316648577,
+      "workflowID": 407708991,
+      "conclusion": "success",
+      "createdAt": "2026-11-07T00:11:01Z",
+      "terminalAPIUpdatedAt": "2026-11-07T00:13:25Z",
+      "wallSeconds": 144.0
+    },
+    {
+      "runID": 42316648580,
+      "workflowID": 407454895,
+      "conclusion": "success",
+      "createdAt": "2026-11-07T00:11:01Z",
+      "terminalAPIUpdatedAt": "2026-11-07T00:12:28Z",
+      "wallSeconds": 87.0
+    }
+  ],
+  "ordinaryUI": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "runID": 42316648565,
+    "groups": {
+      "ui-04": {
+        "artifactID": 13551638882,
+        "sha256": "6ec1b6afe55099ffa82253cd207057f6aa9bee9eb2f3b8795355ac63c06b59bc",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+          "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+          "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+          "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+        ],
+        "selected": 6,
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "strictReplayExit": 1,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "f6e238ecf807ed33faa130ecc1414112551b830ec34d4ccc5e3cd086c1342aba"
+      },
+      "ui-03": {
+        "artifactID": 13552393048,
+        "sha256": "59ef0484a97d6ea5ba2c3a4b11f8b89a8f2c347dd8ec83830eb5f2173d886a12",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+          "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+          "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "ea5d72f8891d788ec6b6604a6ccae2042a72d0541450c9c06ecab4d67d2b1b8e"
+      },
+      "ui-05": {
+        "artifactID": 13554053961,
+        "sha256": "26331a543060fa39f3e0eaae18162f011b7f8136f4add56f500edde51d11c962",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+          "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+          "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "6b597525d57d6da1536d99c31de916583db1a5e2ef06631228d82dab680d9217"
+      },
+      "ui-02": {
+        "artifactID": 13554532080,
+        "sha256": "ea6b592cca4157e06548c1b265c7612770fac27c518c39f8cea011dd99267cca",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+          "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+          "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+          "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+          "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "0cf4131ce2009423ba31e28b1d3eea60515c637d0cafa087f6acd09e9e57ba5a"
+      },
+      "ui-08": {
+        "artifactID": 13554298891,
+        "sha256": "47398449d3761fc69bc0440ab15c8644d07dccbdb9f7fb0305aae38dfc88911a",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+          "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "a09be48282049ead97cb84967100684e6d84bf936e7a360ada606a596334e6e6"
+      },
+      "ui-09": {
+        "artifactID": 13554854103,
+        "sha256": "b10ef315277ec17d141c8b079857c4e25b98e8ef80338c8b989fafa0b6162ad0",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+          "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+          "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+          "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+          "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn"
+        ],
+        "selected": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 2,
+        "rawLogSHA256": "f0a80e1bf98d3642faa084b882cd6271d6362dc36a43f16161718e2ca2a61926"
+      },
+      "ui-06": {
+        "artifactID": 13554814955,
+        "sha256": "b3e3034d183d66e213da08bc5e1c9f921cbe86d5b14300accea69c4a451ee3f3",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+          "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+          "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+          "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+          "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "df750eabd0222165e94d23f179394af4fe0a498c0f3c8c6f6eb22278350afd2d"
+      },
+      "ui-10": {
+        "artifactID": 13555821539,
+        "sha256": "24c0c34a38089567c09aa0653ea25719e31ad2aafb2a603382da7a93592ef5fc",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+          "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+          "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+          "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+        ],
+        "selected": 6,
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "strictReplayExit": 1,
+        "runtimeWarnings": 0,
+        "rawLogSHA256": "1572848b799f9616c82e2d2a6ca30c92a268633b4dbe5cbd28abbe327ac9f3f4"
+      },
+      "ui-07": {
+        "artifactID": 13555913744,
+        "sha256": "47d38a0286ccbcc4398de9996dd4b3f21c10858087186eaaefee994a16f9b6a7",
+        "digestVerified": true,
+        "selectors": [
+          "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+          "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+          "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+          "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock",
+          "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+        ],
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 1,
+        "rawLogSHA256": "40b7883fe1980da72e93f6d6d4f2a468a1d45607def3485b645773722c67088d"
+      }
+    }
+  },
+  "ordinaryUIObservedTotals": {
+    "expectedSelected": 52,
+    "defaultGuardSelected": 48,
+    "rootScopedSelected": 4,
+    "passed": 49,
+    "failed": 3,
+    "skipped": 0,
+    "runtimeWarnings": 5,
+    "allExpectedCasesObserved": true,
+    "scope": "Observed result totals include the separately retained root UI01 scoped replay. Default collector guard refusal, native failures and strict/lifecycle failures remain unchanged."
+  },
+  "gateSummary": {
+    "allNamedRunConclusionsSuccess": false,
+    "modelsStrictPassed": true,
+    "ordinaryUIStrictPassed": false,
+    "storekitStrictPassed": true,
+    "packageSanitizerStrictPassed": true,
+    "performanceOriginalGatesPassed": false,
+    "nativeWireVerified": true
+  },
+  "collectorFailures": [
+    {
+      "runID": 42316648565,
+      "artifact": "iphone-results-ui-01-1",
+      "collectorExit": 1
+    }
+  ],
+  "rootScopedUI01Replay": {
+    "scope": "Root-owned isolated archive exception and strict replay, separately retained; default collector refusal unchanged. Not a native retry or acceptance pass.",
+    "checkerSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+    "rootCheckerCurrentlyByteIdenticalToCandidate": true,
+    "summaryDetailsLogMatchBoundedOriginalMembers": true,
+    "files": {
+      "isolated-extraction.json": "dcdf66d3bb7d196f59a119d5639960e8836f927764c2a8a68c85ed6ada4ee538",
+      "original-strict-exit.json": "bb04299ca999d214513deaf081f1177b2fcb54f7c040e2f7c5a4939db9623fae",
+      "original-strict.log": "5be94b6c83d4f7ca4b54f67a5737b85bd99057bf9249b177553168d4454c5c0f",
+      "test-runtime-warnings.json": "24f3804a42461a10b6d37d0834d3cf4b20d41a2881628bfb61d5c6fc1062b1f5"
+    },
+    "verdict": {
+      "exit": 1,
+      "command": [
+        "python3",
+        "scripts/check_ios_test_results.py",
+        "--selectors",
+        ".build/UI01ReturnReview20261106/inspection/test-plan/ui-01.txt",
+        "--summary",
+        ".build/UI01ReturnReview20261106/inspection/test-summary.json",
+        "--tests",
+        ".build/UI01ReturnReview20261106/inspection/test-details.json",
+        "--result-bundle",
+        ".build/UI01ReturnReview20261106/inspection/Tests.xcresult",
+        "--test-log",
+        ".build/UI01ReturnReview20261106/inspection/Tests.log",
+        "--expected-count",
+        "4"
+      ],
+      "scope": "Separate root bounded inspection; original collector member guard retained",
+      "passed": 3,
+      "failed": 1,
+      "runtimeWarnings": 2,
+      "warningsWithinExistingLimits": true
+    }
+  },
+  "coreProductTransport": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "runID": 42316648565,
+    "productArtifactID": 13550818501,
+    "apiDigest": "sha256:aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594",
+    "bytes": 50657658,
+    "groups": {
+      "ui-04": {
+        "jobID": 128234290801,
+        "conclusion": "failure",
+        "runnerID": 1000004111,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "4f0c261d2b9f3aecedd4306aed7558f749e78b45a53b7a960805540177041fde",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "models": {
+        "jobID": 128234291318,
+        "conclusion": "success",
+        "runnerID": 1000004113,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "8a2271dcd716288d219c1f3344ad58add5357c57e99441973d5ecd33ad84ec54",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-03": {
+        "jobID": 128234291422,
+        "conclusion": "success",
+        "runnerID": 1000004115,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "5a8da62ef543bf66c0f458945f3d4025768beb772a5d4d209296279136c36460",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-02": {
+        "jobID": 128234291558,
+        "conclusion": "success",
+        "runnerID": 1000004124,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "8b3ee3dda4cc6d961f1971866c0e3a07860f030b8563cd38097820aaa9749d2f",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-01": {
+        "jobID": 128234291592,
+        "conclusion": "failure",
+        "runnerID": 1000004114,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "4c4df5bc29e59e6edc7a9139eb6bb4ffce1f083d9a3f6a1c21ef440e723b6101",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-05": {
+        "jobID": 128238932765,
+        "conclusion": "success",
+        "runnerID": 1000004122,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "e48362f06822ce524a9ed081e8dca9f563452084cbe9da65a5033a7a8cba7f1a",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-06": {
+        "jobID": 128241681055,
+        "conclusion": "success",
+        "runnerID": 1000004126,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "5cc69308e28d3f1b4bedb2d7fedb416c01974ca8dc2dcab0330db0fa080069e3",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-07": {
+        "jobID": 128243330965,
+        "conclusion": "success",
+        "runnerID": 1000004136,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "711013292d60c69ab5be0f68e26475bbf2d71ef4884078bad5395de1b2178d7e",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-08": {
+        "jobID": 128244641190,
+        "conclusion": "success",
+        "runnerID": 1000004125,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "b81806f92a3f98d9518d439c54b49bc4ee04ff1d9988e04931ece0b755fb43b6",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-09": {
+        "jobID": 128256235647,
+        "conclusion": "success",
+        "runnerID": 1000004128,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "b40b25511f27fa58deb044440c621915eb62e57e15285f9ecd9ec81a672a25fa",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      },
+      "ui-10": {
+        "jobID": 128256569416,
+        "conclusion": "failure",
+        "runnerID": 1000004132,
+        "logAvailable": true,
+        "verified": true,
+        "logSHA256": "745de1e76b95bdfdc22e19c763ce085cc7819efe7c8307955847de1e40faf8a9",
+        "requestedArtifactIDs": [
+          "13550818501"
+        ],
+        "downloadedDigests": [
+          "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594"
+        ],
+        "expectedMetadataListed": true
+      }
+    },
+    "scope": "Actual matrix restore logs identify the same compiled product artifact and downloaded ZIP digest; product inventory and original result gates remain separate.",
+    "expectedGroups": [
+      "models",
+      "ui-01",
+      "ui-02",
+      "ui-03",
+      "ui-04",
+      "ui-05",
+      "ui-06",
+      "ui-07",
+      "ui-08",
+      "ui-09",
+      "ui-10"
+    ],
+    "allExpectedGroupsRestoredVerifiedProduct": true
+  },
+  "nativeWire": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "runID": 42316648577,
+    "jobID": 128230768920,
+    "artifactID": 13551620253,
+    "archiveSHA256": "cd80cff5aae0e7b41fe4d7711a72adbe2cc2634d45e4c4781f6dbc41f9be66c0",
+    "apiDigestMatched": true,
+    "expectedNodeCasesFromPinnedSource": [
+      "Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)",
+      "Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)",
+      "actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL",
+      "real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL"
+    ],
+    "observedNodeCases": [
+      "Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)",
+      "Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)",
+      "actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL",
+      "real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL"
+    ],
+    "expectedSwiftScenariosFromPinnedSource": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "observedSwiftScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "counts": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "nativeSkipped": 0,
+    "toolchainLines": [
+      "Xcode 26.3",
+      "Build version 17C529",
+      "swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)",
+      "Target: arm64-apple-macosx15.0",
+      "v22.23.4",
+      "postgres (PostgreSQL) 17.11 (Homebrew)",
+      "OpenSSL 1.1.1w  11 Sep 2023"
+    ],
+    "postgresCleanupStopObserved": true,
+    "sourceSHA256": "af02e58589cfc316bf8eac680ea9ccc26b6810bcb6da514dd5be07195ba5cb43",
+    "inputHashes": {
+      "swift-build.log": "ef5f2d02d288cb31512468072e7586a3bfdba29e7826c148d3b837000a34c8d6",
+      "tests.tap": "b80d10820af1d1e077d6032d1f49ae18c4236b7dc46c15071ceb5f8a5c06a4fd",
+      "postgres.log": "1d44d99dee0a3240fc3944e0af22d8a176e20e8c2fda01c58fc7b7455d9fc696"
+    },
+    "jobLogSHA256": "b8e2b090b440e136e13936c9efdbf77df760b888c8d43158e1a52e9e508c11b9",
+    "verified": true,
+    "releaseAcceptance": false,
+    "scope": "Read-only TAP, exact scenario/order and hosted shell success verification. No local execution. These six real wire scenarios are separate from three deliberate skips in offline package suites."
+  },
+  "releaseAcceptance": false,
+  "scope": [
+    "Evidence for five named original attempt1 runs only; fixture collection is independently owned and excluded.",
+    "Original archives and extracted members rehashed; xcresulttool inspection used copies only.",
+    "Performance measurement and hosted persisted-pickup structural evidence are independent; neither substitutes for the other. No raw app Records media/ledger data downloaded.",
+    "Security zero findings is not complete semantic coverage; exact input and compiler/AST limitations are retained in security proofs.",
+    "No dispatch/retry/cancel, tracked/Git mutation or native app/test execution by collector."
+  ],
+  "models": {
+    "artifactID": 13551518190,
+    "sha256": "ac24ff87b9c9b0fa64db58bf146a44fb8e41cfd7d92ed75a982d809e042e8eed",
+    "digestVerified": true,
+    "selected": 601,
+    "passed": 601,
+    "failed": 0,
+    "skipped": 0,
+    "strictReplayExit": 0,
+    "runtimeWarnings": 0,
+    "rawLogSHA256": "31a1d22772dd4f978d16a156d029a99475f423ff91ee0e88417dc802a08eae42"
+  },
+  "sourceProvenanceSummary": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "expectedMerge": "525d68ae2dbb46f21be8d71a495c10f7c1246f7f",
+    "mergeTreeExactlyMatchesCandidate": true,
+    "allAcquiredCheckoutJobsVerified": true,
+    "scope": "Run head and actual checkout are distinct. Checkout logs or bounded Swift source archive prove candidate identity; never-acquired jobs are not treated as executed. Full Swift job log was not proactively downloaded. Bounded build/source evidence and finalized metadata declaration are distinct from database payload, which remains uninspected after the preserved ratio guard refusal."
+  },
+  "compiledPlanSummary": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "runID": 42316648565,
+    "artifactID": 13550818501,
+    "artifactName": "iphone-test-products-1",
+    "artifactSize": 50657658,
+    "sha256": "aa55ff443249a3e4e3731ec64a5e566db92fc108c22757d32ef96897dc248594",
+    "githubDigestVerified": true,
+    "generatedPlanByteIdentical": true,
+    "models": 601,
+    "ordinaryUI": 52,
+    "groupCounts": {
+      "ui-01": 4,
+      "ui-02": 5,
+      "ui-03": 5,
+      "ui-04": 6,
+      "ui-05": 5,
+      "ui-06": 5,
+      "ui-07": 5,
+      "ui-08": 5,
+      "ui-09": 6,
+      "ui-10": 6
+    },
+    "matrixWithSlots": [
+      {
+        "shard": "models",
+        "expected_count": 601,
+        "macos_slot": 0
+      },
+      {
+        "shard": "ui-01",
+        "expected_count": 4,
+        "macos_slot": 1
+      },
+      {
+        "shard": "ui-02",
+        "expected_count": 5,
+        "macos_slot": 2
+      },
+      {
+        "shard": "ui-03",
+        "expected_count": 5,
+        "macos_slot": 3
+      },
+      {
+        "shard": "ui-04",
+        "expected_count": 6,
+        "macos_slot": 4
+      },
+      {
+        "shard": "ui-05",
+        "expected_count": 5,
+        "macos_slot": 0
+      },
+      {
+        "shard": "ui-06",
+        "expected_count": 5,
+        "macos_slot": 1
+      },
+      {
+        "shard": "ui-07",
+        "expected_count": 5,
+        "macos_slot": 2
+      },
+      {
+        "shard": "ui-08",
+        "expected_count": 5,
+        "macos_slot": 3
+      },
+      {
+        "shard": "ui-09",
+        "expected_count": 6,
+        "macos_slot": 4
+      },
+      {
+        "shard": "ui-10",
+        "expected_count": 6,
+        "macos_slot": 0
+      }
+    ],
+    "inventoryDerivedFromCandidateCompiledPlan": true,
+    "testPlan": "RoomInTheCart",
+    "sourceSHA256": {
+      "scripts/plan_ios_tests.py": "eff8122356457031fc25f3fcbcc0636e050613b356db830061ebbd249ea182cf",
+      "scripts/ios_test_durations.json": "e2845b92db67176e6bc93b10dcaeac1d3f2ec2a1775e32a0dc2ae9f3c2d81cfe",
+      "scripts/ci_mac_slots.py": "23e5dae583f1fc10b523348d034f66fad39196a16b7df179e5720221c22ec41a"
+    },
+    "comparedFilesSHA256": {
+      "manifest.json": "060bf66d54b3d25386cacf5ee133dbe3279e0fe95bdd8cc7ca6989a724edff25",
+      "models.txt": "625a877913e5b4d25a3b55c438662d4a0942a5d4470d6385aa6f48b0d36c8cad",
+      "ui-01.txt": "842ab1a1a31e061f406a07a9e6c793191643c48cded4216fb8ae8ac6bc716a53",
+      "ui-02.txt": "ccceec25de5b5eafb1b2bfa74608c0e86c1c6355b3cbc79e736ff113cd1c0c1d",
+      "ui-03.txt": "eeadb98b4587fa2fc303647b7d5cce590cb43655b97f30434faec5ae9d7ad93c",
+      "ui-04.txt": "f6048c7d5b11453632d8dc6760c026158f141862f573b17b8e5ac7b03285a7e4",
+      "ui-05.txt": "99e21a6d948db49925aa5dbc7f892c7117311fda61a93ed43d19e9c10910448e",
+      "ui-06.txt": "d411c9dbcd4b2ae7cad145866e5e5b1557df8fe1ccf0dc3c0f4d507c0c8abf7c",
+      "ui-07.txt": "50b884b9fc380859959b4ffa3895e3daab3ee1f4a5b6ff25c593dc58d70ecd18",
+      "ui-08.txt": "4f829454941240de1d4eda261ca3cb4fa910d802499f6065c66e0aca8793a06d",
+      "ui-09.txt": "b443c8cad40e205c82938736656e5b03b7ae2b9b2f283e626620e74a784cf3b9",
+      "ui-10.txt": "40a0426c4746f61a06a3938f992b554f454833226365d061316c7894e14a4c52"
+    },
+    "enumerationSHA256": "3890d7e30ab8c75075694ce498e3ef9be687509ba214e7819a739a06c9658f40",
+    "archiveInspection": {
+      "zipMembers": 1,
+      "tarMembers": 365,
+      "tarDeclaredBytes": 190479772,
+      "largestTarMemberBytes": 52446544,
+      "tarLinksNotExtracted": 0,
+      "extractedOnly": [
+        "manifest.json",
+        "models.txt",
+        "test-enumeration.json",
+        "ui-01.txt",
+        "ui-02.txt",
+        "ui-03.txt",
+        "ui-04.txt",
+        "ui-05.txt",
+        "ui-06.txt",
+        "ui-07.txt",
+        "ui-08.txt",
+        "ui-09.txt",
+        "ui-10.txt"
+      ],
+      "bounds": {
+        "zipBytes": 104857600,
+        "tarMemberBytes": 536870912,
+        "tarTotalBytes": 2147483648,
+        "tarMembers": 50000,
+        "planFileBytes": 2097152
+      }
+    },
+    "limits": [
+      "Inventory/plan only; native execution is independently verified from result artifacts.",
+      "Only regular compiled test-plan files were extracted; product files and links were never extracted or executed.",
+      "No raw Records result evidence was downloaded or inspected."
+    ]
+  }
+}

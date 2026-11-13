@@ -8,9 +8,13 @@ import SwiftUI
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.locale) private var locale
     @StateObject private var corrections = CaptureCorrectionsModel()
-    @State private var selectedLanguage: String?
+
+    private enum Selection: Hashable {
+        case language(String)
+        case previous(CaptureCorrectionScope)
+    }
+    @State private var selection = Selection.language(CaptureCorrectionScope.appLanguage())
     @State private var boundContext: Context?
     @State private var working = false
     @State private var confirmDisable = false
@@ -25,19 +29,35 @@ import SwiftUI
         let memberID: String?
         let role: String?
         let workspaceID: UUID
-        let language: String
-        var scope: CaptureCorrectionScope {
-            CaptureCorrectionScope(profileID: "local:" + workspaceID.uuidString, localeIdentifier: language)
-        }
+        let scope: CaptureCorrectionScope
     }
 
-    private var language: String { selectedLanguage ?? (locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US") }
     private var context: Context? {
         guard scenePhase == .active, ledger.ready, !ledger.hasPendingLedgerDeletion,
               let workspaceID = ledger.sourceWorkspaceID,
               let identity = CapturePrivateIdentity.current(access: access, household: household) else { return nil }
+        let profile = "local:" + workspaceID.uuidString
+        let scope: CaptureCorrectionScope
+        switch selection {
+        case .previous(let previous) where previous.profileID == profile: scope = previous
+        case .language(let language): scope = CaptureCorrectionScope(profileID: profile, localeIdentifier: language)
+        default: scope = CaptureCorrectionScope(profileID: profile, localeIdentifier: CaptureCorrectionScope.appLanguage())
+        }
         return Context(actorID: identity.actorID, subject: identity.subject, householdID: identity.householdID,
-            memberID: identity.memberID, role: identity.role, workspaceID: workspaceID, language: language)
+            memberID: identity.memberID, role: identity.role, workspaceID: workspaceID, scope: scope)
+    }
+    private var displayedSelection: Selection {
+        guard let scope = context?.scope, scope.isPreviousRegion else {
+            return .language(context?.scope.localeIdentifier ?? CaptureCorrectionScope.appLanguage())
+        }
+        return .previous(scope)
+    }
+    private var previousRegions: [CaptureCorrectionScope] {
+        // Keep the selected row identifiable after its last file is deleted.
+        if let scope = context?.scope, scope.isPreviousRegion, !corrections.previousRegions.contains(scope) {
+            return corrections.previousRegions + [scope]
+        }
+        return corrections.previousRegions
     }
     private var authorized: Bool {
         context != nil && boundContext == context && corrections.scope == context?.scope
@@ -46,19 +66,23 @@ import SwiftUI
     var body: some View {
         ScrollViewReader { scroll in
             Form {
-                if context != nil {
+                if authorized {
                     Section(captureText("Spelling language")) {
-                        Picker(captureText("Spelling language"), selection: Binding(get: { language }, set: { selectedLanguage = $0 })) {
-                            Text(captureText("English spellings")).tag("en-US")
-                            Text(captureText("Spanish spellings")).tag("es-US")
+                        Picker(captureText("Spelling language"), selection: Binding(get: { displayedSelection }, set: { selection = $0 })) {
+                            Text(captureText("English spellings")).tag(Selection.language("en-US"))
+                            Text(captureText("Spanish spellings")).tag(Selection.language("es-US"))
+                            ForEach(Array(previousRegions.enumerated()), id: \.element) { index, region in
+                                Text(regionLabel(region, index: index)).tag(Selection.previous(region))
+                            }
                         }.accessibilityIdentifier("corrections.language")
+                        if !previousRegions.isEmpty {
+                            Text(captureText("Earlier regions have their own saved spellings. Select a region to review or delete them. New captures use the app language."))
+                        }
                         Text(captureText("These spellings belong to this private workspace and the selected language. They stay on this iPhone."))
                     }
-                }
-                if authorized {
                     if let outcome {
                         Section(captureText("Spelling result")) {
-                            Text(outcome.text)
+                            Text(outcome == .disabled && context?.scope.isPreviousRegion == true ? captureText("Saved spellings for this earlier region were deleted.") : outcome.text)
                                 .id("corrections.result")
                                 .accessibilityIdentifier("corrections.result")
                                 .accessibilityFocused($outcomeFocused)
@@ -66,7 +90,7 @@ import SwiftUI
                         }
                     }
                     Section(captureText("Optional spelling memory")) {
-                        if !corrections.failed {
+                        if !corrections.failed && (context?.scope.isPreviousRegion != true || corrections.snapshot.enabled) {
                             Toggle(captureText("Remember product spellings on this device"), isOn: Binding(get: { corrections.snapshot.enabled }, set: { value in
                                 if value { perform(.enable) }
                                 else { confirmDisable = true }
@@ -106,7 +130,7 @@ import SwiftUI
                     corrections.invalidate(); boundContext = nil; working = false; confirmDisable = false
                     outcome = nil; outcomeFocused = false
                     guard let selected = context else { return }
-                    await corrections.bind(selected.scope)
+                    await corrections.bind(selected.scope, includePreviousRegions: true)
                     guard !Task.isCancelled, context == selected, corrections.scope == selected.scope else { return }
                     boundContext = selected
                 }
@@ -121,9 +145,18 @@ import SwiftUI
                     Button(captureText("Cancel")) { confirmDisable = false }
                         .accessibilityIdentifier("corrections.cancelDisable")
                 } message: {
-                    Text(captureText("This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
+                    Text(captureText(context?.scope.isPreviousRegion == true
+                        ? "This deletes only the saved spellings for this earlier region."
+                        : "This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
                 }
         }
+    }
+
+    private func regionLabel(_ region: CaptureCorrectionScope, index: Int) -> String {
+        let language = Locale(identifier: CaptureCorrectionScope.appLanguage())
+        let label = region.localeIdentifier == "und" ? String(index + 1)
+            : language.localizedString(forIdentifier: region.localeIdentifier) ?? region.localeIdentifier
+        return captureText("Earlier region") + " · " + label
     }
 
     private func perform(_ action: CorrectionSettingsAction) {
@@ -147,7 +180,7 @@ import SwiftUI
         working = true; outcome = nil; outcomeFocused = false
         Task {
             guard context == selected else { return }
-            await corrections.bind(selected.scope)
+            await corrections.bind(selected.scope, includePreviousRegions: true)
             guard context == selected, boundContext == selected else { return }
             working = false
             outcome = corrections.failed ? .unconfirmed : .reloaded

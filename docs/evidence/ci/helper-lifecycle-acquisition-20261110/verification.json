@@ -1,0 +1,36 @@
+{
+  "scope": "Standalone diagnostic helper only; no performance acceptance",
+  "preparation": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/helper-owned-lifecycle-r3.1",
+  "manifestSHA256": "b393cf06df97cb403c403986830d8b670fd451334a0ea6e70add0ccda3d4d8e4",
+  "patchSHA256": "25e99a4181b5fe46807d7ec6a521fa80bb6017838392759574dff1506bd87ed6",
+  "installation": {
+    "status": "installed",
+    "reviewer": "root",
+    "manifestSHA256": "b393cf06df97cb403c403986830d8b670fd451334a0ea6e70add0ccda3d4d8e4",
+    "beforeSHA256": {
+      "scripts/simulator_signpost_control/runner.py": "7d9887740070ebde1b96b665c88ef5ad594e3ee1cd0b09dad601671a3f80c499",
+      "scripts/test_simulator_signpost_control.py": "fad1ae52b3b0e8315f53d7eafb9cdce37c9801a063c4ea9d6bacb263cc53dd8d",
+      "scripts/app_scroll_observation/contract.json": "6ce4dce46985c925b020961366af41cf6e680b29d4454e7ba9a798774404b5d5"
+    },
+    "afterSHA256": {
+      "scripts/simulator_signpost_control/runner.py": "f3e68aeb18387c9678dfd20c19bd9f49bc8aa9bb46adc737cc3bceffee319985",
+      "scripts/test_simulator_signpost_control.py": "d3d41129d70dfb834b8ce979728566a182746010f49541fd0e614b748492a03d",
+      "scripts/app_scroll_observation/contract.json": "8cfa01b369fef4046ec77ce75d64492ba0435ad68b204af79930939e4d39c2ff"
+    },
+    "nativeInputOverlap": false,
+    "review": "Reviewed unified exact-owned lifecycle acquisition, original deadlines, one runtime-only sample, retained Popen cleanup/default SIGCHLD/exclusive reaper, unchanged general supervisor, bounded signal failure distinction and setuid/setgid exclusion. Diagnostic only; no baseline or app acceptance."
+  },
+  "offline": {
+    "exitCode": 0,
+    "seconds": 1.442,
+    "logSHA256": "e35419b18ca70a40e0bac2454a3286d7443fe697b6ecae65b2499dce20d040ad",
+    "manifestSHA256": "b393cf06df97cb403c403986830d8b670fd451334a0ea6e70add0ccda3d4d8e4",
+    "scope": "123 mock/file-only helper controls; canonical installed source"
+  },
+  "hostedRun": null,
+  "limits": [
+    "Hosted runtime stall is not yet resolved.",
+    "Observed system sampler identity is diagnostic evidence, not an accepted Xcode performance profile.",
+    "Signal delivery is distinct from verified terminal cleanup; failures stay unqualified."
+  ]
+}

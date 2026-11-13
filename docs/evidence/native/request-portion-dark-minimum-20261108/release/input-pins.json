@@ -1,0 +1,6 @@
+{
+  ".build/S24PortionTypographyNov08/followup-r1/qualification_common.py": "5e246b0a17369553661a45c11d010183fa89f32719a0d3db293476dc4dabd27f",
+  ".build/S24PortionTypographyNov08/followup-r1/release-plan.json": "84138d800046657c81e137af889b34ee67b6c01d3e3f47b3cf9946af0a67de4a",
+  ".build/S24PortionTypographyNov08/followup-r1/fixed-source-manifest.json": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "scripts/check_built_app.py": "6fe1934c8f806aa36418c2243688c706f20c132ca34d569e0bf9d72b91e4d6e6"
+}

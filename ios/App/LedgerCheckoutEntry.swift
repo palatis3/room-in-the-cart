@@ -46,7 +46,8 @@ enum LedgerCheckoutAdapter {
                        packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = []) throws -> LedgerCheckoutReview {
         try shop.validate()
         let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
-        guard !activeLines.isEmpty else { throw LedgerCheckoutError.emptyList }
+        let clearingHandledBasket = previous?.id == shop.id && previous?.basket?.phase == .draft && !shop.handled.isEmpty
+        guard !activeLines.isEmpty || clearingHandledBasket else { throw LedgerCheckoutError.emptyList }
         let sameBasis = previous?.ledgerBasis == shop.basis
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
@@ -112,7 +113,7 @@ enum LedgerCheckoutAdapter {
             // Basis-only and purpose-only reviews still make a fresh revision,
             // so an old frozen snapshot cannot stand for newly reviewed terms.
             if changes.isEmpty { changes = lines.map(BasketChange.upsert) }
-            proposal = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: changes)
+            proposal = changes.isEmpty ? nil : BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: changes)
         } else { proposal = nil }
         return LedgerCheckoutReview(source: shop, workspaceRevision: workspaceRevision,
             previousJourneyRevision: previous?.revision, previousBasketRevision: previous?.basket?.current.id,
@@ -143,12 +144,12 @@ enum LedgerCheckoutAdapter {
                     guard portion > .zero else { continue }
                     let id = compositeID(contribution.id, group.id)
                     needs.append(AllocationNeed(id: id, orderLineID: lineID, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
-                    details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                    details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id, sourceOccurrenceID: meal.id, sourceGroupID: group.id, sourceLedgerRevisionID: shop.revisionID))
                 }
                 let portion = portions.unassigned
                 if portion > .zero {
                     needs.append(AllocationNeed(id: contribution.id, orderLineID: lineID, name: meal.title, amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: .required))
-                    details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                    details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id, sourceOccurrenceID: meal.id, sourceGroupID: nil, sourceLedgerRevisionID: shop.revisionID))
                 }
             default: break
             }
@@ -165,15 +166,28 @@ enum LedgerCheckoutAdapter {
                   try LedgerPackStockReview.isCurrent(selection, shop: review.source, workspaceID: workspaceID,
                     journey: previous, pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings) else { throw LedgerCheckoutError.staleSource }
         }
+        guard let ledgerWorkspaceID = ledger.sourceWorkspaceID else { throw LedgerCheckoutError.staleSource }
+        let occurrenceIDs = Set(review.source.mealOccurrences.map(\.id))
+        let mealSource = PickupCheckoutMealSource(ledgerWorkspaceID: ledgerWorkspaceID, shop: review.source,
+            needs: review.needs, details: review.details,
+            bindings: ledger.workspace.dinnerPlanning.portionBindings.filter { occurrenceIDs.contains($0.occurrenceID) })
+        try mealSource.validate()
         if let previous {
             guard previous.basket?.phase != .reportedPlaced else { throw LedgerCheckoutError.placedOrder }
             pickup.selectedID = review.source.id
-            if !review.needsApplication { return true }
+            if !review.needsApplication {
+                if previous.mealSource == mealSource { return true }
+                return await pickup.change { value in
+                    guard value.revision == review.previousJourneyRevision else { throw LedgerCheckoutError.staleCheckout }
+                    value.mealSource = mealSource
+                }
+            }
             return await pickup.change { value in
                 guard value.revision == review.previousJourneyRevision, var basket = value.basket else { throw LedgerCheckoutError.staleCheckout }
                 if let proposal = review.proposal { try basket.apply(proposal, at: Date()) }
+                value.basketPriceTerms = .from(review.context, scope: PickupPricingTerms.scope(cap: review.cap, basis: review.source.basis))
                 value.basket = basket; value.context = review.context; value.cap = review.cap
-                value.plannedNeeds = review.needs; value.needDetails = review.details
+                value.plannedNeeds = review.needs; value.needDetails = review.details; value.mealSource = mealSource
                 value.ledgerPackSelections = review.packSelections
                 value.ledgerBasis = review.source.basis; value.ledgerSourceRevisionID = review.source.revisionID
                 value.quote = nil; value.quotedRevisionID = nil
@@ -182,7 +196,7 @@ enum LedgerCheckoutAdapter {
         }
         return await pickup.start(from: review.lines, shopID: review.source.id, context: review.context, cap: review.cap,
                                   plannedNeeds: review.needs, ledgerBasis: review.source.basis,
-                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections)
+                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource)
     }
 
     /// A stable shop ID makes resuming after either store commits retry-safe.
@@ -225,6 +239,11 @@ struct LedgerCheckoutEntry: View {
             }
             else if let shop = ledger.shop {
                 List {
+                    if let proof = shop.initialCheckoutChange {
+                        NavigationLink(SavedCheckoutChangeView.title) {
+                            SavedCheckoutChangeView(proof: proof, shopID: shop.id)
+                        }.accessibilityIdentifier("oneChange.savedReview")
+                    }
                     Section {
                         Text(pTr("Review the list for checkout")).font(.title2.bold())
                         Text(pTr("Review the quantities, protected purposes, store and budget together. Applying clears previous checkout prices."))
@@ -269,7 +288,15 @@ struct LedgerCheckoutEntry: View {
                             ForEach(review.packSelections) { selection in
                                 VStack(alignment: .leading, spacing: 5) {
                                     if selection.isNoPurchase { Text(ledgerText("Use confirmed food at home · no purchase needed")) }
-                                    else { Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label)) }
+                                    else {
+                                        let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
+                                        Text(ledgerFormat("Reviewed pack choice: %@", offer.label))
+                                        if let basis = offer.confirmedConversion {
+                                            DisclosureGroup(tr("Ingredient conversion")) {
+                                                Text(ComparisonConversion.readableText(for: basis))
+                                            }
+                                        }
+                                    }
                                     if let stock = selection.request.confirmedAtHome { Text(ledgerFormat("Confirmed at home for this need: %@", ledgerQuantity(stock))) }
                                     if let quantity = selection.purchasedQuantity { Text(ledgerFormat("Purchased usable amount: %@", ledgerQuantity(quantity))) }
                                     if !selection.isNoPurchase, let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }
@@ -278,7 +305,10 @@ struct LedgerCheckoutEntry: View {
                             }
                             if !review.packSelections.isEmpty { Text(ledgerText("Pack choices supply whole purchased amounts. The named meal needs stay unchanged, and the whole checkout still needs its complete charges.")) }
                             Text(pTr("This review includes source, time zone, fees, reserve, cap scope and named portions, even when the list quantities did not change."))
-                            if review.lines.isEmpty {
+                            if review.lines.isEmpty && review.needs.isEmpty {
+                                Text(ledgerText("All remaining items are marked handled. Applying this review removes them from the checkout copy."))
+                                Button(pTr("Apply reviewed checkout copy")) { Task { await apply(review) } }.buttonStyle(PrimaryAction())
+                            } else if review.lines.isEmpty {
                                 Text(ledgerText("All list needs are covered by confirmed food at home. Save the plan, then review instructions for the cook."))
                                 Button(ledgerText("Save use-at-home plan")) { Task { await apply(review) } }.buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerSaveAtHomePlan")
                             } else {

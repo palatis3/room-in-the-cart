@@ -1,0 +1,206 @@
+{
+  "scope": "Prepared one manual hosted scroll observation; no hosted execution or baseline approval",
+  "payloadFiles": {
+    ".github/workflows/ios-performance.yml": {
+      "sha256": "fd1b22218a8ee3e9acae6d2c88b4beadb0e9ccaf49872bb1e1b4e10b63674388",
+      "bytes": 25801,
+      "mode": 420
+    },
+    "ios/App/RoomInTheCartApp.swift": {
+      "sha256": "0a3b59ad276d007db41f8468cbcca38ee4645b2b80638fb56b43e1ab61548ecd",
+      "bytes": 38032,
+      "mode": 420
+    },
+    "ios/UITests/ReleasePerformanceUITests.swift": {
+      "sha256": "2e2209c8b849b3ab9d1e323bb8534577b59dc8e810304127165648a5aca533ae",
+      "bytes": 31228,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/__init__.py": {
+      "sha256": "3283c46663f2f89933619f374af2771911d1225c9d098cfdec84a69e1124f66e",
+      "bytes": 76,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/archive.py": {
+      "sha256": "ec522ab2ad8233da3354d9a4e9a14ea987dc6e67287488ed156c92feb5ac03e7",
+      "bytes": 6581,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/capture.py": {
+      "sha256": "6236becf41dfced17b39891a1eb8b8658193b6da97468959747fa592ac15c706",
+      "bytes": 21141,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/consumer.py": {
+      "sha256": "2db8a7b2901b46746db1e824cc6ad841499cd5f0ddf5909abd37a034b7f0e7c4",
+      "bytes": 9088,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/contract.json": {
+      "sha256": "2c3b73c73810c1ad800c9210c9a97dac7f3c555e15e9ba8c7e213f0a00dc1837",
+      "bytes": 4865,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/contract.py": {
+      "sha256": "aa0d8d2fc0196a06207b08f5417cb1e9275c1cf90f4b0ba44c24a9218bece3b8",
+      "bytes": 7799,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/export.py": {
+      "sha256": "3aaa673486d854bef7591b8e18e7199ffc8e1c51941f17effc1390b19c7ead09",
+      "bytes": 5435,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/native_environment.py": {
+      "sha256": "498769cb3381a721ef9957203d198be6b1c90ca5f8d9d4e309319c884fe8b26c",
+      "bytes": 3130,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/owned.py": {
+      "sha256": "3555ce4a8f1feb78709b366919875c7b6f3cb8bd578e575f6fd02cfff1c2a5e9",
+      "bytes": 6894,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/producer.py": {
+      "sha256": "6f717a9253d0746cabe9ebd58accd0f1cb1566c9ee7a87116016cde7220fb994",
+      "bytes": 7509,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/protocol.py": {
+      "sha256": "d9e0e255eec41249273a3ce83c03fde3aaf06a066a316e34a4b2f57d994c5d6f",
+      "bytes": 3327,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/results.py": {
+      "sha256": "37ab32c29c00f5a6813b620da00e482562e7716512499ca85d4d7717355327fc",
+      "bytes": 12298,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/runner.py": {
+      "sha256": "c701157649b618b25491f8140aada56209448b947fbbb4604009f3fc0e05f534",
+      "bytes": 6754,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/schema.py": {
+      "sha256": "1ec37f5f7c07615fc410221a25c7868884d3a953e9e3424b30a527bc399774a8",
+      "bytes": 11924,
+      "mode": 420
+    },
+    "scripts/app_scroll_observation/support.py": {
+      "sha256": "604d8fe3758577de3a561b513cb70016be38d2d72e9ff33666f5752783806cee",
+      "bytes": 4897,
+      "mode": 420
+    },
+    "scripts/capture_app_scroll_observation.py": {
+      "sha256": "37f6e1301248f13c56a34fc0991fc586a444434405a745830c420aed27804ba5",
+      "bytes": 3783,
+      "mode": 420
+    },
+    "scripts/capture_scroll_signposts.py": {
+      "sha256": "5a7a888f29f4af7af7e84eb7a7d8d9e023d400d2c65010fcf8191a848caa0d18",
+      "bytes": 37335,
+      "mode": 420
+    },
+    "scripts/plan_ios_performance_tests.py": {
+      "sha256": "bbfe795d761a512e3b570fb11684cbdd4157696967ff5cb862302b18a39424ba",
+      "bytes": 5839,
+      "mode": 420
+    },
+    "scripts/test_app_scroll_observation.py": {
+      "sha256": "900b13434f9f9abde8f608982fb66b59ed2d09f5ee230cc498a52008c3295157",
+      "bytes": 41658,
+      "mode": 420
+    }
+  },
+  "frozenPackageSHA256": "75d1cacd65735131a907022da4b36c6db09b0c8df3aae3c3110bfdeb5b9c3301",
+  "reviewReceiptSHA256": "0bf1ddc00714b7c1952c3ba2ecf8880c01401d45e10a0ab73b62c661dd9d0e6e",
+  "offlineTestsPassed": 281,
+  "offlineTests": [
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r4/controls-r1.log",
+      "sha256": "8c56321b6362a42a9827d0ff42fff0ce2345e69685ebd7d96701323204f9241d",
+      "tests": 86,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_plan_ios_performance_tests-r1.log",
+      "sha256": "d699c923ed64885dc9e5cfdd1c856add5965280f5f93fb125040334782857700",
+      "tests": 19,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_performance_plan_provenance-r1.log",
+      "sha256": "0477d6b372cf6f9b6e90142299180ffe34f9f9520693bb4026ea3c1db19088c9",
+      "tests": 17,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r2/old-capture-controls-r1.log",
+      "sha256": "27027c54f22ae8f72522a315edaadc7510ce40ebf4aacac2a54df28d75257e79",
+      "tests": 64,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_check_ios_performance-r1.log",
+      "sha256": "1a47313b75d29f9937d78b1028cd6083ec1568150d50e2678f8759195c532f21",
+      "tests": 10,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_check_ios_test_results-r1.log",
+      "sha256": "2bbe475f670a4d17b073387ac978260d8a494717b862d8a9dd613d696cd99226",
+      "tests": 47,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_preserve_performance_store-r1.log",
+      "sha256": "2ad3671bf279fe6ef0918d6edb3c744dc1b0ded2079250888187efac099ed7c8",
+      "tests": 12,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r1/test_prepare_ios_performance_simulator-r1.log",
+      "sha256": "9d6cdaa9bb00deaf304ddb02066096cd90c1156f8588eb90720e29524ba18c09",
+      "tests": 8,
+      "passed": true
+    },
+    {
+      "path": ".build/HostedAppObservationNov09/implementation-r2/workflow-controls-r1.log",
+      "sha256": "474adb1d8046bc7a68f0c55c8a99727ea7f6d25faa0ad7bf82058219342b9dc7",
+      "tests": 18,
+      "passed": true
+    }
+  ],
+  "workflowLint": {
+    "file": "workflow-lint-r1.json",
+    "sha256": "71dba8bee68aed1deec97fc6525e2a3c3150a7accb74dbd2cd358ec2ba1acc28",
+    "passed": true
+  },
+  "queueDefinitions": 17,
+  "helperTypecheck": {
+    "receipt": ".build/HostedAppObservationNov09/implementation-r1/helper-typecheck-r1/receipt.json",
+    "receiptSHA256": "f4102a919e6772ee8b953ca52553c22eb4b7497b2dd8fe0be9c0955f9a199b81",
+    "probeSHA256": "8b9b4c788eff2e98d705517476081fd87f8897a2f0069d332eb489f698e421be",
+    "passed": true,
+    "exitCode": 0,
+    "elapsedSeconds": 0.7164631250000001,
+    "signals": [],
+    "allKnownChildrenTerminal": true
+  },
+  "rootVerified": {
+    "allFrozenPayloads": true,
+    "all22CanonicalFilesBytesSizesModes": true,
+    "allTestLogHashes": true,
+    "exactHelperSourceUnchanged": true,
+    "protectedSourceContract": true
+  },
+  "ordinaryAcceptanceUnchanged": true,
+  "hostedExecution": false,
+  "baselineApproved": false,
+  "fullCombinedCandidateQualified": false,
+  "qualificationCorrection": {
+    "reason": "The 281 reported controls came from incremental preparation checkpoints. Some workflow-dependent suites were not rerun after artifact/profile changes; first hosted preflight and local full-step checks exposed stale assertions and inherited settings.",
+    "supersedingDispatchReadiness": "docs/evidence/ci/performance-dispatch-parity-20261109/verification.json",
+    "originalLogsAndFrozenPayloadPreserved": true
+  }
+}

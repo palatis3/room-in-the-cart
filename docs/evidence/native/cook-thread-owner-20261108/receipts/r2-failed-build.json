@@ -1,0 +1,33 @@
+{
+  "status": "completed",
+  "phase": "phase1",
+  "startedAtUTC": "2026-11-08T15:59:38.715334+00:00",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "-destination",
+    "generic/platform=iOS Simulator",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/build.xcresult",
+    "build-for-testing"
+  ],
+  "sourceManifestSHA256": "eb1a7f69b81f2ab1105fbb8ca55c08e501c1f693871cb41fe0f9034a59c71991",
+  "expectedCount": null,
+  "cwd": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart",
+  "pid": 62654,
+  "nativeExit": 65,
+  "finishedAtUTC": "2026-11-08T16:05:17.958920+00:00",
+  "sourceUnchanged": true
+}

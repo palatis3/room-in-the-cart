@@ -1,0 +1,105 @@
+{
+  "method": "Completed record file reads/hash/copies only; no native/xcresult/exports/source changes",
+  "copiedFiles": [
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/inspection/strict.txt",
+      "destination": "run/strict.txt",
+      "bytes": 1280,
+      "sha256": "23df11c5a554d0045d66636ae6c45b5014c9a87cb90ab8bcafeddd1d78d1dee8"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/inspection/verification.json",
+      "destination": "run/verification.json",
+      "bytes": 270,
+      "sha256": "c12f58e990be8836dac0c0d6899cfba7799f4aa871966c67793ab5acc8e0e37a"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/inspection/summary.json",
+      "destination": "run/summary.json",
+      "bytes": 1680,
+      "sha256": "5d6b04e3b310663a40362a5b6a8ff57319d59a35bb90e39bcd8d8079b4648dcf"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/inspection/tests.json",
+      "destination": "run/tests.json",
+      "bytes": 2399,
+      "sha256": "eb47c2baa41e51cfdde84510c7a8bac08cf2166e88f83435bd374240fce09efc"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/inspection/test-runtime-warnings.json",
+      "destination": "run/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/minimum17-run/selectors.txt",
+      "destination": "run/selectors.txt",
+      "bytes": 129,
+      "sha256": "f6d132f5a749c32be2fc895cdac5a1d437d7a34ad81ac1baddb4d940155450d5"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/root-review.json",
+      "destination": "root-review.json",
+      "bytes": 795,
+      "sha256": "f1c4fe93d44b33c33d27e8bc9b9bfc45519b836be66d674471bca66dd0acac91"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-0/C2F87CB9-1332-4BF9-8CE6-B6099B9C2B66.png",
+      "destination": "captures/S24-other-meals-Collapsed.png",
+      "bytes": 123075,
+      "sha256": "9c52d1c31f599002b27df73aa79c09e5e2d179ca8146ad4724402d5ad52e0e35"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-1/1DD2B875-3255-424C-B36C-EBE3AFC46964.txt",
+      "destination": "captures/S24-other-meals-Collapsed-discovery.txt",
+      "bytes": 127,
+      "sha256": "554fd2faba5f53e9c6e37d8bdb95f18c6b8f2b5782dfa0b5db2d5763aef02bd7"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-2/A5DD71E7-45DF-4346-BD09-D0E9AD10D850.txt",
+      "destination": "captures/S24-other-meals-Collapsed-control.txt",
+      "bytes": 127,
+      "sha256": "edb32c5eb9809ff81908f1c5bbbe1dbca4b52a8f7dbb0070be9c1221afdaa2f2"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-3/61B2523E-671B-4CF7-8F0A-1715912B0EEC.png",
+      "destination": "captures/S24-other-meals-Expanded.png",
+      "bytes": 150760,
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-4/B3B42C58-82D4-457A-AA66-28C18DA47388.txt",
+      "destination": "captures/S24-other-meals-Expanded-discovery.txt",
+      "bytes": 126,
+      "sha256": "db79974a87e05ae1a4f70294c80576bb1787ab3007618677392c837415e77b03"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-5/1FD4C87E-6623-419B-93AF-54F2EF186A87.txt",
+      "destination": "captures/S24-other-meals-Expanded-control.txt",
+      "bytes": 126,
+      "sha256": "f2b1b77ad6ea6cb5a30a94e6fff4ab3048fa6a7953c1aee0d950624bd561ed1a"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-6/C2FFE860-B3FA-419A-A08E-234BA94BEE0D.png",
+      "destination": "captures/S24-other-meals-expanded-ordinary-facts.png",
+      "bytes": 150760,
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/product.patch",
+      "destination": "provenance/product.patch",
+      "bytes": 717,
+      "sha256": "93ecdbd072a3ce0d27b1c9f74a587cc464a71c156ff5aa4ce50be17cca0ffa65"
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/followup-r1/source-pins.json",
+      "destination": "provenance/product-source-pins.json",
+      "bytes": 543,
+      "sha256": "f5e2c6756d96d736982f7524edb2bc98731ab402c706c5498ecbb1995b40630c"
+    }
+  ],
+  "allSevenSelectedAttachmentHashesVerified": true,
+  "rawIPSOrFullHierarchyCopied": false,
+  "baselineProofUnchanged": true,
+  "baselineManifestSHA256": "d63d49cd9545658493ec55406007cfc62232e5cfbd9fa85e7a392988f8e9a814"
+}

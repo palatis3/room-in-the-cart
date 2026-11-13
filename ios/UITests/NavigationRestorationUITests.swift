@@ -9,8 +9,8 @@ import XCTest
 
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Restoration Saturday pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
+        app.renameSelectedPickup("Restoration Saturday pickup")
         XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 8))
         tap(app.tabBars.buttons["Records"])
         tap(app.tabBars.buttons["Shop"])
@@ -79,5 +79,50 @@ import XCTest
     private func capture(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+    }
+}
+
+@MainActor
+extension XCUIApplication {
+    /// UIKit may retain a dismissed keyboard below the viewport. Measure one
+    /// snapshot instead of waiting for that offscreen accessibility node to vanish.
+    func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5) -> Bool {
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let root = try? self.snapshot(), !root.frame.isEmpty else { return false }
+            var nodes = [root]
+            while let node = nodes.popLast() {
+                nodes.append(contentsOf: node.children)
+                guard !node.frame.isEmpty, node.frame.intersects(root.frame) else { continue }
+                if node.elementType == .keyboard { return false }
+                if node.elementType == .button && node.identifier == doneIdentifier { return false }
+            }
+            return true
+        }, object: nil)
+        return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
+    }
+
+    func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        let picker = buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8), file: file, line: line)
+        picker.tap()
+        let rename = buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "ledgerRenameShop", "Rename pickup")).firstMatch
+        XCTAssertTrue(rename.waitForExistence(timeout: 8), file: file, line: line)
+        rename.tap()
+
+        let field = descendants(matching: .any).matching(identifier: "ledgerShopName").firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 8), file: file, line: line)
+        field.tap()
+        field.press(forDuration: 1.2)
+        let selectAll = descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ AND (elementType == %d OR elementType == %d)", "Select All",
+            XCUIElement.ElementType.menuItem.rawValue, XCUIElement.ElementType.button.rawValue)).firstMatch
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 5), file: file, line: line)
+        selectAll.tap()
+        field.typeText(title)
+        XCTAssertEqual(field.value as? String, title, file: file, line: line)
+        let done = keyboards.buttons["Done"]
+        if done.isHittable { done.tap() }
+        buttons["ledgerSaveShopName"].tap()
+        XCTAssertTrue(field.waitForNonExistence(timeout: 8), file: file, line: line)
     }
 }

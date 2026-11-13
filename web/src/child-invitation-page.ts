@@ -14,6 +14,8 @@ export const childInvitationCopy = {
   language:{en:'Language',es:'Idioma'},english:{en:'English',es:'Inglés'},spanish:{en:'Spanish',es:'Español'},help:{en:'Help',es:'Ayuda'},
   loading:{en:'Checking child setup…',es:'Consultando la configuración para menores…'},
   signin:{en:'Use the email your guardian approved. Their current permission is checked before requesting a sign-in code.',es:'Usa el correo que aprobó tu tutor. Su permiso actual se comprueba antes de solicitar un código de acceso.'},
+  tokenReceived:{en:'Invitation code received.',es:'Se recibió el código de invitación.'},
+  replaceToken:{en:'Enter a different invitation code',es:'Ingresar otro código de invitación'},
   token:{en:'Invitation code',es:'Código de invitación'},email:{en:'Guardian-approved child email',es:'Correo del menor aprobado por el tutor'},
   send:{en:'Request sign-in code',es:'Solicitar código de acceso'},code:{en:'Six-digit code',es:'Código de seis dígitos'},verify:{en:'Verify code',es:'Verificar código'},
   sent:{en:'Check your email for a six-digit code.',es:'Busca en tu correo un código de seis dígitos.'},
@@ -51,14 +53,65 @@ export class ChildInvitationPage {
   private intent:Readonly<ChildInvitationAuthStart>|null=null; private auth:BrowserAuthState|null=null;
   private child:ChildInvitationSession|null=null; private scope:string|null=null; private controller:ChildClaimController|null=null;
   private expected:ChildBrowserEnrollmentReceipt|null=null; private logoutPending=false;
+  private visibility:'ready'|'hidden'|'checking'='ready';
+  private visibilityRevision=0;
+  private refreshAfterAction=false;
   constructor(private readonly root:HTMLElement,private readonly api:ChildInvitationBrowserPort=new ChildInvitationAPI(),private token:string|null=null) {this.language=languageFor(root.ownerDocument.defaultView?.navigator.language??'en');}
   private check(generation:number):void {if(generation!==this.generation)throw new ApiError('access_ended',403);}
   clear():void {this.generation++;this.controller?.clear(true);this.controller=null;this.scope=null;this.child=null;this.token=null;this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;this.expected=null;}
   private async run(action:(generation:number)=>Promise<void>,retryingSignOut=false):Promise<void> {
     if(this.busy||(this.logoutPending&&!retryingSignOut))return;this.busy=true;this.render();
-    try {await action(this.generation);}catch(error){this.fail(error);}finally{this.busy=false;this.render();}
+    try {
+      await action(this.generation);
+    } catch(error) {
+      this.fail(error);
+    } finally {
+      this.busy=false;
+      const refresh=this.refreshAfterAction&&this.visibility==='checking'&&!this.logoutPending;
+      this.refreshAfterAction=false;
+      if(refresh)void this.start();
+      else this.render();
+    }
   }
-  async start():Promise<void>{if(this.logoutPending)return;await this.run(generation=>this.load(generation));}
+  async start():Promise<void>{
+    if(this.logoutPending||this.visibility==='hidden')return;
+    const revision=this.visibilityRevision;
+    await this.run(async generation=>{
+      try {
+        await this.load(generation);
+      } catch(error){
+        if(!(error instanceof ApiError&&[401,403,410].includes(error.status)))throw error;
+        this.fail(error);
+      }
+      if(revision===this.visibilityRevision)this.visibility='ready';
+    });
+  }
+  conceal():void {
+    this.visibility='hidden';
+    this.visibilityRevision++;
+    this.render();
+  }
+  leavePage():void {
+    this.clear();
+    this.auth=null;
+    this.phase='loading';
+    this.notice=null;
+    this.nextSendAt=0;
+    this.conceal();
+  }
+  resume():void {
+    if(this.visibility!=='hidden')return;
+    if(this.logoutPending){
+      this.visibility='ready';
+      this.render();
+      return;
+    }
+    this.visibility='checking';
+    if(this.busy){
+      this.refreshAfterAction=true;
+      this.render();
+    }else void this.start();
+  }
   private async live(generation:number):Promise<LiveChild|null> {
     const auth=await this.api.authState();this.check(generation);
     if(!auth.available||!auth.authenticated||!auth.csrf)return null;
@@ -90,11 +143,19 @@ export class ChildInvitationPage {
     if(!auth.available){this.clear();this.phase='unavailable';this.notice=null;return;}
     if(!auth.authenticated){
       if(this.scope)throw new ApiError('access_ended',403);
-      if(this.auth&&this.requested&&this.auth.csrf!==auth.csrf){this.clear();this.phase='signin';this.auth=auth;this.notice='ended';return;}
+      if(this.auth&&this.auth.csrf!==auth.csrf){this.clear();this.phase='signin';this.auth=auth;this.notice='ended';return;}
       this.auth=auth;this.phase=this.requested?'code':'signin';return;
     }
-    this.auth=auth;const live=await this.live(generation);
-    if(!live){this.clear();this.phase='blocked';this.notice='blocked';return;}
+    const live=await this.live(generation);
+    if(!live){this.clear();this.auth=auth;this.phase='blocked';this.notice='blocked';return;}
+    if(live.auth.csrf!==auth.csrf)throw new ApiError('access_ended',403);
+    if(this.token){
+      const [householdId,inviteId]=this.token.split('.');
+      const matchesAdmission=householdId?.toLowerCase()===live.child.householdId&&inviteId?.toLowerCase()===live.child.inviteId;
+      // A lost response to this page's verification can be recovered from the
+      // admission. An unrelated tab's sign-in cannot inherit this page's token.
+      if(!matchesAdmission||(this.auth&&this.auth.csrf!==auth.csrf&&!this.verificationUncertain))this.token=null;
+    }
     this.adopt(live);this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;
     if(live.child.status==='active'){
       if(await this.scoped(generation,live))return;
@@ -120,7 +181,13 @@ export class ChildInvitationPage {
     const auth=await this.api.authState();this.check(generation);
     if(auth.authenticated){await this.load(generation);return;}
     if(!auth.available||!auth.csrf||auth.csrf!==this.auth?.csrf)throw new ApiError('access_ended',403);
-    this.verificationUncertain=true;await this.api.verifySignin(this.code,auth.csrf);this.check(generation);this.verificationUncertain=false;this.code='';this.email='';this.intent=null;this.requested=false;await this.load(generation);
+    this.verificationUncertain=true;
+    const verified=await this.api.verifySignin(this.code,auth.csrf);
+    this.check(generation);
+    this.auth=verified;
+    this.verificationUncertain=false;
+    this.code='';this.email='';this.intent=null;this.requested=false;
+    await this.load(generation);
   }
   private async claim(generation:number):Promise<void> {
     if(!this.controller||!this.token)throw new ApiError('invalid_entry',422);
@@ -148,7 +215,11 @@ export class ChildInvitationPage {
   }
   checkExpiry():void {
     if(this.controller?.checkExpiry()||this.child&&this.child.status!=='active'&&this.child.expiresAt&&Date.parse(this.child.expiresAt)<=Date.now()) {this.clear();this.phase='blocked';this.notice='ended';this.render();}
-    else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){this.nextSendAt=0;this.render();}
+    else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){
+      this.nextSendAt=0;
+      const resend=this.root.querySelector<HTMLButtonElement>('#child-resend');
+      if(resend)resend.disabled=this.busy;
+    }
   }
   private fail(error:unknown):void {
     if(this.logoutPending){this.notice='signoutFailed';return;}
@@ -167,27 +238,48 @@ export class ChildInvitationPage {
     const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string):HTMLElementTagNameMap[K]=>{const item=document.createElement(tag);if(text!==undefined)item.textContent=text;return item;};
     const button=(key:CopyKey,action:()=>void)=>{const b=el('button',t(key));b.type='button';b.disabled=this.busy;b.addEventListener('click',action);return b;};
     const field=(form:HTMLElement,key:CopyKey,id:string,value:string,type:string,change:(value:string)=>void)=>{const label=el('label',t(key));label.htmlFor=id;const input=el('input');input.id=id;input.type=type;input.value=value;input.required=true;input.disabled=this.busy;input.autocomplete='off';input.addEventListener('input',()=>change(input.value));form.append(label,input);return input;};
+    const invitationField=(form:HTMLFormElement)=>{
+      if(this.token?.trim()){
+        form.append(el('p',t('tokenReceived')),button('replaceToken',()=>{
+          this.token=null;
+          this.intent=null;
+          this.render();
+          this.root.querySelector<HTMLInputElement>('#child-invitation')?.focus();
+        }));
+      }else{
+        const input=field(form,'token','child-invitation','','password',value=>{this.token=value;});
+        input.maxLength=4096;
+      }
+    };
     document.documentElement.lang=this.language;this.root.replaceChildren();const header=el('header');header.append(el('p','Room in the Cart'));
     const select=el('select');select.id='language';select.setAttribute('aria-label',t('language'));
     for(const value of ['en','es'] as const){const option=el('option',t(value==='en'?'english':'spanish'));option.value=value;option.selected=value===this.language;select.append(option);}
     select.addEventListener('change',()=>{this.language=select.value==='es'?'es':'en';this.render();this.root.querySelector<HTMLSelectElement>('#language')?.focus();});header.append(select);
     const main=el('main');main.setAttribute('aria-busy',String(this.busy));main.append(el('h1',t('title')));
+    // The original page retains an OTP or pairing intent when switching apps.
+    // Its DOM stays free of private fields until the current session is verified.
+    if(this.visibility==='hidden'||(this.visibility==='checking'&&!this.logoutPending)){
+      const status=el('p',t(this.busy||this.visibility==='hidden'?'loading':'failed'));
+      status.setAttribute('role','status');main.append(status);
+      if(this.visibility==='checking'&&!this.busy)main.append(button('refresh',()=>void this.start()));
+      this.root.append(header,main);return;
+    }
     const status=el('p',this.busy?t('loading'):this.notice?t(this.notice):'');status.setAttribute('role','status');main.append(status);
     const message=(key:CopyKey)=>{if(status.textContent!==t(key))main.append(el('p',t(key)));};
     if(this.logoutPending)main.append(button('signoutRetry',()=>void this.run(()=>this.signout(),true)));
     else if(this.phase==='unavailable'){status.textContent=t('unavailable');main.append(el('p',t('explanation')),el('p',t('account')),el('p',t('secret')));}
     else if(this.phase==='signin'){
       main.append(el('p',t('signin')),el('p',t('account')));const form=el('form');
-      const token=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});token.maxLength=4096;
+      invitationField(form);
       const email=field(form,'email','child-email',this.email,'email',value=>{this.email=value;});email.maxLength=254;email.autocomplete='email';
       const send=button('send',()=>{});send.type='submit';form.append(send);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.sendCode(generation));});main.append(form,el('p',t('secret')));
     }else if(this.phase==='code'){
       const form=el('form');const input=field(form,'code','child-code',this.code,'text',value=>{this.code=value;});input.inputMode='numeric';input.pattern='[0-9]{6}';input.maxLength=6;input.autocomplete='one-time-code';
       const verify=button('verify',()=>{});verify.type='submit';form.append(verify);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.verify(generation));});
-      const resend=button('resend',()=>void this.run(generation=>this.sendCode(generation)));resend.disabled=this.busy||Date.now()<this.nextSendAt;main.append(form,resend);
+      const resend=button('resend',()=>void this.run(generation=>this.sendCode(generation)));resend.id='child-resend';resend.disabled=this.busy||Date.now()<this.nextSendAt;main.append(form,resend);
     }else if(this.phase==='claim'){
       main.append(el('p',t('claimExplanation')));const form=el('form');
-      if(!this.controller?.state.pairingCode){const input=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});input.maxLength=4096;}
+      if(!this.controller?.state.pairingCode)invitationField(form);
       const claim=button(this.controller?.state.pairingCode?'retryClaim':'claim',()=>{});claim.type='submit';form.append(claim);form.addEventListener('submit',event=>{event.preventDefault();void this.run(generation=>this.claim(generation));});main.append(form);
     }else if(this.phase==='pending'){
       const state=this.controller?.state;if(state?.pairingCode){main.append(el('h2',t('pairing')));const code=el('p',state.pairingCode);code.id='pairing-code';main.append(code);}
@@ -208,10 +300,19 @@ export function mountChildInvitationPage(root:HTMLElement,api:ChildInvitationBro
   const document=root.ownerDocument,window=document.defaultView;
   if(!window||!/^\/child-invite\/?$/.test(window.location.pathname))return false;
   const token=consumeInvitation(window.location,window.history);window.history.replaceState(null,'',window.location.pathname);
-  const page=new ChildInvitationPage(root,api,token);void page.start();
+  const page=new ChildInvitationPage(root,api,token);
+  if(document.visibilityState==='hidden')page.conceal();else void page.start();
   const timer=window.setInterval(()=>page.checkExpiry(),1000);
   window.addEventListener('online',()=>void page.start());
   window.addEventListener('storage',event=>{if(event.key===browserSignOutKey&&event.newValue==='1')page.requireSignOut();});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void page.start();});
-  window.addEventListener('pagehide',()=>{page.clear();window.clearInterval(timer);},{once:true});return true;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')page.conceal();
+    else if(document.visibilityState==='visible')page.resume();
+  });
+  window.addEventListener('pagehide',event=>{
+    page.leavePage();
+    if(!event.persisted)window.clearInterval(timer);
+  });
+  window.addEventListener('pageshow',event=>{if(event.persisted&&document.visibilityState==='visible')page.resume();});
+  return true;
 }

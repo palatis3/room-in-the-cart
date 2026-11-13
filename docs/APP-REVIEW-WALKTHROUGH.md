@@ -1,6 +1,6 @@
 # App Review walkthrough and fictional demo handoff
 
-Prepared from native source on 2026-11-03. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
+Prepared from native source on 2026-11-03; staging status updated on 2026-11-06. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
 
 ## Review package supplied by the release owner
 
@@ -8,7 +8,7 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | --- | --- |
 | Submitted build/version and bundle | Record from the actual signed candidate |
 | Operator business | Venture House Group LLC, explicitly supplied by the user. This does not establish policy/terms approval, jurisdiction, address or retention. |
-| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. Verify delivery/monitoring with the operating owner before release; no test email has been sent |
+| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. [Public mail-routing DNS exists](evidence/b11/support-dns-20261106/README.md), but verify this exact mailbox’s delivery/monitoring with the operating owner before release; no test email has been sent |
 | Privacy and terms pages | Supply operator-reviewed HTTPS URLs and both launch languages |
 | Demo environment | State the exact isolated service environment; use fictional records only |
 | Demo adult accounts | Provide two verified adults through App Store Connect's private review fields, outside this repository |
@@ -18,7 +18,7 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | Apple product | Supply the actual product ID, storefront and reviewer purchase/restore instructions |
 | Open gates | List unconfigured or failed behavior explicitly; exclude its claim from the listing |
 
-Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The current staging `/help`, `/privacy`, `/terms` and `/support` paths returned HTTP 404 on 2026-11-03 and must not be represented as published policies or support. The owner must finish the public pages, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
+Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The staging `/help`, `/privacy`, `/terms` and `/support` paths now resolve after the approved 2026-11-06 deployment; all 27 public API/page/asset checks passed. [Staging rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). After the owner re-enabled browser access, the public pages were also checked in English and Spanish at narrow and wide widths, including keyboard skip navigation, section links and the support contact. The invited sign-in screens correctly remain unavailable while email setup is deferred; authenticated journeys were not exercised. [Rendered browser scope and evidence](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md). These checks do not establish operator policy approval, production URL readiness or a functioning support mailbox. The owner must finish those operating checks, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
 
 ## Fictional local demo, no account required
 
@@ -33,6 +33,18 @@ Use a fresh isolated test installation. Do not erase a person's existing workspa
 7. Open the **Settings** gear on a tab root. Read **Help**, **Privacy and data**, and **Support** offline. Verify the missing-policy/page states if metadata is blank. The supplied support email opens a composer without sending; cancel it during this local walkthrough. Inspect **Review support summary** before opening its system share sheet. The summary must contain only version/build/iOS/language/environment/configuration booleans; verify that it includes none of the demo food, prices, names, photos, identifiers, codes or links.
 8. Open **Settings → Device shortcuts** with optional permissions denied and use typed paths. Review capture output before it becomes saved data. Exercise the actual signed share/widget/notification surfaces separately on a device; source compilation or a simulator run does not establish their distribution behavior.
 
+On November 13 the ordinary Release simulator build passed the pack comparison in step 1 on iOS 27.0 in English and US Spanish. Both languages showed $6.40 and $5.40 after relaunch, and clearing the first usable quantity left that offer unresolved. The support-summary portion of step 7 passed on iOS 17.0 in both languages with an existing saved pickup. The system Copy action produced exactly the nine previewed lines, and the stored comparison retained its original revision and contents. The runs used the application sources in PR revision `b7b0a0a0`. Repeat the checks on the signed build. Local results are in `.build/AppReviewDemoD955Nov13` and `.build/ReleaseSupportB7B0Nov13`.
+
+## Verify an update on an existing installation
+
+Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
+
+Launch the candidate from the Home Screen. Open the comparison in Records and check the original values. Change the confirmed quantity at home, save, quit and reopen. Verify the new costs, both saved revisions and the original record identity. Record the device OS, both build numbers, the candidate commit and the results. When a release changes the database schema, include a store created with the previous schema.
+
+On November 13, the Release build at `717185e1` passed an in-place update on the iOS 17.0 iPhone SE simulator. The saved comparison reopened with its original revision byte-for-byte intact. After the shopper edited the stock and relaunched, the same record contained both revisions and passed the database integrity check. The local results are in `.build/Upgrade717Nov13`.
+
+The pre-release simulator check also exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
+
 ## Connected review, after the real environment is configured
 
 Run these steps with the submitted build and the isolated review household. The current repository's disabled email-provider or child-consent states are intentional availability states, not working substitutes for the following setup.
@@ -44,6 +56,22 @@ Run these steps with the submitted build and the isolated review household. The 
 5. Open **Settings → Household membership**. Inspect Apple's actual localized price/term, renewal disclosure, privacy/terms, **Restore Purchases**, **Manage Subscription** and the Free path. Test purchase, interrupted delivery, pending/cancelled/unverified outcomes, two named seats, restore with the original purchasing account, wrong-household denial, renewal, expiry and refund. A local StoreKit configuration is development evidence only. Record actual sandbox/TestFlight transaction and service reconciliation evidence separately.
 6. Review **Household requests → Account deletion**. Check its scope/status, offline retry, provider erasure and retained receipt behavior in the isolated environment. Check household exit separately. Deleting an account does not cancel its Apple subscription, and local deletion does not recall sent/exported copies.
 7. Test optional household measurement only after separate explicit consent. Review coded fields, submit one response, refresh after an uncertain result, then withdraw consent. Existing local pickup feedback must remain separate and must not upload automatically.
+
+## Household walkthrough on the candidate build
+
+The facilitator can give these tasks to English- or Spanish-speaking households once the candidate and review household are available. Give each person only their role's prompt. Keep the prices on the shopper's phone. Use fictional groceries and a recipient participating in the session.
+
+| Role | English prompt | Consigna en español de EE. UU. |
+| --- | --- | --- |
+| Shopper | Start a list for Tuesday. Add milk and bananas. Mark the bananas as picked up. Close the app, open it again and show what you still need. | Haz una lista para el martes. Agrega leche y plátanos. Marca los plátanos como recogidos. Cierra la app, vuelve a abrirla y muestra qué te falta. |
+| Contributor | From your phone, ask for one box of cereal. Tell us what you know about your request right after you send it. Check again once the shopper has made a decision. | Desde tu teléfono, pide una caja de cereal. Cuéntanos qué sabes de tu solicitud en cuanto la envíes. Vuelve a revisarla cuando la persona que hace la compra haya decidido qué hacer. |
+| Shopper | The pickup limit is $38. The store's total is $37.20, including all charges. The cereal costs $3.49 and the other charges stay the same. Decide what to do with the request. Explain how it affects this pickup. | El límite para esta compra es de $38. El total de la tienda es de $37.20 con todos los cargos incluidos. El cereal cuesta $3.49 y los demás cargos siguen iguales. Decide qué hacer con la solicitud y explica cómo afecta esta compra. |
+| Shopper | You planned six tortillas for Tuesday's tacos, four for Wednesday's quesadillas and two for lunch. Only six usable tortillas came home. Set aside lunch first, then use what you can for Tuesday. Tell the cook what to do. Later you recount and find seven usable tortillas in the same delivery. Send the cook the correction. | Planeaste usar seis tortillas para los tacos del martes, cuatro para las quesadillas del miércoles y dos para el almuerzo. Solo llegaron seis tortillas en buen estado. Aparta primero las del almuerzo y usa las que puedas para el martes. Dile a quien va a cocinar qué debe hacer. Al volver a contar, encuentras siete tortillas en buen estado en esa misma entrega. Avísale del cambio. |
+| Cook | Read the latest message on your phone. How many tortillas should you set aside? How many can you use for Tuesday, and what do you still need for each dinner? | Lee el último mensaje en tu teléfono. ¿Cuántas tortillas debes apartar? ¿Cuántas puedes usar el martes y cuántas te faltan para cada cena? |
+
+**Facilitator's checks.** Begin each paired task from the same saved state in each app. For the food task, use one delivery and the three named meal commitments. The cereal would bring the pickup to $40.69, which is $2.69 over the limit. Look for the contributor's actual outcome after the shopper decides. The first count leaves four tortillas for tacos after setting aside two. The corrected count leaves five for tacos. One taco tortilla and all four quesadilla tortillas are still missing. Ask the cook to explain the instruction without help from the shopper.
+
+Record build, device, language, app order and the comparator's version and tier. For each role, record time, unassisted completion, backtracking, workarounds and any incorrect food or budget conclusion. Have a reader who does not know which app produced an instruction assess its clarity. Ask for preferences after both runs. The study design specifies participant mix, counterbalancing and advancement criteria. [Foundation household comparison](product/foundation-gen2.1/11-experience-audit.md#competitive-comparison-and-release-gate)
 
 ## Evidence to retain
 

@@ -1,0 +1,35 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648586,
+  "attempt": 1,
+  "hostedConclusion": "success",
+  "resultCounts": {
+    "selected": 45,
+    "executed": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0,
+    "expectedFailures": 0
+  },
+  "runtimeWarningOccurrences": 6,
+  "consentResults": [
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "result": "Passed",
+      "durationSeconds": 95.6334400177002
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "result": "Passed",
+      "durationSeconds": 64.40467405319214
+    }
+  ],
+  "sourceFileCount": 442,
+  "compiledSelectorUnionMatchesSource": true,
+  "scope": "Only original fixture attempt1. No native-wire/core scope. Passing subsets do not establish fixes or broader candidate acceptance. Product artifacts are metadata/digest pins only; compiled plans are verified from bounded result artifacts.",
+  "rootVerifiedAtUTC": "2026-11-07T02:58:21.286153+00:00",
+  "frozenFileCount": 3210,
+  "manifestSHA256": "de7bda887a6565711ecb03df824ce96db0944069b87665fe4f7cc12feab71103",
+  "terminalProofSHA256": "c2af18c21a71f3f944ca83479bb22460453bb3e98f48247b8be773b0c0086ea5",
+  "independentVerification": "Rehashed every frozen file; inspected terminal per-shard results, counts, plan binding and restart fields. Did not independently repeat all collector semantic checks."
+}

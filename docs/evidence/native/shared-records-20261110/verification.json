@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "scope": "Current shared snapshot adapter, independent encrypted Records archive, and date presentation; focused package/app model qualification only",
+  "app": {
+    "sourceInputs": 677,
+    "sourceManifestSHA256": "80991b60f66806cbe03eed85a7d0c813e8a739807cd21b786eca826e95509041",
+    "modelTests": 135,
+    "runtimeWarnings": 0,
+    "phases": {
+      "build": {
+        "exitCode": 0,
+        "seconds": 132.353,
+        "logSHA256": "8049d392301ba63316bc961a76af0712721009e6a3d95c3b0f841f1dbb3b6c81"
+      },
+      "bundle": {
+        "exitCode": 0,
+        "seconds": 0.513,
+        "logSHA256": "6a7c3f827bfc65530a2327c7d90c5337c90f594b91b1fce4e543c801d13fe564"
+      },
+      "models": {
+        "exitCode": 0,
+        "seconds": 20.309,
+        "logSHA256": "5fbdd9ba648bfa84d38b122fceb68e355a869a4a59ab647de431fd58ea09630b"
+      },
+      "models-strict": {
+        "exitCode": 0,
+        "seconds": 7.094,
+        "logSHA256": "12af8bc2b3202cea14fa0caa2feb4fadd5bed0eb25d933e832959977c0099968"
+      }
+    },
+    "uiJourneysExecuted": 0,
+    "realServiceAcceptance": false
+  },
+  "packages": {
+    "HouseholdClient": {
+      "tests": 233,
+      "passed": 230,
+      "skipped": [
+        [
+          "HouseholdClientTests.NativeServiceWireTests",
+          "testNativeClientAgainstPostgres"
+        ],
+        [
+          "HouseholdClientTests.SharedMealNativeWireTests",
+          "testSharedMealClientAgainstPostgres"
+        ],
+        [
+          "HouseholdClientTests.StoreQuoteNativeWireTests",
+          "testStoreQuoteClientAgainstPostgres"
+        ]
+      ],
+      "logSHA256": "3cd9298ef0c1e770b3eb02544865f91081f5813b9e1da1280f49fe27d0ed628a"
+    },
+    "RecordArchive": {
+      "tests": 33,
+      "passed": 33,
+      "skipped": [],
+      "logSHA256": "a962d587bde8f1980599cf4dd16d776ffee2a02e2f6e233a52e208df7af1535d"
+    }
+  },
+  "packageSourceInputs": 151,
+  "packageManifestSHA256": "7b0ac2baef64a24942a671b481752dc6ac94b80dfb9ab518cc9a3b1f812c0d8e",
+  "currentAndArchivedInputsVerified": true,
+  "remaining": [
+    "actual service/database qualification of combined changes",
+    "English/Spanish UI journeys",
+    "historical records and privacy erasure reconciliation",
+    "guardian-scoped records access",
+    "one combined release candidate"
+  ]
+}

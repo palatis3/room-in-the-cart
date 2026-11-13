@@ -1,0 +1,118 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Current dinners could not be verified. Reopen the same pickup and review its saved changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current dinners could not be verified. Reopen the same pickup and review its saved changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron verificar las cenas actuales. Vuelve a abrir la misma recogida y revisa sus cambios guardados."
+          }
+        }
+      }
+    },
+    "Chosen dinners show their current meal and date. Original purchases and earlier reusable templates remain preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen dinners show their current meal and date. Original purchases and earlier reusable templates remain preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas elegidas muestran su comida y fecha actuales. Se conservan las compras originales y las plantillas reutilizables anteriores."
+          }
+        }
+      }
+    },
+    "Current dinner unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current dinner unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena actual no disponible"
+          }
+        }
+      }
+    },
+    "Dinner date saved. Its food, portions, deadline and original purchase are unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner date saved. Its food, portions, deadline and original purchase are unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de la cena guardada. Se conservan sus alimentos, porciones, hora límite y compra original."
+          }
+        }
+      }
+    },
+    "Only the current dinner date changes. Review any cook instructions already shared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the current dinner date changes. Review any cook instructions already shared."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cambia la fecha de la cena actual. Revisa las instrucciones de cocina que ya hayas compartido."
+          }
+        }
+      }
+    },
+    "Apply dinner date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply dinner date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar fecha de la cena"
+          }
+        }
+      }
+    },
+    "The dinner or access changed. Reopen it and review the date again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dinner or access changed. Reopen it and review the date again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cena o el acceso han cambiado. Vuelve a abrirla y revisa la fecha otra vez."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

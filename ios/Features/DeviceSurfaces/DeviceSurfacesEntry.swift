@@ -4,16 +4,23 @@ import DeviceSurfaces
 
 struct DeviceSurfacesEntry: View {
     @ObservedObject var composition: DeviceSurfacesComposition
+    @EnvironmentObject private var ledger: LedgerModel
     @State private var selectedShop: UUID?
+    @State private var startingPickup = false
     var body: some View {
         Group {
             if composition.privateAuthorized {
                 List {
                     Section {
                         Text(SurfaceCopy.text("Selected text waits for your review. Nothing has been added to a shop."))
-                        Picker(SurfaceCopy.text("Shopping list"), selection: $selectedShop) {
-                            Text(SurfaceCopy.text("Choose a shopping list")).tag(Optional<UUID>.none)
-                            ForEach(composition.shops, id: \.id) { Text($0.title).tag(Optional($0.id)) }
+                        if composition.shops.isEmpty, !composition.entries.isEmpty {
+                            Button(ledgerText("Start pickup")) { startingPickup = true }
+                                .disabled(!ledger.ready || ledger.saving || ledger.hasPendingSave || ledger.hasPendingLedgerDeletion)
+                        } else {
+                            Picker(SurfaceCopy.text("Shopping list"), selection: $selectedShop) {
+                                Text(SurfaceCopy.text("Choose a shopping list")).tag(Optional<UUID>.none)
+                                ForEach(composition.shops, id: \.id) { Text($0.title).tag(Optional($0.id)) }
+                            }
                         }
                     }
                     if !composition.inboxAvailable { Text(SurfaceCopy.text("Selected text is unavailable on this installation.")) }
@@ -32,11 +39,27 @@ struct DeviceSurfacesEntry: View {
                     if let message = composition.message { Text(message) }
                     Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
                 }.disabled(composition.busy)
+                .confirmationDialog(SurfaceCopy.text("Start a new review for this pickup?"), isPresented: Binding(
+                    get: { composition.destinationChange != nil },
+                    set: { if !$0 { composition.destinationChange = nil } }
+                ), titleVisibility: .visible, presenting: composition.destinationChange) { change in
+                    Button(SurfaceCopy.text("Start new review")) {
+                        Task { await composition.review(change.entry, shopID: change.shopID, replacing: change.previous) }
+                    }
+                    Button(ledgerText("Cancel"), role: .cancel) {}
+                } message: { _ in
+                    Text(SurfaceCopy.text("Your original shared text will be kept. Choices saved for the other pickup will be cleared."))
+                }
+                .sheet(isPresented: $startingPickup, onDismiss: {
+                    if composition.privateAuthorized, let shop = ledger.shop { selectedShop = shop.id }
+                }) {
+                    NavigationStack { LedgerNewShopView(model: ledger) }
+                }
             } else { SurfaceUnavailableView() }
         }.navigationTitle(SurfaceCopy.text("Device shortcuts"))
             .task {
                 await composition.sourceDidChange()
-                if selectedShop == nil { selectedShop = composition.shops.first?.id }
+                if selectedShop == nil, composition.privateAuthorized { selectedShop = ledger.shop?.id }
             }
             .sheet(item: $composition.draft) { _ in NavigationStack { SurfaceImportReview(composition: composition) } }
     }
@@ -44,37 +67,47 @@ struct DeviceSurfacesEntry: View {
 
 private struct SurfaceImportReview: View {
     @ObservedObject var composition: DeviceSurfacesComposition
+    @State private var pendingEdits: [UUID: SurfaceLineFields] = [:]
     var body: some View {
         Group {
             if let draft = composition.draft, composition.privateAuthorized {
+                let review = LedgerImportReview(shop: composition.shop(draft.preview.shopID), preview: draft.preview, choices: draft.decisions)
                 Form {
+                    if let shop = composition.shop(draft.preview.shopID) {
+                        LabeledContent(SurfaceCopy.text("Shopping list"), value: shop.title)
+                    }
                     Section(SurfaceCopy.text("Original wording")) { Text(draft.originalText).textSelection(.enabled) }
                     ForEach(draft.preview.lines) { row in
                         Section {
-                            SurfaceImportedLineEditor(row: row, locked: draft.phase == .committing) { name, amount, unit in composition.editDraftLine(row.id, name: name, amount: amount, unit: unit) }
+                            SurfaceImportedLineEditor(fields: fields(for: row), hasChanges: pendingEdits[row.id] != nil, locked: draft.phase == .committing) {
+                                guard let edits = pendingEdits[row.id] else { return }
+                                if composition.editDraftLine(row.id, name: edits.name, amount: edits.amount, unit: edits.unit) {
+                                    pendingEdits.removeValue(forKey: row.id)
+                                }
+                            }
                             Text(row.originalText).font(.footnote)
+                            if let pack = row.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if row.quantity == nil { Text(SurfaceCopy.text("Quantity unresolved")) }
-                            Picker(SurfaceCopy.text("How to add this line"), selection: Binding(get: { choice(draft.decisions[row.id]) }, set: { setChoice($0, row: row, draft: draft) })) {
-                                Text(SurfaceCopy.text("Choose how to add")).tag("")
-                                Text(SurfaceCopy.text("Add as a separate line")).tag("new")
-                                if let shop = composition.shop(draft.preview.shopID) {
-                                    ForEach(shop.lines.filter { row.duplicateLineIDs.contains($0.id) }, id: \.id) { line in
-                                        Text(SurfaceCopy.text("Merge same need") + ": " + line.name).tag("merge:" + line.id.uuidString)
-                                        Text(SurfaceCopy.text("Add amount") + ": " + line.name).tag("add:" + line.id.uuidString)
-                                    }
-                                }
-                                ForEach(draft.preview.lines.filter { row.duplicateLineIDs.contains($0.proposedLineID) && draft.decisions[$0.id] == .addNew }) { previous in
-                                    Text(SurfaceCopy.text("Merge same need") + ": " + previous.name).tag("merge:" + previous.proposedLineID.uuidString)
-                                    Text(SurfaceCopy.text("Add amount") + ": " + previous.name).tag("add:" + previous.proposedLineID.uuidString)
-                                }
-                                Text(SurfaceCopy.text("Skip this line")).tag("skip")
-                            }.disabled(draft.phase == .committing)
+                            if draft.phase == .committing {
+                                if let choice = draft.decisions[row.id] { Text(confirmedChoice(choice, row: row)) }
+                            } else {
+                                LedgerImportResolutionPicker(identifier: "surfaceImportResolution-\(row.id)", matches: review.matches[row.id] ?? [],
+                                    choice: Binding(get: { review.choices[row.id] }, set: { composition.chooseImportResolution($0, for: row.id) }))
+                            }
                         }
                     }
                     Section {
+                        if !pendingEdits.isEmpty {
+                            Text(SurfaceCopy.text("Apply your line edits before saving or adding this list."))
+                        }
+                        Button(SurfaceCopy.text("Save review draft")) { composition.saveReviewDraft() }
+                            .disabled(draft.phase == .committing || !pendingEdits.isEmpty)
+                        Text(SurfaceCopy.text("Cancel discards unsaved review changes."))
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
-                            .disabled(!draft.preview.lines.allSatisfy { draft.decisions[$0.id] != nil } || draft.preview.lines.isEmpty)
+                            .disabled(draft.phase == .review ? !review.isComplete || !pendingEdits.isEmpty :
+                                draft.preview.lines.isEmpty || draft.decisions.count != draft.preview.lines.count)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
+                            .disabled(!pendingEdits.isEmpty)
                         Text(SurfaceCopy.text("An interrupted import reopens the same reviewed operation. It never adds the list again automatically."))
                         if let message = composition.message { Text(message) }
                     }
@@ -84,24 +117,21 @@ private struct SurfaceImportReview: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { composition.cancelReview() }.disabled(composition.busy) } }
             .interactiveDismissDisabled(composition.busy)
     }
-    private func choice(_ value: ImportResolution?) -> String {
-        switch value { case .addNew: return "new"; case .skip: return "skip"; case .addToLine(let id): return "add:" + id.uuidString; case .mergeDuplicate(let id): return "merge:" + id.uuidString; case nil: return "" }
+
+    private func fields(for row: StagedImportLine) -> Binding<SurfaceLineFields> {
+        let saved = SurfaceLineFields(row)
+        return Binding(get: { pendingEdits[row.id] ?? saved }, set: { updated in
+            pendingEdits[row.id] = updated == saved ? nil : updated
+        })
     }
-    private func setChoice(_ value: String, row: StagedImportLine, draft: SurfaceImportDraft) {
-        var next = draft
-        if value == "new" { next.decisions[row.id] = .addNew }
-        else if value == "skip" { next.decisions[row.id] = .skip }
-        else {
-            let parts = value.split(separator: ":", maxSplits: 1)
-            if parts.count == 2, let id = UUID(uuidString: String(parts[1])) { next.decisions[row.id] = parts[0] == "add" ? .addToLine(id) : .mergeDuplicate(id) }
-            else { next.decisions[row.id] = nil }
+
+    private func confirmedChoice(_ choice: ImportResolution, row: StagedImportLine) -> String {
+        switch choice {
+        case .addNew: return ledgerText("Add as a separate line")
+        case .skip: return ledgerText("Skip this line")
+        case .mergeDuplicate: return ledgerFormat("Merge same need: %@", row.name)
+        case .addToLine: return ledgerFormat("Add amount to: %@", row.name)
         }
-        if next.decisions[row.id] != .addNew {
-            for other in next.preview.lines {
-                if next.decisions[other.id] == .mergeDuplicate(row.proposedLineID) || next.decisions[other.id] == .addToLine(row.proposedLineID) { next.decisions[other.id] = nil }
-            }
-        }
-        composition.saveDraft(next)
     }
 }
 
@@ -143,7 +173,7 @@ struct DeviceSurfacesDestination: View {
                 if composition.privateAuthorized, selected, ledger.shop?.id == id { LedgerHomeView(model: ledger) }
                 else { SurfaceUnavailableView() }
             case .offer(let journey, let offerID):
-                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers.first(where: { $0.id == offerID }) {
+                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
                     Form {
                         Text(offer.replacement)
                         TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -160,36 +190,52 @@ struct DeviceSurfacesDestination: View {
             }
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
         .task {
-            guard composition.privateAuthorized else { return }
-            // A newer pickup selection can arrive after route resolution. The
-            // shop view above checks identity; presentation must never reselect.
-            switch destination {
-            case .offer(let id, _), .deferral(let id, _): if composition.privateAuthorized { pickup.selectedID = id }
-            default: break }
-            selected = true
+            if await prepareForPresentation() { selected = true }
         }
+    }
+
+    func prepareForPresentation() async -> Bool {
+        guard composition.privateAuthorized else { return false }
+        // A newer pickup selection can arrive after route resolution. The
+        // shop view above checks identity; presentation must never reselect.
+        switch destination {
+        case .offer(let id, _), .deferral(let id, _): pickup.selectedID = id
+        default: break
+        }
+        return true
+    }
+}
+
+private struct SurfaceLineFields: Equatable {
+    var name: String
+    var amount: String
+    var unit: UnitOfMeasure
+
+    init(_ row: StagedImportLine) {
+        name = row.name
+        amount = row.quantity.map { ledgerAmountInput($0.amount) } ?? ""
+        unit = row.quantity?.unit ?? .count
     }
 }
 
 private struct SurfaceImportedLineEditor: View {
-    let row: StagedImportLine
+    @Binding var fields: SurfaceLineFields
+    let hasChanges: Bool
     let locked: Bool
-    let apply: (String, String, UnitOfMeasure) -> Void
-    @State private var name: String
-    @State private var amount: String
-    @State private var unit: UnitOfMeasure
-    init(row: StagedImportLine, locked: Bool, apply: @escaping (String, String, UnitOfMeasure) -> Void) {
-        self.row = row; self.locked = locked; self.apply = apply
-        _name = State(initialValue: row.name)
-        _amount = State(initialValue: row.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: row.quantity?.unit ?? .count)
-    }
+    let apply: () -> Void
+
     var body: some View {
         VStack(alignment: .leading) {
-            TextField(SurfaceCopy.text("Item name"), text: $name)
-            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
-            Picker(SurfaceCopy.text("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
-            Button(SurfaceCopy.text("Apply line edits")) { apply(name, amount, unit) }
+            TextField(SurfaceCopy.text("Item name"), text: $fields.name)
+            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $fields.amount).keyboardType(.numbersAndPunctuation)
+            Picker(SurfaceCopy.text("Unit"), selection: $fields.unit) {
+                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+            Button(action: apply) {
+                Text(SurfaceCopy.text("Apply line edits")).frame(minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            .disabled(!hasChanges)
         }.disabled(locked)
     }
 }

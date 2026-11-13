@@ -1,0 +1,67 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "at": "2026-11-06T19:53:40.104181+00:00",
+  "correctionProofSHA256": "c849554dff987cb1b73b43efa1998b1001d9c26bebf2668f95f6e68c9ed3fb75",
+  "items": [
+    {
+      "artifact": "iphone-results-models-1",
+      "beforeVerdict": {
+        "selected": 601,
+        "passed": 601,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0
+      },
+      "confirmationVerdict": {
+        "selected": 601,
+        "passed": 601,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0
+      },
+      "identicalVerdict": true,
+      "identicalFullStrictReport": true,
+      "identicalWarningEvidence": true,
+      "originalZIPUnmodified": true,
+      "pristineExtractionStillMatchesZIP": true,
+      "firstInspectedSQLiteCopyUnchanged": true,
+      "confirmationDirectory": "independent-confirmation/iphone-results-models-1",
+      "confirmationLogSHA256": "6479696f308df497c4ff435eda29457eaeda130165e2e64b8cc5be2239cbc1b3",
+      "confirmationWarningSHA256": "97817c14ac42dc4e165ae215c7a936842f39ec021b931d359c62664254589552"
+    },
+    {
+      "artifact": "iphone-results-ui-03-1",
+      "beforeVerdict": {
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 2
+      },
+      "confirmationVerdict": {
+        "selected": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 2
+      },
+      "identicalVerdict": true,
+      "identicalFullStrictReport": true,
+      "identicalWarningEvidence": true,
+      "originalZIPUnmodified": true,
+      "pristineExtractionStillMatchesZIP": true,
+      "firstInspectedSQLiteCopyUnchanged": true,
+      "confirmationDirectory": "independent-confirmation/iphone-results-ui-03-1",
+      "confirmationLogSHA256": "a30f8a1f8d495dec955dee19ef94cdfb89579753b62f2424a983e4dd0081d29a",
+      "confirmationWarningSHA256": "7877eb97c169181b8b8799ebb36f2ca0f1d30299fd7e8f8e4c407d7536c55677"
+    }
+  ],
+  "readOnlyEvidenceReplay": true,
+  "nativeTestExecution": false,
+  "hostedRetryOrDispatch": false,
+  "protectedInputHashesUnchanged": true
+}

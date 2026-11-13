@@ -1,0 +1,6 @@
+# Reviewed native labels; the independent validator enforces provider routing
+# and separate five-GitHub/three-Bitrise slot limits.
+self-hosted-runner:
+  labels:
+    - xcode-27
+    - "bitrise-runner-room in cart"

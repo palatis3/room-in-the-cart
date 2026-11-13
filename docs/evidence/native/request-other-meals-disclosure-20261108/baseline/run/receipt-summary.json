@@ -1,0 +1,78 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T18:22:44.070634+00:00",
+  "finishedAtUTC": "2026-11-08T18:34:19.233241+00:00",
+  "nativeExit": 65,
+  "expectedCount": 1,
+  "sourceManifestSHA256": "3dade26e9a7702f3520f6ff736d76ce679fb47f9f48782d6aa4f7cddfa43df9b",
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "systemVersion": {
+    "BuildID": "C789FCDA-4AAB-11EE-AE48-7EDEE72CB155",
+    "ProductBuildVersion": "21A328",
+    "ProductCopyright": "1983-2023 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "17.0"
+  },
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=D420C2CA-0E73-4213-9B96-1EB62EB061F6,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S24OtherMealsNov08/execution-r1/minimum17-run/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "on-failure",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts",
+    "test"
+  ],
+  "sourceUnchanged": true,
+  "toolchain": {
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1"
+  },
+  "device": [
+    {
+      "architecture": "arm64",
+      "deviceId": "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+      "deviceName": "RITC Cook Voice Minimum OS Nov08",
+      "modelName": "iPhone SE (3rd generation)",
+      "osBuildNumber": "21A328",
+      "osVersion": "17.0",
+      "platform": "iOS Simulator"
+    }
+  ],
+  "sourceRunReceipt": {
+    "path": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/run.json",
+    "sha256": "0aefb59fe86ce697662da28086ce8596dc10f40b8c74c38fcb66e9a9493ce3e5"
+  },
+  "originalResultManifest": {
+    "path": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/original-manifest.json",
+    "sha256": "76e8ec3562fcd8318970224dd2c7dc64ca8511784e738b161ebf2ebcfb333b1e",
+    "bytes": 485420,
+    "originalUnchanged": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "preparedAtUTC": "2026-11-08T16:55:38.937980+00:00",
+  "sourceManifestSHA256": "24fc718e4ad3173ede4888f4ba9eccac148869e7cad3b1a30481773933a411ca",
+  "priorSourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "changedInputs": [
+    "ios/Features/Household/HouseholdInboxModel.swift",
+    "ios/Tests/HouseholdRequestPackReviewTests.swift",
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "unchangedInputs": 553,
+  "modelsExpected": 19,
+  "fixtureExpected": 1,
+  "patchSHA256": "345734eb60781bad128946dc59c8232118e7e67827c4c34a03dc8638209be9f3",
+  "priorMinimumFixture": "native65 strict1; rowoffscreen beforestylecheck; originalinspection/export complete",
+  "carryforward": "Prior dark/minimumordinary source and tests are byte unchanged except unrelated HouseholdInboxModel and household test inputs. Does not replace original failure or assert new combined acceptance."
+}

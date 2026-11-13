@@ -1,0 +1,94 @@
+--- a/ios/Features/Household/HouseholdRequestPackReviewView.swift
++++ b/ios/Features/Household/HouseholdRequestPackReviewView.swift
+@@ -80,8 +80,22 @@
+             if failure { Text(ht("Review the need, units, pack labels, source, availability, and prices. The decision has not changed.")) }
+         }
+         .onChange(of: needed) { _, _ in reset() }.onChange(of: unit) { _, _ in reset() }
+-        .onChange(of: first) { _, _ in reset() }.onChange(of: second) { _, _ in reset() }
++        .onChange(of: first) { old, new in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            S24PackTrace.emit("change", pack: "a", oldID: old.id, newID: new.id, old: old.matched, new: new.matched)
++            #endif
++            reset()
++        }.onChange(of: second) { old, new in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            S24PackTrace.emit("change", pack: "b", oldID: old.id, newID: new.id, old: old.matched, new: new.matched)
++            #endif
++            reset()
++        }
+         .onChange(of: model.packReviewScope) { _, _ in reset() }
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        .onAppear { traceLifecycle("appear") }
++        .onDisappear { traceLifecycle("disappear") }
++        #endif
+     }
+     @ViewBuilder private func candidateFields(_ draft: Binding<RequestPackDraft>, index: String) -> some View {
+         Text(ht(index == "a" ? "Pack A" : "Pack B")).font(.headline)
+@@ -102,9 +116,30 @@
+         Text(ht("Price source")).font(.caption)
+         TextField(ht("Price source"), text: draft.source).accessibilityIdentifier("household.pack.\(index).source")
+         DatePicker(ht("Price observed"), selection: draft.observedAt)
+-        Toggle(ht("I confirmed this pack matches the request and intended use"), isOn: draft.matched).accessibilityIdentifier("household.pack.\(index).matched")
++        Toggle(ht("I confirmed this pack matches the request and intended use"), isOn: matchedBinding(draft, index: index)).accessibilityIdentifier("household.pack.\(index).matched")
+         Toggle(ht("Counts toward the retailer fee threshold"), isOn: draft.feeEligible)
+     }
++    private func matchedBinding(_ draft: Binding<RequestPackDraft>, index: String) -> Binding<Bool> {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        if S24PackTrace.enabled {
++            let original = draft.matched
++            return Binding(get: { original.wrappedValue }, set: { requested, transaction in
++                let before = draft.wrappedValue
++                S24PackTrace.emit("setter-enter", pack: index, oldID: before.id, newID: before.id, old: before.matched, new: requested)
++                original.transaction(transaction).wrappedValue = requested
++                let after = draft.wrappedValue
++                S24PackTrace.emit("setter-return", pack: index, oldID: before.id, newID: after.id, old: before.matched, new: after.matched)
++            })
++        }
++        #endif
++        return draft.matched
++    }
++    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++    private func traceLifecycle(_ event: String) {
++        S24PackTrace.emit(event, pack: "a", oldID: first.id, newID: first.id, old: first.matched, new: first.matched)
++        S24PackTrace.emit(event, pack: "b", oldID: second.id, newID: second.id, old: second.matched, new: second.matched)
++    }
++    #endif
+     private func reset() { comparison = nil; reviewedScope = nil; failure = false }
+     private func compare() {
+         do {
+--- a/ios/UITestSupport/HouseholdRequestPackUIFixture.swift
++++ b/ios/UITestSupport/HouseholdRequestPackUIFixture.swift
+@@ -1,6 +1,23 @@
+ #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+ import Foundation
+ import HouseholdClient
++
++// Temporary opt-in diagnostics; no product payload or extra observable state.
++enum S24PackTrace {
++    private static let scope: String? = {
++        let process = ProcessInfo.processInfo
++        guard process.arguments.contains("--ui-testing"), process.arguments.contains("--request-pack-fixture"),
++              let value = process.environment["S24_PACK_TRACE_SCOPE"], value.count <= 240,
++              value.range(of: #"^[A-Za-z0-9_./ \[\]\-]+$"#, options: .regularExpression) != nil else { return nil }
++        return value
++    }()
++    static var enabled: Bool { scope != nil }
++    static func emit(_ event: String, pack: String, oldID: String, newID: String, old: Bool, new: Bool) {
++        guard let scope else { return }
++        let process = ProcessInfo.processInfo
++        print("S24_PACK_TRACE uptime=\(process.systemUptime) pid=\(process.processIdentifier) scope=\(scope) event=\(event) pack=\(pack) oldDraft=\(oldID) newDraft=\(newID) old=\(old) new=\(new)")
++    }
++}
+ 
+ final class S24FixtureVault: RefreshTokenVault, @unchecked Sendable {
+     private var value: String?
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -7,6 +7,7 @@
+     override func setUpWithError() throws {
+         continueAfterFailure = false
+         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
++        app.launchEnvironment["S24_PACK_TRACE_SCOPE"] = name
+     }
+     override func tearDownWithError() throws {
+         if testRun?.failureCount ?? 0 > 0 {

@@ -1,0 +1,48 @@
+{
+  "copiedInputResult": "../run1/inspection/S14.xcresult",
+  "method": "xcrun xcresulttool export object --legacy --type file; allowlisted exact IDs only",
+  "originalResultMutation": "none; read-only export",
+  "artifacts": [
+    {
+      "file": "prefill-ui-snapshot",
+      "payloadID": "0~UEh3WCiiPHkj9MW2X1hFM_wAAUhfyTcSlkf3lSWk0BBBCEQizGJ3wLRkWUnq1AYx4xb_j9A-x5wlbEqbD1JbNA==",
+      "activityTimestamp": 1794029152.508,
+      "sha256": "d47ee35985effd9460606a6c205475ad99dd7fc168b93f734c43df1a564e4976",
+      "bytes": 1211,
+      "exportExit": 0,
+      "format": "NSKeyedArchiver",
+      "objectCount": 27,
+      "rootClass": "XCElementSnapshot",
+      "rootElementType": 2,
+      "childCount": 0,
+      "fieldAXNodesAvailable": false
+    },
+    {
+      "file": "postdone-ui-snapshot",
+      "payloadID": "0~rykcK8btLXOvFMOQ_TdBaa4Oaz6Ft61Y5HmqNUYWP7_YMmaJ11mIZJ-KCFZL_DsHRIQyrf4fSytKfpG8gg-83A==",
+      "activityTimestamp": 1794029155.996,
+      "sha256": "b433cd19debc0daa8fcf76720675c8421fdc19ab09d6c743ab0caea56da8f417",
+      "bytes": 1308,
+      "exportExit": 0,
+      "format": "NSKeyedArchiver",
+      "objectCount": 29,
+      "rootClass": "XCElementSnapshot",
+      "rootElementType": 2,
+      "childCount": 0,
+      "fieldAXNodesAvailable": false
+    },
+    {
+      "file": "Free-flow-failure.png",
+      "payloadID": "0~ZT754yet8jLU7PTHio3Qk_9qxyLPTlQpmWXXMfVkcR3gr1XZW70UrfeUxr2GV5gxHkXltJqrN2YodJUTkYDDCQ==",
+      "activityTimestamp": 1794029215.003,
+      "sha256": "2679603fbc7815aa0c9d64853be00e66842cbfdbc33f12e2f24a1d416362f8c4",
+      "bytes": 295269,
+      "exportExit": 0,
+      "format": "PNG",
+      "width": 1206,
+      "height": 2622,
+      "visualObservation": "Typed notes remain visible as a two-line field value; source URL is blank; no keyboard obscures the Notes row."
+    }
+  ],
+  "decoder": "Python plistlib; resolved root, $class, elementType and children UIDs; selected element exports retained separately"
+}

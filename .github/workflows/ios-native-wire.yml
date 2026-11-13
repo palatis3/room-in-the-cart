@@ -1,0 +1,64 @@
+name: Native Swift HTTPS and PostgreSQL
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/ios-native-wire.yml'
+      - '.node-version'
+      - 'scripts/run_ios_native_wire.sh'
+      - 'ios/Packages/HouseholdClient/**'
+      - 'service/**'
+      - 'shared/**'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-native-wire-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-wire:
+    concurrency:
+      # Use the gap before fixture builds finish so Swift CodeQL can start on slot 4.
+      group: ritc-macos-slot-3
+      queue: max
+      cancel-in-progress: false
+    runs-on: xcode-27
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - name: Install PostgreSQL 17
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: |
+          brew install postgresql@17
+          echo "$(brew --prefix postgresql@17)/bin" >> "$GITHUB_PATH"
+      - name: Build the service
+        working-directory: service
+        run: npm ci --ignore-scripts && npm run build
+      - name: Require all native wire cases over pinned loopback HTTPS
+        timeout-minutes: 15
+        run: bash scripts/run_ios_native_wire.sh
+      - name: Preserve native wire test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-wire-results-${{ github.run_attempt }}
+          path: .build/native-wire-results/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7

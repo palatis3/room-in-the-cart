@@ -33,7 +33,7 @@ enum MembershipPurchaseOutcome: Sendable {
     func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome
     func currentTransactions() async -> [MembershipPurchaseOutcome]
     func unfinishedTransactions() async -> [MembershipPurchaseOutcome]
-    func updates() -> AsyncStream<MembershipPurchaseOutcome>
+    func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome>
     func finish(transactionID: String) async
     func sync() async throws
 }
@@ -84,8 +84,9 @@ enum MembershipPurchaseOutcome: Sendable {
         return outcomes
     }
 
-    func updates() -> AsyncStream<MembershipPurchaseOutcome> {
-        AsyncStream { continuation in
+    func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome> {
+        self.productID = productID
+        return AsyncStream { continuation in
             let task = Task { @MainActor [weak self] in
                 for await result in StoreKit.Transaction.updates {
                     guard !Task.isCancelled else { break }

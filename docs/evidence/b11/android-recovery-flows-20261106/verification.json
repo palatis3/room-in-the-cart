@@ -1,0 +1,52 @@
+{
+  "browser": "Chrome156.0.8078.79 / Android14 API34 emulator",
+  "source": "Frozen staging-matching bundle; exact inputs in source-manifest.json",
+  "observations": 37,
+  "horizontalOverflowObserved": false,
+  "fictionalOnly": true,
+  "passedScopes": [
+    "Fresh adult invitation: explicit adult review, one redemption/activation, URL token removed.",
+    "Contributor offline save with consent, private text hidden on offline reload, authorized recovery without automatic send, explicit retry once.",
+    "Lost command receipt: identical bytes/client key retry, one stored effect.",
+    "Targeted outbox deletion: obsolete Retry removed, loss notice, no additional command.",
+    "Interrupted sign-out: private clearing and barrier survive reload, rotated CSRF recovery completes once.",
+    "Helper EN/ES read-only scope, page reload, revocation clearing.",
+    "Editor original proposal retry after projection advances: one effect, received suggestion recovered after reload.",
+    "Child EN/ES pairing, synthetic approval, one claim/finish, admitted page survives reload.",
+    "Actual Chrome restart: session lost, anonymous page, no token/link/replacement enrollment."
+  ],
+  "probeLimitations": [
+    "Fresh server stdin was closed; stopped after successful invitation. Recovery used independent one-time primed origins.",
+    "CDP pointer targeting timed out around keyboard on Review and Send proposal. Screenshot-guided native taps advanced actual controls; no forced DOM clicks/timeouts relaxed. Another Review click returned without advancing; native tap advanced.",
+    "Helper locale returned to default English on reload. Mistaken Spanish-button query timed out; corrected using observed English control.",
+    "Restart probe first assumed session survival; safe anonymous alternate branch then verified. Child own-request destination was not entered after restart.",
+    "Screenshot pathname percent-encoding mistake corrected by byte-preserving moves; hashes recorded."
+  ],
+  "preparedNotExecuted": [
+    "Fresh helper invitation",
+    "Contributor pending queue across full browser restart",
+    "Actor/grant/queue permission changes",
+    "Editor unsent draft reload",
+    "Child wrong-scope/malformed-finish/unconfigured-provider actual-browser paths",
+    "Full radio-off navigation, physical device, TalkBack and human language checks"
+  ],
+  "cleanup": {
+    "serversStopped": [
+      66305,
+      66716,
+      70331,
+      70658,
+      70880
+    ],
+    "reversePortsRemoved": [
+      53847,
+      53995,
+      54580,
+      54733,
+      54867
+    ],
+    "cdpForwardRemoved": 52889
+  },
+  "releaseAcceptance": false,
+  "providerActivation": false
+}

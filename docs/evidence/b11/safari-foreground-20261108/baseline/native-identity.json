@@ -1,0 +1,23 @@
+{
+  "recordedAtUTC": "2026-11-08T05:09:43.376437+00:00",
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "bundleIdentifier": "com.apple.mobilesafari",
+  "bundleVersion": "8623.1.14.10.9",
+  "shortVersion": "26.2",
+  "activeLaunchRecords": [
+    "3395\t0\tUIKitApplication:com.apple.mobilesafari[983c][rb-legacy]"
+  ],
+  "runtimes": [
+    {
+      "name": "iOS 26.2",
+      "buildversion": "23C52",
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2"
+    },
+    {
+      "name": "iOS 26.2",
+      "buildversion": "23C54",
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2"
+    }
+  ],
+  "scope": "Read-only native app/runtime identity after both original foreground cases; task browser remained open. No launch or UI mutation."
+}

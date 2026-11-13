@@ -1,0 +1,33 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "runID": 42048736340,
+  "locales": {
+    "en": {
+      "artifactID": 13427700542,
+      "sha256": "472fb8a47b0cfb40a43dac2a0924082bbaecba0bdc53364777d4b613af053533",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US English \u2014 local StoreKit"
+      ]
+    },
+    "es": {
+      "artifactID": 13427076667,
+      "sha256": "ae799a151692253dbda858540465f07148f5bcee45852e36fd76363eb4a5e500",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+      ]
+    }
+  },
+  "scope": "Native local StoreKit configurations on hosted Xcode26.3. Confirms reviewed billing correction on this candidate; not live Apple billing acceptance. Original Spanish23a73a8 failure remains retained."
+}

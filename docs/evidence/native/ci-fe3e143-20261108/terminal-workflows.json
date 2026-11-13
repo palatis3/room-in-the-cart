@@ -1,0 +1,124 @@
+{
+  "checkedAtUTC": "2026-11-08 20:50:47 UTC",
+  "scope": "Terminal workflow/job inventory; job counts are not test counts.",
+  "workflows": [
+    {
+      "id": 42509307464,
+      "name": "iOS deep checks",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307464",
+      "jobCounts": {
+        "success": 4
+      },
+      "failedJobs": []
+    },
+    {
+      "id": 42509307308,
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "conclusion": "failure",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308",
+      "jobCounts": {
+        "success": 18,
+        "failure": 2
+      },
+      "failedJobs": [
+        {
+          "id": 128838829640,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128838829640",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ]
+        },
+        {
+          "id": 128847355844,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128847355844",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 42509307282,
+      "name": "Build and test",
+      "status": "completed",
+      "conclusion": "failure",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282",
+      "jobCounts": {
+        "success": 18,
+        "failure": 2
+      },
+      "failedJobs": [
+        {
+          "id": 128821441785,
+          "name": "ios-tests (ui-01, 5)",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441785",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ]
+        },
+        {
+          "id": 128850665203,
+          "name": "CI gate",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128850665203",
+          "failedSteps": [
+            "Require every build and test job to succeed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 42509307191,
+      "name": "Security checks",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307191",
+      "jobCounts": {
+        "success": 3
+      },
+      "failedJobs": []
+    },
+    {
+      "id": 42509307183,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307183",
+      "jobCounts": {
+        "success": 1
+      },
+      "failedJobs": []
+    },
+    {
+      "id": 42509307171,
+      "name": "iOS Release performance",
+      "status": "completed",
+      "conclusion": "failure",
+      "headSha": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171",
+      "jobCounts": {
+        "success": 3,
+        "failure": 1
+      },
+      "failedJobs": [
+        {
+          "id": 128821661268,
+          "name": "Release performance (scroll)",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171/job/128821661268",
+          "failedSteps": [
+            "Run one Release performance case"
+          ]
+        }
+      ]
+    }
+  ]
+}

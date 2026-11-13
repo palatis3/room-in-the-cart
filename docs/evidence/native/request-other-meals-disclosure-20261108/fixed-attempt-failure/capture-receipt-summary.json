@@ -1,0 +1,84 @@
+{
+  "sourceReceiptSHA256": "5ad3b7fe975c271644b18f6747c3d9f42457f85f4fbf0462bc69eae09267e088",
+  "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "scope": "Partial first Collapsed/Expanded and ordinary facts before crash; no complete second review/collapse/no-write journey acceptance",
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "inspectionCopyOnly": true,
+  "activityReads": 1,
+  "activitySHA256": "b2c7914ab3a8cfe97fecacd67a75a14741ed11df7cddfd0bb9c73c8a10156f76",
+  "captures": [
+    {
+      "attachmentName": "S24-other-meals-Collapsed_0_3B6B3856-F000-4B5E-AE43-47B21A2EDE90.png",
+      "attachmentUUID": "C2F87CB9-1332-4BF9-8CE6-B6099B9C2B66",
+      "timestamp": 1794163030.626,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-0/C2F87CB9-1332-4BF9-8CE6-B6099B9C2B66.png",
+      "publicPath": "captures/S24-other-meals-Collapsed.png",
+      "sha256": "9c52d1c31f599002b27df73aa79c09e5e2d179ca8146ad4724402d5ad52e0e35",
+      "bytes": 123075,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-Collapsed-discovery_0_CE60B1AB-D705-4756-810B-E3DF124EDBDA.txt",
+      "attachmentUUID": "1DD2B875-3255-424C-B36C-EBE3AFC46964",
+      "timestamp": 1794163030.88,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-1/1DD2B875-3255-424C-B36C-EBE3AFC46964.txt",
+      "publicPath": "captures/S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "554fd2faba5f53e9c6e37d8bdb95f18c6b8f2b5782dfa0b5db2d5763aef02bd7",
+      "bytes": 127,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-Collapsed-control_0_08B5F141-81EF-4246-85B3-ABD70659A02A.txt",
+      "attachmentUUID": "A5DD71E7-45DF-4346-BD09-D0E9AD10D850",
+      "timestamp": 1794163031.06,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-2/A5DD71E7-45DF-4346-BD09-D0E9AD10D850.txt",
+      "publicPath": "captures/S24-other-meals-Collapsed-control.txt",
+      "sha256": "edb32c5eb9809ff81908f1c5bbbe1dbca4b52a8f7dbb0070be9c1221afdaa2f2",
+      "bytes": 127,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-Expanded_0_4BF96984-B367-4C30-9D7A-AE0A8F472634.png",
+      "attachmentUUID": "61B2523E-671B-4CF7-8F0A-1715912B0EEC",
+      "timestamp": 1794163042.816,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-3/61B2523E-671B-4CF7-8F0A-1715912B0EEC.png",
+      "publicPath": "captures/S24-other-meals-Expanded.png",
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e",
+      "bytes": 150760,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-Expanded-discovery_0_11ED42D1-6477-487E-89E3-432DEB517E25.txt",
+      "attachmentUUID": "B3B42C58-82D4-457A-AA66-28C18DA47388",
+      "timestamp": 1794163043.038,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-4/B3B42C58-82D4-457A-AA66-28C18DA47388.txt",
+      "publicPath": "captures/S24-other-meals-Expanded-discovery.txt",
+      "sha256": "db79974a87e05ae1a4f70294c80576bb1787ab3007618677392c837415e77b03",
+      "bytes": 126,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-Expanded-control_0_5CF33804-7FFB-411A-B1B2-E23C10217E3E.txt",
+      "attachmentUUID": "1FD4C87E-6623-419B-93AF-54F2EF186A87",
+      "timestamp": 1794163043.161,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-5/1FD4C87E-6623-419B-93AF-54F2EF186A87.txt",
+      "publicPath": "captures/S24-other-meals-Expanded-control.txt",
+      "sha256": "f2b1b77ad6ea6cb5a30a94e6fff4ab3048fa6a7953c1aee0d950624bd561ed1a",
+      "bytes": 126,
+      "exportExit": 0
+    },
+    {
+      "attachmentName": "S24-other-meals-expanded-ordinary-facts_0_8F2E8676-C30F-4E4F-B150-2F0B6B04950F.png",
+      "attachmentUUID": "C2FFE860-B3FA-419A-A08E-234BA94BEE0D",
+      "timestamp": 1794163047.151,
+      "sourcePath": ".build/S24OtherMealsNov08/fixed-failure-collector-r1/capture/attachment-6/C2FFE860-B3FA-419A-A08E-234BA94BEE0D.png",
+      "publicPath": "captures/S24-other-meals-expanded-ordinary-facts.png",
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e",
+      "bytes": 150760,
+      "exportExit": 0
+    }
+  ]
+}

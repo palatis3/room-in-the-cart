@@ -1,0 +1,10 @@
+{
+  "priorManifest": "38e6b9ece2f6fc8c8b953cf6fe156708da59a3ea841cdca2eebba520601d6dbf",
+  "sourceManifest": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "changedInputs": [
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "unchangedInputs": 555,
+  "scope": "Spanish full journey to verify enabled contrast/padding activation and original persistence. Does not resolve English animation timeout.",
+  "patch": "8e3f0fc76ac355e2bcb0113a0eb9e953251fd893b660a3c99edfb64f0ec7c241"
+}

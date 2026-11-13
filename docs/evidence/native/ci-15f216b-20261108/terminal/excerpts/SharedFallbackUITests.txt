@@ -1,0 +1,37 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/pristine-members/Tests.log
+Original SHA256: e4071d33e1f77b0858f34c52c29dfb3d603261489b5c3a5cc1e1df0c28c2c03f
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+20: Test Case '-[RoomInTheCartUITests.SharedFallbackUITests testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply]' started.
+406: Test Case '-[RoomInTheCartUITests.SharedFallbackUITests testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply]' passed (140.678 seconds).
+407: Test Case '-[RoomInTheCartUITests.SharedFallbackUITests testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip]' started.
+467:     t =    21.89s Find the Target Application 'dev.roominthecart.app.debug'
+468:     t =    22.07s Tap "0" Switch
+469:     t =    22.07s     Wait for dev.roominthecart.app.debug to idle
+470:     t =    22.09s     Find the "0" Switch
+471:     t =    22.64s     Check for interrupting elements affecting "0" Switch
+472:     t =    22.86s     Synthesize event
+473:     t =    23.23s     Wait for dev.roominthecart.app.debug to idle
+474:     t =    24.27s Checking `Expect predicate `value == "1"` for object "fallback.select.F4B0095B-81B2-4E95-B1EB-A99170F24690" Switch`
+475:     t =    24.28s     Find the "fallback.select.F4B0095B-81B2-4E95-B1EB-A99170F24690" Switch
+476:     t =    24.43s     Capturing element debug description
+477:     t =    24.80s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+478:     t =    24.96s         Find: Descendants matching type Switch
+479:     t =    24.96s         Find: Elements matching predicate '"fallback.select.F4B0095B-81B2-4E95-B1EB-A99170F24690" IN identifiers'
+480:     t =    24.97s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+481:     t =    25.09s         Find: Descendants matching type Switch
+482:     t =    25.10s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+483:     t =    26.25s Checking `Expect predicate `value == "1"` for object "fallback.select.F4B0095B-81B2-4E95-B1EB-A99170F24690" Switch`
+484:     t =    26.25s     Find the "fallback.select.F4B0095B-81B2-4E95-B1EB-A99170F24690" Switch
+485:     t =    26.38s     Capturing element debug description
+486:     t =    26.52s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+487:     t =    26.53s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+488:     t =    26.53s         Requesting snapshot of accessibility hierarchy for app with pid 32687
+489: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedFallbackUITests.swift:107: error: -[RoomInTheCartUITests.SharedFallbackUITests testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)")
+490:     t =    27.67s Tear Down
+491: Test Case '-[RoomInTheCartUITests.SharedFallbackUITests testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip]' failed (27.993 seconds).
+492: Test Suite 'SharedFallbackUITests' failed at 2026-11-08 04:23:15.249.
+493: 	 Executed 2 tests, with 1 failure (0 unexpected) in 168.671 (168.673) seconds
+494: Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-08 04:23:15.250.
+495: 	 Executed 2 tests, with 1 failure (0 unexpected) in 168.671 (168.674) seconds
+505: ** TEST EXECUTE FAILED **

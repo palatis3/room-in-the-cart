@@ -1,0 +1,17 @@
+{
+  "sqliteQuickCheck": "ok",
+  "revisions": [
+    1,
+    2
+  ],
+  "lineCount": 30,
+  "contributionCount": 30,
+  "importCount": 1,
+  "importSource": "typed",
+  "originalNamesOrderQuantitiesAndUnitsMatch": true,
+  "identitiesMatchPersistedOriginalPreview": true,
+  "cancelledCarrotsAndAppleAbsent": true,
+  "payloadSHA256": "c82d1fc9d0971a08a1c8402083df776e6fcc2795be24b416b97319b3766496b7",
+  "copiedDatabaseSHA256": "6c7a591d4f427a0541b558985beb1ae7d10af497634cc31c4e161dd4036dc67c",
+  "scope": "Post-run readback compared with durable original import preview, not independently captured pre-action SQLite bytes"
+}

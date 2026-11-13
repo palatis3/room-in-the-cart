@@ -1,0 +1,117 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894668,
+  "jobID": 127231601898,
+  "shard": "ui-10",
+  "artifactID": 13418957239,
+  "sha256": "b4cdb25bfaecebb77221a584156b47d373c77f77f0bfc806f7770058e46fccc4",
+  "digestVerified": true,
+  "selected": 6,
+  "passed": 5,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "runtimeWarnings": 2,
+  "rawLogSHA256": "c6d9a80e0d7004c009814218d4b3beaeb6471dd2102e59e4b61ea75f275146c2",
+  "report": {
+    "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+    "run": 42021894668,
+    "shard": "ui-10",
+    "status": "FAILED: original result unchanged",
+    "selector": "FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+    "failure": "ios/UITests/FreeJourneyUITests.swift:161; 15-second closeReady exists && hittable expectation timed out",
+    "source_identity": {
+      "ios/UITests/FreeJourneyUITests.swift": {
+        "matches_candidate": true,
+        "sha256": "f33ce161eab2215b3b77bf6659ddcae9cee0afd51a3247f7382ce6a73c08d334"
+      },
+      "ios/Features/Pickup/PickupHomeView.swift": {
+        "matches_candidate": true,
+        "sha256": "0f428130e8186e550fa68eba4c5c474f51f89adae1fb04a63d37253b1f78fee6"
+      },
+      "ios/Features/Pickup/PickupModel.swift": {
+        "matches_candidate": true,
+        "sha256": "cb0266ebdd87a4ea6dd51cfafd69a971f1f95761446a97e46ceb1567fa4abbd1"
+      }
+    },
+    "environment": {
+      "device": "iPhone 17",
+      "os": "iOS Simulator 26.2 (23C54)",
+      "xcode": "26.3"
+    },
+    "evidence": [
+      {
+        "at_test_seconds": 164.78,
+        "fact": "Share dated list tap synthesized; a current frozen Wraps \u2014 2 units snapshot was visible immediately before it.",
+        "source": "original Tests.log:1295-1311"
+      },
+      {
+        "at_test_seconds": [
+          167.35,
+          181.54
+        ],
+        "fact": "Every Close predicate poll lacks a matching button; all exported poll descriptions have only the same query chain.",
+        "source": "activities.json; attachments/232D76FA-9E0F-484A-91A9-E3A0C2FB5D56.txt and subsequent poll attachments"
+      },
+      {
+        "at_test_seconds": 182.08,
+        "fact": "Failure app hierarchy has ActivityListView and ShareSheet.RemoteContainerView but no remote controls; only the host shell is exposed.",
+        "source": "original Tests.log:1361-1535; attachments/BE5BA17B-D92C-4EE1-90F9-57147732FFFD.txt"
+      },
+      {
+        "at_test_seconds": 191.62,
+        "fact": "Post-failure resolution finds header.closeButton using unchanged app.buttons query; the attempted action has no Synthesize event.",
+        "source": "original Tests.log:1536-1540; activities.json"
+      },
+      {
+        "at_test_seconds": 196.34,
+        "fact": "App-scoped hierarchy now has remote AX pid20922, header.closeButton at (346,92,36,36), exact frozen-text caption, and share action list.",
+        "source": "attachments/BE50543A-FD41-4E9D-A5F4-54C12E24A57D.txt:158-178"
+      },
+      {
+        "at_test_seconds": 196.67,
+        "fact": "Second Close action also lacks event synthesis. Close remains present through later checks. No successful cancellation can be inferred from execution after the failed assertion.",
+        "source": "original Tests.log:1567-1629; activities.json"
+      },
+      {
+        "at_test_seconds": 319.23,
+        "fact": "Attachment named Retailer-share-cancelled-unplaced-after-relaunch visually shows Shop root, not pickup detail or Share cancelled history.",
+        "source": "attachments/58D2C7DF-F73C-449E-9317-B508CA1EC89D.png"
+      },
+      {
+        "fact": "Checkout-inclusive switch before/after state is 0\u21921, enabled and hittable, keyboard absent; after screenshot visibly on. This run reached Share, unlike the older checkout-switch failure.",
+        "source": "attachments/C019BD12-5B31-4609-A82F-BD04EBAF2B62.png; manifest named Checkout-inclusive-switch-before-state and after-state"
+      },
+      {
+        "fact": "Normal-share same-candidate ui02 passed. Share event t164.58; Close found t170.64; Close event synthesized t172.07; nonexistence check completes t174.22.",
+        "source": "../candidate-23a73a8/iphone-results-ui-02-1/Tests.log:479-507"
+      },
+      {
+        "fact": "Original video sample PTS170.2216667 lasts19.8733333seconds through190.095: dimmed retailer page without share panel or Close. Thus no visible panel across the failed wait. Full sheet/Close visible in PTS190.9033333. Nominal XCTest-relative offset+0.263seconds derives from attachment/activity metadata; independent MP4 creation timestamp agrees to second resolution.",
+        "source": "video-frame-metadata.json; frames/recording-00181.000.png; frames/recording-00191.000.png"
+      }
+    ],
+    "classification": {
+      "supported": "Visible system share-sheet presentation/content readiness is delayed beyond the 15-second deadline. Original video shows only a dimmed retailer page across that deadline and a full sheet later; this is not merely absent accessibility controls on an already-visible sheet. The unchanged app-scoped Close query later resolves correctly.",
+      "not_established": [
+        "Whether Reduce Motion caused the delay, versus simulator/system-service startup variability.",
+        "Any defect in application persistence, frozen snapshot preservation, placement state, or cancellation completion.",
+        "A successful cancellation after the first failure."
+      ],
+      "source_review": "PickupActivitySheet creates ordinary UIActivityViewController with text and completion handler; PickupHandoffView awaits shareOpened persistence then sets .sheet(item:) snapshot. Completion records completed/cancelled with original snapshot. No Reduce Motion branch or demonstrated app-side defect."
+    },
+    "next_action": "Apply the separately justified test-control-flow improvement if desired: throwing shared helper and both callers, with try XCTUnwrap at the unchanged 15-second readiness boundary. This prevents known misleading continuation after a failed readiness assertion. It does not repair or reclassify the original delayed system-sheet presentation. Further product/system cause diagnosis, if required, belongs in one root-owned targeted diagnostic with unchanged deadline and readiness condition; no retry-until-green or query/presentation workaround is supported.",
+    "patch": {
+      "file": "stop-after-share-readiness-failure.patch",
+      "status": "Scratch-only proposal; not applied or compiled. Source-reviewed.",
+      "justification": "Original async test records failure at t182.08 but continues Close attempts, relaunch, route queries and a falsely suggestive screenshot. Swift throw from XCTUnwrap propagates out of shared helper and async test, making this boundary terminate deterministically while XCTest still records failure.",
+      "scope": "Normal caller becomes throws; both callers use try; helper becomes throws; existing completed readiness result unwraps same Close element or nil. Same query, predicate, timeout15, taps, app behavior and Reduce Motion teardown.",
+      "limits": "Only addresses continuation from this readiness boundary. Later assertion boundaries remain unchanged. Does not make original share latency acceptable or establish cancellation success."
+    },
+    "constraints_observed": "Only read shared source/artifacts; xcresulttool used isolated scratch copy. Parent explicitly authorized media-only AVFoundation extraction of existing MP4. No native app build/test/simulator operation, shared source edit, push, timeout change, animation/idleness change, or app guard change.",
+    "video": "Media-only AVFoundation extraction completed in scratch; see video-frame-metadata.json for source SHA256, exact requested/actual frame PTS, sample display intervals, frame SHA256, origin evidence and precision limits."
+  },
+  "videoFrameMetadataSHA256": "925284cfeee048a7f7f83ec61640b2f9417d4e4bfb9131a52a5483501f739237",
+  "rootVisualReview": "Viewed original video frames returned for requested181s and191s; dimmed retailer screen without sheet, then full sheet with Close. Frame timing is recorded PTS, not wall-clock precision.",
+  "followUp": "Throw from unchanged readiness boundary to prevent misleading execution after async XCTest assertion. Original15s deadline/query/required cancellation checks unchanged; original failure remains failed."
+}

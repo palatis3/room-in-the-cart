@@ -1,0 +1,44 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T08:55:50.574421+00:00",
+  "run": 41994028865,
+  "job": 127138449541,
+  "case": "rendered",
+  "hostedJobConclusion": "success",
+  "artifact": {
+    "id": 13400594026,
+    "sha256": "b5fa3fcfc292e2f17fdb9d49f298e168a72d78c19a3069d44e266acb619c05b9",
+    "githubDigestVerified": true
+  },
+  "independentReplay": {
+    "candidateVerifierSHA256": "8480f7b123f07c60a50bc69fc90bdc47a3d534f0e6cd8bcac4bf84cc3c1cac6d",
+    "exactExecutionAndWarningGuard": "passed",
+    "runtimeWarnings": 0,
+    "attachmentAndBaselineRecomputation": "passed",
+    "searchSamples": 20,
+    "checkSamples": 20,
+    "distinctCheckedIDs": 20
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "comparisons": {
+    "searchP95Milliseconds": {
+      "measured": 2712.356541666736,
+      "maximum": 4750,
+      "passed": true
+    },
+    "checkP95Milliseconds": {
+      "measured": 2024.8916250000093,
+      "maximum": 3750,
+      "passed": true
+    }
+  },
+  "limits": "Hosted validator also checked the ephemeral SQLite store. Root independently replayed exported attachments and limits but did not re-read that hosted store. This candidate predates the separately pending functional search recovery assertions."
+}

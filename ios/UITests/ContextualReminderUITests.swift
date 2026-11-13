@@ -12,12 +12,11 @@ import XCTest
         app.terminate()
     }
 
-    func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() {
+    func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() throws {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Deferred coffee pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: "ledgerImportText")
-        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        tap(app.buttons["ledgerReviewImport"]); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
@@ -37,8 +36,19 @@ import XCTest
         assertText("Opening or reviewing this reminder does not schedule a notification.")
         XCTAssertFalse(element("reminder.schedule").exists)
         XCTAssertFalse(app.alerts.firstMatch.exists)
+        let expiryPicker = app.datePickers["reminder.expiry"]
+        let chosenExpiry = try chooseFutureDay(in: expiryPicker, navigationTitle: "Reminder")
+        let expiryDay = DateFormatter()
+        expiryDay.locale = Locale(identifier: "en_US")
+        expiryDay.dateStyle = .full
+        let savedDay = expiryDay.string(from: chosenExpiry)
         enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
+        for id in ["reminder.quietStart", "reminder.quietEnd"] {
+            let picker = app.datePickers[id]
+            reveal(picker)
+            XCTAssertTrue(picker.isHittable)
+        }
         let quiet = element("reminder.quietHours"); reveal(quiet)
         if quiet.value as? String == "1" { quiet.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         tap(element("reminder.review"))
@@ -47,6 +57,12 @@ import XCTest
         capture("S12-deferral-reminder-reviewed-unscheduled")
         tap(element("reminder.schedule"))
         assertElementContains("reminder.status", "Reminder not scheduled. Notifications are off")
+        tap(element("reminder.close"))
+        tap(app.buttons["Request a reminder for this deferral"])
+        reveal(expiryPicker)
+        XCTAssertFalse(element("reminder.openEditor").isEnabled)
+        enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
+        assertText(savedDay)
         tap(element("reminder.turnOff"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         tap(element("reminder.close"))
@@ -60,19 +76,30 @@ import XCTest
         tap(app.buttons["Cancel"])
     }
 
-    func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() {
+    func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() throws {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Offer reminder pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
-        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        tap(app.buttons["ledgerReviewImport"]); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        // These adjacent checkout fields share one keyboard session.
+        for (label, value) in [("Store", "Family market"), ("Branch", "Main branch"),
+                               ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")] {
+            let field = app.textFields[label]
+            tap(field)
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let old = field.value as? String, old != field.placeholderValue {
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges"); fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
         back(to: "Prepare retailer handoff"); tap(app.buttons["Prepare retailer handoff"])
@@ -84,11 +111,20 @@ import XCTest
         fill("4.00", into: "pickup.offer.price")
         let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
         if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
-        chooseFutureOfferCutoff()
+        let chosenCutoffDay = try chooseFutureDay(in: app.datePickers["pickup.offer.cutoff"], navigationTitle: "New store offer")
         tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
         tap(app.buttons["Request an offer deadline reminder"])
         XCTAssertEqual(element("reminder.subject").label, "Large wrap pack")
         assertText("Offer cutoff")
+        let date = DateFormatter()
+        date.locale = Locale(identifier: "en_US")
+        date.calendar = Calendar(identifier: .gregorian)
+        date.timeZone = .current
+        date.dateStyle = .full
+        // This is the saved offer's cutoff in the actual reminder context,
+        // not merely the date that happened to be visible in the popover.
+        reveal(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", date.string(from: chosenCutoffDay))).firstMatch)
+        XCTAssertGreaterThan(chosenCutoffDay, Date())
         tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         XCTAssertTrue(element("reminder.time").exists)
@@ -101,21 +137,53 @@ import XCTest
         capture("S07-cancel-reminder-keeps-pending-store-offer")
     }
 
-    private func chooseFutureOfferCutoff() {
-        let picker = element("pickup.offer.cutoff"); reveal(picker)
+    private func chooseFutureDay(in picker: XCUIElement, navigationTitle: String) throws -> Date {
+        reveal(picker)
         // Compact native date controls expose the date and time as separate buttons.
         let dateButton = picker.buttons.firstMatch
         XCTAssertTrue(dateButton.exists, app.debugDescription)
         dateButton.tap()
+        let monthHeader = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "DatePicker.Show", "Month")).firstMatch
+        XCTAssertTrue(monthHeader.waitForExistence(timeout: 8), app.debugDescription)
+        let month = DateFormatter()
+        month.locale = Locale(identifier: "en_US_POSIX")
+        month.calendar = Calendar(identifier: .gregorian)
+        month.timeZone = .current
+        month.dateFormat = "MMMM yyyy"
+        let displayedMonth = try XCTUnwrap(monthHeader.value as? String)
+        let displayedDate = try XCTUnwrap(month.date(from: displayedMonth), displayedMonth)
+        let calendar = month.calendar!
+        let start = try XCTUnwrap(calendar.dateInterval(of: .month, for: displayedDate)?.start)
+        let nextMonth = try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: start))
+        // Mid-month stays safely future even if this journey spans midnight
+        // on the last day of the current month. Calendar handles year rollover.
+        let target = try XCTUnwrap(calendar.date(byAdding: .day, value: 14, to: nextMonth))
+        XCTAssertGreaterThan(target, Date())
         let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
         XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
         next.tap()
-        // iOS 17 day controls use the complete spoken date, for example
-        // "Tuesday, December 1", rather than the child text's numeral.
-        let firstDay = app.datePickers.collectionViews.buttons.matching(NSPredicate(format: "label ENDSWITH %@", " 1")).firstMatch
-        XCTAssertTrue(firstDay.exists, app.debugDescription)
-        firstDay.tap()
-        app.navigationBars["New store offer"].tap()
+        let spoken = DateFormatter()
+        spoken.locale = Locale(identifier: "en_US")
+        spoken.calendar = calendar
+        spoken.timeZone = .current
+        spoken.dateFormat = "EEEE, MMMM d"
+        // The Month header's accessibility value is not a reliable completion
+        // signal on every runtime. Wait for the exact actionable date instead;
+        // the caller also verifies the saved cutoff in the
+        // reminder context after the offer is committed.
+        let days = app.buttons.matching(NSPredicate(format: "label == %@", spoken.string(from: target)))
+        let day = days.firstMatch
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: day)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed)
+        XCTAssertEqual(days.count, 1)
+        day.tap()
+        app.navigationBars[navigationTitle].tap()
+        // Dismissing the calendar can restore the prior text field's keyboard
+        // and scroll the compact picker out of the lazy Form hierarchy.
+        reveal(picker)
+        let evidence = XCTAttachment(string: "Target day: \(spoken.string(from: target)); target month: \(month.string(from: nextMonth))\nCompact date label: \(dateButton.label)\nCompact date value: \(String(describing: dateButton.value))\nPicker value: \(String(describing: picker.value))")
+        evidence.name = "\(picker.identifier)-future-date-selection"; evidence.lifetime = .keepAlways; add(evidence)
+        return target
     }
 
     private func launch(reset: Bool) {

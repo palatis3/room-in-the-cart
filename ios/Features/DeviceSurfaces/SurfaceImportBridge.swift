@@ -24,6 +24,8 @@ struct SurfaceImportDraft: Codable, Equatable, Identifiable {
     var preview: StagedListImport
     var decisions: [UUID: ImportResolution]
     var phase: Phase
+    // Older journals contain the decided actions without tracking explicit separate choices.
+    var explicitSeparate: Set<UUID>?
     var confirmedAttempts: [SurfaceImportAttempt] = []
 }
 
@@ -67,6 +69,7 @@ final class SurfaceImportJournal {
               result.preview.baseRevision >= 0, result.preview.lines.count <= SelectedTextInbox.maximumLines,
               Set(result.preview.lines.map(\.id)).count == result.preview.lines.count,
               Set(result.decisions.keys).isSubset(of: Set(result.preview.lines.map(\.id))),
+              (result.explicitSeparate ?? []).allSatisfy({ result.decisions[$0] == .addNew }),
               result.confirmedAttempts.count <= 3,
               result.confirmedAttempts.allSatisfy({ $0.preview.id == result.id && $0.preview.shopID == result.preview.shopID && $0.preview.source == .selectedText && $0.preview.originalText == result.preview.originalText }),
               result.expiresAt.timeIntervalSince1970.isFinite else { throw SurfaceError.corrupt }
@@ -138,6 +141,11 @@ final class SurfaceImportJournal {
     func reload() async throws
 }
 
+enum SurfaceImportDestinationConflict: Error {
+    case replaceReview(SurfaceImportDraft)
+    case recoverOriginalPickup
+}
+
 @MainActor final class SurfaceImportBridge {
     private let inbox: SelectedTextInbox
     private let journal: SurfaceImportJournal
@@ -146,19 +154,24 @@ final class SurfaceImportJournal {
     init(inbox: SelectedTextInbox, journal: SurfaceImportJournal, port: any SurfaceLedgerPort, clock: @escaping () -> Date = Date.init) {
         self.inbox = inbox; self.journal = journal; self.port = port; self.clock = clock
     }
-    func open(_ entry: SelectedTextEntry, shopID: UUID) async throws -> SurfaceImportDraft? {
+    func open(_ entry: SelectedTextEntry, shopID: UUID, replacing reviewToReplace: SurfaceImportDraft? = nil) async throws -> SurfaceImportDraft? {
         guard let scope = port.scope, let generation = port.generation else { throw SurfaceError.unavailable }
         let current = try await inbox.pending(now: clock()).first { $0.id == entry.id }
         guard current == entry, port.scope == scope, port.generation == generation else { throw SurfaceError.stale }
-        if let saved = try journal.read(entry.id) {
-            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, saved.expiresAt == entry.receipt.expiresAt, saved.preview.shopID == shopID else { throw SurfaceError.stale }
-            if let receipt = port.shop(shopID)?.importBatches.first(where: { $0.id == entry.id }) {
+        let previous = try journal.read(entry.id)
+        if let reviewToReplace, previous != reviewToReplace { throw SurfaceError.stale }
+        if let saved = previous {
+            guard saved.scope == scope, saved.inboxDigest == entry.receipt.digest, saved.expiresAt == entry.receipt.expiresAt else { throw SurfaceError.stale }
+            if let receipt = port.shop(saved.preview.shopID)?.importBatches.first(where: { $0.id == entry.id }) {
                 try validate(receipt, draft: saved)
                 _ = try await inbox.acknowledgeCommitted(operationID: entry.id, digest: saved.inboxDigest, now: clock())
                 try journal.remove(saved.id, expected: saved)
                 return nil
             }
-            return saved
+            if saved.preview.shopID == shopID { return saved }
+            // An attempt that might have reached the ledger must recover against its original pickup.
+            guard saved.phase == .review, saved.confirmedAttempts.isEmpty else { throw SurfaceImportDestinationConflict.recoverOriginalPickup }
+            guard reviewToReplace != nil else { throw SurfaceImportDestinationConflict.replaceReview(saved) }
         }
         // A receipt without its matching private journal cannot establish the inbox digest.
         guard port.shop(shopID)?.importBatches.contains(where: { $0.id == entry.id }) == false, !port.hasPendingSave else { throw SurfaceError.stale }
@@ -167,10 +180,15 @@ final class SurfaceImportJournal {
         let draft = SurfaceImportDraft(operationID: entry.id, inboxDigest: entry.receipt.digest, scope: scope,
             originalText: entry.originalText, editedText: entry.editedText, expiresAt: entry.receipt.expiresAt, preview: preview,
             decisions: Dictionary(uniqueKeysWithValues: preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) }), phase: .review)
-        try journal.save(draft, replacing: nil)
+        try journal.save(draft, replacing: previous)
         return draft
     }
     func saveReview(_ draft: SurfaceImportDraft, replacing previous: SurfaceImportDraft) throws {
+        try validateReview(draft, replacing: previous)
+        try journal.save(draft, replacing: previous)
+    }
+    /// Validate a sheet edit without making an unconfirmed choice durable.
+    func validateReview(_ draft: SurfaceImportDraft, replacing previous: SurfaceImportDraft) throws {
         guard port.scope == draft.scope, port.generation != nil, !port.hasPendingSave, previous.phase == .review,
               draft.phase == .review, draft.id == previous.id, draft.inboxDigest == previous.inboxDigest,
               draft.scope == previous.scope, draft.confirmedAttempts == previous.confirmedAttempts, draft.originalText == previous.originalText, draft.editedText == previous.editedText,
@@ -179,7 +197,6 @@ final class SurfaceImportJournal {
               draft.preview.lines.map(\.id) == previous.preview.lines.map(\.id),
               draft.preview.lines.map(\.proposedLineID) == previous.preview.lines.map(\.proposedLineID),
               draft.preview.lines.map(\.originalText) == previous.preview.lines.map(\.originalText) else { throw SurfaceError.stale }
-        try journal.save(draft, replacing: previous)
     }
     func commit(_ draft: SurfaceImportDraft) async throws {
         guard let generation = port.generation, port.scope == draft.scope, draft.expiresAt > clock(),
@@ -220,6 +237,7 @@ final class SurfaceImportJournal {
             fresh.confirmedAttempts.append(SurfaceImportAttempt(preview: saved.preview, decisions: saved.decisions))
         }
         fresh.preview = try port.stage(entry, shopID: saved.preview.shopID)
+        fresh.explicitSeparate = nil
         fresh.decisions = Dictionary(uniqueKeysWithValues: fresh.preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) })
         fresh.phase = .review
         try journal.save(fresh, replacing: saved, explicitlyRefreshed: true)

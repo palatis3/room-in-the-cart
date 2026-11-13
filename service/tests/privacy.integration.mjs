@@ -6,7 +6,7 @@ import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
-import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
+import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 import {createHTTPServer} from '../dist/http.js';
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),runtime=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL});
 const workerURL=new URL(process.env.TEST_DATABASE_URL);workerURL.username='ritc_test_worker';const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL??workerURL.toString()});
@@ -55,9 +55,31 @@ test('deletion requires recent signed authentication and configured provider bef
  const a=await actor(),identity=await verifier.verify(a.token);await assert.rejects(()=>new PrivacyService(repo).request(identity,input),e=>e.code==='deletion_unavailable');assert.equal((await status(input)).status,404);
  await assert.rejects(()=>runtime.query('SELECT * FROM ritc.privacy_job'),e=>e.code==='42501');await assert.rejects(()=>runtime.query('SELECT ritc.privacy_claim($1)',[randomUUID()]),e=>e.code==='42501');
 });
+test('a profile-only fixture with an expired lease leaves the next accepted deletion claimable',async t=>{
+ const first=await actor(),second=await actor(),firstJob=request([]),secondJob=request([]);
+ t.after(async()=>{
+   await deferProfileOnlyDeletion(admin,firstJob.clientKey);
+   await deferProfileOnlyDeletion(admin,secondJob.clientKey);
+ });
+ ok(await call(first,'/v1/privacy/deletions','POST',firstJob),202);
+ const lease=randomUUID(),claim=(await worker.query('SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
+ assert.equal(claim.job_id,firstJob.clientKey);
+ ok(await call(second,'/v1/privacy/deletions','POST',secondJob),202);
+ await deferProfileOnlyDeletion(admin,firstJob.clientKey);
+ // Exercise a slow-suite boundary without waiting for the real 30-second lease.
+ assert.equal((await admin.query("UPDATE ritc.privacy_job SET lease_until=clock_timestamp()-interval '1 second' WHERE job_id=$1 AND lease_id=$2",
+   [firstJob.clientKey,lease])).rowCount,1);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal(ok(await status(secondJob)).status,'complete');
+ assert.equal(ok(await status(firstJob)).providerAccountDeleted,false);
+ assert.equal((await admin.query('SELECT 1 FROM auth.sessions WHERE id=$1',[first.session])).rowCount,1);
+});
 test('explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member',async()=>{
  const f=await fresh(),s=await shop(f),other=await invite(f,await actor());const mine=ok(await send(f,f.owner,command(f.owner,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Owner private request',ownQuantity:'secret quantity',authoredAt:new Date().toISOString()}))),theirs=ok(await send(f,other,command(other,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Other retained private request',ownQuantity:'one',authoredAt:new Date().toISOString()})));
  assert.deepEqual(ok(await call(other,'/v1/privacy/deletion-preview')).households[0].otherAdults,[]);
+ const queuePath=`/v1/households/${f.h}/devices/current/request-queue`;
+ assert.ok(ok(await call(f.owner,queuePath,'PUT',{enabled:true})).requestQueueGrant);
+ const otherGrant=ok(await call(other,queuePath,'PUT',{enabled:true})).requestQueueGrant;
  const preview=ok(await call(f.owner,'/v1/privacy/deletion-preview'));assert.equal(preview.households[0].activeShops[0].shopId,s);assert.equal(preview.subscriptionCancelledByDeletion,false);assert.equal(preview.verifiedBackupRetentionDays,1);
  const invalid=request([disposition(f.h)]);assert.equal((await call(f.owner,'/v1/privacy/deletions','POST',invalid)).data.error.code,'organizer_disposition_required');assert.equal((await status(invalid)).status,404);
  const input=request([disposition(f.h,{organizer:'transfer',organizerMemberId:other.id,shops:[{shopId:s,revision:1,authorityEpoch:1,action:'transfer',memberId:other.id}]})]);const accepted=ok(await call(f.owner,'/v1/privacy/deletions','POST',input),202);assert.equal(accepted.status,'pending');assert.equal(accepted.providerAccountDeleted,false);
@@ -65,6 +87,7 @@ test('explicit responsibilities precede deletion; outage keeps pending and exact
  assert.equal((await call(null,'/v1/privacy/jobs/'+input.clientKey,'GET',undefined,{'X-Deletion-Token':randomBytes(32).toString('base64url')})).status,404);
  providerFailure=true;try{const result=await maintenance.run({batchSize:1});assert.equal(result.retryScheduled,1);}finally{providerFailure=false;}
  let receipt=ok(await status(input));assert.equal(receipt.status,'pending');assert.equal(receipt.appDataErased,true);assert.equal(receipt.providerAccountDeleted,false);
+ assert.deepEqual((await admin.query('SELECT grant_id FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rows,[{grant_id:otherGrant}]);
  const rows=(await admin.query('SELECT request_id,original_item,own_quantity FROM ritc.request WHERE household_id=$1',[f.h])).rows;assert.equal(rows.find(r=>r.request_id===mine.request.requestId).original_item,'Removed request');assert.equal(rows.find(r=>r.request_id===theirs.request.requestId).original_item,'Other retained private request');
  const erased=(await admin.query('SELECT * FROM ritc.member WHERE household_id=$1 AND member_id=$2',[f.h,f.owner.id])).rows[0];assert.equal(erased.alias,'Removed member');assert.notEqual(erased.subject,f.owner.subject);
  assert.equal((await admin.query("SELECT count(*)::int AS n FROM ritc.shop_snapshot WHERE household_id=$1 AND snapshot::text LIKE '%Owner private grocery%'",[f.h])).rows[0].n,0);
@@ -74,7 +97,9 @@ test('explicit responsibilities precede deletion; outage keeps pending and exact
 });
 test('household exit revokes only that membership, preserves service identity and is recoverable by the same key',async()=>{
  const f=await fresh(),second=ok(await call(f.owner,'/v1/households','POST',{clientKey:randomUUID(),label:'Keep this household',alias:'Still me',adultAttestation:true}),201);
+ assert.ok(ok(await call(f.owner,`/v1/households/${f.h}/devices/current/request-queue`,'PUT',{enabled:true})).requestQueueGrant);
  const input={clientKey:randomUUID(),confirm:true,disposition:disposition(f.h,{organizer:'archive'})};const first=ok(await call(f.owner,`/v1/households/${f.h}/exit`,'POST',input));assert.equal(first.accountDeleted,false);assert.deepEqual(ok(await call(f.owner,`/v1/households/${f.h}/exit`,'POST',input)),first);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rowCount,0);
  assert.deepEqual(ok(await call(f.owner,'/v1/me/workspaces')).workspaces.map(w=>w.householdId),[second.householdId]);assert.equal((await admin.query('SELECT count(*)::int AS n FROM auth.sessions WHERE id=$1',[f.owner.session])).rows[0].n,1);
 });
 test('sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile',async()=>{
@@ -194,4 +219,141 @@ test('new helper/history data joins the bounded erasure path without deleting an
  assert.equal((await admin.query('SELECT revision FROM ritc.financial_head WHERE household_id=$1 AND shop_id=$2',[f.h,s])).rows[0].revision,2);
  const current=ok(await call(other,`/v1/households/${f.h}/shops/${s}/financial-evidence`));assert.equal(current.entries[0].amountMinor,1234);assert.equal(JSON.stringify(current).includes('Owner private'),false);
  await assert.rejects(()=>runtime.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,other.id]),e=>e.code==='42501');
+});
+
+test('account erasure removes household stock and observed corrections without reviving earlier counts or joint cook text',async()=>{
+ const f=await fresh(),editor=await invite(f,await actor()),s=await shop(f),base='/v1/households/'+f.h+'/shops/'+s;
+ const initial=ok(await call(f.owner,base)),occurrenceId=randomUUID(),now=new Date(Date.now()-1000).toISOString();
+ let epoch=1;
+ const write=(actor,kind,body,revision=3)=>send(f,actor,command(actor,s,kind,body,revision,epoch));
+ ok(await write(f.owner,'shop.patch',{quote:initial.quote,lines:initial.lines,mealEdit:{occurrenceId,baseMealRevision:null,
+   meal:{title:'Household soup',day:'2026-11-07',kind:'dinner',portions:4,protected:false}}},1));
+ ok(await write(f.owner,'shop.reportPlaced',{occurredAt:now},2));
+ const page=async actor=>ok(await call(actor,base+'/pantry-lots'));
+ const review=async actor=>{const {pantryRevision,supplyRevision}=await page(actor);return {pantryRevision,supplyRevision};};
+ const make=async(actor,name)=>ok(await write(actor,'pantry.create',{...await review(actor),location:'pantry',storedAt:null,useFirstAt:null,foodName:name,exclusionTags:[]}));
+ const lot=await make(f.owner,'Retained shared stock');
+ ok(await write(f.owner,'pantry.select',{...await review(f.owner),lotId:lot.lotId,selected:true}));
+ const observe=async(actor,qty)=>{
+   const p=await page(actor),current=p.lots.find(l=>l.lotId===lot.lotId);
+   const row={lotId:lot.lotId,predecessorId:current.observation?.observationId??null,confirmedAt:now,
+     quantity:{amount:{numerator:qty,denominator:1},unit:'count',originalLiteral:String(qty)},pantryRevision:p.pantryRevision,supplyRevision:p.supplyRevision};
+   const preview=ok(await call(actor,base+'/pantry-lots/observation-preview','POST',row));
+   ok(await write(actor,'pantry.observe',{...row,previewDigest:preview.previewDigest}));
+ };
+ await observe(f.owner,5);
+ ok(await write(f.owner,'shop.transferAuthority',{newShopperId:editor.id}));epoch++;
+ await observe(editor,2);
+ await make(editor,'Removed private batch');
+ ok(await write(f.owner,'shop.transferAuthority',{newShopperId:f.owner.id}));epoch++;
+ const original=command(f.owner,s,'cookCopy.save',{placedRevision:2,...await review(f.owner),occurrenceId,mealRevision:2,language:'en',text:'Use the revised shared stock.'},3,epoch);
+ const saved=ok(await send(f,f.owner,original));
+ ok(await write(f.owner,'cookCopy.markSent',{copyId:saved.copyId,recipient:'Cook',previousSendId:null}));
+ assert.equal(ok(await call(f.owner,base+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline.copy.copyId,saved.copyId);
+ const deletion=request([disposition(f.h)]);
+ ok(await call(editor,'/v1/privacy/deletions','POST',deletion),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const retained=await page(f.owner);assert.equal(retained.lots.length,1);assert.equal(retained.lots[0].lotId,lot.lotId);
+ assert.equal(retained.lots[0].observation,null);assert.equal(retained.lots[0].selected,true);
+ assert.deepEqual(ok(await call(f.owner,base+'/cook-copies?occurrenceId='+occurrenceId)),{copies:[],nextCursor:null});
+ assert.equal(ok(await call(f.owner,base+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline,null);
+ assert.equal((await send(f,f.owner,original)).status,409);
+});
+
+test('actual account erasure clears a purchase correction without reviving an old answer and removes request-linked receipts',async()=>{
+ const f=await fresh(),s=await shop(f),author=await invite(f,await actor()),reviewer=await invite(f,await actor());
+ const root='/v1/households/'+f.h,shopPath=root+'/shops/'+s,submit=(a,kind,body,revision,epoch,req)=>
+   send(f,a,command(a,s,kind,body,revision,epoch,req));
+ const requestId=ok(await submit(author,'request.send',{clientRequestId:randomUUID(),originalItem:'A private purchase',ownQuantity:null,
+   authoredAt:new Date().toISOString()})).request.requestId;
+ const line={lineId:randomUUID(),originalItem:'A reviewed purchase',packs:1,unitPriceMinor:250,feeEligible:true};
+ const preview=ok(await call(f.owner,shopPath+'/previews','POST',{requestId,base:{shopRevision:1,authorityEpoch:1,requestRevision:1},
+   decision:{choice:'add',line,promote:false}}));
+ ok(await submit(f.owner,'request.apply',{requestId,previewId:preview.previewId,acceptOverage:false,acceptUnknown:false},1,1,1));
+ ok(await submit(f.owner,'shop.freeze',{},2,1));
+ ok(await submit(f.owner,'shop.reportPlaced',{occurredAt:new Date().toISOString()},3,1));
+ const {shopRevision,placedRevision}=ok(await call(f.owner,shopPath));
+ const observed={requestId,lineId:line.lineId,placedRevision};
+ const prior=ok(await submit(f.owner,'request.confirmPurchase',{...observed,outcome:'notBought'},shopRevision,1,2));
+ ok(await submit(f.owner,'shop.transferAuthority',{newShopperId:reviewer.id},shopRevision,1));
+ const latest=ok(await submit(reviewer,'request.confirmPurchase',{...observed,outcome:'bought'},shopRevision,2,3));
+ ok(await submit(f.owner,'shop.transferAuthority',{newShopperId:f.owner.id},shopRevision,2));
+ const own=async()=>ok(await call(author,root+'/requests/mine')).requests.find(r=>r.requestId===requestId);
+ assert.equal((await own()).purchaseOutcome,'bought');
+ async function erase(person){
+   const input=request([disposition(f.h)]);
+   ok(await call(person,'/v1/privacy/deletions','POST',input),202);
+   assert.equal((await maintenance.run({batchSize:1})).completed,1);
+   assert.equal(ok(await status(input)).status,'complete');
+ }
+ const hasReceipt=async id=>(await admin.query('SELECT 1 FROM ritc.operation_response WHERE household_id=$1 AND operation_id=$2',[f.h,id])).rowCount;
+ await erase(reviewer);
+ const after=await own();assert.equal(after.status,'added');assert.equal(after.revision,5);assert.equal(after.purchaseOutcome,undefined);
+ assert.equal(await hasReceipt(latest.operationId),0);assert.equal(await hasReceipt(prior.operationId),1);
+ await erase(author);
+ assert.equal(await hasReceipt(prior.operationId),0);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1',[f.h])).rowCount,0);
+ const erased=ok(await call(f.owner,shopPath+'/inbox')).requests.find(r=>r.requestId===requestId);
+ assert.equal(erased.status,'withdrawn');assert.equal(erased.linkedLineId,undefined);assert.equal(erased.purchaseOutcome,undefined);
+});
+
+test('erasing the sealed line source removes another shopper purchase confirmation while its independent request author remains',async()=>{
+ const f=await fresh(),s=await shop(f),author=await invite(f,await actor()),later=await invite(f,await actor());
+ const root='/v1/households/'+f.h,path=root+'/shops/'+s;
+ const observed=ok(await call(f.owner,path)),lineId=observed.lines[0].lineId;
+ const requestId=ok(await send(f,author,command(author,s,'request.send',{clientRequestId:randomUUID(),
+   originalItem:'Independent request text',ownQuantity:null,authoredAt:new Date().toISOString()}))).request.requestId;
+ const preview=ok(await call(f.owner,path+'/previews','POST',{requestId,base:{shopRevision:1,authorityEpoch:1,requestRevision:1},
+   decision:{choice:'link',lineId,promote:false}}));
+ ok(await send(f,f.owner,command(f.owner,s,'request.apply',{requestId,previewId:preview.previewId,acceptOverage:false,acceptUnknown:false},1,1,1)));
+ ok(await send(f,f.owner,command(f.owner,s,'shop.freeze',{},2,1)));
+ ok(await send(f,f.owner,command(f.owner,s,'shop.reportPlaced',{occurredAt:new Date().toISOString()},3,1)));
+ const {shopRevision,placedRevision}=ok(await call(f.owner,path));
+ ok(await send(f,f.owner,command(f.owner,s,'shop.transferAuthority',{newShopperId:later.id},shopRevision,1)));
+ const recorded=command(later,s,'request.confirmPurchase',{requestId,lineId,placedRevision,outcome:'bought'},shopRevision,2,2);
+ const receipt=ok(await send(f,later,recorded));
+ const deletion=request([disposition(f.h,{organizer:'transfer',organizerMemberId:later.id})]);
+ ok(await call(f.owner,'/v1/privacy/deletions','POST',deletion),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal(ok(await status(deletion)).status,'complete');
+ const current=ok(await call(author,root+'/requests/mine')).requests[0];assert.equal(current.status,'added');
+ assert.equal(current.originalItem,'Independent request text');assert.equal(current.purchaseOutcome,undefined);
+ const inbox=ok(await call(later,path+'/inbox')).requests[0];assert.equal(inbox.linkedLineId,undefined);
+ assert.equal((await send(f,later,recorded)).data.error.code,'refresh_required');
+ const retry={...recorded,clientKey:randomUUID(),base:{...recorded.base,requestRevision:current.revision}};
+ assert.equal((await send(f,later,retry)).status,404);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.operation_response WHERE household_id=$1 AND operation_id=$2',[f.h,receipt.operationId])).rowCount,0);
+});
+
+test('staged author deletion hides all carried requests and exact retries, then erases source, successors and linked text',async()=>{
+ const f=await fresh(),author=await invite(f,await actor()),source=await shop(f);
+ const text='Private carried grocery';
+ const original=ok(await send(f,author,command(author,source,'request.send',{clientRequestId:randomUUID(),
+   originalItem:text,ownQuantity:'one bag',authoredAt:new Date().toISOString()}))).request;
+ const place=id=>send(f,f.owner,command(f.owner,id,'shop.reportPlaced',{occurredAt:new Date().toISOString()},1,1));
+ ok(await place(source));
+ const second=await shop(f),ops=[],ids=[original.requestId];
+ async function carry(from,to){
+   const op=command(f.owner,to,'request.carry',{sourceShopId:from,sourceAuthorityEpoch:1,requestId:ids.at(-1)},1,1,2);
+   ids.push(ok(await send(f,f.owner,op)).requestId);ops.push(op);
+ }
+ await carry(source,second);ok(await place(second));const third=await shop(f);await carry(second,third);
+ const decision={choice:'add',line:{lineId:randomUUID(),originalItem:text,packs:1,unitPriceMinor:200,feeEligible:true}};
+ const preview=ok(await call(f.owner,`/v1/households/${f.h}/shops/${third}/previews`,'POST',
+   {requestId:ids[2],base:{shopRevision:1,authorityEpoch:1,requestRevision:1},decision}));
+ ok(await send(f,f.owner,command(f.owner,third,'request.apply',{requestId:ids[2],previewId:preview.previewId,acceptOverage:false,acceptUnknown:false},1,1,1)));
+ const input=request([disposition(f.h)]);ok(await call(author,'/v1/privacy/deletions','POST',input),202);
+ for(const shopId of [source,second,third]){
+   const page=ok(await call(f.owner,`/v1/households/${f.h}/shops/${shopId}/inbox`));assert.deepEqual(page.requests,[]);
+ }
+ for(const op of ops)assert.equal((await send(f,f.owner,op)).data.error.code,'refresh_required');
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const rows=await admin.query('SELECT original_item,own_quantity,author_id FROM ritc.request WHERE household_id=$1',[f.h]);
+ assert.deepEqual(rows.rows,Array(3).fill({original_item:'Removed request',own_quantity:null,author_id:author.id}));
+ const evidence=(await admin.query(`SELECT o.payload_digest,r.response FROM ritc.operation o LEFT JOIN ritc.operation_response r
+   USING(household_id,operation_id) WHERE o.household_id=$1 AND o.kind='request.carry'`,[f.h])).rows;
+ assert.deepEqual(evidence,Array(2).fill({payload_digest:'0'.repeat(64),response:null}));
+ assert.equal((await admin.query("SELECT 1 FROM ritc.shop_snapshot WHERE household_id=$1 AND snapshot::text LIKE $2",[f.h,'%'+text+'%'])).rowCount,0);
+ assert.equal((await admin.query("SELECT original_item FROM ritc.basket_line WHERE household_id=$1 AND line_id=$2",[f.h,decision.line.lineId])).rows[0].original_item,'Removed item');
+ for(const op of ops)assert.equal((await send(f,f.owner,op)).data.error.code,'refresh_required');
 });

@@ -1,0 +1,89 @@
+{
+  "nativeProduct": "2c45428",
+  "offerLimitFix": "28b255a",
+  "device": "iPhone SE (3rd generation) simulator, iOS 17.0 (21A328)",
+  "originalProblem": "On iOS 17 the archived retailer evidence label was static text. The only actionable element was a 10.5 by 13.5 point chevron without the retailer-history label.",
+  "interaction": "The full row is a named button at least 44 points high. A single tap on its leading text switched Collapsed to Expanded in both history screens after relaunch.",
+  "checkoutSQLite": {
+    "revision": 3,
+    "current": {
+      "branch": "East",
+      "store": "Market",
+      "slot": "Tuesday 5 PM",
+      "source": "East checkout",
+      "amount": 3905
+    },
+    "earlier": {
+      "branch": "West branch",
+      "store": "Market",
+      "slot": "Tuesday 5 PM",
+      "source": "West checkout",
+      "amount": 3720
+    }
+  },
+  "pickupSQLite": {
+    "revision": 3,
+    "active": {
+      "branch": "East Market",
+      "capFirmness": "firm",
+      "capScope": "wholeShop",
+      "currency": "USD",
+      "mode": "pickup",
+      "timeZoneIdentifier": "America/New_York"
+    },
+    "archived": [
+      {
+        "branch": "West Market",
+        "capFirmness": "firm",
+        "capScope": "wholeShop",
+        "currency": "USD",
+        "knownFees": {
+          "currency": "USD",
+          "minorUnits": 240
+        },
+        "mode": "pickup",
+        "retailerPreview": {
+          "capturedAt": 815782608.907488,
+          "includedCharges": [],
+          "source": "West retailer page",
+          "total": {
+            "currency": "USD",
+            "minorUnits": 3720
+          }
+        },
+        "timeZoneIdentifier": "America/New_York"
+      }
+    ]
+  },
+  "offerTextBoundary": {
+    "firstFullModelRun": {
+      "passed": 681,
+      "failed": 1
+    },
+    "failure": "A retailer offer accepted a quantity literal longer than 2,048 UTF-8 bytes after the local list-import limit was widened.",
+    "fix": "The ordered amount, required amount and remaining-original amount each retain the retailer-offer limit. All three accept a 2,048-byte multibyte literal and reject 2,049 bytes independently. An 8,192-byte list source remains committable."
+  },
+  "integration": {
+    "modelTests": 682,
+    "shopperJourneys": 3,
+    "passed": 685,
+    "failed": 0,
+    "skipped": 0,
+    "recordedRuntimeWarnings": 0,
+    "resultSummarySHA256": "773f0daae17bcbe8a2cb86a889a508c914aee134a189f248d5934bd0898c0e4a",
+    "strictReportSHA256": "c91abd23ed1ef625df3d8efabb5ad0ec2e26c85066846d271e8278c5d55d4590",
+    "logging": "The two history walkthroughs used OS_ACTIVITY_MODE=disable for the app process on iOS 17 after a reproduced XCTest snapshot crash inside the runtime-issue logging callback. Other tests used their ordinary configuration."
+  },
+  "deviceBuild": {
+    "configuration": "Unsigned Release for generic arm64 iPhone",
+    "executableSHA256": "42f28c2ee56e98392d0df2b52bf19b38b918b2af064936bc48ab10513a55531a",
+    "verified": "Executable, assets, privacy manifest, environment, widget and share extensions.",
+    "distribution": "Physical installation and App Store distribution require separate verification."
+  },
+  "otherChecks": {
+    "pythonCI": 215,
+    "localizationEntries": 4218,
+    "localizationCatalogs": 25,
+    "foundationVerifier": "Passed the reference contract and fixture checks."
+  }
+}

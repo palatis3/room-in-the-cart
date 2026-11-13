@@ -1,0 +1,71 @@
+{
+  "base": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+  "files": [
+    {
+      "path": "ios/Features/Pickup/PickupModel.swift",
+      "beforeSHA256": "c57b837b2983d7c0c565817b3d0598b862f043cc901ffde3890849d207a102c1",
+      "installedSHA256": "d667f7bf0e812085dde078972cfb22fc1636903440627d9ade39255feababee6"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupAwayCarryover.swift",
+      "beforeSHA256": "ec24d990552c7d0b72df3736cbd8a5a807d9b78fdd121522dc3dcc0441c40977",
+      "installedSHA256": "571d87db5557cf227897363915f10188caaef7e85cb5c39def5c72d3e9e0e53a"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupStockReview.swift",
+      "beforeSHA256": "e27577bd44dc0159bedd34a2e11660f17d475a2c003090ff0e70c3b0db082b69",
+      "installedSHA256": "2a118c29f4a7176084fce4bae34f462326aa8e9a0271a440a0c2f77db68432be"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerAwayCarryoverView.swift",
+      "beforeSHA256": "c032d974d14c15e62829064824aec492d938d5d81b42db2dc9a4e0dab846f6aa",
+      "installedSHA256": "49bc7042b7ca89260856704eb8c88abc88d1706cfc5e7c914167d8293d3723c8"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupArrivalView.swift",
+      "beforeSHA256": "41fc4c73f15878526d3e6b72ad3a98185765ef18a9c7aa0ad457373f35eba2e3",
+      "installedSHA256": "d5a8a7d66ccc68ff48b939f182170f7aee318fb6d59c4072290ed60fc8336151"
+    },
+    {
+      "path": "ios/Features/Pickup/Pickup.xcstrings",
+      "beforeSHA256": "fc1df197007f53f036c4c100676625e27429e95c04c4f272b3d7a794c5103e14",
+      "installedSHA256": "172db54ab54157a756682e4931c184c2e7f55ae59b268dfc1b67173d238e7d99"
+    },
+    {
+      "path": "ios/Tests/FreeJourneyAcceptanceTests.swift",
+      "beforeSHA256": "736ddc0813453f3fa7fef7930ec0ae8197b8049e85f11d301176c701cd0d34cd",
+      "installedSHA256": "aedc0a5c2d7a0491974eee186c6d676fae49f07ae61240d432a1b7c90068df34"
+    },
+    {
+      "path": "ios/Tests/DinnerAwayCarryoverTests.swift",
+      "beforeSHA256": "8be5b71e2a209fb15620cf8944e58a833059a280452161f59b00944cf542c299",
+      "installedSHA256": "4f6d31345378aa4132ce481db34cd30a18e4223fba2879c5d15c6bd6008e6715"
+    },
+    {
+      "path": "ios/Tests/PickupModelTests.swift",
+      "beforeSHA256": "114013f2a67306471f39e65d70f1f87753a4671ee44e72d0a7283782a817de89",
+      "installedSHA256": "d007efac148ecd497ef9192f8fb7122975fc6fc02c303adb67663a79e4395cbc"
+    },
+    {
+      "path": "ios/App/DeviceSurfacesComposition.swift",
+      "beforeSHA256": "06443824f1943b77bd0dbf40103b973f1690a46cf014562e1fe0363c0a49a0fc",
+      "installedSHA256": "f57987834b4721c714050c4042a81a40fd1618c625f8becd4d508b3efcb34005"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift",
+      "beforeSHA256": "eb3ceb4e1cc66fadd6aaa7ad10969ab915a20ab8082af82764d2d2d5ee58e889",
+      "installedSHA256": "7db828a62a8a46710787ee91b1b99181ee40bd4c3cd55c4aac7b009424727242"
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "beforeSHA256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+      "installedSHA256": "a3a5a20e5288f13c70a737194e13f109c2553e10ed498e23ffbc01d4fa21f4c0"
+    },
+    {
+      "path": "ios/Tests/ContextualReminderTests.swift",
+      "beforeSHA256": "2098e11c4e046e44f6d89cc2b7eb30be9865f08649afdd1a06bbe72b8a743460",
+      "installedSHA256": "9d6c7e70b2e80bb64d5e657cc60db371366c901de0b99b2a5e031de348ef8714"
+    }
+  ],
+  "scope": "Frozen13file proposal plus reviewed2file single-instant production delta; no scratch UI hooks installed."
+}

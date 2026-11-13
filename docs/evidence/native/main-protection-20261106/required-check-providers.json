@@ -1,0 +1,46 @@
+{
+  "CodeQL (javascript-typescript)": {
+    "id": 128079948840,
+    "name": "CodeQL (javascript-typescript)",
+    "app": {
+      "id": 15368,
+      "slug": "github-actions"
+    },
+    "head_sha": "804030e68473d022e72b464940061c01c611a0bd",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "CodeQL (actions)": {
+    "id": 128079948770,
+    "name": "CodeQL (actions)",
+    "app": {
+      "id": 15368,
+      "slug": "github-actions"
+    },
+    "head_sha": "804030e68473d022e72b464940061c01c611a0bd",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "Dependency review": {
+    "id": 128079948245,
+    "name": "Dependency review",
+    "app": {
+      "id": 15368,
+      "slug": "github-actions"
+    },
+    "head_sha": "804030e68473d022e72b464940061c01c611a0bd",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "CI gate": {
+    "id": 128024915969,
+    "name": "CI gate",
+    "app": {
+      "id": 15368,
+      "slug": "github-actions"
+    },
+    "head_sha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "status": "completed",
+    "conclusion": "failure"
+  }
+}

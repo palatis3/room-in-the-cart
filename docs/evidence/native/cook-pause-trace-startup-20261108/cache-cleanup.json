@@ -1,0 +1,15 @@
+{
+  "removedCompilerCacheDirectories": 35,
+  "retainedOngoingDiagnosticCacheDirectories": 2,
+  "freeBeforeBytes": 7574056960,
+  "freeAfterBytes": 18733359104,
+  "observedFreeIncreaseBytes": 11159302144,
+  "currentIOSSourceUnchanged": true,
+  "sourceFilesVerified": 556,
+  "allSiblingProductChecksPassed": true,
+  "privateReceipt": ".build/CIA305065Nov08/cook-cache-cleanup-review-r1/cleanup-receipt.json",
+  "privateReceiptSHA256": "29aeaecd9812a79f0e822c6eacb7c68f81802c846f48305fd7a022a62b06a7a8",
+  "scope": "Only exact inactive historical Build/Intermediates.noindex; current Nov08 caches and ongoing UI09/consent diagnostic caches retained.",
+  "finishedUTC": "2026-11-08T14:35:21.905503+00:00",
+  "traceDecision": "No repeat: no supported collector-side byte/buffer bound was found; restored headroom alone does not qualify another all-process trace."
+}

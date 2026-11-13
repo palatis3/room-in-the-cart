@@ -1,0 +1,247 @@
+{
+  "diagnosticOnly" : true,
+  "events" : [
+    {
+      "callbackUnixUTC" : 1794018091.245229,
+      "callbackUptime" : 830884.2468460834,
+      "instanceOrdinal" : "1",
+      "kind" : "created",
+      "sequence" : 1
+    },
+    {
+      "callbackUnixUTC" : 1794018091.245605,
+      "callbackUptime" : 830884.2472251668,
+      "instanceOrdinal" : "2",
+      "kind" : "created",
+      "sequence" : 2
+    },
+    {
+      "callbackUnixUTC" : 1794018093.1503801,
+      "callbackUptime" : 830886.1519847084,
+      "instanceOrdinal" : "2",
+      "kind" : "willBegin",
+      "sequence" : 3
+    },
+    {
+      "callbackUnixUTC" : 1794018095.953625,
+      "callbackUptime" : 830888.9552057917,
+      "instanceOrdinal" : "2",
+      "kind" : "didStop",
+      "sequence" : 4
+    },
+    {
+      "callbackUnixUTC" : 1794018097.568172,
+      "callbackUptime" : 830890.5697402917,
+      "instanceOrdinal" : "2",
+      "kind" : "report",
+      "sequence" : 5,
+      "suppliedEnd" : {
+        "absoluteTime" : "19941334920688",
+        "absoluteTimeNanoSeconds" : "830888955028666",
+        "unixSeconds" : 1794018095.953448
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19941267657125",
+        "absoluteTimeNanoSeconds" : "830886152380208",
+        "unixSeconds" : 1794018093.150776
+      }
+    },
+    {
+      "callbackUnixUTC" : 1794018097.688216,
+      "callbackUptime" : 830890.6897829584,
+      "instanceOrdinal" : "3",
+      "kind" : "created",
+      "sequence" : 6
+    },
+    {
+      "callbackUnixUTC" : 1794018099.635623,
+      "callbackUptime" : 830892.637174875,
+      "instanceOrdinal" : "3",
+      "kind" : "willBegin",
+      "sequence" : 7
+    },
+    {
+      "callbackUnixUTC" : 1794018102.4358392,
+      "callbackUptime" : 830895.4373672501,
+      "instanceOrdinal" : "3",
+      "kind" : "didStop",
+      "sequence" : 8
+    },
+    {
+      "callbackUnixUTC" : 1794018103.56524,
+      "callbackUptime" : 830896.56675975,
+      "instanceOrdinal" : "3",
+      "kind" : "report",
+      "sequence" : 9,
+      "suppliedEnd" : {
+        "absoluteTime" : "19941490493527",
+        "absoluteTimeNanoSeconds" : "830895437230291",
+        "unixSeconds" : 1794018102.4357018
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19941423296394",
+        "absoluteTimeNanoSeconds" : "830892637349750",
+        "unixSeconds" : 1794018099.635798
+      }
+    },
+    {
+      "callbackUnixUTC" : 1794018103.6718311,
+      "callbackUptime" : 830896.6733494584,
+      "instanceOrdinal" : "4",
+      "kind" : "created",
+      "sequence" : 10
+    },
+    {
+      "callbackUnixUTC" : 1794018105.6945372,
+      "callbackUptime" : 830898.696038875,
+      "instanceOrdinal" : "4",
+      "kind" : "willBegin",
+      "sequence" : 11
+    },
+    {
+      "callbackUnixUTC" : 1794018108.537545,
+      "callbackUptime" : 830901.5390236251,
+      "instanceOrdinal" : "4",
+      "kind" : "didStop",
+      "sequence" : 12
+    },
+    {
+      "callbackUnixUTC" : 1794018109.677434,
+      "callbackUptime" : 830902.6789035418,
+      "instanceOrdinal" : "4",
+      "kind" : "report",
+      "sequence" : 13,
+      "suppliedEnd" : {
+        "absoluteTime" : "19941636933124",
+        "absoluteTimeNanoSeconds" : "830901538880166",
+        "unixSeconds" : 1794018108.537401
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19941568711470",
+        "absoluteTimeNanoSeconds" : "830898696311250",
+        "unixSeconds" : 1794018105.694809
+      }
+    },
+    {
+      "callbackUnixUTC" : 1794018109.8338299,
+      "callbackUptime" : 830902.8352971667,
+      "instanceOrdinal" : "5",
+      "kind" : "created",
+      "sequence" : 14
+    },
+    {
+      "callbackUnixUTC" : 1794018111.8569942,
+      "callbackUptime" : 830904.858445875,
+      "instanceOrdinal" : "5",
+      "kind" : "willBegin",
+      "sequence" : 15
+    },
+    {
+      "callbackUnixUTC" : 1794018114.6537151,
+      "callbackUptime" : 830907.6551438334,
+      "instanceOrdinal" : "5",
+      "kind" : "didStop",
+      "sequence" : 16
+    },
+    {
+      "callbackUnixUTC" : 1794018115.791743,
+      "callbackUptime" : 830908.7931627501,
+      "instanceOrdinal" : "5",
+      "kind" : "report",
+      "sequence" : 17,
+      "suppliedEnd" : {
+        "absoluteTime" : "19941783720246",
+        "absoluteTimeNanoSeconds" : "830907655010250",
+        "unixSeconds" : 1794018114.653582
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19941716606345",
+        "absoluteTimeNanoSeconds" : "830904858597708",
+        "unixSeconds" : 1794018111.857146
+      }
+    },
+    {
+      "callbackUnixUTC" : 1794018115.925894,
+      "callbackUptime" : 830908.9273124167,
+      "instanceOrdinal" : "6",
+      "kind" : "created",
+      "sequence" : 18
+    },
+    {
+      "callbackUnixUTC" : 1794018117.916494,
+      "callbackUptime" : 830910.917896625,
+      "instanceOrdinal" : "6",
+      "kind" : "willBegin",
+      "sequence" : 19
+    },
+    {
+      "callbackUnixUTC" : 1794018120.74256,
+      "callbackUptime" : 830913.7439394584,
+      "instanceOrdinal" : "6",
+      "kind" : "didStop",
+      "sequence" : 20
+    },
+    {
+      "callbackUnixUTC" : 1794018121.85806,
+      "callbackUptime" : 830914.8594306667,
+      "instanceOrdinal" : "6",
+      "kind" : "report",
+      "sequence" : 21,
+      "suppliedEnd" : {
+        "absoluteTime" : "19941929848778",
+        "absoluteTimeNanoSeconds" : "830913743699083",
+        "unixSeconds" : 1794018120.74232
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19941862035336",
+        "absoluteTimeNanoSeconds" : "830910918139000",
+        "unixSeconds" : 1794018117.9167361
+      }
+    },
+    {
+      "callbackUnixUTC" : 1794018121.9709082,
+      "callbackUptime" : 830914.9722776667,
+      "instanceOrdinal" : "7",
+      "kind" : "created",
+      "sequence" : 22
+    },
+    {
+      "callbackUnixUTC" : 1794018124.100644,
+      "callbackUptime" : 830917.1019962917,
+      "instanceOrdinal" : "7",
+      "kind" : "willBegin",
+      "sequence" : 23
+    },
+    {
+      "callbackUnixUTC" : 1794018127.03857,
+      "callbackUptime" : 830920.0398983334,
+      "instanceOrdinal" : "7",
+      "kind" : "didStop",
+      "sequence" : 24
+    },
+    {
+      "callbackUnixUTC" : 1794018128.1725621,
+      "callbackUptime" : 830921.1738799583,
+      "instanceOrdinal" : "7",
+      "kind" : "report",
+      "sequence" : 25,
+      "suppliedEnd" : {
+        "absoluteTime" : "19942080953825",
+        "absoluteTimeNanoSeconds" : "830920039742708",
+        "unixSeconds" : 1794018127.038415
+      },
+      "suppliedStart" : {
+        "absoluteTime" : "19942010455226",
+        "absoluteTimeNanoSeconds" : "830917102301083",
+        "unixSeconds" : 1794018124.10095
+      }
+    }
+  ],
+  "maximumRetainedEvents" : 128,
+  "omittedEvents" : 0,
+  "reportCallbacks" : 6,
+  "schemaVersion" : 1,
+  "status" : "recorded",
+  "totalEvents" : 25,
+  "totalInstances" : "7"
+}

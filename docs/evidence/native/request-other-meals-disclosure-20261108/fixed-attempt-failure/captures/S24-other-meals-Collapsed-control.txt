@@ -1,0 +1,4 @@
+Type: XCUIElementType(rawValue: 9)
+Label: Other meals in this shop
+Value: Optional(Collapsed)
+Frame: (32.0, 132.5, 311.0, 44.0)

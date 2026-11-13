@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "controls": 205,
+  "directScriptEntryRunsAllTests": true,
+  "manifestSHA256": "bdcf79537ebebde5f9f5b65d1df84383b6d2074bc7f1cdde99ec1edc9925a7f9",
+  "patchSHA256": "f0720ddacebf9d7deb8dbf733231ab12722574be6748a4abde5b5099d17bd953",
+  "log": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/infrastructure-cleanup-root-r2/controls.log",
+  "logSHA256": "285ecf1c1f206b028e3ce093a37d45c0204651ba945ed8f132f5751eeb5b74eb",
+  "helperBootMaximumSeconds": 240,
+  "prepareMaximumSeconds": 300,
+  "reservedPostBootSeconds": 30,
+  "cleanupPairSeconds": 30,
+  "cleanupPhaseSeconds": 90,
+  "appPerformanceThresholdsChanged": false,
+  "hostedQualification": false,
+  "reason": "Prospective infrastructure headroom after observed normal177.895s boot and failed180s boot; scoped cleanup replaces broad inventory while preserving exact ownership and fresh runtime checks."
+}

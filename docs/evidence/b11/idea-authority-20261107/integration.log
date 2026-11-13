@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: adult planner corrects excluded ambiguous idea, approves only, then separately proposes and shopper applies once
+ok 1 - adult planner corrects excluded ambiguous idea, approves only, then separately proposes and shopper applies once
+  ---
+  duration_ms: 656.311416
+  type: 'test'
+  ...
+# Subtest: Free current household shopper may approve and separately self-propose without assigning a planner
+ok 2 - Free current household shopper may approve and separately self-propose without assigning a planner
+  ---
+  duration_ms: 109.281709
+  type: 'test'
+  ...
+# Subtest: editing an approved idea invalidates submission and any pending shopper application
+ok 3 - editing an approved idea invalidates submission and any pending shopper application
+  ---
+  duration_ms: 257.115708
+  type: 'test'
+  ...
+# Subtest: exact idea author, approved revision and quantities cannot be substituted
+ok 4 - exact idea author, approved revision and quantities cannot be substituted
+  ---
+  duration_ms: 287.566417
+  type: 'test'
+  ...
+# Subtest: unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry
+ok 5 - unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry
+  ---
+  duration_ms: 604.000666
+  type: 'test'
+  ...
+# Subtest: deleting idea author erases drafts, approvals and retry receipts
+ok 6 - deleting idea author erases drafts, approvals and retry receipts
+  ---
+  duration_ms: 255.9525
+  type: 'test'
+  ...
+# Subtest: exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct
+ok 7 - exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct
+  ---
+  duration_ms: 257.80875
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2872.672916

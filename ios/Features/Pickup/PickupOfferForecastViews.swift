@@ -31,10 +31,32 @@ struct PickupOfferCostDraft: Equatable {
     }
 }
 
+struct PickupOfferConversionScope: Hashable {
+    let lineID: UUID?
+    let replacement: String
+    let originalItem: String?
+    let targetUnit: UnitOfMeasure?
+
+    init(lineID: UUID?, replacement: String, journey: PickupJourney) {
+        self.lineID = lineID
+        self.replacement = replacement
+        let line = journey.pickup?.orderLines.first { $0.id == lineID }
+        originalItem = line?.name
+        targetUnit = line?.ordered.unit
+    }
+}
+
 struct PickupOfferForecastDraft: Equatable {
     var enabled: Bool
     var usable = ""
-    var usableUnit: UnitOfMeasure = .count
+    var usableUnit: UnitOfMeasure = .count {
+        didSet { if usableUnit != oldValue { conversion = nil } }
+    }
+    var conversion: ComparisonConversion? {
+        didSet {
+            if conversion != oldValue { decisions.removeAll(); exclusionsConfirmed.removeAll() }
+        }
+    }
     var retained = PickupOfferCostDraft()
     var lineAllowance = ""
     var decisions: [UUID: PickupOfferDishDecision] = [:]
@@ -45,6 +67,8 @@ struct PickupOfferForecastDraft: Equatable {
     var source = pTr("Manual offer review")
     var observedAt = Date()
     private var originalUsable: Quantity?
+    private var originalConversion: ComparisonConversion?
+    private var conversionScope: PickupOfferConversionScope?
 
     init(original: PickupOffer?, journey: PickupJourney) {
         enabled = original == nil || original?.evaluation != nil
@@ -52,6 +76,15 @@ struct PickupOfferForecastDraft: Equatable {
         originalUsable = input.offeredUsable
         usable = input.offeredUsable?.amount.description ?? ""
         usableUnit = input.offeredUsable?.unit ?? .count
+        if let basis = input.offeredUsable?.confirmedConversion {
+            conversion = ComparisonConversion(sourceLiteral: basis.sourceLiteral ?? "1",
+                targetLiteral: basis.targetLiteral ?? basis.targetAmountPerSourceUnit.description,
+                sourceUnit: basis.sourceUnit, targetUnit: basis.targetUnit, sourceNote: basis.sourceNote)
+            originalConversion = conversion
+        }
+        if let original {
+            conversionScope = .init(lineID: original.lineID, replacement: original.replacement, journey: journey)
+        }
         retained = PickupOfferCostDraft(input.retainedOriginalCharge)
         lineAllowance = input.lineAllowance.map(PickupOfferCostDraft.literal) ?? ""
         for rule in input.dishRules {
@@ -66,8 +99,13 @@ struct PickupOfferForecastDraft: Equatable {
             decisions.removeAll(); exclusionsConfirmed.removeAll()
         }
     }
+    mutating func updateConversionScope(_ scope: PickupOfferConversionScope) {
+        if conversionScope != scope { conversion = nil }
+        conversionScope = scope
+    }
+
     func inputs(offer: PickupOffer, journey: PickupJourney) throws -> PickupOfferEvaluationInputs {
-        let amount: Quantity?
+        var amount: Quantity?
         if usable.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { amount = nil }
         else if let originalUsable, usable == originalUsable.amount.description, usableUnit == originalUsable.unit { amount = originalUsable }
         else {
@@ -75,6 +113,19 @@ struct PickupOfferForecastDraft: Equatable {
             if pieces.count == 2, let n = Int64(pieces[0]), let d = Int64(pieces[1]) {
                 amount = Quantity(amount: try Rational(n, d), unit: usableUnit, originalLiteral: usable)
             } else { amount = try ComparisonModel.quantity(usable, usableUnit) }
+        }
+        if let usableAmount = amount {
+            var basis: UnitBasis?
+            let currentScope = PickupOfferConversionScope(lineID: offer.lineID, replacement: offer.replacement, journey: journey)
+            if conversionScope == currentScope, let conversion {
+                if conversion == originalConversion, usableUnit == originalUsable?.unit {
+                    basis = originalUsable?.confirmedConversion
+                } else if conversion.sourceUnit == usableUnit, conversion.targetUnit == currentScope.targetUnit {
+                    basis = try conversion.unitBasis()
+                }
+            }
+            amount = Quantity(amount: usableAmount.amount, unit: usableAmount.unit,
+                              originalLiteral: usableAmount.originalLiteral, confirmedConversion: basis)
         }
         let rules = journey.needs.filter { $0.orderLineID == offer.lineID }.map { need in
             PickupOfferDishRule(needID: need.id, decision: decisions[need.id] ?? .unreviewed, exclusionsConfirmed: exclusionsConfirmed.contains(need.id))
@@ -92,20 +143,27 @@ struct PickupOfferForecastEditor: View {
     let journey: PickupJourney
     let lineID: UUID?
     let offerID: UUID
+    let replacement: String
+    private var conversionScope: PickupOfferConversionScope {
+        .init(lineID: lineID, replacement: replacement, journey: journey)
+    }
     var body: some View {
-        Section(pTr("Meal and checkout forecast")) {
-            Toggle(pTr("Review usable yield, meal suitability, and combined cost"), isOn: $draft.enabled)
-                .accessibilityIdentifier("pickup.offer.forecast.enabled")
-            Text(pTr("This is a forecast of expected food and charges. It does not record received food or retailer acceptance."))
+        Group {
+            Section(pTr("Meal and checkout forecast")) {
+                Toggle(pTr("Review usable yield, meal suitability, and combined cost"), isOn: $draft.enabled)
+                    .accessibilityIdentifier("pickup.offer.forecast.enabled")
+                Text(pTr("This is a forecast of expected food and charges. It does not record received food or retailer acceptance."))
+            }
+            if draft.enabled {
+                yieldSection
+                dishesSection
+                simultaneousSection
+                checkoutSection
+            } else {
+                Text(pTr("This saved offer has no reviewed meal or combined-cost forecast. Its suitability and joint affordability remain unresolved."))
+            }
         }
-        if draft.enabled {
-            yieldSection
-            dishesSection
-            simultaneousSection
-            checkoutSection
-        } else {
-            Text(pTr("This saved offer has no reviewed meal or combined-cost forecast. Its suitability and joint affordability remain unresolved."))
-        }
+        .onChange(of: conversionScope, initial: true) { _, scope in draft.updateConversionScope(scope) }
     }
     private var yieldSection: some View {
         Section(pTr("Expected usable yield and remaining original charge")) {
@@ -115,6 +173,12 @@ struct PickupOfferForecastEditor: View {
             Picker(pTr("Expected usable unit"), selection: $draft.usableUnit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
             }.accessibilityIdentifier("pickup.offer.usable.unit")
+            if let target = conversionScope.targetUnit {
+                PackConversionControl(packLabel: replacement, sourceUnit: draft.usableUnit, targetUnit: target,
+                                      conversion: $draft.conversion, identifier: "pickup.offer.conversion")
+                    .id(conversionScope)
+                    .id(draft.usableUnit)
+            }
             Text(pTr("Enter the total usable yield covered by the offered price. A package count or label is not a confirmed edible yield. Missing mass-to-volume conversions stay unresolved."))
             PickupOfferCostEditor(title: pTr("Charge for the original amount still expected"), draft: $draft.retained, identifier: "pickup.offer.retained")
             Text(pTr("Inherited allowance for this original line (USD, optional)")).font(.caption)
@@ -245,6 +309,10 @@ struct PickupOfferForecastResults: View {
                         Text("\(pTr("Maximum replacement price after retained original charge")): \(assessment.lineMaximum.map(pMoney) ?? pTr("Unresolved"))")
                     }
                     Text("\(pTr("Expected offered usable yield")): \(selected.evaluation?.inputs.offeredUsable.map { pQuantity($0) } ?? pTr("Unresolved"))")
+                    if let basis = selected.evaluation?.inputs.offeredUsable?.confirmedConversion {
+                        Text(ComparisonConversion.readableText(for: basis))
+                            .accessibilityIdentifier("pickup.offer.forecast.conversion.\(selected.id.uuidString)")
+                    }
                 }
             }
             if !result.isCurrent { Text(pTr("This forecast is stale. Review current offers, meal needs, and checkout evidence before using it.")) }

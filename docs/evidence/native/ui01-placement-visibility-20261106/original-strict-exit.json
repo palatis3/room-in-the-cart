@@ -1,0 +1,24 @@
+{
+  "exit": 1,
+  "command": [
+    "python3",
+    "scripts/check_ios_test_results.py",
+    "--selectors",
+    ".build/UI01ReturnReview20261106/inspection/test-plan/ui-01.txt",
+    "--summary",
+    ".build/UI01ReturnReview20261106/inspection/test-summary.json",
+    "--tests",
+    ".build/UI01ReturnReview20261106/inspection/test-details.json",
+    "--result-bundle",
+    ".build/UI01ReturnReview20261106/inspection/Tests.xcresult",
+    "--test-log",
+    ".build/UI01ReturnReview20261106/inspection/Tests.log",
+    "--expected-count",
+    "4"
+  ],
+  "scope": "Separate root bounded inspection; original collector member guard retained",
+  "passed": 3,
+  "failed": 1,
+  "runtimeWarnings": 2,
+  "warningsWithinExistingLimits": true
+}

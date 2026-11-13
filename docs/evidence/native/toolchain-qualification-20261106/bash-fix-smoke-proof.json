@@ -1,0 +1,267 @@
+{
+  "baseCommit": "c34a473f2b0d62678da3a6eebb1bcbd2900cbdc6",
+  "bashVersion": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin26)",
+  "nativeAppleCommandsExecuted": false,
+  "testCommand": "/bin/bash <original-or-fixed-script> build-debug|build-release",
+  "scenarios": [
+    {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "/Users/palatis/Room in the Cart/.build/ReleaseToolchainQualification20261106/bash-fix/original.sh: line 17: extra[@]: unbound variable\n",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ]
+      ],
+      "xcodeArguments": null,
+      "buildLog": "",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-debug",
+      "stubBuildExit": 0,
+      "scenario": "original-debug"
+    },
+    {
+      "exit": 0,
+      "stdout": "stub build output\n",
+      "stderr": "",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ],
+        [
+          "scripts/check_built_app.py",
+          ".build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app",
+          "--configuration",
+          "Release"
+        ]
+      ],
+      "xcodeArguments": [
+        "-project",
+        "ios/RoomInTheCart.xcodeproj",
+        "-scheme",
+        "RoomInTheCart-Performance",
+        "-configuration",
+        "Release",
+        "-destination",
+        "platform=iOS Simulator,id=22222222-2222-4222-8222-222222222222",
+        "-parallel-testing-enabled",
+        "NO",
+        "-jobs",
+        "2",
+        "-derivedDataPath",
+        ".build/DerivedData",
+        "-enableCodeCoverage",
+        "NO",
+        "-enableAddressSanitizer",
+        "NO",
+        "-enableThreadSanitizer",
+        "NO",
+        "-enableUndefinedBehaviorSanitizer",
+        "NO",
+        "CODE_SIGN_IDENTITY=-",
+        "build-for-testing"
+      ],
+      "buildLog": "stub build output\n",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-release",
+      "stubBuildExit": 0,
+      "scenario": "original-release"
+    },
+    {
+      "exit": 0,
+      "stdout": "stub build output\n",
+      "stderr": "",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ],
+        [
+          "scripts/check_built_app.py",
+          ".build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app",
+          "--configuration",
+          "Debug"
+        ]
+      ],
+      "xcodeArguments": [
+        "-project",
+        "ios/RoomInTheCart.xcodeproj",
+        "-scheme",
+        "RoomInTheCart",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "platform=iOS Simulator,id=22222222-2222-4222-8222-222222222222",
+        "-parallel-testing-enabled",
+        "NO",
+        "-jobs",
+        "2",
+        "-derivedDataPath",
+        ".build/DerivedData",
+        "CODE_SIGN_IDENTITY=-",
+        "build-for-testing"
+      ],
+      "buildLog": "stub build output\n",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-debug",
+      "stubBuildExit": 0,
+      "scenario": "fixed-debug"
+    },
+    {
+      "exit": 0,
+      "stdout": "stub build output\n",
+      "stderr": "",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ],
+        [
+          "scripts/check_built_app.py",
+          ".build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app",
+          "--configuration",
+          "Release"
+        ]
+      ],
+      "xcodeArguments": [
+        "-project",
+        "ios/RoomInTheCart.xcodeproj",
+        "-scheme",
+        "RoomInTheCart-Performance",
+        "-configuration",
+        "Release",
+        "-destination",
+        "platform=iOS Simulator,id=22222222-2222-4222-8222-222222222222",
+        "-parallel-testing-enabled",
+        "NO",
+        "-jobs",
+        "2",
+        "-derivedDataPath",
+        ".build/DerivedData",
+        "-enableCodeCoverage",
+        "NO",
+        "-enableAddressSanitizer",
+        "NO",
+        "-enableThreadSanitizer",
+        "NO",
+        "-enableUndefinedBehaviorSanitizer",
+        "NO",
+        "CODE_SIGN_IDENTITY=-",
+        "build-for-testing"
+      ],
+      "buildLog": "stub build output\n",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-release",
+      "stubBuildExit": 0,
+      "scenario": "fixed-release"
+    },
+    {
+      "exit": 42,
+      "stdout": "stub build output\n",
+      "stderr": "",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ]
+      ],
+      "xcodeArguments": [
+        "-project",
+        "ios/RoomInTheCart.xcodeproj",
+        "-scheme",
+        "RoomInTheCart",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "platform=iOS Simulator,id=22222222-2222-4222-8222-222222222222",
+        "-parallel-testing-enabled",
+        "NO",
+        "-jobs",
+        "2",
+        "-derivedDataPath",
+        ".build/DerivedData",
+        "CODE_SIGN_IDENTITY=-",
+        "build-for-testing"
+      ],
+      "buildLog": "stub build output\n",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-debug",
+      "stubBuildExit": 42,
+      "scenario": "fixed-debug-build-failure"
+    },
+    {
+      "exit": 42,
+      "stdout": "stub build output\n",
+      "stderr": "",
+      "pythonCalls": [
+        [
+          "scripts/qualify_ios_toolchain.py",
+          "verify-runtime",
+          "build"
+        ]
+      ],
+      "xcodeArguments": [
+        "-project",
+        "ios/RoomInTheCart.xcodeproj",
+        "-scheme",
+        "RoomInTheCart-Performance",
+        "-configuration",
+        "Release",
+        "-destination",
+        "platform=iOS Simulator,id=22222222-2222-4222-8222-222222222222",
+        "-parallel-testing-enabled",
+        "NO",
+        "-jobs",
+        "2",
+        "-derivedDataPath",
+        ".build/DerivedData",
+        "-enableCodeCoverage",
+        "NO",
+        "-enableAddressSanitizer",
+        "NO",
+        "-enableThreadSanitizer",
+        "NO",
+        "-enableUndefinedBehaviorSanitizer",
+        "NO",
+        "CODE_SIGN_IDENTITY=-",
+        "build-for-testing"
+      ],
+      "buildLog": "stub build output\n",
+      "pathEntries": [
+        "stub python3",
+        "stub xcodebuild",
+        "/usr/bin/tee"
+      ],
+      "mode": "build-release",
+      "stubBuildExit": 42,
+      "scenario": "fixed-release-build-failure"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "file": "ios/Features/Household/HouseholdInboxView.swift",
+    "retainedAuditSnapshot": {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/source/ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "54683ed68e92107ce449a0e63367b8dd05fbd74d2b2efc710b6e6d61c606eb2a",
+      "bytes": 23552
+    },
+    "current": {
+      "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+      "bytes": 24074
+    },
+    "equal": false
+  },
+  {
+    "file": "ios/Features/Household/HouseholdRequestMealContext.swift",
+    "retainedAuditSnapshot": {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/source/ios/Features/Household/HouseholdRequestMealContext.swift",
+      "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+      "bytes": 4734
+    },
+    "current": {
+      "path": "/Users/palatis/Room in the Cart/ios/Features/Household/HouseholdRequestMealContext.swift",
+      "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+      "bytes": 4734
+    },
+    "equal": true
+  },
+  {
+    "file": "ios/App/Theme.swift",
+    "retainedAuditSnapshot": {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/source/ios/App/Theme.swift",
+      "sha256": "5808cb393f579b5212c106870fb99eeaec36625605ca03859fe5de1aa0d24f29",
+      "bytes": 3306
+    },
+    "current": {
+      "path": "/Users/palatis/Room in the Cart/ios/App/Theme.swift",
+      "sha256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+      "bytes": 4500
+    },
+    "equal": false
+  }
+]

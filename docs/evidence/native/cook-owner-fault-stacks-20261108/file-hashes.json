@@ -1,0 +1,70 @@
+{
+  "scope": "Exact r4 raw fault + UUID/symbol/timing evidence; no repair claim",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 6625,
+      "sha256": "684caa12e4556e98c45e1e5e0e343ccc947eff88bf3eecbce047a2b1058bde22"
+    },
+    {
+      "path": "action-timing.json",
+      "bytes": 2369,
+      "sha256": "d323016a6e35b540e20e7526b324f9b15eec6bebace1ab61efd77046a2d4d321"
+    },
+    {
+      "path": "app-symbols.json",
+      "bytes": 3957,
+      "sha256": "554d7118a49b27e8b04db4998bf477d8e5945642940ead8f2d98d1922fec3711"
+    },
+    {
+      "path": "binary-binding.json",
+      "bytes": 1619,
+      "sha256": "7f4bd763a6b0b03a5a82bb9d2925219548f7a5298aa39407759e8f7473d7fe79"
+    },
+    {
+      "path": "capped-query-receipt.json",
+      "bytes": 1085,
+      "sha256": "a048cd293bcbb1fe3f3ac7c36a0ea0cf242516077f9c96ee9df1c50a8b21e94b"
+    },
+    {
+      "path": "framework-symbols.json",
+      "bytes": 9920,
+      "sha256": "e84e79998d8de3ef0a9167e22c5765b48ff2829878adc7eb165d809cc5e04066"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 4896,
+      "sha256": "65238740b3fac79c5c9627fb8f2f24114b3f495212512839cef0039a6f2f6ca9"
+    },
+    {
+      "path": "query-receipt.json",
+      "bytes": 1110,
+      "sha256": "61a76d845e9e950910b77db36c3efb327134917218c6a184b3ee43372060e1c3"
+    },
+    {
+      "path": "query-stderr.txt",
+      "bytes": 44,
+      "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523"
+    },
+    {
+      "path": "raw-eight-faults.json",
+      "bytes": 55674,
+      "sha256": "cfc9e0ea68b8ca0abe1e3dae3a884ec4b44831c088db60a3d529a7b5428b4416"
+    },
+    {
+      "path": "source-context.json",
+      "bytes": 6374,
+      "sha256": "93df1d6b4e140689cae88072c10b63ca0a047f80fca8104d3975b36e91ec01da"
+    },
+    {
+      "path": "symbolicated-blocked-stacks.json",
+      "bytes": 72679,
+      "sha256": "643ffd1d33b3300198034f5819b4bb2629c95996d32a8ded2f9358c37e61971f"
+    },
+    {
+      "path": "timing-classification.json",
+      "bytes": 2884,
+      "sha256": "eb1913fcc8f440335d754b0faf77978539723a4d3b7d13f82063889c87c26e4b"
+    }
+  ]
+}

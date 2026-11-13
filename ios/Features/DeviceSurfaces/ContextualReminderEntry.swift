@@ -39,7 +39,8 @@ struct SurfaceReminderSetup: View {
     @ObservedObject var composition: DeviceSurfacesComposition
     let target: SurfaceReminderTarget
     let sourceSavedAt: Date?
-    @State private var expiry = Date().addingTimeInterval(86_400)
+    @State private var expiry: Date?
+    @State private var loadAttempt = 0
     @State private var reviewedExpiry = false
     @State private var context: ReminderEditorContext?
     @State private var failure = false
@@ -64,19 +65,39 @@ struct SurfaceReminderSetup: View {
                     }
                     Text(SurfaceCopy.text("Opening or reviewing this reminder does not schedule a notification. Your shop and retailer decision stay unchanged."))
                     if let cutoff = target.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: cutoff.formatted(date: .complete, time: .shortened)) }
-                    else {
-                        DatePicker(SurfaceCopy.text("Reminder expiry"), selection: $expiry)
+                    else if let expiryBinding = Binding($expiry) {
+                        DatePicker(SurfaceCopy.text("Reminder expiry"), selection: expiryBinding)
                             .accessibilityIdentifier("reminder.expiry")
                         Toggle(SurfaceCopy.text("Use this expiry for this reminder"), isOn: $reviewedExpiry)
                             .accessibilityIdentifier("reminder.expiry.confirm")
                         Text(SurfaceCopy.text("This sets a reminder expiry. It does not date a meal or change the shopping list."))
                     }
+                    else if failure {
+                        Button(SurfaceCopy.text("Try again")) { loadAttempt += 1 }
+                    } else {
+                        ProgressView(SurfaceCopy.text("Checking the saved reminder…"))
+                    }
                     Button(SurfaceCopy.text("Review reminder")) {
-                        Task { do { context = try await composition.reminderContext(target, expiresAt: expiry); failure = false } catch { failure = true } }
-                    }.disabled(target.cutoff == nil && !reviewedExpiry)
+                        guard let chosen = target.cutoff ?? expiry else { return }
+                        Task { do { context = try await composition.reminderContext(target, expiresAt: chosen); failure = false } catch { failure = true } }
+                    }.disabled(target.cutoff == nil && (expiry == nil || !reviewedExpiry))
                         .accessibilityIdentifier("reminder.openEditor")
                     if failure { Text(SurfaceCopy.text("This reminder needs a fresh review.")) }
-                }.onChange(of: expiry) { _, _ in reviewedExpiry = false }
+                }
+                .onChange(of: expiry) { _, _ in reviewedExpiry = false }
+                .task(id: loadAttempt) {
+                    guard target.cutoff == nil else { return }
+                    expiry = nil
+                    reviewedExpiry = false
+                    failure = false
+                    do {
+                        let initial = try await composition.initialReminderExpiry(target)
+                        guard !Task.isCancelled else { return }
+                        expiry = initial
+                    } catch {
+                        if !Task.isCancelled { failure = true }
+                    }
+                }
             }
         }.navigationTitle(SurfaceCopy.text("Reminder"))
     }

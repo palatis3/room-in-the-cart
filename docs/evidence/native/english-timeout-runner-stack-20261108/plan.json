@@ -1,0 +1,63 @@
+{
+  "status": "preparedNotExecuted",
+  "sourceCopy": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult",
+  "originalNeverPassedToTool": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/native.xcresult",
+  "attachmentUUID": "DCEF3FDA-F38D-4B23-85D3-DF827383964F",
+  "payloadId": "0~I2ee7E1jXZiRv7CKVxKdIzw-YqmeoCijsTo9EMNWUXIUYHyISWNY2skpM5TqkqUS1Lk30P1dT3oP-8MlusG-Fg==",
+  "payloadDecodedSizeKnown": false,
+  "storedObjectBytesNotDecodedSize": 810335,
+  "outputFreshDirectory": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/english-timeout-spindump-proposal-r1/extraction",
+  "decodedFileLimitBytes": 4000000,
+  "timeoutSeconds": 45,
+  "oneAttemptOnly": true,
+  "noFallbackOrCapIncrease": true,
+  "argv": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "export",
+    "object",
+    "--legacy",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult",
+    "--id",
+    "0~I2ee7E1jXZiRv7CKVxKdIzw-YqmeoCijsTo9EMNWUXIUYHyISWNY2skpM5TqkqUS1Lk30P1dT3oP-8MlusG-Fg==",
+    "--type",
+    "file",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/english-timeout-spindump-proposal-r1/extraction/spindump.txt"
+  ],
+  "environment": {
+    "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "pins": {
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/original-manifest.json": {
+      "bytes": 52666,
+      "sha256": "ec3af5881df299cf35981918917d45336c7520ab2bcf9a8d18c4641243ac879f"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/verification.json": {
+      "bytes": 270,
+      "sha256": "7d3f7bbf0f71dd0f1bf2c281ea5f5400987dea8700cd41dfb3fad5bcf981a99a"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/failure-review/activities-0.json": {
+      "bytes": 491468,
+      "sha256": "db79848f1a810ddf1b5c9e90c0ec3e6bffd929aa670cdb6f9d89a40332ed471f"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/failure-review/attachment-inventory.json": {
+      "bytes": 407550,
+      "sha256": "910cbc9706b9a27117ea28f40430db2fa2505ae4f2ecd0888f8913124da72cbb"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult/Info.plist": {
+      "bytes": 776,
+      "sha256": "7a08b759eeda2a9def84aaaa013e79faecb2150c3ebcc3b5b02347d462cfeb32"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult/Data/data.0~I2ee7E1jXZiRv7CKVxKdIzw-YqmeoCijsTo9EMNWUXIUYHyISWNY2skpM5TqkqUS1Lk30P1dT3oP-8MlusG-Fg==": {
+      "bytes": 810335,
+      "sha256": "b1bb629e3c039e4793cf83de9cb83015a5bb391e33d57fbf870096be9f71d86a"
+    },
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult/Data/refs.0~I2ee7E1jXZiRv7CKVxKdIzw-YqmeoCijsTo9EMNWUXIUYHyISWNY2skpM5TqkqUS1Lk30P1dT3oP-8MlusG-Fg==": {
+      "bytes": 1,
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+    }
+  },
+  "attribution": "Timeout attachment beneath activities[417] Source tap > childActivities[4] post-event idle > timeout child. Late Source wait began about 694.59s. Initial Yield Done post-event wait began about 210.19s; this attachment cannot by itself identify its owner. Confirm actual sample time and process PID from exported header before stack attribution."
+}

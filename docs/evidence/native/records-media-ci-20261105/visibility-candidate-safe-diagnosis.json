@@ -1,0 +1,49 @@
+{
+  "testPatchSHA256": "04a6aab38d3c3a3af965f8454d3620ad21021fc5a2db8b97af0d6b05f38dd73f",
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "producerArtifact": 13378004520,
+  "environment": {
+    "xcode": "27.1 (27A9275)",
+    "simulator": "iPhone 17, iOS 26.2 (23C52)",
+    "deviceID": "8FDEA6E9-B54C-4060-BEC5-44C36398D1E7",
+    "shutdownVerified": true
+  },
+  "identities": {
+    "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+    "runner": "181882e23acda4d2e43d44c9aaea891e0bbeaec20c817bba7915d6a9ae13f527",
+    "testBundle": "771a66a22e8a148397dd79267be0c361a1d4bcd5c1b0bbe969d7e4877cf11d9d",
+    "appLauncher": "34fe1baab2c38f4cef58b307012de11afd66b4ed16c69856748055b18522c87d",
+    "appDebugDylib": "1823687d7404519ad96469dab2a92d96995fa012c118b7a1f378461f62898d4a"
+  },
+  "installedHostedAppBytesVerified": true,
+  "result": {
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "seconds": 266.808,
+    "xcodebuildExit": 65
+  },
+  "originalFailureCleared": "The exact app reached Save after bounded Form movement, saved an AES-256-GCM file without the source wording, cancelled the first import with the result in view, then applied the second import and reached the recovered image and exact wording.",
+  "laterFailure": {
+    "source": "ios/UITests/RecordsMediaUITests.swift",
+    "lineInV1": 113,
+    "assertion": "Package reference caption exists",
+    "diagnosis": "The recovered caption was visibly present immediately after expansion. Wording reveal scrolled the caption above the lazy Form viewport, and the later direct accessibility query failed."
+  },
+  "captionEvidence": {
+    "recordingTimeBeforeScrollSeconds": 260.2,
+    "captionYBeforeScrollPoints": [
+      612.3,
+      626.3
+    ],
+    "recordingTimeAtFailureSeconds": 263.5,
+    "captionVisibleAtFailure": false,
+    "wordingVisibleAtFailure": true
+  },
+  "privateEvidenceSHA256": {
+    "Tests.log": "ce9afb98b88afb36b7c57e24fcf2ad6ab2c67d3ce9d96293be21de601e5eaf49",
+    "test-summary.json": "a335f6d88a42d0854a8447a5321989c6aca08c04dd962f896571cbbef254af72",
+    "activities.json": "164661f694ca8ba428b39814399c27261c0a707a1c0c0f605935b0563a682203",
+    "caption-window-safe.txt": "16e239ac19acacb805edc52205059512c1edb7806284c0e4ef797393b3311952"
+  }
+}

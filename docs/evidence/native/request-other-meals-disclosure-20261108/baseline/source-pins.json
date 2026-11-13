@@ -1,0 +1,15 @@
+{
+  "sourceManifestSHA256": "3dade26e9a7702f3520f6ff736d76ce679fb47f9f48782d6aa4f7cddfa43df9b",
+  "inputCount": 556,
+  "executedBaselineFiles": {
+    "ios/Features/Household/HouseholdRequestMealContext.swift": "19e64564491b6dc13d8024002a22f931b30fdf5ee5a214a94abb04a0b47af1c1",
+    "ios/App/Theme.swift": "4174c99c9b823b19ccd7fcc71c6edfd64a57da852999f5942dc512e9eb1f5568",
+    "ios/UITestSupport/HouseholdRequestPackUIFixture.swift": "35df54cc8bc0051ac0b30022829717726c8cd8561802122b8e7fae198f5a7d93",
+    "ios/UITests/HouseholdRequestPackUITests.swift": "aef48fe549fe64299f30178dd2a2a70966384497e24bc7ffc425ad85b23356ff"
+  },
+  "fixtureOnlyInstallationReceiptSHA256": "6f219b405f64c01fec77db396f055eebd134d17764f734132ddbeb6de6744590",
+  "baselineTestPatchSHA256": "9ecf595a1407f91d502bd146bc5f3cfa33da0a9e77e164dea493d42d9aff3dba",
+  "collectorScriptSHA256": "8feb44bc274bc9e6bb9b6c031ced314b52f3e65346932484982412d7ad10e851",
+  "collectorManifestSHA256": "da3a05fc56a05c6fcc3bc2dd1cf5ee7790440995632750eb182fe939b541625a",
+  "note": "These are executed baseline inputs. Current product already contains a separate unqualified follow-up; no equality to current product is asserted."
+}

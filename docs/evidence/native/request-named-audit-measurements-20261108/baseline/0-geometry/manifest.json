@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "CD852453-9DDA-4150-B49B-8F3DF92A4B4A.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-date-geometry-UICTContentSizeCategoryL_0_5A3392EF-77BC-41BD-B2E8-D864B3AC63CD.txt",
+        "timestamp" : 1794170527.74
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "D1D8595D-9185-49BC-A0E8-D76070DD7C31.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-expiry-title-geometry-UICTContentSizeCategoryL_0_0D2F6402-26B3-4464-B151-FB153FD36C62.txt",
+        "timestamp" : 1794170524.726
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C629DF92-5C9A-4A6B-ADC4-BE608EE00751.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-protected-heading-geometry-UICTContentSizeCategoryL_0_33E66C01-2203-4028-A66D-BD99C3A70C47.txt",
+        "timestamp" : 1794170519.9
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testAuditNamedTargetsAtStandardText()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testAuditNamedTargetsAtStandardText"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "reviewedPatchSHA256": "0d9ca125d4e6b632207af9982ad39900de6b7c32e231d454d50033f242f0a577",
+  "sourceFiles": {
+    "scripts/check_ios_test_results.py": "f8869f051a4bb49e2a95f348718c6f7b6738cd078a372667278a7a456643f4d1",
+    "scripts/test_check_ios_test_results.py": "d87a3e7bb58c56c851118d6ae0027625befb58199512572858f4b35d04ca47d6",
+    "scripts/run_ios_test_shard.sh": "39066289d832e7bc4e70cf1d0afab992db476eb90734adedbc5420b1bf47e583",
+    ".github/workflows/ios-performance.yml": "9efa5e2634c3f91965feb4a49e23a461417a837aee3421205f832d44ae7e61ba"
+  },
+  "localValidation": {
+    "pythonTests": 87,
+    "pythonResult": "passed",
+    "actionlint": "passed",
+    "bashSyntax": "passed",
+    "rootPrintArtifactReplay": "6/6 selected tests and exactly one retained approved warning"
+  },
+  "behavior": "Traverse known XCTest result-tree schema for every selected case. Export per-test details for warning-bearing cases, require exact case/device identity, compare duplicate occurrence multisets and optional newer summary data. Missing/unknown/inconsistent evidence fails when CI supplies the result bundle. Legacy inspection without the bundle explicitly says warning verification unavailable.",
+  "allowance": "Only the exact pre-existing UIHostingController/_UIReparentingView message for the two named tests, with caps2/1, on the observed iPhone17/iOS26.2 build23C54/arm64/Test Scheme Action profile. Origin is unknown, no harmlessness claim. All occurrences remain visible.",
+  "scope": "Actual saved artifact replay and negative mutations on local Xcode27.1. Hosted Xcode26.3 command execution of the new guard remains pending; this is not a complete console audit or absence-of-all-warnings claim.",
+  "files": {
+    "artifact-replay.json": "de0b39c57f14a637f5f88700075c0cbd25440e3dd731252c9f2cf754a21fce5f",
+    "full-model-detail-audit.json": "698c7154800c394a3f9c1324f6a631cd551be51a7dcbe7116be077c07180f915",
+    "root-current-print-replay.log": "ae0dd757c91b13de92cc1c427c4219499d7f736039597e4c9edaebe00f64e51f",
+    "mutation-validation.log": "d2bc7ba1c3fb4be1747ae5a81c45c423f8f30b0172d5c20c155be1b73747f318",
+    "full-ui-detail-audit.json": "347ee7584543795e1736aa595e6ff3103c4dd2a3dfb1f3392fcd78fc5e4f154d"
+  }
+}

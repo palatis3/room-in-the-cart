@@ -1,0 +1,44 @@
+{
+  "workflow-policy-tests": {
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "scripts/test_check_ci_workflows.py"
+    ],
+    "exitCode": 1,
+    "log": "workflow-policy-tests.log"
+  },
+  "slot-policy-tests": {
+    "command": [
+      "python3",
+      "scripts/test_ci_mac_slots.py"
+    ],
+    "exitCode": 0,
+    "log": "slot-policy-tests.log"
+  },
+  "planner-tests": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_plan_ios*.py"
+    ],
+    "exitCode": 0,
+    "log": "planner-tests.log"
+  },
+  "actionlint": {
+    "command": [
+      "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "scripts/check_ci_workflows.py",
+      "--actionlint",
+      "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+      "--report",
+      "/Users/palatis/Room in the Cart/.build/CISlotBalance20261106/actionlint.json"
+    ],
+    "exitCode": 1,
+    "log": "actionlint.log"
+  }
+}

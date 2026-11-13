@@ -1,0 +1,27 @@
+{
+  "utc": "2026-11-06T19:03:20.763912+00:00",
+  "domain": "roominthecart.com",
+  "scope": "Public DNS only; no mail sent or account configuration changed",
+  "queries": [
+    {
+      "type": "MX",
+      "exit": 0,
+      "output": ";; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34673\n;; flags: qr rd ra; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n;; ANSWER SECTION:\nroominthecart.com.\t1800\tIN\tMX\t10 eforward3.registrar-servers.com.\nroominthecart.com.\t1800\tIN\tMX\t15 eforward4.registrar-servers.com.\nroominthecart.com.\t1800\tIN\tMX\t20 eforward5.registrar-servers.com.\nroominthecart.com.\t1800\tIN\tMX\t10 eforward1.registrar-servers.com.\nroominthecart.com.\t1800\tIN\tMX\t10 eforward2.registrar-servers.com.\n\n"
+    },
+    {
+      "type": "A",
+      "exit": 0,
+      "output": ";; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37531\n;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n;; ANSWER SECTION:\nroominthecart.com.\t1800\tIN\tA\t192.64.119.73\n\n"
+    },
+    {
+      "type": "AAAA",
+      "exit": 0,
+      "output": ";; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20493\n;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n"
+    },
+    {
+      "type": "TXT",
+      "exit": 0,
+      "output": ";; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 49552\n;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n;; ANSWER SECTION:\nroominthecart.com.\t1800\tIN\tTXT\t\"v=spf1 include:spf.efwd.registrar-servers.com ~all\"\n\n"
+    }
+  ]
+}

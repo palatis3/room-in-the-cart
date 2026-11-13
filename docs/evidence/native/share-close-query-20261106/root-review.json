@@ -1,0 +1,16 @@
+{
+  "rootOriginalZIPDigestVerifiedBeforeAfter": true,
+  "rootOriginalResultFilesUnchanged": 192,
+  "inspectionCopyVerifiedBeforeExport": true,
+  "selectedPayloadID": "0~eibWIP3wKjh1qccjExOiMxhXmjcrSzrdXoAvMPdh5Mp3TdBJMHCj_P3n3XjPPIKAra0_-Tr0Ip7pvEAbqHerOQ==",
+  "selectedAttachmentUUIDs": [
+    "74BF7CBB-1D6D-43D7-83A2-2AAE8EEF6695",
+    "363CB38E-3DFD-41E4-9423-6ADED4DBB6C4"
+  ],
+  "payloadBytes": 250,
+  "payloadSHA256": "d74ac45135b353a8b51cab0d24b5afd4802705ba81e4b22dc8ffad8b9753402a",
+  "rootVerifiedHierarchyMatches": 1,
+  "result": "Query chain only; no resolved node or Boolean result. No supported query correction or causal app fix.",
+  "nativeExecution": false,
+  "rawRecordsAccess": false
+}

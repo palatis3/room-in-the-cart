@@ -1,0 +1,67 @@
+TAP version 13
+# Native wire XCTest passed history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.281 seconds).
+# Subtest: Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)
+ok 1 - Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)
+  ---
+  duration_ms: 2261.792125
+  type: 'test'
+  ...
+# Native wire XCTest passed history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.328 seconds).
+# Subtest: Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)
+ok 2 - Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)
+  ---
+  duration_ms: 2333.837875
+  type: 'test'
+  ...
+# Native wire XCTest passed meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' passed (0.088 seconds).
+# Native wire XCTest passed meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' passed (2.179 seconds).
+# Native wire XCTest passed meal-fallback HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' passed (1.155 seconds).
+# Subtest: actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL
+ok 3 - actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL
+  ---
+  duration_ms: 9016.854875
+  type: 'test'
+  ...
+# Native wire XCTest passed quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' passed (0.167 seconds).
+# Native wire XCTest passed quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' passed (0.139 seconds).
+# Subtest: real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL
+ok 4 - real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL
+  ---
+  duration_ms: 3889.472708
+  type: 'test'
+  ...
+# Native wire XCTest passed deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.303 seconds).
+# Subtest: assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS
+ok 5 - assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS
+  ---
+  duration_ms: 2153.824167
+  type: 'test'
+  ...
+# Native wire XCTest passed request-purchase HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.154 seconds).
+# Native wire XCTest passed purchase-author HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.045 seconds).
+# Subtest: assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS
+ok 6 - assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS
+  ---
+  duration_ms: 3750.282625
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24140.957167
+Verified 6 Node integration cases and 10 exact XCTest scenario results.

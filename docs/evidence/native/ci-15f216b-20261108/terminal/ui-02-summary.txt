@@ -1,0 +1,10 @@
+2026-11-08T03:42:46.4296890Z Executed 7 of 7 selected tests.
+2026-11-08T03:42:46.4303400Z | RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending | Passed | 354.06 |
+2026-11-08T03:42:46.4304980Z | RoomInTheCartUITests/FreeJourneyUITests/testCarryRecoveredDinnerFoodToAnotherNightAndReopenTheDatedTarget | Passed | 255.40 |
+2026-11-08T03:42:46.4306320Z | RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry | Passed | 157.20 |
+2026-11-08T03:42:46.4307470Z | RoomInTheCartUITests/PickupOfferUITests/testRetailerConfirmedAmendmentChangesTheOrderAndKeepsItsPlacedSnapshotAfterRestart | Passed | 134.99 |
+2026-11-08T03:42:46.4308620Z | RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation | Passed | 71.69 |
+2026-11-08T03:42:46.4309760Z | RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel | Passed | 36.56 |
+2026-11-08T03:42:46.4310810Z | RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn | Passed | 28.78 |
+2026-11-08T03:42:46.4311940Z The XCTest log confirms one start and one passing completion per selected test.
+2026-11-08T03:42:46.4313040Z The XCTest test export recorded 0 runtime warning occurrences across 7 examined tests.

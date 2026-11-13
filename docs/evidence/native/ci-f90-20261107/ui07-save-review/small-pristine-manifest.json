@@ -1,0 +1,37 @@
+[
+  {
+    "file": "Tests.log",
+    "bytes": 267348,
+    "sha256": "64e1dbd99f16e863318bd99025c3cdc9e03bd0e42948b23ffd0cf37a9cdede25",
+    "zipCRC": 3492922285,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-details.json",
+    "bytes": 5006,
+    "sha256": "865097882992065a054dd1151cba1dbb68ac1bac57e8903a9ddf1cd07dc5c4fb",
+    "zipCRC": 175003707,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-plan/ui-07.txt",
+    "bytes": 839,
+    "sha256": "ef11fd96e008a8bd18e85db473a3b6a1eb093f96f3ea831c623a195f21990304",
+    "zipCRC": 3626030059,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+    "zipCRC": 2083576931,
+    "CRCVerified": true
+  },
+  {
+    "file": "test-summary.json",
+    "bytes": 1162,
+    "sha256": "778fdf01759b964cf80435e3f03ca9e25e7e4621ec3a162b1c0f17632d0ebdbe",
+    "zipCRC": 4223795343,
+    "CRCVerified": true
+  }
+]

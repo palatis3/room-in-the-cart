@@ -1,0 +1,42 @@
+{
+  "target": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+  "device": "F38971F3-11E5-4692-9B54-CCBB6E79CE48",
+  "finishedUTC": "2026-11-08T17:02:29.146565+00:00",
+  "polls": 0,
+  "elapsedSeconds": 10.407859500000086,
+  "maxPollMS": 2792.2087919999967,
+  "error": "RuntimeError: process discovery exhausted after three failed polls total",
+  "targetStarted": false,
+  "targetEnded": false,
+  "targetPIDs": [],
+  "uniqueSampledPID": false,
+  "associationAmbiguous": false,
+  "processDiscovery": {
+    "status": "exhausted",
+    "attempts": 3,
+    "successfulPolls": 0,
+    "totalFailures": 3,
+    "totalFailureLimit": 3,
+    "recoveredGaps": 0,
+    "unresolvedGap": {
+      "startedUTC": "2026-11-08T17:02:18.743875+00:00",
+      "startedElapsedSeconds": 0.005134625000096094,
+      "targetEndedBeforeGap": false,
+      "targetAssociationAffected": false
+    },
+    "targetAssociationAffected": false,
+    "maxFailedPollMS": 2791.3094580000006,
+    "startupHandshake": "threadStartedOnly",
+    "threadStartedHandshakeObserved": true,
+    "threadStartedUTC": "2026-11-08T17:02:18.743114+00:00",
+    "initialSnapshotState": "failed",
+    "successfulSnapshotObserved": false,
+    "firstSuccessfulSnapshotUTC": null,
+    "fatalDiscoveryError": null,
+    "requestedPerQueryTimeoutSeconds": 2,
+    "allProcessObservationsPresent": false
+  },
+  "probes": [],
+  "missingDataIsInconclusive": true,
+  "eventsSHA256": "f4839ee95873598e6f500536a5ab8650192bfbbc4be9092973900e4c95bd451f"
+}

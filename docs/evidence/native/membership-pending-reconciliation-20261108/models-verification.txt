@@ -1,0 +1,71 @@
+Executed 60 of 60 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/MembershipTests/testActualNewAttemptClearsOnlyPurchaseOwnedVerificationAndErrorEvidence | Passed | 0.10 |
+| RoomInTheCartTests/MembershipTests/testHTTPAdapterIncludesEnrolledDeviceAndDecodesServerDates | Passed | 0.03 |
+| RoomInTheCartTests/MembershipTests/testConcurrentDoubleCallbackCommitsOnlyOnce | Passed | 0.01 |
+| RoomInTheCartTests/MembershipTests/testHTTPAdapterUsesSpecificServerFailureCodes | Passed | 0.01 |
+| RoomInTheCartTests/MembershipTests/testEquivalentDeliveryFailuresRenderOnceWithoutErasingTransactionEvidence | Passed | 0.01 |
+| RoomInTheCartTests/MembershipTests/testRejectedCallbackHistorySurvivesActualPendingAndCancelledPurchases | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorAuthorizationRejectionStopsObserverUntilNewProjection | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testOlderSameAccountTransactionDoesNotResolveDifferentPendingRequest | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPendingCompletionReconcilesAvailableApprovalWithoutAnUpdateEvent | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testNewActualAttemptClearsOldOperationCopyButRetainsStructuredDeliveryErrors | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testLatePendingAndVerifiedDeliveryFailureRemainSimultaneouslyVisible | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testUnrelatedRejectedAndUnverifiedCallbacksCannotClearPurchaseOrAdmittedDeliveryEvidence | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testAllUnresolvedDeliveryPendingTransactionsGateSubscribeUntilExactRecovery | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testMissingDeploymentConfigurationKeepsPurchaseDisabled | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPendingCompletionReconciliationRejectsAnotherAccount | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testOrdinaryPendingCancellationAndPurchaseExceptionKeepExistingPolicies | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStatusMessagesHaveUniqueStableSemanticIdentityWithoutTransactionIdentity | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testSameReasonHistoricalCallbackAndOwnedRejectionRemainDistinctWithoutDuplication | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPendingCancellationAndUnverifiedNeverGrantSeatsOrFinish | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testDeliveryHistoryAndUnresolvedFailureSurviveGenericRefreshRestoreAndRevocation | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStopDiscardsObservationsAndIgnoresLatePurchaseAndServiceCallbacks | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testLatePendingDoesNotDenyAccessEstablishedByDurableVerifiedDelivery | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPriorDeliveryFailureSurvivesNewPendingAttemptWithoutBecomingItsOutcome | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorIdentityChangeWaitsForNewAuthorizedProjection | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorLockSynchronouslyClearsModelAndCancelsObservation | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testWrongHouseholdRestoreCannotGrantOrFinish | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorCredentialsCannotFollowAnotherAuthenticatedSubject | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorHouseholdSwitchRejectsOldInFlightDelivery | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPendingFirstThenVerifiedFailureKeepsBothObservations | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStopDuringPendingReconciliationDiscardsItsLateSnapshot | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStopDuringDeliveryDiscardsLateResultWithoutFinishing | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorReenrollmentInSameHouseholdReplacesObserver | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testRefreshDoesNotPromptAppleSyncAndRestoreDoes | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testHistoricalDeliveryAcknowledgementDoesNotExtendActualSubscriptionExpiry | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testHTTPAdapterRequiresDeviceBeforeSendingPurchaseContext | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testSecondNamedAdultRecoversSeatWithoutPurchaserTokenOrAppleSubmission | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testInterruptedDeliveryRemainsUnfinishedAndRetries | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testRejectedRestoreSurvivesSuccessfulFreeProjection | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testMismatchedAccountRestoreSurvivesSuccessfulFreeProjection | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorStartsWithoutScreenAndForegroundReusesOneObserver | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPerTransactionRetryUpdatesOnlyThatTransactionAndPreservesOtherFailures | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testSessionRejectionImmediatelyClearsPaidProjection | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testNonDurableAndMismatchedAcknowledgmentsNeverFinish | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPurchaseReportResetsOnlyAtNewActualAttemptOrStopNotRefreshOrRestore | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testStoppedScopeCannotBeReactivatedByQueuedCallback | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testPendingDeliveryKeepsSubscribeClosedUntilRestoreReconciles | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testDurableServiceDeliveryPrecedesFinish | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testSubscribeRecoversAnUnfinishedPurchaseBeforeAskingAppleForAnother | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testCoordinatorDiscardsModelConstructedAfterSignOut | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testNamedAdultSeatsDoNotGrantShopBudgetOrPlanningAuthority | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testMismatchedAccountTokenNeverReachesService | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testUnseatedAdultNeverGetsPaidAccessFromSharedSnapshot | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testHTTPAdapterRejectsUntrustedBaseURLs | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testSameRevisionMayRefreshVerifiedLeaseButCannotChangeSeats | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testRefundWinsOverOlderActiveReceiptAndPreservesFreeRights | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testExpiryBoundaryDoesNotWaitForCachedLeaseDeadline | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testThirdSeatChildAndDuplicateSeatAreRejected | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testEqualRevisionCannotReplaceRefundWithActiveSnapshot | Passed | 0.00 |
+| RoomInTheCartTests/MembershipTests/testVerifiedGraceEndsAtKnownDeadlineAndNoInfiniteOfflineAccess | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 148 log lines (60 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 60 examined tests.
+

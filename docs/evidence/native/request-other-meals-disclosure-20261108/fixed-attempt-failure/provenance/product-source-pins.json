@@ -1,0 +1,12 @@
+{
+  "baselineManifestSHA256": "3dade26e9a7702f3520f6ff736d76ce679fb47f9f48782d6aa4f7cddfa43df9b",
+  "candidateManifestSHA256": "3edd1ef0a08defb65ff1cc7b60882f157f4fd65702422df77cb2887a1731744d",
+  "changedIOSInputs": [
+    "ios/Features/Household/HouseholdRequestMealContext.swift"
+  ],
+  "before": "19e64564491b6dc13d8024002a22f931b30fdf5ee5a214a94abb04a0b47af1c1",
+  "after": "07eace1aa5e79434f0d9da78660c3b77c1dbb5740c0ff221993d0813e75f992f",
+  "testAndFixtureUnchanged": true,
+  "canonicalStillBaseline": true,
+  "nativeExecuted": false
+}

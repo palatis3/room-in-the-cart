@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+    "runId": 42457092386,
+    "statusReceipt": "../status-20261108T091232Z.json",
+    "observedAt": "2026-11-08T09:12:32Z"
+  },
+  "conclusion": "failure",
+  "gate": {
+    "jobId": 128685521345,
+    "failedStep": "Require every build and test job to succeed",
+    "message": "Required jobs did not pass: {'ios-tests': 'failure'}",
+    "failedPrerequisite": "ios-tests",
+    "passedPrerequisites": [
+      "typescript",
+      "service-postgres",
+      "source-checks",
+      "swift-packages",
+      "ios-release",
+      "ios-swift-codeql",
+      "ios-build"
+    ],
+    "jobLogLine": 80
+  },
+  "ordinaryUI": {
+    "shards": [
+      {
+        "shard": 1,
+        "selected": 5,
+        "id": 128660927505,
+        "conclusion": "failure"
+      },
+      {
+        "shard": 2,
+        "selected": 7,
+        "id": 128660927463,
+        "conclusion": "success"
+      },
+      {
+        "shard": 3,
+        "selected": 6,
+        "id": 128660927531,
+        "conclusion": "success"
+      },
+      {
+        "shard": 4,
+        "selected": 6,
+        "id": 128660927273,
+        "conclusion": "success"
+      },
+      {
+        "shard": 5,
+        "selected": 6,
+        "id": 128663596395,
+        "conclusion": "success"
+      },
+      {
+        "shard": 6,
+        "selected": 8,
+        "id": 128665603526,
+        "conclusion": "success"
+      },
+      {
+        "shard": 7,
+        "selected": 8,
+        "id": 128666846454,
+        "conclusion": "success"
+      },
+      {
+        "shard": 8,
+        "selected": 7,
+        "id": 128667962590,
+        "conclusion": "failure"
+      },
+      {
+        "shard": 9,
+        "selected": 8,
+        "id": 128670865070,
+        "conclusion": "success"
+      },
+      {
+        "shard": 10,
+        "selected": 7,
+        "id": 128675681204,
+        "conclusion": "success"
+      }
+    ],
+    "selected": 68,
+    "executed": 68,
+    "passed": 66,
+    "failed": 2,
+    "skipped": 0,
+    "scope": "Success shards completed the exact native acceptance step. UI01 and UI08 observed exact executed/failure counts in their respective receipts.",
+    "failedShardReceipts": [
+      "../ui-01/receipt.json",
+      "../ui-08/receipt.json"
+    ]
+  },
+  "models": {
+    "selected": 696,
+    "jobId": 128660927453,
+    "conclusion": "success"
+  },
+  "ui10": {
+    "jobId": 128675681204,
+    "selected": 7,
+    "executed": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "totalCaseDurationSeconds": 1256.863,
+    "selectedSuiteElapsedSeconds": 1256.884,
+    "testExportRuntimeWarnings": 0,
+    "testExportCasesExaminedForWarnings": 7,
+    "summaryRuntimeWarningsFieldAvailable": false,
+    "runnerRestartBoundariesObserved": 0,
+    "animationIdleMessagesObserved": 0,
+    "analyzedNativeLogLines": 3578,
+    "cases": [
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch",
+        "durationSeconds": 227.872,
+        "jobLogLine": 1071
+      },
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote",
+        "durationSeconds": 255.273,
+        "jobLogLine": 1936
+      },
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "durationSeconds": 115.095,
+        "jobLogLine": 2335
+      },
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently",
+        "durationSeconds": 77.352,
+        "jobLogLine": 2510
+      },
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "durationSeconds": 210.297,
+        "jobLogLine": 3191
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "durationSeconds": 266.843,
+        "jobLogLine": 3876
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "durationSeconds": 104.13,
+        "jobLogLine": 4060
+      }
+    ],
+    "artifact": {
+      "id": 13611224404,
+      "name": "iphone-results-ui-10-1",
+      "bytes": 28143927,
+      "sha256": "da8ac90b948dce062da8b0394e3b3db6d7b2a81849d01b01728929508fbdbbb4",
+      "provenance": "GitHub upload step",
+      "downloaded": false
+    }
+  },
+  "logExcerptLineNumbering": "One-based LF-delimited indices in decoded GitHub job log.",
+  "jobLogExcerptSHA256": {
+    "gate-job-log-excerpts.txt": "052d98188887f4ab185c45ee097c962457c4eba29d8bb74d71e2b1b57dd40bcb",
+    "ui-10-job-log-excerpts.txt": "657d20f2228c93ac861c2fc3cb8ecb54267ac9d1b23720d520c311fecd21554c"
+  }
+}

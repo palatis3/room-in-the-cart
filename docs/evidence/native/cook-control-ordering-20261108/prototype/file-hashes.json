@@ -1,0 +1,32 @@
+[
+  {
+    "path": "Package.swift",
+    "bytes": 410,
+    "sha256": "119df855591c184cf0bc2f392cacb37364bbde6065b28ef90899a3ef265a31d7"
+  },
+  {
+    "path": "REVIEW.md",
+    "bytes": 1813,
+    "sha256": "10708aef31f80f93b68de450e42800957498a76de1e4f8aedb56bce9d8e73b81"
+  },
+  {
+    "path": "Sources/SpeechControlPrototype/SpeechControlPrototype.swift",
+    "bytes": 8070,
+    "sha256": "c9afadd5bbd2541e41e4745e6f7fce854375804c7e81ebfaf2e7499f67139131"
+  },
+  {
+    "path": "Tests/SpeechControlPrototypeTests/SpeechControlPrototypeTests.swift",
+    "bytes": 11727,
+    "sha256": "30c8bdc4617e7484ac0306dba2d6530b96cf95151a36a463c151665757f55a26"
+  },
+  {
+    "path": "r1-pins.json",
+    "bytes": 460,
+    "sha256": "5f586e3318d9d077c27ee6236a69518d0331f944a7c0a91305eda97e57a438ef"
+  },
+  {
+    "path": "r1-to-r2.patch",
+    "bytes": 7896,
+    "sha256": "b15503fe045af9ab2ba1c2e3de1ec402a06b1aa397620b02dd11ba6553fa3531"
+  }
+]

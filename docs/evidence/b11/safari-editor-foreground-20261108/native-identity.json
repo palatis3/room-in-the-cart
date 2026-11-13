@@ -1,0 +1,39 @@
+{
+  "recordedAtUTC": "2026-11-08T11:45:44.793208+00:00",
+  "device": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "ownedName": "RITC-Placed-Receipt-Nov07",
+  "runtimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "browser": {
+    "CFBundleIdentifier": "com.apple.mobilesafari",
+    "CFBundleShortVersionString": "26.2",
+    "CFBundleVersion": "8623.1.14.10.9",
+    "CFBundleExecutable": "MobileSafari"
+  },
+  "browserExecutableSHA256": "65fcdb30b82aef3a163c67650d0fdf2373fc7ab18e1be10319e75dacc5c7437c",
+  "scope": "Read-only existing owned simulator identity; no UI/browser launch or settings change",
+  "settings": {
+    "appearance": {
+      "exit": 0,
+      "stdout": "light",
+      "stderr": ""
+    },
+    "content_size": {
+      "exit": 0,
+      "stdout": "large",
+      "stderr": ""
+    },
+    "increase_contrast": {
+      "exit": 0,
+      "stdout": "disabled",
+      "stderr": ""
+    }
+  }
+}

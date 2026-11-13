@@ -1,0 +1,126 @@
+{
+  "project": "Room in the Cart Staging",
+  "publicURL": "https://room-in-the-cart-staging.vercel.app",
+  "runtimeSource": "02f9b872a9bfe919039cbd7f8117f1faf5983396",
+  "uploadManifestSHA256": "c24822aaea571f611db3f697d94b085ce4dd62ed52aad082b88a75b7996dcb9b",
+  "uploadedFiles": 163,
+  "previousDeployment": "dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr",
+  "currentReadyDeployment": "dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2",
+  "database": {
+    "status": "verified",
+    "project": "uwjxrotnocxxomqdetzk",
+    "commit": "02f9b872a9bfe919039cbd7f8117f1faf5983396",
+    "sourceRegistryCount": 40,
+    "finalRegistryCount": 41,
+    "originalTablesPreserved": 128,
+    "expectedFinalTables": 130,
+    "roleMembershipsUnchanged": true,
+    "verifiedTLS": true,
+    "independentHostedFileSHA256Matches": 41,
+    "registryManifestMD5": "3f3136dc686ce82d8160855d1d2710f0",
+    "initialDeviceGrantCount": 0,
+    "migration041SHA256": "a684f4efae760e0d8b960ffea5edda1c77ff3a2995474c24d1d2c73c64f8d642",
+    "receiptSHA256": "aee1c24d7756e33fbf6ba831228534757331d74dafac2b0e5829df51a9ae506c"
+  },
+  "httpChecks": {
+    "protected": {
+      "passed": 29,
+      "verifiedAt": "2026-11-07T20:05:45.393984+00:00",
+      "receiptSHA256": "f7491d1030241e58d6f4a53321f1c5fcdb1d3537370c34fa6b6ead7551c798cf"
+    },
+    "public": {
+      "passed": 29,
+      "verifiedAt": "2026-11-07T20:06:16.625038+00:00",
+      "receiptSHA256": "f0b807b70e443ed5230745d21ac45848427d8bb046c50992e53f11335b6d31f3"
+    }
+  },
+  "localizedMobileWeb": [
+    {
+      "locale": "en-US",
+      "route": "help",
+      "heading": "Help",
+      "lang": "en",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "en-US",
+      "route": "privacy",
+      "heading": "Privacy and data",
+      "lang": "en",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "en-US",
+      "route": "terms",
+      "heading": "Terms of use",
+      "lang": "en",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "en-US",
+      "route": "support",
+      "heading": "Support",
+      "lang": "en",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "es-US",
+      "route": "help",
+      "heading": "Ayuda",
+      "lang": "es",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "es-US",
+      "route": "privacy",
+      "heading": "Privacidad y datos",
+      "lang": "es",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "es-US",
+      "route": "terms",
+      "heading": "Términos de uso",
+      "lang": "es",
+      "viewport": 375,
+      "content": 375
+    },
+    {
+      "locale": "es-US",
+      "route": "support",
+      "heading": "Soporte",
+      "lang": "es",
+      "viewport": 375,
+      "content": 375
+    }
+  ],
+  "webBrowserScope": "Chrome at 375 CSS pixels. The support email link with localized label was fully in view in both languages.",
+  "installedSimulatorApps": [
+    {
+      "device": "iPhone SE (3rd generation)",
+      "iOS": "17.0",
+      "passed": 3,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "11efbe18c0da413b3e348912321613087f9f9c4854e2edf44a3a7c3e5264e844",
+      "strictVerificationSHA256": "6dcd17f1fc3a1d5c8737515eae7b98fc9582a3357eb3407ae82b159aeb7de1e4"
+    },
+    {
+      "device": "iPhone 17",
+      "iOS": "26.2",
+      "passed": 3,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "0a4205cdbd87dd8aa07fa71d095d7962ea513b3fca3850cc6c54ace1efea9219",
+      "strictVerificationSHA256": "ea249d07423fde888124348556423e1ca69939ea8378b765ad5e62ed497c0509"
+    }
+  ],
+  "nativeScope": "Reused the previously compiled Staging app and test products. Reached the anonymous service, checked the protected workspace response and opened live Help and Support in Safari.",
+  "signedInHouseholdOnHostedStaging": "Pending configured email sign-in. Offline request replay and revocation were exercised against the local service with the reviewed schema."
+}

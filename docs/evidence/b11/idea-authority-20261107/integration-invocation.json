@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/Users/palatis/Room in the Cart/.tools/node-v22.23.4-darwin-arm64/bin/node",
+    "--test",
+    "--test-concurrency=1",
+    "/Users/palatis/Room in the Cart/service/tests/shared-meal-ideas.integration.mjs"
+  ],
+  "start": 1794028928.27751,
+  "scope": "Dedicated synthetic loopback PostgreSQL cluster only"
+}

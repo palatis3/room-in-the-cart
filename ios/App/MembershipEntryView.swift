@@ -13,7 +13,7 @@ struct MembershipEntryView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Text(tr("Choose your household first")).font(.title2.bold())
                     Text(tr("A membership belongs to an authenticated household. Your Free records and manual tools remain available."))
-                    NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
+                    NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 }.padding(20)
             } else if let model = membership.model { MembershipView(model: model) }
             else if membership.failure {

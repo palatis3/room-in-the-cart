@@ -1,0 +1,11 @@
+--- positive/ios/Tests/StoreKitScenarioTests.swift
++++ negative/ios/Tests/StoreKitScenarioTests.swift
+@@ -543,6 +543,8 @@
+         func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
+             trace("storefront.purchase.begin")
+             defer { trace("storefront.purchase.end") }
++            // NEGATIVE CONTROL ONLY: must hit the unchanged 120-second limit.
++            try await Task.sleep(for: .seconds(180))
+             return try await base.purchase(appAccountToken: appAccountToken)
+         }
+         func currentTransactions() async -> [MembershipPurchaseOutcome] {

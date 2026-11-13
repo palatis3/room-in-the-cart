@@ -1,4 +1,6 @@
 import XCTest
+import CryptoKit
+import UniformTypeIdentifiers
 @testable import DeviceSurfaces
 
 final class DeviceSurfacesTests: XCTestCase {
@@ -13,6 +15,55 @@ final class DeviceSurfacesTests: XCTestCase {
         try ReminderIntent(id: id, personaID: UUID(), targetID: UUID(), subject: subject, sourceRevision: 4, routeHandle: handle,
             localTime: CivilReminderTime(year: 2027, month: 1, day: day, hour: 13, minute: 0, timeZoneID: "America/New_York"),
             expiresAt: Date(timeIntervalSince1970: 1_810_000_000), cutoff: Date(timeIntervalSince1970: 1_810_000_000), language: .english, now: now)
+    }
+    private func editedReminder(_ original: ReminderIntent) throws -> ReminderIntent {
+        try ReminderIntent(id: original.id, personaID: original.personaID, targetID: original.targetID,
+            subject: original.subject, sourceRevision: original.sourceRevision, routeHandle: original.routeHandle,
+            localTime: CivilReminderTime(year: 2027, month: 1, day: 21, hour: 13, minute: 0, timeZoneID: original.localTime.timeZoneID),
+            expiresAt: original.expiresAt, cutoff: original.cutoff, language: original.language, now: now)
+    }
+    private func loadTextFile(_ bytes: Data, type: UTType = .utf8PlainText) async throws -> Result<String, SurfaceError> {
+        let source = try file("shopping.txt")
+        try bytes.write(to: source)
+        let provider = NSItemProvider()
+        provider.registerFileRepresentation(forTypeIdentifier: type.identifier, fileOptions: [], visibility: .all) { receive in
+            receive(source, false, nil)
+            return nil
+        }
+        return await withCheckedContinuation { result in
+            SelectedTextInbox.loadPlainText(from: provider) { result.resume(returning: $0) }
+        }
+    }
+    func testSharedPlainTextFilesPreserveOriginalWordingAndLineBreaks() async throws {
+        let text = "2 tortillas\r\nFrijoles negros 🍚"
+        let utf8 = Data(text.utf8)
+        let samples: [(UTType, Data)] = [
+            (.utf8PlainText, utf8),
+            (.plainText, Data([0xEF, 0xBB, 0xBF]) + utf8),
+            (.utf16ExternalPlainText, try XCTUnwrap(text.data(using: .utf16))),
+            (.utf16PlainText, try XCTUnwrap(text.data(using: .utf16LittleEndian)))
+        ]
+        for (type, data) in samples {
+            let result = try await loadTextFile(data, type: type)
+            XCTAssertEqual(try result.get(), text, type.identifier)
+        }
+        let stringResult: Result<String, SurfaceError> = await withCheckedContinuation { result in
+            SelectedTextInbox.loadPlainText(from: NSItemProvider(object: text as NSString)) { result.resume(returning: $0) }
+        }
+        XCTAssertEqual(try stringResult.get(), text)
+    }
+    func testSharedPlainTextFilesRejectOversizedInvalidAndUnrelatedRepresentations() async throws {
+        let exact = Data(repeating: 65, count: SelectedTextInbox.maximumEntryBytes)
+        let valid = try await loadTextFile(exact)
+        XCTAssertEqual(try valid.get().utf8.count, exact.count)
+        let oversized = try await loadTextFile(exact + Data([65]))
+        XCTAssertEqual(oversized, .failure(.capacity))
+        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data()] {
+            let invalid = try await loadTextFile(bytes)
+            XCTAssertEqual(invalid, .failure(.invalid))
+        }
+        let unrelated = try await loadTextFile(Data("beans".utf8), type: .pdf)
+        XCTAssertEqual(unrelated, .failure(.unsupported))
     }
     func testSelectedTextExactReplayAfterReopenAndChangedReplayFails() async throws {
         let url = try file(), id = UUID(), inbox = try SelectedTextInbox(url: url)
@@ -66,6 +117,44 @@ final class DeviceSurfacesTests: XCTestCase {
         do { _ = try await inbox.stage(operationID: UUID(), originalText: "extra", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
         let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.count, 20)
     }
+    func testSelectedTextRejectsNewOversizedReviewButResolvesAnExactLegacyReceipt() async throws {
+        let url = try file()
+        let inbox = try SelectedTextInbox(url: url)
+        let source = Array(repeating: "beans", count: 500).joined(separator: "\r\n") + "\u{2028}  \u{85}rice"
+        let id = UUID()
+        do {
+            _ = try await inbox.stage(operationID: id, originalText: source, now: now)
+            XCTFail("The ledger would receive 501 nonblank rows")
+        } catch SelectedTextInbox.ReviewLimit.tooManyItems {}
+        let absent = try await inbox.receipt(id)
+        XCTAssertNil(absent)
+        let corrected = Array(repeating: "rice", count: 500).joined(separator: "\r")
+        _ = try await inbox.stage(operationID: id, originalText: source, editedText: corrected, now: now)
+        let pending = try await inbox.pending(now: now)
+        XCTAssertEqual(pending.first?.originalText, source)
+        XCTAssertEqual(pending.first?.textForReview, corrected)
+
+        // Schema-v1 receipts used this canonical payload and accepted 501 CRLF-separated items.
+        struct LegacyBody: Encodable { let original: String }
+        let digest = SHA256.hash(data: try canonical(LegacyBody(original: source))).map { String(format: "%02x", $0) }.joined()
+        let legacy = UUID()
+        let database = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: "")
+        try database.execute("INSERT INTO inbox (id,digest,created,expires,disposition,original,edited,bytes) VALUES(?,?,?,?,?,?,?,?)", [.text(legacy.uuidString), .text(digest),
+            .double(now.timeIntervalSince1970), .double(now.addingTimeInterval(SelectedTextInbox.lifetime).timeIntervalSince1970),
+            .text("pending"), .text(source), .null, .integer(Int64(source.utf8.count))])
+        let retry = try await inbox.stage(operationID: legacy, originalText: source, now: now)
+        XCTAssertEqual(retry.disposition, .pending)
+        let older = try await inbox.pending(now: now)
+        XCTAssertEqual(older.first { $0.id == legacy }?.textForReview, source)
+        do {
+            _ = try await inbox.stage(operationID: legacy, originalText: "changed", now: now)
+            XCTFail("Changed text cannot reuse the legacy receipt")
+        } catch SurfaceError.changedReplay {}
+        _ = try await inbox.discard(operationID: legacy, digest: retry.digest, now: now)
+        let terminal = try await inbox.stage(operationID: legacy, originalText: source, now: now)
+        XCTAssertEqual(terminal.disposition, .discarded)
+    }
+
     func testConcurrentConnectionsReturnOneDurableReceipt() async throws {
         let url = try file(), a = try SelectedTextInbox(url: url), b = try SelectedTextInbox(url: url), id = UUID(), date = now
         async let first = a.stage(operationID: id, originalText: "12 wraps", now: date)
@@ -148,6 +237,66 @@ final class DeviceSurfacesTests: XCTestCase {
         let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
         let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
     }
+    func testTurnOffFromAnOlderEditorCannotCancelTheReplacementOrRemoveItsNotification() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        let original = try intent()
+        let first = try await coordinator.save(original, expectedVersion: nil, requestPermission: true, authorized: { true })
+        let replacement = try editedReminder(original)
+        let second = try await coordinator.save(replacement, expectedVersion: first.version, requestPermission: true, authorized: { true })
+        do {
+            _ = try await coordinator.cancel(original.id, expectedVersion: first.version)
+            XCTFail("An editor showing the old reminder must require another review")
+        } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let current = try await coordinator.current(original.id)
+        let identifier = ReminderNotification.identifier(original.id)
+        let stillPending = await scheduler.pending[identifier]
+        XCTAssertEqual(current, second)
+        XCTAssertEqual(stillPending, ReminderNotification(replacement))
+
+        let cancelled = try await coordinator.cancel(original.id, expectedVersion: second.version)
+        let pending = await scheduler.pending
+        XCTAssertEqual(cancelled.status, .cancelled)
+        XCTAssertTrue(pending.isEmpty)
+    }
+
+    func testReschedulingRetiresThePreviousPendingOrDeliveredNoticeEvenIfRegistrationFails() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        for wasDelivered in [false, true] {
+            let original = try intent()
+            let identifier = ReminderNotification.identifier(original.id)
+            let saved = try await coordinator.save(original, expectedVersion: nil, requestPermission: false)
+            if wasDelivered { await scheduler.deliver(identifier) }
+            let replacement = try editedReminder(original)
+            await scheduler.setFailure(true)
+            let failed = try await coordinator.save(replacement, expectedVersion: saved.version, requestPermission: false)
+            XCTAssertEqual(failed.status, .retryNeeded)
+            let oldPending = await scheduler.pending[identifier], oldDelivered = await scheduler.delivered[identifier]
+            XCTAssertNil(oldPending, "The previous time must no longer be able to fire")
+            XCTAssertNil(oldDelivered, "A delivered notice at the previous time must be withdrawn")
+            // Older versions could leave the previous OS request beside retryNeeded.
+            let reopened = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+            await scheduler.setFailure(false)
+            try await scheduler.add(ReminderNotification(original))
+            if wasDelivered { await scheduler.deliver(identifier) }
+            await scheduler.setFailure(true)
+            try await reopened.reconcileAll()
+            let legacyPending = await scheduler.pending[identifier], legacyDelivered = await scheduler.delivered[identifier]
+            XCTAssertNil(legacyPending)
+            XCTAssertNil(legacyDelivered)
+            await scheduler.setFailure(false)
+            try await reopened.reconcileAll()
+            let retried = try await reopened.current(original.id)
+            let pending = await scheduler.pending[identifier], delivered = await scheduler.delivered[identifier]
+            XCTAssertEqual(retried?.status, .scheduled)
+            XCTAssertEqual(pending, ReminderNotification(replacement))
+            XCTAssertNil(delivered)
+        }
+    }
+
     func testElapsedOfferNoticesSurviveReconciliationUntilTurnOffOrPermissionLoss() async throws {
         let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
         let delivered = try intent(), delayed = try intent()

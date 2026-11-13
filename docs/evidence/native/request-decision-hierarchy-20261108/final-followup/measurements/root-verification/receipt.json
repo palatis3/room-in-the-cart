@@ -1,0 +1,21 @@
+{
+  "reviewer": "root",
+  "reportedIndependentReruns": [
+    "light",
+    "dark"
+  ],
+  "publisherVerifiedMeasurementByteIdentity": {
+    "light": true,
+    "dark": true
+  },
+  "measurementSHA256": {
+    "light": "d0375f401e110c72ebd686fcf9aad6f64de0b1bb90d5e0cde43392d474e7540d",
+    "dark": "4e1d7fca45e46a506b9d3f0469aa761417faff8ba61a4772caf5b5598af633dc"
+  },
+  "renderedCoreContrast": {
+    "light": 7.083026440313754,
+    "dark": 8.295238954004883
+  },
+  "scope": "Exact captured English Large-text empty-price fields only; not all fields, AX5, physical accessibility or 41-finding audit closure.",
+  "measurementReexecutedByPublisher": false
+}

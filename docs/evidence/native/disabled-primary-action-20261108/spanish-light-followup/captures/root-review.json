@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "scope": "Spanish current26.2 light Large complete journey only; no English/dark/min17 qualification",
+  "rootViewedPNGs": 5,
+  "labels": "Both complete, sharp and contained within rounded filled/outlined shape; row padding retained. Disabled whole screenshot and enabled/disabled crops reviewed.",
+  "measurements": {
+    "disabled": {
+      "contrast": 15.213849827934512,
+      "RGB": [
+        23,
+        41,
+        37
+      ],
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "components": 12,
+      "source": "png-0-3/E5E2FFC0-4A1C-4A46-A934-B0AB50F97235.png"
+    },
+    "enabled": {
+      "contrast": 8.297771630528558,
+      "RGB": [
+        255,
+        255,
+        255
+      ],
+      "background": [
+        25,
+        88,
+        72
+      ],
+      "components": 12,
+      "source": "png-0-7/0F43ADF3-228A-447A-9919-C00CF0FD4F31.png"
+    }
+  },
+  "nativeAndStrict": {
+    "passed": 1,
+    "warnings": 0,
+    "idleMessages": 0,
+    "runnerRestarts": 0
+  },
+  "interaction": "Disabled center+top-padding attempts retain disabled; enabled top-padding activates once; restart yields one saved library dinner and empty list.",
+  "sourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "remaining": "English animation timeout; dark; minimum17; physical assistive; final Release"
+}

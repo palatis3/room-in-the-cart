@@ -19,6 +19,27 @@ public struct ReminderEditorContext: Sendable {
     }
 }
 
+/// DatePicker needs a date. These values represent recurring wall-clock times,
+/// so the picker and the minute conversion share a fixed zone without DST.
+struct ReminderQuietHoursDraft: Equatable {
+    var start: Date
+    var end: Date
+
+    init(_ saved: QuietHours?) {
+        start = Date(timeIntervalSinceReferenceDate: TimeInterval((saved?.startMinute ?? 22 * 60) * 60))
+        end = Date(timeIntervalSinceReferenceDate: TimeInterval((saved?.endMinute ?? 7 * 60) * 60))
+    }
+
+    func interval() throws -> QuietHours {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        func minuteOfDay(_ date: Date) -> Int {
+            calendar.component(.hour, from: date) * 60 + calendar.component(.minute, from: date)
+        }
+        return try QuietHours(startMinute: minuteOfDay(start), endMinute: minuteOfDay(end))
+    }
+}
+
 @MainActor public struct ReminderEditorView: View {
     private let context: ReminderEditorContext
     private let coordinator: ReminderCoordinator
@@ -33,8 +54,7 @@ public struct ReminderEditorContext: Sendable {
     @State private var timeZoneID: String
     @FocusState private var timeZoneFocused: Bool
     @State private var quiet: Bool
-    @State private var quietStart: Int
-    @State private var quietEnd: Int
+    @State private var quietTimes: ReminderQuietHoursDraft
     @State private var reviewed: ReminderIntent?
     @State private var reviewedGeneration: UUID?
     @State private var version: Int64?
@@ -49,8 +69,7 @@ public struct ReminderEditorContext: Sendable {
         self.authorizeSave = authorizeSave
         _fireAt = State(initialValue: context.initialFireAt); _timeZoneID = State(initialValue: context.timeZoneID); _version = State(initialValue: context.expectedVersion)
         _quiet = State(initialValue: context.initialQuietHours != nil)
-        _quietStart = State(initialValue: (context.initialQuietHours?.startMinute ?? 22 * 60) / 60)
-        _quietEnd = State(initialValue: (context.initialQuietHours?.endMinute ?? 7 * 60) / 60)
+        _quietTimes = State(initialValue: ReminderQuietHoursDraft(context.initialQuietHours))
     }
     public var body: some View {
         Form {
@@ -75,8 +94,12 @@ public struct ReminderEditorContext: Sendable {
                     .focused($timeZoneFocused).submitLabel(.done).onSubmit { timeZoneFocused = false }
                 Toggle(SurfaceCopy.text("Quiet hours"), isOn: $quiet).accessibilityIdentifier("reminder.quietHours")
                 if quiet {
-                    Stepper(SurfaceCopy.text("Quiet hours start") + ": \(quietStart):00", value: $quietStart, in: 0...23)
-                    Stepper(SurfaceCopy.text("Quiet hours end") + ": \(quietEnd):00", value: $quietEnd, in: 0...23)
+                    DatePicker(SurfaceCopy.text("Quiet hours start"), selection: $quietTimes.start, displayedComponents: .hourAndMinute)
+                        .environment(\.timeZone, .gmt)
+                        .accessibilityIdentifier("reminder.quietStart")
+                    DatePicker(SurfaceCopy.text("Quiet hours end"), selection: $quietTimes.end, displayedComponents: .hourAndMinute)
+                        .environment(\.timeZone, .gmt)
+                        .accessibilityIdentifier("reminder.quietEnd")
                 }
                 LabeledContent(SurfaceCopy.text("Expires"), value: display(context.expiresAt))
                 if let cutoff = context.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: display(cutoff)) }
@@ -91,6 +114,7 @@ public struct ReminderEditorContext: Sendable {
             }
             if let message { Text(message).accessibilityAddTraits(.updatesFrequently) }
             Button(SurfaceCopy.text("Turn off this reminder"), role: .destructive) { turnOff() }.frame(minHeight: 44).accessibilityIdentifier("reminder.turnOff")
+                .disabled(!statusLoaded || statusLoadFailed || saved == nil || saved?.status == .cancelled)
         }.disabled(busy).navigationTitle(SurfaceCopy.text("Reminder"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text(saved?.status == .scheduled ? "Done" : "Cancel")) { dismiss() }.disabled(busy).accessibilityIdentifier("reminder.close") } }
             .keyboardDoneAction(visible: timeZoneFocused, title: SurfaceCopy.text("Done"), identifier: "reminder.keyboardDone") { timeZoneFocused = false }
@@ -107,7 +131,7 @@ public struct ReminderEditorContext: Sendable {
                 }
             }
             .onChange(of: fireAt) { _, _ in clearReview() }.onChange(of: timeZoneID) { _, _ in clearReview() }
-            .onChange(of: quiet) { _, _ in clearReview() }.onChange(of: quietStart) { _, _ in clearReview() }.onChange(of: quietEnd) { _, _ in clearReview() }
+            .onChange(of: quiet) { _, _ in clearReview() }.onChange(of: quietTimes) { _, _ in clearReview() }
     }
     private var statusText: String {
         if busy { return SurfaceCopy.text("Reminder update pending. Wait for the saved result.") }
@@ -138,7 +162,7 @@ public struct ReminderEditorContext: Sendable {
             let local = CivilReminderTime(year: year, month: month, day: day, hour: hour, minute: minute, timeZoneID: zone.identifier, confirmedGMTOffset: zone.secondsFromGMT(for: fireAt))
             reviewed = try ReminderIntent(id: context.reminderID, personaID: context.personaID, targetID: context.targetID, subject: context.subject, sourceRevision: context.sourceRevision,
                 routeHandle: context.routeHandle, localTime: local, expiresAt: context.expiresAt, cutoff: context.cutoff,
-                quietHours: quiet ? QuietHours(startMinute: quietStart * 60, endMinute: quietEnd * 60) : nil,
+                quietHours: quiet ? quietTimes.interval() : nil,
                 language: locale.language.languageCode?.identifier == "es" ? .spanish : .english, now: Date())
             reviewedGeneration = generation
         } catch { message = errorText(error) }
@@ -162,12 +186,27 @@ public struct ReminderEditorContext: Sendable {
         }
     }
     private func turnOff() {
-        guard currentAuthorization() != nil else { clearReview(); return }
+        guard let generation = currentAuthorization(), let expectedVersion = saved?.version else { clearReview(); return }
         busy = true
         Task {
             defer { busy = false }
-            do { try await coordinator.cancel(context.reminderID); saved = try await coordinator.current(context.reminderID); version = saved?.version; statusLoaded = true; statusLoadFailed = false; clearReview(); message = SurfaceCopy.text("Reminder turned off.") }
-            catch { message = SurfaceCopy.text("Could not turn off the reminder. Try again.") }
+            do {
+                let cancelled = try await coordinator.cancel(context.reminderID, expectedVersion: expectedVersion)
+                guard currentAuthorization() == generation else { clearReview(); return }
+                saved = cancelled
+                version = cancelled.version
+                clearReview()
+                message = SurfaceCopy.text("Reminder turned off.")
+            } catch {
+                guard currentAuthorization() == generation else { clearReview(); return }
+                if error as? SurfaceError == .stale {
+                    clearReview()
+                    statusLoadFailed = true
+                    message = errorText(error)
+                } else {
+                    message = SurfaceCopy.text("Could not turn off the reminder. Try again.")
+                }
+            }
         }
     }
     private func errorText(_ error: Error) -> String {

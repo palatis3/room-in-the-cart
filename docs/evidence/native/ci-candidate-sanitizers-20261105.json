@@ -1,0 +1,113 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207830",
+  "jobs": {
+    "address": 126972253892,
+    "thread": 126972254179
+  },
+  "results": {
+    "address": {
+      "artifactSHA256": "bde4506446ce0bb75a7d0fd09a008a84052381534395c0a9706c7db60832d013",
+      "packages": {
+        "CoreDomain": {
+          "executed": 171,
+          "passed": 171,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "74f9522fdb60da4a1bad6377bde82a64f052c75a78c31c245d49bd2ef4243439",
+          "skipReasons": []
+        },
+        "DeviceSurfaces": {
+          "executed": 29,
+          "passed": 29,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "9554c61fbbd57734deef563c428ca38031c5310a2bb9497d9754d99f3a808aef",
+          "skipReasons": []
+        },
+        "HouseholdClient": {
+          "executed": 85,
+          "passed": 82,
+          "skipped": 3,
+          "failures": 0,
+          "sha256": "1804ff0f600346dc35040084b4c464a8be07699ff6f0da39890b46c4057c35bf",
+          "skipReasons": [
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/NativeServiceWireTests.swift:28: -[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres] : Test skipped - Run the PostgreSQL integration suite with RITC_TEST_NATIVE_WIRE=1.",
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift:28: -[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres] : Test skipped - Run isolated shared meal PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.",
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteNativeWireTests.swift:24: -[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres] : Test skipped - Run isolated store quote PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1."
+          ]
+        },
+        "LocalStore": {
+          "executed": 74,
+          "passed": 74,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "d3ccbd3e8196c26710aa519e700cb3902e2caff2876056fabc0ab6c8dc89f6a8",
+          "skipReasons": []
+        },
+        "RecordArchive": {
+          "executed": 33,
+          "passed": 33,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "96a77f6416dfb292482d739ba2950e5c94030abc2df66ff2721233d60562ff8f",
+          "skipReasons": []
+        }
+      },
+      "passed": 389,
+      "skipped": 3
+    },
+    "thread": {
+      "artifactSHA256": "90d1b7705994697e4a959256d17a0b13888ddadcb3b9c262ee926d1f494841b3",
+      "packages": {
+        "CoreDomain": {
+          "executed": 171,
+          "passed": 171,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "1f7e8e1f439e76dc773cbf337e482ed8af9b389d716358406ca1607d2330eddd",
+          "skipReasons": []
+        },
+        "DeviceSurfaces": {
+          "executed": 29,
+          "passed": 29,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "556d00d53d1c19fd8546d147ae40c2caabd976b484486952172906bd63b31118",
+          "skipReasons": []
+        },
+        "HouseholdClient": {
+          "executed": 85,
+          "passed": 82,
+          "skipped": 3,
+          "failures": 0,
+          "sha256": "64fa00b4c7c4fc7017ed94c406c0cffdc476b89fb123620a47b4fb98c698f3c9",
+          "skipReasons": [
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/NativeServiceWireTests.swift:28: -[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres] : Test skipped - Run the PostgreSQL integration suite with RITC_TEST_NATIVE_WIRE=1.",
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift:28: -[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres] : Test skipped - Run isolated shared meal PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.",
+            "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteNativeWireTests.swift:24: -[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres] : Test skipped - Run isolated store quote PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1."
+          ]
+        },
+        "LocalStore": {
+          "executed": 74,
+          "passed": 74,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "3c3330b461378f1be505eab42cdae49be0459887df9465e4c74a4e4457135bf7",
+          "skipReasons": []
+        },
+        "RecordArchive": {
+          "executed": 33,
+          "passed": 33,
+          "skipped": 0,
+          "failures": 0,
+          "sha256": "d02fa40f40ba4697e06543b6872a488ea7e444a2efa3d7dedfdf28e0bc302575",
+          "skipReasons": []
+        }
+      },
+      "passed": 389,
+      "skipped": 3
+    }
+  },
+  "scope": "Five package sanitizer suites only. Three opt-in native HTTPS/PostgreSQL cases are explicitly skipped in each sanitizer job and are not counted as passes. A dedicated hosted native-wire lane is being prepared. StoreKit and full workflow results are separate."
+}

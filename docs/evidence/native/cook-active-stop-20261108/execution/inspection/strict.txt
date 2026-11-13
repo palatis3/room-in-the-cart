@@ -1,0 +1,54 @@
+Executed 43 of 43 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback | Passed | 0.21 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart | Passed | 0.08 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry | Passed | 0.04 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testInterruptionEndedShouldResumeNotificationNeverRestarts | Passed | 0.02 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testActiveStopBypassesHeldStateGettersAndCallsNativeStopExactlyOnce | Passed | 0.02 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop | Passed | 0.02 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testActiveFalseStopBypassesGettersButKeepsStartBarrierUntilExplicitRetry | Passed | 0.02 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testEngineCreationCallsAndDestructionUseOneNonMainThread | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled | Passed | 0.01 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testExplicitRepeatWaitsForStopAcknowledgment | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testMatchedTerminalStillRequiresObservedIdleBeforeStopAcknowledgment | Passed | 0.01 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop | Passed | 0.00 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech | Passed | 0.00 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner | Passed | 0.00 |
+| RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testRouteCloseCannotBeReactivated | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testRepeatRechecksStartDeadlineAfterStopAcknowledgment | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testInvalidationCancelsExplicitRepeatWhileStopIsHeld | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testIdlePreparationCancellationDoesNotRequireNativeStopSuccess | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testRevocationAndFailedStopRemainExplicitlyRetryable | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testResumeRechecksAuthorityAndRequiresExplicitAction | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testVoiceOverIsExclusiveAndDoesNotAutoResume | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testDeniedSourceAndPrivateBudgetCannotPlay | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testMissingPreparedVoicePreservesVisibleTextWithoutFallback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPlaybackUsesExactAuthorizedDatedProjection | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testExpiredAuthorityStopsCurrentPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 133 log lines (43 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 43 examined tests.
+

@@ -1,0 +1,28 @@
+{
+  "build": {
+    "nativeExit": 0,
+    "compiledAppCheckExit": 0
+  },
+  "test": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "passed": 8,
+    "selected": 8,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "suppliedConsoleLines": 4381
+  },
+  "wrapperStatus": "failed: original result preservation guard detected added database.sqlite3",
+  "reconciliation": "All79 preexisting result entries and native log hash unchanged; exact preinspection file set restored and verified separately, postinspection bundle preserved",
+  "trace": {
+    "PID": 39312,
+    "rows": 33,
+    "bytes": 114620,
+    "scope": "Closed target-case Store Done instrumented passing baseline"
+  },
+  "originalHostedStall": "Unresolved; not reproduced or repaired",
+  "auditClosureClaimed": false,
+  "productsUnchanged": true,
+  "productFilesIndependentlyVerifiedByRoot": 196
+}

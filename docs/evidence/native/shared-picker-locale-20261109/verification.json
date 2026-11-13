@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "scope": "Isolated locale observation; not a product repair or localization acceptance",
+  "sourceManifestSHA256": "5a91e32882523e7ded2a0b60546d21ab6a504a1cc9506e7186b88ded0732a477",
+  "productsManifestSHA256": "f03804af7df7992b192cf90b6a22639ceffcc08d681badf63bd90ba49528c3d8",
+  "buildExitCode": 0,
+  "nativeExitCode": 0,
+  "strictExitCode": 0,
+  "selectors": [
+    "-only-testing:RoomInTheCartUITests/SharedMealLocaleDiagnosticUITests/testASpanishSharedMealPickerBaseline",
+    "-only-testing:RoomInTheCartUITests/SharedMealLocaleDiagnosticUITests/testBSpanishSharedMealPickerExplicitInheritedLocale"
+  ],
+  "observedCompactDateBothVariants": "Nov 9, 2026",
+  "observedExpandedCalendarBothVariants": "Noviembre de 2026",
+  "swiftUILocaleBothVariants": "es_US",
+  "enclosingSwiftUICalendarLocaleBothVariants": "es_US",
+  "sourceAndProductsUnchanged": true,
+  "canonicalProductChangeInstalled": false,
+  "retainedOriginals": {
+    ".build/SharedMealLocaleNov09/r3/locale-two-selector-diagnostic.patch": "ecfa06cec74a3fd980f7df97734281b522129bc51bc653e01fe89ca91fdd6dfb",
+    ".build/SharedMealLocaleNov09/execution-r2/successor.json": "e55946704e0ecbfc942590bc0bdced1500a1a98e1648b533a53d8b917ba64b2b",
+    ".build/SharedMealLocaleNov09/execution-r2/source.json": "5a91e32882523e7ded2a0b60546d21ab6a504a1cc9506e7186b88ded0732a477",
+    ".build/SharedMealLocaleNov09/execution-r2/build-debug/run.json": "8d9104a16477e0b16c5252dc5feab954e275af8b7a2073aa425a9be254979924",
+    ".build/SharedMealLocaleNov09/execution-r2/build-debug/products.json": "f03804af7df7992b192cf90b6a22639ceffcc08d681badf63bd90ba49528c3d8",
+    ".build/SharedMealLocaleNov09/execution-r2/locale-ui/run.json": "8eda59d585ef3424356458f0186324bbd075c2b35c393aff47baee52d0810c03",
+    ".build/SharedMealLocaleNov09/execution-r2/locale-ui/inspection/receipt.json": "c3bca52161f97b4788e596ae0642d3ece1ef6c270f1736ff67a175ba32931ff3",
+    ".build/SharedMealLocaleNov09/execution-r2/locale-ui/inspection/observations.json": "e1af7da6373c604f931675d3d69a9dbe00525c9e7bdc327996b47b881810193a",
+    ".build/SharedMealLocaleNov09/execution-r2/locale-ui/inspection/root-review.json": "282d2dda4ed2eea1695a19f19c827011535c996e14b7e69a9dbb32f5a8606be0",
+    ".build/SharedMealLocaleNov09/system-control-r1/english-system/run.json": "62f9a992877915c6595d0a8a82f6fc61e3e245d34e0d43f93fbccd6307ea4991",
+    ".build/SharedMealLocaleNov09/system-control-r1/spanish-system/run.json": "64044942c0c87283c27dec3013bff5e5e46fe9f4d467519388d9789422d43ba4",
+    ".build/SharedMealLocaleNov09/system-control-r1/post-spanish-test-preferences.json": "cd79657c00ec9009255b1e23086956359a82104f4e18605d62da6a9d1cbc2b3e",
+    ".build/SharedMealLocaleNov09/system-control-r1/shutdown.json": "5cddafe7d5f76d7382fd44efed85d72b7a87d21248b4f4bf9732a06a9b38aa78"
+  }
+}

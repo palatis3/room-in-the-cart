@@ -1,0 +1,44 @@
+{
+  "status": "local proposal; not installed in canonical source or deployed",
+  "baseCommit": "336d5b51e725f0f7b9c29d9b1a39c3e98b5dc496",
+  "scratch": "/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-rollback042-ejy49_sg/maintenance",
+  "patchSHA256": "9e844130a0ca84c21dd06d084981e59d0aec2c712fe0f0e213993a48e6583aa6",
+  "patchAppliesToCanonical": true,
+  "build": "passed",
+  "focused": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "unit": {
+    "passed": 450,
+    "failed": 0,
+    "skipped": 1
+  },
+  "postgres": {
+    "passed": 243,
+    "failed": 0,
+    "skipped": 3
+  },
+  "operations": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "negativeControls": [
+    "Real TCP endpoint observed0 connections with maintenance,1 with false,1 additional with absent flag; normal startup failed as expected against unavailable database",
+    "Malformed configuration starts the same503 responder rather than throwing or silently serving",
+    "Incomplete declared1GB request body received immediate503 without sending body",
+    "Actual deployed api/index.js and api/maintenance.js imports returned503 with invalidDB/auth settings",
+    "Absent/false operations endpoint retained401authentication behavior"
+  ],
+  "configuration": "SERVICE_MAINTENANCE exacttrue enables; absent/exactfalse normal; any other value fails closed with503; state captured on startup",
+  "scope": "Both HTTP runtime factories before DB/identity/provider/config/body startup; all routes/methods inclhealth/directAPI/cron; static public documents unaffected; intentional migration and recovery/operations CLI remain separate",
+  "deploymentLimits": [
+    "Requires a new Vercel deployment; environment changes cannot update existing immutable URLs",
+    "Prepare prebuilt maintenance candidate; independently verify old deployments remain protected and unaliased",
+    "Never promote041 to serve amended households; deny public reads and writes, retain042 and repair forward or reconcile restore and deletion journal"
+  ],
+  "retainedFailure": "maintenance-full-postgres-missing-fixture.log: scratch archive omitted grocery30/inbox-scenarios.json; exact base-commit fixture restored, freshDB rerun passed",
+  "setupCorrection": "First task-ownedPG restart omitted original socket options; intended-socket createdb failed. Stopped same owned cluster and restarted with explicitprivate socket/port before tests. No foreigndatabase commands or hostedactions."
+}

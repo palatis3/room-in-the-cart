@@ -1,0 +1,98 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2EAAC13C-7820-409B-862B-AF83AD5BD614.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplySource-after_0_63B77F57-40E2-4C03-B03C-A54A67649CB6.png",
+        "timestamp" : 1794195484.335
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "4D13755D-6AE1-4E00-890E-A436250EF386.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplySource-before_0_8F899356-1377-4864-8615-ECC028128A29.png",
+        "timestamp" : 1794195478.022
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "3A32653F-D6F2-438E-8552-ED3F4D66F85F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplyPrice-after_0_5E2E2A02-D980-47F6-96D9-7CB0C65EB4BE.png",
+        "timestamp" : 1794195471.864
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "ED7C25A0-CA59-4774-A315-24B8F1F332C5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplyPrice-before_0_79588914-AE3A-47FF-8ED9-AF4409A6CB8E.png",
+        "timestamp" : 1794195465.66
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2177255D-5D4C-4C36-BAB1-BE88DACA3FB8.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplyYield-after_0_6EA21E3F-44D4-4E82-AF0D-85B130D126F5.png",
+        "timestamp" : 1794195452.801
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "9C5900D3-A325-4FB9-BB02-56D66F2241B7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-Done-ideaSupplyYield-before_0_2B3E3BC6-567A-4A88-948D-066CC0AB7456.png",
+        "timestamp" : 1794195446.57
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "EC561DB4-3A5E-488D-B645-E3EE1C556F60.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-restored-amount-after_0_ADEB1881-130B-4A12-8F26-36B10E1EB32C.png",
+        "timestamp" : 1794195241.522
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "06D2E4CD-62D8-4DD4-9D77-0618C5B9DA6D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-restored-amount-before_0_14D460B3-0709-45A9-ADF1-4F66D4E9AA5B.png",
+        "timestamp" : 1794195236.395
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "D08F0BC8-2BB0-4724-A5CC-BEF0AA9CB0E3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-cleared-amount-after_0_B45B9DAD-2415-44E4-A893-AB9130B147E1.png",
+        "timestamp" : 1794194906.416
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "E75FEA4E-0D2A-40A7-964A-3393646A95F9.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-cleared-amount-before_0_0ACFAE8E-EC01-49CB-91D6-36A305B2DF16.png",
+        "timestamp" : 1794194901.233
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  }
+]

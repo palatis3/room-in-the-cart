@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreDomain
+import LocalStore
 
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
@@ -10,11 +11,11 @@ struct ComparisonView: View {
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
-    init(draft: ComparisonDraft = ComparisonDraft(), savedAt: Date? = nil) {
-        let model = ComparisonModel(draft: draft)
-        model.savedAt = savedAt
+    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil) {
+        let model = ComparisonModel(draft: draft, savedRevision: saved?.revision ?? 0)
+        model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
-        _reviewing = State(initialValue: savedAt != nil)
+        _reviewing = State(initialValue: saved != nil)
     }
 
     var body: some View {
@@ -39,7 +40,8 @@ struct ComparisonView: View {
                 }
             }
         }
-        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done")) { inputFocused = nil }
+        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
+                            identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
@@ -80,7 +82,7 @@ struct ComparisonView: View {
                 TextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
                     .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
                 entry("Total amount needed", text: $model.draft.needed, id: "needed")
-                unitPicker("Needed unit", selection: $model.draft.unit)
+                unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
             }
             Section {
                 entry("Confirmed usable amount at home", text: $model.draft.stock, id: "stock")
@@ -88,10 +90,10 @@ struct ComparisonView: View {
             } header: { Text(tr("Already accounted for")) } footer: {
                 Text(tr("Use the needed unit. Count only stock matched to this item and available for this need. Protected lunch portions are already inside the total, not extra. Leave unconfirmed stock blank."))
             }
-            offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, prefix: "a")
-            offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, prefix: "b")
+            offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, conversion: $model.draft.aConversion, prefix: "a")
+            offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, conversion: $model.draft.bConversion, prefix: "b")
             Section {
-                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap")
+                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
             } footer: { Text(tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) }
             if let error = model.error { errorRow(error) }
             Section {
@@ -107,29 +109,32 @@ struct ComparisonView: View {
         }
     }
 
-    private func entry(_ label: String, text: Binding<String>, id: String) -> some View {
+    private func entry(_ label: String, text: Binding<String>, id: String, keyboard: UIKeyboardType = .numbersAndPunctuation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
             TextField(tr("Unknown if blank"), text: text)
-                .keyboardType(.decimalPad).focused($inputFocused, equals: id)
+                .keyboardType(keyboard).focused($inputFocused, equals: id)
                 .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
     }
 
-    private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>) -> some View {
+    private func unitPicker(_ label: String, selection: Binding<UnitOfMeasure>, id: String) -> some View {
         Picker(tr(label), selection: selection) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
-        }.frame(minHeight: 44)
+        }.frame(minHeight: 44).accessibilityIdentifier(id)
     }
 
-    private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, prefix: String) -> some View {
+    private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
         Section {
             TextField(tr("Pack name (optional)"), text: label, axis: .vertical)
                 .focused($inputFocused, equals: prefix + "Label").accessibilityIdentifier(prefix + "Label")
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
-            unitPicker("Pack unit", selection: unit)
-            entry("Price for one pack (USD)", text: price, id: prefix + "Price")
+            unitPicker("Pack unit", selection: unit, id: prefix + "Unit")
+            PackConversionControl(packLabel: label.wrappedValue.isEmpty ? tr(title) : label.wrappedValue,
+                                  sourceUnit: unit.wrappedValue, targetUnit: model.draft.unit,
+                                  conversion: conversion, identifier: prefix + "Conversion")
+            entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
         } header: { Text(tr(title)) } footer: {
             Text(tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."))
         }
@@ -164,15 +169,23 @@ struct ComparisonView: View {
                 if !model.draft.needed.isEmpty {
                     ComparisonMetric(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
                 }
+                let stock = model.confirmedStock
+                let stockText = stock.map { pQuantity($0.originalLiteral, unit: $0.unit, singular: $0.amount == .one, language: nil) }
+                ComparisonMetric(ledgerFormat("Confirmed at home for this need: %@", stockText ?? recordsText("Not entered")),
+                                 id: "comparisonConfirmedStock")
+                if stock != nil, let remaining = result.offerA.amountToBuy {
+                    ComparisonMetric(message("Needed after confirmed stock: %@", remainingQuantity(remaining)),
+                                     id: "comparisonNeedAfterStock")
+                }
                 if !model.draft.protected.isEmpty {
                     ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
                 }
+                if let summary = result.purchaseSummary {
+                    ComparisonMetric(summary, style: .headline, id: "comparisonPurchaseSummary")
+                }
             }
-            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, preferred: result.preferredOfferID == "a")
-            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, preferred: result.preferredOfferID == "b")
-            if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
-                Section { Text(tr("Both options cost the same for this need.")) }
-            }
+            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
+            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
             Section {
                 ComparisonMetric(tr("Source: prices and usable amounts you entered. Estimates for this item only."), id: "comparisonSourceNote")
                 if let date = model.savedAt {
@@ -205,7 +218,13 @@ struct ComparisonView: View {
         .accessibilityIdentifier("comparisonResultsScroll")
     }
 
-    private func resultSection(_ result: OfferResult, name: String, preferred: Bool) -> some View {
+    private func remainingQuantity(_ amount: Rational) -> String {
+        let (whole, remainder) = amount.numerator.quotientAndRemainder(dividingBy: amount.denominator)
+        let text = whole > 0 && remainder > 0 ? "\(whole) \(remainder)/\(amount.denominator)" : amountText(amount)
+        return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
+    }
+
+    private func resultSection(_ result: OfferResult, name: String, conversion: ComparisonConversion?, preferred: Bool) -> some View {
         Section {
             ComparisonMetric(name, style: .headline, id: result.offerID + "Header", heading: true)
             if let cost = result.totalCost {
@@ -215,25 +234,15 @@ struct ComparisonView: View {
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
             if preferred { ComparisonMetric(tr("Lower cost to buy enough for this item"), style: .headline) }
-            if let packs = result.packsToBuy {
-                ComparisonMetric(message("Whole packs to buy: %@", packs.formatted()), id: result.offerID + "Packs")
+            if let conversion {
+                ComparisonMetric(conversion.readableText(), id: result.offerID + "ConversionBasis")
             }
-            if let purchased = result.purchasedAmount {
-                ComparisonMetric(message("Usable amount to buy: %@ %@", amountText(purchased), model.draft.unit.displayName))
-            }
-            if let shortage = result.remainingNeed, shortage > .zero {
-                ComparisonMetric(message("Still needed: %@ %@", amountText(shortage), model.draft.unit.displayName), style: .headline)
-            }
-            if let leftover = result.leftover {
-                ComparisonMetric(message("Left after the total need: %@ %@", amountText(leftover), model.draft.unit.displayName))
-            }
-            if let headroom = result.itemHeadroom {
-                ComparisonMetric(message(headroom.minorUnits < 0 ? "Over the item limit: %@" : "Room within the item limit: %@",
-                             moneyText(Money(minorUnits: headroom.minorUnits < 0 ? -headroom.minorUnits : headroom.minorUnits))), style: .headline)
-            }
-            if let ceiling = result.unitCeiling {
-                ComparisonMetric(message("Maximum per pack for this item limit: %@", moneyText(ceiling)))
-            }
+            if let packs = result.wholePacksText { ComparisonMetric(packs, id: result.offerID + "Packs") }
+            if let purchased = result.purchasedText(in: model.draft.unit) { ComparisonMetric(purchased) }
+            if let shortage = result.shortageText(in: model.draft.unit) { ComparisonMetric(shortage, style: .headline) }
+            if let leftover = result.leftoverText(in: model.draft.unit) { ComparisonMetric(leftover) }
+            if let limitText = result.itemLimitText { ComparisonMetric(limitText, style: .headline) }
+            if let ceiling = result.unitCeilingText { ComparisonMetric(ceiling) }
             ForEach(result.issues, id: \.self) { issue in
                 Label(issue.explanation, systemImage: "questionmark.circle")
                     .foregroundStyle(Theme.warning)
@@ -247,6 +256,102 @@ struct ComparisonView: View {
     }
 }
 
+struct PackConversionControl: View {
+    let packLabel: String
+    let sourceUnit: UnitOfMeasure
+    let targetUnit: UnitOfMeasure
+    @Binding var conversion: ComparisonConversion?
+    let identifier: String
+    @State private var editing = false
+
+    var body: some View {
+        if sourceUnit.dimension != targetUnit.dimension {
+            if let conversion {
+                Text(conversion.readableText()).font(.subheadline)
+            }
+            Button(conversion == nil ? tr("Add ingredient conversion") : tr("Edit ingredient conversion")) {
+                editing = true
+            }
+            .accessibilityIdentifier(identifier)
+            .sheet(isPresented: $editing) {
+                PackConversionEditor(packLabel: packLabel, sourceUnit: sourceUnit, targetUnit: targetUnit,
+                                     conversion: $conversion)
+            }
+        }
+    }
+}
+
+private struct PackConversionEditor: View {
+    let packLabel: String
+    @Binding var conversion: ComparisonConversion?
+    @State private var draft: ComparisonConversion
+    @State private var showError = false
+    @FocusState private var focusedField: String?
+    @Environment(\.dismiss) private var dismiss
+
+    init(packLabel: String, sourceUnit: UnitOfMeasure, targetUnit: UnitOfMeasure,
+         conversion: Binding<ComparisonConversion?>) {
+        self.packLabel = packLabel
+        _conversion = conversion
+        _draft = State(initialValue: conversion.wrappedValue ?? ComparisonConversion(
+            sourceLiteral: "", targetLiteral: "", sourceUnit: sourceUnit, targetUnit: targetUnit))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    amountField(unit: draft.sourceUnit, text: $draft.sourceLiteral, id: "conversion.source")
+                    amountField(unit: draft.targetUnit, text: $draft.targetLiteral, id: "conversion.target")
+                    TextField(tr("Label or measurement note (optional)"), text: $draft.sourceNote, axis: .vertical)
+                        .focused($focusedField, equals: "conversion.note")
+                        .accessibilityIdentifier("conversion.note")
+                } header: { Text(verbatim: packLabel) } footer: {
+                    Text(tr("Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement."))
+                }
+                Section {
+                    if showError {
+                        Text(tr("Enter two positive amounts. Use a decimal or fraction and keep the source note brief."))
+                            .foregroundStyle(Theme.warning)
+                    }
+                    Button(tr("Confirm conversion")) {
+                        guard (try? draft.unitBasis()) != nil else { showError = true; return }
+                        conversion = draft
+                        dismiss()
+                    }.accessibilityIdentifier("conversion.confirm")
+                    if conversion != nil {
+                        Button(tr("Remove conversion"), role: .destructive) { conversion = nil; dismiss() }
+                            .accessibilityIdentifier("conversion.remove")
+                    }
+                }
+            }
+            .workingSurface()
+            .navigationTitle(tr("Ingredient conversion"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(tr("Cancel")) { dismiss() }.accessibilityIdentifier("conversion.cancel")
+                }
+            }
+            .keyboardDoneAction(visible: focusedField != nil, title: tr("Done"), identifier: "conversion.done") {
+                focusedField = nil
+            }
+        }
+    }
+
+    private func amountField(unit: UnitOfMeasure, text: Binding<String>, id: String) -> some View {
+        let label = message("Amount in %@", unit.displayName)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.subheadline).foregroundStyle(Theme.secondary)
+            TextField(label, text: text)
+                .keyboardType(.numbersAndPunctuation)
+                .focused($focusedField, equals: id)
+                .accessibilityLabel(label).accessibilityIdentifier(id)
+                .frame(minHeight: 44)
+        }
+    }
+}
+
 extension ComparisonIssue {
     var explanation: String {
         switch self {
@@ -254,7 +359,7 @@ extension ComparisonIssue {
         case .atHomeConversionUnknown: return tr("Confirm how the available stock converts to the needed unit.")
         case .protectedConversionUnknown: return tr("Confirm the unit for protected portions.")
         case .usableQuantityUnknown: return tr("How much usable food is in one pack? Leave this unresolved until you know.")
-        case .usableConversionUnknown: return tr("These units need a confirmed conversion for this food. Enter a known usable amount in the needed unit, or leave unresolved.")
+        case .usableConversionUnknown: return tr("Edit this pack to add a conversion from its label or a measurement. Until then, the number of packs to buy is unknown.")
         case .noUsableYield: return tr("This pack has no usable food for the need. Choose another pack or correct its usable amount.")
         case .priceUnknown: return tr("What is the price for one pack? The cost stays unknown until you enter it.")
         }

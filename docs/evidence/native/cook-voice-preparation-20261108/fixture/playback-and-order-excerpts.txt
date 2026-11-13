@@ -1,0 +1,14 @@
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' started.
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' passed (191.997 seconds).
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' started.
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' passed (50.280 seconds).
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' started.
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' passed (109.933 seconds).
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' started.
+    t =    34.76s Tap "capture.readback.play" Button
+    t =    37.45s Tap "Pause readback" Button
+    t =    38.99s Tap "Resume readback" Button
+    t =    40.52s Tap "Stop readback" Button
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (55.022 seconds).
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' started.
+Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' passed (123.557 seconds).

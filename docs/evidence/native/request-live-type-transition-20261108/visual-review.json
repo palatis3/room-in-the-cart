@@ -1,0 +1,63 @@
+{
+  "reviewedPNGCount": 9,
+  "reviewed": [
+    {
+      "name": "S24-live-type-before-expiry-title-ink",
+      "originalFile": "E5CE1AA3-D95B-49C8-8BFB-9722C2363600.png",
+      "publicFile": "screens/before-expiry-title-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-before-expiry-date",
+      "originalFile": "5589B09E-BF0E-4723-99E4-91971799B986.png",
+      "publicFile": "screens/before-expiry-date.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-before-expiry-date-ink",
+      "originalFile": "3578581F-F2AD-4381-8509-5507C76F0FB1.png",
+      "publicFile": "screens/before-expiry-date-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-AX5-expiry-title-ink",
+      "originalFile": "8926B41C-7858-4F9F-B8CB-BB341EF94C44.png",
+      "publicFile": "screens/AX5-expiry-title-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-AX5-expiry-date",
+      "originalFile": "DF685315-3AC6-4DA3-A6B1-307EB13F25ED.png",
+      "publicFile": "screens/AX5-expiry-date.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-AX5-expiry-date-ink",
+      "originalFile": "9D6D3AFF-126C-4651-B3BF-9A5E82E7E32B.png",
+      "publicFile": "screens/AX5-expiry-date-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-restored-expiry-title-ink",
+      "originalFile": "304C3411-E4A8-4EA7-BA59-FD62884B7010.png",
+      "publicFile": "screens/restored-expiry-title-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-restored-expiry-date",
+      "originalFile": "44D19AD3-77CE-42A9-862E-89FF5CFB5CB1.png",
+      "publicFile": "screens/restored-expiry-date.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    },
+    {
+      "name": "S24-live-type-restored-expiry-date-ink",
+      "originalFile": "18EC2695-D650-4066-A9A9-C6D434F6644C.png",
+      "publicFile": "screens/restored-expiry-date-ink.png",
+      "visualReview": "Complete expiry text; no visible truncation, overlap or clipped glyphs in the target text."
+    }
+  ],
+  "limitations": [
+    "Only expiry title/date are visually assessed. Other rows can lie outside the scrolled viewport.",
+    "No VoiceOver, intermediate categories, dark appearance, or internal automated audit sampler coverage is established."
+  ]
+}

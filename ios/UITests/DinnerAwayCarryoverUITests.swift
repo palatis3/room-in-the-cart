@@ -18,7 +18,7 @@ import XCTest
     }
     func testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase() {
         launch(reset: true)
-        let need = element("awayCarryover.need")
+        let need = app.buttons["awayCarryover.need"]
         XCTAssertTrue(need.waitForExistence(timeout: 20)); assertCounts(targets: 0)
         tap(need); tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Dinner wraps")).firstMatch)
         tap(element("awayCarryover.supply"))
@@ -27,13 +27,13 @@ import XCTest
         fill("2", into: "awayCarryover.reserved")
         fill("1", into: "awayCarryover.servings")
         // The focused single-line field has the observed Return key; submit it
-        // before moving back to the physical-evidence switch above this field.
+        // before moving back to the physical-evidence confirmation above this field.
         if app.keyboards.firstMatch.exists {
             app.typeText(XCUIKeyboardKey.return.rawValue)
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
             XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
         }
-        enableSwitch("awayCarryover.checked")
+        confirm("awayCarryover.checked")
         tap(element("awayCarryover.review"))
         assertText("Reserved for carryover: 2")
         assertText("Protected lunch")
@@ -41,7 +41,7 @@ import XCTest
         capture("S25-physical-reservation-reviewed-before-save")
         tap(element("awayCarryover.cancel")); assertCounts(targets: 0)
         XCTAssertFalse(element("awayCarryover.retry").exists)
-        tap(element("awayCarryover.review")); enableSwitch("awayCarryover.approve")
+        tap(element("awayCarryover.review")); confirm("awayCarryover.approve")
         tap(element("awayCarryover.apply"))
         let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             self.element("fixture.away.targets").label == "Carryover targets: 1"
@@ -50,7 +50,7 @@ import XCTest
         assertCounts(targets: 1)
         capture("S25-dated-target-and-original-purchase-retained")
         app.terminate(); launch(reset: false)
-        XCTAssertTrue(element("awayCarryover.need").waitForExistence(timeout: 20)); assertCounts(targets: 1)
+        XCTAssertTrue(app.buttons["awayCarryover.need"].waitForExistence(timeout: 20)); assertCounts(targets: 1)
         let savedTarget = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "awayCarryover.saved.")).firstMatch
         tap(savedTarget)
         assertText("Only this linked physical reservation is claimed.")
@@ -72,46 +72,44 @@ import XCTest
         XCTAssertEqual(element("fixture.away.charge").label, "Posted charge cents: 700")
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
-    private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
-    private func enableSwitch(_ label: String) {
-        let control = app.switches[label]
-        reveal(control)
-        for _ in 0..<20 {
-            let area = scrollableArea(), frame = control.frame
-            let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
-            if control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter) { break }
-            scrollContent(upward: switchCenter.y > area.maxY)
-        }
-        let area = scrollableArea(), frame = control.frame
-        let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
-        // Toggle's accessibility frame includes its multiline label. Its trailing
-        // control must be clear of the keyboard; the whole label need not fit.
-        XCTAssertTrue(control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter),
-                      "The switch tap point must be clear of the keyboard and toolbar")
-        if control.value as? String == "0" {
-            // The accessibility frame includes the Form label. Tap the trailing switch itself.
-            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        }
-        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    private func tap(_ target: XCUIElement, requireContentFrame: Bool = false) {
+        reveal(target, requireContentFrame: requireContentFrame)
+        XCTAssertTrue(target.isHittable, target.debugDescription); target.tap()
+    }
+    private func confirm(_ identifier: String) {
+        let button = app.buttons[identifier]
+        reveal(button)
+        XCTAssertFalse(button.isSelected)
+        button.tap()
+        XCTAssertTrue(button.isSelected, identifier)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+        let field = app.textFields[id]; tap(field, requireContentFrame: true)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, requireContentFrame: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
+            let hittable = target.exists && target.isHittable
+            if hittable && !requireContentFrame { return }
             let area = scrollableArea()
+            // A field below the keyboard can briefly report hittable before
+            // the tap. Require its full frame in the existing content viewport.
+            if hittable {
+                let frame = target.frame
+                if !frame.isEmpty && area.contains(frame) { return }
+            }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
             scrollContent(upward: upward)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        XCTAssertTrue(target.exists && target.isHittable &&
+                      (!requireContentFrame || (!target.frame.isEmpty && scrollableArea().contains(target.frame))),
+                      "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame

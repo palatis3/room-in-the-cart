@@ -1,0 +1,219 @@
+{
+  "requirements": {
+    "foundation": "docs/product/foundation-gen2.1/04-design.md:13-16",
+    "baseline": "docs/product/APP-BASELINE.md:How the product should feel",
+    "component": "ios/App/Theme.swift:17-29,111-113"
+  },
+  "totalCallSites": 23,
+  "essentialDefaultCallSites": 19,
+  "explicitMetadataCallSites": 4,
+  "callers": [
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 201,
+      "title": "Expected total",
+      "originalSource": "HouseholdDecisionFact(ht(\"Expected total\"), value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 205,
+      "title": "Over cap",
+      "originalSource": "HouseholdDecisionFact(ht(\"Over cap\"), value: householdMoney(preview.after.overCapMinor, currency: preview.after.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 211,
+      "title": "Scope",
+      "originalSource": "HouseholdDecisionFact(ht(\"Scope\"), value: householdScope(preview.after.scope))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 212,
+      "title": "Before this decision",
+      "originalSource": "HouseholdDecisionFact(ht(\"Before this decision\"), value: householdMoney(preview.before.totalMinor, currency: preview.before.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 215,
+      "title": "Cost change",
+      "originalSource": "HouseholdDecisionFact(ht(\"Cost change\"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 216,
+      "title": "Cap",
+      "originalSource": "HouseholdDecisionFact(ht(\"Cap\"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 217,
+      "title": "Cap scope",
+      "originalSource": "HouseholdDecisionFact(ht(\"Cap scope\"), value: householdScope(shop.quote.capScope))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 222,
+      "title": "Shop revision",
+      "originalSource": "HouseholdDecisionFact(ht(\"Shop revision\"), value: shop.shopRevision.formatted())",
+      "valueRole": "metadata",
+      "color": "Theme.secondary",
+      "reason": "Source/time/revision metadata"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 223,
+      "title": "Quote recorded",
+      "originalSource": "HouseholdDecisionFact(ht(\"Quote recorded\"), value: householdTime(shop.quote.observedAt))",
+      "valueRole": "metadata",
+      "color": "Theme.secondary",
+      "reason": "Source/time/revision metadata"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 224,
+      "title": "Quote expires",
+      "originalSource": "HouseholdDecisionFact(ht(\"Quote expires\"), value: householdTime(shop.quote.expiresAt))",
+      "valueRole": "metadata",
+      "color": "Theme.secondary",
+      "reason": "Source/time/revision metadata"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 227,
+      "title": "Retailer fee",
+      "originalSource": "HouseholdDecisionFact(ht(\"Retailer fee\"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 229,
+      "title": "Fee threshold",
+      "originalSource": "HouseholdDecisionFact(ht(\"Fee threshold\"), value: householdMoney(shop.quote.fee.thresholdMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 230,
+      "title": "Fee below threshold",
+      "originalSource": "HouseholdDecisionFact(ht(\"Fee below threshold\"), value: householdMoney(shop.quote.fee.belowMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 231,
+      "title": "Fee at or above threshold",
+      "originalSource": "HouseholdDecisionFact(ht(\"Fee at or above threshold\"), value: householdMoney(shop.quote.fee.aboveMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 233,
+      "title": "Tax",
+      "originalSource": "HouseholdDecisionFact(ht(\"Tax\"), value: householdMoney(shop.quote.taxesMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 234,
+      "title": "Deposits",
+      "originalSource": "HouseholdDecisionFact(ht(\"Deposits\"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 235,
+      "title": "Discounts",
+      "originalSource": "HouseholdDecisionFact(ht(\"Discounts\"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 244,
+      "title": "Preview expires",
+      "originalSource": "HouseholdDecisionFact(ht(\"Preview expires\"), value: householdTime(preview.expiresAt))",
+      "valueRole": "metadata",
+      "color": "Theme.secondary",
+      "reason": "Source/time/revision metadata"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 329,
+      "title": "Scope",
+      "originalSource": "HouseholdDecisionFact(ht(\"Scope\"), value: householdScope(value.scope))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 330,
+      "title": "Expected total",
+      "originalSource": "HouseholdDecisionFact(ht(\"Expected total\"), value: householdMoney(value.totalMinor, currency: value.currency))",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 331,
+      "title": "Over cap",
+      "originalSource": "if value.status == \"overCap\" { HouseholdDecisionFact(ht(\"Over cap\"), value: householdMoney(value.overCapMinor, currency: value.currency)) }",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdInboxView.swift",
+      "originalLine": 332,
+      "title": "Remaining within this cap",
+      "originalSource": "if value.status == \"withinCap\" { HouseholdDecisionFact(ht(\"Remaining within this cap\"), value: householdMoney(value.headroomMinor, currency: value.currency)) }",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    },
+    {
+      "file": "ios/Features/Household/HouseholdRequestMealContext.swift",
+      "originalLine": 87,
+      "title": "Protected portions / Portions",
+      "originalSource": "HouseholdDecisionFact(occurrence.meal.protected ? ht(\"Protected portions\") : ht(\"Portions\"), value: occurrence.meal.portions.formatted())",
+      "valueRole": "essential",
+      "color": "Theme.ink",
+      "reason": "Money, quantity, or essential budget scope"
+    }
+  ]
+}

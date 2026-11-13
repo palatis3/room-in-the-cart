@@ -29,6 +29,7 @@ struct HouseholdSetupSections: View {
                     Button(ht("Create household")) { Task { await model.createHousehold() } }.disabled(!canContinue)
                 }
                 Section(ht("Use an invitation")) {
+                    Text(ht("Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.")).font(.caption)
                     SecureField(ht("Invitation code"), text: $model.invitationCode).textInputAutocapitalization(.never).autocorrectionDisabled()
                     Text(ht("Paste the code shared by the organizer or shopper. The invitation determines your access."))
                     Button(ht("Join with invitation")) { Task { await model.redeemInvitation() } }.disabled(!canContinue)
@@ -129,12 +130,13 @@ struct HouseholdHelperComposer: View {
                     Text(ht("Suggestions wait for shopper review. They do not change the basket or instructions automatically."))
                     expiryPicker(model)
                 }
-                ForEach($items) { $item in
+                ForEach(items) { item in
+                    let fields = dinnerDraftBinding(item, in: $items)
                     Section(ht("Instruction")) {
-                        TextField(ht("Item"), text: $item.label)
-                        TextField(ht("Amount, optional"), text: $item.amount)
-                        TextField(ht("Unit, optional"), text: $item.unit)
-                        TextField(ht("What the cook should do"), text: $item.action, axis: .vertical).lineLimit(2...5)
+                        TextField(ht("Item"), text: fields.label)
+                        TextField(ht("Amount, optional"), text: fields.amount)
+                        TextField(ht("Unit, optional"), text: fields.unit)
+                        TextField(ht("What the cook should do"), text: fields.action, axis: .vertical).lineLimit(2...5)
                         Button(ht("Remove instruction"), role: .destructive) { items.removeAll { $0.id == item.id } }
                     }
                 }
@@ -183,14 +185,26 @@ struct HouseholdHelperView: View {
                 if let view = model.helperView {
                     Section {
                         Text(view.shopLabel).font(.headline)
+                        LabeledContent(ht("Current instruction revision"), value: view.revision.formatted())
                         LabeledContent(ht("Last updated"), value: householdTime(view.asOf))
+                            .accessibilityIdentifier("helper.instructions.asOf")
                         LabeledContent(ht("Access expires"), value: householdTime(view.expiresAt))
                         ForEach(Array(view.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
                     }
-                    if let receipt = model.proposalReceipt { Section { Text(receipt.status == "pending" ? ht("Suggestion received for shopper review") : ht("Check current status")) } }
-                    if model.pendingProposal != nil {
+                    if let receipt = model.proposalReceipt {
+                        Section {
+                            Text(ht("Suggestion received for shopper review"))
+                            LabeledContent(ht("Instruction revision reviewed"), value: receipt.baseRevision.formatted())
+                        }
+                    }
+                    if let pending = model.pendingProposal {
                         Section(ht("Pending suggestion")) {
-                            Text(ht("The result is not confirmed. Retry the same suggestion before writing another one."))
+                            if model.proposalReceipt == nil {
+                                if let revision = pending.reviewedRevision {
+                                    LabeledContent(ht("Instruction revision reviewed"), value: revision.formatted())
+                                }
+                                Text(ht("The result is not confirmed. Retry the same suggestion before writing another one."))
+                            }
                             Button(ht("Retry the same suggestion")) { Task { await model.retryProposal() } }
                             Button(ht("Review and clear this suggestion retry")) { clearProposal = true }
                         }

@@ -43,6 +43,7 @@ import XCTest
         launch(reset: true)
         setLocalConsent(false, change: false)
         tap(app.buttons["Optional household measurement"])
+        assertResultVisible("measurement.consent.result", text: "Household measurement is off")
         assertText("If you choose to participate")
         assertText("Grocery text, prices, member names and existing local responses are not sent")
         assertCounter("grants", "Consents: 0")
@@ -54,9 +55,19 @@ import XCTest
         capture("F09-actual-notice-and-explicit-household-consent")
         // Status is freshly fetched through HouseholdService after app recreation;
         // persistence must not send another consent or any previous local response.
-        app.terminate(); launch(reset: false)
+        app.terminate()
+        app.launchEnvironment["RITC_MEASUREMENT_FAIL_SECOND_STATUS_READ"] = "1"
+        launch(reset: false)
+        app.launchEnvironment.removeValue(forKey: "RITC_MEASUREMENT_FAIL_SECOND_STATUS_READ")
         tap(app.buttons["Optional household measurement"])
         assertText("Household measurement is enabled")
+        tap(app.buttons["Refresh measurement consent"])
+        assertText("The service result is unconfirmed.")
+        XCTAssertFalse(element("measurement.consent.result").exists)
+        XCTAssertFalse(app.buttons["Withdraw household measurement consent"].exists)
+        XCTAssertFalse(app.buttons["I agree to optional household measurement"].exists)
+        tap(app.buttons["Refresh measurement consent"])
+        assertResultVisible("measurement.consent.result", text: "Household measurement is enabled")
         assertCounter("grants", "Consents: 1"); assertCounter("sends", "Sends: 0")
         tap(app.tabBars.buttons["Shared shop"])
         tap(app.buttons["Optional pickup feedback"])
@@ -81,6 +92,13 @@ import XCTest
         assertResultVisible("measurement.feedback.result", text: "Household response removed.")
         let removed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.staticTexts["Household response recorded"])
         XCTAssertEqual(XCTWaiter.wait(for: [removed], timeout: 10), .completed)
+        for field in ["What happened?", "Usual workflow", "Compared with your usual workflow"] {
+            let emptyPicker = app.buttons[field + ", Choose a response"]
+            reveal(emptyPicker)
+            XCTAssertTrue(emptyPicker.isHittable, field)
+        }
+        reveal(send)
+        XCTAssertFalse(send.isEnabled)
         assertCounter("sends", "Sends: 1")
         tap(app.tabBars.buttons["Settings"])
         tap(app.buttons["Withdraw household measurement consent"])
@@ -102,6 +120,52 @@ import XCTest
         XCTAssertFalse(app.staticTexts["Household measurement is enabled"].exists)
         assertCounter("grants", "Consents: 1"); assertCounter("sends", "Sends: 1")
         assertCounter("deletes", "Deletes: 1"); assertCounter("withdrawals", "Withdrawals: 1")
+        exerciseUnconfirmedFeedbackReplies()
+    }
+    private func exerciseUnconfirmedFeedbackReplies() {
+        app.terminate()
+        app.launchEnvironment["RITC_MEASUREMENT_FAIL_FEEDBACK_REPLIES"] = "1"
+        launch(reset: true)
+        tap(app.buttons["Optional household measurement"])
+        tap(app.buttons["I agree to optional household measurement"])
+        assertResultVisible("measurement.consent.result", text: "Household measurement is enabled")
+        tap(app.tabBars.buttons["Shared shop"])
+        tap(app.buttons["Optional pickup feedback"])
+        let send = app.buttons["Send this coded household response"]
+        let remove = app.buttons["Remove household response"]
+        let refresh = app.buttons["Refresh household response"]
+        func assertUnread() {
+            assertText("The service result is unconfirmed.")
+            XCTAssertFalse(send.exists)
+            XCTAssertFalse(remove.exists)
+            XCTAssertFalse(app.buttons["Review optional household measurement"].exists)
+            XCTAssertFalse(app.staticTexts["Household response recorded"].exists)
+        }
+        choose("What happened?", value: "I already knew")
+        choose("Usual workflow", value: "My usual list or notes")
+        choose("Compared with your usual workflow", value: "Same result")
+        tap(refresh)
+        assertUnread()
+        tap(refresh)
+        reveal(send)
+        XCTAssertTrue(send.isEnabled, "Refreshing the same consent should preserve the unsent choices")
+        assertCounter("sends", "Sends: 0")
+        tap(send)
+        waitCounter("sends", "Sends: 1")
+        assertUnread()
+        tap(refresh)
+        assertText("I already knew")
+        assertText("This response counts as zero additional benefit")
+        assertCounter("sends", "Sends: 1")
+        tap(remove)
+        waitCounter("deletes", "Deletes: 1")
+        assertUnread()
+        tap(refresh)
+        reveal(send)
+        XCTAssertFalse(send.isEnabled)
+        XCTAssertFalse(remove.exists)
+        assertCounter("sends", "Sends: 1")
+        assertCounter("deletes", "Deletes: 1")
     }
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "--measurement-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

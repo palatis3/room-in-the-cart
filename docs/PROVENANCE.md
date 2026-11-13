@@ -6,9 +6,11 @@ The actual working folder was empty at inspection. No legacy Expo source was pre
 
 `shared/contracts/theme.json` is copied from the accepted Foundation 2.1 token contract. App color assets and web CSS are generated from it. Pack fixtures are newly authored fictional arithmetic examples; there is no real household data or embedded research participant data.
 
-Swift packages have no third-party dependencies. SQLite comes from the operating system. SF Symbols/system typography are used through platform APIs. TypeScript 5.7.3 (Apache-2.0) is a pinned development dependency in the web/service lockfiles; neither scaffold has runtime dependencies.
+Swift packages have no third-party dependencies. SQLite comes from the operating system. SF Symbols/system typography are used through platform APIs. TypeScript 5.7.3 (Apache-2.0) is a pinned development dependency in the web/service lockfiles. The initial scaffolds had no runtime dependencies; the current service includes the dependencies recorded in its package manifest and lockfile for database, authentication and Apple integration.
 
-Local build tooling: official Node 22.14.0 macOS arm64 archive, checksum checked against nodejs.org's published SHASUMS256.txt, kept under ignored `.tools/`. User-local uv 0.13.7 provisioned CPython 3.13.18 to run the supplied reference verification. System Python was not replaced.
+Initial local build tooling used the official Node 22.14.0 macOS arm64 archive. The current pin is Node 22.23.5, the November 11 security release. Its official macOS arm64 archive was checked against nodejs.org's SHASUMS256.txt and is kept under ignored `.tools/`. Earlier binaries remain for reproducing historical evidence; historical test records retain their actual version. CI checks the current pin against the official release index and support schedule, including its major version's latest security release. [Earlier 22.23.4 validation](evidence/native/node-runtime-security-20261105/validation.json) · [Current Node release index](https://nodejs.org/dist/index.json)
+
+User-local uv 0.13.7 provisioned CPython 3.13.18 to run the supplied reference verification. System Python was not replaced.
 
 No Figma asset, stock photography, generated image, retailer credentials, signing secrets or production service credentials are required by this milestone. Spanish UI copy is structurally validated but still needs a human language review.
 

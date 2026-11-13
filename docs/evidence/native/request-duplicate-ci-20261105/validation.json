@@ -1,0 +1,210 @@
+{
+  "headCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "testedCheckoutFromJobLog": "fa769fe",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865/job/126980954137",
+  "artifact": {
+    "id": 13382517275,
+    "name": "iphone-fixture-results-RequestDuplicateComparisonUITests-1",
+    "sizeBytes": 17060328,
+    "sha256": "b367bde6bb985ee3e85f9fadfbddaaa373641d194f1a0f7c6c228c91145e4394"
+  },
+  "artifactAndExportsLocalDirectory": ".build/CIResearch20261104/request-duplicate-f0e2ac3",
+  "environment": {
+    "xcode": "26.3",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    }
+  },
+  "counts": {
+    "totalTestCount": 2,
+    "passedTests": 0,
+    "failedTests": 2,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "cases": [
+    {
+      "sourceLine": 138,
+      "noActiveContainerAtSeconds": 19.71,
+      "collectionFramePoints": [
+        0,
+        110.7,
+        402,
+        763.3
+      ],
+      "scrollPositionPercent": 0,
+      "loadedRequests": 2,
+      "observation": "The largest-text Spanish inbox showed the refresh button and wrapped introduction. Sam had not materialized below the fold. The AX snapshot showed one full-sized CollectionView with a vertical scrollbar. The helper rejected it and made no scroll gesture.",
+      "screenshot": "es-attachments/163305A4-4A82-40D9-9CB6-1405EB1C020E.png",
+      "accessibility": "es-attachments/0A9B8D21-45E8-4883-A6FB-AB81EF84283C.txt",
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+      "durationSeconds": 22.280822038650513,
+      "result": "Failed",
+      "failureText": "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type Any\n    ↪︎Find: Elements matching predicate '\"household.request.a4444444-4444-4444-8444-444444444441\" IN identifiers'\n      ↪︎Find: First Match\nNo matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '\"household.request.a4444444-4444-4444-8444-444444444441\" IN identifiers'`, given input Application, pid: 6926, label: 'Room in the Cart'\n",
+      "dragCountBeforeFailure": 0,
+      "appliedDecisions": 0,
+      "savedLines": 1,
+      "sha256": {
+        "es-details.json": "1b428c096f2e01974e075c9ccaa74b316f81e2cc6ef8cc2dd4c3287af632216b",
+        "es-activities.json": "8319d5d2b0a4b71e4947ba34a5e25ffafe8535874974902b013d0cdc25732c33",
+        "es-attachments/163305A4-4A82-40D9-9CB6-1405EB1C020E.png": "6d02289491d706e5d7252f15dad05fa11457bfa1e45e1c32dff86f367f772d71",
+        "es-attachments/0A9B8D21-45E8-4883-A6FB-AB81EF84283C.txt": "e5f6670d4d2ffc2a8965847082a84187dc37eff59cf2bfadb1e5781ec87d1f1d"
+      }
+    },
+    {
+      "sourceLine": 117,
+      "noActiveContainerAtSeconds": 56.26,
+      "collectionFramePoints": [
+        0,
+        62,
+        402,
+        812
+      ],
+      "coveredInboxCollectionFramePoints": [
+        0,
+        110.7,
+        402,
+        763.3
+      ],
+      "scrollPositionPercent": 37,
+      "loadedRequests": 4,
+      "patOutcomeFramePoints": [
+        32,
+        1040.2,
+        338,
+        20.3
+      ],
+      "patOutcomeAccessibilityLabel": "This request's outcome, Handled",
+      "observation": "An earlier real sheet drag exposed Check more requests. Its tap loaded page two and the Sam and Lee identity and amount assertions passed. The screenshot shows Pat entering at the bottom of the open sheet. AX confirms his exact outcome below the viewport. The helper rejected both CollectionViews before a drag could reveal it.",
+      "screenshot": "en-attachments/EA3A5CA4-4716-42B3-BB01-732A365C2B35.png",
+      "accessibility": "en-attachments/F6902225-09B7-4098-AB22-7D624288F8CD.txt",
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+      "durationSeconds": 60.46937704086304,
+      "result": "Failed",
+      "failureText": "XCTAssertTrue failed - Missing visible comparison value household.duplicates.outcome.a4444444-4444-4444-8444-444444444444: Handled",
+      "dragCountBeforeFailure": 1,
+      "appliedDecisions": 0,
+      "savedLines": 1,
+      "sha256": {
+        "en-details.json": "fdc66f5ca4c0f710d158204e4f321a290ae751fa86f09aa34785334d2d360eff",
+        "en-activities.json": "699db691168b587b1eaf559543c4da898703d97a1baa1a224d1a4ce245d22311",
+        "en-attachments/EA3A5CA4-4716-42B3-BB01-732A365C2B35.png": "7d9061b8be2b3a5263055ff75090d6a0ca2c500533c3e10727ef29d1ff33ffb1",
+        "en-attachments/F6902225-09B7-4098-AB22-7D624288F8CD.txt": "e27384ab8df2f9396ba236586993a32db1b0e08db49cfacab2e9f4b91c0067f0"
+      }
+    }
+  ],
+  "otherDiagnostics": {
+    "runtimeWarningNodesInDetailedTestExports": 0,
+    "animationIdleTimeoutsInTestsLog": 0
+  },
+  "otherEvidenceSha256": {
+    "job.log": "ddfcbac736cc4328ab9c4dcde6263b0cdde3b403b058d3dd7ee10a5349a00b57",
+    "Tests.log": "cc23602bed21ed1b5d64deea2befee4fd29015721c295078a7e1dea17aba3ce2",
+    "test-summary.json": "0523a8e0c4750dfdbe07609efe6de24be16eaef388f53eda90a633fbcedeff5b",
+    "test-details.json": "ae65151ebf04625fb443d737d7b02b4f205b49d8f6080cdeb09d2b3dcf854f1d",
+    "reexported-summary.json": "ecf3bdeac08e2db10608f3351a5b67f3bef78d77ea36b75fb08ef790da226991",
+    "reexported-tests.json": "083eec5369e1c524941e858b0787cdc4e1355f2ad1b2c02dbe45a051c72d743a",
+    "test-plan/RequestDuplicateComparisonUITests.txt": "d62e3cab323ec5f8628ea6993d379b505ddb32c6fa2089a5370e3a18101d2654"
+  },
+  "diagnosis": "Both observed failures arise in XCTest navigation. The helper demanded a hittable hit point for the scroll container even when its AX hierarchy and screenshot showed a usable scroll surface. In English the required outcome already existed below the viewport. Later end-to-end assertions were not exercised by this run.",
+  "scratchCandidate": {
+    "patch": "scroll-surface.patch",
+    "sha256": "e71ec4049b17565564c4a75d904588d800ec1ed3be26836f41abb21863b0d588",
+    "candidateSourceSha256": "400247e78a81de35db8afad0eacfebd056cf182b2ac9abe31e4559d58001d8d7",
+    "scope": "Accept a unique geometry-validated active scroll surface without requiring a container hit point. Drag with application coordinates inside the existing unobscured area. Retain target hit testing, exact assertions, sheet checks, and test limits.",
+    "staticValidation": [
+      "git apply --check",
+      "Swift frontend parse with DEBUG and CONTRIBUTOR_CAPTURE_UI_FIXTURE"
+    ],
+    "nativeValidation": "Passed exact 2/2 on local iPhone 17 iOS 26.2 (23C52), with zero recorded runtime warnings. Hosted confirmation remains pending."
+  },
+  "localCandidateRun": {
+    "directory": ".build/CIResearch20261104/request-duplicate-f0e2ac3/local-candidate",
+    "source": "Frozen f0e2ac3 tree plus only the reviewed test patch.",
+    "sourceSHA256": "400247e78a81de35db8afad0eacfebd056cf182b2ac9abe31e4559d58001d8d7",
+    "configuration": "ARM64 Debug, contributor fixture profile",
+    "xcode": [
+      "Xcode 27.1",
+      "Build version 27A9275"
+    ],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "A3AE9916-EAE2-4551-A292-C283496EF3F9",
+      "deviceName": "CI Request Duplicates Candidate 20261105",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "buildPassed": true,
+    "exactResults": [
+      {
+        "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "result": "Passed",
+        "durationSeconds": 354.7462819814682
+      },
+      {
+        "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+        "result": "Passed",
+        "durationSeconds": 162.2903789281845
+      }
+    ],
+    "counts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "runtimeWarnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 2,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "simulatorShutdown": true,
+    "observed": {
+      "spanishFirstInboxDrag": "t =     9.86s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 670.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 430.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds",
+      "spanishOpenedSamAtSeconds": 16.98,
+      "spanishSameSheetPageTwoAtSeconds": 84.87,
+      "spanishComparedOriginalWordsAtSeconds": 349.74,
+      "englishPatRevealDrag": "t =    44.83s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 613.0) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 373.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds",
+      "englishPatOutcomeYBeforeAfterPoints": [
+        1125.5,
+        722.2
+      ],
+      "englishCancelAndApply": "Original cancel assertions confirmed zero applied decisions and one saved line. Subsequent Apply confirmed one decision and one saved line. The final visible comparison kept Lee pending and Sam saved for next shop."
+    },
+    "productSha256": {
+      "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+      "appExecutable": "8ba21173fafe1bac0f21a753d55be2abd1b536979056f73b73b70e529d65c473",
+      "uiTestExecutable": "951e3feb4424cf6ec56da5e031946bc864ff24c277922f6f6b2e4258107b0dbb"
+    },
+    "evidenceSha256": {
+      "Tests.log": "8ec0c8b2349406a618a53ca15f4089e687e17e66ef5602f9e68d640b6740ea65",
+      "test-summary.json": "2035e518f40ddce8823cc608a13e7f8e44f3bbd81198719e00c2fe9f69895bb8",
+      "test-details.json": "8bc69a3cfafa7ff902c9c1724e1d1e4dc41cb1f388a5c5027e0dcf431d9e2ae9",
+      "test-runtime-warnings.json": "1677e10fda497ff129babf84318eb365d699ffcb49a8fe92016295fbb55bdefa",
+      "root-verification.txt": "2d95e36d28fe3c48563119953d63581ab243a26c714ad486622dc2995be6d534",
+      "es-details.json": "c5f9c9a98cd892bfd82dfe242487985a61bd00333f6e3390dfd9037109cd3ddd",
+      "en-details.json": "aed1a72c778068dfcd571315a0ef34c79375fb5a9513137093b39dede4c6884c",
+      "es-activities.json": "15b83bea04060af4231c28d1073b93fd952d5f5bd1188c426e28d3f33d1f8f2c",
+      "en-activities.json": "25b8252c2fc95ce1cedab2bdc728ae58a3b36a8b024f772be98372696a0d3efa",
+      "es-attachments/7B9484AB-1702-47FE-88D5-CF6F602BBAC9.txt": "4e10d3bdc9ca3ddc69f3ab7efc3019ee17aee5c16bf2a4b32e8e2b7dd6195ac0",
+      "es-attachments/0062496F-06DB-4C0F-9176-99911FF4D07A.txt": "4752656b81ff130280aa83815363d55c988487830f35bbb3fb176a70bf3e43a2",
+      "en-attachments/226379BF-5595-4C16-BCAD-51A279A906DB.txt": "4c095d5d0761fd6c82bd761a81a90811ab93bc3af9697362e603aa43232921b4",
+      "en-attachments/A0E500E3-6D0A-448A-B2ED-466B24C5A1BB.txt": "8f1e3868d4b73bc202a0ea9045df0a4d1e324db6f4c729abd8965f7c78950654",
+      "en-attachments/98EB0928-FDD0-46EE-8C50-B794F25E1FBD.txt": "4549f8392e99aece6ea733a4a1016c1ed6ba269d384cc6e29b28d40445b2021c"
+    },
+    "scope": "One serial execution of both original selectors. Local Xcode 27.1 and iOS 26.2 build 23C52 differ from hosted Xcode 26.3 and runtime 23C54."
+  }
+}

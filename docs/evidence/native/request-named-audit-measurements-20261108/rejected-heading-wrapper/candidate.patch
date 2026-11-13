@@ -1,0 +1,12 @@
+--- ios/Features/Household/HouseholdRequestMealContext.swift
++++ ios/Features/Household/HouseholdRequestMealContext.swift
+@@ -41,6 +41,9 @@
+                 .font(.headline)
+                 .lineLimit(nil)
+                 .fixedSize(horizontal: false, vertical: true)
++                .frame(maxWidth: .infinity, alignment: .leading)
++                .accessibilityElement(children: .ignore)
++                .accessibilityLabel(ht("Protected meal commitments"))
+                 .accessibilityAddTraits(.isHeader)
+             if context.meals == nil {
+                 Text(ht("Meal commitments are unavailable. Check the meal plan before deciding."))

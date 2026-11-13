@@ -1,0 +1,10 @@
+{
+  "verifiedFileCount": 3253,
+  "freezeSHA256": "f810a4206ba32d4ab97c09bede703427a713bfaf593bfa265c699304373226c0",
+  "fullAuditSHA256": "ba6f5d36b85f06038c9f2a3c600ff0cf8b21032ccd038255612c7aadbefc8d2a",
+  "originalRoot": ".build/CIResearch20261106/candidate-0d5bb1b/core-collection",
+  "collectorSession": 85435,
+  "collectorExitCode": 0,
+  "rootAction": "Independently rehashed all3253 frozen files; inspected terminal outcome/plan, named failures, transport and source-provenance summaries. Earlier root reviews retain separate deep/security/performance verification.",
+  "releaseAcceptance": false
+}

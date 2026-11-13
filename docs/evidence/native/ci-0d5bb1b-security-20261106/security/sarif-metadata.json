@@ -1,0 +1,54 @@
+[
+  {
+    "analysis": {
+      "ref": "refs/pull/1/merge",
+      "commit_sha": "525d68ae2dbb46f21be8d71a495c10f7c1246f7f",
+      "analysis_key": ".github/workflows/security.yml:codeql",
+      "environment": "{\"language\":\"javascript-typescript\"}",
+      "category": "/language:javascript-typescript",
+      "error": "",
+      "created_at": "2026-11-07T00:12:19Z",
+      "results_count": 0,
+      "rules_count": 87,
+      "id": 2116334981,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/code-scanning/analyses/2116334981",
+      "sarif_id": "e4f72cda-da3f-11f1-83fa-0022cf100c8d",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "deletable": true,
+      "warning": ""
+    },
+    "sarifPath": "2116334981.sarif",
+    "sha256": "fcf541eb9dfa6cc400ff764a888cfca9ae215de27645649bd9928f0e762bb970",
+    "bytes": 499521
+  },
+  {
+    "analysis": {
+      "ref": "refs/pull/1/merge",
+      "commit_sha": "525d68ae2dbb46f21be8d71a495c10f7c1246f7f",
+      "analysis_key": ".github/workflows/security.yml:codeql",
+      "environment": "{\"language\":\"actions\"}",
+      "category": "/language:actions",
+      "error": "",
+      "created_at": "2026-11-07T00:11:30Z",
+      "results_count": 0,
+      "rules_count": 17,
+      "id": 2116331517,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/code-scanning/analyses/2116331517",
+      "sarif_id": "c788b10a-da3f-11f1-9016-e8c56719a7fe",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "deletable": true,
+      "warning": ""
+    },
+    "sarifPath": "2116331517.sarif",
+    "sha256": "af6f5049deba957d876532d12affa35e777c1bfff00ae54f7e38a5ec2598db72",
+    "bytes": 117488
+  }
+]

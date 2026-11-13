@@ -1,0 +1,9 @@
+{
+  "nativeExit": 65,
+  "hideTotalProtectionAndPackAssertionsPassed": true,
+  "failure": "Test expected root openPickupList button after relaunch, but saved shopping-list route was correctly restored",
+  "evidence": "protected-label-attachments/A0C754D6-C1EA-4ED0-B99C-E95C65F90029.txt",
+  "correction": "Use existing shopRoot helper before reopening the ingredient",
+  "appChangedAfterFirstRun": false,
+  "timeoutsChanged": false
+}

@@ -1,0 +1,102 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234317004,
+  "originalAttempt": 1,
+  "freezeManifestSHA256": "ee66115496aa7cdba99278150218ce3032470ac23a4ec8841be9b918d0d6305c",
+  "freezeVerified": true,
+  "originalJobCount": 20,
+  "workflowPath": ".github/workflows/ci.yml",
+  "workflowSHA256": "f584ee2152ae84ade510b9ed44789857b7e0b8530621bbd4c47129a8c4369729",
+  "dependencyGraph": {
+    "typescript": [],
+    "service-postgres": [],
+    "source-checks": [],
+    "swift-packages": [],
+    "ios-release": [],
+    "ios-swift-codeql": [],
+    "ios-build": [],
+    "ios-tests": [
+      "ios-build"
+    ],
+    "ci-gate": [
+      "typescript",
+      "service-postgres",
+      "source-checks",
+      "swift-packages",
+      "ios-release",
+      "ios-swift-codeql",
+      "ios-build",
+      "ios-tests"
+    ]
+  },
+  "recoveries": {
+    "ui-07": {
+      "originalJobID": 127955589454,
+      "jobName": "ios-tests (ui-07, 6)",
+      "selectedCount": 6,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+      ],
+      "selectorsSHA256": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+      "expectedNewExecutionScope": [
+        "ios-tests (ui-07, 6)",
+        "CI gate"
+      ],
+      "expectedInheritedBuildArtifactID": 13512830848,
+      "expectedInheritedExecutedFailureJobID": 127955589646
+    },
+    "ui-08": {
+      "originalJobID": 127955589647,
+      "jobName": "ios-tests (ui-08, 6)",
+      "selectedCount": 6,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+      ],
+      "selectorsSHA256": "8cae7554555cb6ec065439eb3322b2bca7f11d6e5d88e0c5d021c796b62a8c01",
+      "expectedNewExecutionScope": [
+        "ios-tests (ui-08, 6)",
+        "CI gate"
+      ],
+      "expectedInheritedBuildArtifactID": 13512830848,
+      "expectedInheritedExecutedFailureJobID": 127955589646
+    },
+    "ui-09": {
+      "originalJobID": 127955589616,
+      "jobName": "ios-tests (ui-09, 6)",
+      "selectedCount": 6,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "selectorsSHA256": "5f69dc5804d2d3085a77f440d317f1772ed0abce1413a323540c53ebf7a80ad2",
+      "expectedNewExecutionScope": [
+        "ios-tests (ui-09, 6)",
+        "CI gate"
+      ],
+      "expectedInheritedBuildArtifactID": 13512830848,
+      "expectedInheritedExecutedFailureJobID": 127955589646
+    }
+  },
+  "scopeConclusion": "A job-specific rerun targets the specified matrix job and its downstream CI gate. No other ios-tests matrix instance depends on that instance; UI06 is a sibling and should retain its failed execution. ios-build is upstream and its artifact output is retained. This is an inference from official job-specific rerun semantics and the frozen workflow graph, not an executed dry run.",
+  "expectedOverallOutcome": "CI gate remains failure while UI06 is inherited failure, even if every never-acquired shard passes. Performance is a separate failed run.",
+  "operationalScope": "Use only job-specific rerun, not all-failed or whole-run rerun. Serialize recovery attempts and inspect each new attempt execution scope before the next. New result artifact suffix equals the new run_attempt; retain all frozen attempt1 files. No rerun was performed by this collector.",
+  "sources": [
+    "https://docs.github.com/en/rest/actions/workflow-runs#re-run-a-job-from-a-workflow-run",
+    "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=cli",
+    "https://cli.github.com/manual/gh_run_rerun"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "sourceBuildBase": "6a2463ae7047918f94100aa521cb27a5d02792dd",
+  "pickupPreviewCommit": "dd334bf045fceb8bff5a8e6e3e152167b3c6c953",
+  "appExecutableSHA256": "6a9fa57cdb0b4c7b494a545457e44c52fb7bc5b8e99960d429993842773706ac",
+  "configuration": "Normal Release, Xcode 27.1 (27A9275), local synthetic pickup records.",
+  "device": "iPhone 17 simulator, iOS 27.0 (24A434)",
+  "date": "2026-11-12",
+  "receipt": {
+    "food": "wraps",
+    "received": 8,
+    "usableSaved": 6,
+    "usableProposed": 7,
+    "correctionSaved": false
+  },
+  "mealEffects": {
+    "Tuesday tacos": {
+      "shortBefore": 2,
+      "shortInPreview": 1
+    },
+    "Lunch": {
+      "protected": true,
+      "allocatedBefore": 2,
+      "allocatedInPreview": 2
+    }
+  },
+  "captures": [
+    {
+      "locale": "en-US",
+      "file": "en-US/08-repair-what-came-home.jpg",
+      "sha256": "1c371421667a197d24d690f4129a76cce94eee7ede000d96732ef7357e087561",
+      "originalSHA256": "843137518f206371709bb47419663cc0f65d8c41c35be04fb507157b66c9ef38",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false
+    },
+    {
+      "locale": "es-US",
+      "file": "es-MX/08-repair-what-came-home.jpg",
+      "sha256": "7ffc69f9383491069679ef73e854a84fbfe7185a6a9fef90cd95f494c3c2dbc9",
+      "originalSHA256": "f8b3dad5ed0254c917fe8b90f6b131cb043b20b18e2ce1b4d89ed9e1d01713df",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false
+    }
+  ]
+}

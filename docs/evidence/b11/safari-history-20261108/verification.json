@@ -1,0 +1,52 @@
+{
+  "status": "passed-scoped",
+  "recordedAtUTC": "2026-11-08T03:21:22.378299+00:00",
+  "case": "history-same",
+  "outputCase": "history-same-interactive",
+  "verifierExit": 0,
+  "verifierCommand": [
+    ".tools/node-v22.23.4-darwin-arm64/bin/node",
+    ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "history-same",
+    ".build/SafariQualificationNov08/proposal/runs/history-same-interactive/receipt.json"
+  ],
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "receiptSHA256": "a70bdcd552cb4d049c4815288430aaa4e4d648156d18a5b8a9beebe66c6a7aa5",
+  "actualPersistedBFCache": true,
+  "sameDocumentTokenAllThreeObservations": true,
+  "initialOwnRequestAndExactDraft": true,
+  "synchronousRestoredPageshowPrivateFlagsAbsent": true,
+  "heldAuthorityRequests": 1,
+  "finalSameOwnRequestAndExactDraft": true,
+  "finalReadyNotBusy": true,
+  "commandAttempts": 0,
+  "commandEffects": 0,
+  "productNonGETRequests": 0,
+  "executedCases": [
+    "history-same"
+  ],
+  "unexecutedCases": [
+    "history-changed",
+    "history-revoked",
+    "history-offline",
+    "queue-offline",
+    "queue-lost",
+    "queue-evicted",
+    "queue-revoked"
+  ],
+  "cleanup": {
+    "rootReportedServerPID": 4003,
+    "rootReportedExecSession": 59250,
+    "rootReportedStopExit": 0,
+    "independentPIDCheckExit": 1,
+    "independentPIDPresent": false,
+    "taskSafariTab": "root reports left at own synthetic origin; listener stopped",
+    "captureKeyboard": "root reports temporarily enabled for troubleshooting then restored off",
+    "rootReportedOwnedPortsRefuseConnections": [
+      51017,
+      51184
+    ]
+  },
+  "visualEvidence": "Root observed screenshots in Device Hub CUA tool transcript; no standalone PNG or video export is claimed.",
+  "scope": "Real iPhone Simulator MobileSafari using synthetic loopback authority and instrumented fixture HTML; no physical device, live-provider, full Safari matrix or full release acceptance."
+}

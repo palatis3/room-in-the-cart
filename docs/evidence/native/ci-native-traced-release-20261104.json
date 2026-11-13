@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998628",
+  "job": 126927542600,
+  "toolchain": "Xcode 26.3 on standard macos-15 arm64",
+  "failure": "Optimized Release build under CodeQL tracing reached the 30-minute step timeout. Metadata validation and Swift analysis did not execute.",
+  "startedAt": "2026-11-04T23:13:31Z",
+  "completedAt": "2026-11-04T23:43:37Z",
+  "sourceCompilerErrorsObserved": [],
+  "logSHA256": {
+    "job.log": "81051dbc62d7d916b42683a97c8a652ce37541c23dd33342b2d86be8361875f8",
+    "ReleaseBuild.log": "7228a98c02a3ea23ee6319d2bd178db98087a8295494bb2e635ee140ebddc667"
+  },
+  "nextChange": "Prepare independent required jobs for the normal optimized Release build and same-configuration Swift security extraction with optimization disabled. Performance and coverage of the split remain unverified until a hosted rerun.",
+  "limits": "This establishes a time-bound failure, not a proven cause in the compiler, optimizer or CodeQL extractor."
+}

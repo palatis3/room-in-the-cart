@@ -161,6 +161,30 @@ final class ArchiveMediaTests: XCTestCase {
         let reopened = try RecoveryRegistry(url: location), review = try await reopened.review(selected)
         XCTAssertEqual(review.rows.first?.disposition, .erased)
     }
+    func testUndoRechecksMediaErasedByAnotherRegistryBeforeWriting() async throws {
+        let location = try url()
+        let registry = try RecoveryRegistry(url: location)
+        let original = record(media: [media(), media("keep")])
+        let archive = try envelope([original])
+        let commit = try await registry.apply(registry.review(archive))
+        let copyID = try XCTUnwrap(commit.insertedCopyIDs.first)
+        let undo = try await registry.delete(.copy(copyID))
+
+        let other = try RecoveryRegistry(url: location)
+        try await other.registerErasedMedia([.init(origin: original.origin, mediaID: "photo")])
+        try await registry.undoDelete(undo)
+
+        let reopened = try RecoveryRegistry(url: location)
+        let copies = try await reopened.refreshList()
+        XCTAssertEqual(copies.map(\.id), [copyID])
+        let restored = try XCTUnwrap(copies.first?.record)
+        XCTAssertEqual(restored.media?.map(\.id), ["keep"])
+        XCTAssertEqual(restored.nativePayload, original.nativePayload)
+        XCTAssertEqual(restored.parentRevision, original.revision)
+        let retry = try await reopened.review(archive)
+        XCTAssertEqual(retry.rows.first?.disposition, .erased)
+    }
+
     func testRemovingSourceMediaScrubsEarlierCopiesAndUndoWithoutLosingRecordOrCopyID() async throws {
         let location = try url(), registry = try RecoveryRegistry(url: location)
         let original = record(media: [media(), media("second")])

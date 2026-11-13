@@ -271,8 +271,12 @@ import CoreDomain
         return saved
     }
     func report(_ error: Error) { fail(error) }
+    /// A successfully reviewed editor replaces its earlier validation feedback;
+    /// this does not apply a proposal, save data, or clear a failed write.
+    func clearErrorAfterSuccessfulReview() { error = nil }
     private func fail(_ failure: Error) {
         switch failure {
+        case DinnerDraftValidationError.totalServings: error = dinnerText("Total servings: enter a number greater than zero.")
         case DinnerPlanningError.forbidden: error = dinnerText("Planning access changed or expired. Reconnect and review again.")
         case DinnerPlanningError.paidAccessRequired: error = dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")
         case DinnerPlanningError.stalePreview: error = dinnerText("The pickup or dinner plan changed. Make a new preview before applying.")

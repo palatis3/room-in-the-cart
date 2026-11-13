@@ -1,0 +1,14 @@
+{
+  "base": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+  "head": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "patchSHA256": "57d3d4d21619f5c24ff1db3eb748f9b3c44760313dc163c039d7c63f45e497db",
+  "proposalManifestSHA256": "2038c2ce7435988cd79310a794cdc5d1a9087e1b909077b2c7b7957c7dbc9948",
+  "rootRehashedProposalFiles": 17,
+  "rootReplayedParserTests": 16,
+  "rootPatchApplicationVerified": true,
+  "sourceScope": "Exact three-file proposal; no app/workflow/fixture/baseline/metric-selector changes.",
+  "swiftTypecheck": "Full RELEASE file, actual localXcode27.1 XCTest overlay, exit0/zero diagnostics; no full target/native execution.",
+  "instrumentationPerturbsTiming": true,
+  "releaseAcceptance": false,
+  "originalFailuresRetained": true
+}

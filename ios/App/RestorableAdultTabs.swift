@@ -42,7 +42,7 @@ struct RestoredDestinationView: View {
                 case .comparison(let actor, let workspace, let id):
                     if actor == access.localActorID, app.ready, app.hasLoadedRecords, app.error == nil, app.store?.workspaceID == workspace,
                        let record = app.records.first(where: { $0.id == id }), let draft = try? app.decode(record) {
-                        ComparisonView(draft: draft, savedAt: record.savedAt)
+                        ComparisonView(draft: draft, saved: record)
                     } else { unavailable }
                 case .household(let destination, let identity):
                     if let scope = contextualScope(household), identity.matches(scope), scope.permits(destination) {
@@ -61,12 +61,30 @@ struct RestoredDestinationView: View {
 struct RestorableShoppingListLink<Label: View>: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var navigation: NavigationRestorationModel
     private let label: Label
     init(@ViewBuilder label: () -> Label) { self.label = label() }
     var body: some View {
         if let workspace = ledger.sourceWorkspaceID {
-            NavigationLink(value: RestorableDestination.shoppingList(actorID: access.localActorID,
-                workspaceID: workspace, shopID: ledger.shop?.id)) { label }
+            let actor = access.localActorID
+            let route = RestorableDestination.shoppingList(actorID: actor,
+                workspaceID: workspace, shopID: ledger.shop?.id)
+            if ledger.shop == nil && ledger.ready {
+                Button {
+                    Task {
+                        guard access.unlocked, access.localActorID == actor, navigation.selection == .shop,
+                              navigation.shopPath.isEmpty, ledger.sourceWorkspaceID == workspace, ledger.shop == nil else { return }
+                        let saved = await ledger.startShop(title: ledgerText("Pickup"))
+                        guard saved, let shop = ledger.shop, ledger.sourceWorkspaceID == workspace,
+                              access.unlocked, access.localActorID == actor,
+                              navigation.selection == .shop, navigation.shopPath.isEmpty else { return }
+                        navigation.setPath([.shoppingList(actorID: actor, workspaceID: workspace, shopID: shop.id)], for: .shop)
+                    }
+                } label: { label }
+                .disabled(ledger.saving || ledger.hasPendingSave || ledger.hasPendingLedgerDeletion)
+            } else {
+                NavigationLink(value: route) { label }
+            }
         } else { label }
     }
 }

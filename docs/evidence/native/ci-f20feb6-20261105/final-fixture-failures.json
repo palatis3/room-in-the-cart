@@ -1,0 +1,63 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "run": 41994028672,
+  "originalHostedConclusion": "failure",
+  "cases": [
+    {
+      "case": "lost-reply",
+      "artifact": 13408225765,
+      "artifactSHA256": "76238edb62a1df1a077d181d805a6dcbb2ac3565eecfbda871fbb1c8bc235adb",
+      "job": 127143126894,
+      "originalHostedConclusion": "failure",
+      "nativeResult": "Passed",
+      "originalAndPreChangeGuardExit": 1,
+      "revisedGuardExit": 0,
+      "runtimeWarnings": 2,
+      "warningActivityPaths": [
+        {
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "parents": [
+            {
+              "type": "com.apple.dt.xctest.activity-type.internal",
+              "title": "Tap \"fixture.s27.controls\" Button"
+            },
+            {
+              "type": "com.apple.dt.xctest.activity-type.internal",
+              "title": "Wait for dev.roominthecart.app.debug to idle"
+            }
+          ],
+          "attachmentUUID": "1296a4b5-2ecb-4b68-964e-818bb028834d"
+        },
+        {
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "parents": [
+            {
+              "type": "com.apple.dt.xctest.activity-type.internal",
+              "title": "Tap \"fixture.s27.controls\" Button"
+            },
+            {
+              "type": "com.apple.dt.xctest.activity-type.internal",
+              "title": "Wait for dev.roominthecart.app.debug to idle"
+            }
+          ],
+          "attachmentUUID": "1ec969d9-2d77-4d39-8700-4da2332121ab"
+        }
+      ],
+      "rawLogSHA256": "8a4386c5835d424a84ce72f20a09fa658fc584913f5e93893002eba2e3b6d70e"
+    },
+    {
+      "case": "known-trip",
+      "artifact": 13407782032,
+      "artifactSHA256": "cf8458113b2be2cdbc184635e671b9ca85e6d22b6e1c7d57f7973b13effd1e3b",
+      "job": 127143126918,
+      "originalHostedConclusion": "failure",
+      "nativeResult": "Failed",
+      "originalAndPreChangeGuardExit": 1,
+      "revisedGuardExit": 1,
+      "runtimeWarnings": 0,
+      "warningActivityPaths": [],
+      "rawLogSHA256": "d892c453035047efa8b6884a9ee1d0149375ec0a09810f5f54dc07b6f056d54b"
+    }
+  ],
+  "decision": "Lost-reply alternate idle phase is scoped to the same exact selector, fixture Menu tap, iPhone17/iOS26.2 build23C54 and total maximum2 already allowed warnings. Standalone Menu controls support the phase; wrong selector/tap/phase/device/message and excess counts remain rejected. Known-trip timeout remains failed. SharedStoreQuote direct text matching/existence-first snapshot geometry correction awaits native validation; no test bodies or limits changed."
+}

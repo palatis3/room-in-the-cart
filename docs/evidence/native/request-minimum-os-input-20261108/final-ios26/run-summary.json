@@ -1,0 +1,82 @@
+{
+  "status": "completed",
+  "phase": "ios26",
+  "startedAtUTC": "2026-11-08T13:03:04.463137+00:00",
+  "source": "/Users/palatis/Room in the Cart",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/S24VisibleFieldNov08/fixed-source-manifest.json",
+  "sourceManifestSHA256": "daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc",
+  "selectionSHA256": "5ee9aae41f5dde27016aedb42e41f73718d11ef660be10546026c8ffbe26d10d",
+  "expectedCount": 2,
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=858A2244-001F-4BAD-AFE0-A6E7AF02F41A,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S24VisibleFieldNov08/ios26-run/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+    "test"
+  ],
+  "scope": "Typed exactidentifier plus separate fully-visible content bounds; unchanged product, gestures, hittability,24attempts,720/900limits and full logging; no retries or suppression",
+  "toolchain": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcodebuild": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftExecutable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0"
+  },
+  "bootedRuntimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "pid": 24260,
+  "nativeExit": 0,
+  "finishedAtUTC": "2026-11-08T13:08:15.943881+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "device": {
+    "udid": "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+    "name": "RITC S24 Current Audit Nov08",
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2"
+  },
+  "originalPrivateRunPath": ".build/S24VisibleFieldNov08/ios26-run/run.json",
+  "originalPrivateRunSHA256": "ecd925a19cf7b0a19b833ad7c24d60d2e933c4e5765b82f9e20dd2a2f97d4de6",
+  "omittedProductManifest": {
+    "entries": 275,
+    "reason": "Bounded public projection; exact original run bound by SHA256 above."
+  }
+}

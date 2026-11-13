@@ -1,0 +1,106 @@
+{
+  "checkedAtUTC": "2026-11-08T02:38:40.708121+00:00",
+  "scope": "Read-only scan of every Mach-O file inside existing Release app, including main executable and both embedded extensions. No native execution/build.",
+  "rootReportedBuildExit": 0,
+  "releaseLog": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release.log",
+  "releaseLogSHA256": "aa1632f7af4699447d6cc2b7ad3545d3742483d6ff28b379171810bcc7fc9eb6",
+  "buildSuccessMarkerPresent": true,
+  "requiredExecutables": 3,
+  "machOFilesScanned": 3,
+  "needles": [
+    "S24_PACK_TRACE",
+    "S24_PACK_TRACE_SCOPE"
+  ],
+  "encodings": [
+    "ascii",
+    "utf-16-le",
+    "utf-16-be"
+  ],
+  "result": "absent in all scanned binaries",
+  "binaries": [
+    {
+      "file": "PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare",
+      "absolutePath": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release-dd/Build/Products/Release-iphoneos/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare",
+      "bytes": 653960,
+      "sha256": "b5869d6fe4dffdc03864c6a72931ea02145a86cd157dd780ed2d6d49b0653cfa",
+      "matches": {
+        "S24_PACK_TRACE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        },
+        "S24_PACK_TRACE_SCOPE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        }
+      }
+    },
+    {
+      "file": "PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget",
+      "absolutePath": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release-dd/Build/Products/Release-iphoneos/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget",
+      "bytes": 572344,
+      "sha256": "48459538368d3e41d0279edf16f04c9f5eb7e7b86b1e8dd474ee924e4d0eb8e7",
+      "matches": {
+        "S24_PACK_TRACE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        },
+        "S24_PACK_TRACE_SCOPE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        }
+      }
+    },
+    {
+      "file": "RoomInTheCart",
+      "absolutePath": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release-dd/Build/Products/Release-iphoneos/RoomInTheCart.app/RoomInTheCart",
+      "bytes": 58044936,
+      "sha256": "342f5a77172d1966a60fce662550b81283550c32074b02291798d0d069ad0137",
+      "matches": {
+        "S24_PACK_TRACE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        },
+        "S24_PACK_TRACE_SCOPE": {
+          "ascii": 0,
+          "utf-16-le": 0,
+          "utf-16-be": 0
+        }
+      }
+    }
+  ],
+  "builtAppCheck": {
+    "command": [
+      "python3",
+      "scripts/check_built_app.py",
+      "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release-dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+      "--configuration",
+      "Release"
+    ],
+    "exit": 0,
+    "output": "release-built-app.txt",
+    "outputSHA256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76"
+  },
+  "qualifiedSourceVerification": [
+    {
+      "file": "ios/Features/Household/HouseholdRequestPackReviewView.swift",
+      "actualSHA256": "913ff3d73ff394de81178d71ddcec2560d073105b72e39ba244cec9a8428e3d7",
+      "matchesQualifiedSource": true
+    },
+    {
+      "file": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "actualSHA256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3",
+      "matchesQualifiedSource": true
+    },
+    {
+      "file": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "actualSHA256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f",
+      "matchesQualifiedSource": true
+    }
+  ],
+  "limits": "Byte-marker absence verifies these named trace literals are absent from these built binaries; not an assertion that every conceivable diagnostic is absent or production readiness."
+}

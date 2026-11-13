@@ -1,0 +1,225 @@
+--- a/ios/UITests/ReleasePerformanceUITests.swift
++++ b/ios/UITests/ReleasePerformanceUITests.swift
+@@ -162,6 +162,16 @@
+         if #available(iOS 26.0, *) {
+             metrics.append(XCTHitchMetric(application: app))
+         }
++        // Diagnostic only: buffer clock reads; serialize only after measure returns.
++        // These reads add overhead and cannot establish release acceptance.
++        typealias Boundary = (beforeStart: TimeInterval, afterStart: TimeInterval,
++                              beforeGesture: TimeInterval, afterGesture: TimeInterval,
++                              beforeStop: TimeInterval, afterStop: TimeInterval)
++        var boundaries: [Boundary] = []
++        boundaries.reserveCapacity(6) // Expected warm-up plus five; retain any extra invocations.
++        let anchorBefore = ProcessInfo.processInfo.systemUptime
++        let anchorUTC = Date().timeIntervalSince1970
++        let anchorAfter = ProcessInfo.processInfo.systemUptime
+         var restingY: CGFloat?
+         measure(metrics: metrics, options: measurementOptions()) {
+             // Reset before each iteration. XCTest waits for the swipe to settle.
+@@ -174,11 +184,49 @@
+                 restingY = startY
+             }
+ 
++            let beforeStart = ProcessInfo.processInfo.systemUptime
+             startMeasuring()
++            let afterStart = ProcessInfo.processInfo.systemUptime
++            let beforeGesture = ProcessInfo.processInfo.systemUptime
+             list.swipeUp(velocity: .fast)
++            let afterGesture = ProcessInfo.processInfo.systemUptime
++            let beforeStop = ProcessInfo.processInfo.systemUptime
+             stopMeasuring()
++            let afterStop = ProcessInfo.processInfo.systemUptime
++            boundaries.append((beforeStart, afterStart, beforeGesture, afterGesture,
++                               beforeStop, afterStop))
+ 
+             XCTAssertTrue(!top.exists || top.frame.midY < startY, "The measured gesture must scroll the list")
++        }
++        let finalAnchorBefore = ProcessInfo.processInfo.systemUptime
++        let finalAnchorUTC = Date().timeIntervalSince1970
++        let finalAnchorAfter = ProcessInfo.processInfo.systemUptime
++        do {
++            try attachJSON([
++                "schemaVersion": 1,
++                "diagnosticOnly": true,
++                "clock": "ProcessInfo.systemUptime seconds; UTC anchors are approximate",
++                "initialClockAnchor": ["uptimeBefore": anchorBefore, "unixUTC": anchorUTC,
++                                       "uptimeAfter": anchorAfter],
++                "finalClockAnchor": ["uptimeBefore": finalAnchorBefore, "unixUTC": finalAnchorUTC,
++                                     "uptimeAfter": finalAnchorAfter],
++                "observedInvocationCount": boundaries.count,
++                "expectedInvocationCount": 6,
++                "invocationMapping": "Zero-based observed order. First is expected warm-up only when six invocations complete; no sample is discarded here.",
++                "boundaries": boundaries.enumerated().map { index, value in
++                    ["invocationIndex": Double(index),
++                     "beforeStartMeasuring": value.beforeStart,
++                     "afterStartMeasuring": value.afterStart,
++                     "beforeGesture": value.beforeGesture,
++                     "afterGesture": value.afterGesture,
++                     "beforeStopMeasuring": value.beforeStop,
++                     "afterStopMeasuring": value.afterStop]
++                },
++                "limits": "Clock reads and buffering perturb timing. Calls are bracketed, not XCTest internal collection boundaries. No duration-series substitution or acceptance claim.",
++            ], name: "scroll-measurement-boundaries")
++        } catch {
++            // Missing receipts remain unavailable evidence, never a replacement pass.
++            print("Scroll measurement boundary diagnostic attachment unavailable: \(error)")
+         }
+         screenshot("Populated pickup list after measured scroll")
+     }
+--- a/scripts/scroll_signpost_diagnostic.py
++++ b/scripts/scroll_signpost_diagnostic.py
+@@ -8,9 +8,49 @@
+ SELECTOR = 'ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()'
+ URL_SUFFIX = '/RoomInTheCartUITests/' + SELECTOR.removesuffix('()')
+ 
++
++# Receipt limits affect diagnostic retention only, never metric acceptance.
++ENDPOINT_LIMIT = 128
++ENDPOINT_MARGIN_SECONDS = 5.0
++
++def endpoint_receipt(events, windows, reset_start):
++    """Retain scoped endpoint fields, never raw lines, PID or signpost IDs."""
++    receipt = {'diagnosticOnly': True, 'maximumRetainedEvents': ENDPOINT_LIMIT,
++               'marginSeconds': ENDPOINT_MARGIN_SECONDS,
++               'timestampBasis': 'seconds from first enclosing swipe activity start; not measurement boundaries'}
++    if (not windows or type(reset_start) not in (int, float)
++            or not math.isfinite(reset_start) or reset_start > windows[0][0]):
++        return {**receipt, 'status': 'scope_unavailable'}
++    origin = windows[0][0]
++    lower = reset_start - ENDPOINT_MARGIN_SECONDS
++    upper = windows[-1][2] + ENDPOINT_MARGIN_SECONDS
++    scoped = [e for e in events if lower <= e[0] <= upper]
++    pids, ids, retained = {}, {}, []
++    for ts, pid, sid, kind in scoped[:ENDPOINT_LIMIT]:
++        # Ordinal tokens preserve equality within this receipt, not cross-run identity.
++        process = pids.setdefault(pid, f'process-{len(pids) + 1}')
++        signpost = ids.setdefault((pid, sid), f'signpost-{len(ids) + 1}')
++        indices = [i for i, (start, _, end) in enumerate(windows) if start <= ts <= end]
++        retained.append({'offsetSeconds': round(ts - origin, 6), 'kind': kind,
++                         'processToken': process, 'signpostToken': signpost,
++                         'windowIndices': indices})
++    return {**receipt, 'status': 'truncated' if len(scoped) > ENDPOINT_LIMIT else 'retained',
++            'originUnixUTC': origin,
++            'scopeStartOffsetSeconds': round(lower - origin, 6),
++            'scopeEndOffsetSeconds': round(upper - origin, 6),
++            'scopedEventCount': len(scoped), 'retainedEventCount': len(retained),
++            'omittedEventCount': max(0, len(scoped) - ENDPOINT_LIMIT),
++            'ordering': 'captured log order; tokens preserve equality, not unique gesture identity',
++            'windows': [{'invocationIndex': i, 'swipeStartOffsetSeconds': round(start-origin, 6),
++                         'synthesisStartOffsetSeconds': round(synthesis-origin, 6),
++                         'followingActivityStartOffsetSeconds': round(end-origin, 6)}
++                        for i, (start, synthesis, end) in enumerate(windows)],
++            'events': retained}
++
+ def summarize(log, activity, capture_status, activity_status):
+-    out = {'schemaVersion': 1, 'diagnosticOnly': True, 'captureStatus': capture_status,
+-           'activityStatus': activity_status, 'metric': 'com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration', 'windows': []}
++    out = {'schemaVersion': 2, 'diagnosticOnly': True, 'captureStatus': capture_status,
++           'activityStatus': activity_status, 'metric': 'com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration', 'windows': [],
++           'endpointEvidence': {'diagnosticOnly': True, 'status': 'unavailable'}}
+     if capture_status != 'ok' or activity_status != 'ok':
+         out['status'] = 'capture_unavailable' if capture_status != 'ok' else 'activities_unavailable'
+         return out
+@@ -35,6 +75,7 @@
+         out['windowBasis'] = 'enclosing swipe activity start to following activity start; not XCTest measurement boundaries'
+         previous_end = None
+         process_ids = set()
++        receipt_windows = []
+         for swipe, following in zip(activities[reset:], activities[reset+1:]):
+             if not swipe['title'].startswith('Swipe up CollectionView'): continue
+             starts = [a['startTime'] for a in swipe.get('childActivities', []) if a['title'] == 'Synthesize event']
+@@ -49,6 +90,7 @@
+                     or (previous_end is not None and start <= previous_end)):
+                 raise ValueError('invalid or overlapping window')
+             previous_end = end
++            receipt_windows.append((start, synthesis, end))
+             selected = [event for event in events if start <= event[0] <= end]
+             process_ids.update(event[1] for event in selected)
+             pairs = []
+@@ -59,6 +101,7 @@
+                 if a[3] == 'begin' and b[3] == 'end' and a[1:3] == b[1:3] and b[0] > a[0]:
+                     pairs.append({'durationSeconds': round(b[0]-a[0], 3)})
+             out['windows'].append({'case': 'warm-up' if not out['windows'] else f'measured swipe {len(out["windows"])}', 'eventCount': len(selected), 'pairCount': len(pairs), 'pairs': pairs})
++        out['endpointEvidence'] = endpoint_receipt(events, receipt_windows, activities[reset].get('startTime'))
+         out['matchedProcessCount'] = len(process_ids)
+         out['status'] = ('unparsed_events' if out['unparsedCandidateCount'] else 'zero_events' if not events
+                          else 'incomplete_windows' if len(out['windows']) != 6 or len(process_ids) != 1
+--- a/scripts/test_scroll_signpost_diagnostic.py
++++ b/scripts/test_scroll_signpost_diagnostic.py
+@@ -153,5 +153,75 @@
+         self.assertEqual(summarize("", "not JSON", "ok", "ok")["status"], "parse_error")
+ 
+ 
++    def test_endpoint_receipt_retains_lone_kind_without_promoting_missing_pair(self):
++        for missing, expected in [(0, "end"), (1, "begin")]:
++            report = self.report(self.lines[:missing] + self.lines[missing+1:])
++            self.assertEqual(report["status"], "incomplete_windows")
++            self.assertEqual(report["windows"][0]["pairCount"], 0)
++            scoped = [e for e in report["endpointEvidence"]["events"] if e["windowIndices"] == [0]]
++            self.assertEqual([e["kind"] for e in scoped], [expected])
++
++    def test_endpoint_receipt_preserves_outside_window_endpoint_and_bounded_scope(self):
++        prior = self.lines[0].replace("00:01:51.000", "00:01:49.000")
++        outside = self.lines[0].replace("00:01:51.000", "00:01:34.000")
++        report = self.report([outside, prior] + self.lines[1:])
++        self.assertEqual(report["status"], "incomplete_windows")
++        receipt = report["endpointEvidence"]
++        self.assertEqual(receipt["scopedEventCount"], 12)
++        self.assertEqual(receipt["events"][0]["offsetSeconds"], -1)
++        self.assertEqual(receipt["events"][0]["windowIndices"], [])
++        self.assertEqual(receipt["scopeStartOffsetSeconds"], -15)
++        self.assertEqual(receipt["scopeEndOffsetSeconds"], 60)
++
++    def test_endpoint_receipt_tokens_preserve_equality_without_raw_identifiers(self):
++        lines = self.lines.copy()
++        lines[1] = lines[1].replace("0xab", "0xcd")
++        lines[2] = lines[2].replace("[123:", "[456:")
++        report = self.report(lines)
++        events = report["endpointEvidence"]["events"]
++        self.assertEqual(events[0]["processToken"], events[1]["processToken"])
++        self.assertNotEqual(events[0]["signpostToken"], events[1]["signpostToken"])
++        self.assertNotEqual(events[0]["processToken"], events[2]["processToken"])
++        self.assertEqual(events[0]["signpostToken"], events[3]["signpostToken"])
++        for secret in ["0xab", "0xcd", "123", "456", "private sample text", "RoomInTheCart["]:
++            self.assertNotIn(secret, json.dumps(report))
++        self.assertEqual(report["status"], "incomplete_windows")
++
++    def test_endpoint_overflow_is_explicit_and_does_not_choose_pairs(self):
++        report = self.report(self.lines + [self.lines[0]] * 140)
++        receipt = report["endpointEvidence"]
++        self.assertEqual(receipt["status"], "truncated")
++        self.assertEqual(receipt["scopedEventCount"], 152)
++        self.assertEqual(receipt["retainedEventCount"], 128)
++        self.assertEqual(receipt["omittedEventCount"], 24)
++        self.assertEqual(len(receipt["events"]), 128)
++        self.assertEqual(report["status"], "incomplete_windows")
++        self.assertEqual(report["windows"][0]["pairs"], [])
++
++    def test_endpoint_origin_is_first_swipe_utc_and_aligns_relative_events(self):
++        receipt = self.report()["endpointEvidence"]
++        self.assertIsInstance(receipt["originUnixUTC"], (int, float))
++        self.assertEqual(receipt["originUnixUTC"], 110)
++        self.assertEqual(receipt["originUnixUTC"] + receipt["events"][0]["offsetSeconds"], 111)
++        self.assertEqual(receipt["originUnixUTC"] + receipt["scopeStartOffsetSeconds"], 95)
++        self.assertEqual(receipt["originUnixUTC"] + receipt["windows"][1]["swipeStartOffsetSeconds"], 120)
++
++    def test_endpoint_receipt_scope_failure_does_not_change_existing_summary(self):
++        for value in [None, True, float("nan"), 111]:
++            activity = copy.deepcopy(self.activity)
++            activity["testRuns"][0]["activities"][0]["startTime"] = value
++            report = self.report(activity=activity)
++            self.assertEqual(report["status"], "captured")
++            self.assertEqual(report["endpointEvidence"]["status"], "scope_unavailable")
++            self.assertNotIn("events", report["endpointEvidence"])
++
++    def test_endpoint_receipt_unavailable_with_failed_capture_or_activity(self):
++        for capture, activity in [("error", "ok"), ("ok", "error")]:
++            report = summarize("", "", capture, activity)
++            self.assertEqual(report["endpointEvidence"]["status"], "unavailable")
++        self.assertEqual(self.report()["schemaVersion"], 2)
++        self.assertEqual(len(self.report()["endpointEvidence"]["windows"]), 6)
++
++
+ if __name__ == "__main__":
+     unittest.main()

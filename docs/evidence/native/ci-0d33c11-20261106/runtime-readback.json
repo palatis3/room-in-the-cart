@@ -1,0 +1,264 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "results": {
+    "iphone-performance-launch-1": {
+      "summary": "iphone-performance-launch-1/test-summary.json",
+      "sha256": "8ace87d03b0f3b423e97bdc18b305973eb686dadf60eff52fdbcd4ece8423dc4",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-10-1": {
+      "summary": "iphone-results-ui-10-1/test-summary.json",
+      "sha256": "911f921e75037a6cc9e0d1ddcc2966818aa832b0af6be949044e419b1587bf31",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "storekit-en-1": {
+      "summary": "storekit-en-1/independent-replay/storekit-summary.json",
+      "sha256": "26c709a36a66c1c5d0721459c593b2bcb77b44a4fe58fd3cb3cd75903421c643",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-04-1": {
+      "summary": "iphone-results-ui-04-1/test-summary.json",
+      "sha256": "a01d2d11670bd1c16753a9b79dee44ca4711227a2af1a433219a2b8463897cb8",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-03-1": {
+      "summary": "iphone-results-ui-03-1/test-summary.json",
+      "sha256": "c6f87448aa8602524fd95aee4a5b51cf52bb5ad6188bed4f817196fd25631250",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-09-1": {
+      "summary": "iphone-results-ui-09-1/test-summary.json",
+      "sha256": "4f352c2b1a4d21adda7826ebb7efe118d3313a18645657d07d9d50e183ede3ea",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-performance-rendered-1": {
+      "summary": "iphone-performance-rendered-1/test-summary.json",
+      "sha256": "fb6b2fb44ad336ead4529bbe82803073135820979b3a382260095379943e557d",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-07-1": {
+      "summary": "iphone-results-ui-07-1/test-summary.json",
+      "sha256": "4ace602a585e4b011b758c2b6a220a3b6821c17b410d0889a659745e6f9f5440",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-08-1": {
+      "summary": "iphone-results-ui-08-1/test-summary.json",
+      "sha256": "652d7bddd0e08d4deb8faf94e32c62259a94f5424703aec9698575823916d6db",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-02-1": {
+      "summary": "iphone-results-ui-02-1/test-summary.json",
+      "sha256": "6d80d5990345470141e4f97a45614e6299076c99995055016d400e2ef8e14809",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-06-1": {
+      "summary": "iphone-results-ui-06-1/test-summary.json",
+      "sha256": "684d842f35fd5a50a65b1ce88be50d3234c27787426e9cc58b75cbf4b2f7f59e",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-performance-scroll-1": {
+      "summary": "iphone-performance-scroll-1/test-summary.json",
+      "sha256": "c6956cb47d5a88beea6ca1dd4e7ffd8eca171325509ab0e979bfed8f84e6ce52",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-models-1": {
+      "summary": "iphone-results-models-1/test-summary.json",
+      "sha256": "c9a75aa46e0154f97db434540660c59cbfedd1d9d48db378d509f1104cadaf75",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "storekit-es-1": {
+      "summary": "storekit-es-1/independent-replay/storekit-summary.json",
+      "sha256": "f628f9d8786dfd234532ee2a58b145f1cf8a2fc47285b8fb24158c9e54b57a1d",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-01-1": {
+      "summary": "iphone-results-ui-01-1/test-summary.json",
+      "sha256": "c8f49b67e3b7f3698eb051979c501977018cdbbc1b1e3b63f691f0afa857fc91",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    },
+    "iphone-results-ui-05-1": {
+      "summary": "iphone-results-ui-05-1/test-summary.json",
+      "sha256": "6a547f463e082df0719bdff67f76c15f1d6e1b2ec4b649d5c9d3d2bf8914aa08",
+      "devices": [
+        {
+          "architecture": "arm64",
+          "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        }
+      ],
+      "allExpected": true
+    }
+  },
+  "allReportedExpected": true,
+  "expectedResultGroups": 16,
+  "complete": true
+}

@@ -1,0 +1,49 @@
+{
+  "status": "completed",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-destination",
+    "generic/platform=iOS Simulator",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/build.xcresult",
+    "build-for-testing"
+  ],
+  "startedAtUTC": "2026-11-08T17:26:01.078862+00:00",
+  "scope": "Fresh fixture DD; no native tests/tracing",
+  "sourceManifestSHA256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+  "toolchain": {
+    "versionOutput": "Xcode 27.1\nBuild version 27A9275\n",
+    "bundleVersion": {
+      "BuildVersion": "2",
+      "CFBundleShortVersionString": "27.1",
+      "CFBundleVersion": "25183.120.5",
+      "ProductBuildVersion": "27A9275",
+      "ProjectName": "IDEApplication",
+      "SourceVersion": "25183120005000000"
+    },
+    "developerDir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "pid": 82630,
+  "nativeExit": 0,
+  "sourceUnchanged": true,
+  "priorModelEvidenceUnchanged": true,
+  "binaryUUIDs": {
+    "RoomInTheCart": "UUID: D1C6007F-5F1C-35C3-BE29-9FE9BB361B6C (x86_64) /Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart\nUUID: CF2E7BCB-CD7C-3BA9-AE85-93EAEF9C7A95 (arm64) /Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart\n",
+    "RoomInTheCart.debug.dylib": "UUID: 9C4352A6-F9DF-39CC-B024-D6536E93E256 (x86_64) /Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib\nUUID: 7C913FBF-8440-3584-8AB8-EA76A7644E59 (arm64) /Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib\n"
+  },
+  "finishedAtUTC": "2026-11-08T17:33:22.445862+00:00"
+}

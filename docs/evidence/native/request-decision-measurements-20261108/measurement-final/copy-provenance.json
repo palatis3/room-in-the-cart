@@ -1,0 +1,571 @@
+{
+  "exactCopies": [
+    {
+      "published": "run-receipt.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/run.json",
+      "bytes": 2483,
+      "sha256": "a43ba3570d3e225ece97cca86e95d753fd908876957a618d5aa85c12e68e5f36"
+    },
+    {
+      "published": "selectors.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/selectors.txt",
+      "bytes": 301,
+      "sha256": "92744c765b192024cd08264fe4c38d92103330a43bc89873828b70bcab17700f"
+    },
+    {
+      "published": "verification.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/verification.json",
+      "bytes": 979,
+      "sha256": "206d3efc1360e2212192698575ad1e26873c0c47797fb86e9fc68e515f188342"
+    },
+    {
+      "published": "strict-verification.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/strict-verification.txt",
+      "bytes": 611,
+      "sha256": "8510b1d78253e3eb852c8d7486b9da2484cf21e54f0c64bb2adac13f367e29b9"
+    },
+    {
+      "published": "test-summary.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/test-summary.json",
+      "bytes": 742,
+      "sha256": "1cc679b02ab5178482b3f2de7c3b02def9b6cbfcb3efa57ce29da498be241bc4"
+    },
+    {
+      "published": "test-details.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/test-details.json",
+      "bytes": 2054,
+      "sha256": "f6c901fdb19788febe491b6818f68507c239751f297b668d42b082c0235a5fc7"
+    },
+    {
+      "published": "test-runtime-warnings.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "cc76e9112bb0eb81c9cc802130460cbc5a18d3b186525a823326dcb0e45678ac"
+    },
+    {
+      "published": "original-bundle-sha256.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/original-bundle-sha256.json",
+      "bytes": 32799,
+      "sha256": "162a707d2002db343e213cc9d8602bce58ba930a5aa8fcde0a4b9387fc130d07"
+    },
+    {
+      "published": "exported-attachment-manifest.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/manifest.json",
+      "bytes": 40379,
+      "sha256": "381c3867cd86ebe312baa1577db961ad8de896ec10b502e34e95e02740813630"
+    },
+    {
+      "published": "original-preservation-check.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/original-preservation-check.json",
+      "bytes": 395,
+      "sha256": "be32750fd8fc60dd79fc024aebc1bc1c46968487651382a320a8d74df72d65a7"
+    },
+    {
+      "published": "measurement-summary-original.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-summary-r2/summary.json",
+      "bytes": 149393,
+      "sha256": "42b2d16cbf52751570cbe9dc0b175e3e460df4f18922c6a5e6073d360ce2176b"
+    },
+    {
+      "published": "source/initial-overlay-pins.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/overlay-44e8248/overlay-pins.json",
+      "bytes": 1347,
+      "sha256": "10110b171b9fdfd74c5665a27b25a5c8c48d517ef213bfad9a7804c5ada68d97"
+    },
+    {
+      "published": "source/initial-measurement-overlay.patch",
+      "source": ".build/RequestDecisionAccessibilityNov08/overlay-44e8248/measurement-overlay.patch",
+      "bytes": 13558,
+      "sha256": "ebd195744b861468980d8ec9b80f41c0302f987c1aff852191e1a55986d8218c"
+    },
+    {
+      "published": "source/revision2-proposal-manifest.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/overlay-r2/manifest.json",
+      "bytes": 1339,
+      "sha256": "9c70e26021f7e73f5c41b21b3ed44ab096aabd017eef84f4e3ac309e49396cfb"
+    },
+    {
+      "published": "source/known-earlier-navigation.patch",
+      "source": ".build/RequestDecisionAccessibilityNov08/overlay-r2/measurement-r2.patch",
+      "bytes": 1847,
+      "sha256": "98ef5bde027c118ca8b5197183bd4c433ab079d9b468158a4eede898882cce3d"
+    },
+    {
+      "published": "source/revision2-preparation-checks.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/overlay-r2/preparation-checks.json",
+      "bytes": 395,
+      "sha256": "be32750fd8fc60dd79fc024aebc1bc1c46968487651382a320a8d74df72d65a7"
+    },
+    {
+      "published": "prior-failure/run-receipt.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r1.run.json",
+      "bytes": 986,
+      "sha256": "ec2308180556f7aed490efee4211e660de743adea702d7997b59d55fef726733"
+    },
+    {
+      "published": "prior-failure/strict-verification.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/strict-verification.txt",
+      "bytes": 1127,
+      "sha256": "72282bfa4aa89eccec578dfb2d63659a7b725fc584cb192f195ce217a35b3f7b"
+    },
+    {
+      "published": "prior-failure/verification.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/verification.json",
+      "bytes": 980,
+      "sha256": "d68d132282ea70d64ee0cd1888bd816c1306e2ee3104edb6935819d9779ec604"
+    },
+    {
+      "published": "prior-failure/partial-inventory-rejection.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/partial-inventory-rejection.txt",
+      "bytes": 355,
+      "sha256": "eb200ada0236a56fdfc4c7f0ef4d92f5828dca12499d77c4767048d4f57de5be"
+    },
+    {
+      "published": "original-audit-findings.csv",
+      "source": ".build/RequestDecisionAccessibilityNov08/remaining-findings-original.csv",
+      "bytes": 7117,
+      "sha256": "7e82b9afe3526117641c450e662f83eb97b0e08da1a98feaf498c9c652e776a2"
+    },
+    {
+      "published": "tools/summarize_measurements.py",
+      "source": ".build/RequestDecisionAccessibilityNov08/summarize_measurements.py",
+      "bytes": 13388,
+      "sha256": "dad8f6a7c6f79997dede656e08b49097c60165b88c5dbbbc2a3bc236823fefa2"
+    },
+    {
+      "published": "tools/test_summarize_measurements.py",
+      "source": ".build/RequestDecisionAccessibilityNov08/test_summarize_measurements.py",
+      "bytes": 5218,
+      "sha256": "10728988b2833d857888fe9efa2e90cd941e1cfb1993c9a53d60d4301e6e1840"
+    },
+    {
+      "published": "tools/summarizer-preparation.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-summarizer-preparation.json",
+      "bytes": 1132,
+      "sha256": "c05126714b39960fbf0e4754c6fce5397c276f59da3c4d3766cc3290d387d9c4"
+    },
+    {
+      "published": "crops/small-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/04D4F79E-51E9-4803-A114-51A6C61DE983.png",
+      "bytes": 5657,
+      "sha256": "a98c5ce1c44af89819a1ac1a1f63f39937405eef348315b6f840eab0be7ce086"
+    },
+    {
+      "published": "metrics/small-after.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1183C0F3-50AF-4D6C-9ECF-A8B1EE0EAC59.txt",
+      "bytes": 4211,
+      "sha256": "1ec7bd0ec1b89327af2c101d75535f226c31ce932c64f7bdb04f11b7bd945d54"
+    },
+    {
+      "published": "ancestry/small-after.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/2C317481-7EE8-4BF8-9F6D-592270F7554C.txt",
+      "bytes": 39175,
+      "sha256": "94573e0771e5c47e81d7298e30efedac610c9a8f5bba5b42e513c17440af2c11"
+    },
+    {
+      "published": "screens/small-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/99483CE3-3193-485B-96F8-4FCEF0005022.png",
+      "bytes": 296505,
+      "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918"
+    },
+    {
+      "published": "crops/small-over.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A48FD624-8ACD-4ADF-81A4-E4608299757A.png",
+      "bytes": 4977,
+      "sha256": "daa2a924fafc0b5b877219d86ee5355649ddb70abe3b2fc9b765a9e18632e3d3"
+    },
+    {
+      "published": "metrics/small-over.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1DB7394B-ECD2-4DB3-A418-8C53F337EDF8.txt",
+      "bytes": 4192,
+      "sha256": "cfa3697dd35ef986552b5c61dcb25a94604288bd417a6e162233471cce25974e"
+    },
+    {
+      "published": "ancestry/small-over.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/19391763-018B-4229-8515-A0CE70A3F3CB.txt",
+      "bytes": 39069,
+      "sha256": "4c119cf77927d5906c29a1dfddd60cfb74177cafbdfec1f8ff28b210c2a8d875"
+    },
+    {
+      "published": "crops/small-before.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8AE48017-80A7-443B-8C56-48C665EBC3C2.png",
+      "bytes": 5136,
+      "sha256": "80a64c5156377c04823a0b2625859a266db047d5c0951a16ff5df91eced74352"
+    },
+    {
+      "published": "metrics/small-before.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D18C7D3C-3914-45CB-B259-E2435AA1EAC6.txt",
+      "bytes": 4219,
+      "sha256": "6cb5bb0cb3cd57f207e51e1b6968b4b9d1d05bd269ad3341631d8e07c3a1b168"
+    },
+    {
+      "published": "ancestry/small-before.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/5A73BB36-0811-4393-8364-8236DE78ABA5.txt",
+      "bytes": 39247,
+      "sha256": "47be3e9193f71a81622b64fcf9e97457651de900c3d5ce3a1c7954357ee287b2"
+    },
+    {
+      "published": "crops/small-change.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/75DD92B5-32B7-4D2C-A281-B87C169BC761.png",
+      "bytes": 4700,
+      "sha256": "38b3558d5ca54e9e497d2d1d190b0c10ee2c765fe5d07208fa37cbf3940b1173"
+    },
+    {
+      "published": "metrics/small-change.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A8280D1C-D3EB-4E25-A350-D1C9D0BF7709.txt",
+      "bytes": 4175,
+      "sha256": "91c6d27cf0cb2b86033a48b044f2c3d7a00b75235778ccdf838b86cc1a26ecf4"
+    },
+    {
+      "published": "ancestry/small-change.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DA255F43-02EC-4AA7-8C96-E152C466330D.txt",
+      "bytes": 16689,
+      "sha256": "fded8077ab8311d3809ddd2236d16504256ad3533352b06974be632425fc3fe3"
+    },
+    {
+      "published": "crops/small-cap.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/451230D2-F645-43B7-A4E2-80F274D0AE98.png",
+      "bytes": 5147,
+      "sha256": "468b1bac9b9acb43bc3f7ec495d13d8745505309b9fd66f4809a0369bf82879d"
+    },
+    {
+      "published": "metrics/small-cap.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/AA1EC43F-0577-4697-9C51-41A67740B030.txt",
+      "bytes": 4163,
+      "sha256": "60f454a5bb6606f7315172eb17ace9687133b0207acb7e494dd7564aaffeb06e"
+    },
+    {
+      "published": "ancestry/small-cap.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9ECB6E23-7DAF-4C3A-9D7B-6F030E02559D.txt",
+      "bytes": 16611,
+      "sha256": "bbfd9a4518b8597b209773a51af13ea2123af62a54d9dfb17ceb899b7573b8f5"
+    },
+    {
+      "published": "crops/small-review-decision.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/0AF084B3-0131-4E7C-9844-6389F346828E.png",
+      "bytes": 11744,
+      "sha256": "cb04e8ec9c991bca1a2cd0e438544884e8c9e3ea7325a659405712cece40036e"
+    },
+    {
+      "published": "metrics/small-review-decision.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9413716E-29D2-405B-AC37-AFA4C2B8816E.txt",
+      "bytes": 4216,
+      "sha256": "c71c47ea296bca1e099d54b2ceaa7d1838786d85914bad15a6eb5d2b56b7b9a3"
+    },
+    {
+      "published": "ancestry/small-review-decision.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/68B32F96-FC68-4F54-8225-E691B7F48FCE.txt",
+      "bytes": 6980,
+      "sha256": "317f0caea150f580a54f06da7489c6d97a9aca972e97f530390b4f7953b3772e"
+    },
+    {
+      "published": "crops/small-review-heading.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/08259782-BA95-4195-86A8-39A5FCAE6375.png",
+      "bytes": 11844,
+      "sha256": "b1a989ddefb436e38c020d671a222a348bb98b20a3c07e23737c63826c455704"
+    },
+    {
+      "published": "metrics/small-review-heading.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E2F1FA7A-D900-4F04-BA0E-9AB38126338C.txt",
+      "bytes": 4264,
+      "sha256": "1370f128fac9993c860f67d3e23cb2a1000d982e5f7c2eed3589ca907cd4992b"
+    },
+    {
+      "published": "ancestry/small-review-heading.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/48239EA7-3484-48C1-9EC1-EEE9C799A47C.txt",
+      "bytes": 15886,
+      "sha256": "b5b1f2541d309c4102c165baffd588ad23a75a8b90007378c7a71e605265067e"
+    },
+    {
+      "published": "crops/large-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3012C6B7-66AC-4AAD-A6EA-297E4EAFD702.png",
+      "bytes": 6115,
+      "sha256": "49cd24ac2d6351d0a7d0fc3eccebfc371709299f6968763a8d975d6563e7bbdf"
+    },
+    {
+      "published": "metrics/large-after.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DE8E50D3-708C-4993-AB5B-B4EA1E51B616.txt",
+      "bytes": 4219,
+      "sha256": "8dcb79766893bfe6e56e736ac394fcd0e733f39abc1a986eb5636d1808c7b0fc"
+    },
+    {
+      "published": "ancestry/large-after.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8D213330-391A-48D4-8E04-CED7620E23CF.txt",
+      "bytes": 40389,
+      "sha256": "12fc2a146292316177912f8e6be1daa37f0b312e504349ea72160e143909e279"
+    },
+    {
+      "published": "screens/large-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/40065F46-C313-48A8-BB52-9C58F2411C0B.png",
+      "bytes": 286331,
+      "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c"
+    },
+    {
+      "published": "crops/large-over.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D6404208-59A0-4342-95CD-CE1CE4FD7776.png",
+      "bytes": 5465,
+      "sha256": "546cd9925a6e75047818abf707eca8382baa3719fa59d17890f48c3d1087fa83"
+    },
+    {
+      "published": "metrics/large-over.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/12E877D9-BE96-4E28-A03F-3F060B37BAEA.txt",
+      "bytes": 4166,
+      "sha256": "bacd1998e47e1010276216380df5d5f0872cbad0033055065f8fc98f39bc5f2f"
+    },
+    {
+      "published": "ancestry/large-over.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/39D13139-92D8-41EF-93A4-2732DE62BF56.txt",
+      "bytes": 40281,
+      "sha256": "527124e26f57843265d35d475918194b32f31b08ef314a7e55bb2f6ff62db808"
+    },
+    {
+      "published": "crops/large-before.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3B54A243-03AD-478B-B1E7-4F975A3D09FC.png",
+      "bytes": 5650,
+      "sha256": "bc82a5166f0052181f5f748cf1b133fa8a06ba7d5a9843c9d0cea2900696eca3"
+    },
+    {
+      "published": "metrics/large-before.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/C06639E2-471C-40A0-9FC8-6783EC537DBB.txt",
+      "bytes": 4227,
+      "sha256": "2a05af5decedaf29ab52e67662215a795bbb2e16b9fdb3edb36fef1f4cbf0b2f"
+    },
+    {
+      "published": "ancestry/large-before.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/08BB12FB-0763-4BB9-AD3E-945AAC9ADD5A.txt",
+      "bytes": 37093,
+      "sha256": "7dae4912e6933ed0185df479f212a051cdbc99626294f8a7fd2f052975fa5cc9"
+    },
+    {
+      "published": "crops/large-change.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DEDC6B4E-169B-4F94-B5A0-BD230E4A9DDA.png",
+      "bytes": 5055,
+      "sha256": "63ff7d4deb4bcd53f292eefd8f10e84b9bef3059ecf344734f06f237fb6e1b13"
+    },
+    {
+      "published": "metrics/large-change.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/89F97CF5-40B8-4FF2-BABB-1C5593076ED9.txt",
+      "bytes": 4154,
+      "sha256": "fc4283f7217ed0c891db154ff86379b5ef0d1fc6b75bf7cea4d271ec65a7dbe0"
+    },
+    {
+      "published": "ancestry/large-change.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D906056B-F2DA-4A1B-A26B-8FD880F1EEBC.txt",
+      "bytes": 16141,
+      "sha256": "0b7530dabdda4e97e2ee63a75e0dca7c18e133d29365fba02ffe0fe1c5c089ea"
+    },
+    {
+      "published": "crops/large-cap.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E24850B7-68EC-4CC6-B193-56DA9BDAD9EA.png",
+      "bytes": 5580,
+      "sha256": "73ef4d79d068a18d5947415b38263bc24cbf08043c7f70fdc5cc906c0724ca87"
+    },
+    {
+      "published": "metrics/large-cap.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/7F6A7179-52D4-40E7-A3B0-867D793CC342.txt",
+      "bytes": 4171,
+      "sha256": "3c261b8d0df1b6ea9310b47cd3c9f9c180010638367cc02d4b7ea3aa0f48198a"
+    },
+    {
+      "published": "ancestry/large-cap.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A8B7DAC5-EB98-4B9B-84D7-C5B0CC471E06.txt",
+      "bytes": 16063,
+      "sha256": "a9774989d8c628bb6176a68d08776d7b89999e834e211120707b6eddac522f42"
+    },
+    {
+      "published": "crops/large-review-decision.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/915EBD8F-AC46-48F1-9E63-1B2E5AB1A6DB.png",
+      "bytes": 12727,
+      "sha256": "1e684bf58c624abc9fba20a89c9eb600e4883715257ffd995b2042e5e0815987"
+    },
+    {
+      "published": "metrics/large-review-decision.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/0F6D9829-EDE5-423E-BF1B-D96760A136B7.txt",
+      "bytes": 4224,
+      "sha256": "1d792ddb47c78e5c8a7571fa4e6f5004b6f8dd903b329c637714f10e62c1c661"
+    },
+    {
+      "published": "ancestry/large-review-decision.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/82456843-07F1-4AD4-988D-4D33D7680DB3.txt",
+      "bytes": 6692,
+      "sha256": "b2b6bb7492927d21c2fe17caaa3478a125fb1f4ee395bd9d425a585a1835776d"
+    },
+    {
+      "published": "crops/large-review-heading.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D3DB691C-D0ED-4DFB-8747-36A993D059FA.png",
+      "bytes": 13276,
+      "sha256": "584663c4c6229fe7f6696d2a9ec59a45e815ba15448ee2276c96ebaaa95df0bb"
+    },
+    {
+      "published": "metrics/large-review-heading.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/28045E7D-D3D6-44F3-A94A-BE9C675748B0.txt",
+      "bytes": 4291,
+      "sha256": "7d17447eeaf185dfdb3b5a79874422ef7947d56e4d31cc44c5bbd1b42cd987e6"
+    },
+    {
+      "published": "ancestry/large-review-heading.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/368A298A-798C-4694-A33E-F32BEBF7DFA3.txt",
+      "bytes": 15338,
+      "sha256": "ea3e9de2db01af6e8d4b9a7cae5f9ba88fa11dccc8cc659327903f144526268f"
+    },
+    {
+      "published": "crops/ax5-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/33FC58BD-ECDE-477C-ACA5-C9B2FE2362D2.png",
+      "bytes": 18901,
+      "sha256": "f44da3605f3a03a11604a7177fe26a1551c91f648de5e09db9bb33399e48f393"
+    },
+    {
+      "published": "metrics/ax5-after.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/4AEAA6B4-6BD4-455F-87AF-BDD473D29C11.txt",
+      "bytes": 4303,
+      "sha256": "bdfbd006e70dc97d595af3517be70823613701d5b57cce563f338ef58ea30656"
+    },
+    {
+      "published": "ancestry/ax5-after.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9BDC73FA-B0AD-4E2A-8F0A-72993FD38FAE.txt",
+      "bytes": 30939,
+      "sha256": "5571cb120f6165b1d29e0f29e4da93a411580ddffb1c7fe81586766b9df0e934"
+    },
+    {
+      "published": "screens/ax5-after.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/C21BFBB3-FD43-4EE8-A18E-0CC45B9D8623.png",
+      "bytes": 291764,
+      "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d"
+    },
+    {
+      "published": "crops/ax5-over.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D2D37F03-DA05-4E78-A83C-5CA68A814561.png",
+      "bytes": 16250,
+      "sha256": "a6784106217cdf6ffbe3bc5f6b55bd67582836dbf9b2ef43e6fcb7e0e3827977"
+    },
+    {
+      "published": "metrics/ax5-over.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1E401619-EF08-46C3-B85A-A3963787756C.txt",
+      "bytes": 4273,
+      "sha256": "5d97bdbe4c70cb124e25472352a56a3ebb3554bb6c071607d9063f77bbc4f282"
+    },
+    {
+      "published": "ancestry/ax5-over.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/F6F805D0-FF6B-4592-BFA9-E8DA59840485.txt",
+      "bytes": 30833,
+      "sha256": "ce88a93279630d6c211770630e8ffcdb6626364702054227e1cd6e8d3c786290"
+    },
+    {
+      "published": "crops/ax5-before.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/47702D8C-E226-4BA4-8036-C4F02956E3E3.png",
+      "bytes": 16965,
+      "sha256": "24c1000038583a79de2a5acdb4d74b33c39eec66589107c65838f61758eddb1a"
+    },
+    {
+      "published": "metrics/ax5-before.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E835E590-9C17-4150-B61B-DB8212E84A5C.txt",
+      "bytes": 4327,
+      "sha256": "2e7b64335b5383caa5d9fa29966f1171e2cbd6e2e0f94e735bec5ccdafac4499"
+    },
+    {
+      "published": "ancestry/ax5-before.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/4948D284-C046-4EC1-AD61-1FFF81C943C2.txt",
+      "bytes": 29261,
+      "sha256": "b9fa22af48aa70e20e23e9e24f68053cdbe906bfae1601aa9534996cc440d9f9"
+    },
+    {
+      "published": "crops/ax5-change.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/CC3378D7-9788-4FC1-9B40-754ED38A0240.png",
+      "bytes": 14743,
+      "sha256": "39ee71cd992f30b51faac6c27a8625ea3adf9f5916b8f424de4715be94362c89"
+    },
+    {
+      "published": "metrics/ax5-change.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/B84B736A-7C12-45E8-A087-716774BDADA5.txt",
+      "bytes": 4267,
+      "sha256": "1691f5670aef79ca974292ca50b21cf995c7c306114b1b389b4b1a66520f6a92"
+    },
+    {
+      "published": "ancestry/ax5-change.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/B4079660-9587-4C84-AE2B-3B451BA371DB.txt",
+      "bytes": 15277,
+      "sha256": "75c7d44786227bed6a5ca9bdf0b8ccff6873a2c1090b342b92d56b40bf2ec4a8"
+    },
+    {
+      "published": "crops/ax5-cap.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/02506B8C-325B-450A-A3D7-22004F0D6656.png",
+      "bytes": 17407,
+      "sha256": "16abd232ff90a056d41fcd0d5095f480e02aa0d6fa88af75916c698ded2acede"
+    },
+    {
+      "published": "metrics/ax5-cap.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/AE0B0366-9BEA-4489-AA63-0E11C00E9DCF.txt",
+      "bytes": 4256,
+      "sha256": "03d60941e22b1967065fa9dc581abd61c700a68032938cabfeade9b3af528b3b"
+    },
+    {
+      "published": "ancestry/ax5-cap.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/106B1BDA-35A3-4AC3-BB05-445F4AFF2BDC.txt",
+      "bytes": 15205,
+      "sha256": "c1c1057b85fe3d2b5179a1aa509e28c3bb1b0cec10434f54d7fe2ce8793473b2"
+    },
+    {
+      "published": "crops/ax5-review-decision.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8842E8D6-5F16-444E-BC49-8D5D88533BEA.png",
+      "bytes": 37557,
+      "sha256": "7b6145053289ae7da4abf3ddd119be7a7be77b254e0f6f38259859f4f14b9121"
+    },
+    {
+      "published": "metrics/ax5-review-decision.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9ADDF0FD-FCDB-4383-A7F2-633721DE9E5B.txt",
+      "bytes": 4316,
+      "sha256": "5dc0e373c7ddfa27867319caa5c3f1f25ac64e218e296cf08fcc85f2afd6e560"
+    },
+    {
+      "published": "ancestry/ax5-review-decision.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/6DF41A94-A6D4-4D9B-839B-68338829093B.txt",
+      "bytes": 5874,
+      "sha256": "3588fed31db1f80bd36a32358f3d9ee4efc0230f20b090d1a37a3ba7687ae688"
+    },
+    {
+      "published": "screens/ax5-review-decision.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1588AB5B-282A-4BD4-A929-11CB9F2F2844.png",
+      "bytes": 261802,
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    },
+    {
+      "published": "crops/ax5-review-heading.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9E79F1B1-E4D1-4E9B-AEEB-140E0B579791.png",
+      "bytes": 40137,
+      "sha256": "15d7b6b9a5ebe08718bda3c2a63ad0f79deeed0ec60008f3992c9c89c837dfae"
+    },
+    {
+      "published": "metrics/ax5-review-heading.json",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A352E49A-84FD-43ED-92D4-2D6AB6CF8961.txt",
+      "bytes": 4338,
+      "sha256": "86556965f4dccd6beefd0209c9163af3a46dcb44fd140ab81763c4bee52317cc"
+    },
+    {
+      "published": "ancestry/ax5-review-heading.txt",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/269E915F-EAA4-45EA-A7FF-ABFB7258255D.txt",
+      "bytes": 15114,
+      "sha256": "576763d790014f9e0d6197619fb583d2fce67bdb6e3edba5ddc525bf51915327"
+    },
+    {
+      "published": "screens/ax5-review-heading.png",
+      "source": ".build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D5E67E83-5A8C-4EB7-B92B-6C8D045504CB.png",
+      "bytes": 261802,
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    }
+  ],
+  "derivedFiles": [
+    "measurements.md (only crop links relinked)",
+    "published-image-map.json",
+    "source/revision2-pins-compact.json",
+    "root-visual-observations.json"
+  ],
+  "noImageEdits": true,
+  "copiedCrops": 21,
+  "copiedFullScreens": 5,
+  "copiedMetricAttachments": 21,
+  "copiedAncestryAttachments": 21,
+  "originalExportTargetGroups": 21,
+  "originalExportTargetAttachments": 84,
+  "omittedFullScreens": 16,
+  "scope": "Raw original measurements and bounded published subset. All original84 target attachments remain in completed inspection export."
+}

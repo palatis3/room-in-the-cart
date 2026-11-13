@@ -1,0 +1,51 @@
+{
+  "status": "failed",
+  "qualified": false,
+  "sourceCount": 265,
+  "rootSourceHashesRechecked": true,
+  "strictCompile": "passed",
+  "offline": {
+    "tests": 754,
+    "pass": 753,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "f25f52858be5fb841216052765ce2facb0ed84d4e45bb3f5269d4fdb04d005cf"
+  },
+  "database": {
+    "tests": 352,
+    "passed": 334,
+    "failed": 15,
+    "skipped": 3,
+    "failedNames": [
+      "erasure drops authored records and all receipts carrying erased current or superseded observations",
+      "quarantined PostgreSQL backup restore replays verified signed erasure into all shared graph copies",
+      "signed quarantined restore removes tracking transfers, lineage, sealed copies and pending review while preserving unrelated IDs",
+      "partial state rejects v1 reads, previews, raw Undo, legacy writes and unreviewed freeze without changing state",
+      "link-only author erasure removes exactly that relationship and preserves unrelated sources, edges, used IDs and tombstones through recovery",
+      "privacy erases source copies/receipts, keeps unrelated source and prevents old operation replay",
+      "account erasure removes accepted proposal copies and exact retry evidence without restoring old meal labels",
+      "placed delivery corrections, split arrivals, replay and shopper changes preserve the sealed shop",
+      "delivery ingredient matches use the sealed occurrence, explicit shopper review and supply revision",
+      "reservation erasure removes all revisions involving a former shopper without reviving an older claim",
+      "dated cook copies keep exact sealed text; only an explicit recipient send advances its baseline",
+      "free household can repair a placed dinner and erasure removes revised text without reviving an old meal",
+      "accepted fallback registry tracks the exact source version and erases published copies derived from another shopper",
+      "deleting idea author erases drafts, approvals and retry receipts",
+      "accepted fallback registry preserves per-ingredient notes and rejects stale approvals, guessed groups and unauthorized replay"
+    ]
+  },
+  "postgresStopped": true,
+  "privateStateRetained": true,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "receipt": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-tracking-persistence-r2/receipt.json",
+  "receiptSHA256": "c61d6d933ceaa77cbbacd763976ff286e9943d86f0ce327672d6a829b322dd95",
+  "databaseLog": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-tracking-persistence-r2/database.log",
+  "databaseLogSHA256": "2de4795736dd5fc0bc3a550c283d8dcafe7d4b676edc36448a1ba82f1d2a6940",
+  "sourceManifestSHA256": "f0e098b1d97f8aee83fdee02e2477db2bc9bdd78558776c563a22875d227be37",
+  "next": "Correct scoped erasure authority, distinguish actual copied label provenance from independent authored text, fix invalid edge fixture and missing freeze-review conflict. No unchanged rerun."
+}

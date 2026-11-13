@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "diagnostic": {
+      "checks": 298,
+      "seconds": 9.381,
+      "receiptSHA256": "e0fde481fc0cfb2ce899870322032ef21e71cd461f6db7365d909ca8fb209254",
+      "sourceManifestSHA256": "a89585cb6dd8fceda206ef238d1da4704833748cdbc79370571dd4a6dc920583"
+    },
+    "ordinary": {
+      "checks": 298,
+      "seconds": 9.372,
+      "receiptSHA256": "e615f665575da6974dd612a16ab38eda43d32727f0a2cf52e3d1a062a74aca7a",
+      "sourceManifestSHA256": "a89585cb6dd8fceda206ef238d1da4704833748cdbc79370571dd4a6dc920583"
+    }
+  },
+  "focusedObserverControls": 121,
+  "protectedInputsUnchanged": true,
+  "nativeExecution": false,
+  "releaseAcceptance": false,
+  "reviewedPatchSHA256": "ad9bf161cfa5b1f0c4f0dde0af1fa94c6ef5b49ba881608d13be719b4c89b999",
+  "frozenManifestSHA256": "f4211354266b52a36a57007d17a0dedf529044636feb15160a29ef66d0e4b34f"
+}

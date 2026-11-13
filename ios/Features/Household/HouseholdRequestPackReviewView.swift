@@ -24,10 +24,11 @@ private struct RequestPackDraft: Equatable {
             feeEligible: feeEligible, source: source, observedAt: observedAt)
     }
 }
-private func requestPackQuantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
+func requestPackQuantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
     let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleaned.isEmpty else { return nil }
-    return Quantity(amount: try Rational(decimal: cleaned.replacingOccurrences(of: ",", with: ".")), unit: unit, originalLiteral: text)
+    let amount = try ListQuantityParser.numericAmount(cleaned)
+    return Quantity(amount: amount, unit: unit, originalLiteral: text)
 }
 
 struct HouseholdRequestPackReviewView: View {
@@ -44,7 +45,7 @@ struct HouseholdRequestPackReviewView: View {
         DisclosureGroup(ht("Compare available packs for this request"), isExpanded: $expanded) {
             Text(ht("Enter the usable amount needed for this request. Matching names do not prove that a product or yield is suitable."))
             Text(ht("Reviewed usable amount needed")).font(.caption)
-            TextField(ht("Reviewed usable amount needed"), text: $needed).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.need")
+            TextField(ht("Reviewed usable amount needed"), text: $needed).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("household.pack.need")
             Picker(ht("Need unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
             candidateFields($first, index: "a")
             candidateFields($second, index: "b")
@@ -79,16 +80,32 @@ struct HouseholdRequestPackReviewView: View {
             }
             if failure { Text(ht("Review the need, units, pack labels, source, availability, and prices. The decision has not changed.")) }
         }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Compare available packs for this request"),
+                                                         identifier: "household.pack.open"))
         .onChange(of: needed) { _, _ in reset() }.onChange(of: unit) { _, _ in reset() }
-        .onChange(of: first) { _, _ in reset() }.onChange(of: second) { _, _ in reset() }
+        .onChange(of: first) { old, new in
+            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+            S24PackTrace.emit("change", pack: "a", oldID: old.id, newID: new.id, old: old.matched, new: new.matched)
+            #endif
+            reset()
+        }.onChange(of: second) { old, new in
+            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+            S24PackTrace.emit("change", pack: "b", oldID: old.id, newID: new.id, old: old.matched, new: new.matched)
+            #endif
+            reset()
+        }
         .onChange(of: model.packReviewScope) { _, _ in reset() }
+        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+        .onAppear { traceLifecycle("appear") }
+        .onDisappear { traceLifecycle("disappear") }
+        #endif
     }
     @ViewBuilder private func candidateFields(_ draft: Binding<RequestPackDraft>, index: String) -> some View {
         Text(ht(index == "a" ? "Pack A" : "Pack B")).font(.headline)
         Text(ht("Reviewed pack label")).font(.caption)
         TextField(ht("Reviewed pack label"), text: draft.label).accessibilityIdentifier("household.pack.\(index).label")
         Text(ht("Usable amount in one pack, blank if unknown")).font(.caption)
-        TextField(ht("Usable amount in one pack, blank if unknown"), text: draft.usable).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).usable")
+        TextField(ht("Usable amount in one pack, blank if unknown"), text: draft.usable).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("household.pack.\(index).usable")
         Picker(ht("Pack usable unit"), selection: draft.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
         Text(ht("Price per pack in USD, blank if unknown")).font(.caption)
         TextField(ht("Price per pack in USD, blank if unknown"), text: draft.price).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).price")
@@ -102,9 +119,30 @@ struct HouseholdRequestPackReviewView: View {
         Text(ht("Price source")).font(.caption)
         TextField(ht("Price source"), text: draft.source).accessibilityIdentifier("household.pack.\(index).source")
         DatePicker(ht("Price observed"), selection: draft.observedAt)
-        Toggle(ht("I confirmed this pack matches the request and intended use"), isOn: draft.matched).accessibilityIdentifier("household.pack.\(index).matched")
+        Toggle(ht("I confirmed this pack matches the request and intended use"), isOn: matchedBinding(draft, index: index)).accessibilityIdentifier("household.pack.\(index).matched")
         Toggle(ht("Counts toward the retailer fee threshold"), isOn: draft.feeEligible)
     }
+    private func matchedBinding(_ draft: Binding<RequestPackDraft>, index: String) -> Binding<Bool> {
+        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+        if S24PackTrace.enabled {
+            let original = draft.matched
+            return Binding(get: { original.wrappedValue }, set: { requested, transaction in
+                let before = draft.wrappedValue
+                S24PackTrace.emit("setter-enter", pack: index, oldID: before.id, newID: before.id, old: before.matched, new: requested)
+                original.transaction(transaction).wrappedValue = requested
+                let after = draft.wrappedValue
+                S24PackTrace.emit("setter-return", pack: index, oldID: before.id, newID: after.id, old: before.matched, new: after.matched)
+            })
+        }
+        #endif
+        return draft.matched
+    }
+    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    private func traceLifecycle(_ event: String) {
+        S24PackTrace.emit(event, pack: "a", oldID: first.id, newID: first.id, old: first.matched, new: first.matched)
+        S24PackTrace.emit(event, pack: "b", oldID: second.id, newID: second.id, old: second.matched, new: second.matched)
+    }
+    #endif
     private func reset() { comparison = nil; reviewedScope = nil; failure = false }
     private func compare() {
         do {

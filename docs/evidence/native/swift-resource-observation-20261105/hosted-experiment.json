@@ -1,0 +1,75 @@
+{
+  "candidate": "122a1925d9862337f23ca416278f9cc300a9cf14",
+  "baseRuntimeSource": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "branch": "codex/swift-codeql-resource-observation",
+  "runID": 42097495695,
+  "jobID": 127491268020,
+  "runAttempt": 1,
+  "conclusion": "failure",
+  "countsAsRequiredCandidateAcceptance": false,
+  "runtimeSourceAndProjectUnchanged": true,
+  "compileStep": {
+    "name": "Compile Release Swift sources for CodeQL",
+    "status": "completed",
+    "conclusion": "failure",
+    "number": 6,
+    "started_at": "2026-11-05T20:00:20Z",
+    "completed_at": "2026-11-05T20:30:25Z"
+  },
+  "analysisStep": {
+    "name": "Analyze Swift security findings",
+    "status": "completed",
+    "conclusion": "skipped",
+    "number": 7,
+    "started_at": "2026-11-05T20:30:25Z",
+    "completed_at": "2026-11-05T20:30:25Z"
+  },
+  "artifacts": [
+    {
+      "id": 13451260539,
+      "name": "iphone-swift-codeql-build-logs-1",
+      "size_in_bytes": 17878,
+      "digest": "sha256:5e356174c87a9de86735e0505129e5402d3e80afecfaa6dd39e2a432efac5717"
+    },
+    {
+      "id": 13450229451,
+      "name": "debug-artifacts",
+      "size_in_bytes": 265861865,
+      "digest": "sha256:e54afecc8630fedd5119e386934298ef6f06c0ed34c6ccde5297d270406ff74b"
+    }
+  ],
+  "allArtifactDigestsAndSizesVerified": true,
+  "rawEvidence": ".build/CIResearch20261105/experiments/resources-122a192",
+  "jobLogSHA256": "75ccc6c7823d9b7e952e9edcdacb6c8d82a246542522ce6e7da9e6db92f75769",
+  "resourceSummary": "resource-summary.json",
+  "resourceSummarizerSHA256": "bb63d98b06826168dfa73dffca161e039c4dbd679d6432033630ed8b7ca2057b",
+  "resourceValidation": "120 complete bounded records / 60 ordered start-completion pairs, no incomplete trailing bytes; fixed keys, labels and numeric fields validated.",
+  "observations": [
+    "All four probes report 49 successful and 11 timeout observations. Largest collection duration 75.614 seconds; observer deadlines are not hard OS/tracer process-creation bounds.",
+    "Observed host physical memory 7 GiB. Host-wide swap-in/out counters rise 307382/386505 pages from first to last successful observation at 16 KiB page size; these counters do not identify a responsible process.",
+    "Every successful process observation still explicitly labels ancestry coverage partial. Category maxima are not simultaneous totals, and summed RSS can double-count shared memory.",
+    "Missing/late probes cluster in the early traced initialization period; they cannot reconstruct that interval or certify zero utilization.",
+    "Analysis was skipped after the unchanged 30-minute compile cutoff. No source security acceptance or root-cause fix is claimed."
+  ],
+  "nextStep": "One separate WMO completion measurement, run42105722998 at75e18ff, changes only diagnostic compile30\u219245 and job45\u219260 caps plus run identity. Production scanner remains unchanged.",
+  "traceReview": {
+    "reportSHA256": "6614705fdcd9a81cff34f3360051f9745656ba508a7ee18df112373d96402cba",
+    "sourceResolutionSecondsFromCompileStep": 785.539,
+    "appFrontendSecondsFromCompileStep": 1187,
+    "intendedRuntimeInputUnion": 254,
+    "repositorySwiftInputs": 253,
+    "generatedSwiftInputs": 1,
+    "appInputsNamed": 194,
+    "appPrimaryInputsWithExtractorStartBeforeCutoff": 98,
+    "appPrimaryInputsIncludingLateChildren": 122,
+    "packageAndExtensionPrimaryInputsNamed": 60,
+    "existingDiagnosticSignatures": 18,
+    "analysisComplete": false,
+    "limitations": "Logged input presence and started extractors do not prove successful semantic extraction. Late child activity is outside the compile budget.",
+    "reviewer": "Astra; root verified artifact identity and bounded resource records. Lumpy independently reviewed the resource sample data."
+  },
+  "extractor-review.jsonSHA256": "1d0952feaa4df2db81681007eaeedf83c4a8302b4e9459679a6b8ef39bab3010",
+  "frontend-review.jsonSHA256": "42a07927d2ee65761f6695d2f566a22566987051bc413d66678fe74c3b458b41",
+  "semantic-review.jsonSHA256": "f0ee89928b4a6de786de0e87ae9430402fca038be81ac07a25c17664c40f625e",
+  "driver-comparison.jsonSHA256": "f8e0b78cd2f585795e76e093dbf25c117306ef6996d8ce8f7fe50cbdeef24782"
+}

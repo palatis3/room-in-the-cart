@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "conversionTableVersion": "us-customary-metric-v1",
+  "cases": [
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "ounce",
+        "originalLiteral": "1 ounce",
+        "confirmedConversion": null
+      },
+      "targetUnit": "gram",
+      "expected": {
+        "numerator": "45359237",
+        "denominator": "1600000"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "pound",
+        "originalLiteral": "1 pound",
+        "confirmedConversion": null
+      },
+      "targetUnit": "gram",
+      "expected": {
+        "numerator": "45359237",
+        "denominator": "100000"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "fluidOunce",
+        "originalLiteral": "1 fluidOunce",
+        "confirmedConversion": null
+      },
+      "targetUnit": "milliliter",
+      "expected": {
+        "numerator": "473176473",
+        "denominator": "16000000"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "cup",
+        "originalLiteral": "1 cup",
+        "confirmedConversion": null
+      },
+      "targetUnit": "milliliter",
+      "expected": {
+        "numerator": "473176473",
+        "denominator": "2000000"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "kilogram",
+        "originalLiteral": "1 kilogram",
+        "confirmedConversion": null
+      },
+      "targetUnit": "gram",
+      "expected": {
+        "numerator": "1000",
+        "denominator": "1"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "liter",
+        "originalLiteral": "1 liter",
+        "confirmedConversion": null
+      },
+      "targetUnit": "milliliter",
+      "expected": {
+        "numerator": "1000",
+        "denominator": "1"
+      }
+    },
+    {
+      "quantity": {
+        "amount": {
+          "numerator": "1",
+          "denominator": "1"
+        },
+        "unit": "count",
+        "originalLiteral": "1 count",
+        "confirmedConversion": null
+      },
+      "targetUnit": "gram",
+      "expected": null
+    }
+  ]
+}

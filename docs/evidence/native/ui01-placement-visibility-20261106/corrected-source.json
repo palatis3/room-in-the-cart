@@ -1,0 +1,8 @@
+{
+  "base": "b7fc82e7a40671d4dd050660d11dc2ea769d8d29",
+  "files": {
+    "ios/UITests/FreeJourneyUITests.swift": "c6b5fc4c3fe808e7859616b70d966fd59e2eac72edb0a46760f54d8241753d5a",
+    "ios/Features/Pickup/PickupHomeView.swift": "0f428130e8186e550fa68eba4c5c474f51f89adae1fb04a63d37253b1f78fee6",
+    "ios/Features/Pickup/PickupModel.swift": "c57b837b2983d7c0c565817b3d0598b862f043cc901ffde3890849d207a102c1"
+  }
+}

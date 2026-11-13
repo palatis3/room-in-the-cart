@@ -162,6 +162,26 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         XCTAssertTrue(unstructured.servings.isEmpty); XCTAssertTrue(unstructured.ingredientText.isEmpty)
         XCTAssertTrue(unstructured.unclassifiedText.contains("Bake"))
     }
+    func testYieldSuggestionsPreserveMixedServingsAndInstructionText() throws {
+        let draft = try RecipeOCRParser.draft("Guiso\nRinde: 2 1/2 porciones\nIngredientes\n2 papas\nPreparación\nServings: 1")
+        XCTAssertEqual(draft.servings, "2 1/2")
+        XCTAssertEqual(draft.notes, "Servings: 1")
+        XCTAssertEqual(draft.ingredientText, "2 papas")
+        XCTAssertFalse(draft.confirmed)
+
+        let ambiguous = try RecipeOCRParser.draft("Soup\nServes 2 to 4\nIngredients\n1 carrot")
+        XCTAssertTrue(ambiguous.servings.isEmpty)
+        XCTAssertEqual(ambiguous.unclassifiedText, "Serves 2 to 4")
+
+        let named = try RecipeOCRParser.draft("Servings of Sunshine\nServes 4\nIngredients\n2 oranges")
+        XCTAssertEqual(named.title, "Servings of Sunshine")
+        XCTAssertEqual(named.servings, "4")
+
+        let alternatives = try RecipeOCRParser.draft("Soup\nServes 2\nYield: 4 servings\nIngredients\n1 carrot")
+        XCTAssertTrue(alternatives.servings.isEmpty)
+        XCTAssertEqual(alternatives.unclassifiedText, "Serves 2\nYield: 4 servings")
+    }
+
     func testReviewedRecipeKeepsOriginalSeparateAndDoesNotChooseAMeal() throws {
         let original = "Tacos\nServes 4\nIngredients\n2 packs of 6 wraps\nInstructions\nWarm wraps"
         var draft = try RecipeOCRParser.draft(original)
@@ -206,6 +226,21 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .packageReference)
         let record = try model.reviewed(target: target, label: "Rice", barcode: nil)
         XCTAssertEqual(record.originalText, "rize"); XCTAssertEqual(model.source, .paste)
+    }
+    func testRejectedPastePreservesCurrentReviewAndValidPasteClearsTheFailure() {
+        let model = ScanModel(text: "Receipt from Tuesday")
+        model.confirmed = true
+        XCTAssertFalse(model.paste([String(repeating: "x", count: 20_001)]))
+        XCTAssertEqual(model.failure, .tooLarge)
+        XCTAssertEqual(model.text, "Receipt from Tuesday")
+        XCTAssertTrue(model.confirmed)
+        XCTAssertEqual(model.source, .typed)
+
+        XCTAssertTrue(model.paste(["Rice", "Beans"]))
+        XCTAssertNil(model.failure)
+        XCTAssertEqual(model.originalText, "Rice\nBeans")
+        XCTAssertFalse(model.confirmed)
+        XCTAssertEqual(model.source, .paste)
     }
     func testRevokingPhotoConsentRejectsLateResultAndKeepsTyping() async throws {
         let service = HeldScan(), model = ScanModel(text: "Keep typed", service: service)

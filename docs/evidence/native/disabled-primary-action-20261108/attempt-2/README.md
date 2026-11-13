@@ -1,0 +1,17 @@
+# Second candidate: readable disabled row; both complete journeys failed
+
+This package retains the completed ordinary English/Spanish light run only. Its 556-file source manifest is `38e6b9ece2f6fc8c8b953cf6fe156708da59a3ea841cdca2eebba520601d6dbf`; `change.patch` and `layered-source.json` identify the candidate. Local Xcode 27.1/27A9275 ran on iPhone 17, iOS 26.2/23C54, Large text. The later Spanish run is not included.
+
+**Native: 0/2 passed, exit 65. Strict inspection: exit 1.** English exceeded its original 720-second allowance after repeated animation-idle failures. Spanish failed at an offscreen `dinnerAcceptIdea` snapshot before enabled-action capture. Zero runtime-warning occurrences were recorded across the two examined cases; this does not override either failure.
+
+Root reviewed all seven retained PNGs: two full unknown-quantity screens, two whole disabled buttons, two disabled label interiors, and the Spanish failure screenshot. Both disabled labels now measure **15.21385:1**, glyph core RGB `(23,41,37)` on white, modal across 11 English and 12 Spanish glyph components. The original 912×144 crops contain the label interior; distributed glyph analysis avoids deriving a pass from an outline or stray edge. Reports preserve the original sRGB PNG hashes; `measurement/measure_field.py` preserves the method.
+
+Partial interaction evidence shows a single native disabled Button spanning the 370×82-point Form row. Both cases reached center and outer-padding tap attempts, then checked that the button stayed disabled and no saved confirmation appeared; restoring the quantity reached the earlier enabled-state check. These are partial no-write checks, not a durable write-counter proof. **Neither case reached final enabled-edge activation, saved-dinner confirmation, or the restart/library-count/list assertions. Enabled captures and final persistence acceptance are absent, not passing.**
+
+Spanish failure screenshot and hierarchy show the supply/pack section above the acceptance row; the hierarchy has no `dinnerAcceptIdea` element. The test read `accept.isEnabled` before its existing reveal helper. `failure-review/assert-after-reveal.patch` preserves the enabled assertion and moves it after that reveal, still before activation. It is the proposed subsequent test correction, not source executed by this run. It adds no timeout, retry or product change.
+
+English's first missing animation-complete notification follows Done for `ideaSupplyYield`: tap at 209.62s, idle wait at 210.19s, missing notification at 270.22s. Later price/source actions repeat the idle failure. This is independently unresolved; the Spanish assertion-order fix is not claimed to correct it.
+
+Fourteen deduplicated payloads (1,931,038 bytes) were exported only from the inspection copy. The package retains the exact export receipt, bounded native-log excerpts, strict outputs, run metadata, original-result fingerprint, selectors and source manifest. Original XCResult bytes were verified unchanged after export and review; source-unchanged flags refer to those historical collection times. No result bundles, products, recordings or redundant snapshots are copied here. Absolute scratch paths inside original JSON reports are preserved as provenance; payloads retain receipt-relative paths under `failure-review/`.
+
+`provenance.json` maps copied bytes to their original paths and hashes. `manifest.json` covers every nested packaged file except itself. This package does not close full dinner acceptance or the wider accessibility audit.

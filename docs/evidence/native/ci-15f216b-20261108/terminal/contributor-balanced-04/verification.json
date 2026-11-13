@@ -1,0 +1,111 @@
+{
+  "observedAtUtc": "2026-11-08T04:02:54+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T03:55:59Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128612236669,
+    "name": "Fixture (contributor-balanced-04)",
+    "startedAt": "2026-11-08T03:33:24Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13601989785,
+    "name": "iphone-fixture-results-contributor-balanced-04-1",
+    "digest": "sha256:5c2080f3285b719678b3207589f995e12232faeb4d4686296ed05a348df4d4e3",
+    "size_in_bytes": 10104724,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "4eeeb13aa4d5f01d7d1d978ffca70ffdb10a73cfb15173e6a5708036b866403a",
+    "rangeBytes": 57320,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 497374,
+        "sha256": "fda76f12ab179017fc2200fed0f560720d385847e6b6a247c829b73bbd154bf8",
+        "zipCRC": 2185369053,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 3627,
+        "sha256": "571c84860d23068bb61f42c387ffeb37f02ed1c97ce00d5a120d70888f7de566",
+        "zipCRC": 913593638,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/contributor-balanced-04.txt",
+        "bytes": 615,
+        "sha256": "681ebe9b7ead2c23f7debd69ab6a6dfd0b5fa2a8fcf5eb0eb4d1358204f830c4",
+        "zipCRC": 2990960178,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "5806355247eb76085ff9c4d3d275c1bd0dabbe6fb97dadeb5797a9cf50582c14",
+        "zipCRC": 202412520,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "b356d92c526efe8ee3d07064c1f7fc4fb20d3b1d5da2f2d8ac938d0bfcfa2c5f",
+        "zipCRC": 1803670204,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess": 241.87178707122803,
+      "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource": 102.14076495170593,
+      "RoomInTheCartUITests/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy": 118.19067704677582,
+      "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo": 322.26375102996826,
+      "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice": 152.91347801685333
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

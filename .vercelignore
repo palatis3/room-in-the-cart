@@ -1,11 +1,15 @@
 ios/
 docs/
+diagnostics/
+/README.md
+/.gitattributes
 config/
 scripts/
 .tools/
 .build/
 .git/
 .github/
+supabase/.temp/
 **/node_modules/
 **/dist/
 **/public-build/

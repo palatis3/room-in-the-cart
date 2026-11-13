@@ -195,7 +195,7 @@ final class CaptureImportTests: XCTestCase {
 
     func testLegacyPreviewAndContributionDecodeWithEmptyCaptureDefaults() throws {
         var shop = ShoppingLedger()
-        let preview = shop.stageImport(text: "2 apples", source: .paste)
+        let preview = try shop.stageImport(text: "2 apples", source: .paste)
         try shop.commitImport(preview, at: date)
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(shop)) as? [String: Any])
         var batches = try XCTUnwrap(json["importBatches"] as? [[String: Any]])

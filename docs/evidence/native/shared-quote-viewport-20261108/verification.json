@@ -1,0 +1,98 @@
+{
+  "scope": "Test helper only; product source, all business assertions, original typing and time limits unchanged. Local qualification, not hosted or physical-device acceptance.",
+  "baseCommit": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "originalTestSHA256": "d2cc50ba2e19bfed8cbba324250220ca1d576c775d6e8640ce85b53eea127628",
+  "installedTestSHA256": "f2d838bc6ba324edeb9c34fca28d21765a50fff9e7a12c00dcb0fa0f79e6a23a",
+  "qualifiedCaseCount": 5,
+  "runs": [
+    {
+      "path": ".build/CI15F216Nov08/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/done-viewport-r4-run",
+      "nativeExit": 0,
+      "strictExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "seconds": 427.197
+        }
+      ],
+      "runtimeWarnings": 0,
+      "observedAnimationIdleMessages": 0,
+      "runnerRestarts": 0,
+      "sourceManifestSHA256": "eb93d6f1dba75eb94fa0b5456c7ec320c9939e224953da3f9e30d524efc5de3e",
+      "runReceiptSHA256": "7ab46ad5f5ab205cf57aeb82e83200bb115a6b578e63a39381aa4c71adc9f785",
+      "verificationSHA256": "f50f9aab3916d586d62b8b9516103404ceeb68b826569cfd204cee9c2ff50869",
+      "warningEvidenceSHA256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+      "idleDiagnosticsSHA256": "843170dd2928dd75b8ca40151e0d0e8be9756f1c002f34de1ee12db290a4d9fa",
+      "sourcePinsAfterRun": true,
+      "originalBundleUnchanged": true,
+      "inputProductsUnchanged": null,
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "runtime": {
+        "SIMULATOR_ROOT": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+        "SIMULATOR_RUNTIME_VERSION": "26.2",
+        "SIMULATOR_RUNTIME_BUILD_VERSION": "23C54"
+      },
+      "expectedCount": 1,
+      "retries": 0,
+      "outputProductManifestSHA256": "724a4f98f050751a41bd5e5367bdd0f3617e4e886b8b058bab02bbb4f04b8d81"
+    },
+    {
+      "path": ".build/CI15F216Nov08/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/done-viewport-r4-regression-run",
+      "nativeExit": 0,
+      "strictExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+          "seconds": 96.647
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "seconds": 226.067
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+          "seconds": 64.346
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "seconds": 223.688
+        }
+      ],
+      "runtimeWarnings": 0,
+      "observedAnimationIdleMessages": 0,
+      "runnerRestarts": 0,
+      "sourceManifestSHA256": "eb93d6f1dba75eb94fa0b5456c7ec320c9939e224953da3f9e30d524efc5de3e",
+      "runReceiptSHA256": "f15f4eb8d6845b81e8b29615d655e4f22bcbf08646c5c984f5c1651c78955d1f",
+      "verificationSHA256": "dcbc48a74acde0970d567556703844a0efaeaed0c307e284c490c6f270a79f3e",
+      "warningEvidenceSHA256": "46c491959346fd2623729293bd2f1520d6e0cce6856177b586e8fca8fee2dfc2",
+      "idleDiagnosticsSHA256": "86b44b51606a1fb90394678ae80279a96ce2c3e36f894034ce7235edf6cc5af7",
+      "sourcePinsAfterRun": true,
+      "originalBundleUnchanged": true,
+      "inputProductsUnchanged": true,
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "runtime": {
+        "SIMULATOR_ROOT": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+        "SIMULATOR_RUNTIME_VERSION": "26.2",
+        "SIMULATOR_RUNTIME_BUILD_VERSION": "23C54"
+      },
+      "expectedCount": 4,
+      "retries": 0,
+      "inputProductManifestSHA256": "724a4f98f050751a41bd5e5367bdd0f3617e4e886b8b058bab02bbb4f04b8d81"
+    }
+  ],
+  "originalFailures": [
+    {
+      "path": ".build/CI15F216Nov08/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/execution-r2/runs/known-trip",
+      "nativeExit": 65,
+      "strictExit": 1,
+      "finding": "Fully-visible precondition alone omitted Done accessory strip; extraMinutes typing lacked focus. Later screenshot showed field behind strip; exact tap-time occlusion inferred."
+    },
+    {
+      "path": ".build/CI15F216Nov08/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/done-viewport-r3-run",
+      "nativeExit": 65,
+      "strictExit": 1,
+      "finding": "Measured Done bound rejected itemSubtotal after30 original center drags; source field retained focus. Text interaction consuming center drag inferred, not proved for every event."
+    }
+  ],
+  "remaining": "Hosted Xcode26.3 qualification pending; current14ac cohort does not contain this correction. Separate keyboard-animation investigation remains unresolved."
+}

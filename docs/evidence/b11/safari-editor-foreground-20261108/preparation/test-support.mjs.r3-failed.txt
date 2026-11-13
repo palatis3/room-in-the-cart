@@ -1,0 +1,7 @@
+import {createRequire} from 'node:module';import {readFileSync} from 'node:fs';import {fileURLToPath} from 'node:url';import {join} from 'node:path';
+const require=createRequire('/Users/palatis/Room in the Cart/web/package.json');
+export const {JSDOM}=require('jsdom'),ts=require('typescript'),{IDBFactory}=require('fake-indexeddb');
+const source=fileURLToPath(new URL('./source/',import.meta.url));
+export function loadModules(dom,api){const cache=new Map();return function load(name){if(cache.has(name))return cache.get(name).exports;const module={exports:{}};cache.set(name,module);const code=ts.transpileModule(readFileSync(join(source,name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('require','module','exports','window','document',code)(ref=>{if(ref.endsWith('.css'))return {};const dependency=ref.slice(2).replace(/\.js$/,'');const exports=load(dependency);if(name==='main'&&dependency==='app'&&api)return {WebApp:class extends exports.WebApp{constructor(root,_a,_o,token){super(root,api,new (load('outbox').Outbox)(new IDBFactory()),token);}}};return exports;},module,module.exports,dom?.window,dom?.window?.document);return module.exports;};}
+export const tick=()=>new Promise(r=>setImmediate(r));
+export async function until(predicate){const end=performance.now()+3000;while(performance.now()<end){if(predicate())return;await tick();}throw Error('offline controlled boundary exceeded 3000ms');}

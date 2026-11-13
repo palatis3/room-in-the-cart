@@ -1,0 +1,15 @@
+{
+  "command": [
+    "xcrun",
+    "xcresulttool",
+    "get",
+    "test-results",
+    "summary",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/inspection.xcresult"
+  ],
+  "exit": 0,
+  "fileSizeLimit": 10000000,
+  "stdoutSHA256": "0bcfb4c17ee0e12d12d498b35d4373efcbea6a2787360656843cfd3f151bdea7",
+  "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

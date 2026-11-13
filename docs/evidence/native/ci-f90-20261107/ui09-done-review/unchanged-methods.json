@@ -1,0 +1,7 @@
+{
+  "testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence": true,
+  "fill": true,
+  "launch": true,
+  "restart": true,
+  "revealContent": true
+}

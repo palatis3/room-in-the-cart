@@ -1,0 +1,29 @@
+{
+  "command": [
+    "xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/CheckoutAcceptanceReview20261107/validation/negative/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=268030FF-49A6-46F3-B676-99878D6979FD",
+    "-parallel-testing-enabled",
+    "NO",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/CheckoutAcceptanceReview20261107/validation/negative/Negative.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-only-testing:RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+    "-only-testing:RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+    "-only-testing:RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange",
+    "-only-testing:RoomInTheCartTests/DinnerAwayCarryoverTests/testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival",
+    "-only-testing:RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant",
+    "test-without-building"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart/.build/CheckoutAcceptanceReview20261107/validation/workspace/source",
+  "start": 1794039290.654602
+}

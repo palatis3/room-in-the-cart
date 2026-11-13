@@ -1,0 +1,39 @@
+{
+  "sourceManifestSHA256": "ce71ed0b68bba84bd731082f61587b2029d9481121d60a7864862222cee89ce8",
+  "sourceUnchanged": true,
+  "build": {
+    "passed": true,
+    "configuration": "Debug",
+    "xcode": "27.1",
+    "seconds": 234.757
+  },
+  "package": {
+    "executed": 125,
+    "passed": 122,
+    "expectedIntegrationSkips": 3,
+    "failed": 0
+  },
+  "nativeModels": {
+    "expected": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0,
+    "strictPassed": true,
+    "seconds": 20.613
+  },
+  "receipts": {
+    "build-receipt.json": "7c7c69e95a22f39771b4a84497abc539403893fdfb7cad399c68428992304889",
+    "bundle-receipt.json": "9ed7c60aa59456637180ec44ad83f8969e201e59f8ee5adffc455aa58cd94f99",
+    "package-receipt.json": "734bf0373a11b5c89d7756a701f022ccef9b74de88b5b45081799c652ffa6e80",
+    "models-r3/receipt.json": "3907f2c8142875bd4db80ca2529a94beedbbfb65e35a51e84c37a492f7bf29a7"
+  },
+  "scope": "18 new shared-food cases plus19 existing shop and8 helper-review cases",
+  "uiJourneyAcceptance": false,
+  "fullCandidateAcceptance": false,
+  "deployment": false,
+  "structuralChecks": {
+    "generatedProject": "passed",
+    "localization": "27 catalogs,4403 en/es entries,4011 literal source keys; format arguments match",
+    "humanLocalizationAcceptance": false
+  }
+}

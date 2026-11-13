@@ -1,0 +1,30 @@
+{
+  "scope": "Creation candidate/action Codable roundtrip and existing command body explicit null, plus complete client package suite",
+  "passed": 150,
+  "expectedWireSkips": 3,
+  "newCreationTests": 5,
+  "log": ".build/created-meal-client-r2.log",
+  "logSHA256": "6b37f1c886a55e83ae1c0d6b5caa6ced46ba6f0c808ac3a84a9603c6d20665d9",
+  "firstFailure": ".build/created-meal-client-encoding-first-failure.log",
+  "firstFailureSHA256": "da46e5139ad767d2bcd12e7c382662277f783a9478562e32901c20d07f67ee65",
+  "firstFailureCause": "SharedOperationUndoPatch.encode threw invalidResponse for nil meal; reproduced before correction",
+  "fix": "Preserve explicit meal:null for removal while retaining canonical non-null meal encoding",
+  "sourceSHA256": {
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedOperationUndoContracts.swift": "141ed161267fbf81b6b6fe916e4a8dc4e4ebc62cf0ac9de043b49a09c1dc0fc8",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedOperationUndoMeal.swift": "d74506ef8e2e6ac5ebcae60101f4c12bbd77393b6bf7622b78a929f694c9c421",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedOperationUndoCreationTests.swift": "692bb065644f20f45de77426717b0fcb4e4cc8ab39534984c14d9f0d1a383cf3"
+  },
+  "fullNativeBuildAfterThisEncoderFix": true,
+  "realServiceCreationWire": false,
+  "releaseAcceptance": false,
+  "buildForTesting": {
+    "exitCode": 0,
+    "result": "TEST BUILD SUCCEEDED",
+    "log": ".build/CreatedMealNativeNov10/r2/build.log",
+    "logSHA256": "137835130720bd1eb25ea35e4b6d5fa8922ca2370ae0286fd01444beb22cc502",
+    "resultBundle": ".build/CreatedMealNativeNov10/r2/Build.xcresult",
+    "bundleManifestSHA256": "adc712260d746a432b0ab97ecc76b82dcbe45937f4148201eb5849a8232319aa",
+    "mode": "incremental app/model/UI compilation with r1 DerivedData; unique retained r2 result bundle",
+    "testsExecuted": false
+  }
+}

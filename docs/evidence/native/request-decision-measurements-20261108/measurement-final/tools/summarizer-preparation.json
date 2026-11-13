@@ -1,0 +1,28 @@
+{
+  "scope": "Offline exported-attachment summarizer prepared; no actual measurement bundle/export accessed and no native/rendered acceptance result",
+  "syntheticParserControls": {
+    "passed": 8,
+    "failed": 0,
+    "command": "python3 -B .build/RequestDecisionAccessibilityNov08/test_summarize_measurements.py"
+  },
+  "inspectedCompletedManifest": ".build/RequestDecisionAccessibilityNov08/baseline-r2/inspection/attachments/manifest.json",
+  "expectedGroups": 21,
+  "expectedTargetAttachments": 84,
+  "files": [
+    {
+      "path": ".build/RequestDecisionAccessibilityNov08/summarize_measurements.py",
+      "bytes": 13388,
+      "sha256": "dad8f6a7c6f79997dede656e08b49097c60165b88c5dbbbc2a3bc236823fefa2"
+    },
+    {
+      "path": ".build/RequestDecisionAccessibilityNov08/test_summarize_measurements.py",
+      "bytes": 5218,
+      "sha256": "10728988b2833d857888fe9efa2e90cd941e1cfb1993c9a53d60d4301e6e1840"
+    },
+    {
+      "path": ".build/RequestDecisionAccessibilityNov08/MEASUREMENT-SUMMARIZER.md",
+      "bytes": 3284,
+      "sha256": "c51f943e1dbf74a336fa44ff2b8e71602818f9721137112b005d5d4f7ac82e16"
+    }
+  ]
+}

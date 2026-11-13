@@ -1,0 +1,46 @@
+{
+  "earlierUsable": 6,
+  "correctedUsable": 7,
+  "unit": "count",
+  "matchingPredecessor": true,
+  "matchingReceipt": true,
+  "receiptCount": 1,
+  "originalBasketUnchanged": true,
+  "physicalReceiptUnchanged": true,
+  "settlementUnchanged": true,
+  "requirement": "Foundation 2.1 S08 correction of usable food with dependent meal review",
+  "baseline": "On the original app, the new journey failed because the correction screen omitted the previously confirmed six usable wraps. The Save action read whichever observation was current at tap time.",
+  "change": "Bind the correction to the opened physical receipt and usable observation, preview its meal allocations, and reject a save if that observation, pickup revision or current stock allocation changed. Exact successful retries are idempotent.",
+  "native": "684 model tests and one shopper journey passed on the iPhone SE simulator, iOS 17.0, with zero runtime warnings. The five affected checks also passed on iPhone 17 iOS 26.2 before integration.",
+  "visibleMeals": {
+    "protectedLunch": {
+      "before": 2,
+      "after": 2
+    },
+    "tacos": {
+      "before": 4,
+      "after": 5
+    },
+    "quesadillas": {
+      "before": 0,
+      "after": 0
+    }
+  },
+  "scriptTests": 215,
+  "source": {
+    "ios/Features/Pickup/PickupUsableCorrection.swift": "4a7b5880f541008409fb3d879de31dffdf37a2fdc03a5b79e977a7990ddaebf6",
+    "ios/Features/Pickup/PickupArrivalView.swift": "f20762b4fa4b842238922a8c0793e2376d9a7dc4635f064dea712c239507bdd8",
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "ca461e0edb68e28bac0ef640d661aa89f5d954682ac79fc4b6d9939545573d32",
+    "ios/Tests/PickupModelTests.swift": "c520200a0c3263f5611e275476976d4d05937619fcb94ec8fe0823cab9b5f9a7",
+    "ios/UITests/FreeJourneyUITests.swift": "b86079eb30921e2cd1d86353dea1f88e1789aa8fff3e15edb4370d75e60d167d"
+  },
+  "strictSHA256": "b12ea98e7d6f89681c57cfc8995d47c01301ef9692ea74f0f5e399833e7b6f90",
+  "deviceBuild": {
+    "configuration": "Release",
+    "architecture": "arm64",
+    "destination": "generic iPhone",
+    "signed": false,
+    "result": "Build succeeded. Executable, assets, privacy, environment and embedded extensions verified.",
+    "verificationSHA256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76"
+  }
+}

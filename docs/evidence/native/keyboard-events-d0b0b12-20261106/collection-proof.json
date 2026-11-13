@@ -1,0 +1,18 @@
+{
+  "keyboard-events-1": {
+    "artifactID": 13484227125,
+    "sha256": "8db6da6d34f0558a93b71e8e37bc5eaa4cc583fa4c899c81ba3b6101520a170d",
+    "digestVerified": true,
+    "compressedBytes": 1020752,
+    "members": 74,
+    "expandedBytes": 2573004
+  },
+  "keyboard-products-1": {
+    "artifactID": 13484396727,
+    "sha256": "9dc1a1a53b645f00a666c9f08f1286eced4ede0a45c19f91456ac9fe6845e545",
+    "digestVerified": true,
+    "compressedBytes": 51830824,
+    "members": 1,
+    "expandedBytes": 51830640
+  }
+}

@@ -78,15 +78,19 @@ struct HistoryReservationDraft: Equatable, Identifiable {
 struct HistoryPeriodDraft: Equatable {
     var id = UUID().uuidString.lowercased()
     var baseRevision = 0
-    var title = "", timeZoneID = TimeZone.current.identifier
-    var startsAt = Date(), endsAt = Date().addingTimeInterval(14 * 86_400)
+    var title = "", timeZoneID: String
+    var startsAt: Date, endsAt: Date
     var budget = "", excludedReserve = ""
     var shopIDs: [String] = []
     var reservations: [HistoryReservationDraft] = []
     var reviewedComplete = false
     var reviewedCompleteAt = Date()
     private var terminalReservations: [HistoryFutureReservation] = []
-    init() {}
+    init(start: Date = Date(), calendar: Calendar = .current) {
+        timeZoneID = calendar.timeZone.identifier
+        startsAt = start
+        endsAt = calendar.date(byAdding: .day, value: 14, to: start) ?? start
+    }
     init(_ value: HistorySavedBudgetPeriod) {
         let period = value.period
         id = period.id; baseRevision = value.revision; title = period.title; timeZoneID = period.timeZoneId

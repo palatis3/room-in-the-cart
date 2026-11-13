@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "createdAtUTC": "2026-11-08T09:25:47.595436+00:00",
+  "historicalToolbar": {
+    "previouslyImplemented": true,
+    "comparisonRemovalCommit": "7117ab763c1cfda57e7be1997b7b761bace6a472",
+    "comparisonChange": "Removed ToolbarItemGroup(.keyboard), preserving inputFocused=nil action, added safeAreaInset helper. Positive keyboard-done-controls receipt retains later qualified controls but no detailed negative toolbar attribution.",
+    "dinnerQuoteRemovalCommit": "a06b3cab85be3cff6ba0ae2eabbcf555ddd7ef3e",
+    "dinnerQuoteChange": "Removed ToolbarItemGroup(.keyboard) whose button used UIApplication responder resignation; added per-field FocusState and shared inset helper.",
+    "checkoutWarningEvidence": "/Users/palatis/Room in the Cart/docs/evidence/native/checkout-keyboard-20261104/validation.json",
+    "checkoutWarning": "15 sample events matched the top9frames including SwiftUICore._FrameLayout and SwiftUI.InputAccessoryBar while reporting negative/nonfinite frame. The subsequent focused inset journeys passed on iOS27.0 and one minimumOS17 route.",
+    "planningReachabilityEvidence": "/Users/palatis/Room in the Cart/docs/evidence/native/planning-keyboard-20261104/validation.json",
+    "planningReachability": "Standard DinnerTemplateEditor ingredient amount accepted input while Done was missing; later direct focus-binding/inset changes qualified ordinary/shared/minimumOS routes. This is not an isolated measurement of DinnerQuotesView toolbar failure.",
+    "uncertainty": "Historical changes bundled focus plumbing with presentation changes, and environments differ. They argue against blind toolbar restoration but do not prove a current iOS26.2 toolbar defect or explain today's animation-idle issue."
+  },
+  "recommendation": {
+    "immediate": "Close R8 as a preserved functional nonreproduction with visible blank region and unqualified geometry. Do not turn fixed44 into product behavior or automatically repeat/reorder it.",
+    "productDecision": "No product-facing replacement is justified by present causal evidence. Native keyboard toolbar is not an untried solution and has retained warning/reachability counterexamples.",
+    "nextDiscriminatingEvidence": "If root elects another diagnostic, target actual animation/update ownership and time-resolved viewport/inset geometry during a reproduced first Done stall; synchronize with the already-qualified separate main-loop/animation reply boundary. Another callback-only trace would largely repeat known evidence. Review instrumentation/recording design before execution; preserve existing synchronization/assertions and original failures.",
+    "whyNotMoreCleanRuns": "The source baseline itself intermittently passes; a clean control cannot establish that changed geometry repaired missing animation-idle notification. Endpoint stills cannot rule out a transient collapse or attribute outstanding animation."
+  },
+  "automaticVariantOrRepeatPrepared": false,
+  "newSourceImplementation": false,
+  "nativeActionsByReviewer": false
+}

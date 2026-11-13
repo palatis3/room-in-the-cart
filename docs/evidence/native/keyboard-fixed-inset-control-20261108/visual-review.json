@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-11-08T09:25:47.594773+00:00",
+  "scope": "Independent visual reading of all ten existing R8 endpoint screenshots; no further export/native actions",
+  "probeAuditSHA256": "94d2a775495b60bdb74b54675b09c017f4114fdf274f0bf6754392e2d55247c7",
+  "inspectionVerificationSHA256": "90997347db305c98927c558dcea3182998362ef28c541d3cf31a8fd1336db0a8",
+  "reviewedImages": [
+    {
+      "probe": "center",
+      "phase": "before",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/CF0B8F04-61E4-4505-9A7D-6F6675E3E41D.png",
+      "sha256": "9f1f1af274ca1d46e63d615d52276fdd37716eb64378b0073592166cd6584ac0",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 and insertion caret visible; numeric keyboard visible; Done visibly present on a full-width light strip immediately above keyboard."
+    },
+    {
+      "probe": "center",
+      "phase": "after",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/0CC78E06-357F-4B24-B253-44189960468B.png",
+      "sha256": "2d1167ba7bd8b10746d0c7ffc042989d63287be63d0c0423b115a8f5917a757e",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 retained; no visible keyboard or Done; full-width light blank region remains below the lower Form content. Lower content reaches the identity/exclusions/usable-quantity toggle; blank area reduces visible form viewport."
+    },
+    {
+      "probe": "topLeft",
+      "phase": "before",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/1E161636-58D2-48E2-A49D-5D2E23D05182.png",
+      "sha256": "9f1f1af274ca1d46e63d615d52276fdd37716eb64378b0073592166cd6584ac0",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 and insertion caret visible; numeric keyboard visible; Done visibly present on a full-width light strip immediately above keyboard."
+    },
+    {
+      "probe": "topLeft",
+      "phase": "after",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/957EBF1B-3F56-4816-A0D0-CA03D5112982.png",
+      "sha256": "9230941607fd965e3a24e482a0c1169067537bd6108ac06c09081f21ed56a739",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 retained; no visible keyboard or Done; full-width light blank region remains below the lower Form content. Lower content reaches the identity/exclusions/usable-quantity toggle; blank area reduces visible form viewport."
+    },
+    {
+      "probe": "topRight",
+      "phase": "before",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/2B1D350B-86A9-4B93-B909-89FF8AEB5453.png",
+      "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 and insertion caret visible; numeric keyboard visible; Done visibly present on a full-width light strip immediately above keyboard."
+    },
+    {
+      "probe": "topRight",
+      "phase": "after",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/3705F9A2-5BD9-418C-9484-BB7B549A0C33.png",
+      "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 retained; no visible keyboard or Done; full-width light blank region remains below the lower Form content. Lower content reaches the identity/exclusions/usable-quantity toggle; blank area reduces visible form viewport."
+    },
+    {
+      "probe": "bottomLeft",
+      "phase": "before",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/49FC4985-4709-44AC-9149-3E64428506A1.png",
+      "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 and insertion caret visible; numeric keyboard visible; Done visibly present on a full-width light strip immediately above keyboard."
+    },
+    {
+      "probe": "bottomLeft",
+      "phase": "after",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/17D52889-CCCC-49B3-A341-58341F5E0204.png",
+      "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 retained; no visible keyboard or Done; full-width light blank region remains below the lower Form content. Lower content reaches the identity/exclusions/usable-quantity toggle; blank area reduces visible form viewport."
+    },
+    {
+      "probe": "bottomRight",
+      "phase": "before",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/07B44626-8E04-4F23-BE9D-8ACB9EB844C8.png",
+      "sha256": "ab9c3fc1ba7991a94349f2cf059f5a0d3f77cfca21568575d877e01de3d4c407",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 and insertion caret visible; numeric keyboard visible; Done visibly present on a full-width light strip immediately above keyboard."
+    },
+    {
+      "probe": "bottomRight",
+      "phase": "after",
+      "path": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/attachments/A5706537-B148-425A-A790-8C920E69C187.png",
+      "sha256": "be81243aac3af6e11cb028c3b91150de8c6dfeb2846c86f626218a943fdefd4f",
+      "originalPixelDimensions": [
+        1206,
+        2622
+      ],
+      "viewed": true,
+      "displayNote": "view_image displayed the full screenshot resized from1206x2622 to942x2048; no numerical pixel measurement claimed",
+      "observation": "Amount3 retained; no visible keyboard or Done; full-width light blank region remains below the lower Form content. Lower content reaches the identity/exclusions/usable-quantity toggle; blank area reduces visible form viewport."
+    }
+  ],
+  "allFiveBeforeKeyboardAndDoneVisible": true,
+  "allFiveAfterKeyboardAndDoneNotVisiblyPresent": true,
+  "allFiveAfterAmount3VisiblyRetained": true,
+  "allFiveAfterBlankBottomRegionVisible": true,
+  "endpointGeometryQualified": false,
+  "actualInsetHeightPoints": null,
+  "independentPixelPointCalibrationAvailable": false,
+  "geometryLimit": "Probe JSON records Button frames and tap points but not window/inset bounds. Material background below content does not independently locate the inset-content bottom separate from bottom-safe-area extension. No44point or equal-height measurement is claimed.",
+  "transitionGeometryObserved": false,
+  "causalConclusion": "Clean single diagnostic nonreproduction; no collapse necessity or repair conclusion follows.",
+  "productConclusion": "Blank bottom region is directly visible; R8 is not a production UI candidate. Fixed44 may constrain accessibility text but largest-text behavior was not exercised or visually established here.",
+  "preservation": "All ten existing PNG hashes rechecked against probe audit; no original screenshots, results, inspection files, package or source modified."
+}

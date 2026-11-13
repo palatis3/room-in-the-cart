@@ -1,0 +1,9 @@
+{
+  "priorSourceSHA256": "94c871796090b737893661a45ab10117fbce1ee9c06cea48a4aab1cb7e923a5a",
+  "priorNativeExit": 0,
+  "priorStrictExit": 0,
+  "visualRejection": "Supply title remains missing despite safe-area background correction",
+  "change": "Top safe-area inset keeps Form primary navigation content; same Done layout/action/test",
+  "patchSHA256": "345370042383ad2044a43e47dc6cb3c10717399e54035a479877d87f535c65cc",
+  "preparedAt": "2026-11-09T01:41:08.905688+00:00"
+}

@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 
 public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
@@ -20,7 +21,7 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
               (ingredients + steps).allSatisfy({ $0.utf8.count <= 32768 && !$0.contains("\0") }) else { throw ArchiveError.invalidRecipe }
         if let sourceURL, !sourceURL.isEmpty {
             guard sourceURL.utf8.count <= 4096, let components = URLComponents(string: sourceURL),
-                  ["http", "https"].contains(components.scheme?.lowercased() ?? ""), components.host != nil,
+                  ["http", "https"].contains(components.scheme?.lowercased() ?? ""), let host = components.host, !host.isEmpty,
                   components.user == nil, components.password == nil else { throw ArchiveError.invalidRecipe }
         }
         return self
@@ -41,15 +42,20 @@ public struct RecipeImportReport: Sendable {
 
 /// Documented Recipe JSON-LD profile. Context URLs are inert text, never fetched.
 public enum RecipeImporter {
+    private static func validateVersion(_ version: Any?) throws {
+        guard let version else { return }
+        // JSONSerialization bridges true and 1 to NSNumber.
+        guard let number = version as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number == NSNumber(value: 1) else { throw ArchiveError.unsupportedVersion }
+    }
+
     public static func stage(_ data: Data, existing: [ImportedRecipe] = []) throws -> RecipeImportReport {
         try ArchiveCodec.preflight(data)
         let root: Any
         do { root = try JSONSerialization.jsonObject(with: data) } catch { throw ArchiveError.malformed }
         let nodes: [Any]
         if let dictionary = root as? [String: Any] {
-            if let version = dictionary["formatVersion"] {
-                guard let value = version as? Int, value == 1 else { throw ArchiveError.unsupportedVersion }
-            }
+            try validateVersion(dictionary["formatVersion"])
             if let graph = dictionary["@graph"] as? [Any] { nodes = graph } else { nodes = [dictionary] }
         } else if let array = root as? [Any] { nodes = array }
         else { throw ArchiveError.invalidRecipe }
@@ -59,24 +65,28 @@ public enum RecipeImporter {
         let allowed: Set<String> = ["@context", "@type", "@id", "formatVersion", "name", "recipeYield", "recipeIngredient", "recipeInstructions", "url", "notes", "description"]
         for node in nodes {
             guard let object = node as? [String: Any] else { skipped += 1; continue }
-            if let version = object["formatVersion"] {
-                guard let value = version as? Int, value == 1 else { throw ArchiveError.unsupportedVersion }
-            }
             let types = (object["@type"] as? [String]) ?? (object["@type"] as? String).map { [$0] } ?? []
             guard types.contains(where: { $0 == "Recipe" || $0 == "https://schema.org/Recipe" || $0 == "http://schema.org/Recipe" }) else { skipped += 1; continue }
+            try validateVersion(object["formatVersion"])
             unsupported.formUnion(object.keys.filter { !allowed.contains($0) }.map { String($0.prefix(80)) })
             guard let title = object["name"] as? String else { skipped += 1; continue }
             guard object["recipeIngredient"] == nil || object["recipeIngredient"] is [String],
                   object["recipeYield"] == nil || object["recipeYield"] is String,
                   object["url"] == nil || object["url"] is String,
-                  object["notes"] == nil || object["notes"] is String else { skipped += 1; continue }
+                  object["notes"] == nil || object["notes"] is String,
+                  object["notes"] != nil || object["description"] == nil || object["description"] is String else { skipped += 1; continue }
             var steps: [String] = []
             if let text = object["recipeInstructions"] as? String { steps = [text] }
             else if let array = object["recipeInstructions"] as? [Any] {
                 var valid = true
                 for step in array {
                     if let text = step as? String { steps.append(text) }
-                    else if let object = step as? [String: Any], object["@type"] as? String == "HowToStep", let text = object["text"] as? String { steps.append(text) }
+                    else if let object = step as? [String: Any], object["@type"] as? String == "HowToStep", let text = object["text"] as? String {
+                        steps.append(text)
+                        for key in object.keys where key != "@type" && key != "text" {
+                            unsupported.insert("recipeInstructions." + key.prefix(80))
+                        }
+                    }
                     else { valid = false }
                 }
                 if !valid { skipped += 1; continue }

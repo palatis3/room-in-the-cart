@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=35 elapsed=0.224453958 seconds stage=model.stop.begin

@@ -1,0 +1,17 @@
+{
+  "baseCommit": "10c69b04a7e4a6381eb4b35ca5c4d08aee9df56d",
+  "installedFile": "ios/Tests/DinnerFeatureModelTests.swift",
+  "installedSHA256": "7b1b8e63cdc6027917641eade4818c8e329a9050ced62bb44eda05f9726db568",
+  "rawBuildLogSHA256": "17c79b1aafa6a82c47ba29c507b04684371a5c45998e66e07b55bdd7cf4f3215",
+  "rawBuildLogLocation": "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/build.log",
+  "compiledModelCount": 606,
+  "compiledOrdinaryUICount": 54,
+  "selectedClassCount": 27,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "extraOverlays": [
+    "one localized persistent Notes accessibility label",
+    "unchanged S14 UI regression method"
+  ],
+  "scope": "Production dinner model with existing MemoryDinnerStore; not SQLite durability, native Back, remote generation, provider activation or hosted pass."
+}

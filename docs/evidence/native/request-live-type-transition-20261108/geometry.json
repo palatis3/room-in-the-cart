@@ -1,0 +1,152 @@
+[
+  {
+    "stage": "before",
+    "element": "title",
+    "file": "geometry/before-expiry-title-geometry.txt",
+    "originalFile": "7EDDF559-E015-43C6-841E-1BE08A714824.txt",
+    "frame": [
+      32.0,
+      607.1666666666666,
+      119.0,
+      20.333333333333258
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      118.87548828125,
+      22.0
+    ],
+    "referenceUIFontLineHeight": 20.287109375
+  },
+  {
+    "stage": "before",
+    "element": "date",
+    "file": "geometry/before-expiry-date-geometry.txt",
+    "originalFile": "4E6761D5-62C1-49EE-98EC-9D006D760CF8.txt",
+    "frame": [
+      183.66666666666666,
+      607.1666666666666,
+      186.33333333333334,
+      20.333333333333258
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      186.17822265625,
+      22.0
+    ],
+    "referenceUIFontLineHeight": 20.287109375
+  },
+  {
+    "stage": "AX5",
+    "element": "title",
+    "file": "geometry/AX5-expiry-title-geometry.txt",
+    "originalFile": "F67A0397-FE9B-4E8C-A566-9CC89C0BD053.txt",
+    "frame": [
+      32.0,
+      395.3333333333335,
+      187.0,
+      125.33333333333326
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      186.6904296875,
+      125.248046875
+    ],
+    "referenceUIFontLineHeight": 63.248046875
+  },
+  {
+    "stage": "AX5",
+    "element": "date",
+    "file": "geometry/AX5-expiry-date-geometry.txt",
+    "originalFile": "EF787924-640B-4511-BD4F-AAFC693AEB5D.txt",
+    "frame": [
+      32.0,
+      524.6666666666667,
+      315.3333333333333,
+      125.33333333333337
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      315.30859375,
+      125.248046875
+    ],
+    "referenceUIFontLineHeight": 63.248046875
+  },
+  {
+    "stage": "restored",
+    "element": "title",
+    "file": "geometry/restored-expiry-title-geometry.txt",
+    "originalFile": "38A91A48-96E9-413A-A2A5-EBB8BEC723F5.txt",
+    "frame": [
+      32.0,
+      585.5,
+      119.0,
+      20.333333333333258
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      118.87548828125,
+      22.0
+    ],
+    "referenceUIFontLineHeight": 20.287109375
+  },
+  {
+    "stage": "restored",
+    "element": "date",
+    "file": "geometry/restored-expiry-date-geometry.txt",
+    "originalFile": "FF8F66A5-BD39-4ADC-8E38-89A644DD9786.txt",
+    "frame": [
+      183.66666666666666,
+      585.5,
+      186.33333333333334,
+      20.333333333333258
+    ],
+    "viewport": [
+      0.0,
+      144.0,
+      402.0,
+      714.0
+    ],
+    "requiredBounds": [
+      0.0,
+      0.0,
+      186.17822265625,
+      22.0
+    ],
+    "referenceUIFontLineHeight": 20.287109375
+  }
+]

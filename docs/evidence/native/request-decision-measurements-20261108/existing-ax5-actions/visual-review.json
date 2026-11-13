@@ -1,0 +1,19 @@
+{
+  "image": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/existing-ax5-actions-export-r1/attachments/067A7538-4D7B-4431-919F-052EDB9B9426.png",
+  "imageSHA256": "a8527031f13ac3427f81a4c921b4b24cbdf3fa49946fbce8e1c31c57a1fefd02",
+  "viewed": true,
+  "display": "view_image showed original1206x2622 at942x2048; stored image unchanged",
+  "observations": [
+    "Disabled Apply reviewed decision is complete across3 lines: Apply / reviewed / decision. No target ellipsis, cut glyph or overlap is visible.",
+    "Cancel preview is complete across2 lines: Cancel / preview. Entire target and card bottom are visible; no target clipping or overlap observed.",
+    "The overage toggle above remains off. Content higher/lower in the scroll view is partially outside the viewport; this observation covers the two requested actions only."
+  ],
+  "supportsAX5TargetClipping": false,
+  "interpretation": "This retained capture on byte-matching current relevant product source provides positive evidence against visible clipping of these two targets at AX5 in this state. It does not establish a general audit false positive or complete DynamicType/accessibility acceptance.",
+  "limits": [
+    "Different run/device instance from current-unfiltered-r2/run-r3.",
+    "One recordedAX5 viewport, not every size/state or continuous layout.",
+    "No enabled Apply contrast qualification, physical VoiceOver, hit-region or activation test.",
+    "Fresh41 audit remains native65/strict1; no finding waived."
+  ]
+}

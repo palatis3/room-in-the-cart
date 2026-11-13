@@ -1,0 +1,41 @@
+{
+  "sourceSHA256": {
+    ".github/workflows/ci.yml": "8eeb57f850d5d34d5319b0971f9aba1583009cc29832012a108142a2f788c108",
+    ".github/workflows/ios-deep.yml": "95137aadc67420ab4c7f3d8662bd069e35b8b27504103c95b3cd0dc2d3ee11ab",
+    ".github/workflows/ios-fixtures.yml": "9cce36829500669bf3309dd7723764b7c67ef11226f86e5156fcd7a7c7f183b5",
+    ".github/workflows/ios-performance.yml": "fb9319e614af5a87698bd7ba7aaf32c31eb3d5b82342e423e363b289e8bcf117",
+    "scripts/check_swift_syntax.py": "440756dedc3181b8bff469b68ad25f1fda08b473fb60348c901b6357e336ce1f",
+    "scripts/test_check_swift_syntax.py": "161706b787795524599ffdc299b65f0f09c556ec7dd63207c5390184bec42bda",
+    "docs/CI-VALIDATION.md": "7c72b860ac25ef86a5df06bed9587f55849552254941f2fb8732dfcf6e623063",
+    "service/scripts/test-database.mjs": "8b7db82a7b3b1c5d176715aa7b7f5f5cefbf1bd4adbff8050a0ac049cd0e970e",
+    "service/scripts/database-test-preflight.mjs": "3adb149070c3341d8b834cb85c338830b1108246ff34753e83997041df64a576",
+    "service/tests/database-test-preflight.test.mjs": "fc97519ec95c4cf267777f0192ee123019071bd3bac8f93826d2c8fa1dee4bb1"
+  },
+  "retainedEvidenceSHA256": {
+    ".build/WorkflowEfficiencyNov09/python-checks.log": "ea8604ef5d33a01a8a90b5876af3e6dc30df6a1759804b8291a1fed3e2188339",
+    ".build/WorkflowEfficiencyNov09/swift-syntax.log": "c91bd87477c805f8562efa110d5184b39a44e19945865ed807d93927fd0780fb",
+    ".build/WorkflowEfficiencyNov09/swift-syntax.json": "f153151270f55134b9cd171a58c76a64b00d2696b41efc6f52ef101da00a22d0",
+    ".build/WorkflowEfficiencyNov09/database-preflight-tests.log": "ea3f7e30e97d26f38ec9d5ba308ebf10b652b640a172ef2636afb7e960bf36b7",
+    ".build/SharedUndatedNov09/syntax-negative-control.json": "173f2321d23a7552b2cc66a8faeb9dbc18780bf271b8369a67c4388f029fcedf",
+    ".build/workflow-efficiency-lint.json": "ec15bedb27d7b3e7841c7621d3573cd06190e3fd8bda14b551cbb9cd3e456237",
+    ".build/DatabaseHarnessPreflightNov09/verification.json": "112ccb34a6093fe1296d2b89b33cdc082cb5c71a4be3662689baa900a6912eb2"
+  },
+  "checks": {
+    "python": 109,
+    "nodePreflight": 18,
+    "realPostgres": 6,
+    "realAdminLoginNegative": 1,
+    "workflowQueueNodes": 17,
+    "swiftFilesParsed": 469,
+    "swiftModes": [
+      "Release",
+      "Debug fixtures"
+    ]
+  },
+  "limits": [
+    "Syntax parsing is not type checking, linking or UI acceptance.",
+    "Collector workflow rule is implemented in the runbook; successful collection remains unresolved.",
+    "No full combined hosted run, deployment or baseline approval.",
+    "Initial Python invocation named one nonexistent extra module; corrected complete invocation passed109 tests."
+  ]
+}

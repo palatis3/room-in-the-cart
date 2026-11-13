@@ -1,0 +1,72 @@
+name: UI09 a305 animation observer diagnostic
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact reviewed diagnostic branch HEAD (40 characters)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  control:
+    concurrency:
+      group: ritc-macos-slot-4
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 55
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      EXPECTED_SHA: ${{ inputs.candidate_sha }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Require immutable dispatch identity
+        run: |
+          python3 - <<'PY'
+          import os, re
+          sha = os.environ['EXPECTED_SHA']
+          assert re.fullmatch('[0-9a-f]{40}', sha) and sha == os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_RUN_ATTEMPT'] == '1', 'No diagnostic reruns'
+          PY
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact source, environment and fresh owned simulator
+        timeout-minutes: 8
+        run: python3 diagnostics/ui09-hosted/hosted.py prepare
+      - name: Build the original app and tests with the reviewed observer
+        id: build
+        timeout-minutes: 35
+        run: |
+          python3 diagnostics/ui09-hosted/hosted.py build
+          python3 scripts/check_built_app.py .build/ui09-hosted-dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
+      - name: Boot the owned simulator
+        id: boot
+        timeout-minutes: 8
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+      - name: Run exactly the original eight cases while preserving PID-bound metadata
+        id: tests
+        timeout-minutes: 40
+        run: |
+          status=0
+          python3 diagnostics/ui09-hosted/hosted.py test || status=$?
+          inspection_status=0
+          python3 diagnostics/ui09-hosted/hosted.py inspect || inspection_status=$?
+          if [[ "$status" -eq 0 ]]; then status="$inspection_status"; fi
+          exit "$status"
+      - name: Shut down only the created simulator
+        if: always()
+        timeout-minutes: 2
+        run: python3 diagnostics/ui09-hosted/hosted.py cleanup
+      - name: Preserve source pins, products, original results, full logs and bounded observer evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ui09-a305-observer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .build/ui09-hosted/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error

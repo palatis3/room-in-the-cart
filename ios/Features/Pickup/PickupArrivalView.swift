@@ -2,48 +2,75 @@ import SwiftUI
 import UIKit
 import CoreDomain
 
+private struct ArrivalLineEntry {
+    let lineID: UUID?
+    var disposition: ReceiptDisposition = .received {
+        didSet { if disposition != oldValue { matched = false } }
+    }
+    var item: String {
+        didSet { if item != oldValue { matched = false } }
+    }
+    var received = ""
+    var usable = ""
+    var unit: UnitOfMeasure {
+        didSet { if unit != oldValue { matched = false } }
+    }
+    var matched = false
+    var observationID = UUID()
+
+    init(line: PickupOrderLine? = nil) {
+        lineID = line?.id
+        item = line?.name ?? ""
+        unit = line?.ordered.unit ?? .count
+    }
+}
+
 struct PickupArrivalView: View {
     @ObservedObject var model: PickupModel
-    @State private var selectedLine: UUID?
-    @State private var disposition: ReceiptDisposition = .received
-    @State private var item = ""
-    @State private var received = ""
-    @State private var usable = ""
-    @State private var unit: UnitOfMeasure = .count
-    @State private var matched = false
+    @State private var entry = ArrivalLineEntry()
     @State private var eventID = UUID().uuidString
     @State private var segment = ""
     @State private var occurred = Date()
     @State private var formError: String?
-    @State private var observationID = UUID()
+
+    private var orderLines: [PickupOrderLine] { model.journey?.pickup?.orderLines ?? [] }
+    private var selectedLine: PickupOrderLine? { orderLines.first { $0.id == entry.lineID } }
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
             Section(pTr("Review discrepancies")) {
                 Text(pTr("Unchecked lines remain unverified. Received food and confirmed usable food are separate."))
-                Picker(pTr("Original order line"), selection: $selectedLine) {
+                Picker(pTr("Original order line"), selection: Binding(get: { entry.lineID }, set: { id in
+                    guard id != entry.lineID else { return }
+                    entry = ArrivalLineEntry(line: orderLines.first { $0.id == id })
+                    formError = nil
+                })) {
                     Text(pTr("Choose a line")).tag(UUID?.none)
-                    ForEach(model.journey?.pickup?.orderLines ?? []) { line in Text(line.name).tag(Optional(line.id)) }
+                    ForEach(orderLines) { line in Text(line.name).tag(Optional(line.id)) }
                 }
-                Picker(pTr("What happened"), selection: $disposition) {
+                Picker(pTr("What happened"), selection: $entry.disposition) {
                     Text(pTr("Received")).tag(ReceiptDisposition.received)
                     Text(pTr("No fill")).tag(ReceiptDisposition.noFill)
                     Text(pTr("Partial fill")).tag(ReceiptDisposition.partial)
                     Text(pTr("Wrong item")).tag(ReceiptDisposition.wrongItem)
                     Text(pTr("Late arrival")).tag(ReceiptDisposition.late)
                 }
-                TextField(pTr("Actual item name"), text: $item)
-                TextField(pTr("Physical amount received"), text: $received).keyboardType(.decimalPad)
-                TextField(pTr("Confirmed usable amount (optional)"), text: $usable).keyboardType(.decimalPad)
-                Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
-                Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
-                TextField(pTr("Delivery or receipt evidence ID"), text: $eventID)
-                TextField(pTr("Segment ID (distinct for each split delivery)"), text: $segment)
-                DatePicker(pTr("Actual arrival"), selection: $occurred)
+                TextField(pTr("Actual item name"), text: $entry.item)
+                TextField(pTr("Physical amount received"), text: $entry.received).keyboardType(.numbersAndPunctuation)
+                TextField(pTr("Confirmed usable amount (optional)"), text: $entry.usable).keyboardType(.numbersAndPunctuation)
+                Picker(pTr("Unit"), selection: $entry.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
+                Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $entry.matched)
+                TextField(pTr("Delivery or receipt evidence ID"), text: receiptField($eventID))
+                TextField(pTr("Segment ID (distinct for each split delivery)"), text: receiptField($segment))
+                DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
                 Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
                 if let formError { Text(formError).foregroundStyle(.red) }
                 Button(pTr("Start another actual delivery segment")) {
-                    eventID = UUID().uuidString; observationID = UUID(); segment = ""; received = ""; usable = ""; occurred = Date(); matched = false
+                    entry = ArrivalLineEntry(line: selectedLine)
+                    eventID = UUID().uuidString
+                    segment = ""
+                    occurred = Date()
+                    formError = nil
                 }
             }
             Section(pTr("Saved arrivals and usable corrections")) {
@@ -52,57 +79,58 @@ struct PickupArrivalView: View {
                         Text(receipt.itemName).font(.headline)
                         Text("\(pTr("Received")): \(pQuantity(receipt.received)) · \(pTr(receipt.disposition.rawValue))")
                         Text("\(receipt.key.sourceEventID) / \(receipt.key.segmentID)").font(.caption)
+                        LabeledContent(pTr("Actual arrival")) {
+                            Text(receipt.receivedAt, format: .dateTime.month().day().year().hour().minute())
+                        }
                         if let observation = model.journey?.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) {
                             Text("\(pTr("Usable")): \(pQuantity(observation.usable))")
+                            if receipt.receivedAt > model.stockReviewDate || observation.confirmedAt > model.stockReviewDate {
+                                Text(pTr("Future-dated evidence is not counted as available food."))
+                            }
                         } else { Text(pTr("Usable amount unverified")) }
-                        NavigationLink(pTr("Correct usable amount")) { PickupUsableCorrectionView(model: model, receipt: receipt) }
+                        NavigationLink(pTr("Correct usable amount")) {
+                            PickupUsableCorrectionView(model: model, receipt: receipt).id(receipt.key)
+                        }
                     }
                 }
             }
             NavigationLink(pTr("Review protected portions and repair meals")) { PickupRepairView(model: model) }
         }.navigationTitle(pTr("What came home"))
             .disabled(model.saving)
-            .onChange(of: selectedLine) { _, id in
-                if let line = model.journey?.pickup?.orderLines.first(where: { $0.id == id }) { item = line.name; unit = line.ordered.unit }
-            }
     }
+    private func receiptKey(for line: PickupOrderLine) -> ReceiptKey {
+        ReceiptKey(sourceEventID: eventID, orderLineID: line.id, branchID: line.branchID, segmentID: segment)
+    }
+
+    private func receiptField(_ field: Binding<String>) -> Binding<String> {
+        Binding(get: { field.wrappedValue }, set: { value in
+            guard value != field.wrappedValue else { return }
+            if let line = selectedLine,
+               model.journey?.pickup?.receipts.contains(where: { $0.key == receiptKey(for: line) }) == true {
+                entry = ArrivalLineEntry(line: line)
+                formError = nil
+            } else {
+                entry.observationID = UUID()
+            }
+            field.wrappedValue = value
+        })
+    }
+
     private func save() {
         do {
-            guard let line = model.journey?.pickup?.orderLines.first(where: { $0.id == selectedLine }),
-                  let received = try ComparisonModel.quantity(received, unit), !item.isEmpty, !segment.isEmpty, !eventID.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let key = ReceiptKey(sourceEventID: eventID, orderLineID: line.id, branchID: line.branchID, segmentID: segment)
-            let fragment = ReceiptFragment(key: key, itemName: item, received: received, disposition: disposition, receivedAt: occurred)
-            let observed = try ComparisonModel.quantity(usable, unit).map { UsableObservation(id: observationID, receipt: key, usable: $0, confirmedAt: occurred, confirmedMatchToOrderLine: matched) }
+            guard let line = selectedLine,
+                  let received = try ComparisonModel.quantity(entry.received, entry.unit),
+                  !entry.item.isEmpty, !segment.isEmpty, !eventID.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
+            let key = receiptKey(for: line)
+            let fragment = ReceiptFragment(key: key, itemName: entry.item, received: received, disposition: entry.disposition, receivedAt: occurred)
+            let observed = try ComparisonModel.quantity(entry.usable, entry.unit).map {
+                UsableObservation(id: entry.observationID, receipt: key, usable: $0, confirmedAt: occurred,
+                                  confirmedMatchToOrderLine: entry.matched)
+            }
             Task { if await model.receive(fragment, usable: observed) { formError = nil } }
         } catch { formError = pTr("Choose a line, name the delivery segment and enter valid quantities. No fill requires zero received.") }
     }
 }
-struct PickupUsableCorrectionView: View {
-    @ObservedObject var model: PickupModel
-    let receipt: ReceiptFragment
-    @State private var amount = ""
-    @State private var matched = false
-    @State private var operationID = UUID()
-    @Environment(\.dismiss) private var dismiss
-    var body: some View {
-        Form {
-            PickupSaveStatus(model: model)
-            Text(receipt.itemName)
-            Text("\(pTr("Received")): \(pQuantity(receipt.received))")
-            TextField(pTr("Correct confirmed usable amount"), text: $amount).keyboardType(.decimalPad)
-            Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
-            Button(pTr("Save correction and recheck meals")) { Task {
-                do {
-                    guard let quantity = try ComparisonModel.quantity(amount, receipt.received.unit) else { return }
-                    let previous = model.journey?.pickup?.usableObservations.last { $0.receipt == receipt.key }
-                    let observation = UsableObservation(id: operationID, receipt: receipt.key, usable: quantity, confirmedAt: Date(), supersedesID: previous?.id, confirmedMatchToOrderLine: matched)
-                    if await model.confirmUsable(observation) { dismiss() }
-                } catch { model.error = pTr("Usable amount must be valid and no larger than the received amount.") }
-            } }
-        }.navigationTitle(pTr("Usable food"))
-    }
-}
-
 struct PickupOfferView: View {
     @ObservedObject var model: PickupModel
     @State private var editor: OfferEditorSelection?

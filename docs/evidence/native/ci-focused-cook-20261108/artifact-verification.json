@@ -1,0 +1,10 @@
+{
+  "artifactID": 13636582446,
+  "runID": 42527730777,
+  "headSHA": "348dcdd2ab25180665e8e040de06f6930d4b59b3",
+  "archiveSHA256": "0c309ee0397068a372d89913e1fcad2d640794ef5b38c8d56d6aa92a00d50c3e",
+  "archiveBytes": 105034440,
+  "entryCount": 1164,
+  "expandedBytes": 106445518,
+  "validated": "digest, size, duplicate/path/symlink/encryption limits; Python extraction CRC; original preserved"
+}

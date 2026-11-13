@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "scope": "Spanish current26.2 dark Large complete dinner journey only; minimum17/English timeout separate",
+  "rootViewedPNGs": 5,
+  "labels": "Complete centered Spanish labels in both states; no clipped text. Disabled outlined and enabled filled shapes distinct. Outer native row preserves82-point height and padding.",
+  "measurements": {
+    "disabled": {
+      "contrast": 13.746425261250582,
+      "RGB": [
+        244,
+        245,
+        236
+      ],
+      "background": [
+        28,
+        41,
+        35
+      ],
+      "components": 12,
+      "source": "png-0-3/404A956E-B292-417F-BBAC-157F13FF8A38.png"
+    },
+    "enabled": {
+      "contrast": 9.480252182723206,
+      "RGB": [
+        17,
+        42,
+        33
+      ],
+      "background": [
+        145,
+        219,
+        187
+      ],
+      "components": 12,
+      "source": "png-0-7/54B2407E-A4AA-45FE-BB45-D817D275DE70.png"
+    }
+  },
+  "nativeAndStrict": {
+    "passed": 1,
+    "warnings": 0,
+    "idleMessages": 0,
+    "runnerRestarts": 0,
+    "durationSeconds": 272.24
+  },
+  "interaction": "Disabled center and top-padding attempts retain disabled; enabled top-padding activates once; restart finds one saved library dinner and empty shopping list.",
+  "sourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "remaining": "English animation timeout; minimum17; physical assistive; final Release"
+}

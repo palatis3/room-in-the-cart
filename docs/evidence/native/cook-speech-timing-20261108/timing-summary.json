@@ -1,0 +1,402 @@
+{
+  "status": "incomplete-or-review-required",
+  "problems": [],
+  "missingOperationCoverage": [],
+  "operationSummary": {
+    "7": {
+      "calls": 3,
+      "minimumMilliseconds": 0.00325,
+      "maximumMilliseconds": 0.140041
+    },
+    "1": {
+      "calls": 2,
+      "minimumMilliseconds": 0.008083,
+      "maximumMilliseconds": 0.019875
+    },
+    "10": {
+      "calls": 2,
+      "minimumMilliseconds": 0.369291,
+      "maximumMilliseconds": 75.363375
+    },
+    "9": {
+      "calls": 2,
+      "minimumMilliseconds": 0.464875,
+      "maximumMilliseconds": 75.619875
+    },
+    "3": {
+      "calls": 1,
+      "minimumMilliseconds": 84.11475,
+      "maximumMilliseconds": 84.11475
+    },
+    "4": {
+      "calls": 1,
+      "minimumMilliseconds": 0.24175,
+      "maximumMilliseconds": 0.24175
+    },
+    "2": {
+      "calls": 1,
+      "minimumMilliseconds": 85.004,
+      "maximumMilliseconds": 85.004
+    },
+    "5": {
+      "calls": 1,
+      "minimumMilliseconds": 61.634125,
+      "maximumMilliseconds": 61.634125
+    },
+    "12": {
+      "calls": 2,
+      "minimumMilliseconds": 0.044958,
+      "maximumMilliseconds": 0.120625
+    },
+    "11": {
+      "calls": 2,
+      "minimumMilliseconds": 0.161041,
+      "maximumMilliseconds": 0.317541
+    },
+    "6": {
+      "calls": 1,
+      "minimumMilliseconds": 0.017541,
+      "maximumMilliseconds": 0.017541
+    },
+    "8": {
+      "calls": 1,
+      "minimumMilliseconds": 0.029625,
+      "maximumMilliseconds": 0.029625
+    }
+  },
+  "stderrRequiringReview": [
+    {
+      "file": "timing-notices.stderr",
+      "bytes": 44,
+      "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523"
+    },
+    {
+      "file": "hang-risk.stderr",
+      "bytes": 44,
+      "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523"
+    }
+  ],
+  "runtimeFaultRecords": [
+    {
+      "recordIndex": 0,
+      "timestamp": "2026-11-08 09:38:27.823893+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    },
+    {
+      "recordIndex": 1,
+      "timestamp": "2026-11-08 09:38:28.847136+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    },
+    {
+      "recordIndex": 2,
+      "timestamp": "2026-11-08 09:38:30.401132+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    },
+    {
+      "recordIndex": 3,
+      "timestamp": "2026-11-08 09:38:30.420261+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    },
+    {
+      "recordIndex": 4,
+      "timestamp": "2026-11-08 09:38:31.889239+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    },
+    {
+      "recordIndex": 5,
+      "timestamp": "2026-11-08 09:38:32.481810+0000",
+      "pid": 80665,
+      "emissionThreadID": 25325802,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "insideReadbackWallWindow": true
+    }
+  ],
+  "inputs": [
+    {
+      "file": "timing-notices.json",
+      "bytes": 63687,
+      "sha256": "0abf29cfa60c3f9cb961dcb04ab6c87c590f3a92f1be9b2210f9b8c82f6d1742"
+    },
+    {
+      "file": "hang-risk.json",
+      "bytes": 45178,
+      "sha256": "3b1335739555102d2dabdb82ba09ae34bbaa2dfae0aee0fbbad3669b39e66765"
+    }
+  ],
+  "nativeExitCode": 0,
+  "strictExitCode": 1,
+  "originalFiveCaseOrder": true,
+  "scope": "Positive paired observations only; no performance threshold, main-loop continuity, acoustic correctness or warning acceptance.",
+  "runtimeFaultEnumerationLimit": "Filtered retained log records only; not complete warning validation or direct XCTest issue UUID binding.",
+  "acceptanceGranted": false,
+  "eventCount": 38,
+  "pairedScopes": 19,
+  "measurements": [
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 1,
+      "op": 7,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943499685300416,
+      "endNS": 943499685312166,
+      "durationMilliseconds": 0.01175,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 2,
+      "op": 1,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943499685461750,
+      "endNS": 943499685481625,
+      "durationMilliseconds": 0.019875,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 2,
+      "op": 10,
+      "main": 0,
+      "threadID": 25325905,
+      "beginNS": 943499685587875,
+      "endNS": 943499760951250,
+      "durationMilliseconds": 75.363375,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 1,
+      "op": 9,
+      "main": 0,
+      "threadID": 25325905,
+      "beginNS": 943499685542875,
+      "endNS": 943499761162750,
+      "durationMilliseconds": 75.619875,
+      "queueResidenceMilliseconds": 0.015542
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 4,
+      "op": 3,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943499761825375,
+      "endNS": 943499845940125,
+      "durationMilliseconds": 84.11475,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 5,
+      "op": 4,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943499846395000,
+      "endNS": 943499846636750,
+      "durationMilliseconds": 0.24175,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 3,
+      "op": 2,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943499761744541,
+      "endNS": 943499846748541,
+      "durationMilliseconds": 85.004,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 6,
+      "op": 5,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943502451717375,
+      "endNS": 943502513351500,
+      "durationMilliseconds": 61.634125,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 4,
+      "op": 12,
+      "main": 0,
+      "threadID": 25326540,
+      "beginNS": 943502513589125,
+      "endNS": 943502513634083,
+      "durationMilliseconds": 0.044958,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 3,
+      "op": 11,
+      "main": 0,
+      "threadID": 25326540,
+      "beginNS": 943502513528375,
+      "endNS": 943502513689416,
+      "durationMilliseconds": 0.161041,
+      "queueResidenceMilliseconds": 0.016583
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 7,
+      "op": 1,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943503985066125,
+      "endNS": 943503985074208,
+      "durationMilliseconds": 0.008083,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 6,
+      "op": 10,
+      "main": 0,
+      "threadID": 25326540,
+      "beginNS": 943503985188750,
+      "endNS": 943503985558041,
+      "durationMilliseconds": 0.369291,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 5,
+      "op": 9,
+      "main": 0,
+      "threadID": 25326540,
+      "beginNS": 943503985143500,
+      "endNS": 943503985608375,
+      "durationMilliseconds": 0.464875,
+      "queueResidenceMilliseconds": 0.013041
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 8,
+      "op": 6,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943503992716375,
+      "endNS": 943503992733916,
+      "durationMilliseconds": 0.017541,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 10,
+      "op": 8,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943505518020083,
+      "endNS": 943505518049708,
+      "durationMilliseconds": 0.029625,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 9,
+      "op": 7,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943505517959625,
+      "endNS": 943505518099666,
+      "durationMilliseconds": 0.140041,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 8,
+      "op": 12,
+      "main": 0,
+      "threadID": 25326703,
+      "beginNS": 943505518294666,
+      "endNS": 943505518415291,
+      "durationMilliseconds": 0.120625,
+      "queueResidenceMilliseconds": null
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 2,
+      "call": 7,
+      "op": 11,
+      "main": 0,
+      "threadID": 25326703,
+      "beginNS": 943505518163375,
+      "endNS": 943505518480916,
+      "durationMilliseconds": 0.317541,
+      "queueResidenceMilliseconds": 0.010208
+    },
+    {
+      "pid": 80665,
+      "bootUUID": "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+      "domain": 1,
+      "call": 11,
+      "op": 7,
+      "main": 1,
+      "threadID": 25325802,
+      "beginNS": 943507143672875,
+      "endNS": 943507143676125,
+      "durationMilliseconds": 0.00325,
+      "queueResidenceMilliseconds": null
+    }
+  ],
+  "independentReviewSHA256": "43cbc49405fd6ce6823526ceb945ae2b9696738bc813bf712971be41541a943c",
+  "sourceReviewPath": "/Users/palatis/Room in the Cart/.build/CookSpeechTimingNov08/independent-review-r1/review.json",
+  "timingReviewSHA256": "b987d0be5a49911de8380a82173328121f12fab6ffde7986d863bd2114e44199",
+  "stderrObservation": "Both query stderr files contain only: getpwuid_r did not find a match for uid 501. Positive paired observations are supported; parser status preserved, lossless retention not asserted."
+}

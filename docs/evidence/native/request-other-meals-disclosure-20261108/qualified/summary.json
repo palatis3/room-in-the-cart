@@ -1,0 +1,46 @@
+{
+  "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+  "phases": [
+    {
+      "phase": "minimum17",
+      "caseSeconds": 88.61,
+      "settings": {
+        "appearance": "light",
+        "content_size": "large",
+        "increase_contrast": "disabled"
+      }
+    },
+    {
+      "phase": "current-light",
+      "caseSeconds": 85.7,
+      "settings": {
+        "appearance": "light",
+        "content_size": "large",
+        "increase_contrast": "disabled"
+      }
+    },
+    {
+      "phase": "current-dark-AX5",
+      "caseSeconds": 427.16,
+      "settings": {
+        "appearance": "dark",
+        "content_size": "accessibility-extra-extra-extra-large",
+        "increase_contrast": "disabled"
+      }
+    }
+  ],
+  "nativeAndStrictPasses": 3,
+  "reviewedScreenshots": 15,
+  "reviewedTextAttachments": 24,
+  "release": {
+    "status": "completed",
+    "startedAtUTC": "2026-11-08T19:54:58.846760+00:00",
+    "finishedAtUTC": "2026-11-08T19:55:20.617850+00:00",
+    "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "sourceUnchanged": true,
+    "preservedProductsUnchanged": true,
+    "scope": "Unsigned generic iPhone arm64 Release compile/bundle verification only; not distribution or physical-device acceptance."
+  }
+}

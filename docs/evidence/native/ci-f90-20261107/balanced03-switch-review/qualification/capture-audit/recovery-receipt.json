@@ -1,0 +1,39 @@
+{
+  "status": "recovered-from-original-xcresult",
+  "bundle": "../native.xcresult",
+  "export_command": "xcrun xcresulttool export diagnostics --path .build/S24TraceNov07/native.xcresult --output-path .build/S24TraceNov07/capture-audit/diagnostics",
+  "app_output": "diagnostics/0_Test_RITC-Placed-Receipt-Nov07_Diagnostics/RoomInTheCartUITests-8A802A15-CEAC-45EC-B5C8-0ABE47D8F3A7-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-6964E07F-4C5E-4D81-B6CE-37F2C147F8D8/StandardOutputAndStandardError-dev.roominthecart.app.debug.txt",
+  "app_output_bytes": 173425249,
+  "app_output_sha256": "4c5abfb6fdc8f377d864187a3d4511a1daab87c6a1d398c5ffbb786a43980d57",
+  "app_output_lines": 1368272,
+  "markers": 82,
+  "events": {
+    "appear": 4,
+    "change": 70,
+    "setter-enter": 2,
+    "setter-return": 2,
+    "disappear": 4
+  },
+  "pids": [
+    90958
+  ],
+  "scopes": [
+    "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]"
+  ],
+  "marker_file_sha256": "3df5ec7fe00d9efc9de422ee9e8b006c83e4cb018f49cc8bab81736405c127a3",
+  "no_new_native_run": true,
+  "no_simulator_launch_reset_or_mutation": true,
+  "no_source_changes": true,
+  "marker_text_sha256": "4382d3d8a346c1b3afba059ab4d5597e6ba9752ec6a6e3ee792928f85b55e535",
+  "continuity_sha256": "c833ba8e86e0597a09de64b3f37acd92b8821778e347575b86feb659a370802a",
+  "severe_scan_sha256": "e3cca782ba7e059ad114da285474ce00daf31f99e67ca2146cc474c8c8ecfa5a",
+  "original_result_manifest_sha256": "0ef658069aadeb82c3a2a57795706921fc7b343f2abdf7c1a4763a8216af3058",
+  "original_native_log_sha256": "be2824560d6e8acaa989ffe5f229186e9ff07ca8df52f8d038e283531158c58a",
+  "original_strict_result_sha256": "878c9d36efe656fe40338c9c8399f7a8d5506472dabd4048192dd8d55b84fe45",
+  "console_attempt_error": "Error: No console log available",
+  "hosted_artifact": "iphone-fixture-results-${matrix.shard}-${github.run_attempt}",
+  "hosted_result_bundle_upload": "ios-fixtures.yml:220 .build/Tests*.xcresult (include-hidden-files true, always except RecordsMediaUITests)",
+  "local_and_hosted_diagnostic_collection_flag": "-collect-test-diagnostics never",
+  "app_container_log_search_unnecessary_after_original_result_recovery": true,
+  "readme_sha256": "aed72c130cd82b0196c9ccbc91f1e6b4b38c0becdefef197b07757beb104037c"
+}

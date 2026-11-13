@@ -1,0 +1,459 @@
+[
+  {
+    "size": "small",
+    "key": "after",
+    "label": "$40.69",
+    "crop": {
+      "path": "crops/small-after.png",
+      "sha256": "a98c5ce1c44af89819a1ac1a1f63f39937405eef348315b6f840eab0be7ce086"
+    },
+    "metrics": {
+      "path": "metrics/small-after.json",
+      "sha256": "1ec7bd0ec1b89327af2c101d75535f226c31ce932c64f7bdb04f11b7bd945d54"
+    },
+    "ancestry": {
+      "path": "ancestry/small-after.txt",
+      "sha256": "94573e0771e5c47e81d7298e30efedac610c9a8f5bba5b42e513c17440af2c11"
+    },
+    "screen": {
+      "path": "screens/small-after.png",
+      "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918"
+    }
+  },
+  {
+    "size": "small",
+    "key": "over",
+    "label": "$2.69",
+    "crop": {
+      "path": "crops/small-over.png",
+      "sha256": "daa2a924fafc0b5b877219d86ee5355649ddb70abe3b2fc9b765a9e18632e3d3"
+    },
+    "metrics": {
+      "path": "metrics/small-over.json",
+      "sha256": "cfa3697dd35ef986552b5c61dcb25a94604288bd417a6e162233471cce25974e"
+    },
+    "ancestry": {
+      "path": "ancestry/small-over.txt",
+      "sha256": "4c119cf77927d5906c29a1dfddd60cfb74177cafbdfec1f8ff28b210c2a8d875"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/15CB6B8E-8825-4BED-B14B-BCB101249DFB.png",
+      "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "small",
+    "key": "before",
+    "label": "$37.20",
+    "crop": {
+      "path": "crops/small-before.png",
+      "sha256": "80a64c5156377c04823a0b2625859a266db047d5c0951a16ff5df91eced74352"
+    },
+    "metrics": {
+      "path": "metrics/small-before.json",
+      "sha256": "6cb5bb0cb3cd57f207e51e1b6968b4b9d1d05bd269ad3341631d8e07c3a1b168"
+    },
+    "ancestry": {
+      "path": "ancestry/small-before.txt",
+      "sha256": "47be3e9193f71a81622b64fcf9e97457651de900c3d5ce3a1c7954357ee287b2"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/203932DD-D180-48DA-AD54-ECAF71DE72CB.png",
+      "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "small",
+    "key": "change",
+    "label": "$3.49",
+    "crop": {
+      "path": "crops/small-change.png",
+      "sha256": "38b3558d5ca54e9e497d2d1d190b0c10ee2c765fe5d07208fa37cbf3940b1173"
+    },
+    "metrics": {
+      "path": "metrics/small-change.json",
+      "sha256": "91c6d27cf0cb2b86033a48b044f2c3d7a00b75235778ccdf838b86cc1a26ecf4"
+    },
+    "ancestry": {
+      "path": "ancestry/small-change.txt",
+      "sha256": "fded8077ab8311d3809ddd2236d16504256ad3533352b06974be632425fc3fe3"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/459701E1-A725-47E7-9B14-9183AE053704.png",
+      "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "small",
+    "key": "cap",
+    "label": "$38.00",
+    "crop": {
+      "path": "crops/small-cap.png",
+      "sha256": "468b1bac9b9acb43bc3f7ec495d13d8745505309b9fd66f4809a0369bf82879d"
+    },
+    "metrics": {
+      "path": "metrics/small-cap.json",
+      "sha256": "60f454a5bb6606f7315172eb17ace9687133b0207acb7e494dd7564aaffeb06e"
+    },
+    "ancestry": {
+      "path": "ancestry/small-cap.txt",
+      "sha256": "bbfd9a4518b8597b209773a51af13ea2123af62a54d9dfb17ceb899b7573b8f5"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3FABA6C8-2CD1-43A9-992E-1DA61B848D2D.png",
+      "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "small",
+    "key": "review-decision",
+    "label": "Review decision",
+    "crop": {
+      "path": "crops/small-review-decision.png",
+      "sha256": "cb04e8ec9c991bca1a2cd0e438544884e8c9e3ea7325a659405712cece40036e"
+    },
+    "metrics": {
+      "path": "metrics/small-review-decision.json",
+      "sha256": "c71c47ea296bca1e099d54b2ceaa7d1838786d85914bad15a6eb5d2b56b7b9a3"
+    },
+    "ancestry": {
+      "path": "ancestry/small-review-decision.txt",
+      "sha256": "317f0caea150f580a54f06da7489c6d97a9aca972e97f530390b4f7953b3772e"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E82FD4B0-05BC-428E-A2D2-695788C9C856.png",
+      "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "small",
+    "key": "review-heading",
+    "label": "Review before applying",
+    "crop": {
+      "path": "crops/small-review-heading.png",
+      "sha256": "b1a989ddefb436e38c020d671a222a348bb98b20a3c07e23737c63826c455704"
+    },
+    "metrics": {
+      "path": "metrics/small-review-heading.json",
+      "sha256": "1370f128fac9993c860f67d3e23cb2a1000d982e5f7c2eed3589ca907cd4992b"
+    },
+    "ancestry": {
+      "path": "ancestry/small-review-heading.txt",
+      "sha256": "b5b1f2541d309c4102c165baffd588ad23a75a8b90007378c7a71e605265067e"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/16D1D573-C5F8-4948-BCCA-802D91B62E17.png",
+      "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "after",
+    "label": "$40.69",
+    "crop": {
+      "path": "crops/large-after.png",
+      "sha256": "49cd24ac2d6351d0a7d0fc3eccebfc371709299f6968763a8d975d6563e7bbdf"
+    },
+    "metrics": {
+      "path": "metrics/large-after.json",
+      "sha256": "8dcb79766893bfe6e56e736ac394fcd0e733f39abc1a986eb5636d1808c7b0fc"
+    },
+    "ancestry": {
+      "path": "ancestry/large-after.txt",
+      "sha256": "12fc2a146292316177912f8e6be1daa37f0b312e504349ea72160e143909e279"
+    },
+    "screen": {
+      "path": "screens/large-after.png",
+      "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c"
+    }
+  },
+  {
+    "size": "large",
+    "key": "over",
+    "label": "$2.69",
+    "crop": {
+      "path": "crops/large-over.png",
+      "sha256": "546cd9925a6e75047818abf707eca8382baa3719fa59d17890f48c3d1087fa83"
+    },
+    "metrics": {
+      "path": "metrics/large-over.json",
+      "sha256": "bacd1998e47e1010276216380df5d5f0872cbad0033055065f8fc98f39bc5f2f"
+    },
+    "ancestry": {
+      "path": "ancestry/large-over.txt",
+      "sha256": "527124e26f57843265d35d475918194b32f31b08ef314a7e55bb2f6ff62db808"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3649576B-322B-440A-AD46-93C971AD0A94.png",
+      "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "before",
+    "label": "$37.20",
+    "crop": {
+      "path": "crops/large-before.png",
+      "sha256": "bc82a5166f0052181f5f748cf1b133fa8a06ba7d5a9843c9d0cea2900696eca3"
+    },
+    "metrics": {
+      "path": "metrics/large-before.json",
+      "sha256": "2a05af5decedaf29ab52e67662215a795bbb2e16b9fdb3edb36fef1f4cbf0b2f"
+    },
+    "ancestry": {
+      "path": "ancestry/large-before.txt",
+      "sha256": "7dae4912e6933ed0185df479f212a051cdbc99626294f8a7fd2f052975fa5cc9"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/43D6208C-7F63-49F7-8FF4-D629846B9C16.png",
+      "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "change",
+    "label": "$3.49",
+    "crop": {
+      "path": "crops/large-change.png",
+      "sha256": "63ff7d4deb4bcd53f292eefd8f10e84b9bef3059ecf344734f06f237fb6e1b13"
+    },
+    "metrics": {
+      "path": "metrics/large-change.json",
+      "sha256": "fc4283f7217ed0c891db154ff86379b5ef0d1fc6b75bf7cea4d271ec65a7dbe0"
+    },
+    "ancestry": {
+      "path": "ancestry/large-change.txt",
+      "sha256": "0b7530dabdda4e97e2ee63a75e0dca7c18e133d29365fba02ffe0fe1c5c089ea"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3AF63466-4D50-4219-9CF9-37A78BEAE634.png",
+      "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "cap",
+    "label": "$38.00",
+    "crop": {
+      "path": "crops/large-cap.png",
+      "sha256": "73ef4d79d068a18d5947415b38263bc24cbf08043c7f70fdc5cc906c0724ca87"
+    },
+    "metrics": {
+      "path": "metrics/large-cap.json",
+      "sha256": "3c261b8d0df1b6ea9310b47cd3c9f9c180010638367cc02d4b7ea3aa0f48198a"
+    },
+    "ancestry": {
+      "path": "ancestry/large-cap.txt",
+      "sha256": "a9774989d8c628bb6176a68d08776d7b89999e834e211120707b6eddac522f42"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9C341EBB-E0BF-4C9A-B774-D88904C4ACE3.png",
+      "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "review-decision",
+    "label": "Review decision",
+    "crop": {
+      "path": "crops/large-review-decision.png",
+      "sha256": "1e684bf58c624abc9fba20a89c9eb600e4883715257ffd995b2042e5e0815987"
+    },
+    "metrics": {
+      "path": "metrics/large-review-decision.json",
+      "sha256": "1d792ddb47c78e5c8a7571fa4e6f5004b6f8dd903b329c637714f10e62c1c661"
+    },
+    "ancestry": {
+      "path": "ancestry/large-review-decision.txt",
+      "sha256": "b2b6bb7492927d21c2fe17caaa3478a125fb1f4ee395bd9d425a585a1835776d"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/5008A570-FF4F-4A9F-8256-1716524FC352.png",
+      "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "large",
+    "key": "review-heading",
+    "label": "Review before applying",
+    "crop": {
+      "path": "crops/large-review-heading.png",
+      "sha256": "584663c4c6229fe7f6696d2a9ec59a45e815ba15448ee2276c96ebaaa95df0bb"
+    },
+    "metrics": {
+      "path": "metrics/large-review-heading.json",
+      "sha256": "7d17447eeaf185dfdb3b5a79874422ef7947d56e4d31cc44c5bbd1b42cd987e6"
+    },
+    "ancestry": {
+      "path": "ancestry/large-review-heading.txt",
+      "sha256": "ea3e9de2db01af6e8d4b9a7cae5f9ba88fa11dccc8cc659327903f144526268f"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/068A98E7-8FC8-4ABC-91CD-5B8F7DCD8057.png",
+      "sha256": "79730e03eb905d251e404a3e755388e042730822a0f4970a24777da429fdec27",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "after",
+    "label": "$40.69",
+    "crop": {
+      "path": "crops/ax5-after.png",
+      "sha256": "f44da3605f3a03a11604a7177fe26a1551c91f648de5e09db9bb33399e48f393"
+    },
+    "metrics": {
+      "path": "metrics/ax5-after.json",
+      "sha256": "bdfbd006e70dc97d595af3517be70823613701d5b57cce563f338ef58ea30656"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-after.txt",
+      "sha256": "5571cb120f6165b1d29e0f29e4da93a411580ddffb1c7fe81586766b9df0e934"
+    },
+    "screen": {
+      "path": "screens/ax5-after.png",
+      "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d"
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "over",
+    "label": "$2.69",
+    "crop": {
+      "path": "crops/ax5-over.png",
+      "sha256": "a6784106217cdf6ffbe3bc5f6b55bd67582836dbf9b2ef43e6fcb7e0e3827977"
+    },
+    "metrics": {
+      "path": "metrics/ax5-over.json",
+      "sha256": "5d97bdbe4c70cb124e25472352a56a3ebb3554bb6c071607d9063f77bbc4f282"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-over.txt",
+      "sha256": "ce88a93279630d6c211770630e8ffcdb6626364702054227e1cd6e8d3c786290"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A4F0B729-1780-4640-8EE3-FFC19B46E81D.png",
+      "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "before",
+    "label": "$37.20",
+    "crop": {
+      "path": "crops/ax5-before.png",
+      "sha256": "24c1000038583a79de2a5acdb4d74b33c39eec66589107c65838f61758eddb1a"
+    },
+    "metrics": {
+      "path": "metrics/ax5-before.json",
+      "sha256": "2e7b64335b5383caa5d9fa29966f1171e2cbd6e2e0f94e735bec5ccdafac4499"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-before.txt",
+      "sha256": "b9fa22af48aa70e20e23e9e24f68053cdbe906bfae1601aa9534996cc440d9f9"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E253F1E0-31B2-4886-93B3-80A72ABA87E6.png",
+      "sha256": "951143505199d565360d8a5ef251fa309a0bc7520b6cd1042b4bafa0df486098",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "change",
+    "label": "$3.49",
+    "crop": {
+      "path": "crops/ax5-change.png",
+      "sha256": "39ee71cd992f30b51faac6c27a8625ea3adf9f5916b8f424de4715be94362c89"
+    },
+    "metrics": {
+      "path": "metrics/ax5-change.json",
+      "sha256": "1691f5670aef79ca974292ca50b21cf995c7c306114b1b389b4b1a66520f6a92"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-change.txt",
+      "sha256": "75c7d44786227bed6a5ca9bdf0b8ccff6873a2c1090b342b92d56b40bf2ec4a8"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/81ED0857-2633-4FB6-8169-34E99354B487.png",
+      "sha256": "a24e3cd827eb1b16a79b1709358ce0d1f982b20cbcbdcb7da47d0762f8680d15",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "cap",
+    "label": "$38.00",
+    "crop": {
+      "path": "crops/ax5-cap.png",
+      "sha256": "16abd232ff90a056d41fcd0d5095f480e02aa0d6fa88af75916c698ded2acede"
+    },
+    "metrics": {
+      "path": "metrics/ax5-cap.json",
+      "sha256": "03d60941e22b1967065fa9dc581abd61c700a68032938cabfeade9b3af528b3b"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-cap.txt",
+      "sha256": "c1c1057b85fe3d2b5179a1aa509e28c3bb1b0cec10434f54d7fe2ce8793473b2"
+    },
+    "screen": {
+      "retainedInScratch": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9089DFF7-B3BD-4968-BF96-E449A8067F82.png",
+      "sha256": "fd22b6de1a6ba8f0226710ee71cba5671ce225af3142cbec98efe8a11f38bb6b",
+      "reason": "Representative full screens only; original complete export/manifest retained."
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "review-decision",
+    "label": "Review decision",
+    "crop": {
+      "path": "crops/ax5-review-decision.png",
+      "sha256": "7b6145053289ae7da4abf3ddd119be7a7be77b254e0f6f38259859f4f14b9121"
+    },
+    "metrics": {
+      "path": "metrics/ax5-review-decision.json",
+      "sha256": "5dc0e373c7ddfa27867319caa5c3f1f25ac64e218e296cf08fcc85f2afd6e560"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-review-decision.txt",
+      "sha256": "3588fed31db1f80bd36a32358f3d9ee4efc0230f20b090d1a37a3ba7687ae688"
+    },
+    "screen": {
+      "path": "screens/ax5-review-decision.png",
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    }
+  },
+  {
+    "size": "ax5",
+    "key": "review-heading",
+    "label": "Review before applying",
+    "crop": {
+      "path": "crops/ax5-review-heading.png",
+      "sha256": "15d7b6b9a5ebe08718bda3c2a63ad0f79deeed0ec60008f3992c9c89c837dfae"
+    },
+    "metrics": {
+      "path": "metrics/ax5-review-heading.json",
+      "sha256": "86556965f4dccd6beefd0209c9163af3a46dcb44fd140ab81763c4bee52317cc"
+    },
+    "ancestry": {
+      "path": "ancestry/ax5-review-heading.txt",
+      "sha256": "576763d790014f9e0d6197619fb583d2fce67bdb6e3edba5ddc525bf51915327"
+    },
+    "screen": {
+      "path": "screens/ax5-review-heading.png",
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    }
+  }
+]

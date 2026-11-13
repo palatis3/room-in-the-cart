@@ -1,0 +1,74 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648565,
+  "attempt": 1,
+  "jobID": 128234290801,
+  "jobConclusion": "failure",
+  "checkout": "525d68ae2dbb46f21be8d71a495c10f7c1246f7f",
+  "mergeTreeProofSHA256": "02e32fd154a1f37684c861452c07843460d8ba579d100685c298546f59ab33ad",
+  "jobLog": "42316648565-job-128234290801.log",
+  "jobLogSHA256": "4f0c261d2b9f3aecedd4306aed7558f749e78b45a53b7a960805540177041fde",
+  "artifactID": 13551638882,
+  "originalZIP": "iphone-results-ui-04-1.zip",
+  "archiveSHA256": "6ec1b6afe55099ffa82253cd207057f6aa9bee9eb2f3b8795355ac63c06b59bc",
+  "apiSizeDigestVerified": true,
+  "originalExtractedMembersVerified": 127,
+  "pristineExtractionVerified": true,
+  "sourceFile": "candidate-verifiers/ios/UITests/RoomInTheCartUITests.swift",
+  "sourceSHA256": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34",
+  "rawLogSHA256": "f6e238ecf807ed33faa130ecc1414112551b830ec34d4ccc5e3cd086c1342aba",
+  "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry",
+  "durationSeconds": 96.172,
+  "runtimeExpected": true,
+  "runtimeWarnings": 0,
+  "implicitRunnerRestarts": [],
+  "synchronizationDiagnosticCount": 0,
+  "strictReplayExit": 1,
+  "passed": 5,
+  "failed": 1,
+  "selected": 6,
+  "failureSummary": "Failed to synthesize event: Neither element nor any descendant has keyboard focus. Event dispatch snapshot: Application, pid: 39170, label: 'Room in the Cart'",
+  "chronology": [
+    {
+      "seconds": 77.86,
+      "event": "Tap bQuantity TextField begins",
+      "line": 2654
+    },
+    {
+      "seconds": 79.59,
+      "event": "Tap event synthesis",
+      "line": 2658
+    },
+    {
+      "seconds": 79.95,
+      "event": "Type 6 into application begins",
+      "line": 2660
+    },
+    {
+      "seconds": 81.38,
+      "event": "First keyboard-focus failure",
+      "line": 2670
+    },
+    {
+      "seconds": 82.52,
+      "event": "XCTest internal event retry2, not test/run retry",
+      "line": 2815
+    },
+    {
+      "seconds": 85.04,
+      "event": "XCTest internal event retry3, not test/run retry",
+      "line": 2970
+    },
+    {
+      "seconds": 86.72,
+      "event": "Third keyboard-focus failure",
+      "line": 2980
+    },
+    {
+      "seconds": 94.37,
+      "event": "Failure screenshot attached during teardown",
+      "line": 3271
+    }
+  ],
+  "scope": "Failure is during initial enterComparison at bQuantity input (source486/type562), before compare/Edit growth/return assertions. No keyboard-focus cause or screenshot visibility/hittability inference asserted. Raw log contains three internal XCTest event attempts, not a collector retry or runner restart. No native execution/retry/source change by collector."
+}

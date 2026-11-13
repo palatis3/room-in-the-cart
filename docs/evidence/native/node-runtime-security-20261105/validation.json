@@ -1,0 +1,69 @@
+{
+  "sourceBase": "1654106ac1c64fff4f1da1b439d332e43f3aa8a9",
+  "runtime": {
+    "Node": "22.23.4",
+    "npm": "10.9.9",
+    "PostgreSQL": "17.11",
+    "Xcode": "27.1 / 27A9275",
+    "Swift": "6.4"
+  },
+  "runtimeSource": "https://nodejs.org/en/blog/release/v22.23.4",
+  "fileSHA256": {
+    ".node-version": "0c4bf84f9bedd485b2c4eac05f59e35addc86ce7dbf0d90435528e04384c6314",
+    "service/package.json": "346731e02f5a61d9266ae019ba97909834c46c9e23820146ee1d9fca4e1fc6cd",
+    "service/package-lock.json": "b6914cdc592969a5ec6095559aed07480e5d8374f03dfd661db294ae9d46b9d4",
+    "web/package.json": "6c9e4b49161cb31653aeb693e25dffebfd03c933ff7ec65545ef3a768d40facb",
+    "web/package-lock.json": "1841d6c5a4faac3f18c00d67ff2c3f3cab52cdb38c9d83e5f2d086c0c258ca07",
+    "scripts/check.sh": "b9a0d057a0e89a22a2d79468edf70972613bb798e3df351b25dcd04238e5ba44",
+    "scripts/check_node_runtime.py": "90273dfe8aab9b6db15b96a0173ffbe9564c5c926bbda4edbaec252804911240",
+    "scripts/test_check_node_runtime.py": "d4969a7924f3c14df5b28c8adf1fb0b139aaf9ba79d7cbda17ea0e693be01c11",
+    ".github/workflows/ci.yml": "adc63e0a2166960fcf5f4d75bfcad6ccb73c1450692e52631be9897d29ca55bb"
+  },
+  "validation": {
+    "web": {
+      "tests": 109,
+      "pass": 109,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "service": {
+      "tests": 345,
+      "pass": 344,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "todo": 0
+    },
+    "serviceSkip": "One optional billing PostgreSQL case in the default test command; real PostgreSQL integration separately passed all 174 cases.",
+    "postgresIntegration": 174,
+    "postgresOperations": 15,
+    "nativeWire": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "exactSwiftScenarioInvocations": 6,
+    "npmAudit": "Both complete lockfiles report zero vulnerabilities at every severity.",
+    "pythonValidatorTests": 97,
+    "workflowLint": "passed",
+    "generatedProjectAndLocalization": "passed",
+    "runtimeGate": "Current official metadata accepts 22.23.4 and rejects 22.14.0; negative tests cover stale security floor, EOL, missing metadata, unpublished pin and engine drift.",
+    "cleanup": "Native runner exit 0 includes owned PostgreSQL shutdown and temporary state removal. Initial local attempt stopped before native build because the assumed Homebrew PostgreSQL path was absent; rerun uses the verified ignored local PostgreSQL toolchain."
+  },
+  "evidenceSHA256": {
+    ".build/NodeSecurityUpdate20261105/web-tests.log": "7646760a25718f07d91b81dd73322548cdfe50f381c02de96089e037994f8ae7",
+    ".build/NodeSecurityUpdate20261105/service-tests.log": "c00afa5238272c3fce3b22563cc1de784abfa95367ae2ab0d38c48e22cd06e51",
+    ".build/NodeSecurityUpdate20261105/web-audit.json": "090e800e9f5e8684017eedb6ba3b64ead4a3546a6be2d2ba95abdba249dfed31",
+    ".build/NodeSecurityUpdate20261105/service-audit.json": "ca0605a1b6201e3b71da67fe65ec8627c5f872bb1f02503267b021ff9aec0cc9",
+    ".build/NodeSecurityUpdate20261105/native-wire.log": "e9f9b664587943d7d5243438b174e836d1a2ce93b326a19a7c2767e0f03d247e",
+    ".build/native-wire-results/swift-build.log": "fc513cbf7b3d8f5722a99fd1735e67fe4cbee1585d39a1e99cbfb3c800b13738",
+    ".build/native-wire-results/tests.tap": "6991b41c8cea2b74e4d7ba166d8ff9bc54ec4ad5621cf2de6545c4f30b4a958c",
+    ".build/Node22234PostgresReview/evidence/summary.json": "ac3ef1611a3e0783cb9f8bd58deeb404e2c3e9529a407bc7876798cd0b7ae0d1"
+  },
+  "scope": "Runtime pin and matching engine metadata only; dependency versions and integrity entries unchanged. Hosted first run with this Node pin and native-wire workflow remains pending."
+}

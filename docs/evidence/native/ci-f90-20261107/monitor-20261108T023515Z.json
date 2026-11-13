@@ -1,0 +1,93 @@
+{
+  "observedAtUtc": "2026-11-08T02:35:15Z",
+  "previousSnapshot": "monitor-20261108T023154Z.json",
+  "previousObservedAtUtc": "2026-11-08T02:31:54Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 7
+      },
+      "remainingJobs": []
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 14,
+        "failure": 2,
+        "in_progress": 3,
+        "pending": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128600647338,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128601563444,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128603089001,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "status": "in_progress"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128599384101,
+      "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128599384101",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:32:31Z"
+    }
+  ],
+  "newFailures": [],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "completed",
+    "conclusion": "failure",
+    "artifactState": "collected",
+    "originalEvidence": "speech-runtime-original/proof.json",
+    "causalEvidence": "speech-causal-review/proof.json"
+  },
+  "verifiedSuccess": [
+    {
+      "jobId": 128599384101,
+      "selected": 1,
+      "passed": 1,
+      "hostedLogLines": [
+        "2026-11-08T02:32:06.6697810Z Executed 1 of 1 selected tests.",
+        "2026-11-08T02:32:06.7087700Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T02:32:06.7088870Z The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests."
+      ]
+    }
+  ],
+  "fixtureMatrix": {
+    "plannedRows": 17,
+    "listedRows": 17,
+    "notListedRows": [],
+    "sourceInventory": "monitor-20261108T023154Z.json"
+  }
+}

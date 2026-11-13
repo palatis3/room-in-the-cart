@@ -1,0 +1,7 @@
+{
+  "status": "root-reviewed",
+  "findings": 36,
+  "uniqueReferencedFilesVerified": 177,
+  "allAuditClosed": false,
+  "nextAction": "One unchanged unfiltered audit insertion on current product; preserve unknown original contrast setting and all failures"
+}

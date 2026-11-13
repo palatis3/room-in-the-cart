@@ -1,0 +1,8 @@
+{
+  "status": "root-reviewed-and-test-patch-installed",
+  "evidence": "Exact retained hierarchy line191 identifies TextView for delivery.cook.fullCorrection after Review correction; screenshot shows later scroll position only",
+  "productChange": false,
+  "testSourceSHA256": "d7009ea4df6d71eaa096bce89f032aa46fedb54d28385bcb15ee60e066c86622",
+  "preservedAssertions": "Exact complete wording equality, disabled sharing, destination confirmation, changes and sent-record history",
+  "pendingValidation": "Affected complete journey on iOS17 and26.2 after current isolated S24audit releases lane"
+}

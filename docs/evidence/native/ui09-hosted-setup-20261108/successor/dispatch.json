@@ -1,0 +1,18 @@
+{
+  "requestedAtUTC": "2026-11-08T15:59:12.731454+00:00",
+  "candidateSHA": "2397704ca4392281d396c152b40e350b60c0183e",
+  "command": [
+    "/Users/palatis/Room in the Cart/.tools/github-cli/bin/gh",
+    "workflow",
+    "run",
+    "408061453",
+    "--ref",
+    "codex/ui09-hosted-observer-a305",
+    "-f",
+    "candidate_sha=2397704ca4392281d396c152b40e350b60c0183e"
+  ],
+  "scope": "One new reviewed diagnostic successor; no rerun of failed original, no PR/default branch change",
+  "exitCode": 0,
+  "stdout": "https://github.com/palatis3/room-in-the-cart/actions/runs/42497538157\n",
+  "stderr": ""
+}

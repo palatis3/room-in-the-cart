@@ -1,0 +1,12 @@
+{
+  "status": "reviewed",
+  "findings": [],
+  "urlHosts": [
+    "api.github.com",
+    "github.com",
+    "playwright.dev"
+  ],
+  "scope": "Compact original/prior hosted logs, public provenance URLs, source hashes and scratch workflow proposal. No signed URLs/credentials found. Full job logs remain scratch; excerpt excludes checkout auth/masked-token noise.",
+  "futureDiagnosticFields": "Browser command/args/temp profile/PID/process stderr/exit/cleanup; no pw:protocol, pw:api, environment dump or live-user fixture. Raw future stderr still requires review.",
+  "currentHEADUnchanged": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+}

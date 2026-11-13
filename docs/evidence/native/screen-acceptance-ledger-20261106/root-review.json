@@ -1,0 +1,12 @@
+{
+  "ledgerSHA256": "c45309cae230c29a98ade3749244a2be49d8557aab29db036c6380fcf5da89ba",
+  "packageFilesVerified": 6,
+  "inputFilesVerified": 96,
+  "inputsRestoredFromPreFixCommit6f1b4e4": [
+    "docs/CURRENT-ACCEPTANCE.md",
+    "ios/Features/Ledger/LedgerIngredientView.swift"
+  ],
+  "verifierOnlyChange": "root path points to copied hash-matching inputs; original files untouched",
+  "validationExit": 0,
+  "semanticAcceptanceAudit": false
+}

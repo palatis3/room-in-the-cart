@@ -1,0 +1,97 @@
+OWNER
+Attributes: Button, 0x12557c370, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Element subtree:
+ →Button, 0x12557c370, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Path to element:
+ →Application, 0x125574f80, pid: 74289, label: 'Room in the Cart'
+  ↳Window (Main), 0x125568bb0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x12557b710, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x12557b950, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x12557ba70, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x12557bb90, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x12557bcb0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x12557bdd0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x12557bef0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳NavigationBar, 0x12557c010, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+           ↳Other, 0x12557c130, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+            ↳Other, 0x12557c250, {{20.0, 82.0}, {87.7, 36.0}}
+             ↳Button, 0x12557c370, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x12571c7e0, pid: 74289, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type NavigationBar
+    Output: {
+      NavigationBar, 0x1256565a0, {{0.0, 519.0}, {402.0, 54.0}}, identifier: 'S24 request decision'
+      NavigationBar, 0x12565a800, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+    }
+    ↪︎Find: Elements matching predicate '"Review request" IN identifiers'
+      Output: {
+        NavigationBar, 0x1255b05c0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+      }
+      ↪︎Find: First Match
+        Output: {
+          NavigationBar, 0x12564d0a0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+        }
+        ↪︎Find: Descendants matching type Button
+          Output: {
+            Button, 0x12563d600, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+          }
+          ↪︎Find: Elements matching predicate '"household.decision.cancel" IN identifiers'
+            Output: {
+              Button, 0x1255a02a0, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+            }
+            ↪︎Find: First Match
+              Output: {
+                Button, 0x12562f040, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+              }
+
+TARGET
+Attributes: Button, 0x12573f390, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Element subtree:
+ →Button, 0x12573f390, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Path to element:
+ →Application, 0x125739790, pid: 74289, label: 'Room in the Cart'
+  ↳Window (Main), 0x125738d10, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x12573e730, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x12573e970, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x12573ea90, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x12573ebb0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x12573ecd0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x12573edf0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x12573ef10, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳NavigationBar, 0x12573f030, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+           ↳Other, 0x12573f150, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+            ↳Other, 0x12573f270, {{20.0, 82.0}, {87.7, 36.0}}
+             ↳Button, 0x12573f390, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1255ac6a0, pid: 74289, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type NavigationBar
+    Output: {
+      NavigationBar, 0x125768fb0, {{0.0, 519.0}, {402.0, 54.0}}, identifier: 'S24 request decision'
+      NavigationBar, 0x12576d290, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+    }
+    ↪︎Find: Elements matching predicate '"Review request" IN identifiers'
+      Output: {
+        NavigationBar, 0x1255b28e0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+      }
+      ↪︎Find: First Match
+        Output: {
+          NavigationBar, 0x1255f2fa0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+        }
+        ↪︎Find: Descendants matching type Button
+          Output: {
+            Button, 0x12567db30, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+          }
+          ↪︎Find: Elements matching predicate '"household.decision.cancel" IN identifiers'
+            Output: {
+              Button, 0x12575e500, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+            }
+            ↪︎Find: First Match
+              Output: {
+                Button, 0x1254c01f0, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+              }

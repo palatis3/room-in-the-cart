@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "strictTypeScriptExit": 0,
+  "offline": {
+    "tests": 926,
+    "pass": 925,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "bfed40ab1bf051bc4c501aa7b35fd89edfaae5bc3044d7a0534c6ab27d4d8173"
+  },
+  "database": {
+    "tests": 397,
+    "pass": 394,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "7ad2ec5db354eb620d11117eabb3c4d00f831fc1c522b4ec8e324067b0117d83"
+  },
+  "allSixOriginalFailuresNowPass": true,
+  "originalFailureNames": [
+    "ordinary request inverse after later mapping follows the current shopper and invalidates an old held preview",
+    "a later store selection cannot be treated as the original compound request store basis",
+    "v1 changed-quote first adoption records the reviewed quote and whole Undo preserves a later staple",
+    "signed quarantined restore erases 048 accepted and retired-link lineage without deleting independent same-label facts",
+    "tracked Undo lost reply and original Add replay after later reacceptance never reapply effects",
+    "a held first Apply cannot remove a later reacceptance after another Undo committed"
+  ],
+  "restore048": {
+    "signatureVerified": true,
+    "applied": true,
+    "runtimeStillQuarantined": true,
+    "privateReceiptSHA256": "248fcd907b857482667a107e6b01e1b903c23ef41913e63726fc353c979ba43c"
+  },
+  "sourceFiles": 292,
+  "compiledEntries": 167,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "postgresStopped": true,
+  "originalFailedFixturesPreserved": true,
+  "run": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-compound-backend-r3",
+  "hashes": {
+    "receipt.json": "8ce808340470cba539cae36f96e24c5d2fc910d6580328d54fb7813a36f25693",
+    "source-manifest.json": "19ce85deb92e5707672fe0fd8e8d96816ff563be8a9211353e41f12958ec7655",
+    "compiled-service-manifest.json": "59d63a95e99ad5a91944ab2376c745f928fcd7be7120cde83d2b2ec4f2e12a30",
+    "typescript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "offline.log": "bfed40ab1bf051bc4c501aa7b35fd89edfaae5bc3044d7a0534c6ab27d4d8173",
+    "database.log": "7ad2ec5db354eb620d11117eabb3c4d00f831fc1c522b4ec8e324067b0117d83"
+  },
+  "preparationManifestSHA256": "abdf781b8deb145d3cfea2ac7ba90df2e02a1fae3b47a742a2df597b9ecf826e",
+  "nativeOrBrowserWireQualified": false,
+  "deployed": false,
+  "remainingProductGaps": [
+    "Partial-state store re-review",
+    "Authoritative enabled-partial meal action sources",
+    "Native screen integration and actual-service wire successor"
+  ],
+  "successfulPrivateFixtureRemoved": true
+}

@@ -1,0 +1,51 @@
+{
+  "captures": [
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-whole-button_0_D017D460-9B33-4C29-AFFE-B7ECB39099BD.png",
+        "payloadId": "0~lXwudwwnuRxR05pCC3LuNddGtrjHQAKHjWSacUAcApxm7osqHPvG9VHa2tqKjmIgjrNJENzMEPN25ky2klnY9w==",
+        "timestamp": 1794157105.583,
+        "uuid": "9AC52F1E-252B-44F8-98C3-9419257EC9EE"
+      },
+      "path": "png-0-0/9AC52F1E-252B-44F8-98C3-9419257EC9EE.png",
+      "sha256": "215b51bfa9de648dce478fc81d384ee19822047e1bd2477173c31198a76878ca",
+      "bytes": 11234,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-label-interior_0_57AF5FEB-8484-4865-8454-9152C1165FDF.png",
+        "payloadId": "0~0RRQxlmCPJ1szH7_F6AV2O_map6CRm-kQZskx8U5vxJUJ3O9EFrt7QhWQpNL-yWpXV44YdbYCKclZcwr5yLVTw==",
+        "timestamp": 1794157105.593,
+        "uuid": "68F743BD-0C16-4296-B584-A695420B6AD8"
+      },
+      "path": "png-0-1/68F743BD-0C16-4296-B584-A695420B6AD8.png",
+      "sha256": "c7fdaf73982ba03c548e7d4b5e426b71a3de782139f5b56e6723505b3f74d19e",
+      "bytes": 7784,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-disabled-state-and-crop_0_E1295900-66F2-48DB-B131-25F41AE2B8A8.txt",
+        "payloadId": "0~1KPV9gfhdLwOhK21TbfnWokkp19SJ5FWEwFSjng8wqCmKarKE5W0Cz-dn1XB_6bhFasIW3MM2ytQNX0XimgA6g==",
+        "timestamp": 1794157107.455,
+        "uuid": "C2346A0D-7FA0-483E-9C52-BAE5DC8E86E4"
+      },
+      "path": "png-0-2/C2346A0D-7FA0-483E-9C52-BAE5DC8E86E4.txt",
+      "sha256": "f36d00c2615e20197495e41fcc915504c9e6bb2879b624e5a934aa351a4f5bbb",
+      "bytes": 18778,
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "perFileLimitBytes": 4000000,
+  "timeoutPerCommandSeconds": 45,
+  "visualReview": "pending root"
+}

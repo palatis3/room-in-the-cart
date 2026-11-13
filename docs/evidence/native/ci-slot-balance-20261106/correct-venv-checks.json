@@ -1,0 +1,25 @@
+{
+  "setupCorrection": "Initial driver resolved the venv interpreter symlink to system Python, losing pinned PyYAML. Retained initial setup failures; reran only affected checks with original venv path. No dependency, source or validation policy changed.",
+  "results": {
+    "workflow-policy-tests": {
+      "command": [
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+        "scripts/test_check_ci_workflows.py"
+      ],
+      "exitCode": 0,
+      "log": "workflow-policy-tests-correct-venv.log"
+    },
+    "actionlint": {
+      "command": [
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+        "scripts/check_ci_workflows.py",
+        "--actionlint",
+        "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+        "--report",
+        "/Users/palatis/Room in the Cart/.build/CISlotBalance20261106/actionlint.json"
+      ],
+      "exitCode": 0,
+      "log": "actionlint-correct-venv.log"
+    }
+  }
+}

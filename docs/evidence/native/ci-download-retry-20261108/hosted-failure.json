@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "a30506596ad3a0103396fccb29800c629c92bc30",
+    "headTree": "c963a43b2461ed45946d006c58e7f1516f2d6bd6",
+    "pullRequest": 1,
+    "runId": 42471092731,
+    "jobId": 128701759248,
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092731/job/128701759248",
+    "checkoutSha": "3d61917d3a282e66a4198797528d44558f385369",
+    "statusReceipt": "status-20261108T102206Z.json"
+  },
+  "job": "source-checks",
+  "failedStep": "Validate workflow syntax and expression references",
+  "classification": "Dependency download returned HTTP 504 before workflow lint ran.",
+  "dependency": {
+    "name": "actionlint",
+    "version": "1.7.12",
+    "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
+    "expectedSha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+  },
+  "priorStepInSameShell": "Pinned PyYAML 6.0.3 wheel installed.",
+  "httpStatus": 504,
+  "curlExitCode": 22,
+  "checksumReached": false,
+  "workflowLintReached": false,
+  "artifactCountAtObservation": 0,
+  "jobLogExcerpt": {
+    "path": "source-checks-job-log-excerpts.txt",
+    "ranges": [
+      [
+        119,
+        122
+      ],
+      [
+        123,
+        147
+      ]
+    ],
+    "lineNumbering": "One-based LF-delimited indices in decoded GitHub job log.",
+    "sha256": "35457318b5cdfed73f6842bcc11854871afa868e0db38e2c7695c8a39f068127"
+  }
+}

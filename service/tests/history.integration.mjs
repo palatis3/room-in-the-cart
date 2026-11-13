@@ -91,6 +91,41 @@ test('Free readable-shop discovery pages only current permitted sources and pres
  const foreign=await fixture();assert.notEqual((await call(foreign.owner,f.base+'/history-readable-shops')).status,200);
 });
 
+test('history picker pages current writable shops and narrows rows and cursors to the selected pickup',async()=>{
+ const f=await fixture(),path=f.base+'/shops?scope=history-owned',ids=[f.shopId];
+ for(let n=0;n<51;n++)ids.push(await f.shop());
+ const closed=ids[1];
+ ok(await call(f.owner,f.base+`/shops/${closed}/financial-reviews`,'POST',{
+  clientKey:randomUUID(),sourceVersion:await f.version(closed),allEvidenceEntered:false,closeShop:true
+ }));
+ const retired=ids[2];
+ ok(await call(f.owner,f.base+`/shops/${retired}/history-retire`,'POST',{
+  clientKey:randomUUID(),sourceVersion:await f.version(retired),confirm:true
+ }));
+ const first=ok(await call(f.owner,path));
+ assert.equal(first.shops.length,50);
+ assert.equal(first.nextCursor,first.shops.at(-1).shopId);
+ const next=ok(await call(f.owner,path+'&cursor='+first.nextCursor));
+ assert.equal(next.nextCursor,null);
+ const rows=[...first.shops,...next.shops];
+ assert.deepEqual(rows.map(s=>s.shopId).sort(),ids.filter(id=>id!==retired).sort());
+ assert.equal(rows.find(s=>s.shopId===closed).phase,'closed');
+ const selected={'X-Shop-ID':f.shopId};
+ assert.deepEqual(ok(await call(f.owner,path,'GET',undefined,selected)).shops.map(s=>s.shopId),[f.shopId]);
+ assert.equal((await call(f.owner,path+'&cursor='+closed,'GET',undefined,selected)).status,404);
+ assert.equal((await call(f.owner,path+'&cursor='+retired)).status,404);
+ assert.deepEqual(ok(await call(f.owner,path,'GET',undefined,{'X-Shop-ID':retired})),{shops:[],nextCursor:null});
+ // Ordinary shop switching keeps its original scope, including a retired shop's non-history work.
+ for(const scope of ['owned','active']){
+  const picker=f.base+'/shops?scope='+scope;
+  const head=ok(await call(f.owner,picker,'GET',undefined,selected));
+  const tail=ok(await call(f.owner,picker+'&cursor='+head.nextCursor,'GET',undefined,selected));
+  const expected=scope==='active'?ids.filter(id=>id!==closed):ids;
+  assert.deepEqual([...head.shops,...tail.shops].map(s=>s.shopId).sort(),[...expected].sort());
+ }
+ const reader=await joinAdult(f);await budgetGrant(f,f.owner,reader);
+ assert.deepEqual(ok(await call(reader,path)),{shops:[],nextCursor:null});
+});
 test('a saved period regains full read scope through an explicit grant and loses all envelope signals on revocation',async()=>{
  const f=await fixture();await f.paid();const second=await f.shop(20000),p=period([f.shopId,second]);
  const input={clientKey:randomUUID(),baseRevision:0,period:p};ok(await call(f.owner,f.base+'/budget-periods','POST',input));
@@ -102,6 +137,9 @@ test('a saved period regains full read scope through an explicit grant and loses
  const full=ok(await call(f.owner,path));assert.equal(full.period.id,p.id);assert.equal(full.remaining.maximumMinor,15000);
  assert.deepEqual(ok(await call(f.owner,path+'/record')).period,p);
  assert.equal((await call(f.owner,f.base+'/budget-periods','POST',input)).status,404,'a read grant must not replay a former shopper write');
+ const omitGrantedShop={clientKey:randomUUID(),baseRevision:1,period:{...p,shopIds:[f.shopId]}};
+ assert.equal((await call(f.owner,f.base+'/budget-periods','POST',omitGrantedShop)).status,404);
+ assert.deepEqual(ok(await call(f.owner,path+'/record')).period,p);
  await budgetGrant(f,shopper,f.owner,{shopId:second,enabled:false,targetRevision:1,shopRevision:1,authorityEpoch:2});
  assert.deepEqual(ok(await call(f.owner,path)),partial);
  assert.equal((await call(f.owner,path+'/record')).status,404);
@@ -133,6 +171,18 @@ test('period totals include linked later credits and count an applied reservatio
  const charge=entry('postedCharge',12000,{occurredAt:new Date(Date.now()-3.5*86400000).toISOString()});await f.financial(charge);await f.financial(entry('postedCredit',1000,{creditId:randomUUID(),chargeEvidenceKey:charge.evidenceKey,occurredAt:new Date().toISOString()}));summary=ok(await call(f.owner,f.base+'/budget-periods/'+p.id));assert.equal(summary.permitted.postedNetMinor,11000);assert.equal(summary.remaining.maximumMinor,34000);
  const changed={...p,reservations:p.reservations.map(r=>({...r,state:{kind:'reserved'}}))};assert.equal((await call(f.owner,f.base+'/budget-periods','POST',{clientKey:randomUUID(),baseRevision:1,period:changed})).data.error.code,'reservation_final');
 });
+test('assigned shopper can remove an owned source and replay the saved change',async()=>{
+ const f=await fixture();await f.paid();
+ const second=await f.shop(),p=period([f.shopId,second]),path=f.base+'/budget-periods';
+ ok(await call(f.owner,path,'POST',{clientKey:randomUUID(),baseRevision:0,period:p}));
+ const repeated={...p,shopIds:[f.shopId,f.shopId.toUpperCase()]};
+ assert.equal((await call(f.owner,path,'POST',{clientKey:randomUUID(),baseRevision:1,period:repeated})).status,422);
+ const change={clientKey:randomUUID(),baseRevision:1,period:{...p,shopIds:[f.shopId.toUpperCase()]}};
+ const receipt=ok(await call(f.owner,path,'POST',change));
+ assert.equal(receipt.revision,2);
+ assert.deepEqual(ok(await call(f.owner,path,'POST',change)),receipt);
+ assert.deepEqual(ok(await call(f.owner,path+'/'+p.id+'/record')).period,change.period);
+});
 test('lost shop authority yields only independently permitted subtotal with no hidden funding or counts',async()=>{
  const f=await fixture();await f.paid();const second=await f.shop(20000),p=period([f.shopId,second]),input={clientKey:randomUUID(),baseRevision:0,period:p};ok(await call(f.owner,f.base+'/budget-periods','POST',input));assert.equal(ok(await call(f.owner,f.base+'/budget-periods/'+p.id)).remaining.maximumMinor,15000);
  const other=await actor(),link=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));other.id=ok(await call(other,'/v1/invites/redeem','POST',{token:link.token,intent:'join',adultAttestation:true,alias:'Other adult'})).memberId;await enroll(other,f.h);
@@ -141,6 +191,9 @@ test('lost shop authority yields only independently permitted subtotal with no h
  for(const secret of [second,p.title,'Future plan secret','50000','99999','hidden','remaining','reservations'])assert.equal(JSON.stringify(partial).includes(secret),false,secret);
  assert.deepEqual(ok(await call(f.owner,f.base+'/budget-history','POST',{shopIds:[f.shopId,second,randomUUID()]})),partial);
  assert.equal((await call(f.owner,f.base+'/budget-periods/'+p.id+'/record')).status,404);assert.equal((await call(f.owner,f.base+'/budget-periods','POST',input)).status,404);
+ const replacement={clientKey:randomUUID(),baseRevision:1,period:{...p,shopIds:[f.shopId]}};
+ assert.equal((await call(f.owner,f.base+'/budget-periods','POST',replacement)).status,404);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/budget-periods/'+p.id)),partial);
  const retire={clientKey:randomUUID(),sourceVersion:await f.version(),confirm:true};ok(await call(f.owner,f.base+`/shops/${f.shopId}/history-retire`,'POST',retire));assert.deepEqual(ok(await call(f.owner,f.base+'/budget-periods/'+p.id)).permitted.shops,[]);
 });
 test('price observations preserve pack/channel context and paid lapse never erases saved raw records',async()=>{

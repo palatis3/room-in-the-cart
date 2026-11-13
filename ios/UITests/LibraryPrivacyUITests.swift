@@ -195,7 +195,7 @@ import XCTest
         assertText("Unsupported fields: nutrition")
         assertText("Arroz sin cambiar")
         assertText("Lemon pasta")
-        assertText("Absent here — recover separately")
+        assertText("Ready to recover a separate copy")
         assertSavedRecipes(1)
     }
     private func assertSavedRecipes(_ count: Int, allowsError: Bool = false) {

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/Users/palatis/Room in the Cart/.tools/postgres/bin/pg_ctl",
+    "-D",
+    "/Users/palatis/Room in the Cart/.build/S26AcceptanceInvestigation20261107/postgres-run/data",
+    "-l",
+    "/Users/palatis/Room in the Cart/.build/S26AcceptanceInvestigation20261107/postgres-run/server.log",
+    "-w",
+    "start"
+  ],
+  "start": 1794028879.999124,
+  "scope": "Dedicated synthetic loopback PostgreSQL cluster only"
+}

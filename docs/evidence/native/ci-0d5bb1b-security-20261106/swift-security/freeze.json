@@ -1,0 +1,22 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648565,
+  "files": {
+    "13553643194.zip": "0b6c6db7b05f231a7f8b45d9e2a91b3bf01ae3595e57c935f601fff6ed578e2a",
+    "analyses.json": "537b3443fdbf75b49e14e16908d06ef0b427b46f402753864f9d0dcb66870883",
+    "analysis.json": "0eef961f94275bee2dd7762e5175f3c928b669e21e1209dfa41de39f2a5eff8b",
+    "archive-guard-refusal.json": "9b8261d05741e50d5b273f4b7917a5034b768e35e7d4a01c7c542912e1a0860d",
+    "artifact-metadata.json": "de5a747d424ca7915a006f2145cae105e4d912c9a4bb6fffe717d3e61b98c893",
+    "audit-bounded-source.py": "b962f7092c8a05144758e4f215ef0a302364fe73703c60c0422bf52e9d3ba370",
+    "audit-execution.log": "bec8ed49a8c0a52f7341cc758a8bd583c97d522f544f58bf8ec61303d5f3a43b",
+    "audit.py": "2e6a63dabee9d1f623f92ac9647d0a5fd111b62bfcaf810dc5681770bdf337e4",
+    "bounded-database-selection.json": "3b4af494727a11cb407dcc33b1dc9d62e66fae276bd2377f499c92883b9bdd6f",
+    "compiler-diagnostic-notifications.json": "8ca36ab1946c2641e69a5e13c8845db8823779ba4a4e71d4744de7ecf912e03e",
+    "job.json": "e6b90dddf3257eec1a0c1982e9bc6afd8f0ab22e355002868b0bfa5c90f3d99e",
+    "outer-members.json": "d9f8d7e1a8c3090064d6ab68441e91a1571af4cb7c11b6404f13d2f9eb76e458",
+    "sources-members.json": "872632f829371c704dcede5a485f1b4015ecec1cd1f6da290f63f75719d980cd",
+    "swift.sarif": "dcfea4c07b48cf0594bf2275af05e9a5e8338802c0d840eff6e9c704c6bddc9f",
+    "verification.json": "08b7718c9b01f1832ccc557af9c5dde0f83c03ebaf7f97600ee352242e7b842a"
+  },
+  "releaseAcceptance": false
+}

@@ -1,0 +1,12 @@
+{
+  "priorOutcomeExisted": false,
+  "priorOutcomeSHA256": null,
+  "originalSHA256": "ba0d826d15845078f623003bea30aae9f15ee40ff6ef3e7193ad39a86d231a53",
+  "proposalSHA256": "a8b15aa9a43cbc78e0c69336836b68fc7c45f44beec307381eeb0fdaae2f0722",
+  "collectorsConfirmedExited": [
+    80850,
+    80082
+  ],
+  "performanceJobsAllTerminalSuccess": true,
+  "time": "2026-11-07T06:28:46.215635+00:00"
+}

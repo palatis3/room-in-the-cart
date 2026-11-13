@@ -1,0 +1,128 @@
+{
+  "observedAtUtc": "2026-11-08T02:12:53Z",
+  "previousSnapshot": "monitor-20261108T020720Z.json",
+  "previousObservedAtUtc": "2026-11-08T02:07:20Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "in_progress",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 5,
+        "in_progress": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128588297174,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 10,
+        "failure": 1,
+        "in_progress": 3,
+        "pending": 2
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128589072389,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128594978722,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128595775547,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128599384101,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128588917127,
+      "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128588917127",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:11:59Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128595775547,
+      "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128595775547",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T02:12:02Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128599384101,
+      "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128599384101",
+      "from": "not_listed",
+      "to": "pending",
+      "time": "2026-11-08T02:12:00Z"
+    }
+  ],
+  "newFailures": [],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "in_progress",
+    "runnerId": 1000004595,
+    "selectedTestStepState": "in_progress",
+    "diagnosticStepState": "pending",
+    "expectedArtifact": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "artifactState": "not_listed",
+    "attribution": null
+  },
+  "verifiedSuccess": [
+    {
+      "jobId": 128588917127,
+      "selected": 4,
+      "passed": 4,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0,
+      "hostedLogLines": [
+        "2026-11-08T02:11:36.5841790Z Executed 4 of 4 selected tests.",
+        "2026-11-08T02:11:36.6015720Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T02:11:36.6017580Z The XCTest test export recorded 0 runtime warning occurrences across 4 examined tests."
+      ],
+      "artifact": {
+        "digest": "sha256:a416892f586d89319f603a82ab612e83d52a1e95946f94b67805a6e358f46053",
+        "expired": false,
+        "id": 13600167020,
+        "name": "iphone-fixture-results-SharedDeliveryUITests-stock-and-purchase-1",
+        "size_in_bytes": 5126303
+      }
+    }
+  ]
+}

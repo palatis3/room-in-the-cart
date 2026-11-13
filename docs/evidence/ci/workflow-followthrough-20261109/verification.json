@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "parentCommit": "ed6d297cf0e98edc02cac791f1a13a8cf2455e45",
+  "verifiedAt": "2026-11-09T17:13:47.126498+00:00",
+  "changedSourceSHA256": {
+    ".github/workflows/ci.yml": "1facc39fe75236908c8e86116c4e492adeeaf688aa9795980c976d5106fb54a3",
+    ".github/workflows/ios-fixtures.yml": "165dc40e3abc357d20289b7cb3024c0de587fe250651572bc9d6df7978c4f390",
+    "scripts/record_ios_build_receipt.sh": "102c0a473850b6084a522de795d3088f66af87d069042d8ccdf8069448e65f50",
+    "scripts/test_ios_build_evidence.py": "ddfb9f4077ab30da519920d57d76aa1751e405f546f85fb52fc588b7ec475a04",
+    "scripts/run_ios_native_wire.sh": "2d2d1552293a7ea01cd4d94bc39050f3b9a6505476809717c712464a2e7b8c32",
+    "scripts/test_native_wire_custody.py": "d8c70c32f0ea73ecbda56f70a8268e9420c1b5c74c255e5e4c08f624f16f2903",
+    "service/tests/run-native-wire-test.mjs": "9e2e47211def08d43c74b78e9dac71b85812dd7fdb84524f7687ac0e60f131ed",
+    "service/tests/run-native-wire-output.test.mjs": "e8b459c5fde39627f3825bb968cab4b734bd42cb60947438d77454de9134164f"
+  },
+  "results": {
+    "pythonSourceContractCases": 449,
+    "pythonSourceContractsPassed": true,
+    "wireFailureCustodyControls": 5,
+    "wireOutputControlCases": 1,
+    "queueDefinitionsValidated": 17,
+    "realWireNodeCases": 7,
+    "realWireSwiftScenarios": 12,
+    "realWireElapsedSeconds": 134.7746635,
+    "realWireSourceUnchanged": true,
+    "retainedScenarioStreamsVerified": true,
+    "ownedPrivateStateRemoved": true,
+    "hostControlBoundaryEvents": 2,
+    "hostControlIntervalPairs": 3,
+    "hostControlOfflineCases": 10
+  },
+  "retainedOriginals": {
+    ".build/WorkflowFollowthroughNov09/changed-source.json": "2ba6a2eca7377328c2710ecf89d8042412a8fefdf21f64c8807bcc3160d0b4c3",
+    ".build/WorkflowFollowthroughNov09/python-contracts.json": "526a0cdfd1be32db46bc93e0cea9c92e3377c4af6ec38e9da1f6bd0d1af09833",
+    ".build/WorkflowFollowthroughNov09/python-contracts.log": "94481cb5781b450498b07391618e008d434d3c68d2f872ef812150a89ad25db8",
+    ".build/WorkflowFollowthroughNov09/wire-custody-tests.json": "a40fab1df2a9ae4044b29378eb668f9407c243db5ff5dc4f6e6f0b7ca83e7c80",
+    ".build/WorkflowFollowthroughNov09/wire-custody-tests.log": "8dc8cecac5d27bcabe26df5be2f87bc340010c422c87c838e91b6c2a15cad831",
+    ".build/WorkflowFollowthroughNov09/wire-output-tests.json": "f97982a62668a6be578ec213c39cc01bdb9cc5c9176023e1a9a43f5086cb889d",
+    ".build/WorkflowFollowthroughNov09/wire-output-tests.log": "260c7dba127293e3244a90bf85228e3246226ae30a72d39bd95b8d02ef23390b",
+    ".build/WorkflowFollowthroughNov09/shell-syntax.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".build/WorkflowFollowthroughNov09/native-wire-r1/run.json": "aac5ae317fbfd0517803f961522a2abcf10b145721f571e38f004d1c6a8dc77b",
+    ".build/WorkflowFollowthroughNov09/native-wire-r1/source.json": "e9709588cdfda00e5f6ef2334a9e125d70c05064a2f23f24474815505dee311b",
+    ".build/WorkflowFollowthroughNov09/native-wire-r1/public-evidence.json": "71018877b4f5de2a526469fd2c93ae755c052111a7372c281f1379de61faa75d",
+    ".build/WorkflowFollowthroughNov09/native-wire-r1/run.log": "f9ae4fffdabf84ec3c42f0e6f6e61bab410009daa26abb9ae467a1b8705c116a",
+    ".build/WorkflowFollowthroughNov09/run_wire.py": "b0f062cfee8b2f52fd8e86271dd2c29763874de43e0134e61379def0f1d81d35",
+    ".build/build-evidence-workflow-lint.json": "6ba1e835806e5cac5a8539163f73cb1487888ebcffdde9138f41ead9e5acbf4c",
+    ".build/HostSignpostControlNov09/validation-r1/qualification.json": "32d80b9156265983f6586de90e6125f57d1ebd1f920d3e8bde3c2b65c8dfa707",
+    ".build/HostSignpostControlNov09/validation-r1/input-manifests.json": "34f73158a84a0c21555c01b6f9cbc4296a44021bff8cdc0ef7d57ba21112eddf",
+    ".build/HostSignpostControlNov09/validation-r1/validate.py": "d66af281f009e4ebef4b8ab1cc09db49670a121b6da11f9339d8b35080c364a4",
+    ".build/HostSignpostControlNov09/validation-r1/test_validate.py": "7a908aea19301d82efcf88cc957669e026529d0e723d978e8041126fb852d474",
+    ".build/HostSignpostControlNov09/root-review.json": "f76887f011066d02417cf63bd9ab4831fffb708ae978cf51908e84835d9bb529"
+  },
+  "wireAttempt": ".build/native-wire-results/attempt.IXnzY7",
+  "limits": [
+    "Originals remain local to this Mac; this is not independent archival.",
+    "New build log uploads are best effort and have seven-day Actions retention.",
+    "Failed private fixture state is never uploaded; ephemeral hosted runners destroy it.",
+    "No hosted workflow dispatch, simulator/app trace qualification, performance baseline approval, merge or deployment."
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "observedAtUtc": "2026-11-08T04:32:38+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "Build and test",
+    "runId": 42440464721,
+    "status": "in_progress",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464721"
+  },
+  "job": {
+    "completedAt": "2026-11-08T04:31:47Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128616614616,
+    "name": "ios-tests (ui-06, 8)",
+    "startedAt": "2026-11-08T04:14:21Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603439862,
+    "name": "iphone-results-ui-06-1",
+    "digest": "sha256:3a0a39c7faaac8664e086218b84e4fcc86e91a08f296b2e27b1c4d16c24ca53c",
+    "size_in_bytes": 25505831,
+    "workflow_run": {
+      "id": 42440464721,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "30f262b7f656402e833ca1241eb4537e36a2be760714e4d2e75c6796a8aa3b5a",
+    "rangeBytes": 49227,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 324648,
+        "sha256": "511a8897c82711070d9d50f03ade33c31cf266b98659dc8818683c4f48fca640",
+        "zipCRC": 251799125,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 4923,
+        "sha256": "6d975c6bfa04b3f47e987879c779075bee72444cb7819385e68977d0522fe8ee",
+        "zipCRC": 4030238151,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/ui-06.txt",
+        "bytes": 861,
+        "sha256": "ef17d80d316ec66220007e088026b9e394778f7a0f0e399aebc15d348d14d298",
+        "zipCRC": 2322431857,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+        "zipCRC": 2083576931,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "03c82b6a68eb6473d7ee805e5aed6324a1b511b0803c4394e66cb10efcbbced2",
+        "zipCRC": 1539712779,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof": 398.68614399433136,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testPrintedFluidOuncesKeepTheirVolumeAndPackLabelAfterRestart": 34.34030902385712,
+      "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart": 78.65629601478577,
+      "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint": 53.993616938591,
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch": 159.56691801548004,
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList": 98.37132394313812,
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison": 22.901062965393066,
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens": 12.843153953552246
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 8,
+      "detailExportCount": 8,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

@@ -1,4 +1,5 @@
 import XCTest
+import SQLite3
 import CoreDomain
 @testable import RoomInTheCart
 
@@ -88,7 +89,7 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         var f = try recovery()
         let topup = try XCTUnwrap(ranked(f).first)
         XCTAssertEqual(topup.packCount,1); XCTAssertEqual(topup.merchandise.minorUnits,250); XCTAssertEqual(topup.minutes,30)
-        XCTAssertFalse(f.draft.permitsTrip); XCTAssertEqual(topup.extraCash.minorUnits,275)
+        XCTAssertEqual(topup.extraCash.minorUnits,275)
         f.draft.topUpBudget = "2.74"; XCTAssertTrue(try ranked(f).isEmpty)
         f.draft.topUpBudget = "3"
         let correction = UsableObservation(id:UUID(),receipt:f.key,usable:q(7),confirmedAt:now,supersedesID:f.firstObservation,confirmedMatchToOrderLine:true)
@@ -100,6 +101,211 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         f.draft.reviews[f.dish.id]?.completedLeadReviewed = true; f.draft.deadline = nil
         XCTAssertTrue(try ranked(f).isEmpty)
     }
+    func testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection() throws {
+        var f = try recovery()
+        let ingredient = f.dish.template.ingredients[0].id
+        f.draft.portions = "6"
+        f.draft.topUpBudget = "6"
+        f.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "2"
+        f.journey.stockLots = [.init(id: UUID(), foodID: f.line, name: "Peppers", usable: q(1),
+                                     confirmedAt: now.addingTimeInterval(1), source: .freezer)]
+
+        let shown = try XCTUnwrap(ranked(f).first)
+        var review = PickupFallbackReview()
+        review.draft = f.draft
+        review.reviewDraft()
+        XCTAssertEqual(shown.packCount, 2)
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.agreedTrip = shown
+        XCTAssertTrue(review.canUse(shown, fresh: try ranked(f).first))
+        XCTAssertFalse(review.canUse(shown, fresh: nil))
+
+        // A confirmed lot becomes available after display, while the same dinner still needs a trip.
+        let updated = try XCTUnwrap(PickupFallbackOptions.ranked(journey: f.journey, library: [f.dish], chosenTemplates: [],
+                                                                  draft: f.draft, at: now.addingTimeInterval(1), paid: true).first)
+        XCTAssertEqual(updated.id, shown.id)
+        XCTAssertEqual(updated.packCount, 1)
+        XCTAssertFalse(review.canUse(shown, fresh: updated))
+        XCTAssertFalse(review.canUse(updated, fresh: updated))
+        review.rankedOfferChanged(to: updated)
+        XCTAssertNil(review.agreedTrip)
+        review.rankedOfferChanged(to: shown)
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.agreedTrip = updated
+        XCTAssertTrue(review.canUse(updated, fresh: updated))
+
+        // Editing an offer requires review even when the same packages would be purchased.
+        f.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "3"
+        XCTAssertEqual(try ranked(f).first, shown)
+        review.draft = f.draft
+        XCTAssertFalse(review.isReviewed)
+        XCTAssertNil(review.agreedTrip)
+        review.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "2"
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.reviewDraft()
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+
+        f.draft.portions = "4"
+        let onHand = try XCTUnwrap(ranked(f).first)
+        XCTAssertFalse(onHand.requiresTrip)
+        review.draft = f.draft
+        review.reviewDraft()
+        XCTAssertTrue(review.canUse(onHand, fresh: onHand))
+    }
+
+    func testRepeatedDinnerRequiresSeparateAgreementForTheDisplayedDishAndDraft() throws {
+        var f = try recovery()
+        f.draft.permitsRepeat = true
+        let repeated = try XCTUnwrap(ranked(f, chosen: [f.dish.template.id]).first)
+        var review = PickupFallbackReview()
+        review.draft = f.draft
+        review.reviewDraft()
+        func handoff() -> PickupRepairDraft? {
+            review.manualRepair(for: repeated, fresh: repeated, in: f.journey)
+        }
+
+        XCTAssertNil(handoff())
+        review.agreedTrip = repeated
+        XCTAssertNil(handoff())
+        review.agreedTrip = nil
+        review.agreedRepeat = repeated
+        XCTAssertNil(handoff())
+        review.agreedTrip = repeated
+        var manual = try XCTUnwrap(handoff())
+        let note = try XCTUnwrap(manual.instruction(in: f.journey, at: now))
+        XCTAssertTrue(note.repeatMealAgreed && note.extraTripAgreed)
+        XCTAssertEqual(note.instruction, repeated.instruction)
+        XCTAssertEqual(note.needID, f.draft.target)
+        XCTAssertEqual(note.elapsedMinutes, repeated.minutes)
+        XCTAssertEqual(note.due, f.draft.deadline)
+
+        let edits: [(inout PickupRepairDraft.Fields) -> Void] = [
+            { $0.needID = UUID() }, { $0.instruction += " with extra peppers" }, { $0.minutes = "25" },
+            { $0.knownDue = false }, { $0.due.addTimeInterval(60) }
+        ]
+        for edit in edits {
+            manual = try XCTUnwrap(handoff())
+            edit(&manual.fields)
+            XCTAssertFalse(manual.extraTrip || manual.repeatMeal)
+        }
+        manual = try XCTUnwrap(handoff())
+        let other = PickupJourney(id: UUID(), savedAt: now)
+        XCTAssertNil(manual.instruction(in: other, at: now))
+        manual.synchronize(with: other)
+        XCTAssertFalse(manual.extraTrip || manual.repeatMeal)
+        XCTAssertNil(manual.fields.needID)
+
+        // The same recipe can become an on-hand repeat, without the reviewed trip.
+        f.draft.portions = "4"
+        let onHand = try XCTUnwrap(ranked(f, chosen: [f.dish.template.id]).first)
+        XCTAssertFalse(onHand.requiresTrip)
+        XCTAssertNil(review.manualRepair(for: repeated, fresh: onHand, in: f.journey))
+        review.rankedOfferChanged(to: onHand)
+        review.rankedOfferChanged(to: repeated)
+        XCTAssertNil(handoff())
+        XCTAssertNil(review.agreedRepeat)
+        XCTAssertNil(review.agreedTrip)
+        review.draft = f.draft
+        review.reviewDraft()
+        XCTAssertFalse(review.canUse(onHand, fresh: onHand))
+        review.agreedRepeat = onHand
+        let onHandDraft = try XCTUnwrap(review.manualRepair(for: onHand, fresh: onHand, in: f.journey))
+        XCTAssertTrue(onHandDraft.repeatMeal)
+        XCTAssertFalse(onHandDraft.extraTrip)
+
+        review.draft.target = UUID()
+        review.draft.target = f.draft.target
+        review.reviewDraft()
+        XCTAssertFalse(review.canUse(onHand, fresh: onHand))
+        review.agreedRepeat = onHand
+        review.cancelReview()
+        XCTAssertNil(review.agreedRepeat)
+        review.reviewDraft()
+        XCTAssertFalse(review.canUse(onHand, fresh: onHand))
+    }
+
+    @MainActor func testManualRepairRetrySavesOneAgreedNoteAndClearsBothAgreements() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url, clock: { self.now })
+        let need = UrgentMealNeed(id: UUID(), food: "Peppers", meal: "Dinner", required: q(5), available: q(4),
+                                  due: now.addingTimeInterval(3600), confirmedAt: now)
+        let added = await model.addUrgent(need)
+        XCTAssertTrue(added)
+        let journey = try XCTUnwrap(model.journey)
+        var draft = PickupRepairDraft(shopID: journey.id)
+        draft.fields.needID = need.id
+        draft.fields.instruction = "Serve the pepper dish again."
+        XCTAssertFalse(try XCTUnwrap(draft.instruction(in: journey, at: now)).repeatMealAgreed)
+        draft.extraTrip = true
+        draft.repeatMeal = true
+        let note = try XCTUnwrap(draft.instruction(in: journey, at: now))
+
+        var lock: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &lock), SQLITE_OK)
+        defer { sqlite3_close(lock) }
+        XCTAssertEqual(sqlite3_exec(lock, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+        let saved = await model.change { try $0.recordRepair(note) }
+        XCTAssertFalse(saved)
+        XCTAssertTrue(model.hasPendingSave)
+        draft.synchronize(with: model.journey)
+        XCTAssertEqual(draft.id, note.id)
+        XCTAssertTrue(draft.extraTrip && draft.repeatMeal)
+        XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK)
+
+        let retried = await model.retrySave()
+        XCTAssertTrue(retried)
+        draft.synchronize(with: model.journey)
+        XCTAssertNotEqual(draft.id, note.id)
+        XCTAssertEqual(draft.fields.needID, need.id)
+        XCTAssertTrue(draft.fields.instruction.isEmpty)
+        XCTAssertFalse(draft.extraTrip || draft.repeatMeal)
+        XCTAssertNil(draft.instruction(in: journey, at: now))
+        XCTAssertFalse(model.hasPendingSave)
+        let replay = await model.retrySave()
+        XCTAssertFalse(replay)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        XCTAssertEqual(reopened.journey?.repairs, [note])
+        XCTAssertEqual(reopened.journey?.revision, journey.revision + 1)
+        XCTAssertEqual(reopened.journey?.urgent, [need])
+    }
+
+    func testTimeLimitChangesBestTopUpAndRequiresAgreementForTheNewDinner() throws {
+        var f = try recovery()
+        let faster = dinner("Quick pepper dish", count: 1)
+        var quickReview = try XCTUnwrap(f.draft.reviews[f.dish.id])
+        var offer = try XCTUnwrap(quickReview.ingredients[f.dish.template.ingredients[0].id])
+        offer.packPrice = "2.75"
+        quickReview.ingredients = [faster.template.ingredients[0].id: offer]
+        quickReview.elapsedMinutes = "5"
+        f.draft.reviews[faster.id] = quickReview
+        f.draft.permitsRepeat = true
+        let library = [f.dish, faster]
+        let chosen = Set(library.map { $0.template.id })
+        func best(at date: Date) throws -> PickupFallbackOption {
+            try XCTUnwrap(PickupFallbackOptions.ranked(journey: f.journey, library: library, chosenTemplates: chosen,
+                                                        draft: f.draft, at: date, paid: true).first)
+        }
+        var review = PickupFallbackReview()
+        review.draft = f.draft
+        review.reviewDraft()
+        let initial = try best(at: now)
+        XCTAssertEqual(initial.id, f.dish.id)
+        review.agreedTrip = initial
+        review.agreedRepeat = initial
+        XCTAssertTrue(review.canUse(initial, fresh: initial))
+        let later = try best(at: now.addingTimeInterval(16 * 60))
+        XCTAssertEqual(later.id, faster.id)
+        XCTAssertFalse(review.canUse(initial, fresh: later))
+        review.rankedOfferChanged(to: later)
+        XCTAssertFalse(review.canUse(later, fresh: later))
+        review.agreedTrip = later
+        XCTAssertFalse(review.canUse(later, fresh: later))
+        review.agreedRepeat = later
+        XCTAssertTrue(review.canUse(later, fresh: later))
+    }
+
     func testUncheckedWrongLateUnconfirmedAndExcludedFoodStayUnusableAndRepeatAndSeatAreIndependent() throws {
         var f = try recovery()
         XCTAssertTrue(try ranked(f,chosen:[f.dish.template.id]).isEmpty)
@@ -203,6 +409,83 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         XCTAssertEqual(Set(shop.mealOccurrences.filter { $0.removedAt == nil }.map(\.title)),["New dinner","Other dinner"])
         XCTAssertNil(shop.mealOccurrences.first { $0.id == preserved }?.removedAt)
         XCTAssertThrowsError(try library.replacement(for:scenario,shop:shop,state:state))
+    }
+
+    @MainActor func testAllAcceptedRecoveryOptionsFailWithoutChangingOriginalOpenNeedOrDeadline() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url, clock: { self.now })
+        let tuesday = UrgentMealNeed(id: UUID(), food: "Wraps", meal: "Tuesday tacos", required: q(6),
+                                    available: q(2), due: now.addingTimeInterval(30 * 60), confirmedAt: now)
+        let wednesday = UrgentMealNeed(id: UUID(), food: "Peppers", meal: "Wednesday dinner", required: q(5),
+                                      available: q(4), due: now.addingTimeInterval(45 * 60), confirmedAt: now)
+        let firstSaved = await model.addUrgent(tuesday)
+        let secondSaved = await model.addUrgent(wednesday)
+        XCTAssertTrue(firstSaved && secondSaved)
+        let before = try XCTUnwrap(model.journey)
+        let coverageBefore = try XCTUnwrap(model.allocation)
+        XCTAssertEqual(before.urgent, [tuesday, wednesday])
+        XCTAssertFalse(wednesday.resolved)
+        XCTAssertEqual(coverageBefore.demands.first { $0.id == wednesday.id }?.shortfall, try Rational(1))
+        XCTAssertEqual(coverageBefore.demands.first { $0.id == tuesday.id }?.shortfall, try Rational(4))
+
+        var slowTemplate = dinner("Marinated peppers", count: 1).template
+        slowTemplate.leadTimeMinutes = 120
+        let slow = AcceptedDinner(id: UUID(), template: slowTemplate, acceptedAt: now, acceptedFallback: true)
+        let quick = dinner("Quick peppers", count: 1)
+        let library = [slow, quick]
+        var draft = PickupFallbackDraft()
+        draft.target = wednesday.id; draft.portions = "5"
+        // Extending the review date must not replace the saved 45-minute deadline.
+        draft.deadline = now.addingTimeInterval(180 * 60)
+        draft.tripMinutes = "10"; draft.topUpBudget = "3"; draft.topUpCharges = "0.25"
+        for option in library {
+            var review = FallbackRecipeReview()
+            review.elapsedMinutes = "20"; review.completedLeadReviewed = true
+            review.reviewedIdentityYieldAndExclusions = true
+            review.ingredients[option.template.ingredients[0].id] = .init(foodID: wednesday.id,
+                packLabel: "One pepper", packYield: "1", packUnit: .count, packPrice: "2.50", availablePacks: "1")
+            draft.reviews[option.id] = review
+        }
+        func ranked(_ value: PickupFallbackDraft) throws -> [PickupFallbackOption] {
+            try PickupFallbackOptions.ranked(journey: XCTUnwrap(model.journey), library: library,
+                chosenTemplates: [], draft: value, at: now, paid: true)
+        }
+        // Positive control: these exact accepted identities are usable with reviewed
+        // completed preparation and one genuinely available top-up package.
+        let feasible = try ranked(draft)
+        XCTAssertEqual(Set(feasible.map(\.id)), Set(library.map(\.id)))
+        XCTAssertTrue(feasible.allSatisfy { $0.packCount == 1 && $0.minutes == 30 })
+        XCTAssertEqual(model.journey, before)
+
+        draft.reviews[slow.id]?.elapsedMinutes = "120"
+        draft.reviews[slow.id]?.completedLeadReviewed = false
+        draft.reviews[quick.id]?.ingredients[quick.template.ingredients[0].id]?.availablePacks = "0"
+        // Each option fails a distinct real requirement, not missing setup/access.
+        var timingOnly = draft
+        timingOnly.reviews[quick.id] = nil
+        XCTAssertTrue(try ranked(timingOnly).isEmpty)
+        var quantityOnly = draft
+        quantityOnly.reviews[slow.id] = nil
+        XCTAssertTrue(try ranked(quantityOnly).isEmpty)
+        let rejected = try ranked(draft)
+        XCTAssertTrue(rejected.isEmpty)
+        var review = PickupFallbackReview()
+        review.draft = draft; review.reviewDraft()
+        let priorOption = try XCTUnwrap(feasible.first)
+        review.agreedTrip = priorOption
+        XCTAssertFalse(review.canUse(priorOption, fresh: rejected.first))
+        review.rankedOfferChanged(to: rejected.first)
+        XCTAssertNil(review.agreedTrip)
+        XCTAssertEqual(model.journey, before, "No rejected option may save a repair or settle either need")
+        XCTAssertEqual(model.allocation, coverageBefore)
+        XCTAssertEqual(model.selectedID, before.id)
+        XCTAssertEqual(model.journey?.urgent.first { $0.id == wednesday.id }, wednesday)
+        XCTAssertEqual(model.journey?.urgent.first { $0.id == tuesday.id }, tuesday)
+        let reopened = PickupModel(databaseURL: url, clock: { self.now })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, before)
+        XCTAssertEqual(reopened.allocation, coverageBefore)
     }
 
 }

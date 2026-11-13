@@ -1,0 +1,67 @@
+{
+  "method": "Existing completed file reads/hash checks/copies only; no native, xcresult inspection or attachment export",
+  "copiedFiles": [
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/strict.txt",
+      "destination": "run/strict.txt",
+      "sha256": "1cf93a8fef1bbb1ea5acc87ca156e6a3d1eec880321d83f230f8b45cd3892b93",
+      "bytes": 1280
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/summary.json",
+      "destination": "run/summary.json",
+      "sha256": "2e8d24dea8eb729268c252efebddbbfbde70d584a2dd7043527079b36e71b306",
+      "bytes": 1669
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/tests.json",
+      "destination": "run/tests.json",
+      "sha256": "5794d7816a563ddd7795f116e5abcf5b9da42c88baef045fed48fe0cedb3f356",
+      "bytes": 2384
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/test-runtime-warnings.json",
+      "destination": "run/test-runtime-warnings.json",
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+      "bytes": 179
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/inspection/verification.json",
+      "destination": "run/verification.json",
+      "sha256": "e8ad80b71a2c1864034ee13a1abed448db6aa042a2849c397e94b6ee55dad9ab",
+      "bytes": 270
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/execution-r1/minimum17-run/selectors.txt",
+      "destination": "run/selectors.txt",
+      "sha256": "f6d132f5a749c32be2fc895cdac5a1d437d7a34ad81ac1baddb4d940155450d5",
+      "bytes": 129
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/failure-collector-r1/capture/receipt.json",
+      "destination": "capture-receipt.json",
+      "sha256": "a78ae9556813748c6137e27cfe65f43a8b38732a8f4f979edfd3deb63a0afbad",
+      "bytes": 2315
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/failure-collector-r1/capture/root-review.json",
+      "destination": "root-review.json",
+      "sha256": "d63d78cee460f5c8bc8f18844818fc09181f5bbd054660538341a16c1a2bb2df",
+      "bytes": 737
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/failure-collector-r1/capture/attachment-0/A4C7ABE9-A701-45DF-9E79-BFF156B9455B.png",
+      "destination": "images/other-meals-collapsed.png",
+      "sha256": "77fca157b2d5c03192dd1df170e2712dc8873e46b47f72d38473200b71fc6239",
+      "bytes": 125509
+    },
+    {
+      "source": ".build/S24OtherMealsNov08/failure-collector-r1/capture/attachment-1/2199A6AB-7463-4461-B9AD-359A60D40352.txt",
+      "destination": "discovery.txt",
+      "sha256": "8f2a44a04bdc52fdaced81a2af3deec8f0104c4b19a8c666d6b6750a0201c8cd",
+      "bytes": 127
+    }
+  ],
+  "allThreeOriginalAttachmentsMatchedExportHashes": true,
+  "wholeHierarchyOrDiagnosticsCopied": false
+}

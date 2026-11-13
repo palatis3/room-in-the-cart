@@ -1,0 +1,13 @@
+# Shared Records and protected conversion integration
+
+The assigned shopper can export a current v2 shared-shop record with explicit partial, unknown and erased facts. The independent record omits live authority, preview and replay tokens. Existing v1 export remains separately guarded.
+
+Protected tracked or transferred meal quantities can now be reviewed across units with exact ingredient-specific conversion evidence. The command rechecks current server state and preserves all other meal protection. Whole Undo restores the original observation exactly; its conservation comparison uses the immutable accepted-forward basis, including an explicit missing basis. This fixes both unsafe acceptance and false denial when an older conversion differs. Default, unreviewed meal writes remain strict. A separate fixture correction allocates a new order beyond historical and current lines.
+
+Fresh strict compilation and the combined regression pass **1,031 offline tests** plus one database-only skip, and **433 PostgreSQL tests** plus three separately assigned browser skips. The added cases include 40 protection tests, 21 actual API cases and 12 Records projection tests. Signed restore and privacy erasure passed. Root verified 308 current/archived inputs, compiled products and phase logs; PostgreSQL stopped cleanly. [Backend evidence](backend-verification.json).
+
+The expanded actual Swift/HTTPS/PostgreSQL lane passes **24 Node cases and 80 Swift scenario invocations**, zero failures/skips, retaining all original 21/70 scenarios. It verifies partial store and meal review, Cancel, lost replies, exact retries and whole Undo. Root verified 428 inputs and log hashes; the successful private fixture was removed after PostgreSQL shutdown. [Native transport evidence](native-wire-verification.json).
+
+Limits: no staging deployment or final combined release qualification. Shared Records screen journeys and additional real-route privacy cases are separate pending work. Full historical Records, remote erasure reconciliation, guardian recovery, proposal-backed protected conversion, plain-unbound cross-unit changes and whole protected aggregates remain to be completed.
+
+Additional Records-v2 actual-route coverage now passes all eight cases and the full **441 PostgreSQL** regression with the same three browser skips. Offline remains1,031passes plus one skip. Two initial fixture assumptions were corrected without production changes; compiled products are byte-identical to the already-qualified backend/wire revision. [Route qualification](records-http-verification.json), [original failure](records-http-first-failure.json).

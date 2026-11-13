@@ -44,6 +44,74 @@ final class RecordArchiveTests: XCTestCase {
         let stillNew = await registry.load(id: newCopy.records[0].id)
         XCTAssertEqual(stillNew?.record.revision, "newer")
     }
+    func testImportReviewListsOnlyMatchingSourceVersionsWithTheirOriginalDatesAndMediaSelection() async throws {
+        let url = try temporaryURL(), registry = try RecoveryRegistry(url: url)
+        let plain = record(revision: "b", saved: 600)
+        var selected = plain
+        selected.media = [.init(id: "pack", kind: .packageReference, data: Data("private label".utf8))]
+        let unknown = record(revision: "unknown-date", saved: 0)
+        var otherOrigin = record(revision: "other origin", saved: 900)
+        otherOrigin.origin = "other"
+        let ownerFile = try envelope([plain, selected, unknown, otherOrigin, record(id: "other-id")])
+        let ownerCommit = try await registry.apply(registry.review(ownerFile))
+        let helperFile = try envelope([record(revision: "a", saved: 600)], kind: .helperShop)
+        let helperCommit = try await registry.apply(registry.review(helperFile))
+        let reopened = try RecoveryRegistry(url: url)
+        let incoming = try envelope([record(revision: "new"), plain, record(id: "unrelated")])
+        let review = try await reopened.review(incoming)
+        let plainCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == plain })
+        let selectedCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == selected })
+        let unknownCopy = try XCTUnwrap(ownerCommit.records.first { $0.record == unknown })
+        let byRevision = [helperCommit.records[0], plainCopy, selectedCopy].sorted {
+            ($0.receipt.identity.revision, $0.receipt.identity.projection) < ($1.receipt.identity.revision, $1.receipt.identity.projection)
+        } + [unknownCopy]
+        let expected = byRevision.map { saved in
+            RecoveredCopySummary(id: saved.receipt.identity, documentKind: saved.documentKind,
+                                 savedAtMilliseconds: saved.record.savedAtMilliseconds, selectedReferenceCount: saved.record.media?.count ?? 0)
+        }
+        let sibling = try XCTUnwrap(review.rows.first { $0.record.revision == "new" })
+        let identical = try XCTUnwrap(review.rows.first { $0.record == plain })
+        let absent = try XCTUnwrap(review.rows.first { $0.record.id == "unrelated" })
+        XCTAssertEqual([sibling.disposition, identical.disposition, absent.disposition], [.sibling, .identical, .absent])
+        XCTAssertEqual(sibling.priorCopies, expected)
+        XCTAssertEqual(identical.priorCopies, expected)
+        XCTAssertEqual(identical.existingCopyID, plainCopy.id)
+        XCTAssertTrue(absent.priorCopies.isEmpty)
+        XCTAssertEqual(sibling.priorCopies.last?.savedAtMilliseconds, 0)
+        XCTAssertEqual(sibling.priorCopies.filter { $0.selectedReferenceCount == 1 }.map(\.id), [selectedCopy.receipt.identity])
+    }
+
+    func testHelperAndErasedReviewHideOwnerMetadataAndConflictingBatchLeavesBytesUntouched() async throws {
+        let url = try temporaryURL(), registry = try RecoveryRegistry(url: url)
+        let owner = record(revision: "private"), other = record(revision: "sibling")
+        let commit = try await registry.apply(registry.review(envelope([owner, other])))
+        let helperFile = try envelope([record(revision: "helper")], kind: .helperShop)
+        let helperReview = try await registry.review(helperFile)
+        XCTAssertEqual(helperReview.rows[0].disposition, .sibling)
+        XCTAssertTrue(helperReview.rows[0].priorCopies.isEmpty)
+        let savedHelper = try await registry.apply(helperReview)
+        let helperVersions = try await registry.review(helperFile).rows[0].priorCopies
+        XCTAssertEqual(helperVersions.map(\.id), [savedHelper.records[0].receipt.identity])
+        XCTAssertEqual(helperVersions.map(\.selectedReferenceCount), [0])
+        let rewrapped = try await registry.review(envelope(helperFile.payload.records))
+        XCTAssertEqual(rewrapped.rows[0].priorCopies, helperVersions)
+        _ = try await registry.delete(.copy(commit.records[0].id))
+        var changed = other
+        changed.title = "Conflict"
+        let before = try Data(contentsOf: url)
+        let blocked = try await registry.review(envelope([owner, changed, record(id: "new")]))
+        let erased = try XCTUnwrap(blocked.rows.first { $0.record == owner })
+        let quarantined = try XCTUnwrap(blocked.rows.first { $0.record == changed })
+        let absent = try XCTUnwrap(blocked.rows.first { $0.record.id == "new" })
+        XCTAssertEqual([erased.disposition, quarantined.disposition, absent.disposition], [.erased, .quarantined, .absent])
+        XCTAssertTrue(erased.priorCopies.isEmpty)
+        XCTAssertNil(erased.existingCopyID)
+        XCTAssertEqual(Set(quarantined.priorCopies.map(\.id)), [savedHelper.records[0].receipt.identity, commit.records[1].receipt.identity])
+        do { _ = try await registry.apply(blocked); XCTFail("The entire batch must be refused") }
+        catch { XCTAssertEqual(error as? ArchiveError, .conflict) }
+        XCTAssertEqual(try Data(contentsOf: url), before)
+    }
+
     func testSameRevisionDifferentDigestQuarantinesEntireBatch() async throws {
         let registry = try RecoveryRegistry(url: temporaryURL())
         _ = try await registry.apply(registry.review(envelope([record()])))
@@ -83,6 +151,26 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertTrue(readable.contains("Rice")); XCTAssertFalse(readable.contains("12.50"))
         XCTAssertTrue(ReadableArchive.text([record()], owner: true).contains("12.50"))
     }
+    func testPersonalRecipeTextKeepsOriginalIngredientsAndOrderedInstructionsInBothLanguages() throws {
+        let recipe = ImportedRecipe(title: "Sopa", yieldText: "2 platos", ingredients: ["½ taza de arroz", "salt to taste"],
+                                    steps: ["Añadir arroz.", "Cover and simmer."], sourceURL: "https://example.test/sopa", notes: "La nota familiar")
+        let record = try recipe.archiveRecord(origin: "recipes")
+        let en = ReadableArchive.text([record], owner: true, locale: Locale(identifier: "en_US"))
+        let es = ReadableArchive.text([record], owner: true, locale: Locale(identifier: "es_US"))
+        XCTAssertTrue(en.contains("Yield: 2 platos\nIngredients\n½ taza de arroz\nsalt to taste\nInstructions"))
+        XCTAssertTrue(es.contains("Rinde: 2 platos\nIngredientes\n½ taza de arroz\nsalt to taste\nPreparación"))
+        for text in [en, es] {
+            XCTAssertTrue(text.contains("1. Añadir arroz.\n2. Cover and simmer."))
+            XCTAssertTrue(text.contains("La nota familiar"))
+            XCTAssertTrue(text.contains("https://example.test/sopa"))
+            XCTAssertFalse(text.contains("\"yieldText\":"))
+        }
+        let helper = ReadableArchive.text([record], owner: false, locale: Locale(identifier: "es_US"))
+        XCTAssertTrue(helper.contains("½ taza de arroz"))
+        XCTAssertFalse(helper.contains("La nota familiar"))
+        XCTAssertFalse(helper.contains("https://example.test/sopa"))
+    }
+
     func testHelperThenOwnerKeepsProjectionsIndependent() async throws {
         let registry = try RecoveryRegistry(url: temporaryURL())
         _ = try await registry.apply(registry.review(envelope([record()], kind: .helperShop)))
@@ -123,6 +211,12 @@ final class RecordArchiveTests: XCTestCase {
         let restored = await registry.list(); XCTAssertEqual(restored.count, 2)
         let reimport = try await registry.review(archive); XCTAssertTrue(reimport.canApply)
     }
+    func testSupportReportNamesSupportedFormatsAndKeepsDiagnosticCodesInBothLanguages() {
+        let spanish = ReadableArchive.supportReport(error: .invalidKey, recordCount: 2, locale: Locale(identifier: "es_US"))
+        XCTAssertEqual(spanish, "Soporte de Room in the Cart\nFormatos compatibles: 1.0, 1.1, 1.2\nNúmero de registros: 2\nEstado: invalidKey")
+        let english = ReadableArchive.supportReport(error: nil, recordCount: 0, locale: Locale(identifier: "en_US"))
+        XCTAssertEqual(english, "Room in the Cart support\nSupported archive formats: 1.0, 1.1, 1.2\nRecord count: 0\nStatus: ok")
+    }
     func testRecipeGraphPreservesOriginalTextAndReportsSkippedFieldsAndDuplicates() throws {
         let data = Data(#"{"@context":"https://unreachable.invalid/context","formatVersion":1,"@graph":[{"@type":"Recipe","name":"Arroz","recipeYield":"three plates + lunch","recipeIngredient":["2 cans (15 oz) tomatoes","salt to taste"],"recipeInstructions":[{"@type":"HowToStep","text":"Keep original words."}],"url":"https://example.invalid/recipe","notes":"Family note","nutrition":{"calories":"unknown"}},{"@type":"Person","name":"ignored"},{"@type":"Recipe","name":"Arroz","recipeYield":"three plates + lunch","recipeIngredient":["2 cans (15 oz) tomatoes","salt to taste"],"recipeInstructions":[{"@type":"HowToStep","text":"Keep original words."}],"url":"https://example.invalid/recipe","notes":"Family note"}]}"#.utf8)
         let report = try RecipeImporter.stage(data)
@@ -131,9 +225,41 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(report.recipes[0].ingredients[0], "2 cans (15 oz) tomatoes")
         XCTAssertEqual(report.recipes[0].yieldText, "three plates + lunch")
     }
+    func testRecipePreviewSkipsUnrelatedNodesAndIdentifiesOmittedInstructionFields() throws {
+        let data = Data(#"""
+        {"formatVersion":1,"@graph":[
+          {"@type":"Person","formatVersion":7,"name":"Author"},
+          {"@type":"Recipe","name":"Bad notes","description":{"text":"Do not silently discard me"}},
+          {"@type":"Recipe","name":"Rice","description":"Family recipe",
+           "recipeInstructions":[{"@type":"HowToStep","text":"Simmer","image":"pot.jpg"}]},
+          {"@type":"Recipe","name":"Soup","notes":"Original notes","description":{"text":"Other metadata"}}
+        ]}
+        """#.utf8)
+        let report = try RecipeImporter.stage(data)
+        XCTAssertEqual(report.skippedRows, 2)
+        XCTAssertEqual(report.recipes.map(\.title), ["Rice", "Soup"])
+        XCTAssertEqual(report.recipes.map(\.notes), ["Family recipe", "Original notes"])
+        XCTAssertEqual(report.recipes.first?.steps, ["Simmer"])
+        XCTAssertEqual(report.unsupportedFields, ["recipeInstructions.image"])
+    }
     func testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail() throws {
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"formatVersion":2,"@type":"Recipe","name":"Dinner"}"#.utf8))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"[{"formatVersion":2,"@type":"Recipe","name":"Dinner"}]"#.utf8)))
+        for json in [#"{"formatVersion":true,"@graph":[{"@type":"Recipe","name":"Dinner"}]}"#,
+                     #"[{"@type":"Recipe","name":"Dinner","formatVersion":true}]"#] {
+            XCTAssertThrowsError(try RecipeImporter.stage(Data(json.utf8))) {
+                XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion)
+            }
+        }
+        let mixed = Data(#"[{"@type":"Recipe","name":"Bad source","url":"https:///recipe"},{"@type":"Recipe","name":"Dinner","url":"https://example.org/recipe"}]"#.utf8)
+        let preview = try RecipeImporter.stage(mixed)
+        XCTAssertEqual(preview.recipes.map(\.title), ["Dinner"])
+        XCTAssertEqual(preview.skippedRows, 1)
+        let recipeJSON = #"{"@type":"Recipe","name":"Dinner"}"#
+        for encoding: String.Encoding in [.utf16LittleEndian, .utf16BigEndian, .utf32LittleEndian, .utf32BigEndian] {
+            let bytes = try XCTUnwrap(recipeJSON.data(using: encoding))
+            XCTAssertThrowsError(try RecipeImporter.stage(bytes)) { XCTAssertEqual($0 as? ArchiveError, .malformed) }
+        }
         XCTAssertThrowsError(try ImportedRecipe(title: "Dinner", sourceURL: "javascript:alert(1)").validated())
         XCTAssertThrowsError(try RecipeImporter.stage(Data(#"{"@type":"Recipe""#.utf8)))
     }

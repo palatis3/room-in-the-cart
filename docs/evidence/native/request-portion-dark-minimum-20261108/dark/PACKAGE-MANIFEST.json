@@ -1,0 +1,102 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "1e061882e952c18cf2b8280613a86b1f1212271fe4fcf4ab08f1cc5c490efb65",
+      "bytes": 3867
+    },
+    "capture-summary.json": {
+      "sha256": "71e22e3cc20de2cb8eff0d893191611fc4f401bf9cf8f37ab522afdb96bf061a",
+      "bytes": 14648
+    },
+    "context-receipt-summary.json": {
+      "sha256": "c425f08f03f802bd961d2b8eddd6fb988921bd764841226ba9645a8521e59bd8",
+      "bytes": 1053
+    },
+    "copy-and-verification-receipt.json": {
+      "sha256": "d289dbdca078de12acccb23f7159bcbc4e72c0ca367816986fffb7910680a0e8",
+      "bytes": 5418
+    },
+    "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png": {
+      "sha256": "a35c922b5610707031aeef59fe7406382aa1294cb512b2ae0fbf4cf65e483e5c",
+      "bytes": 29344
+    },
+    "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png": {
+      "sha256": "8fd5621eacae987c47ebf22e7589a6d443b14fec2fa4d68480cdaec4c71ad4d3",
+      "bytes": 2253
+    },
+    "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png": {
+      "sha256": "4662cd080f6027d4c565677e0bce83c903e48e4690f1c2b28c77e2afab33e9e6",
+      "bytes": 29369
+    },
+    "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png": {
+      "sha256": "8fd5621eacae987c47ebf22e7589a6d443b14fec2fa4d68480cdaec4c71ad4d3",
+      "bytes": 2253
+    },
+    "images/S24-standard-Mia-portions-label.png": {
+      "sha256": "a8c50defe3af60abd3a847cb4a22c123ab8be37696882046604a5d6d1261a0d1",
+      "bytes": 9214
+    },
+    "images/S24-standard-Mia-portions-value.png": {
+      "sha256": "67e1302dbc1c0a415c98c032c7efdc8ac028f18ef4e855ea363c8f0ea115fa60",
+      "bytes": 1335
+    },
+    "images/S24-standard-Sam-portions-label.png": {
+      "sha256": "eb74d1d176eca3f359e15303649c2ffe07dcf32318b3483e233ce580a4086154",
+      "bytes": 9229
+    },
+    "images/S24-standard-Sam-portions-value.png": {
+      "sha256": "44cd6967b4444917255807017aee38f4fc6b36ff9181aefe762c2ace7dd85d8c",
+      "bytes": 1337
+    },
+    "images/standard-checkout-and-two-lunches.png": {
+      "sha256": "ef59fad44155ad6cfc8c773cf5194f40e759695dbe2b6c0ebb4c52d4a13a625b",
+      "bytes": 302690
+    },
+    "measurement/measure_field.py": {
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0",
+      "bytes": 9050
+    },
+    "measurement/results.json": {
+      "sha256": "caf9d9a23e96c3b2a228fe249682d20a7ee0c519b3c75a90ed763a3e6b56caf4",
+      "bytes": 7250
+    },
+    "root-review.json": {
+      "sha256": "48e66b25ba5e4ff4b5cbf8be5f55a99b95db857de32fabc3a4277caf9f26a40a",
+      "bytes": 827
+    },
+    "run/receipt-summary.json": {
+      "sha256": "fe5c3dc33d2c0f99808e7f334f61bd36c20eb15fab22629e8bbeb23bf0f331f6",
+      "bytes": 2987
+    },
+    "run/selectors.txt": {
+      "sha256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9",
+      "bytes": 234
+    },
+    "run/strict.txt": {
+      "sha256": "38f254c4c5aba5af3b6cc3d19a165916c639e79d9f8ad33ff63695dcf561778d",
+      "bytes": 832
+    },
+    "run/summary.json": {
+      "sha256": "f2c396ec3607e9909970dbf7830baa29fe6fe92fb38e3cac4aaffa8748c4d189",
+      "bytes": 1021
+    },
+    "run/test-runtime-warnings.json": {
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8",
+      "bytes": 179
+    },
+    "run/tests.json": {
+      "sha256": "3ea534a43b3e9e13fa1a2bbedb405181f4ca6518c48a5cd87c586ef89af28e53",
+      "bytes": 2497
+    },
+    "run/verification.json": {
+      "sha256": "e203dc37af1cd18ab2c77ada60baaff23b7fb119a9626b69616fa461a2502db4",
+      "bytes": 269
+    },
+    "source-pins.json": {
+      "sha256": "b2b425f431f0e9f7943389992439df677a7b72873620a016a6050319ae69409f",
+      "bytes": 822
+    }
+  },
+  "fileCount": 24,
+  "totalBytes": 437978
+}

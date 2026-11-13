@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a0413c0, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'
+Element subtree:
+ →StaticText, 0x11a0413c0, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'
+Path to element:
+ →Application, 0x11a033840, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x11a031db0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a038cc0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a038f00, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a039020, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a039140, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a039260, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a039380, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a0394a0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a039b60, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a039c80, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a039da0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a039ec0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a039fe0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a040ac0, {{16.0, 766.0}, {370.0, 52.0}}
+                ↳Other, 0x11a040f40, {{16.0, 766.0}, {370.0, 52.0}}
+                 ↳Other, 0x11a041060, {{16.0, 766.0}, {370.0, 52.0}}
+                  ↳Other, 0x11a041180, {{16.0, 766.0}, {370.0, 52.0}}
+                   ↳StaticText, 0x11a0412a0, {{16.0, 766.0}, {370.0, 52.0}}, label: 'Preview expires, Dec 31, 2098 at 7:00 PM'
+                    ↳StaticText, 0x11a0413c0, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x104084860, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4401703504.426
+    Output: {
+      StaticText, 0x119f2d240, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'
+    }

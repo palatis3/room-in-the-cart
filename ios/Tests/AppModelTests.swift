@@ -1,6 +1,7 @@
 import XCTest
 import CoreDomain
 import LocalStore
+import RecordArchive
 import SQLite3
 @testable import RoomInTheCart
 
@@ -64,6 +65,20 @@ final class AppModelTests: XCTestCase {
         }
     }
 
+    func testFractionalFoodAmountsRetainOriginalInputAndDoNotBecomePrices() throws {
+        let cases: [(String, Rational)] = [("1/3", try Rational(1, 3)),
+            ("1 1/2", try Rational(3, 2)), ("2⅔", try Rational(8, 3)), (" ½ ", try Rational(1, 2))]
+        for (literal, expected) in cases {
+            let quantity = try XCTUnwrap(ComparisonModel.quantity(literal, .cup))
+            XCTAssertEqual(quantity.amount, expected)
+            XCTAssertEqual(quantity.originalLiteral, literal)
+            XCTAssertThrowsError(try ComparisonModel.money(literal))
+        }
+        for invalid in ["1/0", "1/2-3/4", "1/2 cup", "+1/2", "1 2", "1.0000001", "1 1/2 1/2"] {
+            XCTAssertThrowsError(try ComparisonModel.quantity(invalid, .cup), invalid)
+        }
+    }
+
     @MainActor
     func testUSDParserUsesExactCentsAndRejectsMoreThanTwoDecimalPlaces() throws {
         let cases: [(String, Int64)] = [("0", 0), ("0.01", 1), ("0.10", 10), ("3.49", 349), (" 003.40 ", 340)]
@@ -74,6 +89,252 @@ final class AppModelTests: XCTestCase {
             XCTAssertThrowsError(try ComparisonModel.money(literal), literal)
         }
         XCTAssertNil(try ComparisonModel.money("  "))
+    }
+
+    func testIngredientConversionKeepsReviewedLiteralsAndUsesAnExactPositiveRatio() throws {
+        for (source, target, expected) in [
+            (" 1/3 ", "20.00", try Rational(60)),
+            ("1 1/2", "0.1250", try Rational(1, 12)),
+            ("½", "0.000001", try Rational(1, 500_000))
+        ] {
+            let conversion = ComparisonConversion(sourceLiteral: source, targetLiteral: target,
+                sourceUnit: .cup, targetUnit: .gram, sourceNote: "Measured this flour")
+            let basis = try conversion.unitBasis()
+            XCTAssertEqual(basis.sourceUnit, .cup)
+            XCTAssertEqual(basis.targetUnit, .gram)
+            XCTAssertEqual(basis.targetAmountPerSourceUnit, expected)
+            XCTAssertEqual(basis.sourceLiteral, source)
+            XCTAssertEqual(basis.targetLiteral, target)
+            XCTAssertEqual(basis.sourceNote, "Measured this flour")
+            XCTAssertEqual(try JSONDecoder().decode(ComparisonConversion.self, from: JSONEncoder().encode(conversion)), conversion)
+        }
+        let oversized = "1" + String(repeating: " ", count: StagedListImport.maximumOriginalLineBytes)
+        for invalid in ["", "0", "0/1", "-1", "1/0", "1,25", "1 cup", "1e3", "0.0000001", oversized] {
+            for (source, target) in [(invalid, "1"), ("1", invalid)] {
+                let conversion = ComparisonConversion(sourceLiteral: source, targetLiteral: target,
+                    sourceUnit: .cup, targetUnit: .gram)
+                XCTAssertThrowsError(try conversion.unitBasis(), invalid)
+            }
+        }
+        XCTAssertThrowsError(try ComparisonConversion(sourceLiteral: "1", targetLiteral: "1000",
+            sourceUnit: .kilogram, targetUnit: .gram).unitBasis(), "Defined same-dimension conversions do not need an ingredient basis")
+        XCTAssertThrowsError(try ComparisonConversion(sourceLiteral: "1", targetLiteral: "120",
+            sourceUnit: .cup, targetUnit: .gram, sourceNote: String(repeating: "a", count: 2_049)).unitBasis())
+    }
+
+    @MainActor
+    func testConfirmedConversionResolvesOnlyItsOwnOfferAndKeepsUnknownsVisible() throws {
+        let draft = makeConversionDraft()
+        var withoutSecondBasis = draft
+        withoutSecondBasis.bConversion = nil
+        let one = ComparisonModel(draft: withoutSecondBasis)
+        let oneRequest = try one.request()
+        XCTAssertEqual(oneRequest.offerA.confirmedConversion, try draft.aConversion?.unitBasis())
+        XCTAssertNil(oneRequest.offerB.confirmedConversion)
+        one.compare()
+        let partial = try XCTUnwrap(one.result)
+        XCTAssertEqual(partial.offerA.packsToBuy, 2)
+        XCTAssertEqual(partial.offerA.totalCost, Money(minorUnits: 698))
+        XCTAssertTrue(partial.offerB.issues.contains(.usableConversionUnknown))
+        XCTAssertNil(partial.offerB.totalCost)
+        XCTAssertNil(partial.preferredOfferID)
+
+        let both = ComparisonModel(draft: draft)
+        both.compare()
+        let resolved = try XCTUnwrap(both.result)
+        XCTAssertTrue(resolved.offerA.isResolved)
+        XCTAssertTrue(resolved.offerB.isResolved)
+        XCTAssertEqual(resolved.offerB.packsToBuy, 2)
+        XCTAssertEqual(resolved.offerB.totalCost, Money(minorUnits: 600))
+        XCTAssertEqual(resolved.preferredOfferID, "b")
+        XCTAssertEqual(try both.request().offerB.confirmedConversion?.targetAmountPerSourceUnit, try Rational(80))
+    }
+
+    @MainActor
+    func testConversionScopeEditsInvalidatePermanentlyAndOtherOfferEditsDoNot() throws {
+        let original = makeConversionDraft()
+        let changes: [(String, (inout ComparisonDraft) -> Void, (inout ComparisonDraft) -> Void, Bool, Bool)] = [
+            ("item", { $0.item = "Another ingredient" }, { $0.item = original.item }, true, true),
+            ("needed unit", { $0.unit = .kilogram }, { $0.unit = original.unit }, true, true),
+            ("A label", { $0.aLabel = "Another pack" }, { $0.aLabel = original.aLabel }, true, false),
+            ("A unit", { $0.aUnit = .milliliter }, { $0.aUnit = original.aUnit }, true, false),
+            ("B label", { $0.bLabel = "Another pack" }, { $0.bLabel = original.bLabel }, false, true),
+            ("B unit", { $0.bUnit = .milliliter }, { $0.bUnit = original.bUnit }, false, true)
+        ]
+        for (label, change, restore, clearsA, clearsB) in changes {
+            var draft = original
+            change(&draft)
+            XCTAssertEqual(draft.aConversion == nil, clearsA, label)
+            XCTAssertEqual(draft.bConversion == nil, clearsB, label)
+            restore(&draft)
+            XCTAssertEqual(draft.aConversion == nil, clearsA, label + " after switching back")
+            XCTAssertEqual(draft.bConversion == nil, clearsB, label + " after switching back")
+
+            let model = ComparisonModel(draft: original)
+            model.compare()
+            model.savedAt = Date()
+            change(&model.draft)
+            XCTAssertEqual(model.draft.aConversion == nil, clearsA, label + " model edit")
+            XCTAssertEqual(model.draft.bConversion == nil, clearsB, label + " model edit")
+            XCTAssertNil(model.result)
+            XCTAssertNil(model.savedAt)
+            restore(&model.draft)
+            XCTAssertEqual(model.draft.aConversion == nil, clearsA, label + " model edit after switching back")
+            XCTAssertEqual(model.draft.bConversion == nil, clearsB, label + " model edit after switching back")
+        }
+        var unchangedScope = original
+        unchangedScope.item = original.item; unchangedScope.unit = original.unit
+        unchangedScope.aLabel = original.aLabel; unchangedScope.aUnit = original.aUnit
+        unchangedScope.bLabel = original.bLabel; unchangedScope.bUnit = original.bUnit
+        unchangedScope.needed = "240"; unchangedScope.stock = "10"; unchangedScope.protected = "5"
+        unchangedScope.aQuantity = "2"; unchangedScope.aPrice = "4.00"
+        unchangedScope.bQuantity = "3"; unchangedScope.bPrice = "5.00"; unchangedScope.cap = "12.00"
+        XCTAssertEqual(unchangedScope.aConversion, original.aConversion)
+        XCTAssertEqual(unchangedScope.bConversion, original.bConversion)
+        XCTAssertNoThrow(try ComparisonModel(draft: unchangedScope).request())
+        let model = ComparisonModel(draft: original)
+        model.compare()
+        model.savedAt = Date()
+        var otherRecord = makeConversionDraft()
+        otherRecord.item = "Another flour"
+        otherRecord.aConversion = original.aConversion
+        otherRecord.bConversion = original.bConversion
+        model.draft = otherRecord
+        XCTAssertEqual(model.draft, otherRecord, "Opening an independently confirmed saved draft retains its own basis")
+        XCTAssertNil(model.result)
+        XCTAssertNil(model.savedAt)
+    }
+
+    @MainActor
+    func testEditingTwoCopiesOfAComparisonPreservesTheNewerSavedPrice() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try ComparisonStore(url: directory.appendingPathComponent("local.sqlite"))
+        let draft = makeDraft(unknownSecondYield: false)
+        let first = ComparisonModel(draft: draft)
+        let other = ComparisonModel(draft: draft)
+        await first.save(in: store)
+        await other.save(in: store)
+        XCTAssertNil(other.error)
+
+        first.draft.aPrice = "5.25"
+        await first.save(in: store)
+        XCTAssertNil(first.error)
+        other.draft.bPrice = "6.75"
+        await other.save(in: store)
+        XCTAssertEqual(other.error, tr("This saved comparison changed. Reopen it to review the latest prices before saving your edits."))
+        XCTAssertNil(other.savedAt)
+        XCTAssertEqual(other.draft.bPrice, "6.75")
+        let loaded = try await store.load(id: draft.id)
+        let saved = try XCTUnwrap(loaded)
+        XCTAssertEqual(saved.revision, 2)
+        let latestDraft = try JSONDecoder().decode(SavedPayload.self, from: saved.payload).draft
+        XCTAssertEqual(latestDraft, first.draft)
+        let reopened = ComparisonModel(draft: latestDraft, savedRevision: saved.revision)
+        reopened.draft.bPrice = other.draft.bPrice
+        await reopened.save(in: store)
+        XCTAssertNil(reopened.error)
+        let updated = try await store.load(id: draft.id)
+        XCTAssertEqual(updated?.revision, 3)
+        let newRecord = try XCTUnwrap(updated)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: newRecord.payload).draft, reopened.draft)
+        try await store.close()
+    }
+
+    @MainActor
+    func testConfirmedConversionSaveReopenKeepsOriginalBasisAndAnUnchangedRetry() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("local.sqlite")
+        let store = try ComparisonStore(url: url)
+        let original = makeConversionDraft()
+        let model = ComparisonModel(draft: original, clock: { Date(timeIntervalSince1970: 1_700_000_000) })
+        model.compare()
+        let result = try XCTUnwrap(model.result)
+        await model.save(in: store)
+        XCTAssertNil(model.error)
+        let loaded = try await store.load(id: original.id)
+        let saved = try XCTUnwrap(loaded)
+        let payload = try JSONDecoder().decode(SavedPayload.self, from: saved.payload)
+        XCTAssertEqual(payload.draft, original)
+        XCTAssertEqual(payload.normalizedRequest?.offerA.confirmedConversion, try original.aConversion?.unitBasis())
+        XCTAssertEqual(payload.normalizedRequest?.offerB.confirmedConversion, try original.bConversion?.unitBasis())
+        XCTAssertEqual(payload.answer, result)
+        try await store.close()
+
+        let app = AppModel(databaseURL: url)
+        await app.open()
+        let reopened = try XCTUnwrap(app.records.first)
+        let restored = ComparisonModel(draft: try app.decode(reopened), savedRevision: reopened.revision, clock: { Date(timeIntervalSince1970: 1_800_000_000) })
+        XCTAssertEqual(restored.draft, original)
+        restored.compare()
+        XCTAssertEqual(restored.result, result)
+        await restored.save(in: app.store)
+        await app.refresh()
+        XCTAssertEqual(app.records, [saved])
+        try await app.store?.close()
+    }
+
+    @MainActor
+    func testMalformedSavedConversionRejectsWithoutDeletingItsOriginalBytes() async throws {
+        let original = makeConversionDraft()
+        var wrongSource = original; wrongSource.aConversion?.sourceUnit = .count
+        var wrongTarget = original; wrongTarget.aConversion?.targetUnit = .kilogram
+        var zero = original; zero.bConversion?.targetLiteral = "0"
+        var invalid = original; invalid.aConversion?.sourceLiteral = "NaN"
+        var oversized = original; oversized.bConversion?.sourceNote = String(repeating: "x", count: 2_049)
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let app = AppModel(databaseURL: directory.appendingPathComponent("local.sqlite"))
+        await app.open()
+        let store = try XCTUnwrap(app.store)
+        for var draft in [wrongSource, wrongTarget, zero, invalid, oversized] {
+            draft.id = UUID()
+            // Legacy draft-only payloads have no normalized snapshot to catch a
+            // malformed conversion: the draft itself must validate its basis.
+            let bytes = try JSONEncoder().encode(SavedPayload(draft: draft))
+            let saved = try await store.save(id: draft.id, title: draft.item, payload: bytes, savedAt: Date())
+            XCTAssertThrowsError(try app.decode(saved))
+            XCTAssertThrowsError(try RecordsNativeCodec.comparison(bytes))
+            let retained = try await store.load(id: draft.id)
+            XCTAssertEqual(retained, saved)
+        }
+        try await store.close()
+    }
+
+    @MainActor
+    func testOwnerConversionTextKeepsReviewedEqualityAndHelperProjectionOmitsIt() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let draft = makeConversionDraft()
+        let request = try ComparisonModel(draft: draft).request()
+        let payload = SavedPayload(draft: draft, calculationVersion: SavedPayload.currentCalculationVersion,
+            normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.currentRoundingPolicy)
+        let bytes = try RecordsNativeCodec.canonical(payload)
+        let record = ArchiveRecord(id: draft.id.uuidString, origin: "comparisons/" + UUID().uuidString,
+            revision: ArchiveCodec.digest(bytes), kind: .comparison, title: draft.item, savedAtMilliseconds: 1_700_000_000_000,
+            helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: draft.unit.rawValue)], nativePayload: bytes)
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [record]) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        let owner = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        for conversion in [try XCTUnwrap(draft.aConversion), try XCTUnwrap(draft.bConversion)] {
+            XCTAssertTrue(owner.contains(conversion.readableText()))
+            XCTAssertEqual(ComparisonConversion.readableText(for: try conversion.unitBasis()), conversion.readableText())
+        }
+        let oldBasis = UnitBasis(sourceUnit: .cup, targetUnit: .gram,
+            targetAmountPerSourceUnit: try Rational(60), sourceNote: "Old measured basis")
+        XCTAssertEqual(ComparisonConversion.readableText(for: oldBasis), ComparisonConversion(sourceLiteral: "1", targetLiteral: "60",
+            sourceUnit: .cup, targetUnit: .gram, sourceNote: "Old measured basis").readableText())
+        await model.prepareExport(.helperText)
+        let helper = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
+        XCTAssertTrue(helper.contains(draft.item))
+        for privateValue in ["1/3", "20.00", "0.5000", "40.000", "Measured flour A", "Package B equality", "confirmedConversion", "sourceLiteral"] {
+            XCTAssertFalse(helper.contains(privateValue), privateValue)
+        }
     }
 
     @MainActor
@@ -160,6 +421,9 @@ final class AppModelTests: XCTestCase {
             let draft: ComparisonDraft
         }
         let bytes = try JSONEncoder().encode(LegacyPayload(formatVersion: 1, draft: draft))
+        let legacyDraft = try XCTUnwrap((JSONSerialization.jsonObject(with: bytes) as? [String: Any])?["draft"] as? [String: Any])
+        XCTAssertNil(legacyDraft["aConversion"])
+        XCTAssertNil(legacyDraft["bConversion"])
         let saved = try await store.save(id: draft.id, title: draft.item, payload: bytes,
                                          savedAt: Date(timeIntervalSince1970: 1_700_000_000))
         try await store.close()
@@ -169,6 +433,8 @@ final class AppModelTests: XCTestCase {
         XCTAssertTrue(app.ready)
         let record = try XCTUnwrap(app.records.first)
         XCTAssertEqual(try app.decode(record), draft)
+        XCTAssertNil(try app.decode(record).aConversion)
+        XCTAssertNil(try app.decode(record).bConversion)
         let readPayload = try JSONDecoder().decode(SavedPayload.self, from: record.payload)
         XCTAssertNil(readPayload.calculationVersion)
         XCTAssertNil(readPayload.normalizedRequest)
@@ -310,7 +576,7 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(reopened.records, [record])
         let restoredDraft = try reopened.decode(XCTUnwrap(reopened.records.first))
         XCTAssertEqual(restoredDraft, draft)
-        let restored = ComparisonModel(draft: restoredDraft, clock: { fixedTime.addingTimeInterval(30) })
+        let restored = ComparisonModel(draft: restoredDraft, savedRevision: record.revision, clock: { fixedTime.addingTimeInterval(30) })
         restored.compare()
         XCTAssertNil(restored.error)
         XCTAssertEqual(restored.result, originalResult)
@@ -334,6 +600,26 @@ final class AppModelTests: XCTestCase {
         draft.bLabel = "Twelve-wrap option"
         draft.bQuantity = unknownSecondYield ? "" : "12.00"
         draft.bPrice = "04.50"
+        return draft
+    }
+
+    private func makeConversionDraft() -> ComparisonDraft {
+        var draft = ComparisonDraft()
+        draft.item = "Flour"
+        draft.needed = "120"
+        draft.unit = .gram
+        draft.aLabel = "Flour A"
+        draft.aQuantity = "1"
+        draft.aUnit = .cup
+        draft.aPrice = "3.49"
+        draft.bLabel = "Flour B"
+        draft.bQuantity = "1"
+        draft.bUnit = .cup
+        draft.bPrice = "3.00"
+        draft.aConversion = ComparisonConversion(sourceLiteral: "1/3", targetLiteral: "20.00",
+            sourceUnit: .cup, targetUnit: .gram, sourceNote: "Measured flour A")
+        draft.bConversion = ComparisonConversion(sourceLiteral: "0.5000", targetLiteral: "40.000",
+            sourceUnit: .cup, targetUnit: .gram, sourceNote: "Package B equality")
         return draft
     }
 

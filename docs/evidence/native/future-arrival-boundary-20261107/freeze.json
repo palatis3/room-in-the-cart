@@ -1,0 +1,172 @@
+{
+  "files": {
+    "installation.json": {
+      "bytes": 3491,
+      "sha256": "4a559204587d4ef46fec23674174b0c9d36ada3e40a0ffd9f668c54b50bdf9c2"
+    },
+    "README.md": {
+      "bytes": 2432,
+      "sha256": "42e4e25e4b81973a9f95f34f8a1960e8317c6859397dd4075183a9da6ddbba6c"
+    },
+    "installed.patch": {
+      "bytes": 53256,
+      "sha256": "d8c3c1be8a1328aa270c5162520e98adf309e2efb99dfc74ac3c9938164343f8"
+    },
+    "positive/source-manifest.json": {
+      "bytes": 57148,
+      "sha256": "d82115b4845336244d7e4424f68b6af50072f7d33aa54f5f891e66f30234e859"
+    },
+    "positive/summary.json": {
+      "bytes": 919,
+      "sha256": "129b91e4c3175f9b400730d3939f19de5b3fc34bb34ec14769dd421034836a88"
+    },
+    "positive/selectors.txt": {
+      "bytes": 14405,
+      "sha256": "819ab350ca9b9f1ccee1e71c73548d8f6114bbd52d9482aa692fea611fb6f2d4"
+    },
+    "positive/runtime.json": {
+      "bytes": 393,
+      "sha256": "7e494080b18b2ee2b4f9e4a904d15f4143bad3b0e465635c631e53983de657cd"
+    },
+    "positive/tests.json": {
+      "bytes": 63607,
+      "sha256": "88aaa78260fd573ee2f065659d63ed24a8fb7e1921a3dcc6cc6781dc3655e349"
+    },
+    "positive/products-manifest.json": {
+      "bytes": 29794,
+      "sha256": "011baf6888156a3617ba460a38e11068c13daf06ac567d244bc97f355385d767"
+    },
+    "positive/native-invocation.json": {
+      "bytes": 17996,
+      "sha256": "f707cca94b1ade0e15e39873d2b59761781df1a32809d6e278def24b9e1a7eb2"
+    },
+    "positive/cleanup-delete.json": {
+      "bytes": 103,
+      "sha256": "787debb746cfc74e29b913935feb693239662ba1e1f9359c22362205731fb346"
+    },
+    "positive/original-build-log.json": {
+      "bytes": 220,
+      "sha256": "8ed76b743b24b24e004dae50727aa3dc78a4ad3375327627759204ae56945793"
+    },
+    "positive/strict.log": {
+      "bytes": 17235,
+      "sha256": "54044d3ae8a3d69b7e5e037e3c1256d009c92970a71a2a98ba845b996784b1b9"
+    },
+    "positive/root-check.json": {
+      "bytes": 200,
+      "sha256": "ace1d87aedb87d5b39a9ea932d6f37be936ee3e97efec12bd6b19aaad587f1b6"
+    },
+    "positive/compiler-warning-lines.txt": {
+      "bytes": 4449,
+      "sha256": "03cb1a0d17eaf03252aa4e8659136b45cea92f87da6a3c14358dcab4df428a19"
+    },
+    "positive/build-invocation.json": {
+      "bytes": 680,
+      "sha256": "05ac6bb333a72c817023f071f7ef0d443018a63c6778fa30bfdd3012b22ba3a4"
+    },
+    "positive/strict-result.json": {
+      "bytes": 74,
+      "sha256": "ee45e55accfc412a6668db3efafe8d5af163079aba8820a461b76828439c530e"
+    },
+    "positive/selected-scope.json": {
+      "bytes": 499,
+      "sha256": "8e336b609536d7d4fb710393d44e4f6229be7cef841fad548e013c2e902bd7f6"
+    },
+    "positive/native.log": {
+      "bytes": 60155,
+      "sha256": "75054e1a068e670a6dd44aeeece45f721104e5957c6b7e4fc960ea54e86653f2"
+    },
+    "positive/native-result.json": {
+      "bytes": 74,
+      "sha256": "d495643bacbbf4d6092114b1c2f3b1bcfece5290dfea96a11de4bfb21af4a7e0"
+    },
+    "positive/test-source-identity.json": {
+      "bytes": 136,
+      "sha256": "97aa587c657c127d245db76c477cd7692b1cd32d601d8979a77b16981407e42b"
+    },
+    "positive/original-result-sha256.json": {
+      "bytes": 49503,
+      "sha256": "88846aac22a231417ed567c742d064a84a8cf3688df72f25a16d214f0ea47dea"
+    },
+    "positive/build-result.json": {
+      "bytes": 74,
+      "sha256": "98327ee5da2553e6a2c994fee7e20f4e12a4501016b3d06cb3a39831ea547de6"
+    },
+    "negative/source-manifest.json": {
+      "bytes": 57148,
+      "sha256": "d0d6c3969580c72f7286368708550b24b210a9a24d1bafed0d3b7fb6d5708b0c"
+    },
+    "negative/summary.json": {
+      "bytes": 3565,
+      "sha256": "8b445fb5d9e7c848a3aa0e5afc37a42ba597688c26493c5ed686d146ee26d747"
+    },
+    "negative/selectors.txt": {
+      "bytes": 563,
+      "sha256": "34a36cb2593a79542fa4bd0b582dc6ef673d01cbf4fbafdf6c0404507a96cd92"
+    },
+    "negative/runtime.json": {
+      "bytes": 393,
+      "sha256": "c1af2c08246c8ab3eb2e4dfd3e3717eb0f8b5d0f064bce7090b9ace06a6bd760"
+    },
+    "negative/tests.json": {
+      "bytes": 66359,
+      "sha256": "0d6dd7dfa4e87eb392bf284c57c46a5796b47f7b493953ddbfb2c1d0aeedc776"
+    },
+    "negative/products-manifest.json": {
+      "bytes": 29794,
+      "sha256": "7331b2744739c354f049964b7e0e92372625bcbdf71124697209c30cf7bc10fe"
+    },
+    "negative/native-invocation.json": {
+      "bytes": 1531,
+      "sha256": "dd708b487f898c623bb96351d8e38cc5e0fb5aa717468abb037fb77d44cceb79"
+    },
+    "negative/cleanup-delete.json": {
+      "bytes": 103,
+      "sha256": "b192b94daca94dbdebef5503cb6c516529d4b88c16ed83a3cadabfdb7d82e4e6"
+    },
+    "negative/original-build-log.json": {
+      "bytes": 220,
+      "sha256": "f9173c348f3fde9167f4fc9bf0925e1a4f9bddb8fe6a10c1f1b08d8ea8609d75"
+    },
+    "negative/root-negative-review.json": {
+      "bytes": 8119,
+      "sha256": "9e1b87bb735f939815268719c19db4c1fc32b56892249c9f6e1662f7048aa9da"
+    },
+    "negative/strict.log": {
+      "bytes": 5998,
+      "sha256": "8262d4e02e61fd46d06593503de9a99a041a685e4043b3eff9541ad5c32039bf"
+    },
+    "negative/root-check.json": {
+      "bytes": 272,
+      "sha256": "5c24d857a4ea759a73ca01daaf9b696a055a5627cc8165b17dbd615691625f62"
+    },
+    "negative/compiler-warning-lines.txt": {
+      "bytes": 6730,
+      "sha256": "f0f9d8826dbd95737ac72fde0fd512e838569e753017383ea6f6a4ded063ca19"
+    },
+    "negative/build-invocation.json": {
+      "bytes": 857,
+      "sha256": "98331c8996793d2b76756922467fadd61f4ed4661c34e32d7b18d6d2d099d300"
+    },
+    "negative/strict-result.json": {
+      "bytes": 75,
+      "sha256": "f5f4076059c7b8ce56198de68f7608de66bfd09c0b616d3a6a35bbe0915725de"
+    },
+    "negative/native.log": {
+      "bytes": 70283,
+      "sha256": "b52b73c7649dcbe8f570bc7e787fc6904501c0a2767cc5a06ed3feb3f206b28d"
+    },
+    "negative/native-result.json": {
+      "bytes": 76,
+      "sha256": "241d9fd1533f2dc83dc7b36d7f857cf52833358e7a31533858cf48556d35de27"
+    },
+    "negative/original-result-sha256.json": {
+      "bytes": 6351,
+      "sha256": "096dc76a3b0d497b9729f66442bbcbf7c06280074b560eaa428e424b8083c6bc"
+    },
+    "negative/build-result.json": {
+      "bytes": 74,
+      "sha256": "b1fca15de3af9b62e2f351e8af0524ec34f3f5640a6ac6245898a6a06771a8f1"
+    }
+  }
+}

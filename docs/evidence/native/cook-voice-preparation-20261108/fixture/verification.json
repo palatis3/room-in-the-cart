@@ -1,0 +1,15 @@
+{
+  "expectedCount": 5,
+  "nativeExit": 0,
+  "strictExit": 1,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "originalOrder": true,
+  "playbackTaps": {
+    "capture.readback.play": true,
+    "Pause readback": true,
+    "Resume readback": true,
+    "Stop readback": true
+  },
+  "inspectedAtUTC": "2026-11-08T10:15:34.991584+00:00"
+}

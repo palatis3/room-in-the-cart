@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "44e82484e7c94a0d6cb14a8e55a2909562a329f3",
+  "sourcePath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/source",
+  "scope": "Isolated git archive of ios/scripts and relevant diagnostics; no .git metadata or canonical edits. Baseline source not overlaid.",
+  "files": [
+    {
+      "path": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "sha256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+      "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f"
+    },
+    {
+      "path": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "sha256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3"
+    }
+  ],
+  "candidateTestSHA256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec",
+  "patchSHA256": "ebd195744b861468980d8ec9b80f41c0302f987c1aff852191e1a55986d8218c",
+  "expectedCount": 3,
+  "targetCountPerCase": 7,
+  "totalTargetCaptures": 21,
+  "status": "Prepared only; not typechecked/built/executed; baseline source tree unchanged."
+}

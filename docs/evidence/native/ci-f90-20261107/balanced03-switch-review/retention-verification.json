@@ -1,0 +1,11 @@
+{
+  "verifiedOriginalExactCopies": 31,
+  "originalFilesUnchanged": true,
+  "priorFreezeReceipt": "qualification/prior-freeze/retention-verification.json",
+  "qualifiedCurrentSourceHashesVerified": 3,
+  "qualificationFilesHashed": 24,
+  "qualificationHashManifestSHA256": "68a34c3022439e6727c35a96735f54f7e4a1beb2ff4a81bcc1578c73479e4080",
+  "README_SHA256": "7059029b12fc647d081eca98162423e04b8ab9b034b47f561f632462893c5d32",
+  "originalRetentionManifestSHA256": "f38f63c9aa336d8fda004fac268568d5b16344e2212b9e93fcd3dcfe2ab83978",
+  "status": "Installed local singleton trace qualification; original hosted failure remains unresolved"
+}

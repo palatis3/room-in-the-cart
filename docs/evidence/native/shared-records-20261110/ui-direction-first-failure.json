@@ -1,0 +1,13 @@
+{
+  "status": "failed",
+  "phase": "records-en",
+  "originalExportErrorFixed": true,
+  "focusedExportErrorRegression": "passed",
+  "sourceInputs": 679,
+  "sourceManifestSHA256": "9b5c5442d8502da6be64795fd6fb13ccb7531f709c9c486d7024ffb7c0c1373c",
+  "cause": "Test-only search direction: Cancel brings result to top; chooseFile upward hint searches toward top until original20s bound. The control is below the result.",
+  "fix": "Two post-outcome Choose file calls use downward-content default; assertions and32/20bounds unchanged.",
+  "uiLogSHA256": "8cfaae8130f75f02da1a71c2967a5564158bc51b6756657c6fbbb1c517d41c96",
+  "failureScreenshotSHA256": "95aa16d7d584e6cfc745fc5ed7b0a8c4129d3eb8a8cce8937fdeb9349602ce6c",
+  "nextAttempt": "r12 original EN/ES journeys; focused model not repeated unchanged"
+}

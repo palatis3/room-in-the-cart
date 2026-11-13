@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "1DBFF268-F32F-42C2-B8BE-081520294909.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S23-later-page-Lee-returned-to-durable-outcome-without-scroll_0_E0E3CA2D-4FEA-4DD8-A3F3-8A424CA949F4.png",
+        "timestamp" : 1794139214.988
+      }
+    ],
+    "testIdentifier" : "RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
+  }
+]

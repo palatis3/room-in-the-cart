@@ -1,0 +1,475 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648633,
+  "attempt": 1,
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "artifactID": 13552096762,
+      "name": "storekit-es-1",
+      "sha256": "47fb75674b34ba994106c28732cf47b25b5c51aee344fa27336b360e06389de0",
+      "originalExtractionPristine": true
+    },
+    {
+      "artifactID": 13551543507,
+      "name": "storekit-en-1",
+      "sha256": "94b2897e9a6682eab7cbc3b4a933430937a119cbb2e14aa382085b5640fa42db",
+      "originalExtractionPristine": true
+    },
+    {
+      "artifactID": 13551511417,
+      "name": "swift-address-1",
+      "sha256": "8f0ef08bdb06c2f43a8197d4b2b2af587aa9929f164f6cb771a804e46e038589",
+      "originalExtractionPristine": true
+    },
+    {
+      "artifactID": 13550729278,
+      "name": "swift-thread-1",
+      "sha256": "0e01db7dcb8e5698449bcae9b3c96e311b3e32c129cddbfaf20df89bdca3af5e",
+      "originalExtractionPristine": true
+    }
+  ],
+  "checkouts": [
+    {
+      "jobID": 128230769596,
+      "checkoutVerified": true,
+      "logSHA256": "c235d98c10cc10c84d0002ed24a2aad916486af0810f8914a915d7d81e51b697"
+    },
+    {
+      "jobID": 128230769649,
+      "checkoutVerified": true,
+      "logSHA256": "6f1a21e7bae0189c109f92c7bca02b184cded153abe664517cd5aa7e30c90b16"
+    },
+    {
+      "jobID": 128230769712,
+      "checkoutVerified": true,
+      "logSHA256": "b4fc72df97763080f1a2c7af5b7892c71e27e09c4ef1ccd6526a8480c2b1489f"
+    },
+    {
+      "jobID": 128230769904,
+      "checkoutVerified": true,
+      "logSHA256": "a6cf1bef3385707bff8b37bbc0d7a4bbbf5e2ae5a0356e02594265de6b4fa9e5"
+    }
+  ],
+  "storekit": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "runID": 42316648633,
+    "locales": {
+      "es": {
+        "artifactID": 13552096762,
+        "sha256": "47fb75674b34ba994106c28732cf47b25b5c51aee344fa27336b360e06389de0",
+        "digestVerified": true,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "configurations": [
+          "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+        ],
+        "failures": [],
+        "hostedJSONExportsPresent": true
+      },
+      "en": {
+        "artifactID": 13551543507,
+        "sha256": "94b2897e9a6682eab7cbc3b4a933430937a119cbb2e14aa382085b5640fa42db",
+        "digestVerified": true,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "strictReplayExit": 0,
+        "runtimeWarnings": 0,
+        "configurations": [
+          "US English \u2014 local StoreKit"
+        ],
+        "failures": [],
+        "hostedJSONExportsPresent": true
+      }
+    }
+  },
+  "packages": {
+    "swift-thread-1": {
+      "runID": 42316648633,
+      "artifactID": 13550729278,
+      "sha256": "0e01db7dcb8e5698449bcae9b3c96e311b3e32c129cddbfaf20df89bdca3af5e",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    },
+    "swift-address-1": {
+      "runID": 42316648633,
+      "artifactID": 13551511417,
+      "sha256": "8f0ef08bdb06c2f43a8197d4b2b2af587aa9929f164f6cb771a804e46e038589",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    }
+  },
+  "native": {
+    "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+    "attempt": 1,
+    "results": {
+      "storekit-en-1": {
+        "artifact": "storekit-en-1",
+        "summarySHA256": "8da369bd457ae5d0b72a7659ebeed7d57dc8d812ddd12466f6c5178cf9cdd954",
+        "rawLogSHA256": "c4d84799b1bed40407ab0d599638d98dc4882c1c4e0f09f967066531afe90c41",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 15,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "US English \u2014 local StoreKit"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 15,
+        "startCount": 15,
+        "exactStartOrder": [
+          "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+          "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+          "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+          "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+          "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+          "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+          "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+          "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": false,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+            "startLine": 3972,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (8.893 seconds).",
+            "endLine": 3973,
+            "durationSeconds": 8.893
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+            "startLine": 3974,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.705 seconds).",
+            "endLine": 3975,
+            "durationSeconds": 0.705
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+            "startLine": 3976,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (2.234 seconds).",
+            "endLine": 3977,
+            "durationSeconds": 2.234
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+            "startLine": 3978,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.108 seconds).",
+            "endLine": 3979,
+            "durationSeconds": 1.108
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+            "startLine": 3980,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.426 seconds).",
+            "endLine": 3981,
+            "durationSeconds": 0.426
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+            "startLine": 3982,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.438 seconds).",
+            "endLine": 3983,
+            "durationSeconds": 0.438
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+            "startLine": 3984,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.670 seconds).",
+            "endLine": 3985,
+            "durationSeconds": 0.67
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+            "startLine": 3986,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.027 seconds).",
+            "endLine": 3987,
+            "durationSeconds": 1.027
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+            "startLine": 3988,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.408 seconds).",
+            "endLine": 3989,
+            "durationSeconds": 1.408
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+            "startLine": 3990,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.070 seconds).",
+            "endLine": 3991,
+            "durationSeconds": 1.07
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+            "startLine": 3992,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.940 seconds).",
+            "endLine": 3993,
+            "durationSeconds": 0.94
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+            "startLine": 3994,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.976 seconds).",
+            "endLine": 3995,
+            "durationSeconds": 0.976
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+            "startLine": 3996,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.530 seconds).",
+            "endLine": 3997,
+            "durationSeconds": 0.53
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+            "startLine": 3998,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.215 seconds).",
+            "endLine": 4000,
+            "durationSeconds": 0.215
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing",
+            "startLine": 4001,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (6.833 seconds).",
+            "endLine": 4002,
+            "durationSeconds": 6.833
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      },
+      "storekit-es-1": {
+        "artifact": "storekit-es-1",
+        "summarySHA256": "553243b4b19888c156d1254a9f7dc5f7d6c841b08355458671ad73f2d1588178",
+        "rawLogSHA256": "238763cd074ca82059bbd8875218da3aeb3dc1ac46360c0233be7976690ebb0f",
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+              "deviceName": "iPhone 17",
+              "modelName": "iPhone 17",
+              "osBuildNumber": "23C54",
+              "osVersion": "26.2",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 15,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+            }
+          }
+        ],
+        "runtimeExpected": true,
+        "selectedCount": 15,
+        "startCount": 15,
+        "exactStartOrder": [
+          "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+          "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+          "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+          "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+          "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+          "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+          "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+          "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+          "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+          "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing"
+        ],
+        "selectorFileOrderMatched": true,
+        "selectorOrderRequiredByAudit": false,
+        "serialOverlaps": [],
+        "rawLifecycleFailures": [],
+        "implicitRunnerRestartLines": [],
+        "cases": [
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+            "startLine": 3972,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (10.571 seconds).",
+            "endLine": 3973,
+            "durationSeconds": 10.571
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+            "startLine": 3974,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (2.722 seconds).",
+            "endLine": 3975,
+            "durationSeconds": 2.722
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+            "startLine": 3976,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.332 seconds).",
+            "endLine": 3977,
+            "durationSeconds": 0.332
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+            "startLine": 3978,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.463 seconds).",
+            "endLine": 3979,
+            "durationSeconds": 0.463
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+            "startLine": 3980,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.226 seconds).",
+            "endLine": 3981,
+            "durationSeconds": 0.226
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+            "startLine": 3982,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.151 seconds).",
+            "endLine": 3983,
+            "durationSeconds": 0.151
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+            "startLine": 3984,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.478 seconds).",
+            "endLine": 3985,
+            "durationSeconds": 0.478
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+            "startLine": 3986,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.892 seconds).",
+            "endLine": 3987,
+            "durationSeconds": 0.892
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+            "startLine": 3988,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.799 seconds).",
+            "endLine": 3989,
+            "durationSeconds": 0.799
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+            "startLine": 3990,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.034 seconds).",
+            "endLine": 3991,
+            "durationSeconds": 1.034
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+            "startLine": 3992,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.965 seconds).",
+            "endLine": 3993,
+            "durationSeconds": 0.965
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+            "startLine": 3994,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (1.423 seconds).",
+            "endLine": 3995,
+            "durationSeconds": 1.423
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+            "startLine": 3996,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.776 seconds).",
+            "endLine": 3997,
+            "durationSeconds": 0.776
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+            "startLine": 3998,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.126 seconds).",
+            "endLine": 4000,
+            "durationSeconds": 0.126
+          },
+          {
+            "selector": "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing",
+            "startLine": 4001,
+            "synchronizationDiagnostics": [],
+            "completion": "passed (0.572 seconds).",
+            "endLine": 4002,
+            "durationSeconds": 0.572
+          }
+        ],
+        "outsideCaseSynchronizationDiagnostics": [],
+        "completeExpectedLifecycle": true,
+        "synchronizationDiagnosticCount": 0
+      }
+    },
+    "expectedResultGroups": 2,
+    "scope": "Exact runtime and raw-log lifecycle from preserved original artifacts; strict warning verification recorded separately. Model test execution order is recorded, not required to equal the selector-file order.",
+    "complete": true,
+    "allReportedExpected": true,
+    "allReportedLifecyclesPassed": true
+  },
+  "releaseAcceptance": false,
+  "scope": "Original attempt1 deep lanes only. No recovery or retry. Exactsource/runtime/native identities and strict result gates independently verified."
+}

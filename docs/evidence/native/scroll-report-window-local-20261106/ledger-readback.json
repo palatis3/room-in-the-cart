@@ -1,0 +1,9 @@
+{
+  "headRevision": 2,
+  "shopCount": 1,
+  "lines": 500,
+  "contributions": 500,
+  "payloadSHA256Matches": true,
+  "quickCheck": "ok",
+  "source": "Owned simulator normal Release app; consistent SQLite backup after tearDown"
+}

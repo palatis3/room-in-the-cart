@@ -1,0 +1,4 @@
+Expected state: Collapsed
+Named button count: 0
+Visible label: Other meals in this shop
+Label frame: (32.0, 131.5, 184.5, 20.5)

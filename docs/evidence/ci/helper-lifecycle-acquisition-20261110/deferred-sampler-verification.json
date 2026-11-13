@@ -1,0 +1,28 @@
+{
+  "status": "portable-controls-passed",
+  "tests": 272,
+  "canonicalReview": "four changed paths reviewed and exact preimages/postimages verified",
+  "manifestSHA256": "7ff008244e5dd690866709907075727094cbef1c744858ed4622fb20c1f28e69",
+  "patchSHA256": "8505edb4cebc4db26286259aa8786739196a7018ab7af0cc181c76570627f969",
+  "logSHA256": "ed4d5130828f203b2abf8dfa0d787a3dbcd36ecd61585e04bcf7aa6c69d8c2f2",
+  "changes": {
+    "scripts/simulator_signpost_control/run.py": {
+      "before": "ddd96c92f84960c84920b8d221c54a240808892c398ada3041e40151ac9231f3",
+      "after": "170e277c4747ee2b66a59989ddd7dc5bf9014b197f299c222e44902a608ce5ef"
+    },
+    "scripts/simulator_signpost_control/runner.py": {
+      "before": "105cb1d912969ac5a31237dc7097b8ddf40d51bba7d142f12cf9546ef3b9320d",
+      "after": "78c908f89a103c5e0346844298ca82fd68f1e499b0c8bc0c45a6e027f206125c"
+    },
+    "scripts/test_simulator_signpost_control.py": {
+      "before": "c319fca957cf09ad5963db1b9dca5101cb1ab203c29cd193b0421a4826e567b3",
+      "after": "fb915fcb7a75f521fe153603cdfb11406933d440b244d7ef17c796b1eeaea1e3"
+    },
+    "scripts/app_scroll_observation/contract.json": {
+      "before": "cdd0ba0b87878ed288b7a881ade9568dd94d81af7bc9456bb9421aeced75e1cc",
+      "after": "0399ce5f67efe57de3fec140b51f191fd97c30e98ba795a37fd264d2c4f54c15"
+    }
+  },
+  "nativeOrHostedExecuted": false,
+  "remaining": "Hosted post-boot zero-output inventory stall unresolved; exact workflow profiles and changed hosted diagnostic pending."
+}

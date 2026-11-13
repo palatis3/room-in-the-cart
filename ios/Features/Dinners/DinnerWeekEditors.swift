@@ -3,6 +3,8 @@ import CoreDomain
 
 struct DinnerOccurrenceView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
+    @EnvironmentObject private var ledger: LedgerModel
     let occurrenceID: UUID
     @State private var date = Date()
     @State private var scheduled = false
@@ -13,15 +15,25 @@ struct DinnerOccurrenceView: View {
     private var meal: MealOccurrence? { model.shop?.mealOccurrences.first { $0.id == occurrenceID && $0.removedAt == nil } }
     var body: some View {
         Group {
-            if meal?.carryover != nil {
-                DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
-            } else {
-                occurrenceForm
+            switch currentRoute {
+            case .success(.recovered(let shopID, let currentID)):
+                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shopID, occurrenceID: currentID, carryoverPlanner: model)
+            case .success(.original(let current)):
+                if current.carryover != nil {
+                    DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
+                } else { occurrenceForm }
+            case .failure:
+                ContentUnavailableView(currentDinnerText("Current dinner unavailable"), systemImage: "arrow.triangle.2.circlepath",
+                    description: Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes.")))
+                    .accessibilityIdentifier("dinner.currentMealsUnavailable")
             }
         }
     }
+    private var currentRoute: Result<DinnerMealDestination, Error> {
+        Result { try model.currentMealDestination(occurrenceID, pickup: pickup) }
+    }
     private var occurrenceForm: some View {
-        Form {
+        WorkingForm {
             if let meal {
                 let proposedDay = try? DinnerEntry.date(date, zone: calendarZone, scheduled: scheduled)
                 Section {
@@ -99,7 +111,9 @@ struct DinnerManualAdjustmentView: View {
     @State private var servings: String
     @State private var groups: [DinnerGroupDraft]
     @State private var amounts: [DinnerIngredientDraft]
+    @State private var bindings: [DinnerBindingDraft]
     @State private var showPreview = false
+    private var reviewsAllocations: Bool { meal.servingGroups.contains(where: \.isProtected) }
     init(model: DinnerFeatureModel, meal: MealOccurrence) {
         self.model = model; self.meal = meal; baseRevision = model.shop?.revisionID
         _servings = State(initialValue: meal.servings.description)
@@ -109,36 +123,101 @@ struct DinnerManualAdjustmentView: View {
                 DinnerIngredientDraft(MealIngredient(id: $0.id, name: $0.productName, quantity: $0.quantity))
             }
         })
+        let baseline = model.shop.flatMap { try? DinnerPlanningEngine.manualPortionBindings(occurrenceID: meal.id, ledger: $0, state: model.state) } ?? []
+        _bindings = State(initialValue: meal.ingredientContributionIDs.compactMap { id in
+            model.shop?.contributions.first { $0.id == id && $0.removedAt == nil }
+        }.flatMap { source in meal.servingGroups.map { group in
+            DinnerBindingDraft(contribution: source, group: group,
+                existing: baseline.first { $0.contributionID == source.id && $0.groupID == group.id })
+        } })
     }
     var body: some View {
-        Form {
+        WorkingForm {
             Section {
                 Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
-                TextField(dinnerText("Total servings"), text: $servings)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(dinnerText("Total servings")).font(.caption).foregroundStyle(Theme.secondary)
+                    TextField(dinnerText("Total servings"), text: $servings)
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .frame(minHeight: 44)
+                }
             }
             Section(dinnerText("Serving groups")) {
                 ForEach($groups) { $group in
-                    TextField(dinnerText("Group name"), text: $group.name)
-                    TextField(dinnerText("Group servings"), text: $group.servings)
-                    if group.isProtected { Text(dinnerText("Protected group")) }
+                    if group.isProtected {
+                        Text(group.name)
+                        Text(dinnerFormat("Protected servings: %@", group.servings))
+                    } else {
+                        TextField(dinnerText("Group name"), text: $group.name)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(dinnerText("Group servings")).font(.caption).foregroundStyle(Theme.secondary)
+                            TextField(dinnerText("Group servings"), text: $group.servings)
+                                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                                .frame(minHeight: 44)
+                        }
+                    }
                 }
-                Button(dinnerText("Add serving group")) { groups.append(DinnerGroupDraft()) }.disabled(groups.count >= 100)
+                Button(dinnerText("Add serving group")) {
+                    let group = DinnerGroupDraft(); groups.append(group)
+                    if reviewsAllocations {
+                        for id in meal.ingredientContributionIDs {
+                            if let source = model.shop?.contributions.first(where: { $0.id == id }) {
+                                bindings.append(DinnerBindingDraft(contribution: source,
+                                    group: ServingGroup(id: group.id, name: "", servings: .one), existing: nil))
+                            }
+                        }
+                    }
+                }.disabled(groups.count >= 100)
             }
             Section(dinnerText("Resulting grocery amounts")) {
                 ForEach($amounts) { $amount in
                     VStack(alignment: .leading) {
                         Text(amount.name).font(.headline)
+                        Text(dinnerText("Amount, optional")).font(.caption).foregroundStyle(Theme.secondary)
                         TextField(dinnerText("Amount, optional"), text: $amount.amount)
+                            .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .frame(minHeight: 44)
                         DinnerUnitPicker(unit: $amount.unit)
+                    }
+                }
+            }
+            if reviewsAllocations {
+                Section(dinnerText("Resulting ingredient portions")) {
+                    Text(dinnerText("Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total."))
+                    ForEach(bindings) { snapshot in
+                        let row = dinnerDraftBinding(snapshot, in: $bindings)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(snapshot.product).font(.headline)
+                            Text(groups.first { $0.id == snapshot.groupID }?.name ?? snapshot.group.name)
+                            if snapshot.group.isProtected {
+                                Text(dinnerText("Protected group"))
+                                Text(dinnerQuantity(snapshot.protectedQuantity))
+                            } else {
+                                Text(dinnerText("Resulting amount for this group")).font(.caption).foregroundStyle(Theme.secondary)
+                                TextField(dinnerText("Resulting amount for this group"), text: row.amount)
+                                    .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                                    .frame(minHeight: 44)
+                                    .accessibilityIdentifier("dinnerManualBinding.\(snapshot.contributionID).\(snapshot.groupID)")
+                                DinnerUnitPicker(unit: row.unit)
+                            }
+                        }
+                    }
+                    if bindings.contains(where: { $0.group.isProtected && $0.protectedQuantity == nil }) {
+                        Text(dinnerText("The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner."))
                     }
                 }
             }
             Section {
                 Button(dinnerText("Review")) {
                     do {
-                        let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try DinnerEntry.quantity($0.amount, unit: $0.unit)) }
+                        let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try $0.reviewedQuantity()) }
+                        let reviewedGroups = try groups.map { try $0.group() }
+                        let reviewedBindings = reviewsAllocations ? try bindings.map { row in
+                            guard let group = reviewedGroups.first(where: { $0.id == row.groupID }) else { throw DinnerPlanningError.reviewRequired("portionBinding") }
+                            return try row.binding(occurrenceID: meal.id, servings: group.servings)
+                        } : nil
                         showPreview = model.prepare([.adjust(DinnerAdjustment(occurrenceID: meal.id, servings: try DinnerEntry.positive(servings),
-                            groups: try groups.map { try $0.group() }, quantities: changes))], expectedRevision: baseRevision)
+                            groups: reviewedGroups, quantities: changes, portionBindings: reviewedBindings))], expectedRevision: baseRevision)
                     } catch { model.report(error) }
                 }.disabled(!model.editable)
             }
@@ -213,6 +292,7 @@ struct DinnerGuestsView: View {
                             Text(binding.product).font(.headline)
                             Text(dinnerFormat("%@ · %@ servings", binding.group.name, binding.group.servings.description))
                             TextField(dinnerText("Current amount for this group"), text: $binding.amount)
+                                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                             DinnerUnitPicker(unit: $binding.unit)
                             if binding.group.isProtected { Text(dinnerText("Protected group")) }
                         }.padding(.vertical, 5)
@@ -240,8 +320,8 @@ struct DinnerGuestsView: View {
                     ForEach($groups) { $group in
                         Text(group.name).font(.headline)
                         if group.isProtected {
-                            Text(dinnerFormat("Protected: %@ servings", group.servings))
-                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
+                            Text(dinnerFormat("Protected servings: %@", group.servings))
+                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled().focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
                     }
                     Text(dinnerText("The assisted preview uses saved ingredient bindings. Protected groups remain unchanged."))
                     Button(model.paid ? dinnerText("Preview guest changes") : dinnerText("Explore guest changes without applying")) {
@@ -329,6 +409,7 @@ struct DinnerReservationView: View {
             Section {
                 TextField(dinnerText("Food name"), text: $name).focused($field, equals: .food)
                 TextField(dinnerText("Protected amount"), text: $amount).focused($field, equals: .amount)
+                    .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                 DinnerUnitPicker(unit: $unit)
                 TextField(dinnerText("Purpose, such as lunch"), text: $purpose).focused($field, equals: .purpose)
                 Toggle(dinnerText("Assign a date"), isOn: $scheduled)

@@ -1,0 +1,22 @@
+{
+  "status": "compilation_passed",
+  "scope": "Fresh app/model/UI build-for-testing only; runtime tests not executed",
+  "sourceFiles": 660,
+  "archivedSourcesVerified": true,
+  "sourceManifestSHA256": "ecc8822f336a1b851fedc4bb0d6e4ef6f886232b5ecec5963880bdaee57bdd1b",
+  "buildReceiptSHA256": "8baaa1099b105d2c957b97db624bb2034df3fa9ad1f1499dec1c5ffbde092e72",
+  "buildLogSHA256": "7af047b66b2d42deffb3b8fbddc98a76c5115de07aac80e494788562b784a2ee",
+  "architectures": [
+    "arm64",
+    "x86_64"
+  ],
+  "nativeFlowPacketManifestSHA256": "5bfcb08d13cd70f7af91d628e5d18d2b5ab13de9ec3b0a4c1178e30c5aa1b1bb",
+  "knownSourceReviewIssues": [
+    "Retained409 refresh cannot return exact pending command to retryable state",
+    "Initial legacy adoption needs multiple explicit manual source/basket rows"
+  ],
+  "UIQualified": false,
+  "modelTestsExecuted": false,
+  "successorRequired": true,
+  "laterWireTestChanges": "Separate test-only wire successor installed after this build; original archived sources preserved"
+}

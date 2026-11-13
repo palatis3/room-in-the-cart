@@ -39,7 +39,7 @@ private struct SharedStoreQuotesContent: View {
     @State private var firstEligibility = false
     @State private var secondEligibility = false
     @State private var entering = false
-    @State private var acknowledged = false
+    @State private var acknowledgedReviewID: UUID?
     @State private var clearing = false
     @State private var entryNotice: String?
     @FocusState private var inputFocus: String?
@@ -77,11 +77,27 @@ private struct SharedStoreQuotesContent: View {
                 if let review = model.review {
                     Section {
                         reviewFacts(review, page: page)
-                        Toggle(StoreQuoteCopy.text("I reviewed these exact quotes, conditions, and shared commitments"), isOn: $acknowledged)
-                            .accessibilityIdentifier("sharedQuotes.acknowledged")
-                        Button(actionLabel(review.action)) { Task { await model.sendReviewed(); entering = false; acknowledged = false } }
-                            .buttonStyle(PrimaryAction()).disabled(!acknowledged).accessibilityIdentifier("sharedQuotes.confirm")
-                        Button(dinnerText("Cancel")) { model.cancelReview(); acknowledged = false }
+                        let acknowledged = acknowledgedReviewID == review.id
+                        Button {
+                            acknowledgedReviewID = acknowledged ? nil : review.id
+                        } label: {
+                            Label(StoreQuoteCopy.text("I reviewed these exact quotes, conditions, and shared commitments"),
+                                  systemImage: acknowledged ? "checkmark.square.fill" : "square")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(acknowledged ? .isSelected : [])
+                        .accessibilityIdentifier("sharedQuotes.acknowledged")
+                        Button(actionLabel(review.action)) {
+                            Task {
+                                guard acknowledgedReviewID == review.id, model.review?.id == review.id else { return }
+                                await model.sendReviewed()
+                                entering = false; acknowledgedReviewID = nil
+                            }
+                        }
+                        .buttonStyle(PrimaryAction()).disabled(!acknowledged).accessibilityIdentifier("sharedQuotes.confirm")
+                        Button(dinnerText("Cancel")) { model.cancelReview(); acknowledgedReviewID = nil }
                     } header: {
                         Text(StoreQuoteCopy.text("Review exact action")).accessibilityFocused($reviewFocused)
                     }.id("store-quote-review")
@@ -96,13 +112,13 @@ private struct SharedStoreQuotesContent: View {
                             if !pair.current(in: page) { Text(StoreQuoteCopy.text("Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft.")) }
                             if pair.own {
                                 ForEach(StoreQuoteChoice.allCases, id: \.self) { choice in
-                                    Button(selectionLabel(pair.options[choice], shopper: page.shopper)) { Task { acknowledged = false; await model.prepareSelection(pair: pair, choice: choice) } }
+                                    Button(selectionLabel(pair.options[choice], shopper: page.shopper)) { Task { acknowledgedReviewID = nil; await model.prepareSelection(pair: pair, choice: choice) } }
                                         .disabled(!selectionAllowed(pair, choice: choice, page: page))
                                         .accessibilityIdentifier("sharedQuotes.select." + choice.rawValue)
                                 }
                             } else if page.shopper {
                                 ForEach(pair.proposals) { proposal in
-                                    Button(selectionLabel(pair.options[proposal.choice], shopper: true)) { Task { acknowledged = false; await model.prepareSelection(pair: pair, choice: proposal.choice, proposalID: proposal.id) } }
+                                    Button(selectionLabel(pair.options[proposal.choice], shopper: true)) { Task { acknowledgedReviewID = nil; await model.prepareSelection(pair: pair, choice: proposal.choice, proposalID: proposal.id) } }
                                         .disabled(!selectionAllowed(pair, choice: proposal.choice, page: page))
                                         .accessibilityIdentifier("sharedQuotes.reviewProposal")
                                 }
@@ -118,7 +134,7 @@ private struct SharedStoreQuotesContent: View {
                             HStack {
                                 Text(verbatim: adult.label); Spacer()
                                 Button(adult.enabled ? StoreQuoteCopy.text("Review revoking access") : StoreQuoteCopy.text("Review granting access")) {
-                                    Task { acknowledged = false; await model.prepareGrant(adult, enabled: !adult.enabled) }
+                                    Task { acknowledgedReviewID = nil; await model.prepareGrant(adult, enabled: !adult.enabled) }
                                 }.accessibilityIdentifier("sharedQuotes.grant." + adult.id.uuidString.lowercased())
                                     .accessibilityLabel(String(format: StoreQuoteCopy.text(adult.enabled ? "Review revoking budget access from %@" : "Review granting budget access to %@"), adult.label))
                             }
@@ -195,7 +211,7 @@ private struct SharedStoreQuotesContent: View {
                 do {
                     let options = EnteredStoreQuoteOptions(first: try entered(first, cap: firstCap, capScope: firstCapScope, eligibility: firstEligibility), second: try entered(second, cap: secondCap, capScope: secondCapScope, eligibility: secondEligibility))
                     _ = try SharedStoreQuoteMath.compare(options, commitments: page.commitments, shopID: page.shopId)
-                    acknowledged = false; entryNotice = nil
+                    acknowledgedReviewID = nil; entryNotice = nil
                     Task { await model.prepareSave(options) }
                 } catch { entryNotice = StoreQuoteCopy.text("Enter both stores, branches, sources, dates and valid amounts. Blank costs and unreviewed availability remain unknown.") }
             }.buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedQuotes.reviewSave")
@@ -262,9 +278,9 @@ private struct SharedStoreQuoteFacts: View {
         if let result = try? SharedStoreQuoteMath.compare(options, commitments: commitments, shopID: shopID) {
             facts(options.first, result: result.first).accessibilityIdentifier("sharedQuotes.firstFacts")
             facts(options.second, result: result.second).accessibilityIdentifier("sharedQuotes.secondFacts")
-            Text(dinnerFormat("Items before fees and discounts, second minus first: %@", dinnerMoney(result.itemSubtotalChange)))
-            Text(dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(result.checkoutChange)))
-            Text(dinnerFormat("Checkout plus trip cash, second minus first: %@", dinnerMoney(result.tripCashChange))).accessibilityIdentifier("sharedQuotes.cashDelta")
+            quoteMoneyChange("Items before fees and discounts, second minus first: %@", result.itemSubtotalChange)
+            quoteMoneyChange("Checkout change, second minus first: %@", result.checkoutChange)
+            quoteMoneyChange("Checkout plus trip cash, second minus first: %@", result.tripCashChange).accessibilityIdentifier("sharedQuotes.cashDelta")
             if let minutes = result.extraMinutesChange { Text(dinnerFormat("Extra minutes change: %d", minutes)) }
             if let breakEven = result.secondTripCashBreakEven { Text(dinnerFormat("Second trip cash break-even: %@", dinnerMoney(breakEven))).accessibilityIdentifier("sharedQuotes.breakEven") }
             if let preferred = result.preferredByTotalCash {

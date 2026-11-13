@@ -3,6 +3,8 @@ import type { Context, HouseholdRepository } from './repository.js';
 import type { BillingService } from './billing/service.js';
 import { ServiceError, unavailable } from './errors.js';
 import { uuid } from './contracts.js';
+import {digest} from './database.js';
+import {moveSharedMeal,type SharedMealValue} from './shared-meal-planning.js';
 
 const positive = z.number().int().positive();
 export const grantChange = z.object({ plannerId: uuid.nullable(), grantRevision: positive.or(z.literal(0)), authorityEpoch: positive }).strict();
@@ -98,4 +100,17 @@ export class MealMoves {
       [ctx.householdId,id,input.proposalId,ctx.member.member_id,shop.authority_epoch,grantRevision,shop.revision,input.occurrenceId,input.day]);
     return {saved:true};
   }
+}
+
+/** Read-only exact proposal validation; only shop.patch consumes a move. */
+export async function requireMealMove(ctx:Context,shop:{shop_id:string;revision:number;authority_epoch:number},
+ proposalId:string,occurrenceId:string,original:SharedMealValue|undefined,meal:unknown) {
+ const proposal=(await ctx.db.query(`SELECT m.proposed_day::text FROM ritc.meal_move m
+  JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)
+  JOIN ritc.member a ON a.household_id=m.household_id AND a.member_id=m.actor_id AND a.state='active'
+  WHERE m.household_id=$1 AND m.shop_id=$2 AND m.proposal_id=$3 AND m.occurrence_id=$4 AND m.shop_revision=$5
+  AND m.authority_epoch=$6 AND m.state='pending' AND p.planner_id=m.actor_id AND m.grant_revision=p.revision`,
+  [ctx.householdId,shop.shop_id,proposalId,occurrenceId,shop.revision,shop.authority_epoch])).rows[0];
+ if(!proposal || !original || digest(meal)!==digest(moveSharedMeal(original,proposal.proposed_day)))
+  throw new ServiceError(409,'stale_proposal','Read the current proposal and review its exact move.');
 }

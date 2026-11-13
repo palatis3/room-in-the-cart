@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "Original complete typed-client HTTPS/PostgreSQL lane plus six Undo scenarios",
+  "nodeCases": 11,
+  "swiftScenarios": 33,
+  "failures": 0,
+  "skips": 0,
+  "secondsIncludingFreshSwiftBuild": 166.333,
+  "originals": ".build/SharedDemandGraphNov09/root-operation-undo-wire-r1",
+  "sourceFiles": 330,
+  "files": {
+    "receipt.json": "1ccc2985788eaf8a3999c968e9f23d70cf52be5a94dc8de08d44acc57c8e3d36",
+    "source-manifest.json": "5a7292f59952929f7d61de54a886eeee19291f966db3e499e6297f1c42582b66",
+    "compiled-service-manifest.json": "0f22794caa5e1a8b9158cb9cfee57544d84597f57f361ef537e70973c315bf08",
+    "backend-reuse.json": "a74b37a9f03697ff9742ecec646577bbae4bf2a6636d31d4d2dc5b6f5679c3be",
+    "combined-wire.log": "5a0ffbd5677086a9d7812ff2733ee03a84f88915156929e76ad415c84832b2e1",
+    "wire-result-manifest.json": "42309dc74afb1ff12bfa73b9a67b5caad2bde1e38608f0c0863fe38f7da832cf"
+  },
+  "backendBuildInputsReused": 76,
+  "backendProductEntriesReused": 141,
+  "freshSwiftBuild": true,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "cleanup": {
+    "schemaVersion": 1,
+    "attempt": "attempt.lqNvW6",
+    "exitCode": 0,
+    "postgresStopped": true,
+    "privateStateRetained": false,
+    "retention": "Private state is local only; ephemeral CI runner teardown removes it. No private state is uploaded."
+  },
+  "scenarios": [
+    "Cancel changes no domain state",
+    "Committed response dropped, exact durable outbox retained",
+    "Separate-process retry returns original operation and one write",
+    "New touched-field edit rejects stale Undo",
+    "Erased historical lineage denies prior-success replay",
+    "Revoked typed client and adversarial raw replay denied"
+  ],
+  "releaseAcceptance": false,
+  "unsupportedInverseFamilies": [
+    "meal/date/proposal",
+    "request acceptance",
+    "first adoption",
+    "store",
+    "inverse of inverse"
+  ]
+}

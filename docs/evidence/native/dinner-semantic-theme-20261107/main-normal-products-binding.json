@@ -1,0 +1,10 @@
+{
+  "sourceEntries": 459,
+  "matchingEntries": 458,
+  "differences": [
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "differenceExplanation": "Copied test source adds two scratch visual cases; main retains byte-identical permanent base tests. All product source files exactly match normal run4 products.",
+  "mainTestSHA256": "a29581b69a1e33112bfe8f4d5fb94c6afef2478ccf75076b5ed704a948be01b0",
+  "copiedTestSHA256": "8370fd4695405ef7f40c9823006a89772aac9c8289a714a625677755e261b13c"
+}

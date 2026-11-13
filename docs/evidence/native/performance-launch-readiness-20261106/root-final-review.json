@@ -1,0 +1,21 @@
+{
+  "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+  "runID": 42304515547,
+  "freezeSHA256": "077a351934a6af515db860f6ad79a49ac066688c5f265098b0a4f07d7341a3e2",
+  "rootRehashedFiles": 359,
+  "mismatches": [],
+  "independentSQLite": {
+    "sourceSHA256": "ba2d0c735aacb9a941fd4f842b897ab6f701d7bce8a306e081b003c9e67b9f65",
+    "temporaryCopyOpenedReadOnly": true,
+    "quickCheck": "ok",
+    "memoryRows": 3,
+    "sampleCounts": [
+      5,
+      5,
+      5
+    ],
+    "exactExportEquality": true,
+    "requiredDurationAbsent": true
+  },
+  "interpretation": "All three native cases passed, zero runtime warnings. Launch/rendered baseline gates pass. Scroll required measurement is absent; overall run fails. No retry or release acceptance."
+}

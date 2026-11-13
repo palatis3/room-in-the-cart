@@ -1,0 +1,133 @@
+{
+  "sourceCommit": "bfaf8be83acb874aa7c7337b805a6bf24eab6f2d",
+  "entrySourceCommit": "884d391630f0c5652164c64539c78819bff115d6",
+  "entryExecutableSHA256": "dd638e0d5f8706d251332280e378fc9b5eb0d147ff131071d19171385075fb46",
+  "entryHarnessSHA256": "ffca3fa4dc8292f7fdccc8f44a802f4bc98bfb4303e93fa72bef3d68102671d2",
+  "configuration": "Release, arm64 iPhone Simulator, Xcode 27.1 (27A9275). Separate UI runner, empty app launch arguments and environment overrides.",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "version": "0.1.0 (1)",
+  "appExecutableSHA256": "6970e74c263980b399ba0d554b44d9a426d1f722278de2f7fb47a4c693aab3b6",
+  "device": "iPhone 17, iOS 27.0 (24A434)",
+  "captureDate": "2026-11-12",
+  "timeZone": "America/New_York",
+  "journey": "Dinners → Compare two store trips → enter and review both pickup quotes → save → relaunch → reopen saved pair. After updating the app in place, reopen the pair, verify both options and the explanatory deltas, capture, then tap Edit and verify the saved first store. The read-only ledger check verified both quotes reference the same saved four-portion dinner.",
+  "inputs": {
+    "currency": "USD",
+    "scope": "wholeCheckout",
+    "mode": "pickup",
+    "reviewedForBoth": [
+      "matching required quantities",
+      "availability",
+      "single-store fulfillment",
+      "all charges included"
+    ],
+    "cap": null,
+    "first": {
+      "alreadyPlanned": true,
+      "itemsCents": 3600,
+      "checkoutCents": 3800,
+      "extraTravelCents": 0,
+      "extraMinutes": 0,
+      "checkoutPlusTravelCents": 3800
+    },
+    "second": {
+      "alreadyPlanned": false,
+      "itemsCents": 3200,
+      "checkoutCents": 3500,
+      "extraTravelCents": 400,
+      "extraMinutes": 18,
+      "checkoutPlusTravelCents": 3900
+    }
+  },
+  "secondMinusFirst": {
+    "itemsCents": -400,
+    "checkoutCents": -300,
+    "checkoutPlusTravelCents": 100,
+    "extraMinutes": 18
+  },
+  "assetProcessing": "Original unframed simulator view re-encoded as opaque JPEG at native dimensions.",
+  "captures": [
+    {
+      "appSystemLanguage": "en-US",
+      "systemRegion": "en_US",
+      "systemTextSize": "large",
+      "storeLocale": "en-US",
+      "meal": "Bean tacos",
+      "portions": 4,
+      "stores": [
+        "Maple Market · North",
+        "River Market · East"
+      ],
+      "quoteSource": "Pickup quote",
+      "eligibility": "No coupon",
+      "sharedPickupSlot": "2026-11-12T10:07:54Z",
+      "observedAtUTC": [
+        "2026-11-12T10:07:54.443070+00:00",
+        "2026-11-12T10:07:54.443070+00:00"
+      ],
+      "ledgerHeadRevision": 2,
+      "verifiedLedgerPayloadSHA256": "640c2085383264f9e9d479d0ea4ad280b50e8c40f7cb891ac6c68dadeb4c8c50",
+      "entryAndRelaunchResult": ".build/StoreTripsFrameNov12/en1.xcresult",
+      "captureResult": ".build/StoreTripsFrameNov12/en5.xcresult",
+      "captureHarnessSHA256": "3bfa97cc9fa1cd0771b78f73aaec964d25dd793f29022ea1a4c6b920c2df7f21",
+      "sourcePNG": ".build/StoreTripsFrameNov12/en5-attachments/CC09B6D6-FCE0-4FEA-A7F0-96A121E0F81E.png",
+      "sourceSHA256": "0104b7d2bb2ca6366fdf9c34cbdfd2f4989ef2d677836350bd3ba78e244f699d",
+      "path": "en-US/06-two-store-trips.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "b887a978a9b26fcbdec9e11e40920b12a64d1c16a0ff0bf00500e1d19cd6b14a",
+      "verifiedRuns": {
+        "entryAndRelaunch": "1 of 1 passed",
+        "captureAndEdit": "1 of 1 passed",
+        "recordedRuntimeWarnings": 0
+      },
+      "toolbar": {
+        "title": "Two store trips",
+        "action": "Edit",
+        "accessibilityLabel": "Edit quotes"
+      }
+    },
+    {
+      "appSystemLanguage": "es-US",
+      "systemRegion": "es_US",
+      "systemTextSize": "large",
+      "storeLocale": "es-MX",
+      "meal": "Tacos de frijoles",
+      "portions": 4,
+      "stores": [
+        "Mercado Arce · Norte",
+        "Mercado Río · Este"
+      ],
+      "quoteSource": "Cotización de recogida",
+      "eligibility": "Sin cupón",
+      "sharedPickupSlot": "2026-11-12T10:14:48Z",
+      "observedAtUTC": [
+        "2026-11-12T10:14:48.813021+00:00",
+        "2026-11-12T10:14:48.813022+00:00"
+      ],
+      "ledgerHeadRevision": 2,
+      "verifiedLedgerPayloadSHA256": "a3ea472faf9f2f9aaa5e64e662f7e681488fb8b8e409c615a008441649f80e90",
+      "entryAndRelaunchResult": ".build/StoreTripsFrameNov12/es1.xcresult",
+      "captureResult": ".build/StoreTripsFrameNov12/es5.xcresult",
+      "captureHarnessSHA256": "3bfa97cc9fa1cd0771b78f73aaec964d25dd793f29022ea1a4c6b920c2df7f21",
+      "sourcePNG": ".build/StoreTripsFrameNov12/es5-attachments/4A87282E-80FA-468B-8FE5-0E81DD061954.png",
+      "sourceSHA256": "b854feb9b869221d95950ac25755d80400bb15ea72c4e81087191ba73b760eb6",
+      "path": "es-MX/06-two-store-trips.jpg",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "3a97ff267502ffe0decf6ace66e7c646e153a80769c449e87c964c1958e8863b",
+      "verifiedRuns": {
+        "entryAndRelaunch": "1 of 1 passed",
+        "captureAndEdit": "1 of 1 passed",
+        "recordedRuntimeWarnings": 0
+      },
+      "toolbar": {
+        "title": "Viajes a dos tiendas",
+        "action": "Editar",
+        "accessibilityLabel": "Editar cotizaciones"
+      }
+    }
+  ]
+}

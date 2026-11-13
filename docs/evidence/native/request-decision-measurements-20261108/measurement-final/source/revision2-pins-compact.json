@@ -1,0 +1,155 @@
+{
+  "baseCommit": "44e82484e7c94a0d6cb14a8e55a2909562a329f3",
+  "originalTestSHA256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec",
+  "candidateTestSHA256": "7cee914c8599fb30616c9907dd8b051a758a1bb850a4c1ff8e79ee004eb0e4ab",
+  "targetRelativePath": "ios/UITests/HouseholdRequestPackUITests.swift",
+  "sourceRoot": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-source-r1",
+  "originalEvidence": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-source-r1.preparation.json",
+      "bytes": 2753,
+      "sha256": "4ce09122eb10b1cd18aa7e3518f6629fb6ad0f7a7b30d9899612de0280ebbc17"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-source-r1.original-manifest.json",
+      "bytes": 811117,
+      "sha256": "13aaa39ce67670de4514190c6e8d2b9c5e9f6c08c138f1f0401fcd074cf87880"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1.run.json",
+      "bytes": 986,
+      "sha256": "ec2308180556f7aed490efee4211e660de743adea702d7997b59d55fef726733"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/native.log",
+      "bytes": 1331997,
+      "sha256": "85aa6c86824c06f9ead54df253a13bacf8b8e960c19f50b5463be5f083a2129c"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/verification.json",
+      "bytes": 980,
+      "sha256": "d68d132282ea70d64ee0cd1888bd816c1306e2ee3104edb6935819d9779ec604"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/strict-verification.txt",
+      "bytes": 1127,
+      "sha256": "72282bfa4aa89eccec578dfb2d63659a7b725fc584cb192f195ce217a35b3f7b"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/test-summary.json",
+      "bytes": 1677,
+      "sha256": "fec93520f237eed75d0800c458a3f2169df02b94b6633890df694e89c158ffee"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/test-details.json",
+      "bytes": 2832,
+      "sha256": "ee9342dc433cf8a2214155aef14855d433be60eafa3b7bfc96e2847876e6a14c"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/attachments/F4D1AD64-CE49-49C9-B4E9-0F2191164988.png",
+      "bytes": 275561,
+      "sha256": "8fbb541489195eea9c93c5135cd73ba4e0500060f2e33aa339e935b31d16527b"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/inspection/attachments/C47972C7-1220-4403-9F42-C8C096C0726C.txt",
+      "bytes": 16266,
+      "sha256": "acdd1e9476cdf17d731a001f507896b01a472d3bb5bebf49a74483480624ddab"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/overlay-pins.json",
+      "bytes": 1347,
+      "sha256": "10110b171b9fdfd74c5665a27b25a5c8c48d517ef213bfad9a7804c5ada68d97"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/measurement-methods.swift.txt",
+      "bytes": 12898,
+      "sha256": "973cdc9049e442b6043dad30fdc88d7eb8e7866a460f4c2c5113e8ac8c6ebd41"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/measurement-overlay.patch",
+      "bytes": 13558,
+      "sha256": "ebd195744b861468980d8ec9b80f41c0302f987c1aff852191e1a55986d8218c"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/baseline-HouseholdRequestPackUITests.swift",
+      "bytes": 24949,
+      "sha256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/run-reviewed-proposal.sh",
+      "bytes": 2523,
+      "sha256": "b89cfd14509bc5344577d31fa8a6cd6daad5a5e1d4fe6db1e1a50c68cfb9c679"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/preparation-checks.json",
+      "bytes": 932,
+      "sha256": "383d5a31e55f02a815b7605195982e5fa533fd0e471e5653dbb7171a702b1bc8"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/candidate-HouseholdRequestPackUITests.swift",
+      "bytes": 37847,
+      "sha256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/baseline-pins.json",
+      "bytes": 997,
+      "sha256": "a1bacbb030c6b13283622c78e32b30e265d00cee9dfbbfe72d73c2c846fa9cb6"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/expected-selectors.txt",
+      "bytes": 301,
+      "sha256": "92744c765b192024cd08264fe4c38d92103330a43bc89873828b70bcab17700f"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/REVIEW.md",
+      "bytes": 5804,
+      "sha256": "485e46b8c6a25f96fc57820d6e49a7e164b4319236a4c829bdfb961072ba1545"
+    }
+  ],
+  "priorProducts": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner",
+      "bytes": 95248,
+      "sha256": "04038034ebc5eec617902fa97d49751a8799f0795d61911be28c113291ebcd46"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests",
+      "bytes": 3133280,
+      "sha256": "f94bab512f29982f6130bb69943b6a57322d7b015467c9f3fce75211db16d5e1"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "bytes": 74114528,
+      "sha256": "0501a95fd91d292a6b288e331ea71a701de6fa30251481fb967ca73361b681e0"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "bytes": 40496,
+      "sha256": "8909389cae708e9be8a1563417ab8d5743f2330ec5f2b7fba8a7cc7937dee790"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+      "sha256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f"
+    },
+    {
+      "path": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "sha256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3"
+    },
+    {
+      "path": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "sha256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec"
+    }
+  ],
+  "completeSourceInventory": {
+    "source": ".build/RequestDecisionAccessibilityNov08/overlay-r2/pins.json",
+    "sha256": "153ec4ac7239094cba4cf7e9c6843027391d827d8ca21b1fe76182d426181611",
+    "sourceFileCount": 4158,
+    "scope": "Compact derivative; full4158-file pre-r2 inventory retained in scratch. Candidate test hash overrides original test hash; production sources unchanged."
+  }
+}

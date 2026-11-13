@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This deletes only the saved spellings for this earlier region.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes only the saved spellings for this earlier region."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina solo las correcciones guardadas para esta región anterior."
+          }
+        }
+      }
+    },
+    "Saved spellings for this earlier region were deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved spellings for this earlier region were deleted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron las correcciones guardadas para esta región anterior."
+          }
+        }
+      }
+    },
+    "Earlier region": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier region"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Región anterior"
+          }
+        }
+      }
+    },
+    "Earlier regions have their own saved spellings. Select a region to review or delete them. New captures use the app language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier regions have their own saved spellings. Select a region to review or delete them. New captures use the app language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada región anterior tiene sus propias correcciones guardadas. Elige una región para revisarlas o eliminarlas. Las nuevas capturas usan el idioma de la app."
+          }
+        }
+      }
+    },
     "Purpose or meal": {
       "extractionState": "manual",
       "localizations": {

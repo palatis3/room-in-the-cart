@@ -1,0 +1,8 @@
+{
+  "kind": "diagnostic-only; not a causal fix",
+  "source_commit": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+  "test_source_sha256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+  "diagnostic_source_sha256": "5968535843a0332136fffafdab2906136213b366c199b67f90f3d6afdc82b27a",
+  "native_execution": "none",
+  "limits": "All five-second exact-value expectations and subsequent equality assertions unchanged. Extra public observations occur only after failed decision. No retry, focus change, value substitution, timeout or gate change."
+}

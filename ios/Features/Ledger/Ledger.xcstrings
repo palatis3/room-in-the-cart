@@ -1,6 +1,262 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The pickup or workspace changed. Reopen the dinner for the pickup you want.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pickup or workspace changed. Reopen the dinner for the pickup you want."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la recogida o el espacio de trabajo. Vuelve a abrir la cena para la recogida que quieres usar."
+          }
+        }
+      }
+    },
+    "Your reusable dinner changed. Reopen it to review the current version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your reusable dinner changed. Reopen it to review the current version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cena reutilizable cambió. Vuelve a abrirla para revisar la versión actual."
+          }
+        }
+      }
+    },
+    "Food match saved. Available quantity in this record is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food match saved. Available quantity in this record is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la coincidencia con un alimento. Se desconoce la cantidad disponible en este registro."
+          }
+        }
+      }
+    },
+    "Entered total before reviewing included charges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered total before reviewing included charges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total ingresado antes de revisar los cargos incluidos"
+          }
+        }
+      }
+    },
+    "Extra minutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos adicionales"
+          }
+        }
+      }
+    },
+    "Yes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sí"
+          }
+        }
+      }
+    },
+    "No": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        }
+      }
+    },
+    "Proposed by": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed by"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuesta de"
+          }
+        }
+      }
+    },
+    "Applied by": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied by"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicado por"
+          }
+        }
+      }
+    },
+    "Removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminado"
+          }
+        }
+      }
+    },
+    "Destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        }
+      }
+    },
+    "Import undone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import undone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importación deshecha"
+          }
+        }
+      }
+    },
+    "Added as a separate line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added as a separate line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se agregó como línea separada"
+          }
+        }
+      }
+    },
+    "Added to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se agregó a %@"
+          }
+        }
+      }
+    },
+    "Merged as the same need: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merged as the same need: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se combinó como la misma necesidad: %@"
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se omitió"
+          }
+        }
+      }
+    },
     "A dinner-only cap does not cover the whole pickup. Missing prices and fees remain unknown.": {
       "localizations": {
         "en": {
@@ -253,6 +509,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pasos ya completados, uno por línea"
+          }
+        }
+      }
+    },
+    "Amount per pack on the original label: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount per pack on the original label: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad por paquete en la etiqueta original: %@"
           }
         }
       }
@@ -2033,6 +2305,22 @@
         }
       }
     },
+    "Packs on the original label: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs on the original label: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes en la etiqueta original: %lld"
+          }
+        }
+      }
+    },
     "Paste list": {
       "localizations": {
         "en": {
@@ -2449,6 +2737,23 @@
         }
       }
     },
+    "Rename pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar el nombre de la compra"
+          }
+        }
+      }
+    },
     "Reopen": {
       "localizations": {
         "en": {
@@ -2689,6 +2994,22 @@
         }
       }
     },
+    "Review the pack count and usable amount in each pack.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the pack count and usable amount in each pack."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el número de paquetes y la cantidad utilizable de cada uno."
+          }
+        }
+      }
+    },
     "Review the unsupported or approximate unit.": {
       "localizations": {
         "en": {
@@ -2765,6 +3086,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar artículo"
+          }
+        }
+      }
+    },
+    "Save name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar nombre"
           }
         }
       }
@@ -2993,6 +3331,22 @@
         }
       }
     },
+    "Shorten item %lld to %lld UTF-8 bytes or less.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten item %lld to %lld UTF-8 bytes or less."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el artículo %lld a un máximo de %lld bytes UTF-8."
+          }
+        }
+      }
+    },
     "Show dinner": {
       "localizations": {
         "en": {
@@ -3101,6 +3455,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Límite de gasto (USD, opcional)"
+          }
+        }
+      }
+    },
+    "Split this list into parts of up to %lld UTF-8 bytes each.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split this list into parts of up to %lld UTF-8 bytes each."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divide esta lista en partes de hasta %lld bytes UTF-8 cada una."
+          }
+        }
+      }
+    },
+    "Split this list into parts of up to %lld nonblank items each.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split this list into parts of up to %lld nonblank items each."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divide esta lista en partes de hasta %lld artículos cada una. Las líneas en blanco no cuentan."
           }
         }
       }
@@ -4189,6 +4575,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cantidad utilizable del segundo paquete"
+          }
+        }
+      }
+    },
+    "The matching items cannot take this amount. Choose a separate line or skip it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The matching items cannot take this amount. Choose a separate line or skip it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los artículos que coinciden no admiten esta cantidad. Añádela por separado u omite esta línea."
           }
         }
       }
@@ -5534,6 +5936,198 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar paquetes enteros para %@"
+          }
+        }
+      }
+    },
+    "Show protected needs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show protected needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar necesidades protegidas"
+          }
+        }
+      }
+    },
+    "Hidden protected needs still count toward the total and whole packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden protected needs still count toward the total and whole packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las necesidades protegidas ocultas siguen contando para el total y los paquetes completos."
+          }
+        }
+      }
+    },
+    "Bought by someone else": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bought by someone else"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra persona lo compró"
+          }
+        }
+      }
+    },
+    "Item bought on this list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item bought on this list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo comprado de esta lista"
+          }
+        }
+      }
+    },
+    "Choose a list item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a list item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un artículo de la lista"
+          }
+        }
+      }
+    },
+    "Mark this list item handled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark this list item handled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar este artículo como resuelto"
+          }
+        }
+      }
+    },
+    "All remaining items are marked handled. Applying this review removes them from the checkout copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All remaining items are marked handled. Applying this review removes them from the checkout copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los artículos restantes están marcados como resueltos. Aplicar esta revisión los quita de la copia para la compra."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cargos y los datos anteriores de la tienda corresponden a otro contexto del pedido. Se desconocen los cargos y el resumen propuestos."
+          }
+        }
+      }
+    },
+    "Earlier retailer evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier retailer evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos anteriores de la tienda"
+          }
+        }
+      }
+    },
+    "Enter evidence for these pickup details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter evidence for these pickup details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresar datos para estas condiciones del pedido"
+          }
+        }
+      }
+    },
+    "This pickup changed. Close these edits and reopen the current pickup details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup changed. Close these edits and reopen the current pickup details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este pedido cambió. Cierra esta edición y vuelve a abrir los detalles actuales del pedido."
           }
         }
       }

@@ -8,15 +8,32 @@ struct PickupSettlementView: View {
     @State private var evidence = ""
     @State private var creditID = ""
     @State private var charge = ""
+    @State private var holdKey = ""
+    private enum Field { case amount, evidence, creditID }
+    @FocusState private var field: Field?
     @State private var date = Date()
     @State private var entryID = UUID()
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
+    private var pendingCredits: [SettlementEntry] {
+        let entries = model.journey?.settlement.entries ?? []
+        let settled = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))
+        return entries.filter { entry in
+            entry.kind == .pendingCredit && entry.occurredAt <= model.stockReviewDate && entry.chargeEvidenceKey == charge &&
+                entry.creditID.map { !settled.contains($0) } == true
+        }
+    }
+    private var openHolds: [SettlementEntry] {
+        let entries = model.journey?.settlement.entries ?? []
+        let released = Set(entries.compactMap(\.holdEvidenceKey))
+        return entries.filter { $0.kind == .paymentHold && $0.occurredAt <= model.stockReviewDate && !released.contains($0.evidenceKey) }
+    }
+    private var selectedHold: SettlementEntry? { openHolds.first { $0.evidenceKey == holdKey } }
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
-            if let summary = try? model.journey?.settlement.summary() {
+            if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
                     LabeledContent(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
                     LabeledContent(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
@@ -45,31 +62,63 @@ struct PickupSettlementView: View {
                     Text(pTr("Posted credit")).tag(SettlementKind.postedCredit)
                     Text(pTr("Credit already included in net charge")).tag(SettlementKind.includedCredit)
                 }
-                PickupEvidenceField(title: "Amount", amount: $amount)
-                TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
-                if isCredit {
-                    TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
-                    Picker(pTr("Original posted charge"), selection: $charge) {
-                        Text(pTr("Choose a charge")).tag("")
-                        ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
-                    }
-                }
                 if kind == .holdRelease {
-                    Picker(pTr("Original payment hold"), selection: $charge) {
+                    Picker(pTr("Original payment hold"), selection: $holdKey) {
                         Text(pTr("Choose a hold")).tag("")
-                        ForEach(model.journey?.settlement.entries.filter { $0.kind == .paymentHold } ?? []) { entry in
+                        ForEach(openHolds) { entry in
                             Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey)
                         }
                     }
+                    if let selectedHold { LabeledContent(pTr("Amount"), value: pMoney(selectedHold.amount)) }
+                } else {
+                    PickupEvidenceField(title: "Amount", amount: $amount).focused($field, equals: .amount)
                 }
-                DatePicker(pTr("Evidence date"), selection: $date)
+                TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
+                if isCredit {
+                    Picker(pTr("Original posted charge"), selection: $charge) {
+                        Text(pTr("Choose a charge")).tag("")
+                        ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) && $0.occurredAt <= model.stockReviewDate } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
+                    }
+                    if [.postedCredit, .includedCredit].contains(kind), !pendingCredits.isEmpty {
+                        Picker(financialText("Credit being settled"), selection: Binding(
+                            get: { pendingCredits.contains { $0.creditID == creditID } ? creditID : "" },
+                            set: { creditID = $0 }
+                        )) {
+                            Text(financialText("A separate credit")).tag("")
+                            ForEach(pendingCredits) { pending in
+                                if let id = pending.creditID {
+                                    Text("\(id) · \(pending.evidenceKey) · \(pMoney(pending.amount))").tag(id)
+                                }
+                            }
+                        }
+                    }
+                    TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .creditID)
+                }
+                DatePicker(pTr("Evidence date"), selection: $date, in: ...model.stockReviewDate)
                 Button(pTr("Save financial evidence")) { save() }
+                    .disabled(model.hasPendingSave || (kind == .holdRelease && selectedHold == nil))
             }
             Section(pTr("Saved financial records")) {
                 ForEach(model.journey?.settlement.entries ?? []) { entry in
                     VStack(alignment: .leading) {
                         Text("\(pTr(entry.kind.rawValue)) · \(pMoney(entry.amount))")
                         Text(entry.evidenceKey).font(.caption)
+                        LabeledContent(pTr("Evidence date")) {
+                            Text(entry.occurredAt, format: .dateTime.month().day().year().hour().minute())
+                        }
+                        if entry.occurredAt > model.stockReviewDate {
+                            Text(pTr("This entry is dated later and is excluded from these totals."))
+                        }
+                        if let id = entry.creditID {
+                            LabeledContent(pTr("Credit ID"), value: id)
+                        }
+                        if let original = entry.chargeEvidenceKey {
+                            LabeledContent(pTr("Original posted charge"), value: original)
+                        } else if let hold = entry.holdEvidenceKey {
+                            LabeledContent(pTr("Original payment hold"), value: hold)
+                        }
                     }
                 }
             }
@@ -88,15 +137,35 @@ struct PickupSettlementView: View {
             }
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
+        .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
+        .onChange(of: kind) { _, _ in
+            holdKey = ""
+            charge = ""
+            creditID = ""
+        }
+        .onChange(of: charge) { previous, _ in
+            if !previous.isEmpty { creditID = "" }
+        }
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
             .disabled(model.saving)
     }
     private func save() {
         do {
-            guard let money = try ComparisonModel.money(amount), !evidence.isEmpty,
+            let recordedAmount = kind == .holdRelease ? selectedHold?.amount : try ComparisonModel.money(amount)
+            guard let money = recordedAmount, !evidence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !isCredit || (!creditID.isEmpty && !charge.isEmpty) else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let entry = SettlementEntry(id: entryID, evidenceKey: evidence, kind: kind, amount: money, occurredAt: date, creditID: isCredit ? creditID : nil, chargeEvidenceKey: isCredit ? charge : nil, holdEvidenceKey: kind == .holdRelease ? charge : nil)
-            Task { if await model.settle(entry) { entryID = UUID(); amount = ""; evidence = "" } }
+            let entry = SettlementEntry(id: entryID, evidenceKey: evidence, kind: kind, amount: money, occurredAt: date, creditID: isCredit ? creditID : nil, chargeEvidenceKey: isCredit ? charge : nil, holdEvidenceKey: kind == .holdRelease ? selectedHold?.evidenceKey : nil)
+            Task {
+                if await model.settle(entry) {
+                    entryID = UUID()
+                    amount = ""
+                    evidence = ""
+                    holdKey = ""
+                    charge = ""
+                    creditID = ""
+                    field = nil
+                }
+            }
         } catch { model.error = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.") }
     }
 }
@@ -154,11 +223,12 @@ private struct PickupNextShopSelection: View {
     @State private var choices: [UUID: NextShopDisposition] = [:]
 
     var body: some View {
-        Form {
+        let remaining = try? source.nextShopMealNeeds(closing: choices, at: model.stockReviewDate)
+        return Form {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
             ForEach(source.deferred.filter { $0.status == "review" }) { need in
-                Section(need.line.name) {
+                Section(header: Text(need.line.name).foregroundStyle(Theme.secondary)) {
                     Text(pQuantity(need.line.quantity))
                     Picker(pTr("For this trip"), selection: Binding(get: { choices[need.id] ?? .keep }, set: { choices[need.id] = $0 })) {
                         Text(pTr("Keep deferred")).tag(NextShopDisposition.keep)
@@ -174,24 +244,31 @@ private struct PickupNextShopSelection: View {
                 }
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: source.id) }
-            Section(pTr("Open meal needs")) {
-                ForEach(source.urgent.filter { !$0.resolved }) { need in
-                    Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
-                }
-                if model.journey?.id == source.id {
-                    ForEach(model.allocation?.demands.filter { $0.shortfall != .zero } ?? []) { coverage in
-                        Text(source.needs.first { $0.id == coverage.id }?.name ?? pTr("Open meal need"))
+            Section(header: Text(pTr("Open meal needs")).foregroundStyle(Theme.secondary)) {
+                if let remaining {
+                    ForEach(remaining.urgent) { need in
+                        Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
+                        if remaining.unverified.contains(need.id) { Text(pTr("Short or unverified amount. Review.")) }
+                        if let due = need.due { LabeledContent(pTr("Needed by"), value: due.formatted()) }
                     }
+                    ForEach(remaining.meals) { need in
+                        Text("\(need.name) · \(pQuantity(need.amount))")
+                        if remaining.unverified.contains(need.id) { Text(pTr("Short or unverified amount. Review.")) }
+                        if let due = source.savedMealDeadline(for: need.id) { LabeledContent(pTr("Needed by"), value: due.formatted()) }
+                    }
+                } else {
+                    Text(pTr("Could not prepare this change. Your saved pickup has not changed."))
                 }
                 Text(pTr("Prior receipts and money remain with the previous pickup for review."))
             }
             Button(pTr("Create fresh next-shop draft")) {
                 Task {
+                    guard let remaining else { return }
                     let accepted = Set(choices.filter { $0.value == .accept }.keys)
                     let closing = choices.filter { $0.value == .handled || $0.value == .dismissed }
-                    _ = await model.startNextShop(accept: accepted, closing: closing, sourceID: source.id, sourceRevision: source.revision)
+                    _ = await model.startNextShop(accept: accepted, closing: closing, sourceID: source.id, sourceRevision: source.revision, reviewedMeals: remaining)
                 }
-            }.buttonStyle(.borderedProminent).disabled(model.saving || model.hasPendingSave)
+            }.buttonStyle(.borderedProminent).disabled(remaining == nil || model.saving || model.hasPendingSave)
         }
         .navigationTitle(pTr("Next shop"))
         .onChange(of: model.selectedID) { _, newID in

@@ -1,0 +1,48 @@
+{
+  "candidate": "action-source-catalog-r3",
+  "patchSHA256": "c6a3fe09878a50f3735ba0b54924817e34feb41879565f7c8ad2eee4717bda66",
+  "sourceManifestSHA256": "eaf1c034463f777edd4c5c9e20144b6eff8ce28073d0f1c4ab3d0cf400624d36",
+  "offlineTests": 116,
+  "focusedCatalogTests": 24,
+  "postgresEvidence": {
+    "r2": {
+      "receipt": ".build/SharedDemandGraphNov09/action-source-catalog-pg-r2/root-verification.json",
+      "sha256": "74f03ae71d58ed2ac02349e4c5988d34c11b0266cda70fca57a39c02dfc82687",
+      "result": {
+        "candidate": "action-source-catalog-r2",
+        "sourceManifestSHA256": "1b239bce658f3e0ca6621e7ccd9b48fd727de8286f1e5229529088b519909c90",
+        "compiledManifestSHA256": "040a4a0f38ab71129021b13f8cecca5ebd06a7ef03b118bba2ad96bcfbe661f2",
+        "counts": {
+          "tests": 91,
+          "pass": 91,
+          "fail": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "exactSourceAndCompiledOutputsUnchanged": true,
+        "postgresStopped": true,
+        "testLogSHA256": "dc5bd43d2a2411853b1f9374cc5e9e294f3849d869991d67d42ad8ebcc5171f9",
+        "scope": "Existing shared-demand and shared-meal change/idea HTTP+PostgreSQL routes, five new catalog scenarios; no live deployment"
+      }
+    },
+    "r3": {
+      "receipt": ".build/SharedDemandGraphNov09/action-source-catalog-pg-r3/root-verification.json",
+      "sha256": "759b163fb3eeb4e2547c4d854edac3b25f4934f733e166937717a60293da7f04",
+      "result": {
+        "candidate": "action-source-catalog-r3",
+        "sourceManifestSHA256": "eaf1c034463f777edd4c5c9e20144b6eff8ce28073d0f1c4ab3d0cf400624d36",
+        "compiledManifestSHA256": "46e4c2fd49425da5548f03b1c19b66715b58e794fe637db1b64f41abe9773fc0",
+        "selectedTests": 1,
+        "passed": 1,
+        "skipped": 0,
+        "exactSourceAndCompiledOutputsUnchanged": true,
+        "postgresStopped": true,
+        "testLogSHA256": "da6f36482ee28c5303dd58af723d535400ccd410864ae4a54238c6c8c0ca35ff",
+        "scope": "Explicit protected unknown-to-known quantity catalog, preview rejection without acknowledgment, Apply and exact replay; earlier91r2cases remain separate"
+      }
+    }
+  },
+  "liveDeployment": false,
+  "migrationChange": false,
+  "nativeAcceptance": false
+}

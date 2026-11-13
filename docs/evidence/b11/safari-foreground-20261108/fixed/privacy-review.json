@@ -1,0 +1,9 @@
+{
+  "status": "bounded-synthetic-evidence-reviewed",
+  "receipts": "fixed schema4 flags/timing/storage counters; no command bodies, cookie values, bearer secrets or real household payload",
+  "productCommandAttemptsAndEffects": 0,
+  "retainedLogs": "local build/test names and controlled fixture failures; first Chrome executable-missing error retained separately",
+  "standaloneScreenshots": 0,
+  "publicBaselineFilesUnchanged": 22,
+  "sourceDeployment": "local only, not deployed"
+}

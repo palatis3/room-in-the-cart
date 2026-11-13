@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "9C4209A7-445E-47A2-AA23-AC650D48082C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_FE9545BB-2375-47FA-8C86-7CC448A63234.txt",
+        "timestamp" : 1794191194.181
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "19E44D0A-83C4-4FF2-B79E-024E5D6CFA45.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_AC5E9D05-569A-45A2-9F5C-3321560EB9AC.txt",
+        "timestamp" : 1794191144.692
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2A4A2883-E182-4B44-8F4F-9D296F398C4D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_C2EBEB94-7FD2-460A-A05B-23A874B89873.txt",
+        "timestamp" : 1794191088.781
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "BB175881-395A-4A1F-8264-02594C15B5EF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_E1DF2C17-7F94-4229-B8D3-7C86F984882E.txt",
+        "timestamp" : 1794191081.018
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "FFB8E6F6-91B2-4A5E-A5A9-6B35865A0124.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_678B6C8E-AEFE-4773-9D17-0734110A33BF.txt",
+        "timestamp" : 1794191076.136
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "5DFAC8E5-38F9-4423-9517-5D0CB487CB5E.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-review-scroll-progress_0_CA4B6DB8-3C22-4577-9756-902F1B4522C4.txt",
+        "timestamp" : 1794191019.754
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  }
+]

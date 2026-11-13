@@ -1,0 +1,82 @@
+{
+  "originalScratch": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-09/causal-review",
+  "scope": "Compact causal evidence; full ZIP, diagnostics, attachment objects and source copies retained in private scratch. Original failure remains unresolved.",
+  "exactCopies": [
+    {
+      "path": "original-review.md",
+      "sha256": "c6b02d393ab7f66d0da6899439d3f678c9eb76116c41e9949ef07a80cab74432",
+      "bytes": 6328,
+      "originalRelativePath": "README.md"
+    },
+    {
+      "path": "artifact-receipt.json",
+      "sha256": "06e4fdc5e511aece22d09d9af52a327b3e10d0816e246ce4d1f06c32269ce844",
+      "bytes": 269
+    },
+    {
+      "path": "source-manifest.json",
+      "sha256": "d0eabd3c268ddfb53638a6ee1c0069a197c0a987f5a33efc79f727d8509ad97f",
+      "bytes": 995
+    },
+    {
+      "path": "source-diff.patch",
+      "sha256": "3f95445e79fc7547f87224dc0799e3951c3124bf90eb1fd6bad7bdabf1790532",
+      "bytes": 2542
+    },
+    {
+      "path": "unchanged-methods.json",
+      "sha256": "f3e0e21db32db4c1f7baa299e40d63a2bfb297e484e176be11a19b7501c1d519",
+      "bytes": 163
+    },
+    {
+      "path": "activities.json",
+      "sha256": "7ba75bb186cdb32b899ea43260eb3904d864309607079dad32d3d8528cae0e93",
+      "bytes": 56544
+    },
+    {
+      "path": "wait-timeline.json",
+      "sha256": "0df7893ee62a045b8bea843954900c608901f10fcccdc1a6c845e4a39316d316",
+      "bytes": 738
+    },
+    {
+      "path": "done-tap-boundaries.json",
+      "sha256": "f78164d529079d8d27cca7dacad596a70f04ed459f338bfcc6f06c2942917734",
+      "bytes": 2361
+    },
+    {
+      "path": "first-stall-keyboard-idle-excerpt.txt",
+      "sha256": "c82b95ae5ea5dab5c59a13c8ee044acddbcfe19e188ba9cc7b48b02d1e88455f",
+      "bytes": 2071
+    },
+    {
+      "path": "first-stall-runner-excerpt.txt",
+      "sha256": "b45d19a82f2c7f399a2be8f434cf2df7ae8c877ed7cd584b79fed99541e299fa",
+      "bytes": 3393
+    },
+    {
+      "path": "app-idle-events.txt",
+      "sha256": "336b0df70a1d930d5a45dd6038069c207ee342d67a3cdd53a0c68a93476cf415",
+      "bytes": 10290
+    },
+    {
+      "path": "timeout-stack-excerpt.txt",
+      "sha256": "b09371bc80cc1a1fe770d0f224d6dfc82a1406a9e1e2331c09e37bee1e32ca99",
+      "bytes": 25181
+    },
+    {
+      "path": "app-diagnostic-scan.json",
+      "sha256": "6d0fb8fbc158ae8100e9a4e2ee3b530deec2645fa1083312833200a598147517",
+      "bytes": 730
+    },
+    {
+      "path": "review-receipt.json",
+      "sha256": "c6957a517856ccf3fe18c8d37d3dd652dda069ed5a2a08074905a3385053b375",
+      "bytes": 2180
+    },
+    {
+      "path": "branch-done-app-window.txt",
+      "sha256": "d4d514030a1baf9595aa0d74d8decc9812098a2a6d7ec6b38d5cc12eb7f1e8b7",
+      "bytes": 7130
+    }
+  ]
+}

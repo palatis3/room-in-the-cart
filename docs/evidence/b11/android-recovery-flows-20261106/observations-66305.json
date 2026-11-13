@@ -1,0 +1,87 @@
+{
+  "synthetic": true,
+  "lane": "adult",
+  "mode": "online",
+  "primedRole": null,
+  "counts": {
+    "authStarts": 1,
+    "verifies": 1,
+    "redeems": 1,
+    "activations": 1,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "events": [
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/email/start",
+      "bodySHA256": "5e700082b0fc08d8c31c8307342e927479be3d688fdc043affdef6e594de15ac"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/auth/email/verify",
+      "bodySHA256": "ce1342efa3c150420e9e14cbec79d3ef66b8bd1a8f74ff921ea3b964bb1a89ba"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/invites/redeem",
+      "bodySHA256": "69510497959d81bb2b078df55b521fed4d56aea2afb7654f2ee9c49d3910582d"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/session",
+      "bodySHA256": "c10b32156a8f11dd5b46184a2bcfafef147514fc06868c6f95819b9b0d7a8117"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    }
+  ],
+  "requestCount": 0,
+  "proposalCount": 0,
+  "childCounts": {
+    "starts": 0,
+    "verifies": 0,
+    "claimPosts": 0,
+    "claims": 0,
+    "finishPosts": 0,
+    "finishes": 0,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  }
+}

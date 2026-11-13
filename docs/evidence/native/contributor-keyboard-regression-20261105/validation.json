@@ -1,0 +1,15 @@
+{
+  "sourceBase": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "sourceFile": "ios/UITests/ContributorRequestUITests.swift",
+  "installedSourceSHA256": "56525186175bd791fadd238c0bc733be09a3b3472489fe8d723210de0325531e",
+  "patchSHA256": "74d46eef4de14ea7d8edaca3d66fcbcbeb22eea56a3950526d530d06d471508a",
+  "evidenceDirectory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/contributor-native-ubu7nzt9/evidence",
+  "rootIndependentValidation": "Exact expected identities, counts and structured runtime-warning guard passed for fresh pair and no-card control. Spanish top and English receipt screenshots visually inspected.",
+  "localToolchain": "Xcode27.1 / iOS26.2 build23C52 / iPhone17",
+  "originalHostedFailure": {
+    "job": 126980954166,
+    "artifact": 13380750280,
+    "archiveSHA256": "4f0bfda02280b20f3e5b874c58e512a398410a416549b95483de186fb27f85a7"
+  },
+  "scope": "Test interaction changes only: typed field lookup, actual native Select All and exact replacement, identified bilingual keyboard card, existing interactive keyboard dismissal, measured fully visible switch. Product source unchanged; original hosted failure and local v1 failure preserved. Hosted Xcode26.3/iOS26.2 build23C54 validation pending."
+}

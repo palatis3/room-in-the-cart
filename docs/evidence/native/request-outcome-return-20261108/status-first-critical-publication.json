@@ -1,0 +1,33 @@
+{
+  "baseline": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "selected": 1,
+    "passed": 0,
+    "durationSeconds": 205.034,
+    "recordedRuntimeWarnings": 0,
+    "returnPostcondition": "failed; confirmed sheet remains open"
+  },
+  "fixPassClaimed": true,
+  "fixedSourceReview": "Fixed source manifest and causal method/helper identity retained under fixed-critical/source",
+  "nativeActionsByPublisher": false,
+  "productOrTestEditsByPublisher": false,
+  "fixPassScope": "16 packaged model cases and exactly two fixed critical UI cases only",
+  "fixedCritical": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 2,
+    "passed": 2,
+    "recordedRuntimeWarnings": 0,
+    "runtime": "iOS 26.2 build23C54 light/Large",
+    "screenshots": 2,
+    "visualReview": "pending root"
+  },
+  "remaining": [
+    "larger UI regression root-owned",
+    "minimum iOS17",
+    "Release",
+    "physical VoiceOver focus"
+  ],
+  "readOnlyCompletedResultExportsByPublisher": true
+}

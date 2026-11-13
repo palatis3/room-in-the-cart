@@ -1,0 +1,179 @@
+{
+  "observedAtUtc": "2026-11-08T04:48:32+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    },
+    "strictCheckerSHA256": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa"
+  },
+  "runId": 42440464721,
+  "job": {
+    "completedAt": "2026-11-08T04:45:49Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected tests and verify complete execution"
+    ],
+    "id": 128617122245,
+    "name": "ios-tests (ui-07, 8)",
+    "startedAt": "2026-11-08T04:14:00Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604236844,
+    "name": "iphone-results-ui-07-1",
+    "digest": "sha256:2237fa1ecb05f7b11cc17aa8eecb36a547f6d71cc58e2246e427e029a0072913",
+    "size_in_bytes": 24968770,
+    "workflow_run": {
+      "id": 42440464721,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 44717,
+    "rangeReceiptSHA256": "045b5e6d0ef0d833e79d4a56b300d58ff1b000f8990ea75ba83715acd4dbe7ec",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 228327,
+        "sha256": "160855048682bfee23d3e15b6ff6efa12d02a31b862c861a8b08f71c33f8275f",
+        "zipCRC": 3214788485,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 4925,
+        "sha256": "88bf11ec5ed6f44d3fe3f352a53f30d7fe921264a17f51f4fa9c400eaeb0dc13",
+        "zipCRC": 157567364,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/ui-07.txt",
+        "bytes": 830,
+        "sha256": "661bf13a564fb7a194b34cceef833c32c664ba2055a2bacc0863efacfd8ca125",
+        "zipCRC": 3769261524,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+        "zipCRC": 2083576931,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 1164,
+        "sha256": "73b8f0bee2f28fc0c18bba3b560856dee52f455e2f22c93e20375c177cb49a0c",
+        "zipCRC": 117238557,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false
+  },
+  "nativeResult": {
+    "result": "Failed",
+    "totalTestCount": 8,
+    "passedTests": 7,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "testFailures": [
+      {
+        "failureText": "Test exceeded execution time allowance of 12 minutes",
+        "targetName": "RoomInTheCartUITests",
+        "testIdentifier": 8,
+        "testIdentifierString": "RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+        "testName": "testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer()"
+      }
+    ]
+  },
+  "observedResultCounts": {
+    "Passed": 7,
+    "Failed": 1
+  },
+  "plannedSelectors": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+    "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+    "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+    "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock",
+    "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+  ],
+  "missingSelectors": [],
+  "extraSelectors": [],
+  "executedSelectors": [
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+      "result": "Passed",
+      "durationSeconds": 62.12376093864441
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+      "result": "Passed",
+      "durationSeconds": 289.3861379623413
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+      "result": "Passed",
+      "durationSeconds": 41.57034504413605
+    },
+    {
+      "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock",
+      "result": "Passed",
+      "durationSeconds": 120.96790599822998
+    },
+    {
+      "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "result": "Passed",
+      "durationSeconds": 192.834694981575
+    },
+    {
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+      "result": "Passed",
+      "durationSeconds": 153.08980309963226
+    },
+    {
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop",
+      "result": "Passed",
+      "durationSeconds": 18.136964917182922
+    },
+    {
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "result": "Failed",
+      "durationSeconds": 720
+    }
+  ],
+  "hostedWarningReceipt": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 8,
+    "detailExportCount": 8,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "resultTreeWarningNames": [],
+  "console": {
+    "restartLines": [
+      4214
+    ],
+    "failureRows": [],
+    "strictReplayFailures": [
+      "XCTest restarted its runner at log line 4214.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer; found ['start', 'timeout'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  }
+}

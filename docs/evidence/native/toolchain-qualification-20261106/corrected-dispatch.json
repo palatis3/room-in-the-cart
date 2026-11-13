@@ -1,0 +1,15 @@
+{
+  "diagnosticCommit": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "baseAppCommit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "previousDiagnosticCommit": "c34a473f2b0d62678da3a6eebb1bcbd2900cbdc6",
+  "runID": 42261730525,
+  "attempt": 1,
+  "checkedAt": "2026-11-06T17:27:14.016231+00:00",
+  "rootGuardTestsPassed": 15,
+  "patchSHA256": "86995421dae409e2dd74a4df394e7c5a18bd449c6f6d2ddc5caf7990462e648b",
+  "nativeCasesPreviouslyExecuted": 0,
+  "priorRun": 42259468210,
+  "priorRunPreserved": true,
+  "dispatchCountForThisCommit": 1,
+  "releaseAcceptance": false
+}

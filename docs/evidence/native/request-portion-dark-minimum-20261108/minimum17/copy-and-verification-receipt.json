@@ -1,0 +1,114 @@
+{
+  "method": "Existing-file read/hash/copy and original-pixel analysis only; no xcresult or native commands",
+  "copiedFiles": [
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/inspection/strict.txt",
+      "destination": "run/strict.txt",
+      "bytes": 832,
+      "sha256": "62a5f8bf7ff439b2f34b9c792dbdbf41f9787b127e0a28faeb4695636e24c56f"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/inspection/verification.json",
+      "destination": "run/verification.json",
+      "bytes": 269,
+      "sha256": "f9bdb0dbc4dd29dac32598cc39637d43494998a2a38b47db279d83fb505f9f00"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/inspection/summary.json",
+      "destination": "run/summary.json",
+      "bytes": 1039,
+      "sha256": "587e81b05b96421d32c85cec0fc77989a065e351807240b1c4b1971776f1ff9a"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/inspection/tests.json",
+      "destination": "run/tests.json",
+      "bytes": 2513,
+      "sha256": "7d6a2eb4b2cc95f03b2271ccd0765eb721c7afee16985076fc392861b9006218"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/inspection/test-runtime-warnings.json",
+      "destination": "run/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/selectors.txt",
+      "destination": "run/selectors.txt",
+      "bytes": 234,
+      "sha256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/root-review.json",
+      "destination": "root-review.json",
+      "bytes": 848,
+      "sha256": "98a6797a6ff9972d59d5c4f02dcbb8f5acdf02c985c3efbef6fad8e185994235"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-0-0/223A6533-2065-4CA6-8240-3996404281D0.png",
+      "destination": "images/S24-standard-Sam-portions-label.png",
+      "bytes": 4840,
+      "sha256": "31e0b201b944fe78e03b540a5686587032bb2c049f778198c01e5315777ec423"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-0-2/8017E738-D1CB-4328-94EE-C3507D6BEC00.png",
+      "destination": "images/S24-standard-Sam-portions-value.png",
+      "bytes": 406,
+      "sha256": "196257c9ef3b9b1b50cc4a8e4cc5b3f97a6ba7ebb4ccc2162162ce4b3fbd81ac"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-0-4/596F15DE-AFBA-4369-82B0-0F793AE8680E.png",
+      "destination": "images/S24-standard-Mia-portions-label.png",
+      "bytes": 4840,
+      "sha256": "31e0b201b944fe78e03b540a5686587032bb2c049f778198c01e5315777ec423"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-0-6/E941B47E-D18C-4533-9D89-9D2B4E48638B.png",
+      "destination": "images/S24-standard-Mia-portions-value.png",
+      "bytes": 406,
+      "sha256": "196257c9ef3b9b1b50cc4a8e4cc5b3f97a6ba7ebb4ccc2162162ce4b3fbd81ac"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-1-0/5096789B-84A9-4C41-BF4A-A1272970A2A2.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png",
+      "bytes": 21079,
+      "sha256": "9d091ca055eba4162013510dcca1ae808339dff79d9d802316403c5c3451b2a1"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-1-2/91A48D73-F91A-41F1-AB35-74A3E22EF81A.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png",
+      "bytes": 1157,
+      "sha256": "6bce7b176bda15a139a80fdbb64814e2c0539b4e5dfbe30450deb08ab5695fac"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-1-4/CE597981-1DDC-4F05-9A19-C3BB851020E4.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png",
+      "bytes": 21079,
+      "sha256": "9d091ca055eba4162013510dcca1ae808339dff79d9d802316403c5c3451b2a1"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/captures/target-1-6/D1879295-F40E-4C9F-A6CF-8D65A6C8ECB4.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png",
+      "bytes": 1157,
+      "sha256": "6bce7b176bda15a139a80fdbb64814e2c0539b4e5dfbe30450deb08ab5695fac"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/standard-context/png/5EC6ADD6-B30C-490E-AEDE-D99F4969CD22.png",
+      "destination": "images/standard-checkout-and-two-lunches.png",
+      "bytes": 146328,
+      "sha256": "e5e692de4fa132aaf659d0d5beaf2da843473bd25fed8b1d1422c5253f3b593b"
+    },
+    {
+      "source": "docs/evidence/native/request-portion-typography-20261108/measurement/measure_field.py",
+      "destination": "measurement/measure_field.py",
+      "bytes": 9050,
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0"
+    }
+  ],
+  "verifiedOriginalTargets": 16,
+  "verifiedContextPNG": true,
+  "rawAXAndActivitiesCopied": false,
+  "priorProofsUnchanged": {
+    "docs/evidence/native/request-portion-typography-20261108": "d3a56143e2065efcc545e71a0b479a2d77954277bca9f6bd40b1a65eb76e118b",
+    "docs/evidence/native/request-portion-dark-minimum-20261108/dark": "5eadc0fc08bd088cda1fef0569941bbf845d2a508aa9af8658fabee26bb49894"
+  }
+}

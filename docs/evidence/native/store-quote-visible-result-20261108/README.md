@@ -1,0 +1,11 @@
+# Store-quote offscreen result lookup — local qualification
+
+The complete original known-trip/unknown-cost/private-proposal/shopper-adoption journey passes natively and strictly, 1/1, in 399.775 seconds on iPhone 17 Pro simulator/iOS26.2/23C54, English/light/Large. Zero runtime-warning occurrences and zero runner restarts were recorded. The source manifest is `2acb55ff836b13edc94921827d4872d924a97d0641831bad9eff9f77f6fb59ae`.
+
+The test helper now locates the short break-even result and its viewport in one app snapshot, performs actual scrolling until the result is fully visible, then checks the unchanged $3.00 text and real hittability. The original 30-scroll cap, test timeout, expected calculations, exact save/proposal/adoption counters, private-scope checks and frozen-order restrictions remain. No product calculations, production views, permissions or service behavior changed.
+
+Root reviewed all six retained screenshots. The formerly failing result is fully visible and says “Second trip cash break-even: $3.00”; unknown total cash stays unresolved. Saving private proof leaves the basket unchanged. The shopper explicitly acknowledges adoption; the final screen records two saves, one proposal and one adoption, preserves old proof and rejects further frozen-order adoption.
+
+The run reused the canonical fixture DerivedData path after verifying and preserving its prior products. It began at 21:08:45UTC; the selected tests started at 21:09:01.883UTC (16.85 seconds later). Native completion was 21:15:43UTC; strict inspection/export finished 21:16:09UTC. Source, original result and preserved previous products verified unchanged. No additional selector or launch was introduced. The 16 fixture-planner checks and UI-automation contract check pass.
+
+This qualifies the helper on local Xcode 27.1. The original hosted failure used Xcode 26.3; a focused hosted run is required before claiming that CI failure resolved. The prior failed result remains in `../ci-fe3e143-20261108/known-trip-failure`. The full cohort's other failures and wider release acceptance remain open. Included runner scripts depend on retained private helper/build paths and document the execution rather than providing portable CI commands.

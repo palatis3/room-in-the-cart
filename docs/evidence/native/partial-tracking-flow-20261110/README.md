@@ -1,0 +1,9 @@
+# Partial tracking meal and Undo integration
+
+The integrated app, model and UI targets compile. All **88 focused simulator model tests** pass strict result validation, with zero runtime warnings. Root independently verified all667 current and archived inputs, every phase log hash and unchanged-source receipts. Build37.533seconds; test execution13.684seconds. [Verification](verification.json).
+
+The native editor now loads the authoritative enabled-meal catalog, keeps tracked, transferred, plain-unbound and new sources distinct, requires explicit change/quantification acknowledgments, and routes partial meal edits through complete tracking review. Before/after review includes removed food commitments and transferred facts. Whole-meal history uses its own inverse route. Restored historical basket items have explicit pack evidence and fresh unknown acceptance without becoming ordinary available food.
+
+Eight cases added after the separately passing80-test r7 cover historical/retired Undo packs and fresh ingredient conversion evidence. Changed tracked or transferred sources may supply an explicitly reviewed bridge while preserving authoritative amount/unit/literal, identities and restrictions. Retained conversion evidence cannot be replaced. Existing allocations are not silently removed. Backend conservation remains authoritative; these native tests do not prove server acceptance.
+
+The matching client packet was separately qualified by224 package passes and3expected real-wire skips before installation. Its original failures and isolated execution remain preserved in the [client preparation record](../partial-tracking-client-20261110/README.md). No visual UI journeys or new real HTTPS/PostgreSQL integration executed in this run. Those, shared Records, final combined CI and release gates remain open.

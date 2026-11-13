@@ -1,0 +1,159 @@
+{
+  "baseline": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "diagnosticCommit": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+  "patchSHA256": "9d761dff5a769a95c7bcc7237e92633aa312beeae5da889b6e435e72be294aef",
+  "scope": "One complete original Spanish comparison save-and-reopen selector; local diagnostic wiring only.",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "838D1EDF-7C0B-4A3C-842E-3E7D461F2E0B",
+    "deviceName": "RITC Spanish Done fc9ee9b9-ea24-481a-af14-2fbe56bc14ab",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "durationSeconds": 79.86582899093628,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "sourceFilesVerified": 528,
+  "productFilesVerified": 179,
+  "runtimeBuildChecks": 3,
+  "runtimeBuild": "23C54",
+  "cleanFinishedBoot": true,
+  "capture": {
+    "complete": true,
+    "errors": [],
+    "records": {
+      "exportExit": 0,
+      "videoDecoded": false,
+      "stills": [
+        {
+          "width": 1206,
+          "height": 2622,
+          "decodedBytes": 12651150
+        },
+        {
+          "width": 1206,
+          "height": 2622,
+          "decodedBytes": 12651150
+        }
+      ],
+      "events": {
+        "processIDs": [
+          24709,
+          24923
+        ],
+        "targetProcessID": 24709,
+        "events": 122,
+        "markers": [
+          [
+            "before",
+            24696,
+            773568.3488327917
+          ],
+          [
+            "after",
+            24696,
+            773569.0036559583
+          ]
+        ],
+        "absenceInferenceAllowed": false,
+        "causalConclusion": null
+      }
+    },
+    "absenceInferenceAllowed": false,
+    "causalConclusion": null
+  },
+  "video": {
+    "decodedFrames": 2665,
+    "dimensions": [
+      "1206x2622"
+    ],
+    "durationSeconds": 84.27,
+    "firstPTS": 0,
+    "frames": [
+      {
+        "actualSeconds": 34.57666666666667,
+        "file": "frame-00036.000.png",
+        "requestedSeconds": 36
+      },
+      {
+        "actualSeconds": 36.495,
+        "file": "frame-00036.500.png",
+        "requestedSeconds": 36.5
+      },
+      {
+        "actualSeconds": 36.99666666666667,
+        "file": "frame-00037.000.png",
+        "requestedSeconds": 37
+      },
+      {
+        "actualSeconds": 37.5,
+        "file": "frame-00037.500.png",
+        "requestedSeconds": 37.5
+      },
+      {
+        "actualSeconds": 37.8,
+        "file": "frame-00038.000.png",
+        "requestedSeconds": 38
+      },
+      {
+        "actualSeconds": 38.79333333333334,
+        "file": "frame-00039.000.png",
+        "requestedSeconds": 39
+      },
+      {
+        "actualSeconds": 39.48166666666667,
+        "file": "frame-00039.500.png",
+        "requestedSeconds": 39.5
+      },
+      {
+        "actualSeconds": 39.59166666666667,
+        "file": "frame-00040.000.png",
+        "requestedSeconds": 40
+      },
+      {
+        "actualSeconds": 39.59166666666667,
+        "file": "frame-00040.500.png",
+        "requestedSeconds": 40.5
+      }
+    ],
+    "fullyDecoded": true,
+    "lastPTS": 84.01166666666667,
+    "source": "/Users/palatis/.codex/worktrees/spanish-done-diagnostic/Room in the Cart/.build/spanish-done/screen.mp4",
+    "timingLimit": "Video time is not automatically synchronized to app or runner event uptime."
+  },
+  "rootVisualInspection": "Viewed both external stills and extracted video frames36.5,37,37.5,38,39.5,40,40.5seconds. Recorded bQuantity entry and visible Listo/decimal keyboard precede keyboard removal; later stills show entered values and comparison result. Exact video-to-event time synchronization is not claimed.",
+  "beforeAfterDoneUptimeDeltaSeconds": 0.6548231666674837,
+  "ownedSimulatorDeleted": true,
+  "sourceAndProductsUnchanged": true,
+  "sha256": {
+    "Tests.log": "7f41856bbf4331d101d3b453e5fff8a4e42dc332a12173b9c7ea2ea4fa3290d4",
+    "strict.log": "5f000b1add60b5677ab191b4b3edd2d7db679e31029a23f1aa034f3e1d399648",
+    "test-summary.json": "73356b0d3a6b3aeabe51751fe45ec83ddec5176af3c14144bb36c02cd3cfcefb",
+    "test-details.json": "f87393f7bda40eece1dd6f884dc22efc715006a3d79eb74cde5aa1a41ce7911e",
+    "test-status.json": "0b825a8b487657c8fb8b8438a6046f0b2b7bd43ecf338b49949ac5b8efc44543",
+    "capture-status.json": "6bf26559001118aac7fe7e23b896456c02fe1ab60da747ff9dd5e80d6f08710f",
+    "capture-start.json": "d932b247a643f3fd033183a3da6de9fd25f71afe2e405e5ead05da24a25f9da1",
+    "capture-stop.json": "90402b59d919c26066fadcc6e93fc9efb6cb9726ed566fb39774c38ca4e9fe10",
+    "stills-status.json": "f030876a9236615fe7ba7adb4889fbbbbcc751d1f434e57c748402fa373e555b",
+    "events-live.log": "de0d9b52fab33b74c4bd630cf540c09e3f24e6861480b40d93a97b07da37a092",
+    "events-export.log": "2e67b04cab39bf581c0b837d0182e3ab9983d11ae6565451f0cad612e83d0838",
+    "source-sha256.json": "a2727b3f94ae6d9e2a4d6f65acaf1bd7c79ef0cf57b5206744ae9c09106fa326",
+    "product-sha256.json": "1812553f98215412ce38feca26295591744436fc3e605c8efa045fb5ec306096",
+    "boot.log": "5a524ef2e07f4d23ef5bbfec9fb5a26dc391091b407f86dcc3d88dafa5f5979a",
+    "screen.mp4": "fb255493581811e87f727c66c1388547b7b64d7eafc63fc24d3c7389b5cd33da",
+    "after-bQuantity-Done-5s.png": "718e9c33600c141a2663a43e78832d40b3e36ccf869e12787262516de2bb8f84",
+    "after-bQuantity-Done-15s.png": "754be07f502618a6c1fde9682c30dec888bc30f6eff9a6b88d98ef0c136df0e5"
+  },
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3; this pass is wiring validation and nonreproduction, not a production fix or replacement acceptance.",
+    "Original720/900limits, normal idling, test actions and business/restart assertions are preserved.",
+    "Instrumentation and recording can affect timing; no causal conclusion from absent events.",
+    "No Records selector or raw media accessed."
+  ]
+}

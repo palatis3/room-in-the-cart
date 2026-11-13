@@ -1,0 +1,710 @@
+{
+  "observedAtUtc": "2026-11-08T04:46:53Z",
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "attempt": 1,
+  "event": "pull_request",
+  "cohortTerminal": false,
+  "latestTransitionReceipt": {
+    "path": "monitor-20261108T044653Z.json",
+    "sha256": "2aff948f66e622b9fc708d4d6679c3203919fb37c1281d51c1d3f5a1f7507775"
+  },
+  "ordinaryUI": {
+    "plan": {
+      "path": "ordinary-discovery/verification.json",
+      "sha256": "012f498dc0f0a5f6bcdd02ca2296b08978bf39023155a36464952cf1b65b3db8"
+    },
+    "aggregate": {
+      "selected": 68,
+      "executedWithResultReceipt": 61,
+      "nativePassed": 59,
+      "nativeFailed": 2,
+      "nativeSkipped": 0,
+      "casesInStrictlyPassingJobs": 47,
+      "runtimeWarningsInAvailableReceipts": 0,
+      "runnerRestartsInAvailableConsoleReceipts": 1,
+      "terminalRowsPendingExactResultReceipt": [],
+      "unlistedRows": []
+    },
+    "rows": [
+      {
+        "shard": "ui-01",
+        "selected": 5,
+        "jobId": 128610476890,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-01-summary.txt",
+          "sha256": "dfc6ff7622f5317e04279a9e779fc4928bd7ef86248fbdc8c411b5daafaa2fb0"
+        },
+        "evidenceScope": "Original hosted strict gate log."
+      },
+      {
+        "shard": "ui-02",
+        "selected": 7,
+        "jobId": 128610477032,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-02-summary.txt",
+          "sha256": "caf5e6b4e293a6c4a27f25d25b6cfc718d95885bf85e29d236c443b74fe2d2d6"
+        },
+        "evidenceScope": "Original hosted strict gate log."
+      },
+      {
+        "shard": "ui-03",
+        "selected": 6,
+        "jobId": 128610476718,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-03-summary.txt",
+          "sha256": "43aee2a867bb8d99a9e9e565f73c920851db8ac16f30264931da3285005ccac6"
+        },
+        "evidenceScope": "Original hosted strict gate log."
+      },
+      {
+        "shard": "ui-04",
+        "selected": 6,
+        "jobId": 128610477030,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-04/verification.json",
+          "sha256": "b5486c50221afc0eba2214356431f05271dbd840be2875c893bc205bb6c2d4dd"
+        }
+      },
+      {
+        "shard": "ui-05",
+        "selected": 6,
+        "jobId": 128613594078,
+        "status": "completed",
+        "conclusion": "failure",
+        "executed": 6,
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-05/verification.json",
+          "sha256": "da5cce6a61c16e895626e8afd29bcb444d755097808640f9b3754f42d2173e5d"
+        }
+      },
+      {
+        "shard": "ui-06",
+        "selected": 8,
+        "jobId": 128616614616,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-06/verification.json",
+          "sha256": "f8778a9eac851b252a0d39d36437aa692e10e35922d8595a8b550b3ed3644885"
+        }
+      },
+      {
+        "shard": "ui-07",
+        "selected": 8,
+        "jobId": 128617122245,
+        "status": "completed",
+        "conclusion": "failure",
+        "executed": 8,
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1,
+        "receipt": {
+          "path": "ui-07/verification.json",
+          "sha256": "1dbb40bc126fa6522338fc6f8532c8d1a6fa351a5bd37f4263653b497c0c527a"
+        }
+      },
+      {
+        "shard": "ui-08",
+        "selected": 7,
+        "jobId": 128618649542,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-08/verification.json",
+          "sha256": "b2c1b1398814e6afd2b1b333443dee084af92a4d8738dc6fdbf63ce7de930ae3"
+        }
+      },
+      {
+        "shard": "ui-09",
+        "selected": 8,
+        "jobId": 128621833502,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "ui-09/verification.json",
+          "sha256": "fe8f08d9993901b0348366d7c86671e67ccb57051a172b09c9254d767be95c6f"
+        }
+      },
+      {
+        "shard": "ui-10",
+        "selected": 7,
+        "jobId": 128624830058,
+        "status": "in_progress",
+        "conclusion": null
+      }
+    ]
+  },
+  "fixtureUI": {
+    "plan": {
+      "path": "fixture-source-inventory.json",
+      "sha256": "be1df0291d746ddcd7818a74edc2f1cad78c839378da1198dad08e7eb6bd58d5"
+    },
+    "aggregate": {
+      "selected": 69,
+      "executedWithResultReceipt": 52,
+      "nativePassed": 51,
+      "nativeFailed": 1,
+      "nativeSkipped": 0,
+      "casesInStrictlyPassingJobs": 50,
+      "runtimeWarningsInAvailableReceipts": 0,
+      "runnerRestartsInAvailableConsoleReceipts": 0,
+      "terminalRowsPendingExactResultReceipt": [],
+      "unlistedRows": [
+        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "DinnerDecisionSheetUITests"
+      ]
+    },
+    "rows": [
+      {
+        "shard": "contributor-balanced-02",
+        "selected": 11,
+        "jobId": 128612236397,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "contributor-balanced-02/verification.json",
+          "sha256": "e9c150fe3712d6eb9e3cb0efe66a3076ce8a74a839dcfd8b3e8cc9f05903e07d"
+        }
+      },
+      {
+        "shard": "contributor-balanced-05",
+        "selected": 14,
+        "jobId": 128612236684,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "contributor-balanced-05/verification.json",
+          "sha256": "bd49676b3066545e1456d11dc5c6d1bd791933dc538f1ce0e4a8e9006f6080ff"
+        }
+      },
+      {
+        "shard": "contributor-balanced-01",
+        "selected": 3,
+        "jobId": 128612236658,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "contributor-balanced-01/verification.json",
+          "sha256": "b15ee85ab655b54c192ac545029a6db23d7e2b5bd67618763e6f0a9919b6ef9c"
+        }
+      },
+      {
+        "shard": "contributor-balanced-04",
+        "selected": 5,
+        "jobId": 128612236669,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "contributor-balanced-04/verification.json",
+          "sha256": "a1ba4f428a7359f77f4b90260dd3ecef3500acef411825682caa30a9ffc04bcd"
+        }
+      },
+      {
+        "shard": "contributor-balanced-03",
+        "selected": 10,
+        "jobId": 128612236597,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "contributor-balanced-03/verification.json",
+          "sha256": "f2e3abfbc1986250213316038f121732a87873abb531fb812717496d8a225c22"
+        }
+      },
+      {
+        "shard": "RecordsMediaUITests",
+        "selected": 1,
+        "jobId": 128620991581,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": null,
+        "receipt": {
+          "path": "RecordsMediaUITests/verification.json",
+          "sha256": "d284bb830c65899f524fa823042e74c5fb3df180fbbdcc38c283d6d63c3f42ec"
+        },
+        "evidenceScope": "Restricted hosted redacted report and exact selector only."
+      },
+      {
+        "shard": "SharedDeliveryUITests-stock-and-purchase",
+        "selected": 6,
+        "jobId": 128621149453,
+        "status": "completed",
+        "conclusion": "success",
+        "executed": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "SharedDeliveryUITests-stock-and-purchase/verification.json",
+          "sha256": "1bc6ac18c2f88f4c04028b84c51a11da0d6a00b6b7daebceb8475b0e235b9c77"
+        }
+      },
+      {
+        "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+        "selected": 5,
+        "jobId": 128624824824,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "shard": "SharedFallbackUITests",
+        "selected": 2,
+        "jobId": 128624899598,
+        "status": "completed",
+        "conclusion": "failure",
+        "executed": 2,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "receipt": {
+          "path": "SharedFallbackUITests/verification.json",
+          "sha256": "46f2bd0e1415b5f19e1d6182e2e0d6195598e3a80bc9c6b88146952790aa9efc"
+        }
+      },
+      {
+        "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "selected": 1,
+        "jobId": 128626094384,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+        "selected": 1,
+        "jobId": 128626872278,
+        "status": "pending",
+        "conclusion": null
+      },
+      {
+        "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "selected": 1,
+        "jobId": 128627124142,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "selected": 1,
+        "jobId": 128631169252,
+        "status": "pending",
+        "conclusion": null
+      },
+      {
+        "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "selected": 1,
+        "status": "not_listed"
+      },
+      {
+        "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "selected": 1,
+        "status": "not_listed"
+      },
+      {
+        "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "selected": 1,
+        "status": "not_listed"
+      },
+      {
+        "shard": "DinnerDecisionSheetUITests",
+        "selected": 5,
+        "status": "not_listed"
+      }
+    ]
+  },
+  "webInfrastructureFailure": {
+    "runId": 42440464721,
+    "jobId": 128608399841,
+    "boundary": "Chromium launch timed out at 15000 ms before history-privacy assertions.",
+    "receipt": {
+      "path": "web-failure-excerpt.txt",
+      "sha256": "b1f2a0afc33eede79cecfc00c0f7f65b5cbdfd5f4222db19d795b08543928f28"
+    }
+  },
+  "workflows": [
+    {
+      "runId": 42440464721,
+      "workflow": "Build and test",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464721",
+      "status": "in_progress",
+      "conclusion": null,
+      "counts": {
+        "success": 15,
+        "failure": 3,
+        "in_progress": 1
+      },
+      "remaining": [
+        {
+          "id": 128624830058,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "in_progress"
+        }
+      ],
+      "failedJobs": [
+        {
+          "id": 128608399841,
+          "name": "typescript (web)",
+          "failedSteps": [
+            "Check contributor outbox and history privacy in Chrome"
+          ]
+        },
+        {
+          "id": 128613594078,
+          "name": "ios-tests (ui-05, 6)",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ]
+        },
+        {
+          "id": 128617122245,
+          "name": "ios-tests (ui-07, 8)",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42440464691,
+      "workflow": "iOS deep checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464691",
+      "status": "completed",
+      "conclusion": "success",
+      "counts": {
+        "success": 4
+      },
+      "remaining": [],
+      "failedJobs": [],
+      "terminalReceipts": {
+        "spanishStoreKit": {
+          "passed": 15,
+          "skipped": 0,
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0,
+          "receipt": {
+            "path": "monitor-20261108T031403Z.json",
+            "sha256": "4f04ce32b91522aea3ecc50b9ea2d5dcda4f40219c32c769ac06541af92e9531"
+          }
+        },
+        "englishStoreKit": {
+          "passed": 15,
+          "skipped": 0,
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0,
+          "receipt": {
+            "path": "english-storekit-summary.txt",
+            "sha256": "656594f85408cd5bf52a0ac1867a18706e0fea9a363d0818524edd4358049d61"
+          }
+        },
+        "sanitizers": {
+          "thread": {
+            "passed": 437,
+            "expectedWireSkips": 3,
+            "receipt": {
+              "path": "thread-sanitizer-summary.txt",
+              "sha256": "20afecee67e51c01d8d7155a709db087b2af19333f92f0ad4bc8c2814a9b1cbf"
+            }
+          },
+          "address": {
+            "passed": 437,
+            "expectedWireSkips": 3,
+            "receipt": {
+              "path": "address-sanitizer-summary.txt",
+              "sha256": "aac4057e4f205f5fc8b465872ce0375b0df436b11d38f516859217644cfb28ee"
+            }
+          }
+        }
+      },
+      "terminalJobs": [
+        {
+          "id": 128608400012,
+          "name": "sanitizers (thread)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T02:59:10Z"
+        },
+        {
+          "id": 128608400043,
+          "name": "sanitizers (address)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:04:26Z"
+        },
+        {
+          "id": 128608400173,
+          "name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:11:30Z"
+        },
+        {
+          "id": 128608400424,
+          "name": "storekit (en, US English \u2014 local StoreKit)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:15:37Z"
+        }
+      ]
+    },
+    {
+      "runId": 42440464791,
+      "workflow": "iOS fixture checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791",
+      "status": "pending",
+      "conclusion": null,
+      "counts": {
+        "success": 10,
+        "in_progress": 3,
+        "failure": 1,
+        "pending": 2
+      },
+      "remaining": [
+        {
+          "id": 128624824824,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128626094384,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128626872278,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "pending"
+        },
+        {
+          "id": 128627124142,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "in_progress"
+        },
+        {
+          "id": 128631169252,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "status": "pending"
+        }
+      ],
+      "failedJobs": [
+        {
+          "id": 128624899598,
+          "name": "Fixture (SharedFallbackUITests)",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ]
+        }
+      ]
+    },
+    {
+      "runId": 42440464669,
+      "workflow": "iOS Release performance",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464669",
+      "status": "completed",
+      "conclusion": "success",
+      "counts": {
+        "success": 4
+      },
+      "remaining": [],
+      "failedJobs": [],
+      "terminalReceipts": {
+        "launch": {
+          "path": "performance/launch/verification.json",
+          "sha256": "b9f32e7733f51c4670c817d7d8168845185bc7cb68f2b30c699fc2ea70e9db08"
+        },
+        "rendered": {
+          "path": "performance/rendered/verification.json",
+          "sha256": "cfc003bfe2a871989f9f817800ff88478c90f0ed711c73cf19c53e5f690f8dc0"
+        },
+        "scroll": {
+          "path": "performance/scroll/verification.json",
+          "sha256": "76cfc58e7e162c66832c9649a900f56be05281f459b7855841b4147007296a07"
+        }
+      },
+      "terminalJobs": [
+        {
+          "id": 128608399586,
+          "name": "Build optimized iPhone test products",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:05:46Z"
+        },
+        {
+          "id": 128610747362,
+          "name": "Release performance (launch)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:30:18Z"
+        },
+        {
+          "id": 128610747545,
+          "name": "Release performance (rendered)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:49:33Z"
+        },
+        {
+          "id": 128610747620,
+          "name": "Release performance (scroll)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T03:52:08Z"
+        }
+      ]
+    },
+    {
+      "runId": 42440464677,
+      "workflow": "Native Swift HTTPS and PostgreSQL",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464677",
+      "status": "completed",
+      "conclusion": "success",
+      "counts": {
+        "success": 1
+      },
+      "remaining": [],
+      "failedJobs": [],
+      "terminalReceipts": {
+        "nodeHTTPSAndPostgresCases": 6,
+        "nativeSwiftScenarios": 10,
+        "receipt": {
+          "path": "native-wire-summary.txt",
+          "sha256": "388dca4896f5c57ddea26a7228236ed11282f9439bcb16a0a0bf437928068c95"
+        }
+      },
+      "terminalJobs": [
+        {
+          "id": 128608399778,
+          "name": "native-wire",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T02:56:56Z"
+        }
+      ]
+    },
+    {
+      "runId": 42440464675,
+      "workflow": "Security checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464675",
+      "status": "completed",
+      "conclusion": "success",
+      "counts": {
+        "success": 3
+      },
+      "remaining": [],
+      "failedJobs": [],
+      "terminalReceipts": {
+        "receipt": {
+          "path": "monitor-20261108T025635Z.json",
+          "sha256": "6e403d9235174fd47746ba58372260f84b6a9f95c248fe013de201e840f87d46"
+        },
+        "scope": "Dependency review and Actions/JavaScript CodeQL job conclusions."
+      },
+      "terminalJobs": [
+        {
+          "id": 128608399288,
+          "name": "Dependency review",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T02:54:32Z"
+        },
+        {
+          "id": 128608399508,
+          "name": "CodeQL (javascript-typescript)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T02:55:58Z"
+        },
+        {
+          "id": 128608399567,
+          "name": "CodeQL (actions)",
+          "conclusion": "success",
+          "completedAt": "2026-11-08T02:55:07Z"
+        }
+      ]
+    }
+  ]
+}

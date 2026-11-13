@@ -1,0 +1,33 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11bc45c60, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'
+Element subtree:
+ →StaticText, 0x11bc45c60, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'
+Path to element:
+ →Application, 0x106448cb0, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x106447e30, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11ae53600, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11ae5a2a0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11ae351b0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11aed1620, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11bc3cc60, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11bc11f00, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11bc11050, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a64e2f0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a652c60, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11ae7cb00, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11ae1d180, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11ae0a6e0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11bc45450, {{16.0, 136.0}, {370.0, 56.3}}
+                ↳Other, 0x11bc45900, {{16.0, 136.0}, {370.0, 56.3}}
+                 ↳Other, 0x11bc45a20, {{16.0, 136.0}, {370.0, 56.3}}
+                  ↳Other, 0x11bc45b40, {{16.0, 136.0}, {370.0, 56.3}}
+                   ↳StaticText, 0x11bc45c60, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11b9f5490, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4389280368.372
+    Output: {
+      StaticText, 0x11b9ee2f0, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'
+    }

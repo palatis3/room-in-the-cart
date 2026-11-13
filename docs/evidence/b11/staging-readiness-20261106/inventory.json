@@ -1,0 +1,104 @@
+{
+  "project": "uwjxrotnocxxomqdetzk",
+  "observedAt": "2026-11-06T01:05:41.680288+00:00",
+  "databaseVersion": "17.11",
+  "inventory": {
+    "auth": {
+      "tables": 27,
+      "rows": 82,
+      "populated": [
+        {
+          "table": "schema_migrations",
+          "rows": 82
+        }
+      ]
+    },
+    "public": {
+      "tables": 1,
+      "rows": 8,
+      "populated": [
+        {
+          "table": "ritc_schema_migration",
+          "rows": 8
+        }
+      ]
+    },
+    "ritc": {
+      "tables": 30,
+      "rows": 0,
+      "populated": []
+    },
+    "storage": {
+      "tables": 10,
+      "rows": 80,
+      "populated": [
+        {
+          "table": "migrations",
+          "rows": 80
+        }
+      ]
+    },
+    "supabase_migrations": {
+      "tables": 1,
+      "rows": 9,
+      "populated": [
+        {
+          "table": "schema_migrations",
+          "rows": 9
+        }
+      ]
+    },
+    "vault": {
+      "tables": 1,
+      "rows": 0,
+      "populated": []
+    }
+  },
+  "customAuthTriggers": 0,
+  "migrationChecksumsVerifiedAgainstCurrentCheckout": true,
+  "migrations": [
+    {
+      "version": "001_household_requests.sql",
+      "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b",
+      "applied_at": "2026-11-03T05:50:06.058536+00:00"
+    },
+    {
+      "version": "002_apple_billing.sql",
+      "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e",
+      "applied_at": "2026-11-03T05:50:07.633945+00:00"
+    },
+    {
+      "version": "003_web_session.sql",
+      "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb",
+      "applied_at": "2026-11-03T05:50:09.051893+00:00"
+    },
+    {
+      "version": "004_household_lock.sql",
+      "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250",
+      "applied_at": "2026-11-03T05:50:10.624361+00:00"
+    },
+    {
+      "version": "005_session_and_policy_hardening.sql",
+      "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45",
+      "applied_at": "2026-11-03T06:01:26.691678+00:00"
+    },
+    {
+      "version": "006_household_lifecycle.sql",
+      "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c",
+      "applied_at": "2026-11-03T06:15:13.690022+00:00"
+    },
+    {
+      "version": "007_selected_helper_session.sql",
+      "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5",
+      "applied_at": "2026-11-03T06:15:15.110618+00:00"
+    },
+    {
+      "version": "008_browser_email_auth.sql",
+      "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e",
+      "applied_at": "2026-11-03T06:38:58.927914+00:00"
+    }
+  ],
+  "liveBackupCaptured": false,
+  "isolatedRestoreOfLiveBackupVerified": false,
+  "pending": "Authenticated PostgreSQL connection for a consistent dump into the owner-approved encrypted Mac archive."
+}

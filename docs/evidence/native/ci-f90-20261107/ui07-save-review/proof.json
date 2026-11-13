@@ -1,0 +1,89 @@
+{
+  "runID": 42428215935,
+  "attempt": 1,
+  "jobID": 128583797613,
+  "jobURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128583797613",
+  "candidate": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "artifactID": 13599499470,
+  "artifactBytes": 79094316,
+  "artifactAPISHA256": "48a37ed6a15b6b366b9dd0d5a3746dd5afd1a9d447fba17bfda6d03e5622cc0a",
+  "fullArchiveDownloaded": false,
+  "fullArchiveSHA256IndependentlyVerified": false,
+  "collection": {
+    "smallMembersBytes": 52383,
+    "metadataBytes": 242177,
+    "selectedAttachmentBytes": 501241,
+    "guards": "Existing pinned artifact206/range/length, path/type/encryption/uniqueness,5MB member,12MB request budget, CRC+SHA256 guards unchanged. No video or other-case media fetched.",
+    "pristineMembersStillMatch": true
+  },
+  "nativeOutcome": {
+    "passed": 7,
+    "failed": 1,
+    "selected": 8,
+    "runtimeWarnings": 0,
+    "runtimeWarningSummaryField": null,
+    "failedCaseSeconds": 181.90794897079468,
+    "runnerRestartMarkersObserved": false
+  },
+  "chronology": {
+    "originalNameScreenshot": 75.88,
+    "knownResultScreenshot": 90.7,
+    "saveTapBegin": 93.04,
+    "saveTapSynthesis": 93.98,
+    "statusSearchStart": 94.31,
+    "failedReveal": 179.71,
+    "failureScreenshot": 180.01,
+    "restartAssertionReached": false,
+    "swipeUpAfterTap": 18,
+    "swipeDownAfterTap": 24
+  },
+  "tapEvidence": {
+    "eventAttachmentRow": 65,
+    "point": [
+      65.80000050365925,
+      782.8666667441527
+    ],
+    "windowPoints": [
+      402,
+      874
+    ],
+    "preSaveScreenshotPixels": [
+      1206,
+      2622
+    ],
+    "screenshotPointMapping": [
+      197.40000151097775,
+      2348.600000232458
+    ],
+    "sampleXPixel": 197,
+    "greenVisibleButtonRows": [
+      2333,
+      2348
+    ],
+    "canvasBeginsPixelRow": 2349,
+    "interpretation": "Tap lies within one screenshot pixel of lower clipping boundary. Rounded pixel is first canvas row; this is not an exact UIKit hit-test result or a screenshot at event time."
+  },
+  "observations": [
+    "Pre-save screenshot shows only a thin top edge of green Save control; title and rest of target are clipped below result viewport.",
+    "No scroll is logged between pre-save screenshot and native tap; reveal accepts existence+hittability without full containment.",
+    "Test never reached termination/reopen assertions. Failure screenshot shows upper result rows after scrolling and does not reveal saved/status/error row.",
+    "Exported tap snapshot contains only root UIApplication with no children; no full target hierarchy or frame available.",
+    "Test, ComparisonView, ComparisonModel, localization helper and catalog are byte-identical to f90."
+  ],
+  "causalAssessment": "Observed clipping and recorded edge-targeted tap support a narrow full-visibility precondition before the single Save tap. Actual storage success/failure and exact lost activation are unproven; no persistence or app change justified from this evidence alone.",
+  "proposal": "Exact Spanish case invokes existing revealFullyInComparison, enabled assertion and ready frame/screenshot attachments before unchanged saveAndAssertDurableStatus. One native tap, original saved-label/button-disappearance/restart assertions preserved. No global driver, timeout, workflow, seed or retry changes.",
+  "patchInstalled": true,
+  "nativeExecution": false,
+  "patchApplyCheck": "passed",
+  "sourcePins": "source-pins.json",
+  "localFollowup": {
+    "operator": "root",
+    "status": "full original case running; no result claimed",
+    "session": 27945,
+    "log": ".build/CoreNavigationNov07/native.log",
+    "result": ".build/CoreNavigationNov07/native.xcresult",
+    "scope": "Ordinary Debug, original complete UI07 selector plus separate UI06 case;720/900timeouts unchanged",
+    "installedTestSHA256": "eed5de8923816ed52b97c02f88171ee0720022c025c0b83e0a6bacab2df4c258",
+    "installedFileByteMatchesReviewedScratch": true
+  }
+}

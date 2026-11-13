@@ -1,0 +1,32 @@
+{
+  "algorithm": "SHA256",
+  "files": {
+    "README.md": "05586fc75d2cf9a130fb6e7b831253c666747135cb650b9ed0f4389ea1b63d8b",
+    "cleanup.json": "0b1c123861bc1452c032f04db65d4afbfcaac272151ddb5c565fb7cfd73fb991",
+    "copy-provenance.json": "7c92267221545b1fc108fe4d79c9482d78b3ba8f7d0fa7cde6038aa2e53e2a5e",
+    "frozen/fixture.mjs": "8dd54f39467746fc1cbb6eb4b3e4fadff7efe50ff2736257df9910f3c2ee211e",
+    "frozen/observation.mjs": "95caf98b9afab3b1393fab2bb8decc63d0fa01610712893154cf7525f5023ae1",
+    "frozen/probe.js": "c3621b00b0363cc0b0727565be74b17d96d608e5ada75495054f5a7f98a390a0",
+    "frozen/server.mjs": "3d6e0cf72c054a1905803704eae88fe2cee8b980cef625fc9374cc7064cb5ac5",
+    "frozen/verify-foreground.mjs": "cd391aa87834f05d50afb9ae339126d61a144f944a4fea256a9d389a9bfba956",
+    "harness-manifest.json": "e6f31dcd034ad87be6d5906fce59b43bc5ccf576d0aed6d8c74b7dfd75f57737",
+    "native-identity.json": "3e700fb54d0102c4d0dbbb966e256836a31a8ca561e6ea9ab99ab479b50369ee",
+    "preparation/build-receipt.json": "076e56f429de76022c4e8e3f994a7ace2478e62044839f62d8d63ebf970b0015",
+    "preparation/offline-tests-r2.log": "3edbc15128614a9d4046be57a00b6f46cdbbcb80b61dfdc7673fb71acf6dcea1",
+    "preparation/offline-tests-r3.log": "4ea53e3a7141ec02f3ca41e6ed3bbe6f8f066e6fb3dadf7e303dcadad54ed663",
+    "preparation/offline-tests-r6.log": "db8b39f02c30506987ba5b16be0a68cbbff51e35d28b33640609fcae9e99d4d1",
+    "preparation/original-preservation.json": "60a32508f6f65509bb5c61ad07e9ea082434f4cfe5a441f083938eff317e784c",
+    "preparation/preparation-receipt.json": "9ab86f6cfb7cee61412f527bade39dc8cf8ce1bdfa4d7b2a0edb079729739521",
+    "preparation/source-equality.json": "26ab6f4fae3ac9bcccf59bc237afce3c7713c6fbbbe1c9e9c1ccb0fd44474567",
+    "preparation/source-probe-r2-failed.txt": "c30792050be2a31db769323e51b51b53a6c7f3246a65ee173349b9b37dffecfd",
+    "preparation/source-probe.test.mjs.r3-failed.txt": "1dd794d1f37c33c7885ba7075414eb65052b228908efff0f60d8fae6c5e6463d",
+    "preparation/syntax-checks.json": "37d6b5796aac79d6f0058a6822927d7986e95f229cc335db1ba6c4c0cc135e3a",
+    "preparation/test-support.mjs.r3-failed.txt": "5f8a5d5bbbf2b77ecc0b7308719250b328972366e119c2077602c056a5a9d277",
+    "receipt.json": "89ec707a09799e875e68fa47babea0c7b9c0cea18b8bc61254af1a7ad01af94d",
+    "root-observations.json": "7c0ba75e2d0e9c4dbb9f48e2a56b8f7f271511454204d5a60e61ebec15763f04",
+    "root-verification.json": "218ef0c273191bf9a1ae75fda9f91c583cd3c2337c27953db5ffd48456519e19",
+    "setup-failure.json": "98a7c0fe4f57a0033b3033b503436db90332c7f2d710c07d1a66e3eb342160f7",
+    "verification.json": "c6d61a79ac534285b32c769e149fe8df9b3439270f56b39fc0e8096fdf6ca45d",
+    "verify-evidence.mjs": "fe967767a22369029a992b08b26283d4f3fdd5d358edd14af2a41894fe98a187"
+  }
+}

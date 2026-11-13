@@ -1,0 +1,33 @@
+{
+  "sha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "merge": "c0f2ea1c7db1a528c6262af900e2a912480a7001",
+  "tree": "fcfef46a1881b45e2443de6298a5ef9101a85f78",
+  "checkedAt": "2026-11-06T08:08:29.109446+00:00",
+  "runID": 42184705128,
+  "attempt": 1,
+  "analyses": [
+    {
+      "category": "/language:javascript-typescript",
+      "id": 2110349321,
+      "error": "",
+      "warning": "",
+      "rules_count": 87,
+      "results_count": 0
+    },
+    {
+      "category": "/language:actions",
+      "id": 2110346977,
+      "error": "",
+      "warning": "",
+      "rules_count": 17,
+      "results_count": 0
+    }
+  ],
+  "openPRAlerts": [],
+  "jobs": {
+    "CodeQL (actions)": "success",
+    "CodeQL (javascript-typescript)": "success",
+    "Dependency review": "success"
+  },
+  "scope": "JavaScript/TypeScript, Actions, dependency review only; Swift CodeQL belongs to core lane and is pending"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "8D7C2DBF-71CF-41F8-87E8-595A462B9B30.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-failure-accessibility-hierarchy_0_6787EB7B-E74A-412A-B4C6-2A4E0D01CBA0.txt",
+        "timestamp" : 1794171596.001
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testAuditNamedTargetsAtLargestText()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testAuditNamedTargetsAtLargestText"
+  }
+]

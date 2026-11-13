@@ -1,0 +1,111 @@
+{
+  "observedAtUtc": "2026-11-08T05:17:11+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "failure",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "completed",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T05:16:18Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128634727680,
+    "name": "Fixture (DinnerDecisionSheetUITests)",
+    "startedAt": "2026-11-08T05:03:38Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13605620404,
+    "name": "iphone-fixture-results-DinnerDecisionSheetUITests-1",
+    "digest": "sha256:6fc8ddf6160114413e49a016642e15da945a51d961228e989cf465460c0ff504",
+    "size_in_bytes": 4683442,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "126e9c74bd50be918e496aab42010ee2abe1f449eecb58da1b8a146a5d3259b9",
+    "rangeBytes": 18719,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 63667,
+        "sha256": "ff167933defa71a9cf3694bbdad4621d1de4acc6e3cafd5e2f54a17949fdba4d",
+        "zipCRC": 2874234202,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 2871,
+        "sha256": "d56930a6da582ae5a5ce9ca8aa937295f0de0be5821d764715623f5212a7bf15",
+        "zipCRC": 2474460336,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/DinnerDecisionSheetUITests.txt",
+        "bytes": 499,
+        "sha256": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74",
+        "zipCRC": 1773140076,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "5806355247eb76085ff9c4d3d275c1bd0dabbe6fb97dadeb5797a9cf50582c14",
+        "zipCRC": 202412520,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "c8651dca83e55497b6416a5b5f13bda900cf1e5b35a660b47b2a445fa59f4ce3",
+        "zipCRC": 3368037934,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel": 86.12047910690308,
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation": 91.44168591499329,
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl": 27.78250002861023,
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel": 45.779040932655334,
+      "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation": 72.68620300292969
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

@@ -99,6 +99,26 @@ test('pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds g
   assert.equal((await client.call('/v1/auth/email/start','POST',{email},challenge.data.csrf)).status,429);
 });
 
+test('an in-flight email delivery releases the challenge lock and cannot reopen a signed-out challenge',async()=>{
+  const upstream=provider();
+  const started=Promise.withResolvers(),delivery=Promise.withResolvers();
+  upstream.start=async()=>{started.resolve();await delivery.promise;};
+  const auth=new BrowserAuthService(repo,verifier,upstream,{encryptionKey});
+  const {cookie,csrf}=await auth.challenge('slow-mail-test');
+  const sending=auth.start(cookie,csrf,{email:randomUUID()+'@example.invalid'},'slow-mail-test');
+  const rejected=assert.rejects(sending,error=>error.code==='session_needed');
+  try{
+    await started.promise;
+    assert.equal((await auth.state(cookie)).authenticated,false);
+    await assert.rejects(auth.verify(cookie,csrf,{code:'123456'}),error=>error.code==='code_not_accepted');
+    await assert.rejects(auth.start(cookie,csrf,{email:randomUUID()+'@example.invalid'},'slow-mail-test'),error=>error.code==='login_rate_limited');
+    assert.equal((await auth.logout(cookie,csrf)).signedOut,true);
+  }finally{
+    delivery.resolve();
+    await rejected;
+  }
+});
+
 test('two service instances enforce the same durable account-scoped OTP request limit',async()=>{
   const secondBff=new BrowserAuthService(repo,verifier,provider(),{encryptionKey});
   const second=createHTTPServer({repository:repo,verifier,webOrigin,browserAuth:secondBff,maxRequestsPerMinute:10000});const secondOrigin=await listen(second);

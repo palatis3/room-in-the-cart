@@ -1,0 +1,203 @@
+{
+  "$version": 100000,
+  "$archiver": "NSKeyedArchiver",
+  "$top": {
+    "root": {
+      "UID": 1
+    }
+  },
+  "$objects": [
+    "$null",
+    {
+      "label": {
+        "UID": 19
+      },
+      "parentAccessibilityElement": {
+        "UID": 0
+      },
+      "traits": {
+        "UID": 3
+      },
+      "frame": {
+        "UID": 14
+      },
+      "windowContextID": {
+        "UID": 25
+      },
+      "accessibilityElement": {
+        "UID": 2
+      },
+      "additionalAttributes": {
+        "UID": 20
+      },
+      "title": {
+        "UID": 17
+      },
+      "value": {
+        "UID": 17
+      },
+      "identifier": {
+        "UID": 18
+      },
+      "elementType": {
+        "UID": 13
+      },
+      "placeholderValue": {
+        "UID": 17
+      },
+      "enabled": {
+        "UID": 23
+      },
+      "children": {
+        "UID": 26
+      },
+      "systemAutomationProperties": {
+        "UID": 28
+      },
+      "hasKeyboardFocus": false,
+      "selected": {
+        "UID": 24
+      },
+      "$class": {
+        "UID": 29
+      }
+    },
+    {
+      "$class": {
+        "UID": 12
+      },
+      "element-or-hash": {
+        "UID": 3
+      },
+      "element-type": 1,
+      "context": {
+        "UID": 5
+      },
+      "element-id": {
+        "UID": 4
+      },
+      "processIdentifier": 97211,
+      "origin-platform": 2,
+      "payload": {
+        "UID": 6
+      },
+      "encoding-version": 1
+    },
+    0,
+    1,
+    "4D9272C7-3024-4062-B0FA-E16EF426F17A",
+    {
+      "NS.keys": [
+        {
+          "UID": 7
+        },
+        {
+          "UID": 8
+        },
+        {
+          "UID": 9
+        }
+      ],
+      "NS.objects": [
+        {
+          "UID": 10
+        },
+        {
+          "UID": 3
+        },
+        {
+          "UID": 4
+        }
+      ],
+      "$class": {
+        "UID": 11
+      }
+    },
+    "pid",
+    "uid.elementOrHash",
+    "uid.elementID",
+    97211,
+    {
+      "$classname": "NSDictionary",
+      "$classes": [
+        "NSDictionary",
+        "NSObject"
+      ]
+    },
+    {
+      "$classname": "XCAccessibilityElement",
+      "$classes": [
+        "XCAccessibilityElement",
+        "NSObject"
+      ]
+    },
+    2,
+    {
+      "NS.rectval": {
+        "UID": 15
+      },
+      "$class": {
+        "UID": 16
+      },
+      "NS.special": 3
+    },
+    "{{0, 0}, {402, 874}}",
+    {
+      "$classname": "NSValue",
+      "$classes": [
+        "NSValue",
+        "NSObject"
+      ]
+    },
+    "",
+    "",
+    "Room in the Cart",
+    {
+      "NS.keys": [
+        {
+          "UID": 21
+        }
+      ],
+      "NS.objects": [
+        {
+          "UID": 22
+        }
+      ],
+      "$class": {
+        "UID": 11
+      }
+    },
+    5004,
+    "UIApplication",
+    true,
+    false,
+    3838788091,
+    {
+      "NS.objects": [],
+      "$class": {
+        "UID": 27
+      }
+    },
+    {
+      "$classname": "NSArray",
+      "$classes": [
+        "NSArray",
+        "NSObject"
+      ]
+    },
+    {
+      "NS.keys": [],
+      "NS.objects": [],
+      "$class": {
+        "UID": 11
+      }
+    },
+    {
+      "$classname": "XCElementSnapshot",
+      "$classes": [
+        "XCElementSnapshot",
+        "NSObject"
+      ]
+    }
+  ]
+}

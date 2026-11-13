@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "scope": "Same-store complete Undo backend; native/UI/wire pending",
+  "executionPath": ".build/SharedDemandGraphNov09/root-same-store-undo-r1",
+  "receiptSHA256": "678be900bc809b76dfe6faa79abb19d544d02147cb6aab9706ed03d8cd696ed1",
+  "sourceManifestSHA256": "f6dfe9e623440c02627fc466a62eee45f1a126e0f50579809f264ba38080eb5c",
+  "sourceInputs": 251,
+  "compiledManifestSHA256": "69d615366ccce010db20df0101cb71e609f0e7c1fbafdbd2cf9566e5f0c6b416",
+  "offline": {
+    "tests": 654,
+    "pass": 653,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "0e05ee2b29147341176163bb0f6790d6542ad8b3c88dafdd76da6d60704276d0"
+  },
+  "database": {
+    "tests": 323,
+    "pass": 320,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "5ca5da6e64d874afb471c3196f8f84914bb5cb36f1215bc7ddd40e1e57774a09"
+  },
+  "sameStorePurePassed": [
+    "same-store ordinary Undo binds exact immutable selection without changing action or conservation",
+    "same-store history rejects switched pending unproven or missing selected basis",
+    "same-store replay still rejects erased basis and expired price restoration is not waived"
+  ],
+  "sameStoreHTTPPassed": [
+    "same reviewed store permits complete Undo with Cancel, later staple and exact retry",
+    "same-store Undo rejects repricing itself, pending review and a later switch back to the same named option",
+    "same-store final Apply and replay cannot outlive revoked original budget permission",
+    "same-store erased author removes selected proof without erasing unrelated food and denies retained inverse replay",
+    "selected-store snapshot metadata preserves public receipt shape and original placement snapshot digest"
+  ],
+  "previousMealHTTPPassed": 9,
+  "previousUndoHTTPPassed": 8,
+  "previousRecordsHTTPPassed": 6,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "postgresStopped": true,
+  "journalFenced": true,
+  "stagingDeployment": false
+}

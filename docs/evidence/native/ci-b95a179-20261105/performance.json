@@ -1,0 +1,134 @@
+{
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "runID": 42113018812,
+  "cases": {
+    "rendered": {
+      "attempt": 1,
+      "artifactID": 13458261546,
+      "sha256": "76dff761206cb9fbba086b91f986c53ba2b5fcdb32286d9991560b683f740709",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 3263.726125000062,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2686.1612916667355,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "d3326b25fe8b2c632a6de1407cf350a66e6bf9e98dd81deabc7b99b514b6e219",
+      "calibrationSHA256": "0df49fa34ddcf92799dabd7009ab2b5252817c4813ea63ee766866f6dd77e547",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "e95ff5b8773b7a71560ffad791d979a9b1d174ee7e6aa00c0b9f08630c8da0d8",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "142a2ab0-0524-4ef8-bf8b-1ef842013757",
+          "17039c1c-18aa-450a-aba0-60495cf0df6f",
+          "213241d6-d1a1-47b7-9a2b-df48a629191a",
+          "271e7e5e-4640-42b2-9cd9-6856236b9ac4",
+          "329d9cbb-87cd-41f7-86ff-d05e7818d179",
+          "3d529aaa-f374-4ee7-9027-cd84ac386521",
+          "4b5a81e6-3d2e-4346-ace4-d3a73805a0b6",
+          "50975c1c-566c-447c-ba07-77edd3a9b4bb",
+          "89eb60a6-832e-4a7c-b9da-b840cfab2cca",
+          "8ecb19ce-2b04-48fc-8bd0-ce8960f40e03",
+          "984278c8-d027-4d9c-ab17-cb3a6dc94804",
+          "9acb1b0c-e9c2-4ce8-81e5-2f6a3c610ba2",
+          "9d944055-1de6-431c-bfef-1e5228cd508b",
+          "acbf65b3-184e-402e-bbde-03dd9266d735",
+          "ad2d1aa6-5ff5-46b5-95ab-7430d9535fa2",
+          "addaaac4-7c36-4d39-b42b-3a4a04da7aea",
+          "c6db0e66-6e33-485e-a89e-113256ff4512",
+          "c97c74d2-ad7f-4dee-a025-81ad49655030",
+          "ee68f449-b6a8-4b34-81d1-6221307ce4bc",
+          "f60b8f62-c514-41d2-9c71-9512217b9a7d"
+        ]
+      },
+      "simulatorHitches": null
+    },
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13457863296,
+      "sha256": "9084403ad62b706af1ea1da078ca93699b9022e8df9f3cbfc67f167e8c7d6cef",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.655137625,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "a8d4fa627ff58e295ac21ff204f335d61f12cbe9c8022604b1a865c45799c33a",
+      "calibrationSHA256": "0a104d16545a3fda4b0f4baebcd261277ca198ed7e41a29139c66af8358bc3ab",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null
+    },
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13460139377,
+      "sha256": "5f03367d549a5189c838b7cd0d8c25cca87e5a2bbfc77644761e5ac64e6933df",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.582969125,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 108584.896,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 108912.576,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 109387.712,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "30a690856efe0f6a86dfd24fc024571afa0007af22390ac2c73df02f0f0bfb2b",
+      "calibrationSHA256": "76b71d073cc2f188a1453478daca8d144ba228bb35eb60ac78d3418964df0659",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "e0f8f5ba15830400c791e229c62471528a6d42035a062bc6fa9035241378b6b9",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      }
+    }
+  },
+  "limits": [
+    "Simulator evidence only; physical frame-smoothness acceptance remains separate.",
+    "Pickup SQLite was checked on the hosted runner. Its database is not retained, so local replay verifies metrics/attachments and reported baseline comparison, not a second database read."
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "sourceBindingReceiptSHA256": "0dfc31305b43c4b8b39e83b57df003ad40cc63915021baf789e873157c5a78b6",
+  "sourceBindingReceiptPath": ".build/S24OtherMealsNov08/query-followup-r1/binding-receipt.json",
+  "crashedBaselineManifestSHA256": "3edd1ef0a08defb65ff1cc7b60882f157f4fd65702422df77cb2887a1731744d",
+  "crash": {
+    "bytes": 94419,
+    "sha256": "08834733319e755ef049263727d2ce1bd1dbc61903c77e52eba7a69508d3d999",
+    "pid": 137,
+    "captureTime": "2026-11-08 13:37:28.4027 -0500",
+    "procLaunch": "2026-11-08 13:36:12.9235 -0500",
+    "bundleID": "dev.roominthecart.app.debug",
+    "exception": {
+      "codes": "0x0000000000000001, 0x0000000000000000",
+      "rawCodes": [
+        1,
+        0
+      ],
+      "type": "EXC_BAD_ACCESS",
+      "signal": "SIGSEGV",
+      "subtype": "KERN_INVALID_ADDRESS at 0x0000000000000000"
+    },
+    "termination": {
+      "flags": 0,
+      "code": 11,
+      "namespace": "SIGNAL",
+      "indicator": "Segmentation fault: 11",
+      "byProc": "exc handler",
+      "byPid": 137
+    },
+    "faultingThread": 0
+  },
+  "faultPrefixSymbols": [
+    "_platform_strcmp$VARIANT$Base",
+    "runtime_issue_os_log_fault_callback",
+    "_os_log_invoke_callback",
+    "_os_log_impl_flatten_and_send",
+    "_os_log",
+    "_os_log_fault_impl",
+    "__LIBTRACE_CLIENT_QUARANTINED_DUE_TO_HIGH_LOGGING_VOLUME__",
+    "firehose_client_start_quarantine",
+    "firehose_buffer_stream_chunk_install",
+    "voucher_activity_trace_v_2",
+    "_os_log_impl_flatten_and_send",
+    "_os_log",
+    "_os_log_impl"
+  ],
+  "postCommonFaultSymbols": [
+    "-[XCTElementQuery _firstMatchingSnapshotForInput:transformers:relatedElements:noMatchesMessage:error:]",
+    "-[XCTElementQuery _firstMatchingSnapshotForInput:transformersSubarrays:relatedElements:noMatchesMessage:error:]",
+    "__90-[XCTElementQuery matchingSnapshotsInSnapshotTree:relatedElements:noMatchesMessage:error:]_block_invoke_2",
+    "+[XCTRuntimeIssueContext captureIssuesWithContext:inScope:]",
+    "__90-[XCTElementQuery matchingSnapshotsInSnapshotTree:relatedElements:noMatchesMessage:error:]_block_invoke",
+    "__XCTPerformOnMainRunLoop_block_invoke",
+    "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__"
+  ],
+  "frameworkUUIDs": [
+    {
+      "name": "libsystem_platform.dylib",
+      "uuid": "38c97926-a4a7-3c0e-9086-20774f32b98b",
+      "matchesPrior": true
+    },
+    {
+      "name": "XCTAutomationSupport",
+      "uuid": "5e2b971f-94c7-3e45-aa1b-a0354b1d3288",
+      "matchesPrior": true
+    },
+    {
+      "name": "libsystem_trace.dylib",
+      "uuid": "3da586fd-5d7d-3a75-a15a-ce056eacad84",
+      "matchesPrior": true
+    }
+  ],
+  "boundProducts": [
+    {
+      "bytes": 40496,
+      "sha256": "ebb4b69d7d75f046393a8a86ff632d3670b7af59ee5d5e38854b20dc59119098",
+      "LC_UUID": "34a7257b-fdc2-3d8e-8042-6a5d0fad0336",
+      "crashUUIDMatches": true,
+      "installedSHA256Matches": true,
+      "file": "RoomInTheCart"
+    },
+    {
+      "bytes": 74343712,
+      "sha256": "27a0e766ee628b45e5eb4a283efc5306863781f68b61d8fdd1ae1566171aac53",
+      "LC_UUID": "bac5c549-a99c-30d6-877b-a96a357ac2d3",
+      "crashUUIDMatches": true,
+      "installedSHA256Matches": true,
+      "file": "RoomInTheCart.debug.dylib"
+    }
+  ],
+  "recordedNativeBoundary": {
+    "ordinaryFactsAttachmentRelativeSeconds": 75.92,
+    "failingSamAnyLookupRelativeSeconds": 76.98,
+    "priorRowStaticTextEvidence": {
+      "Sam": [
+        651,
+        652
+      ],
+      "Mia": [
+        715,
+        716
+      ],
+      "ordinaryMeal": [
+        938,
+        939
+      ]
+    }
+  },
+  "interpretation": "SIGSEGV/null in XCTest runtime issue logging callback during high-volume quarantine, matching prior crash signature; not jetsam. New caller is XCTElementQuery snapshot matching; prior caller was accessibility placeholderValue/identifiers. Query narrowing is a hypothesis, not proof of eliminated framework crash or logging origin.",
+  "rawCrashNotCopied": true,
+  "qualification": "Existing prepared binding receipt is summarized, not a new crash collection/reinspection. Root subsequently installed the query-only candidate; this package records no candidate runtime acceptance.",
+  "queryCandidate": {
+    "candidateManifestSHA256": "d8a00ef301fa226be78bdc908543c949039c5f681c496ba8a27d34b6899f0dad",
+    "candidateTestSHA256": "61766cba1a48dfb7bcbc0d7284da0875f0e638609aceb61ad23d003694382a25",
+    "patchSHA256": "335c2b2391c607c9d4438a764727c13f1b1f755da2cc94d88f20dab268500255",
+    "scope": "Exactly two query expressions in OtherMeals case; other plus loop row covers three meal rows. All other test bytes unchanged; no product/helper/assertion/action/logging changes."
+  }
+}

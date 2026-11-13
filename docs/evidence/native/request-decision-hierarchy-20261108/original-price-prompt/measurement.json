@@ -1,0 +1,293 @@
+{
+  "sourcePNG": ".build/S24DecisionHierarchyNov08/light-run/captures/png-3-0/434F6C14-31BF-4639-838D-25A4691710B2.png",
+  "sourceSHA256": "a70bb7b0630f9c79be8ece0951eb4aeede559519c5d7411120eaa8263ff2f10a",
+  "dimensions": [
+    1206,
+    2622
+  ],
+  "PNGColorType": "RGB8",
+  "sRGBChunk": true,
+  "renderingIntent": 0,
+  "PNGChunkCRCsVerified": true,
+  "roiPixelsLeftTopRightBottomExclusive": [
+    90,
+    1040,
+    1060,
+    1145
+  ],
+  "glyphThreshold": "min(R,G,B)<250",
+  "glyphBoundingBoxPixels": [
+    100,
+    1071,
+    999,
+    1119
+  ],
+  "glyphBoundingBoxPointsAt3x": [
+    33.333333333333336,
+    357.0,
+    333.0,
+    373.0
+  ],
+  "backgroundRGB": [
+    255,
+    255,
+    255
+  ],
+  "backgroundCountInROI": 90711,
+  "ROIPixelCount": 101850,
+  "glyphPixelCount": 10501,
+  "dominantNonBackgroundRGB": [
+    197,
+    197,
+    199
+  ],
+  "dominantGlyphCount": 6465,
+  "darkestGlyphRGB": [
+    197,
+    197,
+    199
+  ],
+  "darkestGlyphCount": 6465,
+  "dominantRenderedContrast": 1.7233924684533595,
+  "maximumObservedRenderedContrast": 1.7233924684533595,
+  "requiredContrast": 4.5,
+  "glyphHistogramTop20": [
+    {
+      "RGB": [
+        197,
+        197,
+        199
+      ],
+      "count": 6465,
+      "contrast": 1.7233924684533595
+    },
+    {
+      "RGB": [
+        198,
+        198,
+        200
+      ],
+      "count": 494,
+      "contrast": 1.7055404192257981
+    },
+    {
+      "RGB": [
+        234,
+        234,
+        234
+      ],
+      "count": 256,
+      "contrast": 1.2030443837002105
+    },
+    {
+      "RGB": [
+        213,
+        213,
+        214
+      ],
+      "count": 216,
+      "contrast": 1.4666919879975333
+    },
+    {
+      "RGB": [
+        219,
+        219,
+        220
+      ],
+      "count": 193,
+      "contrast": 1.3835739894793648
+    },
+    {
+      "RGB": [
+        227,
+        227,
+        228
+      ],
+      "count": 145,
+      "contrast": 1.2825132395951726
+    },
+    {
+      "RGB": [
+        231,
+        231,
+        231
+      ],
+      "count": 126,
+      "contrast": 1.2365994749414904
+    },
+    {
+      "RGB": [
+        205,
+        205,
+        207
+      ],
+      "count": 121,
+      "contrast": 1.5873790224231694
+    },
+    {
+      "RGB": [
+        205,
+        205,
+        206
+      ],
+      "count": 111,
+      "contrast": 1.5885500834394684
+    },
+    {
+      "RGB": [
+        248,
+        248,
+        248
+      ],
+      "count": 82,
+      "contrast": 1.0620159366897584
+    },
+    {
+      "RGB": [
+        240,
+        240,
+        240
+      ],
+      "count": 80,
+      "contrast": 1.139610887040401
+    },
+    {
+      "RGB": [
+        201,
+        201,
+        203
+      ],
+      "count": 76,
+      "contrast": 1.6534758003846013
+    },
+    {
+      "RGB": [
+        238,
+        238,
+        239
+      ],
+      "count": 67,
+      "contrast": 1.1594752243296698
+    },
+    {
+      "RGB": [
+        242,
+        242,
+        242
+      ],
+      "count": 67,
+      "contrast": 1.1194947432057414
+    },
+    {
+      "RGB": [
+        207,
+        207,
+        209
+      ],
+      "count": 66,
+      "contrast": 1.5556824400149383
+    },
+    {
+      "RGB": [
+        212,
+        212,
+        214
+      ],
+      "count": 65,
+      "contrast": 1.480143762729228
+    },
+    {
+      "RGB": [
+        246,
+        246,
+        246
+      ],
+      "count": 65,
+      "contrast": 1.0807118239354239
+    },
+    {
+      "RGB": [
+        199,
+        199,
+        201
+      ],
+      "count": 63,
+      "contrast": 1.687939856948828
+    },
+    {
+      "RGB": [
+        218,
+        218,
+        219
+      ],
+      "count": 63,
+      "contrast": 1.3969693836183932
+    },
+    {
+      "RGB": [
+        249,
+        249,
+        249
+      ],
+      "count": 62,
+      "contrast": 1.0528357744845473
+    }
+  ],
+  "nonwhiteRows": {
+    "1071": 47,
+    "1072": 61,
+    "1073": 119,
+    "1074": 127,
+    "1075": 125,
+    "1076": 124,
+    "1077": 98,
+    "1078": 80,
+    "1079": 76,
+    "1080": 75,
+    "1081": 138,
+    "1082": 360,
+    "1083": 406,
+    "1084": 439,
+    "1085": 469,
+    "1086": 374,
+    "1087": 333,
+    "1088": 314,
+    "1089": 300,
+    "1090": 290,
+    "1091": 280,
+    "1092": 291,
+    "1093": 339,
+    "1094": 344,
+    "1095": 340,
+    "1096": 344,
+    "1097": 282,
+    "1098": 272,
+    "1099": 273,
+    "1100": 276,
+    "1101": 291,
+    "1102": 309,
+    "1103": 326,
+    "1104": 362,
+    "1105": 446,
+    "1106": 419,
+    "1107": 392,
+    "1108": 344,
+    "1109": 97,
+    "1110": 15,
+    "1111": 14,
+    "1112": 15,
+    "1113": 15,
+    "1114": 15,
+    "1115": 14,
+    "1116": 14,
+    "1117": 14,
+    "1118": 3
+  },
+  "limits": [
+    "Single retained light/standard-text screenshot; not dark, AX5, increased-contrast or physical display validation.",
+    "Rendered pixel contrast, not recovered pre-alpha style token.",
+    "Antialias edge pixels trend toward background; reported dominant darkest core and darkest-pixel upper bound avoid selecting only pale edges.",
+    "Glyph bounding box is inferred from pixels/source label, not an accessibility element frame.",
+    "No screenshot modification, native execution or canonical-source edit."
+  ]
+}

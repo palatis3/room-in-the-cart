@@ -1,0 +1,25 @@
+{
+  "startedAtUTC": "2026-11-08T21:52:12.802967+00:00",
+  "command": [
+    "/usr/bin/xcrun",
+    "simctl",
+    "spawn",
+    "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+    "log",
+    "show",
+    "--last",
+    "70m",
+    "--style",
+    "json",
+    "--timezone",
+    "UTC",
+    "--predicate",
+    "process == \"RoomInTheCart\" AND subsystem == \"dev.roominthecart.fixture\" AND category == \"cook-destination\""
+  ],
+  "windowMinutes": 70,
+  "scope": "Scoped diagnostic messages only; correlate actual app PID and run window before interpreting.",
+  "exitCode": 0,
+  "finishedAtUTC": "2026-11-08T21:52:23.672313+00:00",
+  "outputSHA256": "4d79f05515e2b841ff4922bb4c5ba03ee3ca0525e355f8bf1a17cc363279e9fd",
+  "outputBytes": 214867
+}

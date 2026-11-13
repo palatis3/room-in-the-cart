@@ -1,0 +1,88 @@
+{
+  "status": "functional-qualification-passed",
+  "scope": "Fresh local app/model/UI build; one model and English/Spanish creation Undo journeys; synthetic HTTP fixture and durable native outbox",
+  "sourceEntries": 627,
+  "sourceManifestSHA256": "1bfbd0fce6c5047e9aa44bed5323377e5e70d3d1f9d1fac8c7a8fe76d8457380",
+  "productEntries": 280,
+  "rootVerifiedSourceArchiveAndProducts": true,
+  "originalResultBundlesUnchanged": true,
+  "receipts": {
+    "model-receipt.json": "e219e7859519360e25943d888f9f670cc0a850c94f835702d1ead08b4793d93b",
+    "model-strict-receipt.json": "5b050f64f900595a3ba49f111d832ff48913bb9caf5d3cba6fc01e0925a329fa",
+    "creation-en-receipt.json": "50afa470ff2a93b22ebfaff6bc7411f4ac53912681133a6e330b0708f97a38d6",
+    "creation-en-strict-receipt.json": "21484d8791000cd213c524f3de05e6a9bd0b295f1998a70edbafaf94559f6502",
+    "creation-es-receipt.json": "97cbd3dc2b3efc62886144319f5cebe51789731cc3dbe46b6e5a083265feb831",
+    "creation-es-strict-receipt.json": "b7613a7e9701dc4a403fe3621e140fe9fcba61741e2ab9387672a3c2965839a7",
+    "final.json": "3c42ead980ea37814c381933f7f59f4a162e7e2a275caf6c9101375239f0fba4",
+    "custody-final.json": "afe3f60d60646c46fed6504d9a158b032ec8ec4c3532d401e12db2e8cc2a689f",
+    "source-manifest.json": "1bfbd0fce6c5047e9aa44bed5323377e5e70d3d1f9d1fac8c7a8fe76d8457380",
+    "products.json": "22610851606b1f356d87c4eddc49b76544a5c27a75c692862d2e1ea741403d88"
+  },
+  "attachments": [
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-en/6042E88C-6D52-4D24-853C-AFD0FF1F3938.png",
+      "name": "Created-Meal-Undo-en-exact-retry-and-survivors_0_042C7742-0BE9-456D-941C-141D35D9653B.png",
+      "sha256": "2a30d26063ab9f051c288dbd9ac23c849cb7db9ad05fdb067832bcb9b7b03bcd"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-en/F619683F-FE3A-4928-9948-C82AA5A868FB.png",
+      "name": "Operation-Undo-en-unknown-total-copy_0_05D788FC-4D6C-4B59-B5CD-929E1AA81657.png",
+      "sha256": "4d79957687fe8fc5c178000659d734c2fade61329d011a2c5e6b86f9abe00928"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-en/3BF059E9-779D-4E7B-BB0E-009DA0330845.png",
+      "name": "Created-Meal-Undo-en-surviving-meals_0_DF981598-0F2D-4D62-887F-2D6BB3467BAD.png",
+      "sha256": "99661811ffebf0be845135afca2c265ded949da2d423e4d01e65c547547912ee"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-en/9DB5AF3C-3DD6-4BC7-B1E3-4F37A28073DB.png",
+      "name": "Created-Meal-Undo-en-lost-reply_0_C732B3EC-A8BE-49B1-A7DF-DE05B0BD30DA.png",
+      "sha256": "e22c80184c3bb3787c5c2eaf74382497d9d50063a3da556fde82f0596255b94e"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-en/A8FA9989-23D7-48C1-9B7D-CE95A7DA7F19.png",
+      "name": "Created-Meal-Undo-en-before-Cancel_0_692D5C55-88F9-4079-95E1-470CC3DA928A.png",
+      "sha256": "50e4fd058e7e6c500740dc11ce7eb2f9d4fa74417c8400d2ba1a10175143978d"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-es/BD9DDF88-EBDC-4255-A140-D40C3E3FB9F6.png",
+      "name": "Created-Meal-Undo-es-exact-retry-and-survivors_0_756E9A32-2E2A-4D56-838D-A2D10B9F6D6D.png",
+      "sha256": "79b358e1e6e8bcc89b32eddde60418183507cbba708b5fabc6cd6a05b2ad9b0b"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-es/623797A7-D57B-4D52-9F58-76E4EB19BE37.png",
+      "name": "Operation-Undo-es-unknown-total-copy_0_220CA382-6519-445C-9134-E45E4E42AF0A.png",
+      "sha256": "94ec8026abd77f38685670e39a52f6572ec0100a6c1382f5642270a729a559e8"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-es/D9D0344F-DFC1-4DFD-AFD0-D65B09B45148.png",
+      "name": "Created-Meal-Undo-es-surviving-meals_0_DB171038-61FB-486C-AE05-1334E39661E9.png",
+      "sha256": "bb4bcdb18bc073b4126b87b6c12f3d27b31abb73ee19ca1b3eccbb4247109e28"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-es/44FE9019-6FC5-40A5-9FFB-ACF514154BE0.png",
+      "name": "Created-Meal-Undo-es-lost-reply_0_1E1BE856-39B9-41DE-A8F9-2AEDC60BA8DC.png",
+      "sha256": "6a40aee3fb4b692c4e4ac649df87c10538f15a34a4f43c8d241530ceca8420ea"
+    },
+    {
+      "path": ".build/CreatedMealUIQualificationNov10/r2/attachments-es/BE1954F0-464E-4CB7-81EC-261BE8D972E4.png",
+      "name": "Created-Meal-Undo-es-before-Cancel_0_3B20E5D4-FB43-4960-8972-B845577B491C.png",
+      "sha256": "3901fdbf61d6f463f66e9a1882a87c255ed00fb1a38dc31dbc94a6624ecca6a1"
+    }
+  ],
+  "visualReview": {
+    "samplesViewed": 6,
+    "finding": "Spanish surviving-meal ingredient quantity label touches its value; layout correction remains required. Functional assertions passed; full visual acceptance not claimed.",
+    "correction": {
+      "finding": "Original-resolution independent and root reinspection shows clear label/value separation. Initial resized-preview interpretation was incorrect; no confirmed layout defect or patch.",
+      "imageSHA256": "bb4bcdb18bc073b4126b87b6c12f3d27b31abb73ee19ca1b3eccbb4247109e28",
+      "originalRootReceiptPreserved": true
+    }
+  },
+  "limits": [
+    "Not authenticated real-service UI or mixed-device acceptance",
+    "Not full combined regression",
+    "Not minimum-iOS or physical-device acceptance",
+    "No performance baseline or App Store readiness claim"
+  ]
+}

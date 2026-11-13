@@ -1,0 +1,1078 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-11-10T14:00:00.000Z",
+  "recordDigest": "ebc40a474e69dbfa49065d15be01fbf9c454c82c9bfc4501634ba855cd59fb52",
+  "record": {
+    "schemaVersion": 1,
+    "projection": "assigned-shopper-history-v1",
+    "origin": {
+      "householdId": "00000000-0000-4000-8000-000000000001",
+      "shopId": "00000000-0000-4000-8000-000000000002"
+    },
+    "shopRevision": 3,
+    "phase": "closed",
+    "basketRevisions": [
+      {
+        "revision": 1,
+        "purpose": "create",
+        "recordedAt": "2026-11-10T14:00:00.000Z",
+        "phase": "draft",
+        "quote": {
+          "currency": "USD",
+          "scope": "wholeCheckout",
+          "complete": true,
+          "capMinor": 3800,
+          "capScope": "wholeCheckout",
+          "fee": {
+            "kind": "fixed",
+            "amountMinor": 0
+          },
+          "taxesMinor": 0,
+          "depositsMinor": 0,
+          "discountsMinor": 0,
+          "observedAt": "2026-11-10T14:00:00.000Z",
+          "expiresAt": "2026-11-11T14:00:00.000Z"
+        },
+        "basketLines": [
+          {
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "originalItem": "Wraps",
+            "packs": 2,
+            "unitPriceMinor": 200,
+            "feeEligible": true
+          }
+        ]
+      },
+      {
+        "revision": 2,
+        "purpose": "freeze",
+        "recordedAt": "2026-11-10T14:00:00.000Z",
+        "phase": "frozen",
+        "quote": {
+          "currency": "USD",
+          "scope": "wholeCheckout",
+          "complete": true,
+          "capMinor": 3800,
+          "capScope": "wholeCheckout",
+          "fee": {
+            "kind": "fixed",
+            "amountMinor": 0
+          },
+          "taxesMinor": 0,
+          "depositsMinor": 0,
+          "discountsMinor": 0,
+          "observedAt": "2026-11-10T14:00:00.000Z",
+          "expiresAt": "2026-11-11T14:00:00.000Z"
+        },
+        "basketLines": [
+          {
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "originalItem": "Wraps",
+            "packs": 2,
+            "unitPriceMinor": 200,
+            "feeEligible": true
+          }
+        ]
+      },
+      {
+        "revision": 3,
+        "purpose": "placed",
+        "recordedAt": "2026-11-10T14:00:00.000Z",
+        "phase": "placed",
+        "quote": {
+          "currency": "USD",
+          "scope": "wholeCheckout",
+          "complete": true,
+          "capMinor": 3800,
+          "capScope": "wholeCheckout",
+          "fee": {
+            "kind": "fixed",
+            "amountMinor": 0
+          },
+          "taxesMinor": 0,
+          "depositsMinor": 0,
+          "discountsMinor": 0,
+          "observedAt": "2026-11-10T14:00:00.000Z",
+          "expiresAt": "2026-11-11T14:00:00.000Z"
+        },
+        "basketLines": [
+          {
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "originalItem": "Wraps",
+            "packs": 2,
+            "unitPriceMinor": 200,
+            "feeEligible": true
+          }
+        ]
+      }
+    ],
+    "mealRevisions": [
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000004",
+        "revision": 1,
+        "meal": {
+          "title": "Tacos",
+          "day": null,
+          "kind": "dinner",
+          "portions": 4,
+          "protected": false,
+          "planning": {
+            "bindings": [
+              {
+                "id": "00000000-0000-4000-8000-000000000007",
+                "groupId": "00000000-0000-4000-8000-000000000006",
+                "ingredientId": "00000000-0000-4000-8000-000000000005",
+                "quantity": {
+                  "amount": {
+                    "numerator": 2,
+                    "denominator": 1
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 wraps"
+                }
+              }
+            ],
+            "groups": [
+              {
+                "id": "00000000-0000-4000-8000-000000000006",
+                "name": "Protected lunches",
+                "servings": {
+                  "numerator": 2,
+                  "denominator": 1
+                },
+                "protected": true
+              }
+            ],
+            "ingredients": [
+              {
+                "id": "00000000-0000-4000-8000-000000000005",
+                "name": "Wraps",
+                "quantity": {
+                  "amount": {
+                    "numerator": 2,
+                    "denominator": 1
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 wraps"
+                },
+                "groupIds": [
+                  "00000000-0000-4000-8000-000000000006"
+                ],
+                "exclusions": [
+                  "No salt"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000004",
+        "revision": 3,
+        "meal": null
+      }
+    ],
+    "cookCopies": [
+      {
+        "copyId": "00000000-0000-4000-8000-000000000008",
+        "occurrenceId": "00000000-0000-4000-8000-000000000004",
+        "mealRevision": 1,
+        "shopRevision": 3,
+        "placedRevision": 2,
+        "version": 1,
+        "language": "es",
+        "text": "Reserve dos tortillas para el almuerzo. Sin sal.",
+        "createdAt": "2026-11-10T14:00:00.000Z"
+      }
+    ],
+    "cookSends": [
+      {
+        "copyId": "00000000-0000-4000-8000-000000000008",
+        "recipient": "Cook",
+        "sentAt": "2026-11-10T14:00:00.000Z"
+      }
+    ],
+    "deliveries": {
+      "sources": [
+        {
+          "sourceId": "00000000-0000-4000-8000-000000000009",
+          "placedRevision": 2,
+          "lineId": "00000000-0000-4000-8000-000000000003",
+          "segmentKey": "00000000-0000-4000-8000-000000000010",
+          "foodName": "Wraps",
+          "exclusionTags": [
+            "No salt"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "arrival",
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "body": {
+            "sourceId": "00000000-0000-4000-8000-000000000009",
+            "observationId": "00000000-0000-4000-8000-000000000011",
+            "predecessorId": null,
+            "arrivedAt": "2026-11-10T14:00:00.000Z",
+            "received": {
+              "amount": {
+                "numerator": 8,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "8 wraps"
+            },
+            "supplyRevision": 2
+          }
+        },
+        {
+          "kind": "usable",
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "body": {
+            "sourceId": "00000000-0000-4000-8000-000000000009",
+            "observationId": "00000000-0000-4000-8000-000000000012",
+            "predecessorId": null,
+            "arrivalObservationId": "00000000-0000-4000-8000-000000000011",
+            "confirmedAt": "2026-11-10T14:00:00.000Z",
+            "usable": {
+              "amount": {
+                "numerator": 6,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "6 wraps"
+            },
+            "supplyRevision": 3
+          }
+        }
+      ],
+      "matches": [
+        {
+          "supplyRevision": 4,
+          "sourceId": "00000000-0000-4000-8000-000000000009",
+          "occurrenceId": "00000000-0000-4000-8000-000000000004",
+          "mealRevision": 1,
+          "ingredientId": "00000000-0000-4000-8000-000000000005",
+          "matched": true
+        }
+      ],
+      "reservations": [
+        {
+          "supplyRevision": 5,
+          "sourceId": "00000000-0000-4000-8000-000000000009",
+          "occurrenceId": "00000000-0000-4000-8000-000000000004",
+          "mealRevision": 1,
+          "ingredientId": "00000000-0000-4000-8000-000000000005",
+          "groupId": "00000000-0000-4000-8000-000000000006",
+          "quantity": {
+            "amount": {
+              "numerator": 2,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "2 wraps"
+          }
+        }
+      ]
+    },
+    "decisions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000013",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "kind": "approval",
+        "product": "Wraps",
+        "dish": "Tacos",
+        "occasion": null,
+        "decision": "Use the confirmed wraps",
+        "outcome": null,
+        "scope": "one_shop",
+        "recordedAt": "2026-11-10T14:00:00.000Z",
+        "observedAt": null,
+        "promotedAt": null
+      }
+    ],
+    "financialEntries": [
+      {
+        "id": "00000000-0000-4000-8000-000000000014",
+        "evidenceKey": "00000000-0000-4000-8000-000000000015",
+        "kind": "postedCharge",
+        "amountMinor": 400,
+        "currency": "USD",
+        "occurredAt": "2026-11-10T14:00:00.000Z",
+        "creditId": null,
+        "chargeEvidenceKey": null,
+        "holdEvidenceKey": null,
+        "sourceText": "Shopper reported receipt total"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000016",
+        "evidenceKey": "00000000-0000-4000-8000-000000000017",
+        "kind": "pendingCredit",
+        "amountMinor": 100,
+        "currency": "USD",
+        "occurredAt": "2026-11-10T14:00:00.000Z",
+        "creditId": "00000000-0000-4000-8000-000000000018",
+        "chargeEvidenceKey": "00000000-0000-4000-8000-000000000015",
+        "holdEvidenceKey": null,
+        "sourceText": "Requested credit; not posted"
+      }
+    ],
+    "priceObservations": [
+      {
+        "id": "00000000-0000-4000-8000-000000000019",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "itemName": "Wraps",
+        "packLabel": "Eight wraps",
+        "usablePack": {
+          "amount": {
+            "numerator": 8,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "8 wraps"
+        },
+        "price": {
+          "kind": "exact",
+          "minor": 200
+        },
+        "currency": "USD",
+        "store": "Fictional market",
+        "branch": "Main",
+        "channel": "storeShelf",
+        "mode": "pickup",
+        "eligibility": "",
+        "observedAt": "2026-11-10T14:00:00.000Z",
+        "sourceText": "Entered shelf price",
+        "sourceLocale": "en-US"
+      }
+    ],
+    "foodHistory": {
+      "demandRevisions": [
+        {
+          "shopRevision": 1,
+          "predecessorRevision": null,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "graph": {
+            "schemaVersion": 1,
+            "conversionTableVersion": "us-customary-metric-v1",
+            "householdId": "00000000-0000-4000-8000-000000000001",
+            "shopId": "00000000-0000-4000-8000-000000000002",
+            "revision": 1,
+            "lines": [
+              {
+                "id": "00000000-0000-4000-8000-000000000003",
+                "name": "Wraps",
+                "unit": "count",
+                "originalOrder": 0,
+                "trashedAt": null
+              }
+            ],
+            "contributions": [
+              {
+                "id": "00000000-0000-4000-8000-000000000031",
+                "lineId": "00000000-0000-4000-8000-000000000003",
+                "source": {
+                  "kind": "manual"
+                },
+                "productKey": "wraps",
+                "productName": "Wraps",
+                "originalText": "Twelve manually entered wraps",
+                "quantity": {
+                  "amount": {
+                    "numerator": "12",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "12 original wraps",
+                  "confirmedConversion": null
+                },
+                "exclusions": [],
+                "contains": [],
+                "removedAt": null
+              },
+              {
+                "id": "00000000-0000-4000-8000-000000000032",
+                "lineId": "00000000-0000-4000-8000-000000000003",
+                "source": {
+                  "kind": "reservation",
+                  "reservationId": "00000000-0000-4000-8000-000000000034",
+                  "purpose": "Protected lunches",
+                  "originOccurrenceId": "00000000-0000-4000-8000-000000000004",
+                  "ingredientId": "00000000-0000-4000-8000-000000000005",
+                  "groupId": "00000000-0000-4000-8000-000000000006",
+                  "bindingId": "00000000-0000-4000-8000-000000000007"
+                },
+                "productKey": "wraps",
+                "productName": "Wraps",
+                "originalText": "Two protected wraps",
+                "quantity": {
+                  "amount": {
+                    "numerator": "2",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 original wraps",
+                  "confirmedConversion": null
+                },
+                "exclusions": [],
+                "contains": [],
+                "removedAt": null
+              }
+            ],
+            "edges": [
+              {
+                "id": "00000000-0000-4000-8000-000000000033",
+                "kind": "withinExisting",
+                "demandId": "00000000-0000-4000-8000-000000000032",
+                "supplyId": "00000000-0000-4000-8000-000000000031",
+                "quantity": {
+                  "amount": {
+                    "numerator": "2",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 original wraps",
+                  "confirmedConversion": null
+                },
+                "confirmation": {
+                  "productMatchConfirmed": true,
+                  "confirmedAt": "2026-11-10T14:00:00.000Z",
+                  "evidence": "Two lunch wraps are inside the entered twelve"
+                }
+              }
+            ],
+            "usedIds": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000031",
+              "00000000-0000-4000-8000-000000000032",
+              "00000000-0000-4000-8000-000000000033"
+            ]
+          },
+          "packReviews": [
+            {
+              "lineId": "00000000-0000-4000-8000-000000000003",
+              "usablePerPack": {
+                "amount": {
+                  "numerator": "6",
+                  "denominator": "1"
+                },
+                "unit": "count",
+                "originalLiteral": "6 original wraps",
+                "confirmedConversion": null
+              },
+              "acceptUnresolved": false
+            }
+          ]
+        },
+        {
+          "shopRevision": 2,
+          "predecessorRevision": 1,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "graph": {
+            "schemaVersion": 1,
+            "conversionTableVersion": "us-customary-metric-v1",
+            "householdId": "00000000-0000-4000-8000-000000000001",
+            "shopId": "00000000-0000-4000-8000-000000000002",
+            "revision": 2,
+            "lines": [
+              {
+                "id": "00000000-0000-4000-8000-000000000003",
+                "name": "Wraps",
+                "unit": "count",
+                "originalOrder": 0,
+                "trashedAt": null
+              }
+            ],
+            "contributions": [
+              {
+                "id": "00000000-0000-4000-8000-000000000031",
+                "lineId": "00000000-0000-4000-8000-000000000003",
+                "source": {
+                  "kind": "manual"
+                },
+                "productKey": "wraps",
+                "productName": "Wraps",
+                "originalText": "Twelve manually entered wraps",
+                "quantity": {
+                  "amount": {
+                    "numerator": "12",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "12 original wraps",
+                  "confirmedConversion": null
+                },
+                "exclusions": [],
+                "contains": [],
+                "removedAt": null
+              }
+            ],
+            "edges": [],
+            "usedIds": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000031",
+              "00000000-0000-4000-8000-000000000032",
+              "00000000-0000-4000-8000-000000000033"
+            ]
+          },
+          "packReviews": [
+            {
+              "lineId": "00000000-0000-4000-8000-000000000003",
+              "usablePerPack": {
+                "amount": {
+                  "numerator": "6",
+                  "denominator": "1"
+                },
+                "unit": "count",
+                "originalLiteral": "6 original wraps",
+                "confirmedConversion": null
+              },
+              "acceptUnresolved": false
+            }
+          ]
+        }
+      ],
+      "trackingRevisions": [
+        {
+          "shopRevision": 1,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "food": {
+            "graph": {
+              "schemaVersion": 1,
+              "conversionTableVersion": "us-customary-metric-v1",
+              "householdId": "00000000-0000-4000-8000-000000000001",
+              "shopId": "00000000-0000-4000-8000-000000000002",
+              "revision": 1,
+              "lines": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000003",
+                  "name": "Wraps",
+                  "unit": "count",
+                  "originalOrder": 0,
+                  "trashedAt": null
+                }
+              ],
+              "contributions": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000031",
+                  "lineId": "00000000-0000-4000-8000-000000000003",
+                  "source": {
+                    "kind": "manual"
+                  },
+                  "productKey": "wraps",
+                  "productName": "Wraps",
+                  "originalText": "Twelve manually entered wraps",
+                  "quantity": {
+                    "amount": {
+                      "numerator": "12",
+                      "denominator": "1"
+                    },
+                    "unit": "count",
+                    "originalLiteral": "12 original wraps",
+                    "confirmedConversion": null
+                  },
+                  "exclusions": [],
+                  "contains": [],
+                  "removedAt": null
+                },
+                {
+                  "id": "00000000-0000-4000-8000-000000000032",
+                  "lineId": "00000000-0000-4000-8000-000000000003",
+                  "source": {
+                    "kind": "reservation",
+                    "reservationId": "00000000-0000-4000-8000-000000000034",
+                    "purpose": "Protected lunches",
+                    "originOccurrenceId": "00000000-0000-4000-8000-000000000004",
+                    "ingredientId": "00000000-0000-4000-8000-000000000005",
+                    "groupId": "00000000-0000-4000-8000-000000000006",
+                    "bindingId": "00000000-0000-4000-8000-000000000007"
+                  },
+                  "productKey": "wraps",
+                  "productName": "Wraps",
+                  "originalText": "Two protected wraps",
+                  "quantity": {
+                    "amount": {
+                      "numerator": "2",
+                      "denominator": "1"
+                    },
+                    "unit": "count",
+                    "originalLiteral": "2 original wraps",
+                    "confirmedConversion": null
+                  },
+                  "exclusions": [],
+                  "contains": [],
+                  "removedAt": null
+                }
+              ],
+              "edges": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000033",
+                  "kind": "withinExisting",
+                  "demandId": "00000000-0000-4000-8000-000000000032",
+                  "supplyId": "00000000-0000-4000-8000-000000000031",
+                  "quantity": {
+                    "amount": {
+                      "numerator": "2",
+                      "denominator": "1"
+                    },
+                    "unit": "count",
+                    "originalLiteral": "2 original wraps",
+                    "confirmedConversion": null
+                  },
+                  "confirmation": {
+                    "productMatchConfirmed": true,
+                    "confirmedAt": "2026-11-10T14:00:00.000Z",
+                    "evidence": "Two lunch wraps are inside the entered twelve"
+                  }
+                }
+              ],
+              "usedIds": [
+                "00000000-0000-4000-8000-000000000003",
+                "00000000-0000-4000-8000-000000000031",
+                "00000000-0000-4000-8000-000000000032",
+                "00000000-0000-4000-8000-000000000033"
+              ]
+            },
+            "basket": [
+              {
+                "id": "00000000-0000-4000-8000-000000000003",
+                "name": "Wraps",
+                "packs": 2,
+                "priceMinor": 200,
+                "feeEligible": true
+              }
+            ],
+            "catalog": [
+              {
+                "id": "00000000-0000-4000-8000-000000000035",
+                "revision": 1,
+                "source": {
+                  "kind": "reservation",
+                  "reservationId": "00000000-0000-4000-8000-000000000034",
+                  "purpose": "Protected lunches",
+                  "originOccurrenceId": "00000000-0000-4000-8000-000000000004",
+                  "ingredientId": "00000000-0000-4000-8000-000000000005",
+                  "groupId": "00000000-0000-4000-8000-000000000006",
+                  "bindingId": "00000000-0000-4000-8000-000000000007"
+                },
+                "sourceLabel": "Protected lunch",
+                "originalText": "Two protected wraps",
+                "originalQuantityText": null,
+                "quantity": {
+                  "amount": {
+                    "numerator": "2",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 original wraps",
+                  "confirmedConversion": null
+                },
+                "sourceExclusions": [],
+                "requiredLineId": null
+              }
+            ],
+            "bindings": [
+              {
+                "factId": "00000000-0000-4000-8000-000000000035",
+                "contributionId": "00000000-0000-4000-8000-000000000032"
+              }
+            ],
+            "unbound": [],
+            "legacyLineIds": [],
+            "packReviews": [
+              {
+                "lineId": "00000000-0000-4000-8000-000000000003",
+                "usablePerPack": {
+                  "amount": {
+                    "numerator": "6",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "6 original wraps",
+                  "confirmedConversion": null
+                },
+                "acceptUnresolved": false
+              }
+            ]
+          }
+        },
+        {
+          "shopRevision": 2,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "food": {
+            "graph": {
+              "schemaVersion": 1,
+              "conversionTableVersion": "us-customary-metric-v1",
+              "householdId": "00000000-0000-4000-8000-000000000001",
+              "shopId": "00000000-0000-4000-8000-000000000002",
+              "revision": 2,
+              "lines": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000003",
+                  "name": "Wraps",
+                  "unit": "count",
+                  "originalOrder": 0,
+                  "trashedAt": null
+                }
+              ],
+              "contributions": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000031",
+                  "lineId": "00000000-0000-4000-8000-000000000003",
+                  "source": {
+                    "kind": "manual"
+                  },
+                  "productKey": "wraps",
+                  "productName": "Wraps",
+                  "originalText": "Twelve manually entered wraps",
+                  "quantity": {
+                    "amount": {
+                      "numerator": "12",
+                      "denominator": "1"
+                    },
+                    "unit": "count",
+                    "originalLiteral": "12 original wraps",
+                    "confirmedConversion": null
+                  },
+                  "exclusions": [],
+                  "contains": [],
+                  "removedAt": null
+                }
+              ],
+              "edges": [],
+              "usedIds": [
+                "00000000-0000-4000-8000-000000000003",
+                "00000000-0000-4000-8000-000000000031",
+                "00000000-0000-4000-8000-000000000032",
+                "00000000-0000-4000-8000-000000000033"
+              ]
+            },
+            "basket": [
+              {
+                "id": "00000000-0000-4000-8000-000000000003",
+                "name": "Wraps",
+                "packs": 2,
+                "priceMinor": 200,
+                "feeEligible": true
+              }
+            ],
+            "catalog": [
+              {
+                "id": "00000000-0000-4000-8000-000000000035",
+                "revision": 1,
+                "source": {
+                  "kind": "reservation",
+                  "reservationId": "00000000-0000-4000-8000-000000000034",
+                  "purpose": "Protected lunches",
+                  "originOccurrenceId": "00000000-0000-4000-8000-000000000004",
+                  "ingredientId": "00000000-0000-4000-8000-000000000005",
+                  "groupId": "00000000-0000-4000-8000-000000000006",
+                  "bindingId": "00000000-0000-4000-8000-000000000007"
+                },
+                "sourceLabel": "Protected lunch",
+                "originalText": "Two protected wraps",
+                "originalQuantityText": null,
+                "quantity": {
+                  "amount": {
+                    "numerator": "2",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "2 original wraps",
+                  "confirmedConversion": null
+                },
+                "sourceExclusions": [],
+                "requiredLineId": null
+              }
+            ],
+            "bindings": [],
+            "unbound": [
+              {
+                "factId": "00000000-0000-4000-8000-000000000035",
+                "transferred": {
+                  "id": "00000000-0000-4000-8000-000000000032",
+                  "lineId": "00000000-0000-4000-8000-000000000003",
+                  "source": {
+                    "kind": "reservation",
+                    "reservationId": "00000000-0000-4000-8000-000000000034",
+                    "purpose": "Protected lunches",
+                    "originOccurrenceId": "00000000-0000-4000-8000-000000000004",
+                    "ingredientId": "00000000-0000-4000-8000-000000000005",
+                    "groupId": "00000000-0000-4000-8000-000000000006",
+                    "bindingId": "00000000-0000-4000-8000-000000000007"
+                  },
+                  "productKey": "wraps",
+                  "productName": "Wraps",
+                  "originalText": "Two protected wraps",
+                  "quantity": {
+                    "amount": {
+                      "numerator": "2",
+                      "denominator": "1"
+                    },
+                    "unit": "count",
+                    "originalLiteral": "2 original wraps",
+                    "confirmedConversion": null
+                  },
+                  "exclusions": [],
+                  "contains": [],
+                  "removedAt": null
+                }
+              }
+            ],
+            "legacyLineIds": [],
+            "packReviews": [
+              {
+                "lineId": "00000000-0000-4000-8000-000000000003",
+                "usablePerPack": {
+                  "amount": {
+                    "numerator": "6",
+                    "denominator": "1"
+                  },
+                  "unit": "count",
+                  "originalLiteral": "6 original wraps",
+                  "confirmedConversion": null
+                },
+                "acceptUnresolved": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "stockHistory": {
+      "lots": [
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "deliverySourceId": null,
+          "location": "freezer",
+          "storedAt": null,
+          "useFirstAt": "2026-11-10T14:00:00.000Z",
+          "foodName": "Wraps saved in freezer",
+          "exclusionTags": [
+            "No salt"
+          ]
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000009",
+          "deliverySourceId": "00000000-0000-4000-8000-000000000009",
+          "location": "pantry",
+          "storedAt": "2026-11-10T14:00:00.000Z",
+          "useFirstAt": null,
+          "foodName": "Wraps",
+          "exclusionTags": [
+            "No salt"
+          ]
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000060",
+          "deliverySourceId": "00000000-0000-4000-8000-000000000060",
+          "location": "freezer",
+          "storedAt": "2026-11-10T14:00:00.000Z",
+          "useFirstAt": null,
+          "foodName": "Wraps carried from an earlier pickup",
+          "exclusionTags": [
+            "No salt"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 1,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "observe",
+          "confirmedAt": "2026-11-10T14:00:00.000Z",
+          "quantity": {
+            "amount": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "four usable freezer wraps"
+          }
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 2,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "select",
+          "selected": true
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 3,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "match",
+          "occurrenceId": "00000000-0000-4000-8000-000000000004",
+          "mealRevision": 1,
+          "ingredientId": "00000000-0000-4000-8000-000000000005",
+          "matched": true
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 4,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "reserve",
+          "occurrenceId": "00000000-0000-4000-8000-000000000004",
+          "mealRevision": 1,
+          "ingredientId": "00000000-0000-4000-8000-000000000005",
+          "groupId": "00000000-0000-4000-8000-000000000006",
+          "quantity": {
+            "amount": {
+              "numerator": 2,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "two protected freezer wraps"
+          }
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 5,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "reserve",
+          "occurrenceId": "00000000-0000-4000-8000-000000000004",
+          "mealRevision": 1,
+          "ingredientId": "00000000-0000-4000-8000-000000000005",
+          "groupId": "00000000-0000-4000-8000-000000000006",
+          "quantity": null
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 6,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "observe",
+          "confirmedAt": "2026-11-10T14:00:00.000Z",
+          "quantity": {
+            "amount": {
+              "numerator": 2,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "two usable freezer wraps after correction"
+          }
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 7,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "observe",
+          "confirmedAt": "2026-11-10T14:00:00.000Z",
+          "quantity": null
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000040",
+          "pantryRevision": 8,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "observe",
+          "confirmedAt": "2026-11-10T14:00:00.000Z",
+          "quantity": {
+            "amount": {
+              "numerator": 0,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "confirmed no usable wraps"
+          }
+        },
+        {
+          "lotId": "00000000-0000-4000-8000-000000000060",
+          "pantryRevision": 9,
+          "recordedAt": "2026-11-10T14:00:00.000Z",
+          "kind": "select",
+          "selected": true
+        }
+      ],
+      "carriedDeliveries": [
+        {
+          "originShopId": "00000000-0000-4000-8000-000000000061",
+          "source": {
+            "sourceId": "00000000-0000-4000-8000-000000000060",
+            "placedRevision": 2,
+            "lineId": "00000000-0000-4000-8000-000000000062",
+            "segmentKey": "00000000-0000-4000-8000-000000000063",
+            "foodName": "Wraps carried from an earlier pickup",
+            "exclusionTags": [
+              "No salt"
+            ]
+          },
+          "observations": [
+            {
+              "kind": "arrival",
+              "recordedAt": "2026-11-10T14:00:00.000Z",
+              "body": {
+                "sourceId": "00000000-0000-4000-8000-000000000060",
+                "observationId": "00000000-0000-4000-8000-000000000064",
+                "predecessorId": null,
+                "arrivedAt": "2026-11-10T14:00:00.000Z",
+                "received": {
+                  "amount": {
+                    "numerator": 10,
+                    "denominator": 1
+                  },
+                  "unit": "count",
+                  "originalLiteral": "10 earlier-pickup wraps"
+                },
+                "supplyRevision": 1
+              }
+            },
+            {
+              "kind": "usable",
+              "recordedAt": "2026-11-10T14:00:00.000Z",
+              "body": {
+                "sourceId": "00000000-0000-4000-8000-000000000060",
+                "observationId": "00000000-0000-4000-8000-000000000065",
+                "predecessorId": null,
+                "arrivalObservationId": "00000000-0000-4000-8000-000000000064",
+                "confirmedAt": "2026-11-10T14:00:00.000Z",
+                "usable": {
+                  "amount": {
+                    "numerator": 8,
+                    "denominator": 1
+                  },
+                  "unit": "count",
+                  "originalLiteral": "8 earlier-pickup wraps"
+                },
+                "supplyRevision": 2
+              }
+            },
+            {
+              "kind": "usable",
+              "recordedAt": "2026-11-10T14:00:00.000Z",
+              "body": {
+                "sourceId": "00000000-0000-4000-8000-000000000060",
+                "observationId": "00000000-0000-4000-8000-000000000066",
+                "predecessorId": "00000000-0000-4000-8000-000000000065",
+                "arrivalObservationId": "00000000-0000-4000-8000-000000000064",
+                "confirmedAt": "2026-11-10T14:00:00.000Z",
+                "usable": null,
+                "supplyRevision": 3
+              }
+            },
+            {
+              "kind": "usable",
+              "recordedAt": "2026-11-10T14:00:00.000Z",
+              "body": {
+                "sourceId": "00000000-0000-4000-8000-000000000060",
+                "observationId": "00000000-0000-4000-8000-000000000067",
+                "predecessorId": "00000000-0000-4000-8000-000000000066",
+                "arrivalObservationId": "00000000-0000-4000-8000-000000000064",
+                "confirmedAt": "2026-11-10T14:00:00.000Z",
+                "usable": {
+                  "amount": {
+                    "numerator": 0,
+                    "denominator": 1
+                  },
+                  "unit": "count",
+                  "originalLiteral": "0 earlier-pickup wraps"
+                },
+                "supplyRevision": 4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

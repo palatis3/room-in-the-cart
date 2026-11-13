@@ -1,0 +1,16 @@
+{
+  "reviewedUploadFiles": 137,
+  "directoryEntries": [
+    "config",
+    "service/dist",
+    "service/scripts",
+    "service/src/billing/tests",
+    "service/tests",
+    "web/dist",
+    "web/public-build",
+    "web/tests"
+  ],
+  "bytes": 1315699,
+  "allPinned": true,
+  "sourceCommit": "d0b0b12ee0cb8412f17e82c92a91013217560670"
+}

@@ -1,0 +1,7 @@
+{
+  "shared/fixtures/checkout.json": "95cbf2abac2b0bedb7b7a33d77667420d07a483fe053652cc323e6707843071a",
+  "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift": "6a3753160c910d365fca577c1d3c784e95d40fd02ee7c863ce09235b13504dfb",
+  "ios/Packages/CoreDomain/Tests/CoreDomainTests/CheckoutTests.swift": "9d30a846dfcd79d613f66f74f55993faf80e59f4c7592d407736177540ee6f7d",
+  "service/tests/checkout.test.mjs": "c70f898a713fcb913370e9b9b07ce994d206a42612a78c39bb5377a71e254d6d",
+  "docs/product/foundation-gen2.1/03-screens.md": "c8110a8f8f2d6f2d36f32305a158ecd9b2e1a34f998abbd79f38a95debf7c7e7"
+}

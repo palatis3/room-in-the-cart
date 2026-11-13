@@ -1,0 +1,20 @@
+{
+  "actualFixtureProductsManifest": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r4-execution/fixture-r1/product-manifest.json",
+  "productsManifestSHA256": "cbc8fb7e54325a8b14b11dcc8b86d7d8dee04e9d43fa3d172ebb7cdf5ef848d8",
+  "rawSHA256": "cfc9e0ea68b8ca0abe1e3dae3a884ec4b44831c088db60a3d529a7b5428b4416",
+  "appImages": [
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "sha256": "4abf02c880fc66811636a4b7f4ad5cd65a253ce434790ae891614ded40818b0e",
+      "matchesActualFixtureProductManifest": true,
+      "uuidOutput": "UUID: DF1B0D04-3418-31C3-A700-2A04478BFC46 (arm64) .build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart\n"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "sha256": "0146820243a832f6ae669e0383aafb2245458b99050859c6bfaba6215c910908",
+      "matchesActualFixtureProductManifest": true,
+      "uuidOutput": "UUID: A5F012DA-1A1F-3765-924D-BA245EC94D9D (arm64) .build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib\n"
+    }
+  ],
+  "scope": "Binds actual fixture build products. Top-level compiled-products.json was the earlier generic configuration and is not substituted for the actual fixture manifest."
+}

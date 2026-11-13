@@ -1,0 +1,5 @@
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  ↪︎Find: Descendants matching type Button
+    ↪︎Find: Elements matching predicate 'identifier == "header.closeButton" OR label == "Close"'
+      ↪︎Find: First Match

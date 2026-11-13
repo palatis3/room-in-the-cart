@@ -1,0 +1,9 @@
+{
+  "status": "passed-static-only",
+  "originalSourceFilesUnchanged": 4158,
+  "originalEvidenceFilesUnchanged": 20,
+  "originalProductFilesUnchanged": 4,
+  "onlyChanges": "one measurement call-site plus one private known-earlier helper",
+  "originalMethodsHelpersTimeoutsAndAssertions": "byte-identical after removing exactly two additions",
+  "nativeBuildTypecheckExecution": "not performed"
+}

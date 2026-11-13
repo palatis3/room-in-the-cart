@@ -1,0 +1,95 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "captureQualified": false,
+  "reason": "No readiness notification; trace contains only an empty issues store; original trace export reports Document Missing Template Error.",
+  "native": {
+    "exitCode": 0,
+    "elapsedSeconds": 175.379461875,
+    "strictExitCode": 0,
+    "requiredMetricsExitCode": 0,
+    "measurements": {
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": [
+        76106.296,
+        76286.52,
+        78400.056,
+        78236.216,
+        78203.448
+      ],
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": [
+        76188.216,
+        76335.672,
+        78400.056,
+        78449.208,
+        78432.824
+      ],
+      "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": [
+        2.581568125,
+        2.583029708,
+        2.566243667,
+        2.582063959,
+        2.566595666
+      ],
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": [
+        81.92,
+        65.536,
+        704.512,
+        -131.072,
+        -147.456
+      ]
+    }
+  },
+  "trace": {
+    "exitCode": 1,
+    "readinessObserved": false,
+    "tocExportExitCode": 10,
+    "cleanup": "Exact owned tracer received SIGINT then verified PID SIGTERM after original AUT/test were terminal; no tracer remains."
+  },
+  "originals": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/execution.json",
+      "sha256": "d9acd9fc91185a30e30c55a7a4d404cd3961b7a4da2465e5d65d8dfe0ee25740"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/inspection/receipt.json",
+      "sha256": "e413eb9a70bfaea6be16588cb9b231df3d4c5f4e729bde07e168d048eca5f089"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/metrics.json",
+      "sha256": "0af0cb1eae2ae14f1813da3a40046517dbf437a8367fc0e134abf0b763b96f13"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/trace-cleanup.json",
+      "sha256": "d305d368f69e56f54626dbe8152aa98251b051806b70662b1de9b4bb941d28ce"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/trace-issues-readback.json",
+      "sha256": "785ff96ce542b0d6481437155773648908c07910aba531c7823bc75337b60d1e"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/inspection/trace-readback.json",
+      "sha256": "17ef7b46adf8f0ee47001a8f552448232b33797ed8c2c46cfd6ee38de52f6629"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/inspection/trace-toc.log",
+      "sha256": "28c3ee1d8e3698496c540c01ccbb9d79fed962accf4e675fd0f33a6af02fdef5"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/instruments.log",
+      "sha256": "e6a7fbcff46038adccbe0e4abf16e1890cddfc70dd0348f1e6179170efb28362"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-instruments-r1/instruments-wait-sample.txt",
+      "sha256": "4971e427881ae53638a2e5e107ea066f14a47be0b5817d811727c790caef5932"
+    }
+  ],
+  "sourceUnchanged": true,
+  "productsUnchanged": true,
+  "originalResultUnchanged": true,
+  "wrapperExitMeaning": "Wrapper exited 0 for native pass; capture is independently failed and must not be qualified from wrapper status.",
+  "limits": [
+    "A waiting stack does not establish why collection failed.",
+    "No observed system authorization prompt or explicit collection error before stop.",
+    "No hosted repeat; no claim about nonemission or baseline."
+  ]
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "title": "Tap \"oneChange.done\" Button",
+    "start": 1794103136.548,
+    "attachments": [
+      {
+        "name": "UI Snapshot 2026-11-07 at 08.58.57 PM",
+        "file": "4B6079F6-3E7A-4093-81D8-3BF4CC9AB3F3",
+        "sha256": "c420b20e332db4cfb0c53b0549edf5d4d1f86401cb6d88d04b15760ebfc42293",
+        "rootChildren": 0,
+        "rootHasKeyboardFocus": false
+      },
+      {
+        "name": "Synthesized Event 2026-11-07 at 08.58.57 PM",
+        "file": "4D562CB3-B95E-4BF3-92F8-E7E2156E81C5",
+        "sha256": "91673c9b6af519e7b2e3cf0b1c58bd73971ab19bf4dbb2c94886f44b6f099b58",
+        "points": [
+          {
+            "x": 364.0,
+            "y": 517.0
+          },
+          {
+            "x": 364.0,
+            "y": 517.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Tap \"oneChange.done\" Button",
+    "start": 1794103152.476,
+    "attachments": [
+      {
+        "name": "UI Snapshot 2026-11-07 at 08.59.12 PM",
+        "file": "4AE687D1-5000-41B4-AEFE-6DBA9D9613E1",
+        "sha256": "c420b20e332db4cfb0c53b0549edf5d4d1f86401cb6d88d04b15760ebfc42293",
+        "rootChildren": 0,
+        "rootHasKeyboardFocus": false
+      },
+      {
+        "name": "Synthesized Event 2026-11-07 at 08.59.13 PM",
+        "file": "7D1C5FFA-B8B2-4A9C-A0E4-BAA5F2A69617",
+        "sha256": "91673c9b6af519e7b2e3cf0b1c58bd73971ab19bf4dbb2c94886f44b6f099b58",
+        "points": [
+          {
+            "x": 364.0,
+            "y": 517.0
+          },
+          {
+            "x": 364.0,
+            "y": 517.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Tap \"oneChange.done\" Button",
+    "start": 1794103462.662,
+    "attachments": [
+      {
+        "name": "UI Snapshot 2026-11-07 at 09.05.23 PM",
+        "file": "51CACB95-3284-4E5E-BDF5-F29F8B2FD31D",
+        "sha256": "c420b20e332db4cfb0c53b0549edf5d4d1f86401cb6d88d04b15760ebfc42293",
+        "rootChildren": 0,
+        "rootHasKeyboardFocus": false
+      },
+      {
+        "name": "Synthesized Event 2026-11-07 at 09.05.24 PM",
+        "file": "ECBA7712-1CCC-4073-9CAE-32A92DDAB9AE",
+        "sha256": "91673c9b6af519e7b2e3cf0b1c58bd73971ab19bf4dbb2c94886f44b6f099b58",
+        "points": [
+          {
+            "x": 364.0,
+            "y": 517.0
+          },
+          {
+            "x": 364.0,
+            "y": 517.0
+          }
+        ]
+      }
+    ]
+  }
+]

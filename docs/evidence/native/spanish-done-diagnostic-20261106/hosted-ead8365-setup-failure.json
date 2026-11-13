@@ -1,0 +1,178 @@
+{
+  "runID": 42204324021,
+  "attempt": 1,
+  "workflowID": 407500252,
+  "head": "ead836577a81ad499a610baffe8e8136eb2f2a7f",
+  "branch": "codex/diagnostic-spanish-done-b359d07",
+  "conclusion": "failure",
+  "collectedAt": "2026-11-06T10:43:14.996815+00:00",
+  "artifact": {
+    "run": 42204324021,
+    "attempt": 1,
+    "head": "ead836577a81ad499a610baffe8e8136eb2f2a7f",
+    "artifactID": 13496615147,
+    "name": "spanish-done-diagnostic-1",
+    "archiveBytes": 599,
+    "sha256": "1fd791bab68edfcdd30eacdee75854b0b0a41caa0f9980e3d49bd6c67835c2b3",
+    "digestVerified": true,
+    "members": 3,
+    "expandedBytes": 230,
+    "oversizedMembers": [],
+    "limits": {
+      "archiveBytes": 256000000,
+      "memberBytes": 50000000,
+      "totalBytes": 1000000000,
+      "members": 50000
+    },
+    "extracted": true
+  },
+  "source": {
+    "onlyChangedFilesFrom161ab64": [
+      "diagnostics/spanish-done/README.md",
+      "diagnostics/spanish-done/run.py",
+      "diagnostics/spanish-done/test_diagnostic.py"
+    ],
+    "onlyChangedRunnerFunction": "verify_runtime",
+    "allOriginalSwiftWorkflowAndExecuteCodeUnchanged": true,
+    "diagnosticFileSHA256": {
+      ".github/workflows/ios-fixtures.yml": "58b32ff3c19da9b2c1aa8e62b92ce10c0402dd150b6d1bf5fa906996bdce769a",
+      "diagnostics/spanish-done/README.md": "f9efda7033b866e788374f43b2bafa45cbe342864e809fffe576409af0378485",
+      "diagnostics/spanish-done/build.sh": "bfad1466571f2fcd775415c09ffb273cbb414c7339273d17271eb3efa48c7d07",
+      "diagnostics/spanish-done/local-wiring.sh": "509ce10372c188c8e58b73a42e472c9f6996e133479502cf62566285fe17a8b8",
+      "diagnostics/spanish-done/preservation.py": "73a122cf94191e93b03a53dfe218315493eaf76594d4d98f388c5425ce298928",
+      "diagnostics/spanish-done/protocol.py": "930c44df458290d74152452faf349d35977699fb6c810a6d2696ec83a9afbe4c",
+      "diagnostics/spanish-done/run.py": "34942ad9751e735f5a7c0b593db1cca3b9a95501c16b38bcb52c25c43c2d6035",
+      "diagnostics/spanish-done/test_diagnostic.py": "8d8cc92efec68142900d5ec5ba342c96b4e159a1680f4cc1a1b5eda2fa532674",
+      "ios/App/Theme.swift": "15728bbe48f2fc43fe2ef1b3a793c62243847251ecf15bdebfb652901d145010",
+      "ios/Features/Shop/ComparisonView.swift": "db4165e18c2c2ea1a3ccf105b8c39e0d400292a8ab746403d9c216420644cbb2",
+      "ios/UITests/RoomInTheCartUITests.swift": "19cbe46a0f3c17f4c3011d557494a5a4ac321637e7c285a71504b7b979e6b852"
+    },
+    "hostedSyntheticTests": 29,
+    "frozenSourceAndProducts": "Not produced; preparation failed before inventory or device creation."
+  },
+  "toolchain": "Xcode 26.3\nBuild version 17C529",
+  "environment": {
+    "runnerImage": "macos-15-arm64",
+    "imageVersion": "20261104.0514.1",
+    "macOS": "15.8.2",
+    "macOSBuild": "24H232",
+    "expectedRuntime": "iOS26.2/23C54",
+    "runtimeInventoryVerified": false,
+    "actualRuntimeVerified": false,
+    "ownedSimulatorCreated": false
+  },
+  "failure": {
+    "classification": "Setup-only runtime inventory timeout before simulator creation; no build or app test result.",
+    "query": [
+      "xcrun",
+      "simctl",
+      "list",
+      "-j"
+    ],
+    "configuredTimeoutSeconds": 30,
+    "prepareStepStartUTC": "2026-11-06T10:39:36.4816910Z",
+    "failureLogUTC": "2026-11-06T10:40:09.8409510Z",
+    "elapsedQuerySeconds": null,
+    "elapsedLimit": "The exception records30second timeout. No per-query elapsed measurement was emitted for this inventory call.",
+    "amended90SecondGetenvQueryReached": false
+  },
+  "testResult": {
+    "raw": null,
+    "notInvoked": true
+  },
+  "strictReplay": {
+    "status": "not run",
+    "reason": "Original selector was not invoked; no result bundle or test log exists.",
+    "pinnedCheckerBase": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+    "checkerSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990"
+  },
+  "capture": {
+    "complete": false,
+    "errors": [
+      "[Errno 2] No such file or directory: '.build/spanish-done/identity.json'"
+    ],
+    "absenceInferenceAllowed": false
+  },
+  "cleanup": {
+    "workflowStep": "success",
+    "meaning": "No-op because identity.json did not exist; preparation never reached simulator creation.",
+    "shutdownObserved": false,
+    "deviceDeleted": false
+  },
+  "jobSteps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Require one exact manually selected diagnostic commit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate diagnostic parsing and source preservation without native UI actions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Check exact source and environment; create and boot one owned simulator",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Compile original core test profile and freeze diagnostic products",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Run the complete original Spanish selector once with normal idling",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Collect evidence and retain independent test and capture verdicts",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Shut down only the owned simulator",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "retainedFilesSHA256": {
+    "capture-status.json": "d4229d5ae0246883b323642a077374560aff5136440e0631dc245dc083bde6ab",
+    "test-result.json": "d0fb1e32458b81b1da3c02485bd8ffad50908b8d4edd2449e8ffbf05659796a0",
+    "toolchain.txt": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973"
+  },
+  "previousRunPreserved": "../hosted/summary.json",
+  "collectorStopped": true,
+  "limitations": [
+    "No inventory or actual runtime build was observed. Xcode/toolchain and runner image are verified from retained artifacts/job log.",
+    "The new runner image differs from the previous run; this is context, not a causal attribution.",
+    "The90second getenv change was not exercised, so this run provides no outcome for that change.",
+    "No XCTest reproduction/nonreproduction, capture chronology or product fix can be inferred.",
+    "Collector performed no native app/test/simulator operation, source/Git mutation, retry, cancellation or dispatch. Only the named diagnostic artifact was downloaded."
+  ]
+}

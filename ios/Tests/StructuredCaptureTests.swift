@@ -4,6 +4,46 @@ import CoreDomain
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testRangeConnectorsRemainAmountsAndKeepTheRealDestination() throws {
+        let simple = try row("2 to 3 apples")
+        XCTAssertEqual(simple.amount, "")
+        XCTAssertEqual(simple.name, "apples")
+        XCTAssertEqual(simple.destination, destination)
+        let source = "two packs of six to eight wraps for lunch to Saturday pickup without sesame"
+        var draft = try row(source)
+        XCTAssertEqual(draft.amount, ""); XCTAssertEqual(draft.packCount, "2")
+        XCTAssertEqual(draft.amountPerPack, ""); XCTAssertEqual(draft.name, "wraps")
+        XCTAssertEqual(draft.destination, destination); XCTAssertEqual(draft.purpose, "lunch")
+        XCTAssertEqual(draft.exclusions, "sesame")
+        let trailing = try row("2 cans of beans, 6 to 8 oz each to 3 Oaks")
+        XCTAssertEqual(trailing.name, "beans"); XCTAssertEqual(trailing.destination, "3 Oaks")
+        XCTAssertEqual(trailing.packCount, "2"); XCTAssertEqual(trailing.amountPerPack, "")
+        let chained = try row("two to three packs of six to eight wraps to Saturday pickup without sesame")
+        XCTAssertEqual(chained.name, "wraps"); XCTAssertEqual(chained.packCount, "")
+        XCTAssertEqual(chained.amountPerPack, ""); XCTAssertEqual(chained.destination, destination)
+        XCTAssertEqual(chained.exclusions, "sesame")
+        let lunches = try row("2 apples for two to three lunches to 3 Oaks without sesame")
+        XCTAssertEqual(lunches.name, "apples"); XCTAssertEqual(lunches.amount, "2")
+        XCTAssertEqual(lunches.purpose, "two to three lunches"); XCTAssertEqual(lunches.destination, "3 Oaks")
+        XCTAssertEqual(lunches.exclusions, "sesame")
+        let named = try row("2 apples to 3 Oaks")
+        XCTAssertEqual(named.amount, "2"); XCTAssertEqual(named.destination, "3 Oaks")
+        let spanish = try row("entre dos y tres tazas de arroz para cena destino esta compra sin nueces")
+        XCTAssertEqual(spanish.amount, ""); XCTAssertEqual(spanish.name, "arroz")
+        XCTAssertEqual(spanish.destination, destination); XCTAssertEqual(spanish.purpose, "cena")
+        XCTAssertEqual(spanish.exclusions, "nueces")
+        let branded = try row("2 Formula 1 to 3 Oaks")
+        XCTAssertEqual(branded.name, "Formula 1"); XCTAssertEqual(branded.destination, "3 Oaks")
+        draft.amountPerPack = "7"; draft.confirmed = true
+        let reviewed = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+        var shop = ShoppingLedger()
+        let preview = try shop.stageCaptureImport(id: UUID(), originalText: source, source: .voice, lines: [reviewed])
+        try shop.commitImport(preview)
+        let saved = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        XCTAssertEqual(try saved.quantity(forLineID: draft.proposedLineID)?.amount, try Rational(14))
+        XCTAssertEqual(saved.contributions.first?.originalText, source)
+        XCTAssertEqual(saved.contributions.first?.exclusions, ["sesame"])
+    }
     func testEnglishAndSpanishQuantitiesRemainExact() throws {
         let english = try row("half kg rice for dinner to this pickup")
         let spanish = try row("medio kg arroz para la cena destino esta compra")
@@ -12,6 +52,137 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(english.name, "rice"); XCTAssertEqual(spanish.name, "arroz")
         XCTAssertEqual(spanish.purpose, "la cena"); XCTAssertEqual(spanish.destination, destination)
     }
+    func testSpokenHalfMeasuresAndCompoundCountsReachTheReviewedGroceryList() throws {
+        let examples: [(String, String, Rational?, UnitOfMeasure?)] = [
+            ("one and a half cups of rice", "rice", try Rational(3, 2), .cup),
+            ("one and a quarter cups of rice", "rice", try Rational(5, 4), .cup),
+            ("one cup and a quarter of a cup of rice", "rice", try Rational(5, 4), .cup),
+            ("una taza y un cuarto de taza de arroz", "arroz", try Rational(5, 4), .cup),
+            ("one pound and a half ounce of cheese", "cheese", try Rational(33, 32), .pound),
+            ("one cup and a quarter of a fluid ounce of oil", "oil", try Rational(33, 32), .cup),
+            ("una taza y un cuarto de libra de arroz", "arroz", nil, nil),
+            ("one cup and a quarter of a pint of rice", "rice", nil, nil),
+            ("one cup and a half of Cup Noodles", "Cup Noodles", try Rational(3, 2), .cup),
+            ("three quarters of a cup of milk", "milk", try Rational(3, 4), .cup),
+            ("un cuarto de taza de leche", "leche", try Rational(1, 4), .cup),
+            ("tres cuartos de taza de arroz", "arroz", try Rational(3, 4), .cup),
+            ("una taza y un cuarto de arroz", "arroz", try Rational(5, 4), .cup),
+            ("two packs of three quarters of a cup of rice", "rice", try Rational(3, 2), .cup),
+            ("between a quarter cup and three quarters of a cup of rice", "rice", nil, nil),
+            ("2 Quarter Pounders", "Quarter Pounders", try Rational(2), .count),
+            ("three quarters of an apple", "apple", try Rational(3, 4), .count),
+            ("tres cuartos de una manzana", "manzana", try Rational(3, 4), .count),
+            ("three quarters of milk", "three quarters of milk", nil, nil),
+            ("a quarter to half a cup of milk", "milk", nil, nil),
+            ("three quarters for parking", "quarters", try Rational(3), .count),
+            ("dos y media tazas de arroz", "arroz", try Rational(5, 2), .cup),
+            ("una taza y media de arroz", "arroz", try Rational(3, 2), .cup),
+            ("a cup and a half of milk", "milk", try Rational(3, 2), .cup),
+            ("veintidós tortillas", "tortillas", try Rational(22), .count),
+            ("half a cup of milk", "milk", try Rational(1, 2), .cup),
+            ("twenty Dos Equis", "Dos Equis", try Rational(20), .count),
+            ("thirty thousand grains", "thirty thousand grains", nil, nil),
+            ("a half cup of milk", "milk", try Rational(1, 2), .cup),
+            ("twenty one tortillas", "tortillas", try Rational(21), .count),
+            ("twenty-one tortillas", "tortillas", try Rational(21), .count),
+            ("treinta y dos tortillas", "tortillas", try Rational(32), .count),
+            ("half and half", "half and half", nil, nil),
+            ("2 cups of Half and Half", "Half and Half", try Rational(2), .cup),
+            ("two packs of one and a half cups of rice", "rice", try Rational(3), .cup),
+            ("between one and a half and two cups of rice", "rice", nil, nil),
+            ("entre una y media taza de arroz", "arroz", nil, nil),
+            ("between one cup and half a cup of rice", "rice", nil, nil)
+        ]
+        for (text, name, amount, unit) in examples {
+            var draft = try row(text)
+            XCTAssertThrowsError(try draft.reviewed(expectedDestination: destination), text)
+            draft.confirmed = true
+            let line = try XCTUnwrap(draft.reviewed(expectedDestination: destination), text)
+            var shop = ShoppingLedger()
+            let preview = try shop.stageCaptureImport(id: UUID(), originalText: text, source: .voice, lines: [line])
+            try shop.commitImport(preview)
+            let saved = try XCTUnwrap(shop.contributions.first)
+            XCTAssertEqual(preview.lines.first?.name, name, text)
+            XCTAssertEqual(saved.quantity?.amount, amount, text)
+            XCTAssertEqual(saved.quantity?.unit, unit, text)
+            XCTAssertEqual(saved.originalText, text)
+        }
+        let purchased = try ShoppingLedger().stageImport(text: "2 Hundred Grand bars\n2 and a half cups of Half and Half", source: .paste)
+        XCTAssertEqual(purchased.lines.map(\.name), ["Hundred Grand bars", "Half and Half"])
+        XCTAssertEqual(purchased.lines.map { $0.quantity?.amount }, [try Rational(2), try Rational(5, 2)])
+        XCTAssertEqual(purchased.lines.map { $0.quantity?.unit }, [.count, .cup])
+        for name in ["Half and Half", "One Degree oats", "Seven Seas dressing"] {
+            let pasted = try XCTUnwrap(ShoppingLedger().stageImport(text: name).lines.first)
+            XCTAssertEqual(pasted.name, name)
+            XCTAssertNil(pasted.quantity)
+        }
+    }
+    func testMixedMeasuresAndSpanishPackEvidenceReachTheSameReviewedList() throws {
+        for label in ["2 × 12 fl. oz. seltzer", "dos latas de 12 oz. líq. seltzer"] {
+            var draft = try row(label)
+            XCTAssertEqual(draft.name, "seltzer")
+            XCTAssertEqual(draft.packUnit, .fluidOunce)
+            draft.confirmed = true
+            let captured = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+            let preview = try ShoppingLedger().stageCaptureImport(id: UUID(), originalText: label, source: .voice, lines: [captured])
+            XCTAssertEqual(preview.lines.first?.quantity?.unit, .fluidOunce)
+            XCTAssertEqual(preview.lines.first?.quantity?.amount, try Rational(24))
+        }
+        for text in ["1 1/2 cups of arroz", "1½ tazas de arroz"] {
+            let draft = try row(text)
+            XCTAssertEqual(draft.amount, "3/2")
+            XCTAssertEqual(draft.unit, .cup)
+            XCTAssertEqual(draft.name, "arroz")
+            XCTAssertEqual(draft.originalText, text)
+        }
+        var packs = try row("dos paquetes de 1 1/2 onzas líquidas de caldo sin sal")
+        XCTAssertEqual(packs.packCount, "2")
+        XCTAssertEqual(packs.amountPerPack, "3/2")
+        XCTAssertEqual(packs.packUnit, .fluidOunce)
+        XCTAssertEqual(packs.name, "caldo")
+        XCTAssertEqual(packs.exclusions, "sal")
+        packs.confirmed = true
+        let captured = try XCTUnwrap(packs.reviewed(expectedDestination: destination))
+        let shop = ShoppingLedger()
+        let staged = try shop.stageCaptureImport(id: UUID(), originalText: packs.originalText, source: .voice, lines: [captured])
+        XCTAssertEqual(staged.lines[0].quantity?.amount, try Rational(3))
+        XCTAssertEqual(staged.lines[0].quantity?.unit, .fluidOunce)
+        XCTAssertEqual(staged.lines[0].originalText, packs.originalText)
+        let unknown = try row("dos paquetes de 2 cucharaditas de sal")
+        XCTAssertTrue(unknown.amountPerPack.isEmpty)
+        XCTAssertTrue(unknown.warnings.contains(.packUnknown))
+        XCTAssertTrue(try row("1 1/0 cups rice").amount.isEmpty)
+    }
+
+    func testMultipliedAndNestedPackLabelsKeepExactPackEvidenceWithoutInventingMissingContents() throws {
+        let label = "2 × 15 oz pinto beans"
+        var draft = try row(label)
+        XCTAssertEqual(draft.name, "pinto beans")
+        XCTAssertEqual(draft.packCount, "2")
+        XCTAssertEqual(draft.amountPerPack, "15")
+        XCTAssertEqual(draft.packUnit, .ounce)
+        draft.confirmed = true
+        let capture = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+        var shop = ShoppingLedger()
+        let preview = try shop.stageCaptureImport(id: UUID(), originalText: label, source: .paste, lines: [capture])
+        try shop.commitImport(preview)
+        XCTAssertEqual(shop.contributions.first?.quantity?.amount, try Rational(30))
+        XCTAssertEqual(shop.contributions.first?.quantity?.unit, .ounce)
+        XCTAssertEqual(shop.contributions.first?.capture?.packCount, 2)
+        XCTAssertEqual(shop.contributions.first?.originalText, label)
+        let nested = try row("dos cajas de 6 paquetes de 8 tortillas")
+        XCTAssertEqual(nested.name, "tortillas")
+        XCTAssertEqual(nested.packCount, "2")
+        XCTAssertEqual(nested.amountPerPack, "48")
+        var missing = try row("2 packs of 6 packs of wraps")
+        XCTAssertTrue(missing.amountPerPack.isEmpty)
+        XCTAssertTrue(missing.warnings.contains(.packUnknown))
+        missing.confirmed = true
+        let unknown = try XCTUnwrap(missing.reviewed(expectedDestination: destination))
+        let unknownPreview = try shop.stageCaptureImport(id: UUID(), originalText: missing.originalText, source: .paste, lines: [unknown])
+        XCTAssertNil(unknownPreview.lines.first?.quantity)
+    }
+
     func testPackEvidenceCommitsTogetherWithExclusionsAndOriginal() throws {
         let original = "two packs of six wraps for tacos without peanuts to this pickup"
         var draft = try row(original); draft.confirmed = true
@@ -38,6 +209,7 @@ final class StructuredCaptureTests: XCTestCase {
     func testUnknownMeasureAndAmbiguousCommaNeverBecomeKnownCount() throws {
         let unknown = try row("2 handfuls almonds")
         XCTAssertEqual(unknown.amount, ""); XCTAssertTrue(unknown.warnings.contains(.ambiguous))
+        XCTAssertTrue(try row("2 tsp. sugar").amount.isEmpty)
         let comma = try row("1,000 tortillas")
         XCTAssertEqual(comma.amount, ""); XCTAssertEqual(comma.name, "1,000 tortillas")
         XCTAssertThrowsError(try CaptureNumber.parse("1,000"))
@@ -82,6 +254,39 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(CaptureGuestParser.proposal("dos invitados más")?.amount, try Rational(2))
         XCTAssertNil(CaptureGuestParser.proposal("no more guests"))
         XCTAssertNil(CaptureGuestParser.proposal("two guests and three lunches"))
+    }
+    func testGuestWordingKeepsAnAdditionDistinctFromTheNewMealTotal() throws {
+        let four = try Rational(4)
+        let six = try Rational(6)
+        let two = try Rational(2)
+        for phrase in ["add two guests", "agrega dos invitados", "añade dos invitadas", "add two vegetarian guests"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), six, phrase)
+        }
+        for phrase in ["two guests in total", "dos invitados en total"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), two, phrase)
+        }
+        for phrase in ["remove two guests", "two fewer guests", "dos invitados menos"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), two, phrase)
+        }
+        XCTAssertThrowsError(try CaptureGuestParser.proposal("remove four guests")?.proposedTotal(current: four))
+        XCTAssertEqual(try CaptureGuestParser.proposal("add twenty one guests")?.proposedTotal(current: four), try Rational(25))
+        for phrase in ["two boxes for the guests", "dos cajas para los invitados", "no agregues dos invitados",
+                       "don't add two guests", "dos invitados menos el cocinero", "dos invitados menos, menos el cocinero",
+                       "more than two guests", "más de dos invitados", "add two guests in total"] {
+            XCTAssertNil(CaptureGuestParser.proposal(phrase), phrase)
+        }
+    }
+    func testUncertainGuestCountsNeedAnExplicitTotalInBothLanguages() throws {
+        for phrase in ["about two more guests", "two guests or more", "maybe add two guests",
+                       "approximately two guests", "up to two more guests", "two guests at most",
+                       "unos dos invitados más", "dos invitados o más", "quizá dos invitados",
+                       "alrededor de dos invitados", "hasta dos invitados", "dos invitados como máximo"] {
+            XCTAssertNil(CaptureGuestParser.proposal(phrase), phrase)
+        }
+        let four = try Rational(4)
+        for phrase in ["two more guests for dinner", "dos invitados más para cenar"] {
+            XCTAssertEqual(try CaptureGuestParser.proposal(phrase)?.proposedTotal(current: four), try Rational(6), phrase)
+        }
     }
     func testConflictingTotalAndPackEvidenceFailsAtomically() throws {
         var draft = try row("2 packs of 6 wraps")

@@ -1,0 +1,59 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T18:10:34.089798+00:00",
+  "stdoutLimitBytes": 8388608,
+  "stderrLimitBytes": 65536,
+  "timeoutSeconds": 60,
+  "recordingExecuted": false,
+  "originalUnchanged": true,
+  "clonedBytes": 12387518,
+  "pid": 93736,
+  "nativeExit": 10,
+  "stopReason": null,
+  "outputBytes": {
+    "stdout": 0,
+    "stderr": 66
+  },
+  "elapsedSeconds": 1.7774161249999998,
+  "tocReadable": false,
+  "finishedAtUTC": "2026-11-08T18:10:35.870313+00:00",
+  "priorReceiptUnchanged": true,
+  "strictReceiptUnchanged": true,
+  "nativeResultUnchanged": true,
+  "sourceUnchanged": true,
+  "runnerExit": 2,
+  "attemptCount": 1,
+  "rootSession": "29520",
+  "error": "Export failed: Trace is malformed; instrument run data is missing",
+  "retainedDataAvailable": false,
+  "exactCommandScope": "xcrun xctrace export --input verified APFS clone.trace --toc",
+  "conclusion": "The retained bundle is malformed and lacks instrument run data. No table/interval/waker evidence is available from this capture; no raw fallback, new recording or retry performed.",
+  "sourcePins": [
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/manifest.json",
+      "bytes": 348,
+      "sha256": "ea365ff55ef76fe0a0f3a64ea8399c8f7f9213ea2c4e7a7bddbd3f7d348a0eb3"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/input.json",
+      "bytes": 482549,
+      "sha256": "898f6e6e8a47774242f0e447701666a65415d25493b19f3fe678b14ccf99f267"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/run.json",
+      "bytes": 26392,
+      "sha256": "6e5ea7650d16e8c09fee0db168d1203d7b10b3e3230893d246f4637cbff84691"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/toc.xml",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/stderr.txt",
+      "bytes": 66,
+      "sha256": "d107c0d0bee87bbb268e2d42500a2f8a76628e6fb9295c5b821501b5887a083b"
+    }
+  ],
+  "previousPublicManifestSHA256": "4d5808a34a866beb5d0061cabb0857defd0a6c3acc79f76108d3245416166065"
+}

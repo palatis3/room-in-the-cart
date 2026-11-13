@@ -1,0 +1,12 @@
+Executed 5 of 5 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence | Passed | 81.03 |
+| RoomInTheCartTests/OneChangeTests/testExplicitReviewAndSaveCreatesOneDraftWithItsActualAfterPriceAndNoInventedItems | Passed | 0.07 |
+| RoomInTheCartTests/OneChangeTests/testIncompleteRetailerPriceAndOriginalComparisonSurviveRestartAndBudgetEdits | Passed | 0.03 |
+| RoomInTheCartTests/OneChangeTests/testUnknownEvidenceOrChangedPickupCannotBecomeAMatchedSaving | Passed | 0.02 |
+| RoomInTheCartTests/OneChangeTests/testOverageRequiresAgreementToTheActualReviewedAmount | Passed | 0.01 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 5 examined tests.

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "kind": "meal",
+    "occurrenceId": "00000000-0000-4000-8000-000000000100",
+    "ingredientId": "00000000-0000-4000-8000-000000000110",
+    "groupId": "00000000-0000-4000-8000-000000000120",
+    "bindingId": "00000000-0000-4000-8000-000000000130"
+  },
+  "unresolved": {
+    "occurrenceId": "00000000-0000-4000-8000-000000000100",
+    "ingredientId": "00000000-0000-4000-8000-000000000110",
+    "label": "No sesame",
+    "resolution": {
+      "kind": "unresolved"
+    }
+  },
+  "reviewed": {
+    "occurrenceId": "00000000-0000-4000-8000-000000000100",
+    "ingredientId": "00000000-0000-4000-8000-000000000110",
+    "label": "No sesame",
+    "resolution": {
+      "kind": "mapped",
+      "tags": [
+        "sesame"
+      ],
+      "confirmedAt": "2026-11-09T13:00:00Z"
+    }
+  },
+  "expected": {
+    "unresolvedCommitment": "retained",
+    "unresolvedAllocationError": "unresolved_exclusion",
+    "missingMappedTagError": "missing_mapped_exclusion",
+    "otherOccurrenceError": "invalid_exclusion_origin"
+  }
+}

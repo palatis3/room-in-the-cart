@@ -1,0 +1,30 @@
+{
+  "archiveMember": "Performance.log",
+  "originalLogSHA256": "fb23cd4f8fb5fe94be637019d4773be0142db70dad31f0bd4388dab8a9700d6c",
+  "lines": [
+    {
+      "line": 1,
+      "text": "Command line invocation:"
+    },
+    {
+      "line": 2,
+      "text": "    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -xctestrun .build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator26.2-arm64-x86_64.xctestrun -destination \"platform=iOS Simulator,id=BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06\" -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics never \"-only-testing:RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup\" test-without-building"
+    },
+    {
+      "line": 517,
+      "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/ReleasePerformanceUITests.swift:166: Test Case '-[RoomInTheCartUITests.ReleasePerformanceUITests testScrollingPerformanceOnFiveHundredItemPickup]' measured [Memory Peak Physical (app), kB] average: 105121.254, relative standard deviation: 0.584%, values: [104783.744000, 104423.296000, 104685.440000, 105930.624000, 105783.168000], performanceMetricID:com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak, baselineName: \"\", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000"
+    },
+    {
+      "line": 518,
+      "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/ReleasePerformanceUITests.swift:166: Test Case '-[RoomInTheCartUITests.ReleasePerformanceUITests testScrollingPerformanceOnFiveHundredItemPickup]' measured [Memory Physical (app), kB] average: -42.598, relative standard deviation: -444.293%, values: [-376.832000, 180.224000, -16.384000, -81.920000, 81.920000], performanceMetricID:com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical, baselineName: \"\", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000"
+    },
+    {
+      "line": 519,
+      "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/ReleasePerformanceUITests.swift:166: Test Case '-[RoomInTheCartUITests.ReleasePerformanceUITests testScrollingPerformanceOnFiveHundredItemPickup]' measured [Absolute Memory Physical (app), kB] average: 104764.083, relative standard deviation: 0.615%, values: [104079.232000, 104292.224000, 104357.760000, 105537.408000, 105553.792000], performanceMetricID:com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute, baselineName: \"\", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000"
+    },
+    {
+      "line": 524,
+      "text": "Test Case '-[RoomInTheCartUITests.ReleasePerformanceUITests testScrollingPerformanceOnFiveHundredItemPickup]' passed (384.849 seconds)."
+    }
+  ]
+}

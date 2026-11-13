@@ -25,15 +25,14 @@ final class ShareViewController: UIViewController {
         let providers = (items[0].attachments ?? []).filter { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }
         guard providers.count == 1 else { model.reject(); return }
         let expected = generation
-        providers[0].loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] item, error in
-            let text: String?
-            if let value = item as? String { text = value }
-            else if let data = item as? Data, data.count <= SelectedTextInbox.maximumEntryBytes { text = String(data: data, encoding: .utf8) }
-            else { text = nil }
+        SelectedTextInbox.loadPlainText(from: providers[0]) { [weak self] result in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == expected else { return }
-                guard error == nil, let text else { self.model.reject(); return }
-                self.model.accept(text)
+                switch result {
+                case .success(let text): self.model.accept(text)
+                case .failure(.capacity): self.model.rejectSize()
+                case .failure: self.model.reject()
+                }
             }
         }
     }
@@ -49,8 +48,13 @@ final class ShareViewController: UIViewController {
     var onSaved: (() -> Void)?
     private let session = SelectedTextSession()
     func accept(_ text: String) {
-        guard text.utf8.count <= SelectedTextInbox.maximumEntryBytes, !text.contains("\0"), text.split(separator: "\n", omittingEmptySubsequences: false).count <= SelectedTextInbox.maximumLines else { reject(); return }
+        guard SelectedTextInbox.fitsEnvelope(original: text) else { rejectSize(); return }
+        guard !text.contains("\0") else { reject(); return }
         original = text; edited = text; loading = false
+    }
+    func rejectSize() {
+        loading = false
+        error = SurfaceCopy.text("Share up to 500 lines and 64 KiB of plain text, including edits. Choose a smaller selection or shorten the edit.")
     }
     func reject() { loading = false; error = SurfaceCopy.text("Select a shorter plain-text list and try again.") }
     func cancel() {
@@ -60,14 +64,18 @@ final class ShareViewController: UIViewController {
     }
     func save() {
         guard !saving, !loading, !original.isEmpty else { return }
+        let reviewEdit = edited == original ? nil : edited
+        guard SelectedTextInbox.fitsEnvelope(original: original, edited: reviewEdit) else { rejectSize(); return }
         saving = true; error = nil
         Task {
             defer { saving = false }
             do {
                 let inbox = try IOSSurfaceContainers.inbox()
-                let result = try await session.save(original: original, edited: edited == original ? nil : edited, now: Date(), inbox: inbox)
+                let result = try await session.save(original: original, edited: reviewEdit, now: Date(), inbox: inbox)
                 guard result.disposition == .pending else { throw SurfaceError.stale }
                 onSaved?()
+            } catch SelectedTextInbox.ReviewLimit.tooManyItems {
+                self.rejectSize()
             } catch { self.error = SurfaceCopy.text("Could not save for review. Try again or cancel; your shopping list is unchanged.") }
         }
     }
@@ -82,7 +90,9 @@ private struct ShareComposerView: View {
                 if !model.original.isEmpty {
                     Section(SurfaceCopy.text("Original text")) { Text(model.original).textSelection(.enabled) }
                     Section(SurfaceCopy.text("Review text")) { TextEditor(text: $model.edited).frame(minHeight: 140).accessibilityLabel(SurfaceCopy.text("Review text")) }
-                    Button(SurfaceCopy.text("Save for review")) { model.save() }.frame(minHeight: 44).disabled(model.saving || model.edited.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button(SurfaceCopy.text("Save for review")) { model.save() }
+                        .frame(minHeight: 44)
+                        .disabled(model.saving || !model.edited.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
                 }
                 if let error = model.error { Text(error).accessibilityAddTraits(.updatesFrequently) }
             }.disabled(model.saving).navigationTitle(SurfaceCopy.text("Selected text"))

@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T10:15:53.821540+00:00",
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-r1/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "sourcePins": {
+    "ios/Features/Capture/LocalCookSpeech.swift": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+    "ios/Tests/CookReadbackTests.swift": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543"
+  },
+  "pid": 88305,
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "finishedAtUTC": "2026-11-08T10:20:46.122867+00:00",
+  "sourceUnchanged": true
+}

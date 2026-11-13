@@ -1,0 +1,17 @@
+{
+  "ledger": "docs/evidence/native/request-decision-measurements-20261108/current-audit/findings.json",
+  "ledgerSHA256": "b75ba930edc3efbd183c4a05e1446adeaa358ea39b224bd4736f22a897718c28",
+  "currentCount": 41,
+  "namedCurrentMatches": [],
+  "unattributedCurrentFindings": [
+    1,
+    8,
+    11,
+    13,
+    15,
+    22,
+    41
+  ],
+  "oldReconciliationMatches": [],
+  "limit": "Unattributed records cannot establish absence or identity for this prompt. No ledger count/disposition changed."
+}

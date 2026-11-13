@@ -1,0 +1,188 @@
+{
+  "retainedAtUTC": "2026-11-08T02:11:15.548430+00:00",
+  "files": [
+    {
+      "file": "original-small/artifact-metadata.json",
+      "bytes": 802,
+      "sha256": "f2a293220b7182159ca8d16ee89cda280d62cfdb736aed25c025f2dc037dfc5e",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/artifact-metadata.json"
+    },
+    {
+      "file": "original-small/range-receipt.json",
+      "bytes": 3573,
+      "sha256": "2d01544091d3f2fafd559b3994da63d05e47d50d832c067b7227c9db702d3c64",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/range-receipt.json"
+    },
+    {
+      "file": "original-small/pristine-manifest.json",
+      "bytes": 970,
+      "sha256": "871f504a7d56e477b4120ab7b391d224b419b1b1081b64b6e1288934ff51e326",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/pristine-manifest.json"
+    },
+    {
+      "file": "original-small/test-summary.json",
+      "bytes": 1232,
+      "sha256": "f4af6fe0c7d14875285bc8cfe7e5eb10ae64dc0aa0eb36e114d41f13c5910fb4",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/pristine-members/test-summary.json"
+    },
+    {
+      "file": "original-small/test-runtime-warnings.json",
+      "bytes": 182,
+      "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/pristine-members/test-runtime-warnings.json"
+    },
+    {
+      "file": "original-small/ui-06.txt",
+      "bytes": 863,
+      "sha256": "bfe7c9da303c5852039a19b8fb174429af0c96f062c4a59d29d7e669fd7c9f12",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06/pristine-members/test-plan/ui-06.txt"
+    },
+    {
+      "file": "metadata/range-receipt.json",
+      "bytes": 3088,
+      "sha256": "a32e532f741ef96591e02b48e0df13e4a89000f0e3f8fae8088272d6a0712fcb",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/range-receipt.json"
+    },
+    {
+      "file": "metadata/pristine-manifest.json",
+      "bytes": 993,
+      "sha256": "2f618afd6fddc68916e2a29903891fc3c67843a542b4e5d04bc418d214cf3171",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/pristine-manifest.json"
+    },
+    {
+      "file": "attachments/range-receipt.json",
+      "bytes": 3133,
+      "sha256": "d66cfedf1384e8273ad912620b268100f87649ca9373e1b4edae385b506a0e77",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/attachment-download-available/range-receipt.json"
+    },
+    {
+      "file": "attachments/pristine-manifest.json",
+      "bytes": 1165,
+      "sha256": "eefcf04cb02f2f088427c22fcc0e34d49fb91ba6931b463fffce7a0f507ba86d",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/attachment-download-available/pristine-manifest.json"
+    },
+    {
+      "file": "attachments/export-receipts.json",
+      "bytes": 1670,
+      "sha256": "30939cf9700053b5bdde2bcb0be56ad0b592b505339da02a69cb2fdc1c5b305a",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/attachment-download-available/export-receipts.json"
+    },
+    {
+      "file": "session/range-receipt.json",
+      "bytes": 1956,
+      "sha256": "ccef5d2626d43964ff97100b39ca2cbe90aae166409ecb383b752dafe97bfaaa",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/diagnostics-original-session/range-receipt.json"
+    },
+    {
+      "file": "session/pristine-download-manifest.json",
+      "bytes": 584,
+      "sha256": "9c4c1af70d680616bdea40444846abdf99f2de47221d393bba4f3860ffffe081",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/diagnostics-original-session/pristine-download-manifest.json"
+    },
+    {
+      "file": "session/session-receipt.json",
+      "bytes": 366,
+      "sha256": "deae6ed4d679bcf35f292454d969fe172b138c94093a45bfb9375bbc91515dc7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/diagnostics-original-session/session-receipt.json"
+    },
+    {
+      "file": "session/directory-traversal.json",
+      "bytes": 2381,
+      "sha256": "2fe99ccb7eb00a9252c8e253ba4b6adf8f75a4841fa7087493a378ce3a5a117f",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/diagnostics-original-session/directory-traversal.json"
+    },
+    {
+      "file": "attachments/exports/S27-complete-store-differences.png",
+      "bytes": 439474,
+      "sha256": "8444c259f7ca7a059ce8e6687e0c271cc8584129eb5d68048ede91edd8dea5cd",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/attachment-download-available/exports/S27-complete-store-differences.png"
+    },
+    {
+      "file": "attachments/exports/S27-reopened-adopted-branch-and-dated-comparison.png",
+      "bytes": 488813,
+      "sha256": "c96f380435d9cb8d8eb0c282354f0bd0021da4b958360b1800b335499f2342b0",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/attachment-download-available/exports/S27-reopened-adopted-branch-and-dated-comparison.png"
+    },
+    {
+      "file": "original-review-receipt.json",
+      "bytes": 1871,
+      "sha256": "e5971586712f158ef7af38c68ad6f26de260ad86a310302aec3b72847d0106fa",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/review-receipt.json"
+    },
+    {
+      "file": "original-investigation.md",
+      "bytes": 6700,
+      "sha256": "beeab7aab1f9fb499d1a5325cb91302f3ef27d3d9ba7c471d01a7f329825b9d7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/review.md"
+    },
+    {
+      "file": "activity-duration-summary.json",
+      "bytes": 5866,
+      "sha256": "e5c50a1e017017e4bfc3752dc5d8187bc1b7dfc7782402254374f69145b34ccd",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/activity-duration-summary.json"
+    },
+    {
+      "file": "slow-query-session-excerpt.txt",
+      "bytes": 64332,
+      "sha256": "4bb4e9638223101c96b53ac72e7a73890fe6a6ab81488bd24a105856d610833a",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/slow-query-session-excerpt.txt"
+    },
+    {
+      "file": "timeout-and-continuation.txt",
+      "bytes": 8793,
+      "sha256": "11207491ff9b159859a6db34c201af5d69dff8af249720faece4b02042e98d86",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/timeout-and-continuation.txt"
+    },
+    {
+      "file": "proposal/known-top-branch-reveal.patch",
+      "bytes": 2379,
+      "sha256": "f325e1c8d5ab05fcfef6257314d79afb038388258047c2cd78b4fe532a1b130e",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/top-header-candidate/known-top-branch-reveal.patch"
+    },
+    {
+      "file": "proposal/proposal-receipt.json",
+      "bytes": 8294,
+      "sha256": "cea76c644902e6748259fa5ed48957dac4d44dd82d8cd82d0214639b1c096d5e",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/top-header-candidate/proposal-receipt.json"
+    },
+    {
+      "file": "proposal/original-header-search.txt",
+      "bytes": 32861,
+      "sha256": "cbbfbdbfb91ba1501e0e3737f08794ce257d20f987b73006a11102642778edb7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/top-header-candidate/original-header-search.txt"
+    },
+    {
+      "file": "proposal/proposal.md",
+      "bytes": 3320,
+      "sha256": "a6f392cba68a6c81ac26bb3d3a4cb6a2a58e20a7564c8d3fb717534c7ea5f681",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection/top-header-candidate/proposal.md"
+    },
+    {
+      "file": "validation-start-snapshot.json",
+      "bytes": 866,
+      "sha256": "6fafa74a62030700ad6bdda235a80cad5d82dd6871650aed73c6eddb5b7e7998",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CoreNavigationNov07/run.json"
+    },
+    {
+      "file": "collectors/collect-ui06-metadata.py",
+      "bytes": 6186,
+      "sha256": "4c656dee4e3d7ab6bd6b911d416b9cd1652b57cc8dd7ed77d43c574347fdb1b6",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-ui06-metadata.py"
+    },
+    {
+      "file": "collectors/collect-ui06-attachments.py",
+      "bytes": 5830,
+      "sha256": "39c54d124615b23ca34a1a9491197b44cf584457657b4146a6e70b9153657f2f",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-ui06-attachments.py"
+    },
+    {
+      "file": "collectors/collect-ui06-session.py",
+      "bytes": 7345,
+      "sha256": "32c4fda66dc3713df5d137d259ba3dec4f586a073e456d4df2f5db98bfe1ae07",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-ui06-session.py"
+    }
+  ],
+  "rawInspectionDirectory": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06-inspection",
+  "rawSmallArtifactDirectory": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/ui-06",
+  "excluded": "Full Session, video, ZIP transport ranges, pristine object binaries, SQLite, inspection copy and whole candidate source files. Range receipts point into raw locations; they are not full ZIP hash verification."
+}

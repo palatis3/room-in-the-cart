@@ -1,0 +1,31 @@
+{
+  "artifact": {
+    "id": 13504647847,
+    "node_id": "MDg6QXJ0aWZhY3QxMzUwNDY0Nzg0Nw==",
+    "name": "iphone-fixture-results-contributor-balanced-02-1",
+    "size_in_bytes": 133303280,
+    "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13504647847",
+    "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13504647847/zip",
+    "expired": false,
+    "digest": "sha256:6c937052fbdcfbffd77be335ad50afc09ac7afd43ef8ad82807b26ae1ca28dbc",
+    "created_at": "2026-11-06T13:14:35Z",
+    "updated_at": "2026-11-06T13:14:35Z",
+    "expires_at": "2026-11-13T13:14:27Z",
+    "workflow_run": {
+      "id": 42215222541,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "0d33c11d43a97d670bf56d104d3260cad9b3f202"
+    }
+  },
+  "memberCount": 189,
+  "expandedBytes": 135526411,
+  "exception": [
+    [
+      "Tests.xcresult/Data/data.0~NeUY5MJHoRcpLsOgCupcBwtmAX98JuUO_dtdiheS0NWN7pIvdFscRhKFVef4JzFOd42mn1lo6nSbliFL8UszWQ==",
+      111504249
+    ]
+  ],
+  "scope": "Exact immutable artifact/member/size exception for read-only failure evidence; all other bounds/strict rules unchanged. No test retry."
+}

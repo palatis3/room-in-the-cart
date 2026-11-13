@@ -1,0 +1,34 @@
+{
+  "baseline": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "runID": 42301547684,
+  "jobID": 128184766889,
+  "artifactSHA256": "c40e62db416b010959720eb3a7ee556d49dfeeaf7eced194283937986400c7df",
+  "rootVerifiedArchiveDigest": true,
+  "sourceSHA256": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+  "onlyFourLineReadinessInsertion": true,
+  "typecheck": {
+    "command": [
+      "xcrun",
+      "swiftc",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+      "-typecheck",
+      "-swift-version",
+      "5",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+      "-target",
+      "arm64-apple-ios17.0-simulator",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks",
+      "-D",
+      "RELEASE",
+      "ios/UITests/ReleasePerformanceUITests.swift"
+    ],
+    "exitCode": 0,
+    "diagnosticBytes": 0,
+    "scope": "Whole ReleasePerformanceUITests file with actual XCTest overlay; not a target build or native run"
+  },
+  "nativeValidation": false,
+  "sourceScope": "Only explicit Shop readiness before pickup navigation; all metric loops, fixture, checks, baseline and existing limits unchanged. Adds up to ten seconds condition waiting per helper call within original case/job limits."
+}

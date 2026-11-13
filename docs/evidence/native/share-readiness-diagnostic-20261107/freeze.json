@@ -1,0 +1,41 @@
+{
+  "files": {
+    "typecheck-invocation.json": {
+      "sha256": "b8fba65f3330c91a3688d19278c656e69dd612785007eff0adabadb2b8aa55a9",
+      "bytes": 1014
+    },
+    "installation.json": {
+      "sha256": "74ed28e55b0d2ab689dfce9d2d8fe8e775f9cef94135f7883fcd4c60a86db141",
+      "bytes": 327
+    },
+    "diagnostic.patch": {
+      "sha256": "45da25f553acad6d72564b75e84bfce07682018c703483076a5f775322f80362",
+      "bytes": 1638
+    },
+    "typecheck.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "README.md": {
+      "sha256": "0e1f1cbf9dad6e774eb5833cae1b926a692536e8ed0e7bdc896e56bfd7b162d7",
+      "bytes": 1756
+    },
+    "typecheck-result.json": {
+      "sha256": "2bc12fdb55e33fa06ca4e2ed57c9269791a9d97f28120943ac6a2aaa55d6d55c",
+      "bytes": 45
+    },
+    "root-media-review.json": {
+      "sha256": "3e2be0c0dfffdacc86ca173a1e3585b2bc1f09c7e515e1b1bddcfb2e8826c63d",
+      "bytes": 850
+    },
+    "original-failure-review.md": {
+      "sha256": "f41c8d61078efcb611da1f21bce51ee1550db4aa3054428a8250aefe61216be8",
+      "bytes": 7980
+    },
+    "preparation-manifest.json": {
+      "sha256": "f4132e4aa75bece547b4aa55afb4bc9e475684848369572812bcdf16236fe45f",
+      "bytes": 3092
+    }
+  },
+  "atUTC": "2026-11-07T07:40:42.806752+00:00"
+}

@@ -1,0 +1,14 @@
+Executed 1 of 1 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable | Failed | 69.93 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest logged a failure for RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable at log line 1077.
+XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

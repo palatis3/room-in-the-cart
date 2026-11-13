@@ -1,0 +1,35 @@
+{
+  "artifactID": 13490819621,
+  "artifactName": "iphone-fixture-results-contributor-balanced-04-1",
+  "sha256": "09e7f6403c071951d7d2596d6226142645afac34adaf1eae93f1decfa89f7dcd",
+  "size": 9074056,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433846,
+  "hostedConclusion": "success",
+  "selected": 4,
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 4,
+    "detailExportCount": 4,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+    "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+    "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+    "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+  ],
+  "rawLogSHA256": "42f2e9991918c80fe82769d1d048c66a3157692926a72f6fa4bca6919ad66fdc",
+  "replayedBundle": "Tests.xcresult"
+}

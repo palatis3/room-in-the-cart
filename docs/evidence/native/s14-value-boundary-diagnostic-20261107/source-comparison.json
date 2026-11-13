@@ -1,0 +1,50 @@
+[
+  {
+    "path": "ios/UITests/FreeJourneyUITests.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+    "prior_local_passing_sha256": "a29581b69a1e33112bfe8f4d5fb94c6afef2478ccf75076b5ed704a948be01b0",
+    "same_as_prior_local_passing": false,
+    "current_sha256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707"
+  },
+  {
+    "path": "ios/Features/Dinners/DinnerWeekEditors.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+    "prior_local_passing_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+    "same_as_prior_local_passing": true,
+    "current_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8"
+  },
+  {
+    "path": "ios/Features/Dinners/DinnerDrafts.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c",
+    "prior_local_passing_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c",
+    "same_as_prior_local_passing": true,
+    "current_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c"
+  },
+  {
+    "path": "ios/Features/Dinners/DinnerFeatureModel.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd",
+    "prior_local_passing_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd",
+    "same_as_prior_local_passing": true,
+    "current_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd"
+  },
+  {
+    "path": "ios/Features/Dinners/DinnerDecisionSheet.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9",
+    "prior_local_passing_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9",
+    "same_as_prior_local_passing": true,
+    "current_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9"
+  },
+  {
+    "path": "ios/Features/Dinners/DinnerAccessShield.swift",
+    "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+    "candidate_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b",
+    "prior_local_passing_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b",
+    "same_as_prior_local_passing": true,
+    "current_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b"
+  }
+]

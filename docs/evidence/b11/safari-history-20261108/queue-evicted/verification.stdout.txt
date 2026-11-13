@@ -1,0 +1,1 @@
+{"status":"passed-scoped","case":"queue-evicted","commandAttempts":1,"commandEffects":0}

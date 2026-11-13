@@ -3,6 +3,7 @@ import type { Context, HouseholdRepository } from './repository.js';
 import type { MealMoves } from './meal-moves.js';
 import { digest } from './database.js';
 import { ServiceError } from './errors.js';
+import { exclusionConflict } from './recovery-domain.js';
 const id = z.string().uuid().transform(value => value.toLowerCase()), label = z.string().trim().min(1).max(240);
 const positive = z.number().int().min(1).max(1_000_000), nonnegative = z.number().int().min(0).max(1_000_000);
 const amount = z.union([nonnegative,z.object({numerator:nonnegative,denominator:positive}).strict()]);
@@ -29,11 +30,10 @@ export const sharedIdeaDraftSchema = z.object({
   if(value.ingredients.some(i=>i.usableNumerator !== null && i.usableDenominator !== null && i.usableNumerator>i.usableDenominator)) ctx.addIssue({code:'custom',message:'Usable yield cannot exceed the entered package.'});
 });
 export type SharedIdeaDraft = z.infer<typeof sharedIdeaDraftSchema>;
-const fold=(value:string)=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLocaleLowerCase('en').trim();
 /** Only explicit household-entered evidence is evaluated. No device store or private prices are consulted. */
 export function evaluateSharedIdea(value:SharedIdeaDraft) {
   const ingredients=value.ingredients.map(i=>{
-    const excluded=value.exclusions.some(e=>fold(i.name).includes(fold(e)));
+    const excluded=exclusionConflict({name:i.name,exclusions:value.exclusions});
     const reserved=i.reservations.reduce((sum,r)=>add(sum,fraction(r.amount)),{n:0n,d:1n});
     const remaining=i.stock===null?null:subtract(fraction(i.stock),reserved);
     const shortage=i.required===null||remaining===null?null:subtract(fraction(i.required),remaining);
@@ -87,15 +87,30 @@ export class SharedMealIdeas {
   }
 }
 
-/** A proposal may carry only the exact approved quantities, under the current adult's grant. */
+/** A new occurrence must match the approved idea under the current adult's grant. */
 export async function requireApprovedSharedIdea(ctx:Context,shopId:string,authorityEpoch:number,grantRevision:number,
-  actorId:string,ideaId:string,revision:number,meal:unknown) {
+  actorId:string,ideaId:string,revision:number,meal:unknown,exactProposalReceipt=false) {
   const row=(await ctx.db.query(`SELECT draft FROM ritc.shared_meal_idea WHERE household_id=$1 AND shop_id=$2 AND idea_id=$3
     AND actor_id=$4 AND authority_epoch=$5 AND grant_revision=$6 AND revision=$7 AND state='approved'`,
     [ctx.householdId,shopId,ideaId,actorId,authorityEpoch,grantRevision,revision])).rows[0];
   if(!row)throw stale();
   const draft=sharedIdeaDraftSchema.parse(row.draft),day=(meal as {day?:unknown})?.day;
-  const expected={title:draft.title,day,kind:'dinner',portions:draft.servings,protected:false,
-    planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:i.required===null?null:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${literal(i.required)} ${i.unit}`},groupIds:[],exclusions:[]}))}};
-  if(!evaluateSharedIdea(draft).canApprove||digest(meal)!==digest(expected))throw stale();
+  if(!evaluateSharedIdea(draft).canApprove)throw stale();
+  const ingredients=draft.ingredients.map(i=>({
+    id:i.id,name:i.name,quantity:i.required===null ? null : {
+      amount:typeof i.required==='number' ? {numerator:i.required,denominator:1} : i.required,
+      unit:i.unit,originalLiteral:`${literal(i.required)} ${i.unit}`,
+    },groupIds:[],exclusions:[],
+  }));
+  const baseMeal={title:draft.title,day,kind:'dinner',portions:draft.servings,protected:false,planning:{groups:[],ingredients}};
+  const submitted=digest(meal);
+  // Older clients saved only the base shape. An exact receipt can acknowledge that
+  // historical write; creating a proposal or consuming it still requires the reviewed facts.
+  if(exactProposalReceipt && submitted===digest(baseMeal))return;
+  const planning={
+    ...baseMeal.planning,
+    ...(draft.exclusions.length ? {exclusions:draft.exclusions} : {}),
+    ...(draft.minutes!==null ? {leadTimeMinutes:draft.minutes} : {}),
+  };
+  if(submitted!==digest({...baseMeal,planning}))throw stale();
 }

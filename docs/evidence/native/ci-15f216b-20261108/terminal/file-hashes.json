@@ -1,0 +1,527 @@
+[
+  {
+    "file": "DinnerDecisionSheetUITests/pristine-members/test-plan/DinnerDecisionSheetUITests.txt",
+    "bytes": 499,
+    "sha256": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74"
+  },
+  {
+    "file": "DinnerDecisionSheetUITests/verification.json",
+    "bytes": 4199,
+    "sha256": "0d4df072a65b5b30ed70582d6f4883a7f89e38522d63d1da96ac68d93377430e"
+  },
+  {
+    "file": "README.md",
+    "bytes": 8465,
+    "sha256": "1c4516acc8c0238b092b556927e14bcfa922181c3932b62cb88cbf56627856a0"
+  },
+  {
+    "file": "RecordsMediaUITests/pristine-members/records-test-report.md",
+    "bytes": 364,
+    "sha256": "c67d2e46f00ad827219757db8a4be5e0ad5085705b693e968df4dbe8a933d924"
+  },
+  {
+    "file": "RecordsMediaUITests/pristine-members/test-plan/RecordsMediaUITests.txt",
+    "bytes": 122,
+    "sha256": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b"
+  },
+  {
+    "file": "RecordsMediaUITests/verification.json",
+    "bytes": 1839,
+    "sha256": "d284bb830c65899f524fa823042e74c5fb3df180fbbdcc38c283d6d63c3f42ec"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-details.json",
+    "bytes": 3235,
+    "sha256": "3b3f0bc4737a22d5bd5ad423cdc6500185039371f41b45bab2b26cb758d68149"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-plan/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+    "bytes": 532,
+    "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-runtime-warnings.json",
+    "bytes": 346,
+    "sha256": "c7800357c492169550fc48812417a5a2c91e5030d99f23f4581c92692bc521fa"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-speech-runtime-error.txt",
+    "bytes": 44,
+    "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-speech-runtime.json",
+    "bytes": 38429,
+    "sha256": "619c9c0ea4f102373cf647e3a95d14175be453e21e9f7b1109c0a8adf17fefdd"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-speech-start.txt",
+    "bytes": 20,
+    "sha256": "8f5456b504a56bea793ae285e220e0339baae7a7fdf6180b62f5c85211648598"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/test-summary.json",
+    "bytes": 707,
+    "sha256": "992546954028356c9e3e671f5e56b23985f28f84b8b8fb51bae45ee639930ce9"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout/verification.json",
+    "bytes": 6053,
+    "sha256": "579fad391138bb8f15a923bf106a74a64dbc9591bf8d6277b9893aff4bd2b599"
+  },
+  {
+    "file": "SharedDeliveryUITests-recovery-cook-and-closeout-summary.txt",
+    "bytes": 2884,
+    "sha256": "1210f779b1f14b9ae6c65c3c6a2ec6276cf86e91638120fe55aec534d8939a9c"
+  },
+  {
+    "file": "SharedDeliveryUITests-stock-and-purchase/pristine-members/test-plan/SharedDeliveryUITests-stock-and-purchase.txt",
+    "bytes": 639,
+    "sha256": "9f113c6e2e8ac1ac0e90b36b29386fea93bb24dba2c5e044e17bf504052b6cbf"
+  },
+  {
+    "file": "SharedDeliveryUITests-stock-and-purchase/verification.json",
+    "bytes": 4402,
+    "sha256": "1bc6ac18c2f88f4c04028b84c51a11da0d6a00b6b7daebceb8475b0e235b9c77"
+  },
+  {
+    "file": "SharedFallbackUITests/pristine-members/test-details.json",
+    "bytes": 1857,
+    "sha256": "d71ee292d87befc3a439ddeeb948e60bc9ccbe1a3b9a028d159e308f77448258"
+  },
+  {
+    "file": "SharedFallbackUITests/pristine-members/test-plan/SharedFallbackUITests.txt",
+    "bytes": 218,
+    "sha256": "e140671e4e641c2f2bdb66da7b4ed4030bbc289e9651ffe952367f171106100a"
+  },
+  {
+    "file": "SharedFallbackUITests/pristine-members/test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "655e0e03528691a025687aa854e1236c5c3f3a8a659c0fbc78f8a8d329840adf"
+  },
+  {
+    "file": "SharedFallbackUITests/pristine-members/test-summary.json",
+    "bytes": 1257,
+    "sha256": "cf93890145168bfce3d8a4a751b3557c5352ae3de36fd20cb18e44218c47fe8d"
+  },
+  {
+    "file": "SharedFallbackUITests/verification.json",
+    "bytes": 6276,
+    "sha256": "46f2bd0e1415b5f19e1d6182e2e0d6195598e3a80bc9c6b88146952790aa9efc"
+  },
+  {
+    "file": "SharedFallbackUITests-summary.txt",
+    "bytes": 2005,
+    "sha256": "f83e3f6e4c1964991f6eb9f53e5ec0d035061d5df23dd04f2e53552a6b644991"
+  },
+  {
+    "file": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview/pristine-members/test-plan/SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt",
+    "bytes": 116,
+    "sha256": "0481679dfa40ef7aae745cdf4af797f613e7c9d2ff779ae98fe106b4b05359fe"
+  },
+  {
+    "file": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview/verification.json",
+    "bytes": 3898,
+    "sha256": "d62c37efdfff0850230402c23e035e730e599c558b816a1bfbe99ef7546bbf5d"
+  },
+  {
+    "file": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn/pristine-members/test-plan/SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.txt",
+    "bytes": 106,
+    "sha256": "d5edad5d51c5465106f511e1d854157a60c633f6a6a358b3a9677f96e1efe50c"
+  },
+  {
+    "file": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn/verification.json",
+    "bytes": 3862,
+    "sha256": "780f436086fa81003865a3e71bc6e60b7826cdfbb1dfb507fae322a456144c21"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult/pristine-members/test-plan/SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.txt",
+    "bytes": 115,
+    "sha256": "76c844050eca114fcf16267969780963d9ce646f1c5f64df275be91f46180287"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult/verification.json",
+    "bytes": 3895,
+    "sha256": "3a5dcee84a84022564577586beaea5391bc7736beeadd1e08a9b4c38d0dcc5d0"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/pristine-members/test-details.json",
+    "bytes": 1397,
+    "sha256": "1088b192a7c273733c50c96e4ce74b14642ae8d863b459e4bc60395cd6c79632"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/pristine-members/test-plan/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+    "bytes": 116,
+    "sha256": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/pristine-members/test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/pristine-members/test-summary.json",
+    "bytes": 1239,
+    "sha256": "a583c3b1c86f8dfdd52037480f237b8c06b4418ba7d82b6cc97d26728cffd57e"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/verification.json",
+    "bytes": 5347,
+    "sha256": "f0237eaa68ed6b44f440be0849f79e789ea323f61bc6eaad7957caba2b4bb659"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-summary.txt",
+    "bytes": 1658,
+    "sha256": "b7b606b67cfb666e31ad9916840310269193eab26f1a587656fd0b9d7bb28873"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave/pristine-members/test-plan/SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt",
+    "bytes": 114,
+    "sha256": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave/verification.json",
+    "bytes": 3894,
+    "sha256": "bb32316ed8523dff5dc9f5cf3930297e37c6903070630df2b768bb44e630e356"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable/pristine-members/test-plan/SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.txt",
+    "bytes": 99,
+    "sha256": "bd19dd89da11f05ee96a89a88301f749dc95d554477430d3230f030e826eb249"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable/verification.json",
+    "bytes": 3833,
+    "sha256": "85d1ee986e8c1afd947f8f24d56bfd28c5023e697905d65900e713454a037a90"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction/pristine-members/test-plan/SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt",
+    "bytes": 119,
+    "sha256": "18490653592a3d155fb4595c559cf5429ef83a3bffa302e4b8e2053a5b99b946"
+  },
+  {
+    "file": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction/verification.json",
+    "bytes": 3913,
+    "sha256": "39cf8abcc9216b6528d6dd4f11f97a1435dbdc099d214b31dc028cbbca5b9d69"
+  },
+  {
+    "file": "address-sanitizer-summary.txt",
+    "bytes": 389,
+    "sha256": "aac4057e4f205f5fc8b465872ce0375b0df436b11d38f516859217644cfb28ee"
+  },
+  {
+    "file": "checkpoint-20261108T051651Z.json",
+    "bytes": 25156,
+    "sha256": "121e04a5387e89daf960e6eecbb10d2f6e62b235713961fecdef9eacd4db1ff8"
+  },
+  {
+    "file": "contributor-balanced-01/pristine-members/test-plan/contributor-balanced-01.txt",
+    "bytes": 366,
+    "sha256": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a"
+  },
+  {
+    "file": "contributor-balanced-01/verification.json",
+    "bytes": 3989,
+    "sha256": "b15ee85ab655b54c192ac545029a6db23d7e2b5bd67618763e6f0a9919b6ef9c"
+  },
+  {
+    "file": "contributor-balanced-02/pristine-members/test-plan/contributor-balanced-02.txt",
+    "bytes": 1185,
+    "sha256": "7ac65d36f80875b8c1749b1144b37e5dc267295c50e082e01aee41025f8ea077"
+  },
+  {
+    "file": "contributor-balanced-02/verification.json",
+    "bytes": 5043,
+    "sha256": "e9c150fe3712d6eb9e3cb0efe66a3076ce8a74a839dcfd8b3e8cc9f05903e07d"
+  },
+  {
+    "file": "contributor-balanced-03/pristine-members/test-plan/contributor-balanced-03.txt",
+    "bytes": 1122,
+    "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16"
+  },
+  {
+    "file": "contributor-balanced-03/verification.json",
+    "bytes": 4955,
+    "sha256": "f2e3abfbc1986250213316038f121732a87873abb531fb812717496d8a225c22"
+  },
+  {
+    "file": "contributor-balanced-04/pristine-members/test-plan/contributor-balanced-04.txt",
+    "bytes": 615,
+    "sha256": "681ebe9b7ead2c23f7debd69ab6a6dfd0b5fa2a8fcf5eb0eb4d1358204f830c4"
+  },
+  {
+    "file": "contributor-balanced-04/verification.json",
+    "bytes": 4302,
+    "sha256": "a1ba4f428a7359f77f4b90260dd3ecef3500acef411825682caa30a9ffc04bcd"
+  },
+  {
+    "file": "contributor-balanced-05/pristine-members/test-plan/contributor-balanced-05.txt",
+    "bytes": 1607,
+    "sha256": "34dc67f998f83493163ae8af7e3eaf03aa48102bf0523a41b469bccae40a53b7"
+  },
+  {
+    "file": "contributor-balanced-05/verification.json",
+    "bytes": 5556,
+    "sha256": "bd49676b3066545e1456d11dc5c6d1bd791933dc538f1ce0e4a8e9006f6080ff"
+  },
+  {
+    "file": "english-storekit-summary.txt",
+    "bytes": 616,
+    "sha256": "656594f85408cd5bf52a0ac1867a18706e0fea9a363d0818524edd4358049d61"
+  },
+  {
+    "file": "excerpts/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+    "bytes": 3700,
+    "sha256": "3ab18bfa1be076651d9296a16e3c0f6ce442f3a1237005306ec5106071c8f5fb"
+  },
+  {
+    "file": "excerpts/SharedFallbackUITests.txt",
+    "bytes": 3509,
+    "sha256": "766d7c6970e7fc627e63db50656247f406593a5da4013e26c1dcb3d3f96ea7ea"
+  },
+  {
+    "file": "excerpts/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+    "bytes": 3185,
+    "sha256": "78b37ad2bbb5779cbc299da80384d470150d996e6b53bf577b9cb241b2e962f6"
+  },
+  {
+    "file": "excerpts/ui-05.txt",
+    "bytes": 4101,
+    "sha256": "7c8551d219d3df6d8d1cd398a605c78c1f64fe689eee962f80badcbced6f9a2f"
+  },
+  {
+    "file": "excerpts/ui-07.txt",
+    "bytes": 6108,
+    "sha256": "8f93ad7be5909153ba937efb1c92b58ff53321c9662ff17add6b3e4ec2727e12"
+  },
+  {
+    "file": "excerpts/ui-10.txt",
+    "bytes": 6053,
+    "sha256": "d44e65e7fb3af3a1ff1df130d576c8de2790988831315e926dfed9025b38f36c"
+  },
+  {
+    "file": "excerpts/web-browser-order.txt",
+    "bytes": 5209,
+    "sha256": "d4319712b0a55c47ceae8dd5d191e952297d05f03a898466d26a7cf78222adda"
+  },
+  {
+    "file": "fixture-selectors-69.txt",
+    "bytes": 7690,
+    "sha256": "075bc7bf252e551221d58497ce3ac8470bdadff118935eb423001208a9f150a1"
+  },
+  {
+    "file": "fixture-source-inventory.json",
+    "bytes": 12164,
+    "sha256": "be1df0291d746ddcd7818a74edc2f1cad78c839378da1198dad08e7eb6bd58d5"
+  },
+  {
+    "file": "fixture-terminal-inventory.json",
+    "bytes": 7234,
+    "sha256": "01816f0a1f38f5d4a9134d77d08608c9cbcf32a474e636ee61f572a07fb318ac"
+  },
+  {
+    "file": "monitor-20261108T025635Z.json",
+    "bytes": 8902,
+    "sha256": "6e403d9235174fd47746ba58372260f84b6a9f95c248fe013de201e840f87d46"
+  },
+  {
+    "file": "monitor-20261108T031403Z.json",
+    "bytes": 13243,
+    "sha256": "4f04ce32b91522aea3ecc50b9ea2d5dcda4f40219c32c769ac06541af92e9531"
+  },
+  {
+    "file": "monitor-20261108T051651Z.json",
+    "bytes": 18974,
+    "sha256": "41c26bb0abaab4180ffce4bcfe6e99450832321389dc46e004f35d900c7aeb75"
+  },
+  {
+    "file": "native-wire-summary.txt",
+    "bytes": 139,
+    "sha256": "388dca4896f5c57ddea26a7228236ed11282f9439bcb16a0a0bf437928068c95"
+  },
+  {
+    "file": "ordinary-discovery/verification.json",
+    "bytes": 3658,
+    "sha256": "012f498dc0f0a5f6bcdd02ca2296b08978bf39023155a36464952cf1b65b3db8"
+  },
+  {
+    "file": "performance/launch/verification.json",
+    "bytes": 3401,
+    "sha256": "b9f32e7733f51c4670c817d7d8168845185bc7cb68f2b30c699fc2ea70e9db08"
+  },
+  {
+    "file": "performance/rendered/verification.json",
+    "bytes": 7485,
+    "sha256": "cfc003bfe2a871989f9f817800ff88478c90f0ed711c73cf19c53e5f690f8dc0"
+  },
+  {
+    "file": "performance/scroll/verification.json",
+    "bytes": 7835,
+    "sha256": "76cfc58e7e162c66832c9649a900f56be05281f459b7855841b4147007296a07"
+  },
+  {
+    "file": "privacy-review.json",
+    "bytes": 433,
+    "sha256": "92737fd4b3017602d7986d383318bda6bd9a14c094df2175736d6459382d4d88"
+  },
+  {
+    "file": "publication-audit.json",
+    "bytes": 503,
+    "sha256": "0ffccf41d4e86efc73eca6c9668db08c33c0e07164a8b95d91c530996866ba24"
+  },
+  {
+    "file": "reconciliation.json",
+    "bytes": 6646,
+    "sha256": "e694f3bd6d984b14634041c9da3ef4aaf19ff38d76f6eeb80c6503a72bd2f9ec"
+  },
+  {
+    "file": "retention.json",
+    "bytes": 41530,
+    "sha256": "d2c2d896348990eed1c4799b7ff1948a761e3293f9da475d7bdf6d4cd0a1c25a"
+  },
+  {
+    "file": "shards.tsv",
+    "bytes": 2286,
+    "sha256": "53e0f288580927015b9a3f9bf7ceb559ccb54e14787911e733d508106936f309"
+  },
+  {
+    "file": "thread-sanitizer-summary.txt",
+    "bytes": 2614,
+    "sha256": "20afecee67e51c01d8d7155a709db087b2af19333f92f0ad4bc8c2814a9b1cbf"
+  },
+  {
+    "file": "ui-01-summary.txt",
+    "bytes": 286,
+    "sha256": "dfc6ff7622f5317e04279a9e779fc4928bd7ef86248fbdc8c411b5daafaa2fb0"
+  },
+  {
+    "file": "ui-02-summary.txt",
+    "bytes": 1398,
+    "sha256": "caf5e6b4e293a6c4a27f25d25b6cfc718d95885bf85e29d236c443b74fe2d2d6"
+  },
+  {
+    "file": "ui-03-summary.txt",
+    "bytes": 286,
+    "sha256": "43aee2a867bb8d99a9e9e565f73c920851db8ac16f30264931da3285005ccac6"
+  },
+  {
+    "file": "ui-04/verification.json",
+    "bytes": 4254,
+    "sha256": "b5486c50221afc0eba2214356431f05271dbd840be2875c893bc205bb6c2d4dd"
+  },
+  {
+    "file": "ui-05/pristine-members/test-details.json",
+    "bytes": 4361,
+    "sha256": "f80de00b770a834f1700ac36cc2a2986572673d2713a739b09273c2e44c242f3"
+  },
+  {
+    "file": "ui-05/pristine-members/test-plan/ui-05.txt",
+    "bytes": 628,
+    "sha256": "0415f7e0a15429949b1eb5732013cb3a90d5717fbe2280e6be9337d2af41e090"
+  },
+  {
+    "file": "ui-05/pristine-members/test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "6635f765ac4d45baa1a2fde7dad242a65b85e9290a599240464ad69a085738f1"
+  },
+  {
+    "file": "ui-05/pristine-members/test-summary.json",
+    "bytes": 1198,
+    "sha256": "5ad5f3756a128d25128c383049676d290f938939b4fe175b601032b79f8db95c"
+  },
+  {
+    "file": "ui-05/verification.json",
+    "bytes": 5369,
+    "sha256": "da5cce6a61c16e895626e8afd29bcb444d755097808640f9b3754f42d2173e5d"
+  },
+  {
+    "file": "ui-05-summary.txt",
+    "bytes": 3283,
+    "sha256": "0be5333186547c9960c7791cf55112904775ec19f430256d7c9967e87ad26667"
+  },
+  {
+    "file": "ui-06/verification.json",
+    "bytes": 4573,
+    "sha256": "f8778a9eac851b252a0d39d36437aa692e10e35922d8595a8b550b3ed3644885"
+  },
+  {
+    "file": "ui-07/pristine-members/test-details.json",
+    "bytes": 4925,
+    "sha256": "88bf11ec5ed6f44d3fe3f352a53f30d7fe921264a17f51f4fa9c400eaeb0dc13"
+  },
+  {
+    "file": "ui-07/pristine-members/test-plan/ui-07.txt",
+    "bytes": 830,
+    "sha256": "661bf13a564fb7a194b34cceef833c32c664ba2055a2bacc0863efacfd8ca125"
+  },
+  {
+    "file": "ui-07/pristine-members/test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92"
+  },
+  {
+    "file": "ui-07/pristine-members/test-summary.json",
+    "bytes": 1164,
+    "sha256": "73b8f0bee2f28fc0c18bba3b560856dee52f455e2f22c93e20375c177cb49a0c"
+  },
+  {
+    "file": "ui-07/verification.json",
+    "bytes": 6679,
+    "sha256": "1dbb40bc126fa6522338fc6f8532c8d1a6fa351a5bd37f4263653b497c0c527a"
+  },
+  {
+    "file": "ui-07-summary.txt",
+    "bytes": 3976,
+    "sha256": "3aaa5428570c5f5fe7278f58961b835f8c93b26627d072db0d7794086e9b00e5"
+  },
+  {
+    "file": "ui-08/verification.json",
+    "bytes": 4411,
+    "sha256": "b2c1b1398814e6afd2b1b333443dee084af92a4d8738dc6fdbf63ce7de930ae3"
+  },
+  {
+    "file": "ui-09/verification.json",
+    "bytes": 4575,
+    "sha256": "fe8f08d9993901b0348366d7c86671e67ccb57051a172b09c9254d767be95c6f"
+  },
+  {
+    "file": "ui-10/pristine-members/test-details.json",
+    "bytes": 4192,
+    "sha256": "a95dd22e9b37e91eee2f29f8d812021888679e1fead8b37ccab53165aa7f2c1d"
+  },
+  {
+    "file": "ui-10/pristine-members/test-plan/ui-10.txt",
+    "bytes": 761,
+    "sha256": "244f57325c0435df0a474eb11ba43d7d9a07dc1db0b03d63c5a61803762afe10"
+  },
+  {
+    "file": "ui-10/pristine-members/test-runtime-warnings.json",
+    "bytes": 182,
+    "sha256": "4107607ed15883a828fbfc791bee13719675f20183898631eb7e6e2e032f6dbd"
+  },
+  {
+    "file": "ui-10/pristine-members/test-summary.json",
+    "bytes": 1226,
+    "sha256": "1cab5d765fac5ecc4d0957ce91617d02041ab6b2b38f0a5141afaba79ad556aa"
+  },
+  {
+    "file": "ui-10/verification.json",
+    "bytes": 6516,
+    "sha256": "e96629b36893443e5cfbb33811d5140e600d6f96379688c8c5e310de12bc5e04"
+  },
+  {
+    "file": "ui-10-summary.txt",
+    "bytes": 3715,
+    "sha256": "bbe272476afc893bb999bf46a54fa408aaedac13c98532c440b69d2954e7865e"
+  },
+  {
+    "file": "web-failure-excerpt.txt",
+    "bytes": 9683,
+    "sha256": "b1f2a0afc33eede79cecfc00c0f7f65b5cbdfd5f4222db19d795b08543928f28"
+  },
+  {
+    "file": "web-job-metadata.json",
+    "bytes": 2580,
+    "sha256": "3a12c1bafd0883b6dc654d74bd2a48509726882c8342e65b710ad9e61cd30f30"
+  }
+]

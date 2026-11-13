@@ -1,0 +1,58 @@
+{
+  "status": "visual-qualification-failed",
+  "reviewer": "root",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "imagesReviewed": 2,
+  "finding": "Native automatic Form button attenuates the entire direct PrimaryActionLabel. AX remainsDisabled and both physical-tap/no-save thenrestored-quantity/save/restart journeys pass, but actual label contrast failsproduct4.5:1. Do not qualify globalcandidate or continue unchanged ordinary-dark/minimum phases.",
+  "measurements": [
+    {
+      "language": "english",
+      "roi": [
+        440,
+        1830,
+        765,
+        1925
+      ],
+      "dominant": {
+        "RGB": [
+          139,
+          148,
+          146
+        ],
+        "pixels": 3110,
+        "contrast": 3.1116551271707706,
+        "componentsWithColor": 11,
+        "componentsWhereColorIsMode": 11
+      },
+      "components": 11,
+      "support": true,
+      "sRGB": true
+    },
+    {
+      "language": "spanish",
+      "roi": [
+        430,
+        2105,
+        775,
+        2205
+      ],
+      "dominant": {
+        "RGB": [
+          139,
+          148,
+          146
+        ],
+        "pixels": 3357,
+        "contrast": 3.1116551271707706,
+        "componentsWithColor": 12,
+        "componentsWhereColorIsMode": 12
+      },
+      "components": 12,
+      "support": true,
+      "sRGB": true
+    }
+  ],
+  "sourceManifestSHA256": "be308a336e69d2b316df79efd8d71ff3e3e9824b516c0091934bd05f2ea9462d",
+  "scope": "Direct DinnerAcceptIdea only; five customstylefixturepassesremainvalidfortheirfrozen source."
+}

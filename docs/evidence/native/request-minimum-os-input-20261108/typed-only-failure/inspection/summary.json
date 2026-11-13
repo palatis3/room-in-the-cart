@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "modelName" : "iPhone SE (3rd generation)",
+        "osBuildNumber" : "21A328",
+        "osVersion" : "17.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1794142364.256,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1794142140.245,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Missing fully actionable UI element: Attributes: TextField, 0x11e138e10, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\nElement subtree:\n →TextField, 0x11e138e10, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\nPath to element:\n →Application, 0x107593050, pid: 21505, label: 'Room in the Cart'\n  ↳Window (Main), 0x11e70e130, {{0.0, 0.0}, {375.0, 667.0}}\n   ↳Other, 0x11e636990, {{0.0, 0.0}, {375.0, 667.0}}\n    ↳Other, 0x11e636bd0, {{0.0, 40.0}, {375.0, 627.0}}\n     ↳Other, 0x11e636cf0, {{0.0, 40.0}, {375.0, 627.0}}\n      ↳Other, 0x11e636e10, {{0.0, 40.0}, {375.0, 627.0}}\n       ↳Other, 0x11e636f30, {{0.0, 40.0}, {375.0, 627.0}}\n        ↳Other, 0x11e637050, {{0.0, 40.0}, {375.0, 627.0}}\n         ↳Other, 0x11e637170, {{0.0, 40.0}, {375.0, 627.0}}\n          ↳Other, 0x11e637830, {{0.0, 40.0}, {375.0, 627.0}}\n           ↳Other, 0x11e637950, {{0.0, 40.0}, {375.0, 627.0}}\n            ↳Other, 0x11e637a70, {{0.0, 40.0}, {375.0, 627.0}}\n             ↳Other, 0x11e637b90, {{0.0, 40.0}, {375.0, 627.0}}\n              ↳CollectionView, 0x11e637cb0, {{0.0, 40.0}, {375.0, 627.0}}\n               ↳Cell, 0x11e63ee50, {{16.0, 535.0}, {343.0, 44.0}}\n                ↳Other, 0x11e63f1b0, {{16.0, 535.0}, {343.0, 44.0}}\n                 ↳Other, 0x11e1382d0, {{16.0, 535.0}, {343.0, 44.0}}\n                  ↳Other, 0x11e138cf0, {{16.0, 535.0}, {343.0, 44.0}}\n                   ↳TextField, 0x11e138e10, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\nQuery chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x107596890, pid: 21505, label: 'Room in the Cart'\n  }\n  ↪︎Find: Descendants matching type TextField\n    Output: {\n      TextField, 0x11e2c8380, {{16.0, 95.0}, {343.0, 44.0}}, identifier: 'household.pack.a.label', placeholderValue: 'Reviewed pack label', value: Reviewed pack a\n      TextField, 0x11e2c9580, {{16.0, 183.0}, {343.0, 44.0}}, identifier: 'household.pack.a.usable', placeholderValue: 'Usable amount in one pack, blank if unknown', value: 4\n      TextField, 0x11e2cb2c0, {{16.0, 315.0}, {343.0, 44.0}}, identifier: 'household.pack.a.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: 3.00\n      TextField, 0x11e2cd000, {{16.0, 447.0}, {343.0, 44.0}}, placeholderValue: 'Available pack limit, blank if unlimited confirmed', value: Available pack lim...\n      TextField, 0x11e2cdfc0, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\n    }\n    ↪︎Find: Elements matching predicate 'identifier == \"household.pack.a.source\"'\n      Output: {\n        TextField, 0x11e479ed0, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\n      }\n      ↪︎Find: First Match\n        Output: {\n          TextField, 0x11e2c0190, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source', value: Price source\n        }\n",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "testName" : "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

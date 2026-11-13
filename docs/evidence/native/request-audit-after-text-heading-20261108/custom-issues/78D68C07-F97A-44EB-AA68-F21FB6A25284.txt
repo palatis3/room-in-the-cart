@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x1190dd1b0, {{32.0, 290.5}, {69.0, 20.3}}, label: 'Over cap'
+Element subtree:
+ →StaticText, 0x1190dd1b0, {{32.0, 290.5}, {69.0, 20.3}}, label: 'Over cap'
+Path to element:
+ →Application, 0x104139c10, pid: 42894, label: 'Room in the Cart'
+  ↳Window (Main), 0x10413c2b0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1190d8650, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1190d8890, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x1190d89b0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x1190d8ad0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x1190d8bf0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x1190d8d10, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x1190d8e30, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x1190d94f0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x1190d9610, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x1190d9730, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x1190d9850, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x1190d9970, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x1190dc430, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x1190dc8b0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x1190dc9d0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x1190dcaf0, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x1190dd090, {{32.0, 290.5}, {338.0, 20.3}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+                    ↳StaticText, 0x1190dd1b0, {{32.0, 290.5}, {69.0, 20.3}}, label: 'Over cap'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x119158000, pid: 42894, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 42894, elementOrHash.elementID: 4850754048.388
+    Output: {
+      StaticText, 0x119150f50, {{32.0, 290.5}, {69.0, 20.3}}, label: 'Over cap'
+    }

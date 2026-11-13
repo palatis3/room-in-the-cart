@@ -1,0 +1,143 @@
+{
+  "candidate": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "runID": 42428215935,
+  "attempt": 1,
+  "jobID": 128573980752,
+  "artifactID": 13597417339,
+  "artifactSHA256": "adb5a92cb85f6d9433f620636bfa7b8d4c4ec62cde00ec60b350aa9fe477a5fe",
+  "archiveGuards": "Unchanged from candidate-1080fad reviewed core collector; only source/run/artifact allowlist narrowed. All 95 entries passed; no exception.",
+  "collectorSource": ".build/CIResearch20261107/candidate-1080fad/scoped-lanes-proof/core-collection/collect-results.py",
+  "collectorSourceSHA256": "216280098c326b1142e43ca44872eb134c603f527af94b90cd7387b19e92b794",
+  "pinnedCollector": ".build/CIF90Nov07/settings-original/collect-results.py",
+  "pinnedCollectorSHA256": "ed91b52668b1a5d2fa94be50dbf959af55ee9fc4235029c8713fc2435f7a9e6a",
+  "originalFilesVerifiedUnchanged": 95,
+  "pristineManifestSHA256": "d7c52b7f910a1ebb6bcc84fe3432cc93777806e217cf40c19f9f6b4cc6a66f71",
+  "retainedMonitorFilesMatchOriginalArtifact": true,
+  "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+  "caseResult": "Failed",
+  "durationSeconds": 58.420122027397156,
+  "timeline": [
+    {
+      "title": "Launch com.apple.Preferences",
+      "unixSeconds": 1794097937.736,
+      "relativeSeconds": 0.064,
+      "utc": "2026-11-08T00:32:17.736000+00:00",
+      "isAssociatedWithFailure": true
+    },
+    {
+      "title": "Failed to launch com.apple.Preferences: Timed out attempting to launch app.",
+      "unixSeconds": 1794097967.759,
+      "relativeSeconds": 30.087,
+      "utc": "2026-11-08T00:32:47.759000+00:00",
+      "isAssociatedWithFailure": true
+    },
+    {
+      "title": "Setting up automation session",
+      "unixSeconds": 1794097973.7,
+      "relativeSeconds": 36.028,
+      "utc": "2026-11-08T00:32:53.700000+00:00",
+      "isAssociatedWithFailure": false
+    },
+    {
+      "title": "Tap \"Accessibility\" StaticText",
+      "unixSeconds": 1794097986.852,
+      "relativeSeconds": 49.18,
+      "utc": "2026-11-08T00:33:06.852000+00:00",
+      "isAssociatedWithFailure": false
+    },
+    {
+      "title": "Waiting 8.0s for \"Motion\" StaticText to exist",
+      "unixSeconds": 1794097987.209,
+      "relativeSeconds": 49.537,
+      "utc": "2026-11-08T00:33:07.209000+00:00",
+      "isAssociatedWithFailure": false
+    },
+    {
+      "title": "Tear Down",
+      "unixSeconds": 1794097995.6,
+      "relativeSeconds": 57.928,
+      "utc": "2026-11-08T00:33:15.600000+00:00",
+      "isAssociatedWithFailure": false
+    },
+    {
+      "title": "Added attachment named 'Free-flow-failure'",
+      "unixSeconds": 1794097995.867,
+      "relativeSeconds": 58.195,
+      "utc": "2026-11-08T00:33:15.867000+00:00",
+      "isAssociatedWithFailure": false
+    }
+  ],
+  "sourceComparison": {
+    "path": "ios/UITests/FreeJourneyUITests.swift",
+    "currentCommit": "cfe86daf9a6eee50c29772f10a02c21fc0b3d87c",
+    "sections": [
+      {
+        "sectionStarts": "func testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+        "unchanged": true,
+        "sectionSHA256": "e7831e5c7bcd88334c8d287b0622556f10e15ae6de436285298be2dc35d8d606"
+      },
+      {
+        "sectionStarts": "private static func reduceMotionSwitch(",
+        "unchanged": true,
+        "sectionSHA256": "28cc7a4ba6694784b1b598687a03bc86c87769f72f3e9cd3508c6e1af3d3c6f7"
+      }
+    ]
+  },
+  "visualObservation": "Original teardown screenshot shows Settings main page with Accessibility row visible; no Motion page, Reduce Motion switch, app, or share sheet. This is the later 58.195s state, not the initial launch-timeout screen.",
+  "diagnosticFinding": "The runner explicitly reports event dispatch preempted by earlier failure during the Accessibility tap. The logged tap activity did not establish delivered input.",
+  "unresolved": "The platform launch timeout origin and delay before Settings foreground state are not established by the retained runner/limited testmanagerd logs.",
+  "inspection": {
+    "tool": "xcresulttool version 25115, schema 0.4.0",
+    "bundle": ".build/CIF90Nov07/settings-original/inspection-copy/Tests.xcresult",
+    "initialExportCollision": "Concurrent first activities/attachments exports exited64 because xcresulttool attempted to create the same database.sqlite3 in the disposable inspection copy. Details/diagnostics exports succeeded. After conversion, sequential activities/attachments exports succeeded. No original bundle mutation or native test retry.",
+    "diagnosticScope": "Inspected the failed-case window of the first runner session and limited testmanagerd log. Other-case/app stdout and recording media were not inspected. Only failed-selector attachments exported; screenshot viewed directly.",
+    "successfulCommands": [
+      [
+        "xcrun",
+        "xcresulttool",
+        "get",
+        "test-results",
+        "test-details",
+        "--path",
+        ".build/CIF90Nov07/settings-original/inspection-copy/Tests.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced"
+      ],
+      [
+        "xcrun",
+        "xcresulttool",
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        ".build/CIF90Nov07/settings-original/inspection-copy/Tests.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced"
+      ],
+      [
+        "xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        ".build/CIF90Nov07/settings-original/inspection-copy/Tests.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "--output-path",
+        ".build/CIF90Nov07/settings-original/attachments"
+      ],
+      [
+        "xcrun",
+        "xcresulttool",
+        "export",
+        "diagnostics",
+        "--path",
+        ".build/CIF90Nov07/settings-original/inspection-copy/Tests.xcresult",
+        "--output-path",
+        ".build/CIF90Nov07/settings-original/diagnostics"
+      ]
+    ]
+  },
+  "scope": "Original result inspection only; no app/test/workflow changes, native execution, hosted retries, timeout changes, preference bypass, warning suppression, or acceptance relabeling.",
+  "pristineManifest": "pristine-manifest.json"
+}

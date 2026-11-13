@@ -1,0 +1,8 @@
+Executed 1 of 1 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording | Passed | 142.76 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.
+

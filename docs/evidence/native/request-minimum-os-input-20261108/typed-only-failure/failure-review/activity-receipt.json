@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "get",
+    "test-results",
+    "activities",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/S24TypedFieldNov08/ios17-run/inspection/native.xcresult",
+    "--test-id",
+    "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()"
+  ],
+  "exitCode": 0,
+  "perFileCapBytes": 4000000,
+  "timeoutSeconds": 45,
+  "activitiesSHA256": "06618b843c23b992e3e9726d9fbccd69c2a552ca02a87f9a11f9b941c2a5c5a0",
+  "referenceCount": 4,
+  "targets": [
+    {
+      "lifetime": "keepAlways",
+      "name": "S24-request-pack-failure_0_DB0C870B-FE37-466E-82D0-D65E8F79730B.png",
+      "payloadId": "0~NFl4J3-DXFfwrDVcez4ZUVzeaoOT-hyq_nX0f1Lnw02TFpHunjIemX18VAT5XxXQWPvjp9qAzVaBE6Qvkoolww==",
+      "timestamp": 1794142361.912,
+      "uuid": "EEDFEC39-5EF4-42E1-8E9F-C6033C3D6C0E"
+    },
+    {
+      "lifetime": "keepAlways",
+      "name": "S24-failure-accessibility-hierarchy_0_B8ABB9F9-9803-4597-B1DD-C01E8503F331.txt",
+      "payloadId": "0~YifHDCpVAPzx5u0zikq0_i2lIq_rpXHzNh2o4Jvktmf4sx3jlKXqAAWbmD_SWC5aQRi5_MxIOwzenX2aCIIjEA==",
+      "timestamp": 1794142362.632,
+      "uuid": "CD875378-272D-4821-B9E7-A02CA4DE9B1B"
+    }
+  ],
+  "originalUnchanged": true
+}

@@ -1,0 +1,78 @@
+--- a/ios/UITests/RoomInTheCartUITests.swift
++++ b/ios/UITests/RoomInTheCartUITests.swift
+@@ -5,6 +5,7 @@
+ @MainActor
+ final class RoomInTheCartUITests: XCTestCase {
+     private var app: XCUIApplication!
++    private var diagnoseQuantityFocus = false
+ 
+     override func setUpWithError() throws {
+         continueAfterFailure = false
+@@ -205,6 +206,7 @@
+     }
+ 
+     func testLargestTextEditActionGrowsInContentAndReturnsToEntry() throws {
++        diagnoseQuantityFocus = true
+         launch(largeDark: true)
+         openEmptyComparison()
+         enterComparison(item: "Accessible edit wraps", firstQuantity: "8", cap: "30")
+@@ -556,15 +558,58 @@
+ 
+     private func type(_ text: String, into id: String) {
+         let field = element(id)
+-        tap(field)
++        if diagnoseQuantityFocus && id == "bQuantity" {
++            reveal(field)
++            captureQuantityFocus("B-before-tap", field: field)
++            field.tap()
++            captureQuantityFocus("B-after-tap", field: field)
++        } else {
++            tap(field)
++        }
+         // The keyboard can scroll a large-type Form row out of the snapshot.
+         // Type into the focused field rather than requerying a recycled row.
+         app.typeText(text)
+         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "Hecho"])).firstMatch
+         XCTAssertTrue(done.waitForExistence(timeout: 3), "Decimal input must have a keyboard dismissal control")
++        if diagnoseQuantityFocus && id == "aPrice" { captureQuantityFocus("A-before-Done", field: field) }
+         done.tap()
++        if diagnoseQuantityFocus && id == "aPrice" { captureQuantityFocus("A-after-Done", field: field) }
+         reveal(field)
+         XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
++    }
++
++    // Diagnostic only: public observations can perturb timing and are not a focus fix.
++    // Samples are sequential, not atomic; no food text or field values are retained.
++    private func captureQuantityFocus(_ phase: String, field: XCUIElement) {
++        let started = ProcessInfo.processInfo.systemUptime
++        func state(_ target: XCUIElement) -> [String: Any] {
++            let exists = target.exists
++            guard exists else { return ["exists": false] }
++            return ["exists": true, "hittable": target.isHittable,
++                    "enabled": target.isEnabled, "frame": NSStringFromCGRect(target.frame)]
++        }
++        let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "Hecho"]))
++        let samples: [String: Any] = [
++            "phase": phase, "sampleStartedUptime": started,
++            "field": state(field),
++            "bQuantityMatches": app.descendants(matching: .any).matching(identifier: "bQuantity").count,
++            "bQuantity": state(element("bQuantity")),
++            "collection": state(app.collectionViews.firstMatch),
++            "navigation": state(app.navigationBars.firstMatch),
++            "tabs": state(app.tabBars.firstMatch),
++            "keyboardCount": app.keyboards.count,
++            "keyboard": state(app.keyboards.firstMatch),
++            "doneCount": done.count, "done": state(done.firstMatch),
++            "sampleFinishedUptime": ProcessInfo.processInfo.systemUptime
++        ]
++        do {
++            let data = try JSONSerialization.data(withJSONObject: samples, options: [.sortedKeys, .prettyPrinted])
++            let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
++            attachment.name = "Quantity-focus-" + phase
++            attachment.lifetime = .keepAlways
++            add(attachment)
++        } catch { XCTFail("Unable to encode quantity focus diagnostic: \(error)") }
++        if phase.hasPrefix("B-") { screenshot("Quantity-focus-" + phase) }
+     }
+ 
+     private func element(_ id: String) -> XCUIElement {

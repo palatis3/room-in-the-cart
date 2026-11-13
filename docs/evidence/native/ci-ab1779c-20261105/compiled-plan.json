@@ -1,0 +1,26 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071958899,
+  "artifactID": 13437571219,
+  "sha256": "297f258fa92a44e5ac5e22fb1a69ea871b67a4e9603a1019ba7f4d8483325b41",
+  "githubDigestVerified": true,
+  "generatedPlanByteIdentical": true,
+  "models": 599,
+  "ordinaryUI": 51,
+  "groupCounts": {
+    "ui-01": 3,
+    "ui-02": 4,
+    "ui-03": 5,
+    "ui-04": 5,
+    "ui-05": 5,
+    "ui-06": 5,
+    "ui-07": 6,
+    "ui-08": 6,
+    "ui-09": 6,
+    "ui-10": 6
+  },
+  "limits": [
+    "Inventory/plan only; native execution is independently verified from result artifacts.",
+    "Only the compiled test-plan was extracted from the validated products archive; app products were not executed locally."
+  ]
+}

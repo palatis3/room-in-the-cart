@@ -1,0 +1,34 @@
+{
+  "baseCommit": "2815a35",
+  "device": "iPhone SE, iOS 17.0 (21A328), arm64 simulator",
+  "configuration": "Debug; isolated UI test workspace entered through real screens",
+  "resultBundle": ".build/PickupFactsHold20261104/PickupFactsHold-facts-done.xcresult",
+  "summarySHA256": "aaeebd483ffa941300d04f2e5d6fa264b1f9373b4bd7e995c0443c7a3b3fcb6d",
+  "sourceSHA256": {
+    "ios/Features/Ledger/LedgerHomeView.swift": "64e07bc4f853f5885c9a61a91b829c42193fc4de51509fe99bb7b84f4f2a602a",
+    "ios/Features/Ledger/LedgerSheets.swift": "31f68c4d433eef62179668609f951b724ec9efe09122ba421192f82607e739a3",
+    "ios/Features/Pickup/PickupHomeView.swift": "b925c5330a1893a2294db0d81f656d58fe9fa074a3599d76ab96c9d05218ee13",
+    "ios/Features/Pickup/Pickup.xcstrings": "a8ae4aa62114bcad488a43a47b605860ae8026cf419e1018e7b6dfaac9135d9b",
+    "ios/UITests/ContextualNavigationUITests.swift": "bd02803f951fd80905f77dac94499dd3a3424c3b008ba59065b728b6fd778429"
+  },
+  "appBinarySHA256": "bc80cd125e8f8ffdaa4240a5de2fb6e6d1bbc50bcec1b18e6a7fed9e8f05b235",
+  "tests": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": []
+  },
+  "cases": [
+    {
+      "name": "testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+      "seconds": 121.81,
+      "assertions": "Hold comparison defaults off; fields appear only after opt-in; missing hold remains unresolved; hold45/funds40 yields5 while checkout30/cap38 retains8 headroom; toggling off clears amounts and reopening defaults off."
+    },
+    {
+      "name": "testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+      "seconds": 64.155,
+      "assertions": "Full pickup-details card opens; decimal keyboard Done dismisses;35 dinner-only cap and date save with unknown fees; cancel a proposed date removal; exact saved summary, date and cap survive relaunch."
+    }
+  ],
+  "limits": "No live retailer, payment, network, physical-device or signed-distribution claim. Earlier failing scratch attempts are preserved alongside this result; a prior repeated-query crash was in injected XCTest runtime logging on iOS17."
+}

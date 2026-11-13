@@ -1,0 +1,109 @@
+{
+  "nativeFixed": {
+    "nativeExitCode": 0,
+    "driverExitCode": 0,
+    "strictReplayExit": 0,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 242.4,
+    "device": "iPhone 17 Pro arm64 simulator",
+    "runtime": "iOS26.2/23C54",
+    "coordinator": "Xcode27.1/27A9275",
+    "configuration": "Debug"
+  },
+  "sourceAndProductBinding": {
+    "attempt8SourceInputs": 470,
+    "allResolved": true,
+    "products": 202,
+    "allIndependentlyRehashed": true,
+    "negativeExecutableHashesVerified": true,
+    "onlyProductionChange6To8": "LedgerHomeView explicit borderless style on Retry and Discard",
+    "additionalTestChange6To8": "Reveal ledgerImport, tap directly, and require Bring the list before editing; exact patch retained.",
+    "driverAndProtocolUnchanged": true,
+    "laterPermanentRegressionNotCovered": true
+  },
+  "negative": {
+    "attempt": 6,
+    "testOutcome": "failed",
+    "before": {
+      "headRevision": 2,
+      "revisionCount": 2,
+      "payloadSHA256": "ec4cd39ad1764c0c6218eb395c6f83675bb146fe292f3d6e8d3433ccc26e8cf5",
+      "importBatchCount": 1,
+      "contributionCount": 2,
+      "quantities": [
+        {
+          "denominator": 1,
+          "name": "recovery pears",
+          "numerator": 3,
+          "unit": "count"
+        },
+        {
+          "denominator": 1,
+          "name": "recovery wraps",
+          "numerator": 2,
+          "unit": "count"
+        }
+      ]
+    },
+    "after": {
+      "headRevision": 3,
+      "revisionCount": 3,
+      "payloadSHA256": "019a227f3faaa5b942a70b0a31a0cd5821b0a3515d056f53e1add94ca58a68a0",
+      "importBatchCount": 2,
+      "contributionCount": 3,
+      "quantities": [
+        {
+          "name": "discarded oat jars",
+          "numerator": 4,
+          "denominator": 1,
+          "unit": "count"
+        },
+        {
+          "name": "recovery pears",
+          "numerator": 3,
+          "denominator": 1,
+          "unit": "count"
+        },
+        {
+          "name": "recovery wraps",
+          "numerator": 2,
+          "denominator": 1,
+          "unit": "count"
+        }
+      ]
+    },
+    "priorFailedSaveDurablyUnchanged": true,
+    "discardCancelledPhaseNotReached": true
+  },
+  "fixed": {
+    "attempt": 8,
+    "twoRealWriterLockIntervals": true,
+    "hostWriterTotalChangesZero": true,
+    "eachFailedSaveDurablyUnchanged": true,
+    "retryExactlyOneRevisionAndOneBatch": true,
+    "discardFinalFullShopAndHistoryEqualSavedRetry": true,
+    "finalReadOnlySQLiteVerified": true,
+    "protocolDoneObserved": true
+  },
+  "uiObservations": {
+    "largestTextTestPath": true,
+    "keyboardPresentBeforeBothSubmissions": true,
+    "keyboardAbsentAfterBothFailures": true,
+    "errorStartVisibleBeforeRevealBoth": true,
+    "oneHittableGlobalRecoveryMatchAtEachRecordedAction": true,
+    "underlyingNonHittableDuplicatesRetained": true,
+    "originalHeadingSentinelUnavailableBoth": true
+  },
+  "limitations": [
+    "Local Debug synthetic writer-contention flow; not hosted Xcode26.3 or release acceptance.",
+    "Test method changed only the import entry targeting between negative6 and passing8; not a byte-identical XCTest comparison.",
+    "Pre-submit Original wording sentinel was unavailable, so automatic scroll movement from an offscreen heading is not demonstrated.",
+    "Scoped geometry/hittability and semantic disabled state do not establish exhaustive VoiceOver behavior, pixel contrast, every disabled PrimaryAction appearance or all keyboard/layout states.",
+    "Shared-row action dispatch is the source-supported mechanism; no closure-entry instrumentation proves which closures ran.",
+    "Attempts1-7 remain retained, including the true application negative6 and incomplete fixed7.",
+    "No new native execution, simulator mutation, source/Git edit or hosted call by this reviewer."
+  ]
+}

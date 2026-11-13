@@ -1,0 +1,11 @@
+{
+  "reviewedAtUTC": "2026-11-08T11:46:30.722092+00:00",
+  "image": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/png/F054BF36-F432-487E-9C1E-A69D62D17708.png",
+  "sha256": "e8353655b3ee7275f016fc92a915e86e28214fb7e315f4c91c6781ee48c2398d",
+  "observed": [
+    "Review request sheet remains open with Cancel in its navigation bar.",
+    "Sheet visibly says Decision confirmed by the household and Added to the plan.",
+    "No automatic return to the inbox is shown at the failed postcondition."
+  ],
+  "scope": "Exact original-product regression failure screenshot, resized from1206x2622 to942x2048; not physical accessibility evidence"
+}

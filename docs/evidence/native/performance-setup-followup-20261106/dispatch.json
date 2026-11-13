@@ -1,0 +1,16 @@
+{
+  "head": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "branch": "codex/verify-performance-setup-804030e",
+  "runID": 42301547684,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42301547684",
+  "createdAt": "2026-11-06T22:02:20Z",
+  "workflow": "ios-performance.yml",
+  "enforce_baselines": true,
+  "dispatchCount": 1,
+  "pullRequestOpened": false,
+  "localRootTestsPassed": 32,
+  "scope": "Exact804 plus reviewed0500ca3 setup helper; one build and original three performance cases. No changed native sources, thresholds, planner, warnings or time limits.",
+  "statusAtCapture": "queued",
+  "priorFailuresPreserved": true
+}

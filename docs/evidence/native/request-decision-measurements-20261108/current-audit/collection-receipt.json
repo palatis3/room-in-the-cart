@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "export",
+    "attachments",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/inspection/native.xcresult",
+    "--test-id",
+    "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/reconciliation/text-attachments",
+    "--filter",
+    "*.txt"
+  ],
+  "input": "completed inspection COPY only",
+  "filter": "*.txt",
+  "exit": 0,
+  "limitExceeded": false,
+  "filesIncludingLogs": 87,
+  "bytesIncludingLogs": 123466,
+  "limitFiles": 200,
+  "limitBytes": 20971520,
+  "inspectionVerificationSHA256": "61c278fe3e925308c2e693f78965fcb041e2eabae031973eb67f9ec53b2dbc7d"
+}

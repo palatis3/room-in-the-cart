@@ -1,0 +1,65 @@
+[
+  {
+    "attachment": {
+      "rowid": 164,
+      "userInfo_fk": 77,
+      "xcResultKitPayloadRefId": "0~NIzVc3P_mWErmYOTsLMZ3bkc1tS6JiAZGfFUcXjK5DL_H46cnBBSi_tCXevuNp15ASIrquX2Yu1ZIJ-tc4B1nw==",
+      "inActivityIdentifier": 0,
+      "lifetime": "keepAlways",
+      "name": "Free-whole-packs-saved-for-checkout-review",
+      "timestamp": 815793155.625,
+      "testIssue_fk": null,
+      "activity_fk": 1908,
+      "filenameOverride": "Free-whole-packs-saved-for-checkout-review_0_D736BAD9-F37A-441C-9C76-9677310757DC.png",
+      "uniformTypeIdentifier": "public.png",
+      "uuid": "FEECD244-C64F-4BE7-9465-7EAF5BA47518"
+    },
+    "file": "exports/Free-whole-packs-saved-for-checkout-review.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 196782,
+    "sha256": "40598b5f23a2d6ee2f521a902a5f23fb7d9f08560fb928d9cad457633526211a"
+  },
+  {
+    "attachment": {
+      "rowid": 241,
+      "userInfo_fk": 116,
+      "xcResultKitPayloadRefId": "0~lGdAdFSchCEBXDjRbvKcvE39efEgjY63W3svPnPKhUD-3rlnVTu3dJvqUh1D4rdwlFY4LqBpBhXflNPjeLvZ4g==",
+      "inActivityIdentifier": 0,
+      "lifetime": "keepAlways",
+      "name": "Free-flow-failure",
+      "timestamp": 815793269.6830001,
+      "testIssue_fk": null,
+      "activity_fk": 2393,
+      "filenameOverride": "Free-flow-failure_0_F614BFD7-F410-4103-9C51-70D431828E01.png",
+      "uniformTypeIdentifier": "public.png",
+      "uuid": "7709F078-F941-4711-8B1E-3C32D5B4BB84"
+    },
+    "file": "exports/Free-flow-failure.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 389669,
+    "sha256": "e89ae0ae9f9e222971abb7bf0510ad094039e401a1141c3072366edb0c848b47"
+  },
+  {
+    "attachment": {
+      "rowid": 239,
+      "userInfo_fk": null,
+      "xcResultKitPayloadRefId": "0~fUu-SQN3iOLZgGF7jtSXyc-Z604ah4DYH89WPrJ8YyzJ5toFIGsxWvIIVdkubnXrJYaCHVvvUBurORQdVFxA5Q==",
+      "inActivityIdentifier": 0,
+      "lifetime": "deleteOnSuccess",
+      "name": "kXCTAttachmentLegacySnapshot",
+      "timestamp": 815793264.7349999,
+      "testIssue_fk": null,
+      "activity_fk": 2376,
+      "filenameOverride": "Snapshot_0_FF0BE13A-1526-445C-AB09-66D6FC7E2F9F",
+      "uniformTypeIdentifier": "com.apple.dt.xctest.element-snapshot",
+      "uuid": "47BD76E0-DF78-4AD9-B179-8AB1F6D6A964"
+    },
+    "file": "exports/kXCTAttachmentLegacySnapshot.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1308,
+    "sha256": "df981022ee2c5e24d65521312a641fbd51141e90cddccf9c029c553c9e2ba5da"
+  }
+]

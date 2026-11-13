@@ -1,0 +1,65 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "requiredWorkflowResults": {
+    "core": {
+      "runID": 42021894668,
+      "result": "failure"
+    },
+    "fixtures": {
+      "runID": 42021894739,
+      "result": "failure"
+    },
+    "deep": {
+      "runID": 42021894579,
+      "result": "failure"
+    },
+    "security": {
+      "runID": 42021894555,
+      "result": "success",
+      "scope": "Actions and JavaScript/TypeScript; Swift CodeQL separately fails in core"
+    },
+    "nativeWire": {
+      "runID": 42021894581,
+      "result": "success"
+    },
+    "performance": {
+      "runID": 42021894768,
+      "result": "success"
+    }
+  },
+  "models": {
+    "selected": 580,
+    "strictPassed": 580
+  },
+  "ordinaryUI": {
+    "selected": 51,
+    "nativePassed": 48,
+    "nativeFailed": 3,
+    "casesInStrictPassingGroups": 33,
+    "failedGroups": [
+      "ui-05",
+      "ui-07",
+      "ui-10"
+    ]
+  },
+  "fixtureUI": {
+    "selected": 44,
+    "nativePassed": 43,
+    "nativeFailed": 1,
+    "casesInStrictPassingGroups": 42,
+    "failedGroups": [
+      "RecordsMediaUITests",
+      "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+    ],
+    "recordsScope": "Safe original redacted report only; no original raw result replay"
+  },
+  "notGreen": [
+    "Swift CodeQL traced build timeout",
+    "Spanish StoreKit delivery assertion",
+    "Dinner move and initial urgent repair720s animation waits",
+    "Reduce Motion15s share readiness failure",
+    "Records media native failure with redacted details only",
+    "Known-trip native pass rejected by exact warning phase guard"
+  ],
+  "limits": "All originals retained. Local later fixes/diagnostics and future guard policies do not relabel original hosted results. Optional diagnostic environment failure is separate. No deployment or release approval."
+}

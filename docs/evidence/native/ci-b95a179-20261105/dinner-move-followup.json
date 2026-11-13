@@ -1,0 +1,46 @@
+{
+  "failedCandidate": "b95a179",
+  "failedJob": 127552845780,
+  "originalFailure": "XCTest exceeded 720 seconds after a Done tap in manual dinner entry.",
+  "change": "Enter four adjacent values directly in the unscheduled manual dinner and verify their values before tapping Review. Keep all protected-lunch Done checks.",
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "08F8114E-3A47-4DE8-B1EA-8A00AC9B1AB7",
+          "deviceName": "RITC Dinner Move Direct Entry b95",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 27.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793918353.021,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793917908.834,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - RoomInTheCart",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "strictReplay": "Executed 1 of 1 selected tests.\n\n| Test | Result | Seconds |\n|---|---|---|\n| RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence | Passed | 432.34 |\nThe XCTest log confirms one start and one passing completion per selected test.\n\nThe XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.",
+  "rawLogSHA256": "f7bcf6b08617046b8712361bf89ed1eca305db57b7ac3dbefaa8158d3560c8fb",
+  "limits": "Local Xcode 27.1 on matching 23C54 runtime. Fresh hosted validation required."
+}

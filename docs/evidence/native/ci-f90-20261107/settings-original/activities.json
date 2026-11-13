@@ -1,0 +1,743 @@
+{
+  "testIdentifier" : "FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+  "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+  "testName" : "testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+  "testRuns" : [
+    {
+      "activities" : [
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Screen Recording 2026-11-07 at 07.32.17 PM.mp4",
+              "payloadId" : "0~BpSDdva_b8ieVtb7pZavxD2mldtmaZDiQ0jn9Ye_K8swSsXEuYn2WY8OgHKbViji81NVGE8vwiIr0K0GEVaE2g==",
+              "timestamp" : 1794097937.725,
+              "uuid" : "C31FF430-B3E2-4C9F-A37E-57CEA8214E57"
+            }
+          ],
+          "childActivities" : [
+            {
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097937.725,
+              "title" : "kXCTAttachmentScreenRecording"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097937.672,
+          "title" : "Start Test at 2026-11-08 00:32:17.672"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097937.726,
+          "title" : "Set Up"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "childActivities" : [
+                {
+                  "isAssociatedWithFailure" : true,
+                  "startTime" : 1794097967.759,
+                  "title" : "Failed to launch com.apple.Preferences: Timed out attempting to launch app."
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097973.7,
+                  "title" : "Setting up automation session"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097976.568,
+                  "title" : "Wait for com.apple.Preferences to idle"
+                }
+              ],
+              "isAssociatedWithFailure" : true,
+              "startTime" : 1794097937.736,
+              "title" : "Launch com.apple.Preferences"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097937.735,
+          "title" : "Open com.apple.Preferences"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Reduce Motion\" Switch`_0_E4713047-F92D-4E04-9B64-166E9341E7A8.txt",
+              "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+              "timestamp" : 1794097984.245,
+              "uuid" : "9481D577-BDBA-48F9-91CE-4FA7C4ADD441"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Reduce Motion\" Switch`_0_29CD1974-81F8-43A8-83FB-19338931BB91.txt",
+              "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+              "timestamp" : 1794097984.823,
+              "uuid" : "48CFB635-8078-4C8F-9B6B-F02403ADB70B"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Reduce Motion\" Switch`_0_D7A28F47-B313-47FA-84A8-778F7D7F3E28.txt",
+              "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+              "timestamp" : 1794097985.834,
+              "uuid" : "F4EE7532-6F23-4F1C-AFC2-64AA1AA68EEA"
+            }
+          ],
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Reduce Motion\" Switch`_0_E4713047-F92D-4E04-9B64-166E9341E7A8.txt",
+                  "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+                  "timestamp" : 1794097984.245,
+                  "uuid" : "9481D577-BDBA-48F9-91CE-4FA7C4ADD441"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097983.736,
+                  "title" : "Checking existence of `\"Reduce Motion\" Switch`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097984.244,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097984.245,
+                  "title" : "Debug description for `\"Reduce Motion\" Switch`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097983.734,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Reduce Motion\" Switch`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Reduce Motion\" Switch`_0_29CD1974-81F8-43A8-83FB-19338931BB91.txt",
+                  "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+                  "timestamp" : 1794097984.823,
+                  "uuid" : "48CFB635-8078-4C8F-9B6B-F02403ADB70B"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097984.735,
+                  "title" : "Checking existence of `\"Reduce Motion\" Switch`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097984.822,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097984.823,
+                  "title" : "Debug description for `\"Reduce Motion\" Switch`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097984.734,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Reduce Motion\" Switch`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Reduce Motion\" Switch`_0_D7A28F47-B313-47FA-84A8-778F7D7F3E28.txt",
+                  "payloadId" : "0~4Fvq4K6GjokJD2ho6y6wTJ15-in7XPEHGoElU9nW8JQSdIRWa-GWP7oDQQuopnje3DDdNwV15U3NT6JoVABzlw==",
+                  "timestamp" : 1794097985.834,
+                  "uuid" : "F4EE7532-6F23-4F1C-AFC2-64AA1AA68EEA"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097985.744,
+                  "title" : "Checking existence of `\"Reduce Motion\" Switch`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097985.833,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097985.834,
+                  "title" : "Debug description for `\"Reduce Motion\" Switch`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097985.739,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Reduce Motion\" Switch`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097985.835,
+              "title" : "Checking existence of `\"Reduce Motion\" Switch`"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097982.724,
+          "title" : "Waiting 3.0s for \"Reduce Motion\" Switch to exist"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "App UI hierarchy for com.apple_0_ACD8C71F-0DC8-44A3-BA0C-DEBB5CFB6493.Preferences",
+              "payloadId" : "0~XEJwPj3h9UTBBDGbOhffE9KiCyNEIVxx2cckmDeIhxdFJnyFHaEiUUHUFDiZorwAIsPsweehaCLanUkonEo_KQ==",
+              "timestamp" : 1794097986.189,
+              "uuid" : "D87A1B18-06C8-45E2-96ED-954E54FE461C"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "UI Snapshot 2026-11-07 at 07.33.06 PM",
+              "payloadId" : "0~T4K1s9p_f75nHjPUlT-2qsys8zdHZbfrNkDcWvf_9AdI0_Yqxj7vnmpwt9SCT9v8a6Fwib2TRkBRfq0P8EbokQ==",
+              "timestamp" : 1794097986.189,
+              "uuid" : "EAE6CFE6-B14D-4942-B638-6554B1D843D4"
+            }
+          ],
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097985.932,
+              "title" : "Requesting snapshot of accessibility hierarchy for app with pid 14068"
+            },
+            {
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097986.189,
+              "title" : "App UI hierarchy for com.apple.Preferences"
+            },
+            {
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097986.189,
+              "title" : "kXCTAttachmentLegacySnapshot"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097985.931,
+          "title" : "Collecting debug information to assist test failure triage"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.422,
+          "title" : "Checking existence of `\"Motion\" StaticText`"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.502,
+          "title" : "Checking existence of `\"Accessibility\" StaticText`"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.571,
+          "title" : "Find the \"Accessibility\" StaticText"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.692,
+          "title" : "Checking existence of `\"Accessibility\" StaticText`"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.755,
+          "title" : "Find the \"Accessibility\" StaticText"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097986.853,
+              "title" : "Wait for com.apple.Preferences to idle"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097986.857,
+              "title" : "Find the \"Accessibility\" StaticText"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097986.965,
+              "title" : "Check for interrupting elements affecting \"Accessibility\" StaticText"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097986.852,
+          "title" : "Tap \"Accessibility\" StaticText"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_22C45C3A-54D3-45FA-8883-73E59FA4ED38.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097988.366,
+              "uuid" : "081C7063-1351-47D7-B653-86F8C0368A30"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_2237FB99-CE16-454E-9BB6-009E4B2CF53B.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097989.303,
+              "uuid" : "6C016E1D-2E3C-40B3-B5FB-B8F16CF107DB"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_19F71CC7-8F67-4282-8DA1-432C8F98FA87.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097990.264,
+              "uuid" : "A0B00876-9262-473E-8E11-42637E8D098D"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_CDB6AB27-144B-45BF-9C89-A1F4F1BFF74D.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097991.337,
+              "uuid" : "AA6D079A-791D-4354-A0C2-5351FD2C4020"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_0B066AB1-43B5-4366-A0F9-BFBB5D1274A3.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097992.317,
+              "uuid" : "73955071-588F-4F0E-A506-9A91DC56E2DF"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_9E5CB1C1-4443-465C-A599-F99B2083714A.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097993.307,
+              "uuid" : "B3EBB7A7-7BF4-40A8-9BB4-8B3D1663E260"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_51BE769B-ADD3-422C-98EF-BC90150C24AA.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097994.313,
+              "uuid" : "766D3BE0-D040-4677-9232-3E70ED706874"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "Debug description for `\"Motion\" StaticText`_0_51530307-3D56-4893-A1C6-9A1B765149F6.txt",
+              "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+              "timestamp" : 1794097995.286,
+              "uuid" : "069B125C-BAE1-45C2-9703-ED9F3E044467"
+            }
+          ],
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_22C45C3A-54D3-45FA-8883-73E59FA4ED38.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097988.366,
+                  "uuid" : "081C7063-1351-47D7-B653-86F8C0368A30"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097988.215,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097988.365,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097988.366,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097988.214,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_2237FB99-CE16-454E-9BB6-009E4B2CF53B.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097989.303,
+                  "uuid" : "6C016E1D-2E3C-40B3-B5FB-B8F16CF107DB"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097989.216,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097989.302,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097989.303,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097989.214,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_19F71CC7-8F67-4282-8DA1-432C8F98FA87.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097990.264,
+                  "uuid" : "A0B00876-9262-473E-8E11-42637E8D098D"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097990.215,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097990.263,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097990.264,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097990.214,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_CDB6AB27-144B-45BF-9C89-A1F4F1BFF74D.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097991.337,
+                  "uuid" : "AA6D079A-791D-4354-A0C2-5351FD2C4020"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097991.281,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097991.337,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097991.337,
+                  "title" : "Capturing element debug description"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097991.281,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_0B066AB1-43B5-4366-A0F9-BFBB5D1274A3.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097992.317,
+                  "uuid" : "73955071-588F-4F0E-A506-9A91DC56E2DF"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097992.273,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097992.316,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097992.317,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097992.272,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_9E5CB1C1-4443-465C-A599-F99B2083714A.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097993.307,
+                  "uuid" : "B3EBB7A7-7BF4-40A8-9BB4-8B3D1663E260"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097993.264,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097993.306,
+                  "title" : "Capturing element debug description"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097993.307,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097993.264,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_51BE769B-ADD3-422C-98EF-BC90150C24AA.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097994.313,
+                  "uuid" : "766D3BE0-D040-4677-9232-3E70ED706874"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097994.264,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097994.313,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097994.313,
+                  "title" : "Capturing element debug description"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097994.264,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "attachments" : [
+                {
+                  "lifetime" : "deleteOnSuccess",
+                  "name" : "Debug description for `\"Motion\" StaticText`_0_51530307-3D56-4893-A1C6-9A1B765149F6.txt",
+                  "payloadId" : "0~URrTsFN7lxDZoPiywk6Tv5JWIlq1o3xYYdmcoY1sYl--RtGzkqxn9tu4k8GYR5Frmk_9NuFUtiDfr34l2pU6hg==",
+                  "timestamp" : 1794097995.286,
+                  "uuid" : "069B125C-BAE1-45C2-9703-ED9F3E044467"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097995.222,
+                  "title" : "Checking existence of `\"Motion\" StaticText`"
+                },
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097995.286,
+                  "title" : "Debug description for `\"Motion\" StaticText`"
+                },
+                {
+                  "activityType" : "com.apple.dt.xctest.activity-type.internal",
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097995.286,
+                  "title" : "Capturing element debug description"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.214,
+              "title" : "Checking `Expect predicate `existsNoRetry == 1` for object \"Motion\" StaticText`"
+            },
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.287,
+              "title" : "Checking existence of `\"Motion\" StaticText`"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097987.209,
+          "title" : "Waiting 8.0s for \"Motion\" StaticText to exist"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "App UI hierarchy for com.apple_0_2F1FB201-83F5-4ACE-89F6-6929E166B59F.Preferences",
+              "payloadId" : "0~_kl2efooDTAY6Gb9AaT9sPUCu_Gou1aUEp4eF9Td5eZabEMCtjhW1hF0WXAlw1qyncTugZ80x7fbxTPCjvvkqg==",
+              "timestamp" : 1794097995.489,
+              "uuid" : "6CA6769A-0012-4246-8457-6873ACD6C9C6"
+            },
+            {
+              "lifetime" : "deleteOnSuccess",
+              "name" : "UI Snapshot 2026-11-07 at 07.33.15 PM",
+              "payloadId" : "0~T4K1s9p_f75nHjPUlT-2qsys8zdHZbfrNkDcWvf_9AdI0_Yqxj7vnmpwt9SCT9v8a6Fwib2TRkBRfq0P8EbokQ==",
+              "timestamp" : 1794097995.49,
+              "uuid" : "22169E22-6815-4AE4-8AF4-416CAB144F39"
+            }
+          ],
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.internal",
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.329,
+              "title" : "Requesting snapshot of accessibility hierarchy for app with pid 14068"
+            },
+            {
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.489,
+              "title" : "App UI hierarchy for com.apple.Preferences"
+            },
+            {
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.49,
+              "title" : "kXCTAttachmentLegacySnapshot"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097995.329,
+          "title" : "Collecting debug information to assist test failure triage"
+        },
+        {
+          "activityType" : "com.apple.dt.xctest.activity-type.internal",
+          "attachments" : [
+            {
+              "lifetime" : "keepAlways",
+              "name" : "Free-flow-failure_0_9DCA4AF2-06A6-453B-9C78-D3D1C8F5ED28.png",
+              "payloadId" : "0~miSup2Oh3z5VoGeAkRuc4y1uSY-4TfOMt-2veuyqLkgRvihDzKDmhHZgN76Rnjm4Nh59YF85yt2XvG5A9owKwA==",
+              "timestamp" : 1794097995.867,
+              "uuid" : "27722C9D-7A32-4E7A-ADF0-794751918932"
+            }
+          ],
+          "childActivities" : [
+            {
+              "activityType" : "com.apple.dt.xctest.activity-type.attachmentContainer",
+              "attachments" : [
+                {
+                  "lifetime" : "keepAlways",
+                  "name" : "Free-flow-failure_0_9DCA4AF2-06A6-453B-9C78-D3D1C8F5ED28.png",
+                  "payloadId" : "0~miSup2Oh3z5VoGeAkRuc4y1uSY-4TfOMt-2veuyqLkgRvihDzKDmhHZgN76Rnjm4Nh59YF85yt2XvG5A9owKwA==",
+                  "timestamp" : 1794097995.867,
+                  "uuid" : "27722C9D-7A32-4E7A-ADF0-794751918932"
+                }
+              ],
+              "childActivities" : [
+                {
+                  "isAssociatedWithFailure" : false,
+                  "startTime" : 1794097995.867,
+                  "title" : "Free-flow-failure"
+                }
+              ],
+              "isAssociatedWithFailure" : false,
+              "startTime" : 1794097995.867,
+              "title" : "Added attachment named 'Free-flow-failure'"
+            }
+          ],
+          "isAssociatedWithFailure" : false,
+          "startTime" : 1794097995.6,
+          "title" : "Tear Down"
+        }
+      ],
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName" : "iPhone 17",
+        "modelName" : "iPhone 17",
+        "osBuildNumber" : "23C54",
+        "osVersion" : "26.2",
+        "platform" : "iOS Simulator"
+      },
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ]
+}

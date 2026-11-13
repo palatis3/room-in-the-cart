@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2A164578-03A4-42BE-9EBA-5901ACFA9F52.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text Sam’s wrap lunch_0_F7DF73E2-9E29-4E7A-BBCC-88C120894B6C.png",
+        "timestamp" : 1794145394.161
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+  }
+]

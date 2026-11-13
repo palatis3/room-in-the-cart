@@ -1,0 +1,26 @@
+{
+  "nativeExit": 65,
+  "strictExit": 1,
+  "inventoryExit": 1,
+  "passedCases": [
+    "AX5",
+    "Large"
+  ],
+  "failedCase": "Small",
+  "failure": "Global same-label StaticText query matched both selected Outcome menu value and separate Preview heading; original exactcount guard correctly failed.",
+  "hierarchy": "attachments/50F70F94-EE4B-4C73-B2ED-C6994D524062.txt",
+  "hierarchySHA256": "5fe653150407b5b03959c11d18f6532388f05c00b4103b886207542e99c5c49c",
+  "observedPickerLines": [
+    102,
+    110
+  ],
+  "observedPreviewLines": [
+    175,
+    181
+  ],
+  "rootViewedFailureImage": "attachments/7FB85683-A592-4C79-914E-A85F4D272609.png",
+  "sourceUnchanged": true,
+  "originalBundleUnchanged": true,
+  "productCount": 195,
+  "next": "Separate r2 test-only selector constrained to unique non-picker preview cell; no globalfirst/visibilityfallback; originalassertionsandinventoryunchanged."
+}

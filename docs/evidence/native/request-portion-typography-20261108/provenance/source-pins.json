@@ -1,0 +1,14 @@
+{
+  "baseCommit": "b252905026dc686e03d6ce75da613b3aa959ee85",
+  "files": {
+    "ios/Features/Household/HouseholdRequestMealContext.swift": {
+      "before": "564f84d92cce23ba01f35c4fafe6a4df7098be2bc3529c54d2521df2cbfe2633",
+      "proposed": "19e64564491b6dc13d8024002a22f931b30fdf5ee5a214a94abb04a0b47af1c1"
+    },
+    "ios/UITests/HouseholdRequestPackUITests.swift": {
+      "before": "bec66901e1dcdee2f58909f94bf940e0ae8f1977f856cc94e1847b0c873d57d6",
+      "proposed": "bf59f4682651dccc529e3dafdbf04d9d6ea948c26f5bf78712d4e74570ebac9b"
+    }
+  },
+  "canonicalUnchanged": true
+}

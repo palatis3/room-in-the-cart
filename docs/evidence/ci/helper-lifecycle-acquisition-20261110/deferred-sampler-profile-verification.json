@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "commit": "7f0312f2e973e2c437dc7e291ca966aa5bb4e4d7",
+  "profiles": {
+    "diagnostic": {
+      "suites": 11,
+      "checks": 635,
+      "logSHA256": "b49a37b7a25f91b96590df643a24f44250c5e444e16b9dfe29de5a088e6bc8b0"
+    },
+    "helper": {
+      "suites": 11,
+      "checks": 635,
+      "logSHA256": "e52359452f820d4904fb2e719367c09f2fc19c52062a7cc40c5b30b2817ac829"
+    },
+    "ordinary": {
+      "suites": 11,
+      "checks": 635,
+      "logSHA256": "a9db8280e1188c8b1923620f6e405b803d8bb50d987228d67ba6fef04e01a55a"
+    }
+  },
+  "sourceFiles": 772,
+  "observerPins": 50,
+  "receiptSHA256": "9cb4d8898ab258d5190671f0ea18d5e112678e0af2aec2d6b33f99fd7679e8e2",
+  "nativeOrHostedQualification": false
+}

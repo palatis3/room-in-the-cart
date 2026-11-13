@@ -1,0 +1,7 @@
+{
+  "nativeLogSHA256": "0dfb7b44d6085180bf56c1bdd991d872e369aa0225004403d7cce13fba65b1c0",
+  "measurementScriptSHA256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0",
+  "sourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "nativeLogScope": "complete private log retained; strict result records1case,1606lines,0observed idle/restarts and0reported runtime warnings",
+  "captureCount": 10
+}

@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11b969f40, {{32.0, 601.8}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'
+Element subtree:
+ →StaticText, 0x11b969f40, {{32.0, 601.8}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'
+Path to element:
+ →Application, 0x1064407e0, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x11b95a3b0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11b963460, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11b9636a0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11b9637c0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11b9638e0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11b963a00, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11b963b20, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11b963c40, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11b964300, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11b964420, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11b964540, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11b964660, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11b964780, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11b967240, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11b9676c0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11b9677e0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11b967900, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11b969d00, {{32.0, 581.8}, {338.0, 56.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+                    ↳StaticText, 0x11b969f40, {{32.0, 601.8}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x106365d90, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4910576672.405
+    Output: {
+      StaticText, 0x1063656f0, {{32.0, 601.8}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'
+    }

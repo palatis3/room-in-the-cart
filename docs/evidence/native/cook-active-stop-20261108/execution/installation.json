@@ -1,0 +1,16 @@
+{
+  "status": "reviewed-r5-delta-installed-isolated-only-no-native-execution",
+  "installedAtUTC": "2026-11-08T17:09:08.642871+00:00",
+  "worktree": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart",
+  "baseManifestSHA256": "6cd2a19a5153214a55ff97e57b166f415f14bd2d8bb642eadfcf0ffb643dedfe",
+  "candidateManifestSHA256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+  "patchSHA256": "dbca3ad330f9c382cb3ef678ade2acdf6e47ba5e0372971d1bc4de7814eb695e",
+  "verifiedSourceCount": 556,
+  "priorProductsResultAndMetadataPreserved": true,
+  "productsAndOriginalResultUnchanged": true,
+  "changedPaths": [
+    "ios/Features/Capture/LocalCookSpeech.swift",
+    "ios/Tests/CookReadbackTests.swift"
+  ],
+  "canonicalMutation": false
+}

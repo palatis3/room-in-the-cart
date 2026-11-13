@@ -33,8 +33,10 @@ export class SupabaseEmailOTPProvider implements EmailOTPProvider {
   }
   private readonly publicKey:string;
   private async request(path:string,body:unknown,accessToken?:string):Promise<unknown>{
+    // Code delivery waits on SMTP. Verification, refresh and logout do not.
+    const timeoutMs = path === '/otp' ? 15_000 : 5_000;
     let response:Response;
-    try{response=await this.fetcher(this.base+path,{method:'POST',redirect:'error',signal:AbortSignal.timeout(5000),headers:{apikey:this.publicKey,'Content-Type':'application/json',...(accessToken?{Authorization:'Bearer '+accessToken}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});}catch{throw unavailable();}
+    try{response=await this.fetcher(this.base+path,{method:'POST',redirect:'error',signal:AbortSignal.timeout(timeoutMs),headers:{apikey:this.publicKey,'Content-Type':'application/json',...(accessToken?{Authorization:'Bearer '+accessToken}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});}catch{throw unavailable();}
     if(response.status===429)throw limited();
     if(!response.ok){if([400,401,403,422].includes(response.status)&&(path==='/verify'||path.startsWith('/token')))throw codeRejected();throw unavailable();}
     if(response.status===204)return null;
@@ -105,18 +107,28 @@ export class BrowserAuthService {
     if(childBinding&&existing&&(childBinding.householdId!==existing.householdId||childBinding.inviteId!==existing.inviteId))throw sessionNeeded();
     const binding=existing??childBinding;
     if(binding){if(!this.options.childSignin)throw unavailable();await this.options.childSignin.beforeChildSignin(binding,email);}
-    const result=await this.transaction<Outcome<{status:'check_email'}>>(hash,async(db,now)=>{
+    const reservation = await this.transaction<Outcome<Date>>(hash,async(db,now)=>{
       const row=await this.record(db,hash,now);this.csrf(row,csrf);
       if(row.phase!=='challenge')return{failure:new ServiceError(409,'already_signed_in','Sign out before using a different email address.')};
       if(row.guardian_invite_id&&(row.guardian_invite_id!==binding?.inviteId||row.guardian_household_id!==binding?.householdId))return{failure:sessionNeeded()};
       if(row.send_after&&row.send_after>now)return{failure:limited()};
-      await db.query('UPDATE ritc.browser_auth SET send_after=$2,guardian_household_id=$3,guardian_invite_id=$4,guardian_signin_started_at=$5 WHERE token_hash=$1',[hash,new Date(now.getTime()+60_000),binding?.householdId??null,binding?.inviteId??null,binding?now:null]);
+      const sendAfter = new Date(now.getTime()+60_000);
+      await db.query('UPDATE ritc.browser_auth SET send_after=$2,guardian_household_id=$3,guardian_invite_id=$4,guardian_signin_started_at=$5,email_cipher=NULL,code_expires_at=NULL WHERE token_hash=$1',[hash,sendAfter,binding?.householdId??null,binding?.inviteId??null,binding?now:null]);
       if(!await this.rate(db,now,'otp-ip',clientAddress,20))return{failure:limited()};
       if(!await this.rate(db,now,'otp-email',email,5))return{failure:limited()};
-      try{await this.provider.start(email);}catch(e){return{failure:e instanceof ServiceError?e:unavailable()};}
+      return {value:sendAfter};
+    });
+    const reservedUntil = this.unwrap(reservation);
+    // Delivery can take seconds. Release both challenge and rate-bucket locks
+    // while waiting, then verify the challenge still owns this send attempt.
+    try { await this.provider.start(email); }
+    catch (error) { throw error instanceof ServiceError ? error : unavailable(); }
+    return this.transaction(hash,async(db,now)=>{
+      const row = await this.record(db,hash,now);
+      if (row.phase !== 'challenge' || row.send_after?.getTime() !== reservedUntil.getTime()) throw sessionNeeded();
       await db.query('UPDATE ritc.browser_auth SET email_cipher=$2,code_expires_at=$3,verify_attempts=0 WHERE token_hash=$1',[hash,this.seal({email},hash),new Date(now.getTime()+10*60_000)]);
-      return{value:{status:'check_email'}};
-    });return this.unwrap(result);
+      return {status:'check_email' as const};
+    });
   }
   async verify(cookie:string,csrf:string,input:z.infer<typeof emailVerifySchema>){
     const hash=this.hash(cookie);

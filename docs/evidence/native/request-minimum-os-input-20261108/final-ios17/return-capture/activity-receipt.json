@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "get",
+    "test-results",
+    "activities",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/S24VisibleFieldNov08/ios17-run/inspection/native.xcresult",
+    "--test-id",
+    "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()"
+  ],
+  "exitCode": 0,
+  "perFileCapBytes": 4000000,
+  "timeoutSeconds": 45,
+  "activitiesSHA256": "2a159b7d14787135d8be86e1a9fe13561175b8f9a8693f1fb454b884812b173a",
+  "referenceCount": 1,
+  "targets": [
+    {
+      "lifetime": "keepAlways",
+      "name": "S23-request-returned-once-without-manual-dismissal_0_6F16E134-B543-45F2-B338-AE173573964A.png",
+      "payloadId": "0~1-gkjxPW4uLIHlu6Q3k9a-vvpTXzcHZFJKsS2Ja8bCHASxbASdg0tx7_X2o56byIaJphUnM3Nrlgcgg3ROFbLA==",
+      "timestamp": 1794142920.715,
+      "uuid": "23BF4B1A-FEB7-4404-A826-953E52868AC7"
+    }
+  ],
+  "originalUnchanged": true
+}

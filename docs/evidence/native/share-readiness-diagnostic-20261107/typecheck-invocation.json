@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcrun",
+    "swiftc",
+    "-typecheck",
+    "-swift-version",
+    "5",
+    "-D",
+    "DEBUG",
+    "-target",
+    "arm64-apple-ios17.0-simulator",
+    "-sdk",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+    "-F",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks",
+    "-I",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+    "-module-cache-path",
+    "/Users/palatis/Room in the Cart/.build/ShareCancellationReview20261107/root-typecheck/module-cache",
+    "/Users/palatis/Room in the Cart/.build/ShareCancellationReview20261107/agent-review/FreeJourneyUITests.swift"
+  ],
+  "sourceSHA256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+  "start": 1794036934.795579,
+  "scope": "Whole standalone FreeJourneyUITests typecheck; not native execution or hosted acceptance."
+}

@@ -1,0 +1,30 @@
+{
+  "correctedAtUtc": "2026-11-08T06:19:29.427453+00:00",
+  "previousSummarySHA256": "1892f4cdbb86001786dfcd1d8b1b155ff7bd82b9f138bde53817f007e98088a1",
+  "correctedSummarySHA256": "22f9624f73db0f5c2ad2b31b574d252bef37cba31f1adffb148af9ce5d87af70",
+  "nativeLogSHA256": "65052ee150f319a256f78737b5f6d0104e8e9e3dd29b28cb1babd87e9be9cfbc",
+  "nativeLogBytes": 1764440,
+  "lfBytes": 9500,
+  "crlfPairs": 0,
+  "bareCrByteOffsetsZeroBased": [
+    1075777,
+    1075856,
+    1076025,
+    1076195,
+    1076455
+  ],
+  "correction": "Previously only LF-delimited line offsets were listed. Added exact checker/keyboard parser universal-newline line numbers and labeled the LF offsets separately.",
+  "firstMiss": {
+    "checkerIteratorLine": 8952,
+    "lfDelimitedLine": 8947,
+    "seconds": 112.23
+  },
+  "rechecked": {
+    "consoleAnchorsAndEightIdleMarkers": true,
+    "allAppAndRunnerMarkerLines": true,
+    "allFourKeyboardCallbackTimingDeltas": true,
+    "firstSelectionTimingDeltas": true,
+    "inputAndParserHashesUnchanged": true
+  },
+  "substantiveFindingsChanged": false
+}

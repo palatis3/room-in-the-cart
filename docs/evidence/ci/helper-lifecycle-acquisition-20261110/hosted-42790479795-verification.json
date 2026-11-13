@@ -1,0 +1,38 @@
+{
+  "status": "diagnostic_failed",
+  "runID": 42790479795,
+  "commit": "ac68b9d3e71f92d4accae1928e77a320d3743d7c",
+  "zipSHA256": "83eedaaa745e5f398e0f5ad0c772a84835386077ed6d4e304be8b06530826067",
+  "tarSHA256": "2ed03f282fc2750431406d51427086f2e28972c303b0d9f08fcc0c8b6e9bb57a",
+  "zipMembers": 13,
+  "tarMembers": 22,
+  "sourcePinsVerifiedAgainstCommit": 50,
+  "bootstatus": {
+    "exitCode": 0,
+    "signals": [],
+    "seconds": 88.351085,
+    "insideDeadline": true
+  },
+  "firstFailure": {
+    "label": "booted-inventory",
+    "error": "ValueError: helper_lifecycle_deadline",
+    "exitCode": -2,
+    "stdoutBytes": 0,
+    "stderrBytes": 0
+  },
+  "captureReached": false,
+  "readinessReached": false,
+  "cleanup": {
+    "status": "failed",
+    "failedCommands": [
+      "shutdown-verified-device"
+    ],
+    "allKnownChildrenTerminal": true,
+    "deleteDispatched": false,
+    "ownedDeviceDeletionVerified": false,
+    "error": "ValueError: helper_lifecycle_deadline"
+  },
+  "performanceQualified": false,
+  "readbackSHA256": "89f728fb7df4279e57fecf7e619ef324de112d14d5ca3955a43b07185426f3ee",
+  "rootVerifiedOriginalArchive": true
+}

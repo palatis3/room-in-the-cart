@@ -1,0 +1,10 @@
+Executed 3 of 3 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite | Passed | 161.80 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite | Passed | 48.08 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision | Passed | 34.27 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests.
+

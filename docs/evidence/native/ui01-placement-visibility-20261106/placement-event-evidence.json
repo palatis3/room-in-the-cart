@@ -1,0 +1,272 @@
+[
+  {
+    "timestamp": 1794012114.376,
+    "file": "C2C18CE0-A288-455A-8994-11472504A8AA",
+    "sha256": "872ca340fae8195e83d51b393594e8402314b46db162d815078fc50bacf23251",
+    "kind": "UI Snapshot 2026-11-06 at 07.41.54 PM",
+    "identifier": "",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false
+  },
+  {
+    "timestamp": 1794012114.674,
+    "file": "18488CEC-F797-437D-84A0-789D51A29212",
+    "sha256": "54103555effdb2003e2b8749c52146a90ddd55970042e985397e92a2f192bb33",
+    "kind": "Synthesized Event 2026-11-06 at 07.41.54 PM",
+    "name": "tap",
+    "eventPaths": {
+      "NS.objects": [
+        {
+          "targetFrame.width": 0.0,
+          "targetFrame.x": 0.0,
+          "pathType": 1,
+          "targetFrame.y": 0.0,
+          "deviceID": 0,
+          "pointerEvents": {
+            "NS.objects": [
+              {
+                "pressure": 0.0,
+                "eventType": 1,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.0,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 84.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 38.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              },
+              {
+                "pressure": 0.0,
+                "eventType": 3,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.05,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 84.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 38.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              }
+            ]
+          },
+          "speedFactor": 0.0,
+          "eventStream": "$null",
+          "targetFrame.height": 0.0,
+          "index": 1
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": 1794012112.575,
+    "file": "22539D99-78BF-4E9C-816D-4AF11ED0E17A",
+    "sha256": "872ca340fae8195e83d51b393594e8402314b46db162d815078fc50bacf23251",
+    "kind": "UI Snapshot 2026-11-06 at 07.41.52 PM",
+    "identifier": "",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false
+  },
+  {
+    "timestamp": 1794012112.873,
+    "file": "5D3EABD4-A725-4101-B6CD-B1A1A947E9DB",
+    "sha256": "54103555effdb2003e2b8749c52146a90ddd55970042e985397e92a2f192bb33",
+    "kind": "Synthesized Event 2026-11-06 at 07.41.52 PM",
+    "name": "tap",
+    "eventPaths": {
+      "NS.objects": [
+        {
+          "targetFrame.width": 0.0,
+          "targetFrame.x": 0.0,
+          "pathType": 1,
+          "targetFrame.y": 0.0,
+          "deviceID": 0,
+          "pointerEvents": {
+            "NS.objects": [
+              {
+                "pressure": 0.0,
+                "eventType": 1,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.0,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 84.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 38.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              },
+              {
+                "pressure": 0.0,
+                "eventType": 3,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.05,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 84.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 38.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              }
+            ]
+          },
+          "speedFactor": 0.0,
+          "eventStream": "$null",
+          "targetFrame.height": 0.0,
+          "index": 1
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": 1794012111.485,
+    "file": "6D9C0143-DB3B-4AA8-993E-835674996F9A",
+    "sha256": "872ca340fae8195e83d51b393594e8402314b46db162d815078fc50bacf23251",
+    "kind": "UI Snapshot 2026-11-06 at 07.41.51 PM",
+    "identifier": "",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false
+  },
+  {
+    "timestamp": 1794012111.818,
+    "file": "3ABF2E7D-EF04-4127-AC0B-5BB542A8A613",
+    "sha256": "e4f12dbacd75e0acca239abbd278f2c3869bf3d0ec6da7eedfe5d0e56f29e91a",
+    "kind": "Synthesized Event 2026-11-06 at 07.41.51 PM",
+    "name": "tap",
+    "eventPaths": {
+      "NS.objects": [
+        {
+          "targetFrame.width": 0.0,
+          "targetFrame.x": 0.0,
+          "pathType": 1,
+          "targetFrame.y": 0.0,
+          "deviceID": 0,
+          "pointerEvents": {
+            "NS.objects": [
+              {
+                "pressure": 0.0,
+                "eventType": 1,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.0,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 786.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 17.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              },
+              {
+                "pressure": 0.0,
+                "eventType": 3,
+                "clickCount": 0,
+                "duration": 0.0,
+                "verticalLineScroll": 0,
+                "keyCode": 0,
+                "gesturePhase": 0,
+                "deltaVector.dy": 0.0,
+                "destination.y": 0.0,
+                "buttonType": 0,
+                "keyModifierFlags": 0,
+                "gestureStage": 0,
+                "typingSpeed": 0,
+                "destination.x": 0.0,
+                "deviceID": 0,
+                "offset": 0.05,
+                "deltaVector.dx": 0.0,
+                "coordinate.y": 786.0,
+                "mergeModifierFlagsWithCurrentFlags": false,
+                "coordinate.x": 17.0,
+                "keyPhase": 0,
+                "shouldRedact": false,
+                "string": "$null",
+                "key": "$null"
+              }
+            ]
+          },
+          "speedFactor": 0.0,
+          "eventStream": "$null",
+          "targetFrame.height": 0.0,
+          "index": 1
+        }
+      ]
+    }
+  }
+]

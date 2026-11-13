@@ -121,6 +121,10 @@ async function assertDestination(){
 async function register(db,id,verified){
  await db.query('SELECT ritc.privacy_restore_register($1,$2,$3,$4::jsonb,$5::jsonb)',
   [id,destination.oid,verified.bundleDigest,JSON.stringify(verified.head),JSON.stringify(verified.events)]);
+ // A device could have opted out after the backup. Only a fresh opt-in in the
+ // recovered database may authorize additional queued sends.
+ if((await db.query("SELECT to_regclass('ritc.request_queue_permission') IS NOT NULL AS installed")).rows[0].installed)
+  await db.query('TRUNCATE ritc.request_queue_permission');
 }
 
 async function replay(id){
@@ -160,7 +164,10 @@ async function checkReplayed(id,expected,run){
 async function readRuns(ids){
  return new Map((await owner.query('SELECT * FROM ritc.privacy_restore_run WHERE run_id=ANY($1::uuid[])',[ids])).rows.map(row=>[row.run_id,row]));
 }
-function reportGate(extra={}){
+async function reportGate(extra={}){
+ if((await owner.query("SELECT to_regclass('ritc.request_queue_permission') IS NOT NULL AS installed")).rows[0].installed &&
+    (await owner.query('SELECT 1 FROM ritc.request_queue_permission LIMIT 1')).rowCount)
+  throw Error('Restored device queue permissions must be cleared in quarantine');
  console.log(JSON.stringify({runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false,...extra}));
 }
 
@@ -203,7 +210,7 @@ async function applyWindow(){
   if(next||!(await owner.query('SELECT fenced FROM ritc.privacy_journal_origin WHERE singleton')).rows[0]?.fenced)
    throw Error('Restore window remains quarantined');
   for(const entry of evidence.entries)await checkReplayed(entry.runId,entry,runs.get(entry.runId));
-  reportGate({segments:evidence.entries.length,manifestDigest:evidence.digest});
+  await reportGate({segments:evidence.entries.length,manifestDigest:evidence.digest});
   return;
  }
  if(command==='replay'){
@@ -241,7 +248,7 @@ try{
    console.log(JSON.stringify({runId,targetsApplied:await replay(runId),providerReconciliationRequired:true}));
   }else{
    await checkReplayed(runId,verified,(await readRuns([runId])).get(runId));
-   reportGate();
+   await reportGate();
   }
  }
 }finally{await worker?.end();await owner.end();}

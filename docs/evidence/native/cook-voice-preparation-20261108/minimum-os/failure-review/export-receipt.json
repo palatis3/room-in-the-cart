@@ -1,0 +1,45 @@
+{
+  "commands": [
+    {
+      "args": [
+        "get",
+        "test-results",
+        "test-details",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/ios17/fixture/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--compact"
+      ],
+      "exit": 0,
+      "problem": null
+    },
+    {
+      "args": [
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/ios17/fixture/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--compact"
+      ],
+      "exit": 0,
+      "problem": null
+    },
+    {
+      "args": [
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/ios17/fixture/inspection/native.xcresult",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/ios17/failure-review/attachments"
+      ],
+      "exit": -25,
+      "problem": null
+    }
+  ],
+  "originalUnchanged": true
+}

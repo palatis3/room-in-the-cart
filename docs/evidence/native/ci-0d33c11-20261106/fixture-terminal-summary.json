@@ -1,0 +1,476 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "attempt": 1,
+  "runs": {
+    "42215222541": {
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    "42215222459": {
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "observedAt": "2026-11-06T14:25:41.883944+00:00",
+  "candidateVerifierAndHarnessSourceMatchesGit": true,
+  "sourceFileCount": 42,
+  "sourceInventoryCount": 45,
+  "compiledSelectorUnionMatchesAll45SourceCases": true,
+  "allSelectorsAccountedFor": true,
+  "allEvidenceCollected": true,
+  "allRequestedChecksPassing": false,
+  "resultCounts": {
+    "selected": 45,
+    "passed": 44,
+    "failed": 1,
+    "skipped": 0,
+    "expectedFailures": 0,
+    "executed": 45
+  },
+  "nonexecution": {},
+  "missingShards": [],
+  "unexpectedShards": [],
+  "collectionErrors": {},
+  "resolvedCollectionErrors": {
+    "contributor-balanced-02": {
+      "initialError": {
+        "collectionErrorType": "AssertionError",
+        "artifactID": 13504647847,
+        "jobID": 127895017151,
+        "hostedConclusion": "failure"
+      },
+      "resolution": "Original generic50MB member bound rejected one111,504,249-byte xcresult member; exact ID/digest/name/size exception reviewed, all other bounds unchanged. No test retry."
+    }
+  },
+  "strictFailures": {
+    "contributor-balanced-02": {
+      "artifactID": 13504647847,
+      "artifactName": "iphone-fixture-results-contributor-balanced-02-1",
+      "sha256": "6c937052fbdcfbffd77be335ad50afc09ac7afd43ef8ad82807b26ae1ca28dbc",
+      "size": 133303280,
+      "digestVerified": true,
+      "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "runID": 42215222541,
+      "jobID": 127895017151,
+      "hostedConclusion": "failure",
+      "selected": 7,
+      "passed": 6,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "planByteIdentical": true,
+      "runtimeWarnings": 0,
+      "warnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 7,
+        "detailExportCount": 7,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "rawLogSHA256": "102542e55eec9919da01bffb1eea22e3ce00c9e14cb236f304dd07f3aafe0de8",
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false,
+      "collectionRecovery": "Original generic50MB member bound rejected one111,504,249-byte xcresult member; exact ID/digest/name/size exception reviewed, all other bounds unchanged. No test retry."
+    }
+  },
+  "strictPassingCases": 37,
+  "recordsRedactedPassed": true,
+  "recordsScope": "Only exact allowlisted redacted report and compiled plan; no raw Records download/read or independent native replay.",
+  "nativeWirePassed": true,
+  "nativeWire": {
+    "artifactID": 13499889307,
+    "artifactName": "native-wire-results-1",
+    "sha256": "c601ea14cc121d957b34661dbac1592e3219d4fd268b2536fd35ae0a3d9a31bd",
+    "size": 2389,
+    "digestVerified": true,
+    "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+    "runID": 42215222459,
+    "jobID": 127883421254,
+    "hostedConclusion": "success",
+    "independentReadback": {
+      "valid": true,
+      "integrationCases": 4,
+      "swiftPassedInvocations": 6,
+      "exactScenarios": [
+        "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+        "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+        "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+        "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+        "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+        "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+      ],
+      "databaseStopped": true
+    },
+    "scope": "Recorded Swift transport over pinned loopback HTTPS and disposable PostgreSQL; no deployed-provider acceptance."
+  },
+  "runtime": {
+    "contributor-balanced-03": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 7,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "contributor-balanced-02": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 6,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "contributor-balanced-05": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 11,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "contributor-balanced-01": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 3,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "contributor-balanced-04": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 4,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 2
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 2
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 2
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    },
+    "DinnerDecisionSheetUITests": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 5,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+      "hostedRetryArtifactPresent": false,
+      "warnings": 0
+    }
+  },
+  "evidenceSHA256": {
+    "DinnerDecisionSheetUITests.json": "20e3d84fe99b9489ed3e3c798b9efebb41ae9f8fe835973eaa46b8cc902eb40b",
+    "RecordsMediaUITests.json": "2d63c9a80def9056412c0b59b8bd41975e30e60c2056f42dad4843271a3ca32f",
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.json": "1457e78e75ca879786c0c03a3621a70580c497d599d1269bf5f5444f49a23e06",
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.json": "ea8e38575af0a4568c1d4487e47cb057cc4c7eb9a69e7aa4de6c7ddad5c61c78",
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.json": "8bfb7160eb24f7ee7411482d70cf3273b1c565aec2c805bd9d06c01e56cf2a5d",
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.json": "e93fba2ad89165908fd0e1f197ae26fc20a09e56518af49344fd14f3cc69ac09",
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.json": "a8e2bd1a9c61f194219ef04d1314bce3fe29459a50d5e2b5b3ba0f2258eb10cd",
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.json": "f600e4cb77a9661b791340ca6db242cd6c530fe68586bdd47d5e927cc2627c78",
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.json": "699bd05b696a915ebecfa96f00b600e2b8897e2a192495990c30d2bd4a040df0",
+    "contributor-balanced-01.json": "b7a36f7a1627d9c42870a0eb4230e3888b431b4da3dce0abd215d1a426d07cd9",
+    "contributor-balanced-02.json": "f79c965cd16626da14a5e3d4dda2a24f636fad9c6f12c97a4acafda3daac6805",
+    "contributor-balanced-03.json": "cc5231ccb80da1084e045f353e2523d87cf85b801e3489b67b19c2f5497e2d78",
+    "contributor-balanced-04.json": "ff57b71e6f5399a71222cd1b4f9904e6c8f76f1155e83ec8c324d03dbaf1edbb",
+    "contributor-balanced-05.json": "ebbf6faf61045e078e8423bb9b999d7a6b0146c9927a2b2692a6f124ce7f79a2",
+    "fixture-inventory.json": "4c70983ff9a63bd664334b90a1c6139867eed0bd56b82e60d91efc1cc187928d",
+    "native-wire.json": "0cf145d2ecb5fbd91f80f055e7f28da2a61746fa6236affb3ad092cde7dca08a"
+  },
+  "scope": "Recorded-result readback only; no native execution, Git/source changes, dispatch, retry or cancellation. Raw Records media never downloaded/read."
+}

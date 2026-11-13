@@ -1,0 +1,247 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998637",
+  "runner": "macos-15 Apple Silicon",
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "calibration": [
+    {
+      "attempt": 1,
+      "case": "launch",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "a0de93a88d4adcf577fae87d5015a54abaf96f10b8c4753541cb553928f26e3b",
+        "test-summary.json": "1b19900ea3f9dc80dd1f6477980f59b0328de748148e7aeb716260103422be6b",
+        "test-details.json": "0fe0f052211028b17379763561fa2007b2e958529e3ade6b769c58702204ee9f",
+        "Performance.log": "4c6325489b9f80ec00c142f267f51cf7a20ffd8b281f1899936df9cacfb0f90f"
+      },
+      "localBaselineReplay": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.156887292,
+          "maximum": 5.5,
+          "passed": true
+        }
+      }
+    },
+    {
+      "attempt": 1,
+      "case": "rendered",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "a922a68a1e1100db4578d3ac086cedd47192a27b5a3d959f22170ddc01a3d936",
+        "test-summary.json": "740961311ae341ed8bd471de6cea3712db5de23f24b1e5d468e73bf4cac8ef06",
+        "test-details.json": "178c843411b4b1b2933844de82c8678300bbe94bb5ac29a2213334b0101a3304",
+        "Performance.log": "2af0c6a2bdedc51101dd4cb88108ec53d42deb4a44b30f01aa27b2167f098c9a"
+      },
+      "localBaselineReplay": {
+        "searchP95Milliseconds": {
+          "measured": 3710.1076666666586,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2859.961958333315,
+          "maximum": 3750,
+          "passed": true
+        }
+      }
+    },
+    {
+      "attempt": 1,
+      "case": "scroll",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "88e4018c05e1e930d5b6dbafb266086f7cea605c2244c4aae68305a2c2088783",
+        "test-summary.json": "8ac73baff55cb29fa27d7b31f8094fa80fd759a4ace8240e1db2126f1fb4eb26",
+        "test-details.json": "7a7e67269e352c1b970da3861a40ba8ae634995346e96816c3f72a6e351b8a07",
+        "Performance.log": "eaecffc583251b379d45a435d101a285206c3341e0c1ad6a0a395bd6cd90defe"
+      },
+      "localBaselineReplay": {
+        "scrollMedianSeconds": {
+          "measured": 2.583409541,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 108928.896,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 109256.576,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 109305.728,
+          "maximum": 160000,
+          "passed": true
+        }
+      }
+    },
+    {
+      "attempt": 2,
+      "case": "launch",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "0fa3427695eace687366faac7cd0e00099b5ac250bd947cc361ad6deb7674329",
+        "test-summary.json": "64b27e963dad091cd4b1a56cdb7b7023cbcdf8610f32f251d9ce10aaf164b0c4",
+        "test-details.json": "cdfcf8a023cc765cf98856cc657d895890c2b012b398872a7e8fa0fc271e8dc9",
+        "Performance.log": "f71c8d9a83e2e99758d0dfd02873dd8557ae25c224061c60b6dd92fe0d1e95b0"
+      },
+      "localBaselineReplay": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.328948917,
+          "maximum": 5.5,
+          "passed": true
+        }
+      }
+    },
+    {
+      "attempt": 2,
+      "case": "rendered",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "a020f46ce97ec9300c8d0ad69c883062c2fbed6f3cbc86be089a87544ce6a9a4",
+        "test-summary.json": "4bde477091d9d98f7c6754c2b9a9e683e5ea807a50577d997c19532a56ec427f",
+        "test-details.json": "74043ad2f94bea7238435931b30fd4372d90aef4aea34ed5c5fd50016eda4fe8",
+        "Performance.log": "2ff7e65925c19349a5c1c11523b6de3b4f29c642caae158d5710f6545a38cf9c"
+      },
+      "localBaselineReplay": {
+        "searchP95Milliseconds": {
+          "measured": 3547.804916666678,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2852.769749999993,
+          "maximum": 3750,
+          "passed": true
+        }
+      }
+    },
+    {
+      "attempt": 2,
+      "case": "scroll",
+      "functionalResult": "1 passed, 0 failures/skips/expected failures",
+      "originalJobResult": "Failed only because baseline file was absent",
+      "evidenceSHA256": {
+        "calibration.json": "c11b0fb68faf1ffa6fdb92f4d939d620f8068a92f7911514f5d3e742204bbb09",
+        "test-summary.json": "11e44985fa8da9b456bd50c6e0a06737aa38270997ca70c4202a278d9dc72d9a",
+        "test-details.json": "9cc6453632167af4f74844e6c5d0bbec6a68eb778b9e4f2a4274635461cdf3e9",
+        "Performance.log": "880abe2444d4194ad927b2c50aa6ce38e1bdb02bd466e8d95a6580d6e592993c"
+      },
+      "localBaselineReplay": {
+        "scrollMedianSeconds": {
+          "measured": 2.583535292,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 119644.224,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 120021.056,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 120184.896,
+          "maximum": 160000,
+          "passed": true
+        }
+      }
+    }
+  ],
+  "negativeChecks": [
+    {
+      "case": "launch",
+      "metric": "responsiveLaunchMedianSeconds",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "rendered",
+      "metric": "searchP95Milliseconds",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "rendered",
+      "metric": "checkP95Milliseconds",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "scroll",
+      "metric": "scrollMedianSeconds",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "scroll",
+      "metric": "absoluteMemoryMedianKilobytes",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "scroll",
+      "metric": "peakMemoryMedianKilobytes",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "scroll",
+      "metric": "maximumPeakMemoryKilobytes",
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "environment",
+      "field": "osVersion",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "osBuildNumber",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "modelName",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "architecture",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "xcode",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "buildConfiguration",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "testConfiguration",
+      "result": "Rejected mismatched environment"
+    }
+  ],
+  "scope": "Initial reviewed regression limits, not device latency targets. Local comparison replay does not relabel the original failed jobs or replace a fresh hosted strict run. Both attempts used the same compiled products and five launch/scroll/memory samples plus twenty rendered interactions each. Simulator hitch metrics were unavailable in both.",
+  "initialSixMetricBaselineSHA256": "ab217a44ebe69da1606e52414da17e9198507d85bad6d026a4ffdeefe764123a",
+  "baselineSHA256": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+  "maximumPeakDerivation": "Current checker derives maximumPeakMemoryKilobytes from the five validated raw peak samples in the unchanged reports; the historical baselineValues blocks retain their original six-metric content. No new runtime measurement is claimed.",
+  "maximumPeakTests": "Four low peaks plus161000kB reject only maximum; five156000kB peaks reject only median; an exact160000kB maximum is accepted; missing maximum budget is rejected. Eight performance-verifier test methods passed."
+}

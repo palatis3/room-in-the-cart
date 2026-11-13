@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+    "runId": 42457094298,
+    "jobId": 128671571534,
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457094298/job/128671571534",
+    "observedAt": "2026-11-08T08:45:30Z",
+    "statusReceipt": "../status-20261108T084530Z.json",
+    "sourceKind": "GitHub Actions decoded job log and artifact metadata via GitHub connector"
+  },
+  "job": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+  "failedStep": "Run selected fixture tests and require complete execution",
+  "native": {
+    "selected": 5,
+    "executed": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "totalCaseDurationSeconds": 733.691,
+    "selectedSuiteElapsedSeconds": 733.708,
+    "runnerRestartBoundariesObserved": 0,
+    "animationIdleMessagesObserved": 0,
+    "analyzedNativeLogLines": 2539
+  },
+  "tests": [
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+      "durationSeconds": 300.057,
+      "jobLogLine": 1414
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+      "durationSeconds": 72.095,
+      "jobLogLine": 1648
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+      "durationSeconds": 130.71,
+      "jobLogLine": 2172
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+      "durationSeconds": 70.053,
+      "jobLogLine": 2437
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+      "durationSeconds": 160.775,
+      "jobLogLine": 3053
+    }
+  ],
+  "runtimeWarningGate": {
+    "status": "failed-evidence-unavailable",
+    "warningCount": null,
+    "jobLogLine": 3084,
+    "diagnostic": "XCTest runtime warning evidence is unavailable. Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0.",
+    "descriptionAttachmentExpected": 1,
+    "descriptionAttachmentsFound": 0,
+    "caseAttributionFromJobLog": null
+  },
+  "artifact": {
+    "id": 13611400715,
+    "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "bytes": 4909856,
+    "digest": "sha256:bc8b89cc1f18a4dd8070fa85684654cf2f15adc8fcdd5a04fdf744b7ea388522",
+    "expiresAt": "2026-11-15T08:43:10Z",
+    "downloaded": false
+  },
+  "jobLogExcerpt": {
+    "path": "job-log-excerpts.txt",
+    "lineNumbering": "One-based LF-delimited line indices in decoded GitHub job log.",
+    "ranges": [
+      [
+        1414,
+        1414
+      ],
+      [
+        1648,
+        1648
+      ],
+      [
+        2172,
+        2172
+      ],
+      [
+        2437,
+        2437
+      ],
+      [
+        3053,
+        3053
+      ],
+      [
+        3054,
+        3067
+      ],
+      [
+        3070,
+        3086
+      ],
+      [
+        3134,
+        3137
+      ]
+    ]
+  },
+  "jobLogExcerptSha256": "e21ced94476a4a42d318f7a8fc846813de3ec124d314a81edd813ddab39b2b62"
+}

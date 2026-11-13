@@ -1,0 +1,1321 @@
+[{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113369908,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26132822,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 229812,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 182720,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 3330580,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3333100,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3336464,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 140884,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3336248,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3341840,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3337256,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359504,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359544,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 603044,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 602860,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 600696,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 597068,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 3359620,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358996,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3391648,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358012,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3276560,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 9256212,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 26212,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset" : 6764,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:11.142389+0000",
+  "machTimestamp" : 24240550700719,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B B4 81 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C0 C9 02 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 14 D2 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D EC DB 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 E9 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 54 26 02 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 38 E8 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 FE 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 28 EC 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 38 43 33 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF A4 33 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC 32 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 78 2A 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 4C 1C 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 84 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 14 41 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D A0 C0 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 3C 3D 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 FF 31 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 14 3D 8D 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 64 66 00 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 6C 1A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113369915,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26131913,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 231396,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 159636,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 6056,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 230560,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 70428,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 69228,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 601816,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 598192,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 10684,
+        "imageUUID" : "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset" : 18523508,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 18540444,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 8099360,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 8098664,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 5534764,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 31562480,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 31615284,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:11.226244+0000",
+  "machTimestamp" : 24240552713244,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B E4 87 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 94 6F 02 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A8 17 00 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D B0 C4 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A0 84 03 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 1C 13 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 6C 0E 01 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF D8 2E 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF B0 20 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 4E 5B 04 62 61 70 33 67 94 75 4F F8 B8 DF E4 E6 BC 29 00 00 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 74 A5 1A 01 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 9C E7 1A 01 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 20 96 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 68 93 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 2C 74 54 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 9A E1 01 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 69 E2 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113369917,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26131913,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 234308,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 161532,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 6056,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 230560,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 70428,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 69228,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 601816,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 598192,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 10684,
+        "imageUUID" : "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset" : 18523508,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 18540444,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 8099360,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 8098664,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 5534764,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 31562480,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 31615284,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:12.576539+0000",
+  "machTimestamp" : 24240585120332,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 44 93 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B FC 76 02 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A8 17 00 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D B0 C4 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A0 84 03 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 1C 13 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 6C 0E 01 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF D8 2E 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF B0 20 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 4E 5B 04 62 61 70 33 67 94 75 4F F8 B8 DF E4 E6 BC 29 00 00 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 74 A5 1A 01 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 9C E7 1A 01 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 20 96 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 68 93 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 2C 74 54 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 9A E1 01 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 69 E2 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113370176,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26132822,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 229284,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 182340,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 3332640,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3333172,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3343308,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3337256,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359504,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359544,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 603044,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 602860,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 600696,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 597068,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 3359620,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358996,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3391648,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358012,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3276560,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 9256212,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 26212,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset" : 6764,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:13.758964+0000",
+  "machTimestamp" : 24240613498525,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B A4 7F 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 44 C8 02 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 DA 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 DC 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D CC 03 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 28 EC 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 38 43 33 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF A4 33 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC 32 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 78 2A 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 4C 1C 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 84 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 14 41 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D A0 C0 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 3C 3D 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 FF 31 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 14 3D 8D 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 64 66 00 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 6C 1A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113370177,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26131913,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 233208,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 159860,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 6056,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 230560,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 70428,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 69228,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 601816,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 598192,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 10684,
+        "imageUUID" : "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset" : 18523508,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 18540444,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 8099360,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 8098664,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 5534764,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 31562480,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 31615284,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:13.767501+0000",
+  "machTimestamp" : 24240613703416,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B F8 8E 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 74 70 02 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A8 17 00 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D B0 C4 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A0 84 03 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 1C 13 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 6C 0E 01 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF D8 2E 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF B0 20 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 4E 5B 04 62 61 70 33 67 94 75 4F F8 B8 DF E4 E6 BC 29 00 00 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 74 A5 1A 01 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 9C E7 1A 01 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 20 96 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 68 93 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 2C 74 54 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 9A E1 01 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 69 E2 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113370180,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26131913,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 233644,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 160084,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 6056,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 230560,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 70428,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 69228,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 601816,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 598192,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 10684,
+        "imageUUID" : "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset" : 18523508,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 18540444,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 8099360,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 8098664,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 5534764,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 31562480,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 31615284,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:15.329978+0000",
+  "machTimestamp" : 24240651202855,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B AC 90 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 54 71 02 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A8 17 00 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D B0 C4 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A0 84 03 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 1C 13 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 6C 0E 01 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF D8 2E 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF B0 20 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 4E 5B 04 62 61 70 33 67 94 75 4F F8 B8 DF E4 E6 BC 29 00 00 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 74 A5 1A 01 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 9C E7 1A 01 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 20 96 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 68 93 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 2C 74 54 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 9A E1 01 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 69 E2 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113370181,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26131913,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 234308,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 161532,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 6056,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 230560,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 70428,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 69228,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 601816,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 598192,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 10684,
+        "imageUUID" : "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset" : 18523508,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 18540444,
+        "imageUUID" : "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset" : 8099360,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 8098664,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 5534764,
+        "imageUUID" : "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset" : 31562480,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 31615284,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset" : 0,
+        "imageUUID" : "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:16.257455+0000",
+  "machTimestamp" : 24240673462300,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B 44 93 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B FC 76 02 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A8 17 00 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D B0 C4 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D A0 84 03 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 1C 13 01 00 EC 9E CF 10 95 9D 3D A1 A0 55 6D E9 70 15 9B 9D 6C 0E 01 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF D8 2E 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF B0 20 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 4E 5B 04 62 61 70 33 67 94 75 4F F8 B8 DF E4 E6 BC 29 00 00 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 74 A5 1A 01 19 61 54 FF BA 04 33 CD 92 77 98 F9 AA 0B 74 99 9C E7 1A 01 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 20 96 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 68 93 7B 00 71 9C F3 49 8C 4A 30 54 95 36 23 EB 53 64 8E E0 2C 74 54 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 9A E1 01 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 34 69 E2 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+},{
+  "timezoneName" : "",
+  "messageType" : "Fault",
+  "eventType" : "logEvent",
+  "source" : null,
+  "formatString" : "%s%{xcode:text-backtrace}.*P",
+  "userID" : 501,
+  "activityIdentifier" : 113370184,
+  "subsystem" : "com.apple.runtime-issues",
+  "category" : "Hang Risk",
+  "threadID" : 26132822,
+  "senderImageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519",
+  "backtrace" : {
+    "frames" : [
+      {
+        "imageOffset" : 584064,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 589392,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 28196,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 115888,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 73808,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 34496,
+        "imageUUID" : "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset" : 582700,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 580856,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 575440,
+        "imageUUID" : "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset" : 9249416,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9257912,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 9258528,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 210120,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 229812,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 182720,
+        "imageUUID" : "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset" : 3330580,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3333100,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3345136,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3337256,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359504,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359544,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 603044,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 602860,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 600696,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 597068,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 576748,
+        "imageUUID" : "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset" : 3359620,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358996,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3391648,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3359776,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3358012,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 3276560,
+        "imageUUID" : "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset" : 9256212,
+        "imageUUID" : "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset" : 26212,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset" : 6764,
+        "imageUUID" : "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  },
+  "bootUUID" : "DB3998B1-2EF4-4C74-BA15-D1348E4C60E0",
+  "processImagePath" : "\/Users\/palatis\/Library\/Developer\/CoreSimulator\/Devices\/4C7FAE04-D40B-4ADC-8F75-1366C09B1695\/data\/Containers\/Bundle\/Application\/1A4A9D8B-D41A-46A1-9C90-331E17952BF0\/RoomInTheCart.app\/RoomInTheCart",
+  "senderImagePath" : "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/iOS_23C54\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.2.simruntime\/Contents\/Resources\/RuntimeRoot\/usr\/lib\/libRPAC.dylib",
+  "timestamp" : "2026-11-08 16:31:16.930742+0000",
+  "machTimestamp" : 24240689621184,
+  "eventMessage" : "__delegate_identifier__:Performance Diagnostics__:::____message__:{\"message\":\"[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions\",\"antipattern trigger\":\"-[NSCondition wait]\",\"message type\":\"elevatable\",\"category type\":3,\"subcategory type\":-1,\"show in console\":\"0\"}'C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 88 22 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D B8 43 8D 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 20 46 8D 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C8 34 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B B4 81 03 00 36 A9 A6 AF ED 55 35 1F 9F 47 2B F2 60 E8 B0 1B C0 C9 02 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 14 D2 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D EC DB 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D F0 0A 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 28 EC 32 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 38 43 33 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF A4 33 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC 32 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 78 2A 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF 4C 1C 09 00 4F 6D 05 0D 95 EE 3A 95 96 9C 3A 98 B2 9D F6 FF EC CC 08 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 84 43 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 14 41 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D A0 C0 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 20 44 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 3C 3D 33 00 A5 F0 12 DA 1A 1F 37 65 92 4D BA 24 5E C9 4D 9D 10 FF 31 00 C1 53 11 6F DD 31 3F A9 89 BB 04 B4 7C 1F A8 3D 14 3D 8D 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 64 66 00 00 87 28 D7 7B 94 C9 38 E9 A5 4B 1D 4A 92 96 7C D8 6C 1A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'",
+  "processImageUUID" : "DF1B0D04-3418-31C3-A700-2A04478BFC46",
+  "traceID" : 2689865389510916,
+  "processID" : 69990,
+  "senderProgramCounter" : 584064,
+  "parentActivityIdentifier" : 0
+}]

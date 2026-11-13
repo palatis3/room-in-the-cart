@@ -1,0 +1,39 @@
+{
+  "runID": 42428215935,
+  "attempt": 1,
+  "jobID": 128573980815,
+  "jobURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128573980815",
+  "candidate": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "artifactID": 13598791272,
+  "artifactBytes": 128230043,
+  "artifactAPISHA256": "94712a7eba650c201a9dcd26c3ec5df6dd31cbc793f696139bcce2d46cc78962",
+  "fullArchiveDownloaded": false,
+  "fullArchiveDigestIndependentlyVerified": false,
+  "collection": "Existing guarded HTTP-range collector, exact source/artifact pins, strict206/range/length checks, normalized member paths/types, per-member5MB and ratio1000 bounds, transfer budget12MB, ZIP CRC and retained member SHA256. Metadata259976bytes; exact selected attachments568481bytes. No video/other-case attachment payload. Oversized106773410byte recording never downloaded.",
+  "downloadReceipts": [
+    {
+      "path": ".build/CIF90Nov07/ui-04-inspection/range-receipt.json",
+      "sha256": "1c7df10c24fa379247d7c825af8ca74eedd3479991770b87482d5a4fa6ffea19"
+    },
+    {
+      "path": ".build/CIF90Nov07/ui-04-inspection/attachment-download/range-receipt.json",
+      "sha256": "35ed0a9b0d598b57632d1e534c351ea50c8cc88aa424ffdb3263031455619bcc"
+    }
+  ],
+  "selectedMembersVerifiedUnchanged": true,
+  "nativeOutcome": {
+    "passed": 5,
+    "failed": 1,
+    "selected": 6,
+    "failedCaseDurationSeconds": 336.63618099689484,
+    "runtimeWarningCount": 0
+  },
+  "visualFinding": "At failure, populated slot is followed directly by Shopping mode, so Source and Observed rows are absent from the visible form layout. Keyboard remains open. Prior exact-case screenshot records the pack choice saved for checkout review.",
+  "causalAssessment": "The source field is intentionally absent when changed retailer terms invalidate known saved/basket pricing. The test changed terms after applying its priced pack choice and omitted the existing replacement-pricing review. This supports a narrow test-sequence correction; it does not support modifying the pricing gate or scrolling/timeouts.",
+  "hierarchyLimit": "Failed-query hierarchy lists populated Store/Branch/slot plus Spending cap and no Source. Exported last legacy snapshot has only the app root and no children, so it is not represented as a full hierarchy.",
+  "sourceComparison": "Entire PickupCheckoutDraft and FreeJourneyUITests files, and PickupCheckoutView body/helpers, remain unchanged from f90. Unrelated placed-order UI changes exist later in PickupHomeView.",
+  "proposedCorrection": "Scratch patch only: retain first3field values/assertions, dismiss keyboard, verify preserved Wraps/$3.00 pricing and explicit changed-terms warning, require disabled Save, follow both replacement actions, verify blank source, enter original source exactly, then original inclusive3.00 and byte-identical remainder.",
+  "patchInstalled": false,
+  "nativeExecution": false,
+  "scratchValidation": "git apply --check succeeded against pinned current source; source file hash remained unchanged. No build or native test performed."
+}

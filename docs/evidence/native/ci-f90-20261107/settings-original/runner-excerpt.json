@@ -1,0 +1,147 @@
+{
+  "source": ".build/CIF90Nov07/settings-original/diagnostics/0_Test_iPhone 17_Diagnostics/RoomInTheCartUITests-66709C19-8605-47D7-B8F7-472D40AB1E9D-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-22FBD553-A64F-4E79-9CE5-6FF74D1C63A2/Session-RoomInTheCartUITests-2026-11-08_002831-bJqRMx.log",
+  "sourceSHA256": "d1bdb3d45fb5e118b073f07056abb1629d51a14d6310403d90f1cedcd7cef70b",
+  "lineConvention": "Physical LF-delimited source lines",
+  "lines": [
+    {
+      "line": 49240,
+      "text": "00:32:17.736 RoomInTheCartUITests-Runner[6544:24387] KVO change: checked status of Expect value of 'activated' of <XCUIApplicationImpl: 0x600000d68480 com.apple.Preferences> to be '1': fulfill=NO"
+    },
+    {
+      "line": 49241,
+      "text": "00:32:17.736 RoomInTheCartUITests-Runner[6544:24387] Creating future for 'launching application via platform mechanisms' with timeout 60.00"
+    },
+    {
+      "line": 49242,
+      "text": "00:32:17.736 RoomInTheCartUITests-Runner[6544:24387] Launching <XCUIPlatformApplicationManager: 0x6000000106b0> via platform with args: env:{"
+    },
+    {
+      "line": 49250,
+      "text": "}"
+    },
+    {
+      "line": 49251,
+      "text": "00:32:17.737 RoomInTheCartUITests-Runner[6544:24387] Creating future for 'launching application via platform mechanisms' with timeout 60.00"
+    },
+    {
+      "line": 49252,
+      "text": "00:32:17.738 RoomInTheCartUITests-Runner[6544:24387] <XCTWaiter: 0x600000d68180> entering wait loop for 60.00s with expectations: `launching application via platform mechanisms`"
+    },
+    {
+      "line": 49262,
+      "text": "00:32:47.751 RoomInTheCartUITests-Runner[6544:24387] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600000d68180>"
+    },
+    {
+      "line": 49263,
+      "text": "00:32:47.753 RoomInTheCartUITests-Runner[6544:24387] Wait <XCTWaiterWait: 0x6000017cc080> completed after 30.016s"
+    },
+    {
+      "line": 49264,
+      "text": "00:32:47.754 RoomInTheCartUITests-Runner[6544:24387] cleaning up launching application via platform mechanisms"
+    },
+    {
+      "line": 49280,
+      "text": "00:32:51.153 RoomInTheCartUITests-Runner[6544:48474] Handling kAXPidStatusChangedNotification"
+    },
+    {
+      "line": 49281,
+      "text": "00:32:51.154 RoomInTheCartUITests-Runner[6544:48474] Got kAXPidStatusChangedNotification for pid 14068: active"
+    },
+    {
+      "line": 49282,
+      "text": "00:32:52.643 RoomInTheCartUITests-Runner[6544:48474] Handling kAXUserTestingNotification"
+    },
+    {
+      "line": 49293,
+      "text": "00:32:52.681 RoomInTheCartUITests-Runner[6544:25168] Got kAXPidStatusChangedNotification for pid 4177: active"
+    },
+    {
+      "line": 49294,
+      "text": "00:32:53.261 RoomInTheCartUITests-Runner[6544:25168] -[XCTRunnerDaemonSession(XCTMessagingRole_UIApplicationStateUpdating) _XCT_applicationDidUpdateState:] com.apple.Preferences@/Library/Developer/CoreSimulator/Volumes/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/Applications/Preferences.app pid: 14068 state: running foreground"
+    },
+    {
+      "line": 49295,
+      "text": "00:32:53.261 RoomInTheCartUITests-Runner[6544:25168] Handling kAXPidStatusChangedNotification"
+    },
+    {
+      "line": 49328,
+      "text": "00:32:53.753 xcodebuild[4008:16730] Nothing to delete"
+    },
+    {
+      "line": 49329,
+      "text": "00:32:53.754 xcodebuild[4008:16730] _XCT_testWithIdentifier:<XCTTestIdentifier leaf, method, swift [\"FreeJourneyUITests\", \"testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced\"]> didRecordIssue:Assertion Failure: Failed to launch com.apple.Preferences: Timed out attempting to launch app."
+    },
+    {
+      "line": 49330,
+      "text": "00:32:53.832 xcodebuild[4008:16730] Nothing to delete"
+    },
+    {
+      "line": 50348,
+      "text": "}"
+    },
+    {
+      "line": 50349,
+      "text": "00:33:07.207 RoomInTheCartUITests-Runner[6544:24387] Error (com.apple.dt.xctest.ui-testing.error) 10010, userInfo keys: (null): Event dispatch preempted by earlier failure."
+    },
+    {
+      "line": 50350,
+      "text": "00:33:07.208 RoomInTheCartUITests-Runner[6544:24387] Error (com.apple.dt.xctest.ui-testing.error) 10010, userInfo keys: (null): Event dispatch preempted by earlier failure."
+    },
+    {
+      "line": 50351,
+      "text": "00:33:07.208 RoomInTheCartUITests-Runner[6544:24387] <XCTContext: 0x600002119090> finished activity <XCActivityRecord: 0x6000021385f0> 2026-11-08 00:33:06 +0000: Tap \"Accessibility\" StaticText (0.355409s)"
+    },
+    {
+      "line": 50352,
+      "text": "00:33:07.234 xcodebuild[4008:16730] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method [\"none\", \"none\"]> didFinishActivity:<XCActivityRecord: 0x6000004063f0> 2026-11-08 00:33:06 +0000: Tap \"Accessibility\" StaticText (0.355409s)"
+    },
+    {
+      "line": 50689,
+      "text": "00:33:15.337 xcodebuild[4008:16730] Nothing to delete"
+    },
+    {
+      "line": 50690,
+      "text": "00:33:15.329 RoomInTheCartUITests-Runner[6544:24387] <XCTContext: 0x600002119090> finished activity <XCActivityRecord: 0x6000021385f0> 2026-11-08 00:33:07 +0000: Waiting 8.0s for \"Motion\" StaticText to exist (8.11958s)"
+    },
+    {
+      "line": 50691,
+      "text": "00:33:15.337 xcodebuild[4008:16730] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method [\"none\", \"none\"]> didFinishActivity:<XCActivityRecord: 0x600000412d00> 2026-11-08 00:33:07 +0000: Waiting 8.0s for \"Motion\" StaticText to exist (8.11958s)"
+    },
+    {
+      "line": 50751,
+      "text": "00:33:15.567 RoomInTheCartUITests-Runner[6544:24387] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000002ae2c0> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 \"Unable to get source info for address 4463913064 in image 'RoomInTheCartUITests'\" UserInfo={NSLocalizedDescription=Unable to get source info for address 4463913064 in image 'RoomInTheCartUITests'}"
+    },
+    {
+      "line": 50752,
+      "text": "00:33:15.599 RoomInTheCartUITests-Runner[6544:24387] -[FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]: Exited last nested run loop and shouldHaltWhenReceivesControl is YES."
+    },
+    {
+      "line": 50753,
+      "text": "00:33:15.600 RoomInTheCartUITests-Runner[6544:24387] <XCTContext: 0x600002138410> started activity <XCActivityRecord: 0x600002138a00> 2026-11-08 00:33:15 +0000: Tear Down"
+    },
+    {
+      "line": 50786,
+      "text": "00:33:16.000 RoomInTheCartUITests-Runner[6544:24387] cleaning up requesting to stop screen recording"
+    },
+    {
+      "line": 50787,
+      "text": "2026-11-08 00:33:16.002763+0000 RoomInTheCartUITests-Runner[6544:24387] [general] *** Assertion failure in -[RoomInTheCartUITests.FreeJourneyUITests _caughtUnhandledDeveloperExceptionPermittingControlFlowInterruptions:caughtInterruptionException:whileExecutingBlock:], XCTestCase+IssueHandling.m:273"
+    },
+    {
+      "line": 50788,
+      "text": "00:33:16.036 xcodebuild[4008:16730] Received AttachmentFutureMetadata(attachmentUUID: E63B3AF7-2F71-4C11-AE35-1E1C8CC8871E, dataContainerRelativeAttachmentPath: Attachments/E63B3AF7-2F71-4C11-AE35-1E1C8CC8871E, dataContainerURLPrefix: file:///Users/runner/Library/Developer/CoreSimulator/Devices/BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06/data/Containers/Data/InternalDaemon/366BBEE5-2ECF-4ACA-AB4E-4BA6C2EA3151/, hostLocalURLOfFinalizedAttachment: (null), uniformTypeIdentifierString: public.mpeg-4, finalizationState: .completed, userName: mobile, additionalMetadata: {"
+    },
+    {
+      "line": 50963,
+      "text": "    t =    58.20s     Added attachment named 'Free-flow-failure'"
+    },
+    {
+      "line": 50964,
+      "text": "2026-11-08 00:33:16.002763+0000 RoomInTheCartUITests-Runner[6544:24387] [general] *** Assertion failure in -[RoomInTheCartUITests.FreeJourneyUITests _caughtUnhandledDeveloperExceptionPermittingControlFlowInterruptions:caughtInterruptionException:whileExecutingBlock:], XCTestCase+IssueHandling.m:273"
+    },
+    {
+      "line": 50965,
+      "text": "Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' failed (58.420 seconds)."
+    }
+  ]
+}

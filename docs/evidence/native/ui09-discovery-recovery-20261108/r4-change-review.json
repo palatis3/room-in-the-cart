@@ -1,0 +1,19 @@
+{
+  "baseHEAD": "2397704ca4392281d396c152b40e350b60c0183e",
+  "changedPayloadFiles": [
+    "diagnostics/ui09-hosted/collect.py",
+    "diagnostics/ui09-hosted/hosted.py",
+    "diagnostics/ui09-hosted/pins.json"
+  ],
+  "successorPatchSHA256": "efed76de6b936f6f193b62951e6dedf830589445d06f540d93a1eafeebc262a0",
+  "patchCheckExit": 0,
+  "isolatedWorktreeUnchanged": true,
+  "r3Unchanged": true,
+  "workflowUnchanged": true,
+  "observerPatchUnchanged": true,
+  "selectorsUnchanged": true,
+  "processQueryTimeoutSeconds": 2,
+  "processPollFailureLimitTotal": 3,
+  "nativeExecution": false,
+  "remoteMutation": false
+}

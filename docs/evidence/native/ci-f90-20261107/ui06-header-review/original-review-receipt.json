@@ -1,0 +1,49 @@
+{
+  "headSHA": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "run": 42428215935,
+  "job": 128579225683,
+  "artifact": 13599975417,
+  "apiArchiveSHA256": "9f17675363410ebf5fb08bfebb140fc3f5efff0ede13cc1041df3e28f3b06ef6",
+  "apiArchiveBytes": 29920421,
+  "fullArchiveLocallyHashVerified": false,
+  "sources": [
+    {
+      "file": "ios/UITests/ContextualNavigationUITests.swift",
+      "sha256": "3f2c8f9f21945a5004d87f2589d0a2b9be73d937e364499c60db6154989c614c",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/Features/Dinners/DinnerQuotesView.swift",
+      "sha256": "220c2cadbb9c850c6fbbf988cdbdaaa8d77b03ba3a722086755614960ad13da1",
+      "byteIdenticalToF90": true
+    },
+    {
+      "file": "ios/Features/Dinners/DinnerFeatureModel.swift",
+      "sha256": "4bee343c17d4fbf28447cbfd104480d7afd224d195958a98ad1d6c9be775bff1",
+      "byteIdenticalToF90": true
+    }
+  ],
+  "pristineManifestMembersReverified": 10,
+  "exports": [
+    {
+      "file": "exports/S27-complete-store-differences.png",
+      "sha256": "8444c259f7ca7a059ce8e6687e0c271cc8584129eb5d68048ede91edd8dea5cd",
+      "bytes": 439474
+    },
+    {
+      "file": "exports/S27-reopened-adopted-branch-and-dated-comparison.png",
+      "sha256": "c96f380435d9cb8d8eb0c282354f0bd0021da4b958360b1800b335499f2342b0",
+      "bytes": 488813
+    }
+  ],
+  "session": {
+    "case": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+    "sourceFile": "Session-RoomInTheCartUITests-2026-11-08_012739-ADS67J.log",
+    "sourceBytes": 18087329,
+    "sourceSHA256": "97b2d74b41440847a08424357e082a4d32d2f0dc93037a254008ed96226c6aea"
+  },
+  "announcedPostTimeoutScreenshotPresentInSQLite": false,
+  "nativeExecuted": false,
+  "canonicalSourcesEdited": false,
+  "correctionProposed": false
+}

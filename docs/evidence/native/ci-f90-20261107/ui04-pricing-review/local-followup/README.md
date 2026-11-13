@@ -1,0 +1,9 @@
+# Complete pricing-review journey verified locally
+
+The complete ordinary Debug journey passed in 401.68 seconds on iPhone17/iOS26.2, Xcode27.1. Strict verification confirms exactly one start and one passing completion, no skips, no runner restarts and zero recorded runtime warnings. [Verification](confirmed-verification.json) · [Strict receipt](confirmed-strict.txt).
+
+The test now reviews the preserved pack pricing after changing retailer terms, starts replacement pricing, verifies its blank source, enters the original source and inclusive $3.00, reviews the proposed checkout, and explicitly saves that review. It verifies the saved result before continuing. The complete remaining placement, short-fill, protected-lunch repair, cook-instruction, settlement, feedback-withdrawal, fresh-next-shop, dinner-reuse and restarted-history actions and assertions remain unchanged. No product guard, tap helper, timeout or retry policy changed.
+
+The first attempt used the wrong contributor-fixture build profile and failed before the ordinary Shop tab. The corrected ordinary-profile attempt passed the initial replacement-pricing steps, but omitted final confirmation: the generic back helper cancelled the proposed checkout, so Freeze remained disabled. Its [failed strict receipt](first-ordinary-strict.txt), [transition log](first-ordinary-transition.log), [screenshot](uncommitted-checkout-handoff.png) and [exact diagnosis](first-ordinary.json) are retained. The final confirmation patch and both earlier attempts are pinned in [pre-installation proof](confirmation-patch-proof.json).
+
+Root inspected the final frozen handoff and restarted saved-decision screenshots. The latter retains the exact protected-lunch repair and says Meal outcome unconfirmed. This is local simulator acceptance; it does not replace the original f90 failure or establish hosted acceptance on Xcode26.3.

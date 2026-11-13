@@ -1,0 +1,251 @@
+{
+  "methodSHA256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0",
+  "maskRule": "Exclude dominant background and RGB values whose maximum channel distance from it is less than8; choose the most frequent remaining exact RGB. Use original-pixel sRGB contrast, no scaling or image changes.",
+  "results": [
+    {
+      "semanticTarget": "S24-standard-Sam-portions-label",
+      "image": "images/S24-standard-Sam-portions-label.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 426,
+        "height": 61,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "39ef5daeca79a846f3c34420e0194c460f3b441477870e0ac5b52ca9236dbcae"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 2754,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 16,
+      "distributedColorSupport": true,
+      "interpretation": "Repeated label-glyph core color support."
+    },
+    {
+      "semanticTarget": "S24-standard-Sam-portions-value",
+      "image": "images/S24-standard-Sam-portions-value.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 31,
+        "height": 61,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "6a314569b4ab219e504a2fbd2289c29198827d84787d8dfdb536b2739923cfc8"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 126,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 1,
+      "distributedColorSupport": false,
+      "interpretation": "Single digit only; no multiglyph inference."
+    },
+    {
+      "semanticTarget": "S24-standard-Mia-portions-label",
+      "image": "images/S24-standard-Mia-portions-label.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 426,
+        "height": 60,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "f1f1be5f6f23b600d0ff93a86ccf9b6657118cbc9ed8e1ca86e2888232922967"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 2754,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 16,
+      "distributedColorSupport": true,
+      "interpretation": "Repeated label-glyph core color support."
+    },
+    {
+      "semanticTarget": "S24-standard-Mia-portions-value",
+      "image": "images/S24-standard-Mia-portions-value.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 31,
+        "height": 60,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "43c1802bcc362b19c6a2899c91a27a5e7f88002c0f238cd0580fa2c2781b6228"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 126,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 1,
+      "distributedColorSupport": false,
+      "interpretation": "Single digit only; no multiglyph inference."
+    },
+    {
+      "semanticTarget": "S24-AX5-88888888-8888-4888-8888-888888888888-portions-label",
+      "image": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 684,
+        "height": 374,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "2a38de0d7626e4a5510b95dc2f17319d17c25a0f544b278ccd337213adaf282b"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 38507,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 17,
+      "distributedColorSupport": true,
+      "interpretation": "Repeated label-glyph core color support."
+    },
+    {
+      "semanticTarget": "S24-AX5-88888888-8888-4888-8888-888888888888-portions-value",
+      "image": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 96,
+        "height": 190,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 1755,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 1,
+      "distributedColorSupport": false,
+      "interpretation": "Single digit only; no multiglyph inference."
+    },
+    {
+      "semanticTarget": "S24-AX5-99999999-9999-4999-8999-999999999999-portions-label",
+      "image": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 684,
+        "height": 376,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "29a1d6a00cd0cd8530e24c6e25382581443f7f85de145b5dd02effc8bb922d7f"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 38507,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 17,
+      "distributedColorSupport": true,
+      "interpretation": "Repeated label-glyph core color support."
+    },
+    {
+      "semanticTarget": "S24-AX5-99999999-9999-4999-8999-999999999999-portions-value",
+      "image": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png",
+      "PNG": {
+        "sRGBIntent": 0,
+        "width": 96,
+        "height": 190,
+        "bitDepth": 8,
+        "colorType": 2,
+        "channels": 3,
+        "allPixelsOpaque": true,
+        "chunkCRCsVerified": true,
+        "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4"
+      },
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "mostFrequentNonbackgroundRGB": [
+        23,
+        41,
+        37
+      ],
+      "corePixels": 1755,
+      "contrast": 15.213849827934512,
+      "safeMethodRetainedComponents": 1,
+      "distributedColorSupport": false,
+      "interpretation": "Single digit only; no multiglyph inference."
+    }
+  ],
+  "limits": [
+    "Digit crops have one component; distributedColorSupport=false is retained and no multiglyph pass is inferred.",
+    "Native assertions and visual review are separate from this file-only pixel measurement.",
+    "No claim about other colors, text sizes, appearance, devices or screen regions."
+  ]
+}

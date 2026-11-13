@@ -1,0 +1,18 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648635,
+  "attempt": 1,
+  "frozenFilesRehashed": 732,
+  "mismatches": [],
+  "freezeSHA256": "62b406ed7ce85e6544db96f344d49fdea6a6b3a972ee61abb7310720ddc0634d",
+  "workflowConclusion": "failure",
+  "nativeCasesPassed": 3,
+  "strictRuntimeWarnings": 0,
+  "measurementGatePassed": {
+    "launch": true,
+    "rendered": true,
+    "scroll": false
+  },
+  "scope": "Root rehashed all frozen files and inspected per-case audit and original SQLite omission report; native pass does not substitute for duration evidence.",
+  "releaseAcceptance": false
+}

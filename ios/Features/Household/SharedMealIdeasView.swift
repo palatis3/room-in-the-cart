@@ -84,50 +84,56 @@ private struct SharedMealIdeaEditor: View {
                 Text(draft.source == "app_template" ? ht("Source: app-owned editable template") : ht("Source: household manual entry"))
                 Stepper(value: $draft.servings, in: 1...1000) { LabeledContent(ht("Suggested servings"), value: draft.servings.formatted()) }
                 number(ht("Preparation minutes, if known"), value: $draft.minutes).focused($inputFocus, equals: "minutes")
-                TextField(ht("Assumed extras, one per line"), text: lines($draft.assumedExtras), axis: .vertical)
-                    .focused($inputFocus, equals: "extras")
-                TextField(ht("Shared household exclusions, one per line"), text: lines($draft.exclusions), axis: .vertical)
-                    .focused($inputFocus, equals: "exclusions")
+                multilineField(ht("Assumed extras, one per line"), values: $draft.assumedExtras, focus: "extras")
+                multilineField(ht("Shared household exclusions, one per line"), values: $draft.exclusions, focus: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
             }.disabled(!own || model.pending != nil)
-            ForEach($draft.ingredients) { $ingredient in
-                let prefix = "ingredient.\(ingredient.id)."
+            ForEach(draft.ingredients) { snapshot in
+                let ingredient = dinnerDraftBinding(snapshot, in: $draft.ingredients)
+                let id = snapshot.id
+                let prefix = "ingredient.\(id)."
                 Section {
-                    TextField(ht("Ingredient name"), text: $ingredient.name).focused($inputFocus, equals: prefix + "name")
-                    Picker(ht("Ingredient unit"), selection: $ingredient.unit) {
+                    TextField(ht("Ingredient name"), text: ingredient.name).focused($inputFocus, equals: prefix + "name")
+                    Picker(ht("Ingredient unit"), selection: ingredient.unit) {
                         Text(ht("Count")).tag("count"); Text(ht("Grams")).tag("gram"); Text(ht("Kilograms")).tag("kilogram")
                         Text(ht("Ounces")).tag("ounce"); Text(ht("Pounds")).tag("pound")
                         Text(ht("Milliliters")).tag("milliliter"); Text(ht("Liters")).tag("liter")
                         Text(ht("Fluid ounces")).tag("fluidOunce"); Text(ht("Cups")).tag("cup")
                     }
-                    SharedIdeaAmountField(title: ht("Required quantity"), value: $ingredient.required, focus: $inputFocus, fieldID: prefix + "required")
-                    SharedIdeaAmountField(title: ht("Household stock in this unit"), value: $ingredient.stock, focus: $inputFocus, fieldID: prefix + "stock")
-                    ForEach(ingredient.reservations.indices, id: \.self) { index in
-                        let reservation = prefix + "reservation.\(index)."
-                        TextField(ht("Named reservation"), text: $ingredient.reservations[index].name)
-                            .focused($inputFocus, equals: reservation + "name")
-                        SharedIdeaAmountField(title: ht("Reserved quantity"), value: Binding(get: { ingredient.reservations[index].amount }, set: { ingredient.reservations[index].amount = $0 ?? 0 }),
-                                             focus: $inputFocus, fieldID: reservation + "amount")
+                    SharedIdeaAmountField(title: ht("Required quantity"), value: ingredient.required, focus: $inputFocus, fieldID: prefix + "required")
+                    SharedIdeaAmountField(title: ht("Household stock in this unit"), value: ingredient.stock, focus: $inputFocus, fieldID: prefix + "stock")
+                    ForEach(ingredient.wrappedValue.reservations) { snapshot in
+                        let reservation = dinnerDraftBinding(snapshot, in: ingredient.reservations)
+                        let reservationID = snapshot.id
+                        let field = prefix + "reservation.\(reservationID)."
+                        TextField(ht("Named reservation"), text: reservation.name)
+                            .focused($inputFocus, equals: field + "name")
+                        SharedIdeaAmountField(title: ht("Reserved quantity"), value: Binding(get: { reservation.wrappedValue.amount }, set: { reservation.wrappedValue.amount = $0 ?? 0 }),
+                                             focus: $inputFocus, fieldID: field + "amount")
                         Button(ht("Remove reservation"), role: .destructive) {
                             inputFocus = nil
-                            ingredient.reservations.remove(at: index)
+                            ingredient.wrappedValue.reservations.removeAll { $0.id == reservationID }
                         }
                     }
-                    Button(ht("Add named reservation")) { ingredient.reservations.append(.init(name: "", amount: 1)) }.disabled(ingredient.reservations.count >= 20)
-                    SharedIdeaAmountField(title: ht("Whole package quantity"), value: $ingredient.pack, focus: $inputFocus, fieldID: prefix + "pack")
-                    number(ht("Usable yield numerator"), value: $ingredient.usableNumerator).focused($inputFocus, equals: prefix + "numerator")
-                    number(ht("Usable yield denominator"), value: $ingredient.usableDenominator).focused($inputFocus, equals: prefix + "denominator")
+                    Button(ht("Add named reservation")) { ingredient.wrappedValue.reservations.append(.init(name: "", amount: 1)) }.disabled(ingredient.wrappedValue.reservations.count >= 20)
+                    SharedIdeaAmountField(title: ht("Whole package quantity"), value: ingredient.pack, focus: $inputFocus, fieldID: prefix + "pack")
+                    number(ht("Usable yield numerator"), value: ingredient.usableNumerator).focused($inputFocus, equals: prefix + "numerator")
+                    number(ht("Usable yield denominator"), value: ingredient.usableDenominator).focused($inputFocus, equals: prefix + "denominator")
                     Text(ht("Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown."))
-                    TextField(ht("Household stock and package evidence"), text: $ingredient.evidence, axis: .vertical)
+                    TextField(ht("Household stock and package evidence"), text: ingredient.evidence, axis: .vertical)
                         .focused($inputFocus, equals: prefix + "evidence")
                         .accessibilityLabel(ht("Household stock and package evidence"))
                         .accessibilityIdentifier("household-idea-evidence")
-                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }.disabled(draft.ingredients.count == 1)
+                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id } }.disabled(draft.ingredients.count == 1)
                 }.disabled(!own || model.pending != nil)
             }
             if own {
                 Button(ht("Add ingredient")) { draft.ingredients.append(.init()) }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
-                Button(ht("Save household draft for review")) { Task { await model.write(ideaID: ideaID, draft: draft, approve: false, reviewed: false) } }
+                Button(ht("Save household draft for review")) {
+                    let reviewedDraft = draft.normalizedForSave(), selectedID = ideaID
+                    draft = reviewedDraft
+                    Task { await model.write(ideaID: selectedID, draft: reviewedDraft, approve: false, reviewed: false) }
+                }
                     .disabled(model.pending != nil || saved?.draft == draft).accessibilityIdentifier("household-idea-save")
             }
             if let saved, saved.draft == draft {
@@ -159,8 +165,18 @@ private struct SharedMealIdeaEditor: View {
                 .accessibilityIdentifier("household-idea-cancel-approval")
         } message: { Text(ht("This saves adult approval only. Linking a meal and changing shared packs require separate reviews.")) }
     }
+    private func multilineField(_ title: String, values: Binding<[String]>, focus: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.subheadline).accessibilityHidden(true)
+            TextField("", text: lines(values), axis: .vertical)
+                .focused($inputFocus, equals: focus)
+                .accessibilityLabel(title)
+                .frame(minHeight: 44)
+        }
+    }
     private func lines(_ value: Binding<[String]>) -> Binding<String> {
-        Binding(get: { value.wrappedValue.joined(separator: "\n") }, set: { value.wrappedValue = $0.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty } })
+        Binding(get: { value.wrappedValue.joined(separator: "\n") },
+                set: { value.wrappedValue = $0.components(separatedBy: "\n") })
     }
     private func number(_ title: String, value: Binding<Int?>) -> some View { TextField(title, value: value, format: .number).keyboardType(.numberPad) }
     private func template() {

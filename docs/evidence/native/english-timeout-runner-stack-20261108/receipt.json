@@ -1,0 +1,42 @@
+{
+  "startedAtUTC": "2026-11-08T17:19:25.305621+00:00",
+  "argv": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "export",
+    "object",
+    "--legacy",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification/ordinary-light-run/inspection/native.xcresult",
+    "--id",
+    "0~I2ee7E1jXZiRv7CKVxKdIzw-YqmeoCijsTo9EMNWUXIUYHyISWNY2skpM5TqkqUS1Lk30P1dT3oP-8MlusG-Fg==",
+    "--type",
+    "file",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/english-timeout-spindump-proposal-r1/extraction/spindump.txt"
+  ],
+  "planSHA256": "ac60536b340645b787ed9ee074f7c4bb367784c9b45df7e54b8b87b8849463ba",
+  "inputPinsVerifiedBefore": true,
+  "timeoutSeconds": 45,
+  "perFileLimitBytes": 4000000,
+  "originalNeverPassedToTool": true,
+  "exitCode": -25,
+  "elapsedSeconds": 0.074061916,
+  "inputPinsVerifiedAfter": true,
+  "files": {
+    "stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "spindump.txt.xcrk-export.85O43s": {
+      "bytes": 4000000,
+      "sha256": "b197db1d0ec0045c85f283f50c1a3dcd6f96031d12449228daa6ccd58bb0b268"
+    }
+  },
+  "status": "incomplete",
+  "finishedAtUTC": "2026-11-08T17:19:25.385219+00:00"
+}

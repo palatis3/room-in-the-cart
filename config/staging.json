@@ -8,5 +8,7 @@
   "supabaseURL": "https://uwjxrotnocxxomqdetzk.supabase.co",
   "region": "us-west-2",
   "serviceURL": "https://room-in-the-cart-staging.vercel.app",
-  "publishableKey": "sb_publishable_1xdXiFaWaZ0rngagT4sVrg_X7q-YbG6"
+  "publishableKey": "sb_publishable_1xdXiFaWaZ0rngagT4sVrg_X7q-YbG6",
+  "helpURL": "https://room-in-the-cart-staging.vercel.app/help",
+  "supportURL": "https://room-in-the-cart-staging.vercel.app/support"
 }

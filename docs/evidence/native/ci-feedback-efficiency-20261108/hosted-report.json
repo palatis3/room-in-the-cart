@@ -1,0 +1,197 @@
+{
+  "runs": [
+    {
+      "id": 42544579944,
+      "attempt": 1,
+      "sha": "d1705d920595be12a3eb8c378f50ad04dbf65ccd",
+      "workflow": "iOS deep checks",
+      "branch": "codex/ci-focus-pending-recovery-20261108",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944",
+      "job_count": 7,
+      "repeated_failed_steps": {},
+      "jobs": [
+        {
+          "id": 128928192234,
+          "name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128928192234",
+          "execution_seconds": 438.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Run purchase, restore, renewal and revocation scenarios",
+              "seconds": 354.0
+            },
+            {
+              "name": "Select iPhone",
+              "seconds": 24.0
+            },
+            {
+              "name": "Complete job",
+              "seconds": 17.0
+            }
+          ]
+        },
+        {
+          "id": 128928192291,
+          "name": "storekit (en, US English \u2014 local StoreKit)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128928192291",
+          "execution_seconds": 363.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Run purchase, restore, renewal and revocation scenarios",
+              "seconds": 286.0
+            },
+            {
+              "name": "Complete job",
+              "seconds": 28.0
+            },
+            {
+              "name": "Select iPhone",
+              "seconds": 22.0
+            }
+          ]
+        },
+        {
+          "id": 128926764537,
+          "name": "Build shared LocalStoreKit test products",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926764537",
+          "execution_seconds": 306.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Build both LocalStoreKit configurations once",
+              "seconds": 264.0
+            },
+            {
+              "name": "Verify both compiled configurations and package shared products",
+              "seconds": 11.0
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "seconds": 9.0
+            }
+          ]
+        },
+        {
+          "id": 128926691220,
+          "name": "sanitizers (address)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926691220",
+          "execution_seconds": 184.0,
+          "pre_start_seconds": 4.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Check package tests for memory errors or data races",
+              "seconds": 172.0
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "seconds": 6.0
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "seconds": 2.0
+            }
+          ]
+        },
+        {
+          "id": 128926690943,
+          "name": "sanitizers (thread)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926690943",
+          "execution_seconds": 179.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Check package tests for memory errors or data races",
+              "seconds": 167.0
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "seconds": 8.0
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "seconds": 1.0
+            }
+          ]
+        },
+        {
+          "id": 128926690657,
+          "name": "Validate shared StoreKit test plan",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926690657",
+          "execution_seconds": 12.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "seconds": 5.0
+            },
+            {
+              "name": "Check both locale configurations and artifact workflow before macOS",
+              "seconds": 4.0
+            },
+            {
+              "name": "Set up job",
+              "seconds": 0
+            }
+          ]
+        },
+        {
+          "id": 128930166528,
+          "name": "StoreKit build and both locales gate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128930166528",
+          "execution_seconds": 2.0,
+          "pre_start_seconds": 3.0,
+          "failed_steps": [],
+          "slowest_steps": [
+            {
+              "name": "Set up job",
+              "seconds": 0
+            },
+            {
+              "name": "Require shared build and both locale jobs to succeed",
+              "seconds": 0
+            },
+            {
+              "name": "Complete job",
+              "seconds": 0
+            }
+          ]
+        }
+      ],
+      "repo": "palatis3/room-in-the-cart"
+    }
+  ],
+  "active_run_count": 0,
+  "possible_duplicate_runs": [],
+  "notes": [
+    "Read-only snapshot; no dispatch, retry, cancellation or log download.",
+    "Possible duplicates share workflow, branch and SHA; compare manual scopes before cancelling.",
+    "Repeated failed step names help triage; they are not a count of distinct bugs.",
+    "pre_start_seconds includes dependencies and scheduling, not just runner queue time.",
+    "A focused green run does not establish full PR or release acceptance."
+  ]
+}

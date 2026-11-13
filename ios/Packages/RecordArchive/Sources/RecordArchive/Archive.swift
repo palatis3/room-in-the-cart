@@ -5,10 +5,11 @@ import CryptoKit
 public enum ArchiveError: Error, Equatable, Sendable {
     case tooLarge, malformed, unsupportedVersion, integrity, invalidIdentity, unsupportedProjection
     case locked, invalidKey, conflict, staleReview, unavailable, invalidRecipe, unsupportedRecord
+    case exportSelectionChanged, deletionSelectionChanged
 }
 
 public enum ArchiveKind: String, Codable, Sendable { case personalRecovery, helperShop }
-public enum ArchiveRecordKind: String, Codable, Sendable { case comparison, ledger, pickup, recipe }
+public enum ArchiveRecordKind: String, Codable, Sendable { case comparison, ledger, pickup, recipe, sharedShop, sharedHistory }
 
 /// The helper representation is an allowlist, not a filtered native model.
 public struct HelperLine: Codable, Equatable, Sendable {
@@ -96,6 +97,7 @@ public struct ArchiveReceipt: Codable, Equatable, Sendable {
 }
 
 public enum ArchiveCodec {
+    static let supportedMinorVersions = 0...2
     public static let maximumFileBytes = 8 * 1_048_576
     public static let maximumRecords = 500
     public static let maximumNativeBytes = 4 * 1_048_576
@@ -111,6 +113,7 @@ public enum ArchiveCodec {
     }
     public static func make(records: [ArchiveRecord], kind: ArchiveKind, origin: String, revision: String, parent: String? = nil, shopID: String? = nil, producerBuild: String = "1", exportedAt: Date = Date()) throws -> ArchiveEnvelope {
         guard records.count <= maximumRecords else { throw ArchiveError.tooLarge }
+        guard kind != .helperShop || !records.contains(where: { $0.kind == .sharedShop || $0.kind == .sharedHistory }) else { throw ArchiveError.unsupportedProjection }
         let projected = records.map { record -> ArchiveRecord in
             var copy = record
             if kind == .helperShop { copy.nativePayload = nil; copy.media = nil }
@@ -190,7 +193,7 @@ public enum ArchiveCodec {
         guard Set(object.keys).isSubset(of: allowed) else { throw ArchiveError.unsupportedRecord }
     }
     public static func validate(_ value: ArchiveEnvelope) throws {
-        guard value.formatMajor == 1, (0...2).contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
+        guard value.formatMajor == 1, supportedMinorVersions.contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
         guard value.projectionID == projection(for: value.documentKind) else { throw ArchiveError.unsupportedProjection }
         guard identifier(value.originNamespace), identifier(value.sourceRevisionID), value.parentRevisionID.map(identifier) ?? true,
               value.shopID.map(identifier) ?? true, value.producerBuild.utf8.count <= 128 else { throw ArchiveError.invalidIdentity }
@@ -201,6 +204,9 @@ public enum ArchiveCodec {
             guard record.title.utf8.count <= 4096, !record.title.contains("\0"), record.helperLines.count <= 2000,
                   (record.nativePayload?.count ?? 0) <= maximumNativeBytes else { throw ArchiveError.tooLarge }
             guard identities.insert(identity(record, projection: value.projectionID)).inserted else { throw ArchiveError.invalidIdentity }
+            if record.kind == .sharedShop || record.kind == .sharedHistory {
+                guard value.documentKind == .personalRecovery, record.nativePayload != nil, record.media == nil, record.helperLines.isEmpty else { throw ArchiveError.unsupportedProjection }
+            }
             if value.documentKind == .helperShop, record.nativePayload != nil || record.media != nil { throw ArchiveError.unsupportedProjection }
             for line in record.helperLines {
                 guard [line.label, line.originalAmount, line.originalUnit, line.originalLanguage ?? "", line.purpose ?? "", line.action ?? "", line.foodStatus ?? ""].allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }) else { throw ArchiveError.tooLarge }
@@ -231,6 +237,8 @@ public enum ArchiveCodec {
         guard String(data: data, encoding: .utf8) != nil else { throw ArchiveError.malformed }
         var depth = 0, quoted = false, escaped = false
         for byte in data {
+            // Raw NUL is invalid in UTF-8 JSON. Foundation otherwise auto-detects UTF-16/32.
+            guard byte != 0 else { throw ArchiveError.malformed }
             if quoted {
                 if escaped { escaped = false } else if byte == 92 { escaped = true } else if byte == 34 { quoted = false }
             } else if byte == 34 { quoted = true }

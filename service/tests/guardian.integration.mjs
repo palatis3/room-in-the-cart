@@ -14,7 +14,7 @@ import {createRuntime,databaseConfiguration} from '../dist/runtime.js';
 import {createOperationsHTTPServer} from '../dist/operations-http.js';
 import {tokenHash} from '../dist/database.js';
 import {PrivacyService} from '../dist/privacy.js';
-import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
+import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),app=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL}),proof=new pg.Pool({connectionString:process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL});
 const journal=await openPrivacyJournalFixture(admin);
 const privacyProvider={assertAvailable:async()=>{},deleteAccount:async()=>{throw Error('Profile-only fixture must not call provider');}};
@@ -206,7 +206,7 @@ test('enrolled child submits only own request and never receives basket, budget,
  for(const route of ['/members','/shops/'+shopId,'/shops/'+shopId+'/inbox','/guardian/consents'])assert.equal((await call(f.child,f.base+route)).status,404);
 });
 
-test('trusted finish and pending-child identity deletion serialize in both deterministic lock orders',async()=>{
+test('trusted finish and pending-child identity deletion serialize in both deterministic lock orders',async t=>{
  for(const ordering of ['finish_first','deletion_first']){
   const f=await family(),state=await claimed(f);ok(await call(f.adult,f.base+'/guardian/enrollments/'+state.setup.enrollmentId+'/confirm-child','POST',{clientKey:randomUUID(),baseRevision:state.setup.revision,claimId:state.claim.claimId,pairingCode:state.input.pairingCode}));
   const details=(await admin.query('SELECT c.pairing_hash,a.email_digest FROM ritc.guardian_child_claim c JOIN ritc.guardian_child_invitation v USING(household_id,invite_id) JOIN ritc.guardian_attempt a USING(household_id,enrollment_id) WHERE c.household_id=$1 AND c.claim_id=$2',[f.house.householdId,state.claim.claimId])).rows[0];
@@ -217,6 +217,7 @@ test('trusted finish and pending-child identity deletion serialize in both deter
    const finish=()=>trusted.query('SELECT ritc.guardian_finish_verified($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) receipt',[f.house.householdId,state.claim.claimId,issuer,f.child.subject,f.child.session,details.pairing_hash,details.email_digest,randomUUID(),tokenHash(randomUUID()),randomUUID(),tokenHash(randomUUID()),f.adult.email,f.child.email]);
    const pinnedClient={query:deleting.query.bind(deleting),release(){}};const deletionRepo=new HouseholdRepository({connect:async()=>pinnedClient,query:deleting.query.bind(deleting)},{allowChildNetwork:true,noticeVersion:notices[0].version,sessionStatus:new SupabaseSessionVerifier(issuer)});
    const deletionService=new PrivacyService(deletionRepo,{provider:privacyProvider,policy:privacyPolicy,journal:journal.port});const deletionIdentity=await verifier.verify(f.child.token),deletionInput={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]};
+   t.after(()=>deferProfileOnlyDeletion(admin,deletionInput.clientKey));
    const erase=()=>deletionService.request(deletionIdentity,deletionInput).then(value=>({accepted:true,value}),error=>({accepted:false,error}));
    async function awaitLock(pid){for(let i=0;i<200;i++){if((await admin.query('SELECT wait_event_type FROM pg_stat_activity WHERE pid=$1',[pid])).rows[0]?.wait_event_type==='Lock')return;await new Promise(resolve=>setTimeout(resolve,2));}throw new Error('expected real PostgreSQL lock wait');}
    if(ordering==='finish_first'){finalizing=finish();await awaitLock(trustedPID);deletion=erase();await awaitLock(deletePID);await lock.query('COMMIT');const result=await finalizing;assert.ok(result.rows[0].receipt);await trusted.query('COMMIT');const resultDelete=await deletion;assert.equal(resultDelete.accepted,false);assert.equal(resultDelete.error.code,'unavailable');assert.equal(resultDelete.error.status,404);}
@@ -225,9 +226,11 @@ test('trusted finish and pending-child identity deletion serialize in both deter
   }finally{await lock.query('ROLLBACK');await trusted.query('ROLLBACK');lock.release();trusted.release();deleting.release();}
  }
 });
-test('real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority',async()=>{
- const f=await family(),state=await active(f),job=randomUUID();const deletionService=new PrivacyService(repo,{provider:privacyProvider,policy:privacyPolicy,journal:journal.port});await deletionService.request(await verifier.verify(f.adult.token),{clientKey:job,statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.house.householdId,organizer:'archive',shops:[],eraseChildProfiles:[state.receipt.memberId]}]});
- await admin.query("UPDATE ritc.privacy_job SET next_at=clock_timestamp()+interval '1 day' WHERE job_id<>$1",[job]);const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL}),lease=randomUUID();try{const claim=(await worker.query('SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];assert.equal(claim.job_id,job);for(let i=0;i<5;i++){const result=(await worker.query('SELECT ritc.privacy_erase_target($1,$2) done',[job,lease])).rows[0];await journal.port.acknowledgeJob(job);if(result.done)break;}
+test('real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority',async t=>{
+ const f=await family(),state=await active(f),job=randomUUID();
+ t.after(()=>deferProfileOnlyDeletion(admin,job));
+ const deletionService=new PrivacyService(repo,{provider:privacyProvider,policy:privacyPolicy,journal:journal.port});await deletionService.request(await verifier.verify(f.adult.token),{clientKey:job,statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.house.householdId,organizer:'archive',shops:[],eraseChildProfiles:[state.receipt.memberId]}]});
+ const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL}),lease=randomUUID();try{const claim=(await worker.query('SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];assert.equal(claim.job_id,job);for(let i=0;i<5;i++){const result=(await worker.query('SELECT ritc.privacy_erase_target($1,$2) done',[job,lease])).rows[0];await journal.port.acknowledgeJob(job);if(result.done)break;}
   const profiles=(await admin.query('SELECT state,erased_at,issuer,alias FROM ritc.member WHERE household_id=$1',[f.house.householdId])).rows;assert.ok(profiles.every(profile=>profile.erased_at&&profile.state==='revoked'&&profile.issuer==='urn:ritc:erased'));assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.guardian_enrollment WHERE household_id=$1',[f.house.householdId])).rows[0].n,0);assert.equal((await admin.query('SELECT count(*)::int n FROM auth.users WHERE id=$1',[f.child.subject])).rows[0].n,1);assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.guardian_child_principal WHERE provider_user=$1',[f.child.subject])).rows[0].n,1);
   await admin.query('DELETE FROM ritc.identity_erasure WHERE identity_hash=$1',[tokenHash(issuer+'\n'+f.child.subject)]);assert.equal((await call(f.child,'/v1/households','POST',{clientKey:randomUUID(),label:'Forbidden after profile erasure',alias:'No',adultAttestation:true})).status,503);
  }finally{await worker.end();}

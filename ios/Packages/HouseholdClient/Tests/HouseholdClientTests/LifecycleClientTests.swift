@@ -7,8 +7,8 @@ extension HouseholdClientTests {
     private func helperBootstrap() -> Data {
         Data("{\"household\":{\"id\":\"\(household)\",\"label\":\"Home\"},\"memberId\":\"\(member)\",\"role\":\"editor\",\"shopId\":\"\(lifecycleShop)\",\"grantId\":\"\(lifecycleGrant)\",\"enrolled\":true,\"queueConsent\":false,\"capabilities\":[\"helper_view\",\"helper_propose\"]}".utf8)
     }
-    private func helperViewBytes() -> Data {
-        Data("{\"grantId\":\"\(lifecycleGrant)\",\"shopId\":\"\(lifecycleShop)\",\"revision\":2,\"asOf\":\"2026-11-03T00:00:00Z\",\"expiresAt\":\"2099-01-01T00:00:00Z\",\"mode\":\"edit\",\"canPropose\":true,\"shopLabel\":\"Tuesday pickup\",\"language\":\"en\",\"items\":[{\"label\":\"Wraps\",\"amount\":\"6\",\"unit\":null,\"action\":\"Save two for lunch.\"}]}".utf8)
+    private func helperViewBytes(revision: Int = 2) -> Data {
+        Data("{\"grantId\":\"\(lifecycleGrant)\",\"shopId\":\"\(lifecycleShop)\",\"revision\":\(revision),\"asOf\":\"2026-11-03T00:00:00Z\",\"expiresAt\":\"2099-01-01T00:00:00Z\",\"mode\":\"edit\",\"canPropose\":true,\"shopLabel\":\"Tuesday pickup\",\"language\":\"en\",\"items\":[{\"label\":\"Wraps\",\"amount\":\"6\",\"unit\":null,\"action\":\"Save two for lunch.\"}]}".utf8)
     }
     private func lifecycleBytes(_ request: URLRequest) -> Data {
         if let data = request.httpBody { return data }
@@ -42,16 +42,39 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: false))
         XCTAssertThrowsError(try MembershipIntent.create(subject: "account", label: "Home", alias: "Mia", adultAttestation: false))
         let intent = try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: true)
+        let legacyBytes = try JSONEncoder().encode(intent)
+        XCTAssertFalse(String(decoding: legacyBytes, as: UTF8.self).contains("defaultAliasLanguage"))
+        XCTAssertEqual(try JSONDecoder().decode(MembershipIntent.self, from: legacyBytes), intent)
+        let spanish = Locale(identifier: "es_US")
+        let blank = try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: true, defaultAliasLocale: spanish)
+        let restored = try JSONDecoder().decode(MembershipIntent.self, from: JSONEncoder().encode(blank))
+        XCTAssertEqual(restored, blank)
+        let blankBody = try XCTUnwrap(JSONSerialization.jsonObject(with: restored.bytes) as? [String: Any])
+        XCTAssertEqual(restored.defaultAliasLanguage, "es")
+        XCTAssertNil(blankBody["defaultAliasLanguage"])
+        XCTAssertEqual(blank.bytes, intent.bytes)
+        XCTAssertNil(blankBody["alias"])
+        let named = try MembershipIntent.redeem(subject: "account", token: token, alias: "María José", adultAttestation: true, defaultAliasLocale: spanish)
+        let namedBody = try XCTUnwrap(JSONSerialization.jsonObject(with: named.bytes) as? [String: Any])
+        XCTAssertEqual(namedBody["alias"] as? String, "María José")
+        XCTAssertNil(named.defaultAliasLanguage)
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
             if let result = self.authResponse(request) { return result }
             XCTAssertEqual(request.url!.absoluteString, "https://service.test/v1/invites/redeem")
             let body = try XCTUnwrap(JSONSerialization.jsonObject(with: self.lifecycleBytes(request)) as? [String: Any])
-            XCTAssertEqual(body["token"] as? String, token); XCTAssertEqual(body["intent"] as? String, "join"); XCTAssertNil(body["alias"])
+            XCTAssertEqual(body["token"] as? String, token); XCTAssertEqual(body["intent"] as? String, "join"); XCTAssertNil(body["alias"]); XCTAssertNil(body["defaultAliasLanguage"])
             return (200, Data("{\"householdId\":\"\(self.household)\",\"memberId\":\"\(self.member)\",\"role\":\"editor\",\"grantId\":\"\(self.lifecycleGrant)\"}".utf8))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         let receipt = try await service.executeMembership(intent); XCTAssertEqual(receipt.grantId, lifecycleGrant)
+        MockURLProtocol.handler = { request in
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Accept-Language"), "es")
+            XCTAssertEqual(self.lifecycleBytes(request), intent.bytes)
+            return (200, try JSONEncoder().encode(receipt))
+        }
+        _ = try await service.executeMembership(restored)
+        _ = try await service.executeMembership(restored)
     }
     func testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes() async throws {
         let auth = try auth(); let vault = MemoryVault(); var registrations = 0; var broadCalls = 0
@@ -89,25 +112,106 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         XCTAssertNil(try vault.read())
     }
+    func testHelperCurrentViewAndProposalStayWithinEnrolledShopRoleAndExpiry() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+            auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let editor = try XCTUnwrap(JSONSerialization.jsonObject(with: helperBootstrap()) as? [String: Any])
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: helperViewBytes()) as? [String: Any])
+        let stateLock = NSLock()
+        var bootstrap = editor
+        var view = original
+        var writes = 0
+        MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
+            if let result = self.authResponse(request) { return result }
+            if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
+            if request.url!.path.hasSuffix("/bootstrap") { return (200, try JSONSerialization.data(withJSONObject: bootstrap)) }
+            if request.url!.path.hasSuffix("/current") { return (200, try JSONSerialization.data(withJSONObject: view)) }
+            writes += 1
+            return (500, Data())
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+        let intent = try await service.prepareHelperProposal(grantID: lifecycleGrant, baseRevision: 2, correction: "Save two.")
+        for (field, invalidValue) in [("shopId", UUID().uuidString), ("expiresAt", "2000-01-01T00:00:00.001Z")] {
+            stateLock.withLock {
+                view = original
+                view[field] = invalidValue
+            }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.currentHelperView(grantID: lifecycleGrant)
+                XCTFail("Displayed instructions with invalid \(field)")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.executeHelperProposal(intent)
+                XCTFail("Retried suggestion with invalid \(field)")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        }
+        stateLock.withLock {
+            bootstrap["role"] = "helper"
+            bootstrap["capabilities"] = ["helper_view"]
+            view = original
+            view["mode"] = "read"
+            view["canPropose"] = false
+        }
+        _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+        let readOnly = try await service.currentHelperView(grantID: lifecycleGrant)
+        XCTAssertFalse(readOnly.canPropose)
+        for mode in ["read", "edit"] {
+            stateLock.withLock {
+                view["mode"] = mode
+                view["canPropose"] = true
+            }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.executeHelperProposal(intent)
+                XCTFail("Read-only helper retried an editor proposal")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        }
+        XCTAssertEqual(stateLock.withLock { writes }, 0)
+    }
+
     func testHelperProposalRetriesExactBytesAndStopsAfterRevocation() async throws {
         let auth = try auth(); var bodies: [Data] = []; var revoked = false
+        var revision = 2, receiptRevision: Int?
+        let proposalID = UUID().uuidString
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.helperBootstrap()) }
             if revoked { return (404, Data()) }
-            if request.url!.path.hasSuffix("/current") { return (200, self.helperViewBytes()) }
-            bodies.append(self.lifecycleBytes(request)); throw URLError(.networkConnectionLost)
+            if request.url!.path.hasSuffix("/current") { return (200, self.helperViewBytes(revision: revision)) }
+            bodies.append(self.lifecycleBytes(request))
+            if let receiptRevision {
+                return (200, try JSONSerialization.data(withJSONObject: ["grantId": self.lifecycleGrant, "proposalId": proposalID,
+                    "baseRevision": receiptRevision, "status": "pending"]))
+            }
+            throw URLError(.networkConnectionLost)
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
         let intent = try await service.prepareHelperProposal(grantID: lifecycleGrant, baseRevision: 2, correction: "Keep three wraps for lunch.")
         for _ in 0..<2 { do { _ = try await service.executeHelperProposal(intent); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
         XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
+        revision = 3
+        let current = try await service.currentHelperView(grantID: lifecycleGrant)
+        XCTAssertEqual(current.revision, 3)
+        let restored = try JSONDecoder().decode(HelperProposalIntent.self, from: encoded(intent))
+        XCTAssertEqual(restored.reviewedRevision, 2)
+        receiptRevision = 3
+        do { _ = try await service.executeHelperProposal(restored); XCTFail("Acknowledged a different instruction revision") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        receiptRevision = 2
+        let receipt = try await service.executeHelperProposal(restored)
+        XCTAssertEqual(receipt.baseRevision, 2)
+        XCTAssertEqual(bodies, Array(repeating: intent.bytes, count: 4))
         revoked = true
         do { _ = try await service.executeHelperProposal(intent); XCTFail("Revoked suggestion replay") } catch {}
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(bodies.count, 4)
     }
     func testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys() throws {
         let projection = try HelperProjection(shopLabel: "Pickup", language: "es", items: [.init(label: "Tortillas", amount: nil, unit: nil, action: "Guardar dos.")])

@@ -1,0 +1,92 @@
+{
+  "modernWeb": "fec58e1e4b572c97dc1292cc552710aceca0c369",
+  "modernNative": "cd2cc12da64174dfe6445f15ad07ff3e02fa796e",
+  "modernService": "7449efb7f3526b36b15ad79d6cde4196711cdd2f",
+  "released040": "eae1e721cb08b8d678200a2345f5c3abb18df6c6",
+  "releasedScriptSHA256": "5b60298ff2d903b3baf0cb530df28d07169a98f896793357204260d54b6b87fa",
+  "hardware": "iOS 26.2 simulator, Android 14 Chrome 156 emulator, loopback PostgreSQL server with synthetic test accounts. Android secure-context loopback HTTP, native TLS with temporary local CA.",
+  "nativeChecks": {
+    "iphone-041": {
+      "tests": 1,
+      "runtimeWarnings": 0
+    },
+    "iphone-040": {
+      "tests": 1,
+      "runtimeWarnings": 0
+    },
+    "iphone-041-rights": {
+      "tests": 1,
+      "runtimeWarnings": 0
+    }
+  },
+  "rights": {
+    "androidRevocationClearedPending": true,
+    "androidRestoration": {
+      "oldGrantAbsent": true,
+      "oldQueueEmpty": true,
+      "explicitNewConsent": true,
+      "manualRetryAfterLostReply": false
+    },
+    "nativeRevocationClearedPending": true
+  },
+  "database": {
+    "40": {
+      "receipts": [
+        {
+          "requests": 1,
+          "operations": 1
+        },
+        {
+          "requests": 1,
+          "operations": 1
+        }
+      ],
+      "absent": [
+        "040 could not queue this Android request"
+      ]
+    },
+    "41": {
+      "receipts": [
+        {
+          "requests": 1,
+          "operations": 1
+        },
+        {
+          "requests": 1,
+          "operations": 1
+        },
+        {
+          "requests": 1,
+          "operations": 1
+        },
+        {
+          "requests": 1,
+          "operations": 1
+        }
+      ],
+      "absent": [
+        "Unsent checked on release 040",
+        "Unsent before opening released web",
+        "Old browser offline draft",
+        "Reconnect access ended",
+        "Unsent native after rights loss"
+      ]
+    }
+  },
+  "sameOptedInDevice": true,
+  "legacyQueueConsent": false,
+  "stalePendingRowsAfterReopen": 0,
+  "legacyImmediateOnlineReceived": true,
+  "checkedResultSHA256": "426733ae9cc60f3eddbd929d2dd9b9fe0a2e7ffcd09d52af2e4426fcdddf2fc3",
+  "teardown": {
+    "ownedIPhoneCloneRemoved": true,
+    "localTestCAAndKeysRemoved": true,
+    "readOnlyAndroidOverlayStopped": true,
+    "temporaryDatabasesDropped": [
+      "b07",
+      "b07040"
+    ],
+    "allLocalServicePortsClosed": true,
+    "candidateWorktreeClean": true
+  }
+}

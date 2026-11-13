@@ -1,0 +1,20 @@
+{
+  "status": "running",
+  "baseCommit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "selectors": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+  ],
+  "sourceSHA256": {
+    "ios/UITests/ContextualNavigationUITests.swift": "c59477daa1b60ba20efc8aa93caa52cdf296d65e7698293b96eda11dafbc6045",
+    "ios/UITests/RoomInTheCartUITests.swift": "eed5de8923816ed52b97c02f88171ee0720022c025c0b83e0a6bacab2df4c258"
+  },
+  "conditions": "DEBUG",
+  "defaultTestAllowance": 720,
+  "maximumTestAllowance": 900,
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "derivedData": ".build/ShopEntryNov07/dd",
+  "log": "native.log",
+  "result": "native.xcresult",
+  "execSession": 27945
+}

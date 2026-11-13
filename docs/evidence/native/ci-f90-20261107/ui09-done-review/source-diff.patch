@@ -1,0 +1,46 @@
+diff --git a/ios/UITests/ContextualNavigationUITests.swift b/ios/UITests/ContextualNavigationUITests.swift
+index 2cfdeff..403dfbb 100644
+--- a/ios/UITests/ContextualNavigationUITests.swift
++++ b/ios/UITests/ContextualNavigationUITests.swift
+@@ -609,6 +609,26 @@ import UIKit
+ 
+     func testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof() {
+         launch(reset: true)
++        func assertCurrentPickupBranch() {
++            let branch = app.staticTexts["quoteCurrentBranch"]
++            for _ in 0..<24 {
++                if branch.exists && branch.isHittable {
++                    XCTAssertEqual(branch.label, "Current pickup branch: East branch")
++                    return
++                }
++                // This header is in the first section. A lazy absent row is above
++                // the reviewed result, so search toward the top rather than down.
++                let upward: Bool
++                if branch.exists && !branch.frame.isEmpty {
++                    upward = branch.frame.midY > scrollableArea().midY
++                } else {
++                    upward = false
++                }
++                scrollContent(upward: upward)
++            }
++            XCTAssertTrue(branch.exists && branch.isHittable, "The adopted pickup branch must be visible")
++            XCTAssertEqual(branch.label, "Current pickup branch: East branch")
++        }
+         tap(element("openPickupList"))
+         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+@@ -673,12 +693,12 @@ import UIKit
+         tap(element("dinnerCancelPreview"))
+         XCTAssertFalse(app.staticTexts["Current pickup branch: East branch"].exists)
+         tapQuoteRow("Preview using Market B"); tap(element("dinnerApply"))
+-        assertText("Current pickup branch: East branch")
++        assertCurrentPickupBranch()
+         assertText("This saved comparison uses an earlier pickup revision.")
+         let adoptAgain = app.buttons["Preview using Market B"]
+         reveal(adoptAgain); XCTAssertFalse(adoptAgain.isEnabled)
+         restart(); tap(app.tabBars.buttons["Dinners"]); tap(app.buttons["Compare two store trips"])
+-        assertText("Current pickup branch: East branch")
++        assertCurrentPickupBranch()
+         tap(app.buttons["Market A and Market B"])
+         assertText("This saved comparison uses an earlier pickup revision.")
+         capture("S27-reopened-adopted-branch-and-dated-comparison")

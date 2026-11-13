@@ -1,0 +1,26 @@
+{
+  "reviewedAtUTC": "2026-11-08T10:49:30.476410+00:00",
+  "status": "no remaining source-review blocker; native visual qualification pending",
+  "sourceSHA256": {
+    "ios/Features/Household/SharedCookHistoryView.swift": "5591e7987cb884ab6c873fde4d4644c49bb49a68d6bbd942f6a0b140ad3fed81",
+    "ios/UITests/SharedDeliveryUITests.swift": "fb8b1bd2015bf314dc700257cc8bee615345ca95dd1c0cda557dc0d18cf169a1"
+  },
+  "themeHelperSHA256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+  "whitespaceInsensitiveDiffSHA256": "085d70a8e94d1df37252a64fb67198f056c60f608cfa816ca6b99181acc84900",
+  "missingCaptureHelperResolved": true,
+  "reviewedChanges": [
+    "History retains List, existing content/order/task/refresh/authority checks; Group adds Theme.surface row backgrounds and workingSurface adds canvas/ink.",
+    "Saved-copy Form uses existing WorkingForm, whose body preserves native Form and applies the same semantic colors. Existing recipient/correction state, actions and modifiers unchanged.",
+    "Exact fullCorrection identifier accepts native TextField or TextView; explicit type assertion and exact original value equality remain; no retyping, extra input, timeout or scrolling-budget change.",
+    "Private capture helper creates app screenshot attachment, names it, sets keepAlways and adds it. Three call sites provide five captures because history/saved-copy helper runs twice. No business mutations or added input in capture."
+  ],
+  "diffCheckExitCode": 0,
+  "sourceUnchangedDuringReview": true,
+  "nativeActionsPerformed": false,
+  "testsOrBuildPerformed": false,
+  "limitations": [
+    "Source review does not establish rendered colors, geometry or accessibility behavior on iOS17/light or iOS26.2/dark.",
+    "Screenshot calls add test execution overhead; existing assertions and budgets remain unchanged.",
+    "Fixture root tint remains distinct from production inherited tint; this change addresses row/canvas/ink styling."
+  ]
+}

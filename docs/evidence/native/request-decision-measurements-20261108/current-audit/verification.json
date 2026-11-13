@@ -1,0 +1,15 @@
+{
+  "nativeExit": 65,
+  "strictExit": 1,
+  "expectedCount": 1,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "auditConsoleIssueCount": 41,
+  "auditConsoleCategories": {
+    "Contrast failed": 4,
+    "Dynamic Type font sizes are partially unsupported": 29,
+    "Dynamic Type font sizes are unsupported": 4,
+    "Text clipped": 4
+  },
+  "inspectedAtUTC": "2026-11-08T10:51:40.893032+00:00"
+}

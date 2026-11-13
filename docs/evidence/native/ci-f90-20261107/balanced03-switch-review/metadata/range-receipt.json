@@ -1,0 +1,114 @@
+{
+  "artifactID": 13599104299,
+  "transferredBytes": 528332,
+  "requests": [
+    {
+      "file": "0001.bin",
+      "start": 54480651,
+      "end": 54480672,
+      "bytes": 22,
+      "sha256": "56abccd2a63b57c92aa448e9085c9bbe35fae330729f0532674918587b32af2c"
+    },
+    {
+      "file": "0002.bin",
+      "start": 54480631,
+      "end": 54480650,
+      "bytes": 20,
+      "sha256": "fc53253275d1717032d0ede4b9b1630c1f46396a9e33ec8785d6fba54a4c0365"
+    },
+    {
+      "file": "0003.bin",
+      "start": 54439952,
+      "end": 54480650,
+      "bytes": 40699,
+      "sha256": "93ad972c7be3e0963acd9577d566b38be7ba9f1fe46a09ec3a6cc704ab70854c"
+    },
+    {
+      "file": "0004.bin",
+      "start": 53922545,
+      "end": 53922574,
+      "bytes": 30,
+      "sha256": "a850cfa1fc6619774151374b513a53538fc003cc50a2288e11a09731a1c49dc1"
+    },
+    {
+      "file": "0005.bin",
+      "start": 53922575,
+      "end": 53922599,
+      "bytes": 25,
+      "sha256": "7133c34e82aaeb022464acde480e4dcc37b97661da8ef86f5d73f5d0c4ba321f"
+    },
+    {
+      "file": "0006.bin",
+      "start": 53922600,
+      "end": 53923003,
+      "bytes": 404,
+      "sha256": "b092ce99187af1bae0ef8981aa763ec375571350be4ebec7d79baadc91432ec4"
+    },
+    {
+      "file": "0007.bin",
+      "start": 53923020,
+      "end": 53923049,
+      "bytes": 30,
+      "sha256": "b3e5008192a84377b7f6fc989b8b8dad5e65cf44afe6522c692b87cb831efe4a"
+    },
+    {
+      "file": "0008.bin",
+      "start": 53923050,
+      "end": 53923080,
+      "bytes": 31,
+      "sha256": "b89dbdb7f382110980002d8c8500061e438154a92545c58e4c580e0358d05a11"
+    },
+    {
+      "file": "0009.bin",
+      "start": 53923081,
+      "end": 54407609,
+      "bytes": 484529,
+      "sha256": "17bc8026d801554f77c528ac2a856002f81b09b684425a146a26f9d17d1e8a4e"
+    },
+    {
+      "file": "0010.bin",
+      "start": 18473168,
+      "end": 18473197,
+      "bytes": 30,
+      "sha256": "e1ba9321d45d1098e80fe192ed681df7b7a9c1437b5e436bf3a91a27738f95ea"
+    },
+    {
+      "file": "0011.bin",
+      "start": 18473198,
+      "end": 18473312,
+      "bytes": 115,
+      "sha256": "229fd59f048c7235a9614c0daeb24cd989080249228aecc15e62b584f354b0f6"
+    },
+    {
+      "file": "0012.bin",
+      "start": 18473313,
+      "end": 18475294,
+      "bytes": 1982,
+      "sha256": "6655681ad25fede2bb13b3aa7901bfe635aa57c927b128fb6faf2140815d2de2"
+    },
+    {
+      "file": "0013.bin",
+      "start": 53900922,
+      "end": 53900951,
+      "bytes": 30,
+      "sha256": "e1ba9321d45d1098e80fe192ed681df7b7a9c1437b5e436bf3a91a27738f95ea"
+    },
+    {
+      "file": "0014.bin",
+      "start": 53900952,
+      "end": 53901066,
+      "bytes": 115,
+      "sha256": "55e06ffc4801df246cab39c3e2b9ccb07e7c85adb48da58b333314313e5ed648"
+    },
+    {
+      "file": "0015.bin",
+      "start": 53901067,
+      "end": 53901336,
+      "bytes": 270,
+      "sha256": "5cc076dd52c4e7e7aeb936cd04c2081f348610ce287f94f01315adb74ecdb3d5"
+    }
+  ],
+  "fullArchiveDownloaded": false,
+  "fullArchiveAPIHashVerified": false,
+  "scope": "Only Info.plist/SQLite/root metadata; no media or diagnostics payload."
+}

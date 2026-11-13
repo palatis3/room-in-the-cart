@@ -1,0 +1,161 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "attempt": 1,
+  "results": {
+    "iphone-performance-launch-1": {
+      "artifact": "iphone-performance-launch-1",
+      "summarySHA256": "6d5d0bd5d63c6ecb8fe8c58e80b7d6a49ab34d4a1bf4ff6acb1bfc4aa5f3b5e3",
+      "rawLogSHA256": "92c16e79173f2cf61525fb809bc5b955f7b592da34594bbddd9bd836058dedc3",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "runtimeExpected": true,
+      "selectedCount": 1,
+      "startCount": 1,
+      "exactStartOrder": [
+        "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance"
+      ],
+      "selectorFileOrderMatched": true,
+      "selectorOrderRequiredByAudit": true,
+      "serialOverlaps": [],
+      "rawLifecycleFailures": [],
+      "implicitRunnerRestartLines": [],
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+          "startLine": 18,
+          "synchronizationDiagnostics": [],
+          "completion": "passed (72.178 seconds).",
+          "endLine": 71,
+          "durationSeconds": 72.178
+        }
+      ],
+      "outsideCaseSynchronizationDiagnostics": [],
+      "completeExpectedLifecycle": true,
+      "synchronizationDiagnosticCount": 0
+    },
+    "iphone-performance-rendered-1": {
+      "artifact": "iphone-performance-rendered-1",
+      "summarySHA256": "c45e64c37821b338d31fef2f8943b3113d7aeede420a73a9f7f9f8eca1432bf1",
+      "rawLogSHA256": "7cf481367c7b38e10b20deb01985d62ed13e709760be3f8744c9dd5bc4548891",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "runtimeExpected": true,
+      "selectedCount": 1,
+      "startCount": 1,
+      "exactStartOrder": [
+        "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup"
+      ],
+      "selectorFileOrderMatched": true,
+      "selectorOrderRequiredByAudit": true,
+      "serialOverlaps": [],
+      "rawLifecycleFailures": [],
+      "implicitRunnerRestartLines": [],
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+          "startLine": 19,
+          "synchronizationDiagnostics": [],
+          "completion": "passed (537.762 seconds).",
+          "endLine": 1426,
+          "durationSeconds": 537.762
+        }
+      ],
+      "outsideCaseSynchronizationDiagnostics": [],
+      "completeExpectedLifecycle": true,
+      "synchronizationDiagnosticCount": 0
+    },
+    "iphone-performance-scroll-1": {
+      "artifact": "iphone-performance-scroll-1",
+      "summarySHA256": "5117f5302902c0161cd43e8341ab38f9b76f93f018ce3da0f841af191eab140a",
+      "rawLogSHA256": "91edf3eb96280eae057af1c4672873dc4a6f257736827a9cb121f94d4668192d",
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "runtimeExpected": true,
+      "selectedCount": 1,
+      "startCount": 1,
+      "exactStartOrder": [
+        "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"
+      ],
+      "selectorFileOrderMatched": true,
+      "selectorOrderRequiredByAudit": true,
+      "serialOverlaps": [],
+      "rawLifecycleFailures": [],
+      "implicitRunnerRestartLines": [],
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+          "startLine": 18,
+          "synchronizationDiagnostics": [],
+          "completion": "passed (330.538 seconds).",
+          "endLine": 534,
+          "durationSeconds": 330.538
+        }
+      ],
+      "outsideCaseSynchronizationDiagnostics": [],
+      "completeExpectedLifecycle": true,
+      "synchronizationDiagnosticCount": 0
+    }
+  },
+  "expectedResultGroups": 3,
+  "scope": "Exact runtime and raw-log lifecycle from preserved original artifacts; strict warning verification recorded separately. Model test execution order is recorded, not required to equal the selector-file order.",
+  "complete": true,
+  "allReportedExpected": true,
+  "allReportedLifecyclesPassed": true
+}

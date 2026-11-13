@@ -1,0 +1,79 @@
+{
+  "baseCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "candidateSourceSHA256": "15c0da4d1a433ef45d593160cb21db3cf1f96d09dae00dee00eb88fcc752170b",
+  "patchSHA256": "e876a29dd109387330b5c5e069bc9350b79ffd2691169075d0afd7a612b93d30",
+  "originalHostedResults": {
+    "passed": 3,
+    "failed": 2,
+    "unallowedWarnings": 6,
+    "artifact": 13383693888
+  },
+  "localResult": {
+    "passed": 5,
+    "failed": 0,
+    "xcodebuildExit": 0,
+    "strictGateExit": 1,
+    "executionLogFailures": [],
+    "runtimeWarnings": {
+      "status": "unexpected-warnings",
+      "summaryWarningCount": 3,
+      "runtimeWarningCount": 3,
+      "examinedTestCount": 5,
+      "detailExportCount": 5,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 0
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 0
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 0
+        }
+      ]
+    },
+    "durationsSeconds": {
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 96.78157603740692,
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 457.29226899147034,
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 257.33303701877594,
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 72.77970099449158,
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 263.85203099250793
+    }
+  },
+  "evidenceSHA256": {
+    "Tests.log": "6b223f770d837cca53979ca60316a878b0e0b58b52dc391441e45eda880efafb",
+    "test-summary.json": "4551bcc277d8915036ce368b1547cb3808c67c108f9de33fe318c7b8da8e68e9",
+    "test-details.json": "5f8506eddf7cf0e5b57e8e76b1589d40f0d977ff95d4e02e00aca3125e4c05ea",
+    "test-runtime-warnings.json": "a1f9555364bb55df7cc297e2b469e801d021dd36c5745e0b8cb5f0e7bfb54f10",
+    "release-state.json": "8f6eec95975d433707742dae9e1cf5399756050ca93fd4512cf005239141bc71"
+  },
+  "laneRelease": {
+    "verified_at_utc": "2026-11-05T03:49:19.668579+00:00",
+    "devices": [
+      {
+        "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+        "name": "iPhone 17",
+        "state": "Booted"
+      },
+      {
+        "udid": "22335EC1-DDDC-4E9E-9D0B-68D000AE174B",
+        "name": "S27QuotesReview-k8lo6n44",
+        "state": "Shutdown"
+      }
+    ],
+    "active_owned_native_processes": [],
+    "source_hash_unchanged": true,
+    "patch_hash_unchanged": true,
+    "native_lane_released": true
+  },
+  "scope": "Test interaction correction only: exact bilingual keyboard card, exact field values, fresh confirmation dialog, retry-cleared notice and no extra writes. The complete five-case assertion run passed once. Warning gate remains failed; no allowance changed. Local Xcode27.1/iOS26.2 build23C52 differs from hosted26.3/23C54; fresh hosted verification is required."
+}

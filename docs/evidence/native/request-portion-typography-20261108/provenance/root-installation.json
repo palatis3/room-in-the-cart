@@ -1,0 +1,12 @@
+{
+  "installedAtUTC": "2026-11-08T17:55:08.878846+00:00",
+  "status": "reviewed two-file delta installed canonical",
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "verifiedInputs": 556,
+  "changedPaths": [
+    "ios/Features/Household/HouseholdRequestMealContext.swift",
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "productChange": "Portion fact caption to body",
+  "executionManifestSHA256": "717ba4aed95d9e6354d5c40f10c599487f6ec9c667dfd463b143dfaafbe9e299"
+}

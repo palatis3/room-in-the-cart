@@ -18,6 +18,16 @@ func dinnerDraftBinding<Element: Identifiable>(_ snapshot: Element, in collectio
     })
 }
 
+// Own the full Form row hit area while keeping the semantic label colors.
+private struct DinnerIdeaAcceptanceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PrimaryActionLabel(label: configuration.label, isPressed: configuration.isPressed)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .contentShape(Rectangle())
+    }
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -39,11 +49,13 @@ struct DinnerTemplateEditor: View {
     @State private var completed = false
     @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
-    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
+    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil, servingsUnknown: Bool = false) {
         self.model = model; self.purpose = purpose; originalIdea = idea
         _originalIdentity = State(initialValue: model.editorIdentity)
         _supplyEvidence = State(initialValue: idea?.supplyEvidence ?? [])
-        _draft = State(initialValue: DinnerTemplateDraft(idea?.template ?? initial))
+        var draft = DinnerTemplateDraft(idea?.template ?? initial)
+        if servingsUnknown { draft.servings = "" }
+        _draft = State(initialValue: draft)
         _acceptedID = State(initialValue: model.state.acceptedDinners.first(where: { $0.sourceIdeaID == idea?.id && idea != nil })?.id ?? UUID())
         _yieldConfirmed = State(initialValue: idea?.yieldConfirmed ?? false)
         _availabilityConfirmed = State(initialValue: idea?.availabilityConfirmed ?? false)
@@ -57,11 +69,35 @@ struct DinnerTemplateEditor: View {
         }
     }
     private var editor: some View {
-        Form {
+        Group {
+            if purpose == .idea {
+                VStack(spacing: 0) {
+                    if inputFocus != nil { DinnerFocusedDoneBar { inputFocus = nil } }
+                    editorForm
+                }
+            } else {
+                editorForm
+            }
+        }
+        .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
+        .toolbar {
+            if purpose == .idea, reviewed != nil, reviewedIdea != nil, !completed, inputFocus == nil {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(dinnerText("Edit"), action: continueEditing)
+                        .accessibilityIdentifier("dinnerReviewEdit")
+                }
+            }
+        }
+        .dinnerAccess(model)
+        .keyboardDoneAction(visible: purpose != .idea && inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
+        .dinnerApplyPresentation(model, presented: $showPreview)
+    }
+    private var editorForm: some View {
+        WorkingForm {
             if completed {
                 Section {
                     Text(dinnerText("Dinner saved. Choose it separately to add grocery needs."))
-                    Button(dinnerText("Done")) { dismiss() }
+                    Button(dinnerText("Done")) { dismiss() }.buttonStyle(PrimaryAction())
                 }
             } else if let reviewed {
                 Section(dinnerText("Review dinner")) {
@@ -84,14 +120,21 @@ struct DinnerTemplateEditor: View {
                             if let value { supplyEvidence.append(value) }
                             reviewedIdea?.supplyEvidence = supplyEvidence
                         }
-                        Button(dinnerText("Accept idea")) { Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) } }
-                            .disabled(!review.canAccept || !model.editable).accessibilityIdentifier("dinnerAcceptIdea")
-                        Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }.disabled(!model.editable)
+                        Button(dinnerText("Accept idea")) {
+                            Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) }
+                        }
+                        .buttonStyle(DinnerIdeaAcceptanceButtonStyle())
+                        .listRowInsets(EdgeInsets())
+                        .disabled(!review.canAccept || !model.editable)
+                        .accessibilityIdentifier("dinnerAcceptIdea")
+                        Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }
+                            .foregroundStyle(Theme.action).disabled(!model.editable)
                     } else {
                         Button(dinnerText("Save accepted dinner")) { Task { completed = await model.accept(reviewed, id: acceptedID, fallback: fallback) } }
-                            .disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
+                            .buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
                     }
-                    Button(dinnerText("Continue editing")) { self.reviewed = nil; reviewedIdea = nil }
+                    Button(dinnerText("Continue editing"), action: continueEditing)
+                        .foregroundStyle(Theme.action)
                 }
             } else {
                 DinnerTemplateFields(draft: $draft, focus: $inputFocus)
@@ -114,8 +157,9 @@ struct DinnerTemplateEditor: View {
                         if originalIdea?.catalogVersion == "reviewed-catalog-v1" {
                             Text(dinnerText("Suggested by Room in the Cart"))
                         }
-                        TextField(dinnerText("Assumptions, one per line"), text: $assumptions, axis: .vertical)
+                        workingTextField(dinnerText("Assumptions, one per line"), text: $assumptions, axis: .vertical)
                             .focused($inputFocus, equals: "assumptions")
+                            .accessibilityLabel(dinnerText("Assumptions, one per line"))
                         Toggle(dinnerText("Usable yield reviewed"), isOn: $yieldConfirmed)
                         Toggle(dinnerText("Availability reviewed"), isOn: $availabilityConfirmed)
                         if let originalIdea, !originalIdea.hardExclusions.isEmpty {
@@ -126,14 +170,18 @@ struct DinnerTemplateEditor: View {
                 }
                 if !draft.title.isEmpty {
                     NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(initialDish: draft.title) }
+                        .foregroundStyle(Theme.action)
                 }
-                Section { Button(dinnerText("Review"), action: review).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
+                Section { Button(dinnerText("Review"), action: review).buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
             }
             DinnerFeedback(model: model)
-        }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
-            .keyboardDoneAction(visible: inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
-            .dinnerApplyPresentation(model, presented: $showPreview)
+        }
     }
+    private func continueEditing() {
+        reviewed = nil
+        reviewedIdea = nil
+    }
+
     private func review() {
         do {
             let template = try draft.template(validate: purpose != .idea)
@@ -151,7 +199,11 @@ struct DinnerTemplateEditor: View {
                 }
                 idea.supplyEvidence = supplyEvidence.isEmpty ? nil : supplyEvidence
                 idea.assumptions = DinnerEntry.list(assumptions); reviewedIdea = idea; reviewed = template
-            } else { reviewed = template }
+                model.clearErrorAfterSuccessfulReview()
+            } else {
+                reviewed = template
+                model.clearErrorAfterSuccessfulReview()
+            }
         } catch { model.report(error) }
     }
 }
@@ -160,13 +212,22 @@ struct DinnerTemplateFields: View {
     let focus: FocusState<String?>.Binding
     var body: some View {
         Section(dinnerText("Dinner")) {
-            TextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
-            TextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
-            TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
-            TextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
-            TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
-            TextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")
-            TextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
+            workingTextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
+                .accessibilityLabel(dinnerText("Dinner name"))
+            workingTextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
+                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .accessibilityLabel(dinnerText("Total servings"))
+            workingTextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
+                .accessibilityLabel(dinnerText("Notes"))
+            workingTextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
+                .accessibilityLabel(dinnerText("Source URL, optional"))
+            workingTextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
+                .accessibilityLabel(dinnerText("Hard exclusions, one per line"))
+            workingTextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")
+                .keyboardType(.numberPad).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .accessibilityLabel(dinnerText("Remaining lead time in minutes, optional"))
+            workingTextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
+                .accessibilityLabel(dinnerText("Completed steps, one per line"))
         }
         Section(dinnerText("Ingredients")) {
             Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
@@ -174,31 +235,53 @@ struct DinnerTemplateFields: View {
                 let row = dinnerDraftBinding(ingredient, in: $draft.ingredients)
                 let prefix = "ingredient.\(ingredient.id)."
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Ingredient name"), text: row.name).focused(focus, equals: prefix + "name")
-                    TextField(dinnerText("Amount, optional"), text: row.amount).focused(focus, equals: prefix + "amount")
+                    ingredientField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
+                    ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                     DinnerUnitPicker(unit: row.unit)
-                    TextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical).focused(focus, equals: prefix + "notes")
-                    TextField(dinnerText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
-                        .focused(focus, equals: prefix + "exclusions")
-                    Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
-                        .buttonStyle(.borderless)
+                    ingredientField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
+                    ingredientField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
+                    Button(role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } } label: {
+                        Text(dinnerText("Remove ingredient"))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless).foregroundStyle(Theme.error)
                 }.padding(.vertical, 6)
             }
-            Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.disabled(draft.ingredients.count >= 200)
+            Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.foregroundStyle(Theme.action).disabled(draft.ingredients.count >= 200)
         }
         Section(dinnerText("Serving groups")) {
             Text(dinnerText("Name each group explicitly. Protected groups keep their reviewed portions when guests change."))
             ForEach(draft.groups) { group in
                 let row = dinnerDraftBinding(group, in: $draft.groups)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Group name"), text: row.name).focused(focus, equals: "group.\(group.id).name")
-                    TextField(dinnerText("Group servings"), text: row.servings).focused(focus, equals: "group.\(group.id).servings")
+                    workingTextField(dinnerText("Group name"), text: row.name).focused(focus, equals: "group.\(group.id).name")
+                        .accessibilityLabel(dinnerText("Group name"))
+                    workingTextField(dinnerText("Group servings"), text: row.servings).focused(focus, equals: "group.\(group.id).servings")
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .accessibilityLabel(dinnerText("Group servings"))
                     Toggle(dinnerText("Protected group"), isOn: row.isProtected)
                     Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.borderless).foregroundStyle(Theme.error)
                 }.padding(.vertical, 6)
             }
-            Button(dinnerText("Add serving group")) { draft.groups.append(DinnerGroupDraft()) }.disabled(draft.groups.count >= 100)
+            Button(dinnerText("Add serving group")) { draft.groups.append(DinnerGroupDraft()) }.foregroundStyle(Theme.action).disabled(draft.groups.count >= 100)
+        }
+    }
+
+    private func ingredientField(_ title: String, value: Binding<String>, key: String, axis: Axis = .vertical) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Keep the purpose visible when a value replaces the native prompt.
+            // The editable field already exposes this same accessible name.
+            Text(title).font(.body).fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
+            TextField(title, text: value, prompt: Text(""), axis: axis)
+                .fixedSize(horizontal: false, vertical: true)
+                .focused(focus, equals: key)
+                .accessibilityLabel(title).accessibilityIdentifier(key)
         }
     }
 }
@@ -210,48 +293,54 @@ struct DinnerUnitPicker: View {
 }
 struct DinnerLibraryView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @Environment(\.pickupLedger) private var liveLedger
     @State private var showPreview = false
     var body: some View {
         List {
-            Section {
-                Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
-                NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
-            }
-            Section(dinnerText("Accepted dinners")) {
-                if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
-                ForEach(model.state.acceptedDinners) { dinner in
-                    let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(dinner.template.title).font(.headline)
-                        Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
-                        if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
-                        if isFreeReusable { Text(dinnerText("Your Free reusable dinner")) }
-                    }.padding(.vertical, 6)
-                    if let evidence = dinner.template.sourceEvidence {
-                        NavigationLink(captureText("Original recipe source")) {
-                            RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence)
+            Group {
+                Section {
+                    Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
+                    NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
+                }
+                if let liveLedger, model.store === liveLedger {
+                    Section { RecordsRecoveryLink(accessibilityID: "dinner.recipeFiles", dinnerModel: model) }
+                }
+                Section(dinnerText("Accepted dinners")) {
+                    if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
+                    ForEach(model.state.acceptedDinners) { dinner in
+                        let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(dinner.template.title).font(.headline)
+                            Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
+                            if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
+                            if isFreeReusable { Text(dinnerText("Your Free reusable dinner")) }
+                        }.padding(.vertical, 6)
+                        if let evidence = dinner.template.sourceEvidence {
+                            NavigationLink(captureText("Original recipe source")) {
+                                RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence)
+                            }
+                        }
+                        if !isFreeReusable {
+                            Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
+                        }
+                        Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
+                            .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
+                        NavigationLink(dinnerText("Review as a new dinner version")) {
+                            DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
                         }
                     }
-                    if !isFreeReusable {
-                        Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
-                    }
-                    Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
-                        .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
-                    NavigationLink(dinnerText("Review as a new dinner version")) {
-                        DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
+                }
+                if !model.workspace.mealTemplates.isEmpty {
+                    Section(dinnerText("Earlier reusable dinners")) {
+                        Text(dinnerText("Review an earlier template before adding it to the accepted library."))
+                        ForEach(model.workspace.mealTemplates) { template in
+                            NavigationLink(template.title) { DinnerTemplateEditor(model: model, purpose: .reusable, initial: template) }
+                        }
                     }
                 }
-            }
-            if !model.workspace.mealTemplates.isEmpty {
-                Section(dinnerText("Earlier reusable dinners")) {
-                    Text(dinnerText("Review an earlier template before adding it to the accepted library."))
-                    ForEach(model.workspace.mealTemplates) { template in
-                        NavigationLink(template.title) { DinnerTemplateEditor(model: model, purpose: .reusable, initial: template) }
-                    }
-                }
-            }
-            DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Dinner library")).dinnerAccess(model).disabled(!model.editable)
+                DinnerFeedback(model: model)
+            }.listRowBackground(Theme.surface)
+        }.workingSurface().navigationTitle(dinnerText("Dinner library")).dinnerAccess(model).disabled(!model.editable)
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
@@ -262,40 +351,67 @@ struct DinnerIdeasView: View {
     @State private var generated: DinnerIdeaDraft?
     var body: some View {
         List {
-            Section {
-                Text(dinnerText("Start with a manual idea or a supplied pattern. Review and accept it before choosing it for your pickup."))
-                NavigationLink(dinnerText("Write a dinner idea")) { DinnerTemplateEditor(model: model, purpose: .idea) }
-            }
-            if !model.ideaCatalog.isEmpty {
-                Section(dinnerText("Room in the Cart meal patterns")) {
-                    let patterns = model.ideaCatalog.sorted { $0.id.uuidString < $1.id.uuidString }
-                    Picker(dinnerText("Starting meal"), selection: $patternIndex) {
-                        ForEach(Array(patterns.enumerated()), id: \.element.id) { index, pattern in
-                            Text(pattern.title).tag(index)
+            Group {
+                Section {
+                    Text(dinnerText("Start with a manual idea or a supplied pattern. Review and accept it before choosing it for your pickup."))
+                    NavigationLink(dinnerText("Write a dinner idea")) { DinnerTemplateEditor(model: model, purpose: .idea) }
+                }
+                if !model.ideaCatalog.isEmpty {
+                    Section(dinnerText("Room in the Cart meal patterns")) {
+                        let patterns = model.ideaCatalog.sorted { $0.id.uuidString < $1.id.uuidString }
+                        Picker(dinnerText("Starting meal"), selection: $patternIndex) {
+                            ForEach(Array(patterns.enumerated()), id: \.element.id) { index, pattern in
+                                Text(pattern.title).tag(index)
+                            }
+                        }
+                        workingTextField(dinnerText("Hard exclusions, one per line"), text: $exclusions, axis: .vertical)
+                        Button(dinnerText("Prepare editable idea")) {
+                            do {
+                                generated = try model.newIdea(seed: UInt64(patternIndex), exclusions: DinnerEntry.list(exclusions))
+                            } catch { model.report(error) }
+                        }
+                        if let generated {
+                            Text(generated.template.title)
+                            NavigationLink(dinnerText("Review prepared idea")) { DinnerTemplateEditor(model: model, purpose: .idea, idea: generated) }
                         }
                     }
-                    TextField(dinnerText("Hard exclusions, one per line"), text: $exclusions, axis: .vertical)
-                    Button(dinnerText("Prepare editable idea")) {
-                        do {
-                            generated = try model.newIdea(seed: UInt64(patternIndex), exclusions: DinnerEntry.list(exclusions))
-                        } catch { model.report(error) }
-                    }
-                    if let generated {
-                        Text(generated.template.title)
-                        NavigationLink(dinnerText("Review prepared idea")) { DinnerTemplateEditor(model: model, purpose: .idea, idea: generated) }
+                }
+                Section(dinnerText("Saved idea drafts")) {
+                    if model.state.ideas.isEmpty { Text(dinnerText("No saved idea drafts.")) }
+                    ForEach(model.state.ideas) { idea in
+                        NavigationLink(idea.template.title) { DinnerTemplateEditor(model: model, purpose: .idea, idea: idea) }
                     }
                 }
-            }
-            Section(dinnerText("Saved idea drafts")) {
-                if model.state.ideas.isEmpty { Text(dinnerText("No saved idea drafts.")) }
-                ForEach(model.state.ideas) { idea in
-                    NavigationLink(idea.template.title) { DinnerTemplateEditor(model: model, purpose: .idea, idea: idea) }
-                }
-            }
-            DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Dinner ideas"))
+                DinnerFeedback(model: model)
+            }.listRowBackground(Theme.surface)
+        }.workingSurface().navigationTitle(dinnerText("Dinner ideas"))
             .onChange(of: patternIndex) { _,_ in generated = nil }
             .onChange(of: exclusions) { _,_ in generated = nil }
             .dinnerAccess(model).disabled(!model.editable)
+    }
+}
+
+/// A form sibling gives Done its own rectangular target, clear of navigation and keyboard chrome.
+struct DinnerFocusedDoneBar: View {
+    let dismissKeyboard: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer()
+            Button(action: dismissKeyboard) {
+                Text(dinnerText("Done"))
+                    .font(.body.weight(.semibold))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Theme.action)
+            .accessibilityIdentifier("dinnerFocusedKeyboardDone")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Theme.canvas, ignoresSafeAreaEdges: [])
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dinnerFocusedKeyboardDoneBar")
     }
 }

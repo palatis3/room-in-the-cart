@@ -1,0 +1,22 @@
+{
+  "oldCommit": "02f9b872a9bfe919039cbd7f8117f1faf5983396",
+  "newCommit": "336d5b51e725f0f7b9c29d9b1a39c3e98b5dc496",
+  "oldAndCurrentRuntimeSourcesMatchGit": true,
+  "preservedIsolatedSourceRoot": "/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-rollback042-ejy49_sg",
+  "node": "22.23.4",
+  "postgres": "bundled17",
+  "swiftProbes": 6,
+  "passedBehaviorChecks": 21,
+  "oldWorkerRealErasureTests": {
+    "passed": 2,
+    "skipped": 0
+  },
+  "applicationRollbackAfter042Use": "not functionally safe: old service omits amendment delivery identities, rejects new registrations and closed corrections, and cannot read/retry amendments",
+  "schemaCompatibility": "041 service starts and operates on042 before amendments; existing snapshots and finance preserved during exercised old-service writes; old migration runner retains42 registry entries",
+  "mixedClientLimit": "Unmodified041 Swift client rejects complete202-line delivery projection from new service; old service response succeeds while omitting201 historical identities",
+  "maintenanceFinding": "No general application read/write suspension control exists. Privacy flags are not an outage gate. Proposed server/edge503 gate must protect reads and writes independent of client and direct deployment routes.",
+  "recommendation": "Prepare042 staged upgrade with explicit client compatibility and server-side outage/forward-repair plan; do not approve ordinary041 serving rollback after feature use",
+  "initialFailure": "Initial harness compared JSON strings for cached receipts; property ordering differs. Changed to structural strict deep equality, preserved failure log, restarted on fresh database.",
+  "canonicalImplementationEdits": false,
+  "liveChanges": false
+}

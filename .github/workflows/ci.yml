@@ -1,22 +1,37 @@
 name: Build and test
+run-name: Build and test · ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic (all models + 2 original UI journeys)' || 'full suite' }}
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      ios_scope:
+        description: Full suite, or a manual Dinner diagnostic that cannot qualify release
+        type: choice
+        options: [full, dinner]
+        default: full
+  workflow_call:
+    inputs:
+      require_release_metadata:
+        description: Reject missing production support, policy and Apple product metadata
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: core-ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'dinner-diagnostic' || 'full' }}
   cancel-in-progress: true
 jobs:
   typescript:
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         package: [web, service]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -25,6 +40,13 @@ jobs:
         working-directory: ${{ matrix.package }}
       - run: npm test
         working-directory: ${{ matrix.package }}
+      - name: Check contributor outbox and history privacy in Chrome
+        if: matrix.package == 'web'
+        timeout-minutes: 2
+        env:
+          DEBUG: pw:browser
+        run: npm run test:browser
+        working-directory: web
   service-postgres:
     runs-on: ubuntu-24.04
     services:
@@ -46,9 +68,22 @@ jobs:
       TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_test
       BILLING_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
       BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
+      RITC_TEST_PG_BIN: /usr/lib/postgresql/17/bin
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install PostgreSQL 17 tools for the backup and restore tests
+        timeout-minutes: 5
+        run: |
+          # Match the service version without refreshing a moving PGDG package index.
+          package=postgresql-client-17_17.11-1.pgdg24.04+2_amd64.deb
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://apt-archive.postgresql.org/pub/repos/apt/pool/main/p/postgresql-17/$package" --output "$package"
+          echo "b3b071b67a814a382516d6f6241b529c52f909672457e2f48083acce047b634f  $package" | sha256sum -c -
+          sudo apt-get install --yes --no-install-recommends "./$package"
+          "$RITC_TEST_PG_BIN/pg_dump" --version
+          "$RITC_TEST_PG_BIN/pg_restore" --version
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -81,7 +116,8 @@ jobs:
           CREATE ROLE ritc_guardian_combined_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
           GRANT ritc_guardian_verifier, ritc_worker TO ritc_guardian_combined_worker;
           SQL
-      - run: npm test && npm run test:integration
+      - name: Run PostgreSQL integration, billing and browser retry tests
+        run: npm run test:integration
         working-directory: service
         env:
           RITC_TEST_WEB_WIRE: "1"
@@ -92,174 +128,605 @@ jobs:
           OPERATIONS_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_operations
           OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
           TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_operations
-  ios:
-    runs-on: macos-15-intel
-    timeout-minutes: 100
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-    outputs:
-      test_products_artifact: ${{ steps.upload_ios_products.outputs['artifact-id'] }}
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Record toolchain
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate workflow syntax and expression references
+        shell: bash
         run: |
-          xcodebuild -version
-          swift --version
-          python3 --version
-      - name: Check generated sources
+          yaml_env="$RUNNER_TEMP/ci-yaml"
+          python3 -m venv "$yaml_env"
+          "$yaml_env/bin/python" -m pip install --disable-pip-version-check --no-cache-dir \
+            --no-deps --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
+          echo "$yaml_env/bin" >> "$GITHUB_PATH"
+          lint_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$lint_dir"
+          curl --fail --silent --show-error --location \
+            --retry 3 --retry-max-time 90 --connect-timeout 10 --max-time 30 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$lint_dir/actionlint.tar.gz"
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
+            | (cd "$lint_dir" && sha256sum --check)
+          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
+          "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
+            --report .build/workflow-lint.json
+      - name: Verify the pinned Node release is supported and security-current
+        timeout-minutes: 1
+        run: python3 scripts/check_node_runtime.py
+      - name: Validate generated files, localization and CI test selection
         run: |
           python3 scripts/generate_theme.py --check
           python3 scripts/check_localization.py
-          python3 scripts/test_check_localization.py
-          python3 scripts/test_app_configuration.py
           python3 scripts/generate_xcode_project.py --check
-      - name: Swift package tests
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          bash -n scripts/run_ios_test_shard.sh
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        id: foundation-python
+        with:
+          python-version: '3.13'
+          update-environment: false
+      - name: Verify the Foundation 2.1 product contracts and reference scenarios
+        working-directory: docs/product/foundation-gen2.1
+        env:
+          FOUNDATION_PYTHON: ${{ steps.foundation-python.outputs.python-path }}
+        run: '"$FOUNDATION_PYTHON" -B verify.py'
+  swift-packages:
+    needs: source-checks
+    concurrency:
+      group: ritc-macos-slot-0
+      queue: max
+      cancel-in-progress: false
+    runs-on: xcode-27
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
+      - name: Test Swift packages and collect coverage
         run: |
+          set -o pipefail
+          mkdir -p .build/package-results
           for manifest in ios/Packages/*/Package.swift; do
-            swift test --package-path "$(dirname "$manifest")"
+            package="$(dirname "$manifest")"
+            name="$(basename "$package")"
+            swift test --package-path "$package" --enable-code-coverage 2>&1 | tee ".build/package-results/$name.log"
+            swift test --package-path "$package" list --skip-build > ".build/package-results/$name.inventory.txt"
           done
-      - name: Select available iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-      - name: Build iPhone simulator test products
-        id: build_ios_tests
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
-          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
-      - name: Compile unsigned Release for iPhone
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
-          -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
-          -derivedDataPath .build/ReleaseDerivedData CODE_SIGNING_ALLOWED=NO build
-      - name: Verify compiled app configuration
+          python3 scripts/check_swift_package_results.py --results .build/package-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: swift-package-results-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/package-results
+            ios/Packages/**/.build/**/codecov/*.json
+          retention-days: 7
+  ios-release:
+    needs: source-checks
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-m4-slot-1' || 'ritc-macos-slot-1' }}
+      queue: max
+      cancel-in-progress: false
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-ci 2' || 'xcode-27' }}
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+      REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
         run: |
-          python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
-          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
-      - name: Package iPhone test products
-        id: package_ios_products
-        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
-        run: tar -czf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build Products
-      - name: Upload iPhone test products
-        id: upload_ios_products
-        if: ${{ !cancelled() && steps.package_ios_products.outcome == 'success' }}
-        uses: actions/upload-artifact@v4
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected Release producer runtime: {runtime}")
+          print(f"Release producer runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
+      - name: Activate Bitrise Xcode compilation cache
+        id: compilation-cache
+        if: runner.environment == 'self-hosted'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Report unavailable optional compilation cache
+        if: steps.compilation-cache.outcome == 'failure'
+        run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
+      - name: Compile unsigned Release for iPhone
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          mkdir -p .build
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -jobs 2 -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build 2>&1 | tee .build/ReleaseBuild.log
+      - name: Verify the compiled iPhone app and embedded extensions
+        shell: bash
+        run: |
+          args=(--configuration Release)
+          if [[ "$REQUIRE_RELEASE_METADATA" == true ]]; then
+            args+=(--require-release-metadata)
+          fi
+          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app "${args[@]}"
+      - name: Retain Release compilation log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-release-build-log-${{ github.run_attempt }}
+          path: .build/ReleaseBuild.log
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+  ios-swift-codeql:
+    # GitHub does not support traced Swift extraction with Xcode 27 / Swift 6.4.
+    # Keep this required security-only compiler exception until upstream support exists.
+    # https://github.blog/changelog/2026-10-19-codeql-changes-for-macos-27-xcode-27-and-swift-6-4/
+    needs: source-checks
+    concurrency:
+      group: ritc-macos-slot-4
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 85
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Record Swift analysis toolchain
+        shell: bash
+        run: |
+          mkdir -p .build
+          {
+            uname -m
+            xcodebuild -version
+            swift --version
+          } | tee .build/SwiftCodeQLToolchain.log
+      - name: Validate Release Swift settings before tracing
+        shell: bash
+        run: |
+          # GitHub's Swift extraction guidance requires uncached compilation and the legacy driver.
+          # https://docs.github.com/en/code-security/tutorials/customize-code-scanning/prepare-code-for-analysis
+          build_args=(
+            -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
+            -jobs 2 -derivedDataPath .build/SwiftCodeQLDerivedData ARCHS=arm64
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+            COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO
+            SWIFT_USE_INTEGRATED_DRIVER=NO SWIFT_OPTIMIZATION_LEVEL=-Onone
+            SWIFT_COMPILATION_MODE=wholemodule
+          )
+          cat > .build/SwiftCodeQLAssertUncompiled.py <<'PY'
+          from pathlib import Path
+          import json
+          import re
+          import stat
+
+          # Settings resolution may write PIF JSON, but must not compile runtime sources.
+          # Fail closed on other DerivedData/Build files, even if their suffix is unknown.
+          derived_build = Path(".build/SwiftCodeQLDerivedData/Build")
+          roots = [derived_build, *Path("ios/Packages").glob("*/.build")]
+          product_suffixes = {
+              ".o", ".obj", ".a", ".dylib", ".so", ".dll", ".swiftmodule", ".swiftdoc",
+              ".swiftinterface", ".swiftsourceinfo", ".pcm", ".bc", ".air", ".metallib", ".ipa",
+          }
+          product_directories = {".app", ".appex", ".framework", ".xcframework", ".xcarchive", ".dSYM", ".bundle", ".swiftmodule"}
+          binary_magic = (
+              b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
+              b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca",
+              b"\x7fELF", b"MZ", b"!<arch>\n", b"BC\xc0\xde", b"\xde\xc0\x17\x0b",
+          )
+          pif_names = {"project": "(?:PROJECT|PACKAGE)", "target": "TARGET", "workspace": "WORKSPACE"}
+
+
+          def planning_metadata(path):
+              parts = path.relative_to(derived_build).parts
+              if len(parts) != 5 or parts[:3] != ("Intermediates.noindex", "XCBuildData", "PIFCache"):
+                  return False
+              prefix = pif_names.get(parts[3])
+              if prefix is None or re.fullmatch(prefix + r"@v[0-9]+_.+-json", parts[4]) is None:
+                  return False
+              try:
+                  return isinstance(json.loads(path.read_text(encoding="utf-8")), dict)
+              except (OSError, UnicodeError, json.JSONDecodeError):
+                  return False
+
+
+          found = []
+          for root in roots:
+              if root.is_symlink():
+                  found.append(str(root) + " [symlink]")
+                  continue
+              if not root.exists():
+                  continue
+              for path in root.rglob("*"):
+                  mode = path.lstat().st_mode
+                  reason = None
+                  if stat.S_ISLNK(mode):
+                      reason = "symlink"
+                  elif stat.S_ISDIR(mode):
+                      if path.suffix in product_directories:
+                          reason = "product bundle"
+                  elif not stat.S_ISREG(mode):
+                      reason = "non-regular output"
+                  elif path.suffix in product_suffixes:
+                      reason = "compiled product suffix"
+                  elif mode & 0o111:
+                      reason = "executable output"
+                  else:
+                      with path.open("rb") as stream:
+                          header = stream.read(8)
+                      if header.startswith(binary_magic):
+                          reason = "compiled binary header"
+                      elif root == derived_build and not planning_metadata(path):
+                          reason = "unrecognized Build output"
+                  if reason:
+                      found.append(str(path) + " [" + reason + "]")
+          if found:
+              raise SystemExit("Swift CodeQL requires uncompiled app/package sources; found: " + ", ".join(sorted(found)[:20]))
+          print("No pre-existing app/package compiled products; permitted only recognized PIF JSON in DerivedData/Build.")
+          PY
+          python3 .build/SwiftCodeQLAssertUncompiled.py
+          settings="$RUNNER_TEMP/swift-codeql-settings.json"
+          xcodebuild "${build_args[@]}" -showBuildSettings -json > "$settings" 2> .build/SwiftCodeQLSettings.stderr.log
+          python3 - "$settings" <<'PY' | tee .build/SwiftCodeQLSettings.log
+          import json, sys
+          from pathlib import Path
+
+          targets = json.loads(Path(sys.argv[1]).read_text())
+          app = [target["buildSettings"] for target in targets if target.get("target") == "RoomInTheCart"]
+          if len(app) != 1:
+              raise SystemExit("Expected exactly one RoomInTheCart app target in Xcode build settings.")
+          expected = {"CONFIGURATION": "Release", "PLATFORM_NAME": "iphoneos", "ARCHS": "arm64", "SWIFT_OPTIMIZATION_LEVEL": "-Onone", "SWIFT_COMPILATION_MODE": "wholemodule"}
+          actual = {key: app[0].get(key) for key in expected}
+          conditions = app[0].get("SWIFT_ACTIVE_COMPILATION_CONDITIONS", "").split()
+          print(json.dumps({**actual, "SWIFT_ACTIVE_COMPILATION_CONDITIONS": conditions}, indent=2))
+          if actual != expected or "RELEASE" not in conditions or "DEBUG" in conditions:
+              raise SystemExit("Swift CodeQL must compile all Release sources in whole-module mode for arm64 iPhoneOS with optimization disabled.")
+          PY
+          python3 .build/SwiftCodeQLAssertUncompiled.py
+          declare -p build_args > .build/SwiftCodeQLBuildArgs.sh
+      - name: Initialize Swift security analysis
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: swift
+          build-mode: manual
+          debug: true
+      - name: Compile Release Swift sources for CodeQL
+        # The uncached Swift trace reached the previous 50-minute cutoff while
+        # compiling the app. Leave time after compilation for analysis and cleanup.
+        timeout-minutes: 70
+        shell: bash
+        run: |
+          source .build/SwiftCodeQLBuildArgs.sh
+          python3 .build/SwiftCodeQLAssertUncompiled.py
+          xcodebuild "${build_args[@]}" build 2>&1 | tee .build/SwiftCodeQLBuild.log
+      - name: Analyze Swift security findings
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:swift
+      - name: Retain Swift analysis compilation logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-swift-codeql-build-logs-${{ github.run_attempt }}
+          path: |
+            .build/SwiftCodeQLToolchain.log
+            .build/SwiftCodeQLSettings.log
+            .build/SwiftCodeQLSettings.stderr.log
+            .build/SwiftCodeQLBuild.log
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+  ios-build:
+    needs: source-checks
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-2' || 'ritc-macos-slot-3' }}
+      queue: max
+      cancel-in-progress: false
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    # Includes the existing 40-minute model execution step on the prepared
+    # producer. This composite cap replaces separate build/model jobs.
+    timeout-minutes: 75
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+    outputs:
+      test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
+      test_matrix: ${{ steps.plan.outputs.matrix }}
+      model_result: ${{ steps.models.outcome }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected core producer runtime: {runtime}")
+          print(f"Core producer runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
+      - name: Check supported keyboard automation before simulator setup
+        run: python3 scripts/test_ui_automation_contract.py
+      - name: Record Swift version and select iPhone
+        run: |
+          swift --version
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Activate Bitrise Xcode compilation cache
+        id: compilation-cache
+        if: runner.environment == 'self-hosted'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Report unavailable optional compilation cache
+        if: steps.compilation-cache.outcome == 'failure'
+        run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
+      - name: Build iPhone simulator test products once
+        id: build
+        shell: bash
+        env:
+          REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
+        run: |
+          set -o pipefail
+          configuration=Debug
+          bash scripts/record_ios_build_receipt.sh "$configuration" "$REQUESTED_IOS_SCOPE"
+          # Discovery needs a ready simulator, but compilation can run during boot.
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
+          boot_pid=$!
+          build_status=0
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
+          boot_status=0
+          wait "$boot_pid" || boot_status=$?
+          if (( build_status != 0 )); then exit "$build_status"; fi
+          exit "$boot_status"
+      - name: Verify the compiled simulator app
+        run: python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
+      - name: Discover compiled tests and balance UI groups
+        id: plan
+        shell: bash
+        env:
+          REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
+        run: |
+          python3 scripts/discover_ios_tests.py --simulator "$SIMULATOR_ID"
+          python3 scripts/select_ios_core_work.py --github-output "$GITHUB_OUTPUT"
+      - name: Retain test discovery attempts
+        if: always() && steps.plan.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-test-discovery-${{ github.run_attempt }}
+          path: |
+            .build/test-discovery/stages.txt
+            .build/test-discovery/attempt-1.json
+            .build/test-discovery/attempt-2.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
+      - name: Package test products and exact selection
+        run: |
+          bash scripts/package_ios_simulator_tests.sh "$RUNNER_TEMP/iphone-test-products.tar.lzfse"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
         with:
           name: iphone-test-products-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/iphone-test-products.tar.gz
+          path: ${{ runner.temp }}/iphone-test-products.tar.lzfse
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
-      - name: Test iPhone models
-        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
-          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -derivedDataPath .build/DerivedData -resultBundlePath .build/ModelTests.xcresult
-          -parallel-testing-enabled NO -test-timeouts-enabled YES
-          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
-          -collect-test-diagnostics never -only-testing:RoomInTheCartTests
-          CODE_SIGN_IDENTITY=- test-without-building
-      - name: Upload iPhone model test evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Run model tests on the prepared producer and verify every result
+        id: models
+        timeout-minutes: 40
+        # Preserve UI execution after a model failure. The required CI gate
+        # checks this raw outcome separately; a failed model run cannot pass.
+        continue-on-error: true
+        env:
+          TEST_SHARD: models
+          EXPECTED_TEST_COUNT: ${{ steps.plan.outputs.model_count }}
+        run: bash scripts/run_ios_test_shard.sh
+      - name: Retain model results from the prepared producer
+        if: always() && steps.models.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: iphone-model-results-${{ github.run_attempt }}
-          path: .build/ModelTests.xcresult
+          name: iphone-results-models-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-*.json
+            .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
-  ios-ui:
-    needs: ios
-    if: ${{ !cancelled() && needs.ios.outputs.test_products_artifact != '' }}
-    runs-on: macos-15-intel
-    timeout-minutes: 115
+      - name: Retain iPhone simulator build evidence
+        if: always() && steps.build.outcome != 'skipped'
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-test-build-log-${{ github.run_attempt }}
+          path: |
+            .build/ios-build-evidence/build.log
+            .build/ios-build-evidence/receipt.txt
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
+  ios-tests:
+    name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
+      queue: max
+      cancel-in-progress: false
+    needs: ios-build
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    timeout-minutes: 55
     strategy:
       fail-fast: false
-      matrix:
-        shard: [free-journey, planning-pickup, checkout-context, comparison]
+      # Share five GitHub, three M2 and six M4 queues with fixture jobs.
+      # External forks stay on GitHub; admit every row to its assigned slot.
+      matrix: ${{ fromJSON(needs.ios-build.outputs.test_matrix) }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      UI_SHARD: ${{ matrix.shard }}
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
+      TEST_SHARD: ${{ matrix.shard }}
+      EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Download iPhone test products
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        # Test products and selectors come from the build artifact. Keep UI
+        # sources available for mapping XCTest failures in the result reports.
         with:
-          artifact-ids: ${{ needs.ios.outputs.test_products_artifact }}
-          path: ${{ runner.temp }}
+          sparse-checkout: |
+            scripts
+            ios/UITests
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected core consumer runtime: {runtime}")
+          print(f"Core consumer runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
+      - name: Select isolated iPhone simulator for ui-01 and ui-05
+        timeout-minutes: 8
+        run: |
+          if [[ "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
+      - name: Start Bitrise simulator boot during artifact download
+        id: early_boot
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/prepare_ios_simulator.sh start
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.ios-build.outputs.test_products_artifact }}
+          path: .build/download
           merge-multiple: true
-      - name: Restore iPhone test products
+      - name: Restore iPhone test products and selection
         run: |
           mkdir -p .build/DerivedData/Build
-          tar -xzf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build
-      - name: Select available iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-      - name: Wait for iPhone simulator boot
-        timeout-minutes: 12
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
-      - name: Test iPhone journeys
-        shell: bash
-        timeout-minutes: 92
-        run: |
           set -o pipefail
-          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
-          test "${#test_runs[@]}" -eq 1
-          test -f "${test_runs[0]}"
-          free_suites=(FreeJourneyUITests)
-          pickup_suites=(
-            PickupOfferUITests
-            LedgerConfirmedStockPackUITests
-            ContextualReminderUITests
-            NavigationRestorationUITests
-          )
-          checkout_suites=(ContextualNavigationUITests)
-          mode=only
-          selectors=()
-          case "$UI_SHARD" in
-            free-journey) suites=("${free_suites[@]}") ;;
-            planning-pickup) suites=("${pickup_suites[@]}") ;;
-            checkout-context) suites=("${checkout_suites[@]}") ;;
-            comparison)
-              mode=skip
-              suites=("${free_suites[@]}" "${pickup_suites[@]}" "${checkout_suites[@]}")
-              selectors+=('-skip-testing:RoomInTheCartTests')
-              ;;
-            *) exit 1 ;;
-          esac
-          # The comparison shard also picks up future UI suites.
-          for suite in "${suites[@]}"; do
-            selectors+=("-${mode}-testing:RoomInTheCartUITests/$suite")
-          done
-          run_journeys() {
-            local result_bundle="$1" log="$2"
-            xcodebuild -xctestrun "${test_runs[0]}" \
-              -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-              -resultBundlePath "$result_bundle" \
-              -parallel-testing-enabled NO -test-timeouts-enabled YES \
-              -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 \
-              -collect-test-diagnostics never "${selectors[@]}" test-without-building \
-              2>&1 | tee "$log"
-          }
-          if run_journeys .build/UITests.xcresult .build/UITests.log; then
-            exit 0
-          fi
-          # A killed runner before connection never executed a journey.
-          if ! grep -Fq 'Test crashed with signal kill before establishing connection.' .build/UITests.log ||
-             grep -Eq '^Test Case .* started\.' .build/UITests.log; then
-            exit 1
-          fi
-          echo 'Retrying once after the XCTest runner was killed before connection.'
-          xcrun simctl shutdown "$SIMULATOR_ID" || true
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
-          run_journeys .build/UITests-retry.xcresult .build/UITests-retry.log
-      - name: Upload iPhone journey test evidence
+          restore_extract_started=$SECONDS
+          printf 'Restore archive extraction started\n'
+          /usr/bin/compression_tool -decode -A lzfse -t 2 -i .build/download/iphone-test-products.tar.lzfse |
+            tar -xf - -C .build/DerivedData/Build
+          printf 'Restore archive extraction completed in %s seconds\n' "$((SECONDS - restore_extract_started))"
+          restore_selection_started=$SECONDS
+          mv .build/DerivedData/Build/test-plan .build/test-plan
+          printf 'Restore selection placement completed in %s seconds\n' "$((SECONDS - restore_selection_started))"
+      - name: Start GitHub simulator boot after test product restore
+        id: late_boot
+        if: runner.environment != 'self-hosted'
+        run: bash scripts/prepare_ios_simulator.sh start
+      - name: Wait for simulator boot
+        timeout-minutes: 8
+        if: ${{ !cancelled() && (steps.early_boot.outcome == 'success' || steps.late_boot.outcome == 'success') }}
+        run: bash scripts/prepare_ios_simulator.sh wait
+      - name: Run selected tests and verify complete execution
+        timeout-minutes: 40
+        run: bash scripts/run_ios_test_shard.sh
+      - name: Clean up only the owned simulator after result export
         if: always()
-        uses: actions/upload-artifact@v4
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
+      - name: Retain result bundles, screenshots, logs and timing
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: iphone-ui-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          name: iphone-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          include-hidden-files: true
           path: |
-            .build/UITests.xcresult
-            .build/UITests.log
-            .build/UITests-retry.xcresult
-            .build/UITests-retry.log
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-simulator-boot.*
+            .build/test-*.json
+            .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
+  ci-gate:
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic gate' || 'CI gate' }}
+    needs: [typescript, service-postgres, source-checks, swift-packages, ios-release, ios-swift-codeql, ios-build, ios-tests]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - name: Require every build and test job to succeed
+        run: |
+          python3 - <<'PY'
+          import json, os
+          jobs = json.loads(os.environ["JOB_RESULTS"])
+          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          model_result = jobs.get("ios-build", {}).get("outputs", {}).get("model_result")
+          if model_result != "success":
+              failures["ios-models"] = model_result or "missing"
+          if failures:
+              raise SystemExit(f"Required jobs did not pass: {failures}")
+          print("Every required build and test job passed.")
+          PY

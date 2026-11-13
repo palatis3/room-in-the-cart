@@ -1,0 +1,50 @@
+{
+  "baseCommit": "5b5ada58a89247837827ec1a4c7c24776df679fc",
+  "workflowChanges": {
+    "ios-deep.yml": {
+      "onlyEventFiltersChanged": true,
+      "sha256": "20aa906e08c891f6ffc69e0dbd2f9626e6a25fbb8e0c4eb8af572c6960d1ec21"
+    },
+    "ios-fixtures.yml": {
+      "onlyEventFiltersChanged": true,
+      "sha256": "b6e320640290d45057848ffab2c720bb1f059557f3b2d3b54aaab53422a4b102"
+    },
+    "ios-performance.yml": {
+      "onlyEventFiltersChanged": true,
+      "sha256": "15d9861f35391a6ce1f1037c342a11e324f44050c96f78c86aa9a275541b8027"
+    },
+    "ios-native-wire.yml": {
+      "onlyEventFiltersChanged": true,
+      "sha256": "962a131c12eef729769a080a1e14d6d1c98396c7fd17a800f6bd02176215fcd6"
+    }
+  },
+  "releaseWorkflowUnchanged": true,
+  "originalTriggerRegressionFailures": 46,
+  "focusedTests": 6,
+  "limits": [
+    "Static trigger-policy checks, not a GitHub event replay.",
+    "GitHub currently documents a 3,000-file path-filter limit; pre-release reusable calls remain unfiltered.",
+    "Broad native-source and shared-input matches intentionally run all three additional suites; this does not reduce native workload."
+  ],
+  "officialPathFilterSource": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons",
+  "sourceCheckedUTC": "2026-11-05",
+  "fullPythonSuiteTests": 153,
+  "actionlint": "passed",
+  "diffCheck": "passed",
+  "branchProtectionReadOnly": {
+    "checkedUTC": "2026-11-05T20:10:04Z",
+    "rulesets": [],
+    "mainProtection": "HTTP404 Branch not protected",
+    "settingsChanged": false
+  },
+  "review": {
+    "reviewer": "Lumpy",
+    "scope": "Independent source review of supplied patch; no blocker found. Root executed checks. No hosted trigger replay or branch-protection enforcement is claimed.",
+    "knownLimits": [
+      "Broad scripts/config globs intentionally schedule some unrelated native checks.",
+      "Static trigger tests do not emulate GitHub event generation or prove reusable-call semantics alone; root separately verified unchanged job bodies and release workflow."
+    ]
+  },
+  "testSourceSHA256": "7ab80d7b292117c56c9e7ff47d77d482996d4111a22dd5c3294ab487b8ff644a",
+  "rawEvidence": ".build/CIResearch20261105/trigger-coverage"
+}

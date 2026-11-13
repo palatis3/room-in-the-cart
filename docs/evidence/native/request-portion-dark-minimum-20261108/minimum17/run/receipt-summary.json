@@ -1,0 +1,80 @@
+{
+  "status": "completed",
+  "phase": "minimum17",
+  "startedAtUTC": "2026-11-08T18:10:57.603669+00:00",
+  "finishedAtUTC": "2026-11-08T18:14:30.926478+00:00",
+  "nativeExit": 0,
+  "expectedCount": 2,
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "selectionSHA256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9",
+  "sourceUnchanged": true,
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "systemVersion": {
+    "BuildID": "C789FCDA-4AAB-11EE-AE48-7EDEE72CB155",
+    "ProductBuildVersion": "21A328",
+    "ProductCopyright": "1983-2023 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "17.0"
+  },
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=D420C2CA-0E73-4213-9B96-1EB62EB061F6,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S24PortionTypographyNov08/followup-r1/minimum17-run/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "on-failure",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+    "-only-testing:RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+    "test"
+  ],
+  "device": [
+    {
+      "architecture": "arm64",
+      "deviceId": "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+      "deviceName": "RITC Cook Voice Minimum OS Nov08",
+      "modelName": "iPhone SE (3rd generation)",
+      "osBuildNumber": "21A328",
+      "osVersion": "17.0",
+      "platform": "iOS Simulator"
+    }
+  ],
+  "toolchain": {
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1"
+  },
+  "sourceRunReceipt": {
+    "path": ".build/S24PortionTypographyNov08/followup-r1/minimum17-run/run.json",
+    "sha256": "7c8402fc18d5c8e33ad06d484d555ebd3623d5279d89ba6013b45a32896443ab"
+  },
+  "preservation": {
+    "sourceUnchanged": true,
+    "preservedProductsUnchanged": true,
+    "priorResultsUnchanged": true
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "baseCandidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "scope": "Original six-case contributor-balanced-02 selection; app source unchanged from hosted candidate, only ContributorRequestUITests fill helper changed.",
+  "change": "After keyboard dismissal, reveal the editor, assert the keyboard remains absent, then retain exact draft-value equality and original-at-top review assertions.",
+  "selected": 6,
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "nativeExit": 0,
+  "strictExit": 0,
+  "selectors": [
+    "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+    "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+    "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+    "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+    "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+    "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+  ],
+  "sourceAndProductsUnchanged": true,
+  "frozenCounts": {
+    "source-sha256.json": 494,
+    "product-sha256.json": 179
+  },
+  "sourceManifestSHA256": "7b908ec8b85abf4abbc1cb30c65dff7a197753c5ef83ac8422f2413631960788",
+  "productManifestSHA256": "729fe0733a0270e164a7497e2e76b966b8d05d782a8b86274ab8118187e22bd2",
+  "testSourceSHA256": "261fed8a28e81dceaecb6e0018c037dd07fcf8a436c0b97901ede42a0239c51f",
+  "patchSHA256": "92681a7afbf61d1635179e261e382063036bc54348ecaa2ed0e9b61aaf85a975",
+  "testLogSHA256": "335736475b6fb9ce798d2eb93cc2627e944f6b13b0df438c8e83f6abc2005f82",
+  "renderedOriginalAtTopScreenshotSHA256": "2e0df39011d9d6bfda6ae488214a1c2690d851b3f58e91234524380c5b0c38bf",
+  "renderedReview": "Root viewed the original-at-top attachment: full original Spanish phrase is displayed below the capture navigation bar, with no keyboard visible.",
+  "ownedSimulatorsShutdown": true,
+  "previewUntouched": true,
+  "interruptedSetup": {
+    "testCasesStarted": 0,
+    "exit": 130,
+    "reason": "Incorporate explicit post-reveal keyboard assertion before cases began; partial bundle/log retained."
+  },
+  "review": "Lumpy reviewed source/screenshots and recommended the post-reveal keyboard check; no demonstrated product-data-loss finding.",
+  "limits": [
+    "Local Xcode27.1/iOS26.2 build23C52 differs from hosted Xcode26.3/build23C54.",
+    "This local pass does not change the original hosted failure or complete hosted acceptance.",
+    "No timeout, warning policy, source-data assertion or full-scenario step was removed."
+  ]
+}

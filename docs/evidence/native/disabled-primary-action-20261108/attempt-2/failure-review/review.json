@@ -1,0 +1,41 @@
+{
+  "status": "partial failed-run evidence only; native0/2, strict failed",
+  "sourceManifestSHA256": "38e6b9ece2f6fc8c8b953cf6fe156708da59a3ea841cdca2eebba520601d6dbf",
+  "exports": {
+    "uniqueAttachments": 14,
+    "totalPayloadBytes": 1931038,
+    "copyOnly": true,
+    "originalUnchangedAfterExport": true,
+    "canonicalSourceUnchangedAtExportCompletion": true,
+    "fullInspectionRepeated": false,
+    "originalUnchangedAtReviewCompletion": true
+  },
+  "visualReview": {
+    "root": "Root reported reviewing all7 PNGs: two full disabled screens, two whole buttons, two label interiors, Spanish failure. Labels sharp; whole-row bounds and outline intact.",
+    "independent": "Reviewed exact Spanish failure PNG and Spanish label interior. Failure shows reviewed tortillas and beans; acceptance row below viewport. Numeric analysis of both original label interiors.",
+    "cropLimits": "912x144 opaque sRGB interior PNGs. Dominant background white, core #172925. Distributed connected glyph modes11 EN/12 ES; no edge/caret/control component provides result. Antialias edge colors are not the core contrast.",
+    "contrast": {
+      "english": 15.213849827934512,
+      "spanish": 15.213849827934512
+    }
+  },
+  "disabledEvidence": {
+    "AX": "Native Button Disabled, x16,width370,height82; ENy674.3, ESy677.3. Both tests reached center and outer-padding attempts, subsequent disabled/exists/no-saved-message checks and valid-quantity review.",
+    "limit": "No durable write-counter in ordinary journey; full once-only persisted-library assertion was not reached. Do not describe entire acceptance journey as passed."
+  },
+  "spanishFailure": {
+    "evidence": "Final failure hierarchy has zero dinnerAcceptIdea entries. Screenshot is scrolled to supply/pack details, not acceptance row. At233.16s test queries accept.isEnabled before the reveal helper; retries fail236.09s.",
+    "correction": "assert-after-reveal.patch moves existing isEnabled assertion after existing assertReadableDinnerAcceptance reveal and before activation. No removed assertion, timeout, retry, product change or additional reveal loop.",
+    "status": "Scratch proposal only; native verification belongs to root."
+  },
+  "englishFailure": {
+    "evidence": "First missing animation-complete notification follows Done for ideaSupplyYield: Tap209.62s, synthesized209.88s, wait210.19s, missing270.22s. Repeats during later price/source actions and exceeds720s before enabled capture.",
+    "limit": "Separate unresolved native idle/keyboard-path failure; no causal owner/stack established here. Assertion-order correction does not address it."
+  },
+  "missing": [
+    "Both enabled whole-button, label-interior, state/crop, enabled-padding captures",
+    "Both final enabled-edge activation and persisted-library/list assertions"
+  ],
+  "noAppOrTestExecution": true,
+  "canonicalEditsByReviewer": false
+}

@@ -1,0 +1,831 @@
+{
+  "source": ".build/CIFocusedCookNov08/results-original/test-speech-runtime.json",
+  "sha256": "3486b406a2f34d922beb38ab17a29d87efbdcb33954764293003a4ef691a1ce9",
+  "records": [
+    {
+      "index": 0,
+      "timestamp": "2026-11-08 22:18:33.827500+0000",
+      "pid": 27045,
+      "threadID": 75634,
+      "activityID": 411353,
+      "processImageUUID": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x387e4",
+          "symbol": "0x000387e4 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x26f94",
+          "symbol": "0x00026f94 (in TextToSpeech) + 44"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20a059c",
+          "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20ae4d0",
+          "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0",
+          "symbol": "unresolved"
+        }
+      ],
+      "emissionFramesCount": 33
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-11-08 22:18:35.526341+0000",
+      "pid": 27045,
+      "threadID": 75634,
+      "activityID": 411355,
+      "processImageUUID": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20a059c",
+          "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20ae4d0",
+          "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0",
+          "symbol": "unresolved"
+        }
+      ],
+      "emissionFramesCount": 33
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-11-08 22:18:36.204518+0000",
+      "pid": 27045,
+      "threadID": 75634,
+      "activityID": 411357,
+      "processImageUUID": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x37fa4",
+          "symbol": "0x00037fa4 (in TextToSpeech) + 100"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x2c844",
+          "symbol": "0x0002c844 (in TextToSpeech) + 300"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x35177c",
+          "symbol": "LocalCookSpeech.pause() (in RoomInTheCart.debug.dylib) + 84"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x352880",
+          "symbol": "protocol witness for CookSpeechPlayback.pause() in conformance LocalCookSpeech (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x3030ec",
+          "symbol": "CookReadbackModel.pause() (in RoomInTheCart.debug.dylib) + 124"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x30a488",
+          "symbol": "closure #1 in closure #1 in closure #1 in CookReadbackView.body.getter (in RoomInTheCart.debug.dylib) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x6fb920",
+          "symbol": "<deduplicated_symbol> (in SwiftUI) + 24"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdfcdb0",
+          "symbol": "specialized static MainActor.assumeIsolated<A>(_:file:line:) (in SwiftUI) + 132"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdc77ac",
+          "symbol": "ButtonAction.callAsFunction() (in SwiftUI) + 388"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xb68f0",
+          "symbol": "<deduplicated_symbol> (in SwiftUI) + 52"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x69370c",
+          "symbol": "ButtonBehavior.ended() (in SwiftUI) + 224"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x699258",
+          "symbol": "partial apply for implicit closure #2 in implicit closure #1 in ButtonBehavior.body.getter (in SwiftUI) + 32"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd73818",
+          "symbol": "partial apply for closure #1 in closure #2 in closure #1 in _ButtonGesture.internalBody.getter (in SwiftUI) + 28"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdfcdb0",
+          "symbol": "specialized static MainActor.assumeIsolated<A>(_:file:line:) (in SwiftUI) + 132"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd6e9f4",
+          "symbol": "closure #2 in closure #1 in _ButtonGesture.internalBody.getter (in SwiftUI) + 80"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd749a8",
+          "symbol": "partial apply for closure #2 in PrimitiveButtonGestureCallbacks.dispatch(phase:state:) (in SwiftUI) + 84"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0xcbdb4",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x242080",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x28e2c4",
+          "symbol": "<deduplicated_symbol> (in SwiftUI) + 20"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54ade0",
+          "symbol": "<deduplicated_symbol> (in SwiftUI) + 44"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50f708",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50e760",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50e498",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x9548e0",
+          "symbol": "UIKitResponderEventBindingBridge.flushActions() (in SwiftUI) + 400"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x95493c",
+          "symbol": "@objc UIKitResponderEventBindingBridge.flushActions() (in SwiftUI) + 24"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc66bb0",
+          "symbol": "-[UIGestureRecognizerTarget _sendActionWithGestureRecognizer:] (in UIKitCore) + 76"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6fd84",
+          "symbol": "_UIGestureRecognizerSendTargetActions (in UIKitCore) + 88"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6ca68",
+          "symbol": "_UIGestureRecognizerSendActions (in UIKitCore) + 296"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6c62c",
+          "symbol": "-[UIGestureRecognizer _updateGestureForActiveEvents] (in UIKitCore) + 320"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc712c8",
+          "symbol": "-[UIGestureRecognizer gestureNode:didUpdatePhase:] (in UIKitCore) + 296"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0xc6a0",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x2869c",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x543dc",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x7b464",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc5e090",
+          "symbol": "-[UIGestureEnvironment _updateForEvent:window:] (in UIKitCore) + 468"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11e6450",
+          "symbol": "-[UIWindow sendEvent:] (in UIKitCore) + 2796"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11c42e4",
+          "symbol": "-[UIApplication sendEvent:] (in UIKitCore) + 376"
+        },
+        {
+          "uuid": "AF87E7D6-1068-3D45-93D5-100C754A495F",
+          "offset": "0x5c624",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x1073270",
+          "symbol": "__dispatchPreprocessedEventFromEventQueue (in UIKitCore) + 1184"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x1075f24",
+          "symbol": "__processEventQueue (in UIKitCore) + 4800"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x106e4d0",
+          "symbol": "updateCycleEntry (in UIKitCore) + 168"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x691378",
+          "symbol": "_UIUpdateSequenceRunNext (in UIKitCore) + 120"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x10c60a4",
+          "symbol": "schedulerStepScheduledMainSectionContinue (in UIKitCore) + 56"
+        },
+        {
+          "uuid": "E2E29A67-7D1D-333D-9227-E405451EDB7D",
+          "offset": "0x12b4",
+          "symbol": "unresolved"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x574ac",
+          "symbol": "__CFMachPortPerform (in CoreFoundation) + 164"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x93aa8",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__ (in CoreFoundation) + 56"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x930c0",
+          "symbol": "__CFRunLoopDoSource1 (in CoreFoundation) + 480"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92188",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 2100"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20a059c",
+          "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20ae4d0",
+          "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0",
+          "symbol": "unresolved"
+        }
+      ],
+      "emissionFramesCount": 59
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-11-08 22:18:36.226239+0000",
+      "pid": 27045,
+      "threadID": 75634,
+      "activityID": 411359,
+      "processImageUUID": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x38ef8",
+          "symbol": "0x00038ef8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27074",
+          "symbol": "0x00027074 (in TextToSpeech) + 44"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20a059c",
+          "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20ae4d0",
+          "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0",
+          "symbol": "unresolved"
+        }
+      ],
+      "emissionFramesCount": 33
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-11-08 22:18:37.762726+0000",
+      "pid": 27045,
+      "threadID": 75634,
+      "activityID": 427842,
+      "processImageUUID": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x390ac",
+          "symbol": "0x000390ac (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27154",
+          "symbol": "0x00027154 (in TextToSpeech) + 44"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20a059c",
+          "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40"
+        },
+        {
+          "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+          "offset": "0x20ae4d0",
+          "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0",
+          "symbol": "unresolved"
+        }
+      ],
+      "emissionFramesCount": 33
+    }
+  ]
+}

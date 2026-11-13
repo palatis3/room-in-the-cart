@@ -1,0 +1,12 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "run": 42021894668,
+  "job": 127226433096,
+  "conclusion": "failure",
+  "failedStep": "Compile Release Swift sources for CodeQL",
+  "observedError": "The action Compile Release Swift sources for CodeQL has timed out after30minutes.",
+  "instrumentedBuildComplete": false,
+  "swiftAnalysisAccepted": false,
+  "jobLogSHA256": "0b1943abff655a2b92ea8bc99c0940aa9a9b4dca49c468f4c7db002600a3ccdf",
+  "limits": "Ordinary optimized Release build passed separately. Instrumented build timeout is unresolved; this is not a clean Swift security analysis. Dedicated read-only comparison is underway. No timeout increase, source exclusion or CI rerun."
+}

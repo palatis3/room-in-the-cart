@@ -1,0 +1,38 @@
+{
+  "execSession": 5280,
+  "baseCommit": "336d5b51e725f0f7b9c29d9b1a39c3e98b5dc496",
+  "sourceSHA256": "74f2beb39a24b81e6b3f60f46ff8a5ceb0c1fd37796724247f8d02145d99513e",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "log": "full-confirmed.log",
+  "resultBundle": "full-confirmed.xcresult",
+  "compilationConditions": "DEBUG",
+  "status": "passed",
+  "priorAttempts": [
+    "full.xcresult",
+    "full-ordinary.xcresult"
+  ],
+  "nativeExit": 0,
+  "strictExit": 0,
+  "durationSeconds": 401.68,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "runnerRestarts": 0,
+  "localXcode": "27.1 /27A9275",
+  "iOS": "26.2 /23C54",
+  "hostedXcode": "26.3",
+  "hostedFollowup": "pending",
+  "applicationSourcesChanged": false,
+  "scope": [
+    "Preserved old pricing and disabled Save before replacing pricing after changed retailer terms",
+    "Verified proposed terms, price source and inclusive3.00, committed final review and saw saved result",
+    "Original placement, short-fill, protected lunch repair, cook note, financial close, feedback withdrawal, next shop, dinner reuse and restarted decision history assertions unchanged"
+  ],
+  "hashes": {
+    ".build/FreeJourneyPricingReviewNov07/full-confirmed.log": "d49723c718ccabad13cbbbe74c21bb84b87633a957582543635a67766a9bf3f1",
+    "docs/evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/confirmed-summary.json": "228d9d489b2c73b25f56b8fd72348df5978e998c7ee89f546a1990f7b62d92f6",
+    "docs/evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/confirmed-tests.json": "bc9ab4cf06073d8c4ecc396fc56ca19e9045bce7031d1590cd8453cd6813cab1",
+    "docs/evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/confirmed-strict.txt": "762b7fe2ae24be917d4287ad3b17899bedf4dfee5fe8c01f37711a504948a0f1",
+    "docs/evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/saved-repair-after-next-shop.png": "e6026fed66de43d82b7e2ae325fe9f9b64b7e560382bfb71b34b213e8b084e8d",
+    "docs/evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/frozen-handoff.png": "8212c4eede4cfade82580e8201f5782e266ccf8ba429ccd63ed8a9fd67f4900c"
+  }
+}

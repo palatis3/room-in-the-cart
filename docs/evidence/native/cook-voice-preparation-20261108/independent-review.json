@@ -1,0 +1,22 @@
+{
+  "reviewer": "ci_log_record_fix",
+  "receivedAtUTC": "2026-11-08T10:15:19.740975+00:00",
+  "sourcePins": {
+    "ios/Features/Capture/LocalCookSpeech.swift": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+    "ios/Tests/CookReadbackTests.swift": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543"
+  },
+  "result": "No actionable correctness or race defect found",
+  "scope": "Read-only code and deterministic test review; no edits or native actions",
+  "findings": [
+    "Generation checks reject stale voice and audio callbacks.",
+    "Old release is queued before replacement acquire, including reused playback IDs.",
+    "Pause preserves per-playback catalog; Stop invalidates it.",
+    "Authority and VoiceOver checks remain after asynchronous preparation."
+  ],
+  "limits": [
+    "Controlled loaders do not execute actual background speechVoices or measure responsiveness.",
+    "Fake pause does not model actual audio release; preparation reuse is tested separately and real wiring reviewed.",
+    "Deinitialization during pending lookup is reviewed but lacks a dedicated regression.",
+    "No Pause/QoS repair or warning suppression justified."
+  ]
+}

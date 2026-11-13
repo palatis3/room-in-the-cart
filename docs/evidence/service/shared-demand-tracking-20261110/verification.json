@@ -1,0 +1,15 @@
+{
+  "exitCode": 0,
+  "seconds": 6.067594583,
+  "testFiles": 43,
+  "logSHA256": "153158d96b22504ec02544273ca6e77ff7cd1e92e9ce889fbcd841f907b29ca3",
+  "scope": "service offline only; no database integration or route activation",
+  "passed": 691,
+  "skipped": 1,
+  "focusedPassed": 38,
+  "prototypeManifestSHA256": "ee208b5d93b9d688a7754ef7a45077ce1449a3ad46af90eb345f6bccef2a62a3",
+  "canonicalSourceSHA256": "3b5d2812e91ffb4df7a7f4e401fcee98831393382d2a292706182fb5f1f25b1e",
+  "canonicalTestSHA256": "f5c7ae83d9efd7dbdfd6c4a009ce7315d3cef593fc1601c807f1917d9e610ba8",
+  "focusedLogSHA256": "b917d78f84fbdae792deee380db46c0fbd78513ec351dc67cc70f302eba1eb48",
+  "releaseAcceptance": false
+}

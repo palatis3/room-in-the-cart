@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -6,13 +5,13 @@ import { createServer } from 'node:https';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
+import { runNativeWireTest } from './run-native-wire-test.mjs';
 
 const run = promisify(execFile);
 
 // A fixture identity provider returns one real signed test JWT. Household requests
 // keep their original headers and body and go through the normal API and database.
-export async function exerciseNativeClient({service, owner, householdId, shopId, secondShopId, observationId, paid}) {
+export async function exerciseNativeClient({service, owner, householdId, shopId, secondShopId, observationId, paid, deferredRequestId, purchaseRequestId, purchaseReader = false}) {
   const dir = await mkdtemp(join(tmpdir(), 'ritc-native-wire-'));
   const key = join(dir, 'tls.key'), cert = join(dir, 'tls.pem'), code = randomUUID();
   let tls;
@@ -44,15 +43,14 @@ export async function exerciseNativeClient({service, owner, householdId, shopId,
       res.writeHead(401); res.end('{}');
     });
     await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
-    const packagePath = fileURLToPath(new URL('../../ios/Packages/HouseholdClient',import.meta.url));
-    try {
-      const {stdout} = await run('swift',['test','--package-path',packagePath,'--filter','NativeServiceWireTests'],{
-        env:{...process.env,RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
-          RITC_WIRE_PAID:paid?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId,RITC_WIRE_OTHER:secondShopId,RITC_WIRE_OBSERVATION:observationId},
-        timeout:180000,maxBuffer:2_000_000
-      });
-      assert.match(stdout,/Executed 1 test, with 0 failures/);
-    } catch(error) { throw new Error('Native client failed: '+String(error.stdout||error.stderr).slice(-3500)+'; API responses: '+unsuccessful.join(', ')); }
+    await runNativeWireTest({
+      suite: 'NativeServiceWireTests', method: 'testNativeClientAgainstPostgres',
+      scenario: deferredRequestId ? 'deferred-request' : purchaseReader ? 'purchase-author' : purchaseRequestId ? 'request-purchase' : paid ? 'history-paid' : 'history-free', unsuccessful,
+      env:{RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
+        ...(deferredRequestId ? {RITC_WIRE_DEFERRED_REQUEST:deferredRequestId} : {}),
+        ...(purchaseRequestId ? {RITC_WIRE_PURCHASE_REQUEST:purchaseRequestId,RITC_WIRE_PURCHASE_READER:purchaseReader?"1":"0"} : {}),
+        RITC_WIRE_PAID:paid?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId,RITC_WIRE_OTHER:secondShopId,RITC_WIRE_OBSERVATION:observationId},
+    });
   } finally {
     if(tls?.listening) await new Promise(resolve=>tls.close(resolve));
     await rm(dir,{recursive:true,force:true});

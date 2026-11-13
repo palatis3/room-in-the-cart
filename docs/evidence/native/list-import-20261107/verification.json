@@ -1,0 +1,212 @@
+{
+  "productCommit": "929fe4e9d725602dcd07c9b8b11ef1991d03aa3d",
+  "requirement": "Foundation 2.1 S02 and Master D02",
+  "before": "Both new shopping-ledger parse cases and the new structured-capture app test failed against the original parsers. The iPhone capture test interpreted 1 1/2 cups of arroz as count 1.",
+  "verification": {
+    "model": {
+      "device": "iPhone SE (3rd generation)",
+      "iOS": "17.0",
+      "build": "21A328",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "strictRuntimeWarnings": 0,
+      "summarySHA256": "0a87914570934a2cc510e27490da576fa8ebaeab32b0a2573c5baf0ec31cad72"
+    },
+    "ui": {
+      "device": "iPhone SE (3rd generation)",
+      "iOS": "17.0",
+      "build": "21A328",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictRuntimeWarnings": 0,
+      "summarySHA256": "f1a594fb3afd982e1a879848d8f0dbaa55f73b811718496b7324bc5b3b8abc42"
+    }
+  },
+  "packageGate": [
+    "CoreDomain: 190 passed, 0 deliberately skipped",
+    "DeviceSurfaces: 29 passed, 0 deliberately skipped",
+    "HouseholdClient: 101 passed, 3 deliberately skipped",
+    "LocalStore: 74 passed, 0 deliberately skipped",
+    "RecordArchive: 33 passed, 0 deliberately skipped"
+  ],
+  "installedDatabase": {
+    "databaseIntegrity": "ok",
+    "headRevision": 3,
+    "headSHA256": "373281b5becebe0a28b49e93a6f00f9db2dc23e3a7e20f8f40075498e69bbc41",
+    "lines": 1,
+    "activeContributions": 2,
+    "importReceipts": 2,
+    "duplicateAllocations": 1,
+    "effectiveQuantity": "3/2 US cups",
+    "originalWording": [
+      "1 1/2 cups of arroz",
+      "1 1/2 tazas de arroz"
+    ]
+  },
+  "uiHarness": "The first end-to-end run reached the restored list and waited for a root-only shortcut. The corrected test inspects the restored list or enters through Shop if needed, then reads both source texts.",
+  "duplicatePickerVerification": {
+    "source": "cea57142f327d0a7562135d8c299964b3b272443",
+    "runs": {
+      "second": {
+        "pass": 1,
+        "fail": 0,
+        "skip": 0,
+        "runtimeWarnings": 0,
+        "restarts": 0,
+        "animationWaits": 0
+      },
+      "controls": {
+        "pass": 18,
+        "fail": 0,
+        "skip": 0,
+        "runtimeWarnings": 0,
+        "restarts": 0,
+        "animationWaits": 0
+      }
+    }
+  },
+  "integrated": {
+    "productCommit": "ab083d07f1e3cb2b5e987cf41518951195b6f6e6",
+    "iPhone": "iPhone SE (3rd generation), iOS 17.0 (21A328)",
+    "configuration": "Release scheme build for iOS Simulator, Debug scheme for the two executed tests",
+    "releaseBuild": "succeeded",
+    "passedSelectors": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMixedEnglishAndSpanishListMeasuresMergeAndSurviveRestart",
+      "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextRevalidatesDependentChoicesAcrossSavedEdits"
+    ],
+    "strictRuntimeWarnings": 0,
+    "resultSummarySHA256": "8f067e5ca8baf70e5362707e013ed43ca09151f2b8c276c67e58d656baa218a6",
+    "installedDatabase": {
+      "databaseIntegrity": "ok",
+      "headRevision": 3,
+      "headSHA256": "d02131eca7ca496afb6bcb8d9e1d8d7e5a5ea62c517cde84b18952e201c8a85c",
+      "lines": 1,
+      "activeContributions": 2,
+      "importReceipts": 2,
+      "duplicateAllocations": 1,
+      "effectiveQuantity": "3/2 US cups",
+      "originalWording": [
+        "1 1/2 cups of arroz",
+        "1 1/2 tazas de arroz"
+      ]
+    },
+    "localization": "Localization checks passed: 25 catalogs, 4199 en/es entries, 3900 literal source keys, matching format arguments."
+  },
+  "packLabels": {
+    "product": "9d1622b",
+    "iPhone": "iPhone SE (3rd generation), iOS 17.0",
+    "passed": 41,
+    "recordedRuntimeWarnings": 0,
+    "before": "The original structured-capture regression failed on both the printed multiplier and missing contents inside nested packs. The original CoreDomain staging test also failed.",
+    "database": {
+      "integrity": "ok",
+      "headRevision": 2,
+      "payloadSHA256": "da25aaf16528eb8ac7ce2b26b41c8317c7237b99f26b737ebaee7ee74e381749",
+      "originalWording": "2x15 oz pinto beans",
+      "packCount": 2,
+      "perPackMassOunces": 15,
+      "reviewedNeedMassOunces": 28,
+      "activeLines": 1,
+      "importBatches": 1
+    },
+    "compiledPackageCheck": [
+      "CoreDomain: 192 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 29 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ]
+  },
+  "boundedImport": {
+    "integratedCommit": "f4f8910",
+    "before": "1,001 identical rows totaling 8,007 bytes reached an uncommittable preview. A separate valid 8,192-byte package label could not commit because the scalar quantity stored its original source text.",
+    "after": "Ordinary paste keeps the complete oversized text editable. Correcting it to 3 pears saves one item across restart. An 8,192-byte supported package label now commits with its full original wording and exact pack evidence.",
+    "nativeEvidenceSHA256": "b79a41d2fdce34ed9d1656dc1eb8d7c515b2158ede0258409ec819ef506b2ba8",
+    "selectedNativeTests": [
+      "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection",
+      "RoomInTheCartTests/LedgerSelectedTextPortTests/testRealLedgerRestartAcknowledgesExactReceiptWithoutDuplicate",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable"
+    ],
+    "nativeRuntimeWarnings": 0,
+    "packageGate": [
+      "CoreDomain: 194 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 30 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ],
+    "integratedIOS17": {
+      "productCommit": "f4f8910",
+      "device": "iPhone SE (3rd generation), iOS 17.0 simulator",
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently",
+        "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "3353e70958b3d2e51be0b892e53976cf211191ce34aa74e494b89dc52c3dcc64",
+      "deviceBuild": "Unsigned Release build for generic arm64 iPhone passed executable, assets, privacy, environment and both embedded extension checks."
+    }
+  },
+  "printedMeasureAbbreviations": {
+    "productCommit": "8a2ded6aebea3df73b958024db9e8bff31323f4f",
+    "before": "The unmodified importer staged \"2 × 12 fl. oz. seltzer\" as a count of 24, used the unit text as part of the item name, and treated \"2 tbsp. cocoa\" as a count. The focused regression failed on 19 assertions.",
+    "selectedDevice": "iPhone SE (3rd generation) simulator running iOS 17.0 (21A328)",
+    "native": {
+      "passed": 17,
+      "recordedRuntimeWarnings": 0,
+      "strictResultSHA256": "b4dd6625b882bcb04adc91974450c38238ed34bb5b020b1ef36207c9fc09f553",
+      "coverage": "16 structured-capture tests and one installed list import, commit and restart journey"
+    },
+    "sqlite": {
+      "integrity": "ok",
+      "headRevision": 2,
+      "headSHA256": "3cf27460a6f0066500bda4d48fe83e1936b4ef1405227515b2366f028a9aad10",
+      "originalText": "2 cans of seltzer, 12 fl. oz. each",
+      "savedQuantity": {
+        "amount": {
+          "denominator": 1,
+          "numerator": 24
+        },
+        "originalLiteral": "2 cans of seltzer, 12 fl. oz. each",
+        "unit": "fluidOunce"
+      },
+      "savedPack": {
+        "amountPerPack": {
+          "amount": {
+            "denominator": 1,
+            "numerator": 12
+          },
+          "originalLiteral": "2 cans of seltzer, 12 fl. oz. each",
+          "unit": "fluidOunce"
+        },
+        "count": 2
+      },
+      "importBatches": 1,
+      "lines": 1,
+      "contributions": 1
+    },
+    "packageGate": [
+      "CoreDomain: 194 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 30 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ]
+  },
+  "rangedQuantities": {
+    "nativeSource": "ce8bd62",
+    "testedWorkerCommit": "b28bbdeaf0b0a94e7648e3e93cfccb0339882285",
+    "before": "The list treated \"2 to 3 apples\" as exactly 2 and \"2 packs of 6 to 8 wraps\" as exactly 12. Structured capture could also misread a range endpoint as the destination.",
+    "result": "Retains independently known pack count or per-pack amount, the entered words, explicit destination and exclusions. The shopper can correct the total. The installed app reopened the 14-unit edit while keeping the original per-pack amount unresolved.",
+    "device": "iPhone 17 simulator, iOS 26.2",
+    "passed": 19,
+    "runtimeWarnings": 0,
+    "strictResultSHA256": "e92283a91cc6f5f1d2a507ed69e44d82f97bf1e341d0c56aa146aa857dc5c5f4"
+  }
+}

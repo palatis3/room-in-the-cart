@@ -4,9 +4,12 @@ import XCTest
 /// Dedicated isolated fixture build only; normal full-suite builds contain no S24 fixture test.
 @MainActor final class HouseholdRequestPackUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var restoreClarificationAppearance: (() -> Void)?
+    private var useClarificationForegroundNavigation = false
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
+        app.launchEnvironment["S24_PACK_TRACE_SCOPE"] = name
     }
     override func tearDownWithError() throws {
         if testRun?.failureCount ?? 0 > 0 {
@@ -18,27 +21,298 @@ import XCTest
             snapshot.name = "S24-failure-preview-diagnostics"; snapshot.lifetime = .keepAlways; add(snapshot)
         }
         app.terminate()
+        restoreClarificationAppearance?(); restoreClarificationAppearance = nil
     }
-    func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() {
+    func testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice() throws {
+        app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--deferred-request-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let open = element("household.deferred.open")
+        let source = element("household.deferred.88888888-5555-4555-8555-555555555555")
+        let successor = element("household.request.44444444-4444-4444-8444-444444444444")
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        XCTAssertFalse(successor.exists)
+        tap(open)
+        tap(source)
+        assertText("8 wraps")
+        tap(element("household.deferred.keep"))
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+
+        tap(source)
+        tap(element("household.deferred.confirm"))
+        let retry = app.buttons["Retry the same decision"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertFalse(retry.isEnabled)
+        tap(app.buttons["Refresh current requests"])
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
+        let eligible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: retry)
+        XCTAssertEqual(XCTWaiter.wait(for: [eligible], timeout: 12), .completed)
+        tap(retry)
+        reveal(successor)
+        XCTAssertTrue(successor.waitForExistence(timeout: 8))
+        XCTAssertTrue(successor.label.contains("From an earlier pickup"))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
+        XCTAssertEqual(app.buttons.matching(identifier: successor.identifier).count, 1)
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        tap(open)
+        assertText("No earlier requests are waiting for this pickup.")
+        tap(app.navigationBars["Saved from earlier pickups"].buttons.firstMatch)
+
+        func openAddDecision() {
+            tap(successor)
+            tap(element("household.decision.choice"))
+            tap(app.buttons["Add packs to this shop"])
+        }
+        openAddDecision()
+        let price = element("household.decision.price")
+        reveal(price)
+        XCTAssertTrue((price.value as? String ?? "").isEmpty || price.value as? String == price.placeholderValue)
+        reveal(price, fullyVisible: true)
+        let promptImage = XCTAttachment(screenshot: price.screenshot())
+        promptImage.name = "S24-empty-price-prompt"; promptImage.lifetime = .keepAlways; add(promptImage)
+        let promptFrame = XCTAttachment(string: price.debugDescription)
+        promptFrame.name = "S24-empty-price-prompt-frame"; promptFrame.lifetime = .keepAlways; add(promptFrame)
+        try assertReadableContrast(price)
+        tap(element("household.decision.review"))
+        let apply = app.buttons["household.decision.apply"]
+        let missingPrice = app.staticTexts["At least one line price is unknown."]
+        reveal(missingPrice, fullyVisible: true)
+        XCTAssertTrue(missingPrice.isHittable)
+        capture("S24-unknown-price-visible-without-expanding-details")
+        let details = app.buttons["household.decision.checkoutDetails"]
+        reveal(details)
+        XCTAssertEqual(details.value as? String, "Collapsed")
+        reveal(apply)
+        XCTAssertFalse(apply.isEnabled)
+        try assertDisabledApplyRejectsActivation(apply, name: "S24-unknown-price-disabled-apply")
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(successor.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        openAddDecision()
+        reveal(price, fullyVisible: true)
+        price.tap()
+        price.typeText("4.25")
+        dismissKeyboardIfPresent()
+        tap(element("household.decision.review"))
+        assertElementContains("household.decision.after-total", "$4.25")
+        reveal(apply); XCTAssertTrue(apply.isEnabled)
+        tap(apply)
+        assertReturnedToConfirmedRequest()
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
+    }
+
+    func testClarificationGuidanceAndEmptyQuestionStayReadableAndCancelDoesNotWrite() throws {
+        useClarificationForegroundNavigation = true
+        defer { useClarificationForegroundNavigation = false }
+        let environment = ProcessInfo.processInfo.environment
+        let size = environment["RITC_S24_CLARIFICATION_SIZE"] ?? "large"
+        let appearance = environment["RITC_S24_CLARIFICATION_APPEARANCE"] ?? "light"
+        guard ["large", "ax5"].contains(size), ["light", "dark"].contains(appearance) else {
+            XCTFail("Clarification traits must be large/ax5 and light/dark"); return
+        }
+        let category: UIContentSizeCategory = size == "ax5" ? .accessibilityExtraExtraExtraLarge : .large
+        let argument = size == "ax5" ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"
+        let name = "S24-clarification-" + appearance + "-" + size
+        let previousAppearance = XCUIDevice.shared.appearance
+        restoreClarificationAppearance = { XCUIDevice.shared.appearance = previousAppearance }
+        defer { restoreClarificationAppearance?(); restoreClarificationAppearance = nil }
+        XCUIDevice.shared.appearance = appearance == "dark" ? .dark : .light
+        XCTAssertEqual(XCUIDevice.shared.appearance, appearance == "dark" ? .dark : .light)
+        let runnerCategory = UIApplication.shared.preferredContentSizeCategory
+        XCTAssertEqual(runnerCategory, category, "Establish the requested system text size before launching this test")
+        app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--request-meal-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+                               "-UIPreferredContentSizeCategoryName", argument,
+                               "-appearance", appearance]
+        app.launch()
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        reveal(request)
+        XCTAssertTrue(request.waitForExistence(timeout: 20)); tap(request)
+        XCTAssertTrue(element("household.decision.cancel").waitForExistence(timeout: 5))
+        let wording = "Only this requester receives your question. Leave private costs and other requests out of it."
+        let guidanceMatches = app.staticTexts.matching(NSPredicate(format: "label == %@", wording))
+        let guidance = guidanceMatches.firstMatch
+        centerForReading(guidance)
+        XCTAssertEqual(guidanceMatches.count, 1)
+        let guidanceImage = try captureClarificationText(guidance, text: wording, category: category,
+                                                        name: name + "-guidance", isPrompt: false)
+        let question = try revealClarificationQuestion()
+        XCTAssertEqual(question.identifier, "household.decision.question")
+        XCTAssertTrue(question.label == "Question" || question.placeholderValue == "Question", "Require the exact native Question title")
+        XCTAssertTrue((question.value as? String ?? "").isEmpty || question.value as? String == "Question")
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        let questionImage = try captureClarificationText(question, text: "Question", category: category,
+                                                        name: name + "-empty-question", isPrompt: true)
+        var measurements: [[String: Any]] = []
+        // Collect both original failing targets; this does not forgive either failure.
+        do {
+            let prior = continueAfterFailure; continueAfterFailure = true
+            defer { continueAfterFailure = prior }
+            for (target, image) in [("privacy guidance", guidanceImage), ("empty Question prompt", questionImage)] {
+                let measured = try assertReadableContrast(image, label: name + " " + target)
+                measurements.append(["target": target, "contrast": measured.contrast,
+                                     "medianLuminance": measured.medianLuminance])
+            }
+        }
+        let report: [String: Any] = ["appearanceRequested": appearance, "deviceAppearanceObserved": XCUIDevice.shared.appearance.rawValue,
+                                    "categoryRequested": category.rawValue, "runnerCategoryObserved": runnerCategory.rawValue,
+                                    "appAppearancePreferenceRequested": appearance, "appearancePath": "S24 fixture mirrors ordinary app preferredColorScheme; system propagation is not qualified",
+                                    "locale": "en_US", "minimumContrast": 4.5, "measurements": measurements,
+                                    "traitEvidence": "Public device appearance readback, runner system category, native app category override, visible row geometry and observed background luminance; app text scale/wrapping require screenshot review, not inferred from padded row height"]
+        let receipt = XCTAttachment(data: try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]),
+                                    uniformTypeIdentifier: "public.json")
+        receipt.name = name + "-contrast-and-palette"; receipt.lifetime = .keepAlways; add(receipt)
+        for measured in measurements {
+            let background = try XCTUnwrap(measured["medianLuminance"] as? Double)
+            if appearance == "light" { XCTAssertGreaterThanOrEqual(background, 0.8, "Observed target must use a light surface") }
+            else { XCTAssertLessThanOrEqual(background, 0.2, "Observed target must use a dark surface") }
+        }
+        let send = app.buttons.matching(NSPredicate(format: "label == %@", "Send clarification"))
+        reveal(send.firstMatch, fullyVisible: true)
+        XCTAssertEqual(send.count, 1); XCTAssertFalse(send.firstMatch.isEnabled)
+        reveal(question, fullyVisible: true); question.tap()
+        let draft = "Which cereal?\nKeep the original request."
+        question.typeText(draft)
+        XCTAssertEqual(question.value as? String, draft)
+        dismissKeyboardIfPresent()
+        reveal(question, fullyVisible: true)
+        XCTAssertEqual(question.identifier, "household.decision.question")
+        XCTAssertEqual(question.value as? String, draft)
+        capture(name + "-multiline-draft")
+        reveal(send.firstMatch, fullyVisible: true); XCTAssertTrue(send.firstMatch.isEnabled)
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        let diagnostics = element("fixture.s24.preview-diagnostics")
+        XCTAssertEqual(diagnostics.value as? String, "Fixture command attempts: 0")
+        capture(name + "-cancelled-without-write")
+
+        // Positive control: a rejected clarification must still be observable as
+        // an attempted command. This intentionally leaves an isolated pending
+        // operation; the final Cancel dismisses the sheet, not that operation.
+        tap(request)
+        XCTAssertTrue(element("household.decision.cancel").waitForExistence(timeout: 5))
+        let controlQuestion = try revealClarificationQuestion()
+        controlQuestion.tap(); controlQuestion.typeText("Intentional rejected clarification control")
+        dismissKeyboardIfPresent()
+        reveal(send.firstMatch, fullyVisible: true)
+        XCTAssertEqual(send.count, 1); XCTAssertTrue(send.firstMatch.isEnabled)
+        send.firstMatch.tap()
+        let notice = element("household.decision.notice")
+        reveal(notice, fullyVisible: true)
+        XCTAssertTrue(notice.waitForExistence(timeout: 5))
+        XCTAssertEqual(notice.label, "The service could not confirm this decision. Retry the pending decision to avoid a duplicate.")
+        tap(element("household.decision.cancel"))
+        // The pending request can be disabled; reveal its identity without tapping it.
+        for _ in 0..<24 {
+            if request.exists { break }
+            scrollContent(upward: true)
+        }
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        let observedAttempt = expectation(for: NSPredicate(format: "value == %@", "Fixture command attempts: 1"),
+                                          evaluatedWith: diagnostics)
+        wait(for: [observedAttempt], timeout: 5)
+        XCTAssertEqual(diagnostics.value as? String, "Fixture command attempts: 1")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        let control = XCTAttachment(string: "Rejected clarification positive control: \(diagnostics.value ?? "nil"); \(element("fixture.s24.posts").label); \(element("fixture.s24.lines").label). The pending operation is not claimed cancelled.")
+        control.name = name + "-rejected-attempt-observed"; control.lifetime = .keepAlways; add(control)
+        capture(name + "-rejected-attempt-control")
+    }
+
+    private func revealClarificationQuestion() throws -> XCUIElement {
+        let identity = NSPredicate(format: "identifier == %@", "household.decision.question")
+        let fields = app.textFields.matching(identity), views = app.textViews.matching(identity)
+        // Resolve both editable types on each observation; a lazy row must not
+        // permanently select the absent type before scrolling it into view.
+        for attempt in 0...24 {
+            let count = fields.count + views.count
+            if count > 0 {
+                XCTAssertEqual(count, 1, "Require one Question field with the stable identifier")
+                let field = fields.count == 1 ? fields.element : views.element
+                let gestureArea = scrollableArea(bottomInset: 16), bounds = app.frame
+                // Horizontal gesture margins do not obscure a visible Form row.
+                let viewport = CGRect(x: bounds.minX, y: gestureArea.minY,
+                                      width: bounds.width, height: gestureArea.height).intersection(bounds)
+                if field.isHittable && viewport.contains(field.frame) { return field }
+                if attempt < 24 { scrollContent(upward: field.frame.midY > gestureArea.midY) }
+            } else if attempt < 24 { scrollContent(upward: true) }
+        }
+        return try XCTUnwrap(nil as XCUIElement?, "Question field did not become wholly visible within 24 gestures")
+    }
+
+    private func captureClarificationText(_ target: XCUIElement, text: String, category: UIContentSizeCategory,
+                                          name: String, isPrompt: Bool) throws -> CGImage {
+        reveal(target, fullyVisible: true)
+        let frame = target.frame, gestureArea = scrollableArea(bottomInset: 16), bounds = app.frame
+        let viewport = CGRect(x: bounds.minX, y: gestureArea.minY,
+                              width: bounds.width, height: gestureArea.height).intersection(bounds)
+        let font = UIFont.preferredFont(forTextStyle: .body,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        // AX exposes the padded Form row, not its glyph/content rectangle.
+        // Row-width wrapping is only a conservative minimum-space calculation.
+        let rowWidthMinimum = (text as NSString).boundingRect(with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture(name + "-full")
+        let screenshot = target.screenshot()
+        let ink = XCTAttachment(screenshot: screenshot)
+        ink.name = name + "-target"; ink.lifetime = .keepAlways; add(ink)
+        let geometry = XCTAttachment(string: "identifier=\(target.identifier); label=\(target.label); placeholderValue=\(target.placeholderValue ?? "nil"); value=\(target.value ?? "nil"); categoryRequested=\(category.rawValue); frame=\(frame); appBounds=\(bounds); gestureArea=\(gestureArea); visibleViewport=\(viewport); bodyPointSize=\(font.pointSize); lineHeight=\(font.lineHeight); rowWidthMinimumTextBounds=\(rowWidthMinimum); glyphBounds=unmeasured; wrappingAndAppFontScale=screenshot-review-required\n\(target.debugDescription)")
+        geometry.name = name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        XCTAssertEqual(target.frame, frame, "Target geometry changed during capture")
+        if isPrompt {
+            XCTAssertTrue(target.label == text || target.placeholderValue == text, "Require the exact native prompt title")
+        } else { XCTAssertEqual(target.label, text) }
+        XCTAssertTrue(viewport.contains(frame)); XCTAssertTrue(target.isHittable)
+        XCTAssertGreaterThan(frame.width, 0)
+        XCTAssertGreaterThanOrEqual(frame.height + 2, font.lineHeight)
+        if !isPrompt {
+            // Padding makes a row-height upper bound invalid. Complete visible
+            // wrapping and actual text scale must also be reviewed in the images.
+            XCTAssertGreaterThanOrEqual(frame.height + 2, rowWidthMinimum.height)
+        }
+        return try XCTUnwrap(screenshot.image.cgImage)
+    }
+
+    func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() throws {
         openCerealReview()
         let sam = element("household.decision.meal.88888888-8888-4888-8888-888888888888")
         let mia = element("household.decision.meal.99999999-9999-4999-8999-999999999999")
         // Require one actual viewport with both current/proposed checkout and
         // the two named commitments, rather than finding each after scrolling.
-        let context = [element("household.decision.after-total"), element("household.decision.over-cap"), element("household.decision.before-total"), sam, mia]
+        let feeBasis = element("household.decision.feeBasis")
+        let context = [element("household.decision.after-total"), element("household.decision.over-cap"), element("household.decision.before-total"), feeBasis, sam, mia]
         revealTogether(context)
         for target in context {
             XCTAssertTrue(target.exists && target.isHittable, target.debugDescription)
         }
+        XCTAssertEqual(feeBasis.label, "Fixed retailer fee: $1.99.")
         XCTAssertTrue(element("household.decision.before-total").label.contains("$37.20"))
         XCTAssertTrue(element("household.decision.after-total").label.contains("$40.69"))
         XCTAssertTrue(element("household.decision.over-cap").label.contains("$2.69"))
         XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
         XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
         capture("S24-cereal-checkout-with-two-named-protected-lunches")
+        // Do not scroll between the existing shared viewport proof and these quantity checks.
+        try assertReadablePortions(sam, category: .large, name: "S24-standard-Sam-portions")
+        try assertReadablePortions(mia, category: .large, name: "S24-standard-Mia-portions")
+        let total = element("household.decision.after-total").staticTexts["$40.69"]
+        centerForReading(total)
+        try assertReadableContrast(total)
+        let guidance = app.staticTexts["Check usable food separately; this review does not confirm meal coverage."]
+        centerForReading(guidance)
+        try assertReadableContrast(guidance)
         tap(element("household.decision.cancel"))
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
-        XCTAssertTrue(request.waitForExistence(timeout: 5)); XCTAssertTrue(request.label.contains("Received, waiting for review"))
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
         tap(element("fixture.s24.end-access"))
@@ -47,6 +321,383 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         capture("S24-shopper-access-ended-clears-private-context")
     }
+    func testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite() {
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
+        openCerealReview()
+        XCTAssertTrue(element("household.decision.after-total").label.contains("$40.69"))
+        let outer = app.buttons["household.decision.checkoutDetails"]
+        let inner = app.buttons["household.decision.includedCharges"]
+        func open(_ button: XCUIElement, label: String) {
+            reveal(button, fullyVisible: true)
+            XCTAssertEqual(button.label, label)
+            XCTAssertEqual(button.value as? String, "Collapsed")
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            XCTAssertGreaterThan(button.frame.width, app.frame.width / 2)
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+            XCTAssertEqual(button.value as? String, "Expanded")
+        }
+        XCTAssertFalse(inner.exists)
+        open(outer, label: "Checkout calculation details")
+        let revision = app.staticTexts["Shop revision, 1"]
+        reveal(revision)
+        XCTAssertTrue(revision.isHittable)
+        open(inner, label: "Included charges and discounts")
+        let charges = ["Retailer fee, $1.99", "Tax, $0.75", "Deposits, $0.10", "Discounts, $0.49"]
+        for charge in charges {
+            let row = app.staticTexts[charge]
+            centerForReading(row)
+            XCTAssertTrue(row.isHittable)
+            XCTAssertEqual(row.label, charge)
+        }
+        capture("S23-shopper-itemized-checkout-details")
+        let apply = app.buttons["household.decision.apply"]
+        reveal(apply)
+        XCTAssertFalse(apply.isEnabled, "Opening the calculation cannot accept the overage")
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(element("household.request.44444444-4444-4444-8444-444444444444").waitForExistence(timeout: 5))
+        tap(element("fixture.s24.end-access"))
+        XCTAssertTrue(app.staticTexts["Shopper access has ended. Return to household settings."].waitForExistence(timeout: 10))
+        XCTAssertFalse(outer.exists); XCTAssertFalse(inner.exists)
+        for charge in charges { XCTAssertFalse(app.staticTexts[charge].exists) }
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
+    func testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview() {
+        openCerealReview()
+        let apply = app.buttons["household.decision.apply"]
+        let overage = app.switches["household.decision.overage"]
+        let cancelPreview = app.buttons.matching(NSPredicate(format: "label == %@", "Cancel preview"))
+        let item = app.textFields["household.decision.item"]
+        let price = app.textFields["household.decision.price"]
+        let review = element("household.decision.review")
+        func assertNoWrites() {
+            XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+            XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        }
+        func assertPreviewState(count: Int, present: Bool) {
+            let facts = element("fixture.s24.preview-diagnostics").label
+            XCTAssertTrue(facts.contains("Fixture previews: \(count);"), facts)
+            XCTAssertTrue(facts.contains("selected: 44444444-4444-4444-8444-444444444444;"), facts)
+            XCTAssertTrue(facts.contains("choice: add; price: 3.49;"), facts)
+            let preview = present ? "55555555-5555-4555-8555-555555555555" : "none"
+            XCTAssertTrue(facts.contains("preview: \(preview);"), facts)
+        }
+        assertPreviewState(count: 1, present: true)
+        reveal(apply); XCTAssertFalse(apply.isEnabled)
+        enableSwitch("household.decision.overage")
+        XCTAssertEqual(overage.value as? String, "1")
+        reveal(apply); XCTAssertTrue(apply.isEnabled)
+        assertNoWrites()
+
+        let cancel = cancelPreview.firstMatch
+        reveal(cancel, fullyVisible: true)
+        capture("S24-cancel-preview-before-activation")
+        XCTAssertEqual(cancelPreview.count, 1)
+        XCTAssertEqual(cancel.elementType, .button)
+        XCTAssertEqual(cancel.label, "Cancel preview")
+        XCTAssertTrue(cancel.isEnabled && cancel.isHittable)
+        cancel.tap() // Exercise Cancel preview, not the toolbar's sheet dismissal.
+        capture("S24-cancel-preview-returned-to-draft")
+        XCTAssertFalse(cancel.exists)
+        XCTAssertFalse(element("household.decision.after-total").exists)
+        XCTAssertFalse(apply.exists)
+        XCTAssertFalse(overage.exists)
+        XCTAssertTrue(app.navigationBars["Review request"].exists)
+        XCTAssertTrue(element("household.decision.cancel").exists)
+        assertPreviewState(count: 1, present: false)
+        assertNoWrites()
+
+        reveal(item, fullyVisible: true)
+        XCTAssertEqual(item.value as? String, "Brown rice cereal")
+        reveal(price, fullyVisible: true)
+        XCTAssertEqual(price.value as? String, "3.49")
+        // Re-review the unchanged draft before any typing: a field edit would
+        // independently reset consent and could mask a broken Cancel preview.
+        reveal(review, fullyVisible: true)
+        XCTAssertEqual(review.elementType, .button)
+        XCTAssertEqual(review.label, "Review decision")
+        XCTAssertTrue(review.isEnabled && review.isHittable)
+        capture("S24-cancel-preview-draft-ready-for-fresh-review")
+        review.tap()
+        XCTAssertTrue(element("household.decision.after-total").waitForExistence(timeout: 10))
+        assertElementContains("household.decision.after-total", "$40.69")
+        assertElementContains("household.decision.over-cap", "$2.69")
+        assertPreviewState(count: 2, present: true)
+        reveal(overage, fullyVisible: true)
+        XCTAssertEqual(overage.value as? String, "0", "A fresh preview must require fresh overage consent")
+        reveal(apply); XCTAssertFalse(apply.isEnabled)
+        capture("S24-cancel-preview-fresh-review-requires-consent")
+        assertNoWrites()
+
+        // Supported focus evidence: an explicit field tap routes keyboard input
+        // to that field. This does not assert automatic or VoiceOver focus.
+        reveal(item, fullyVisible: true)
+        item.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Brown rice cereal".count))
+        app.typeText("Reviewed cereal draft")
+        XCTAssertEqual(item.value as? String, "Reviewed cereal draft")
+        dismissKeyboardIfPresent()
+        reveal(price, fullyVisible: true)
+        XCTAssertEqual(price.value as? String, "3.49")
+        assertPreviewState(count: 2, present: false)
+        assertNoWrites()
+    }
+
+    func testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts() {
+        openCerealReview(extraArguments: ["--request-other-meal-fixture"])
+        let title = "Other meals in this shop"
+        let controls = app.buttons.matching(NSPredicate(format: "label == %@", title))
+        let control = controls.firstMatch
+        let label = app.staticTexts.matching(NSPredicate(format: "label == %@", title)).firstMatch
+        let other = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")).firstMatch
+
+        func assertReviewedFacts() {
+            for (id, expected) in [
+                ("88888888-8888-4888-8888-888888888888", ["Sam’s wrap lunch", "Lunch · November 4, 2026", "Protected portions, 1"]),
+                ("99999999-9999-4999-8999-999999999999", ["Mia’s wrap lunch", "Lunch · November 5, 2026", "Protected portions, 1"])
+            ] {
+                let row = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal." + id)).firstMatch
+                reveal(row, fullyVisible: true)
+                let observedLabel = row.label
+                for fact in expected { XCTAssertTrue(observedLabel.contains(fact), observedLabel) }
+            }
+            for (id, amount) in [("household.decision.before-total", "$37.20"),
+                                 ("household.decision.after-total", "$40.69"),
+                                 ("household.decision.over-cap", "$2.69")] {
+                let total = app.staticTexts.matching(identifier: id).firstMatch
+                reveal(total)
+                let observedLabel = total.label
+                XCTAssertTrue(observedLabel.contains(amount), observedLabel)
+            }
+            let apply = app.buttons.matching(identifier: "household.decision.apply").firstMatch
+            reveal(apply); XCTAssertFalse(apply.isEnabled, "Disclosure cannot accept the overage")
+            XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.posts").firstMatch.label, "Fixture applied decisions: 0")
+            XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.lines").firstMatch.label, "Fixture saved lines: 0")
+        }
+        var headerSize: CGSize?
+        func assertControl(_ state: String) {
+            reveal(label, fullyVisible: true)
+            capture("S24-other-meals-" + state)
+            let count = controls.count
+            let discovery = XCTAttachment(string: "Expected state: \(state)\nNamed button count: \(count)\n" +
+                "Visible label: \(title)\nLabel frame: \(label.frame)")
+            discovery.name = "S24-other-meals-" + state + "-discovery"
+            discovery.lifetime = .keepAlways; add(discovery)
+            // Never ask an absent firstMatch for debugDescription or a snapshot.
+            // The header screenshot and discovery facts survive this intended failure.
+            guard count == 1 else {
+                XCTFail("Expected exactly one button named \(title); found \(count)")
+                return
+            }
+            guard let snapshot = try? control.snapshot() else {
+                XCTFail("The named Other meals control could not be snapshotted")
+                return
+            }
+            let details = "Type: \(snapshot.elementType)\nLabel: \(snapshot.label)\n" +
+                "Value: \(String(describing: snapshot.value))\nFrame: \(snapshot.frame)"
+            let evidence = XCTAttachment(string: String(details.prefix(4096)))
+            evidence.name = "S24-other-meals-" + state + "-control"
+            evidence.lifetime = .keepAlways; add(evidence)
+            XCTAssertEqual(snapshot.elementType, .button)
+            XCTAssertEqual(snapshot.label, title)
+            XCTAssertEqual(snapshot.value as? String, state)
+            XCTAssertTrue(snapshot.isEnabled && control.isHittable)
+            XCTAssertGreaterThanOrEqual(snapshot.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(snapshot.frame.height, 44)
+            // Native snapshots can differ by floating-point roundoff at a shared edge.
+            XCTAssertTrue(snapshot.frame.insetBy(dx: -0.000001, dy: -0.000001).contains(label.frame),
+                          "The named action must include its visible label")
+            if let headerSize {
+                XCTAssertEqual(snapshot.frame.width, headerSize.width, accuracy: 1,
+                               "Opening details must keep the header width stable")
+                XCTAssertEqual(snapshot.frame.height, headerSize.height, accuracy: 1,
+                               "Changing the chevron must not rewrap the header")
+            } else {
+                headerSize = snapshot.frame.size
+            }
+        }
+
+        assertReviewedFacts()
+        assertControl("Collapsed")
+        XCTAssertFalse(other.exists)
+        // Tap the actual text center, never the trailing disclosure chevron.
+        label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        assertControl("Expanded")
+        reveal(other, fullyVisible: true)
+        let ordinaryLabel = other.label
+        for fact in ["Family rice dinner", "Dinner · November 6, 2026", "Portions, 4"] {
+            XCTAssertTrue(ordinaryLabel.contains(fact), ordinaryLabel)
+        }
+        XCTAssertFalse(ordinaryLabel.contains("Protected portions"))
+        capture("S24-other-meals-expanded-ordinary-facts")
+        assertReviewedFacts()
+        assertControl("Expanded")
+        label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        assertControl("Collapsed")
+        XCTAssertFalse(other.exists)
+        assertReviewedFacts()
+    }
+
+    func testLargestTextShowsCompleteProtectedLunchNamesAndDates() throws {
+        openCerealReview(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let dates = ["Lunch · November 4, 2026", "Lunch · November 5, 2026"]
+        let meals = [("88888888-8888-4888-8888-888888888888", "Sam’s wrap lunch"),
+                     ("99999999-9999-4999-8999-999999999999", "Mia’s wrap lunch")]
+        let traits = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        try assertCompleteDecisionText(app.staticTexts["Protected meal commitments"], style: .headline,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-protected-heading")
+        for ((id, name), date) in zip(meals, dates) {
+            // Combined meal facts are StaticText, as in the other-meals check.
+            // Scope the parent before querying its portion label and value;
+            // the broad Any parent timed out while resolving those children.
+            let row = app.staticTexts.matching(identifier: "household.decision.meal." + id).firstMatch
+            centerForReading(row)
+            XCTAssertTrue(row.label.contains(name) && row.label.contains(date) && row.label.contains("Protected portions, 1"))
+            for (label, style) in [(name, UIFont.TextStyle.subheadline), (date, .caption1)] {
+                let text = row.staticTexts.matching(NSPredicate(format: "label == %@", label)).firstMatch
+                XCTAssertTrue(text.exists, label)
+                let font = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits)
+                let needed = (label as NSString).boundingRect(with: CGSize(width: row.frame.width, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+                XCTAssertGreaterThanOrEqual(text.frame.height + 2, needed.height, label)
+            }
+            capture("Largest text " + name)
+            try assertReadablePortions(row, category: .accessibilityExtraExtraExtraLarge,
+                                       name: "S24-AX5-" + id + "-portions")
+        }
+        let expiry = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Preview expires,")).firstMatch
+        centerForReading(expiry)
+        let expiryDate = expiry.staticTexts.allElementsBoundByIndex.filter { $0.label != "Preview expires" }
+        XCTAssertEqual(expiryDate.count, 1)
+        let date = try XCTUnwrap(expiryDate.first)
+        // The fixture expires at midnight UTC, which is still the prior year
+        // in New York. Check the exact device-local date, not one host's year.
+        let expectedExpiry = try XCTUnwrap(ISO8601DateFormatter().date(from: "2099-01-01T00:00:00Z"))
+        let expiryStyle = Date.FormatStyle(date: .abbreviated, time: .shortened,
+                                          locale: Locale(identifier: "en_US"), timeZone: .current)
+        XCTAssertEqual(date.label, expectedExpiry.formatted(expiryStyle))
+        try assertCompleteDecisionText(expiry.staticTexts["Preview expires"], style: .body,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-title")
+        try assertCompleteDecisionText(date, style: .body,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-date")
+        try assertDisabledApplyRejectsActivation(app.buttons["household.decision.apply"], name: "S24-largest-disabled-apply")
+        centerForReading(app.buttons["Cancel preview"])
+        capture("Largest text review actions")
+        tap(element("household.decision.cancel"))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
+    private func assertCompleteDecisionText(_ text: XCUIElement, style: UIFont.TextStyle,
+                                            category: UIContentSizeCategory, name: String) throws {
+        centerForReading(text)
+        let frame = text.frame, area = scrollableArea(bottomInset: 16)
+        let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+        let font = UIFont.preferredFont(forTextStyle: style,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        let required = (text.label as NSString).boundingRect(
+            with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture(name)
+        let ink = XCTAttachment(screenshot: text.screenshot())
+        ink.name = name + "-ink"; ink.lifetime = .keepAlways; add(ink)
+        let geometry = XCTAttachment(string: "label=\(text.label); frame=\(frame); viewport=\(viewport); lineHeight=\(font.lineHeight); requiredBounds=\(required)")
+        geometry.name = name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        XCTAssertTrue(viewport.contains(frame), name)
+        XCTAssertTrue(text.isHittable, name)
+        XCTAssertGreaterThanOrEqual(frame.height + 2, max(font.lineHeight, required.height), name)
+        try assertReadableContrast(text)
+    }
+
+    // These are essential quantities. Check actual rendered bounds and pixels, not a source font declaration.
+    // The caller positions the meal; this helper must not scroll away from the shared checkout viewport.
+    private func assertReadablePortions(_ row: XCUIElement, category: UIContentSizeCategory, name: String) throws {
+        let area = scrollableArea(bottomInset: 16)
+        let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+        let traits = UITraitCollection(preferredContentSizeCategory: category)
+        let minimumFont = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits)
+        for (suffix, label) in [("label", "Protected portions"), ("value", "1")] {
+            let matches = row.staticTexts.matching(NSPredicate(format: "label == %@", label))
+            XCTAssertEqual(matches.count, 1, name + " " + suffix)
+            let text = matches.firstMatch
+            XCTAssertEqual(text.label, label)
+            XCTAssertTrue(text.isHittable, text.debugDescription)
+            let frame = text.frame
+            let required = (label as NSString).boundingRect(
+                with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: minimumFont], context: nil)
+            let screenshot = text.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name + "-" + suffix; attachment.lifetime = .keepAlways; add(attachment)
+            let geometry = XCTAttachment(string: "category=\(category.rawValue); frame=\(frame); viewport=\(viewport); bodyLineHeight=\(minimumFont.lineHeight); requiredTextBounds=\(required)\n\(text.debugDescription)")
+            geometry.name = name + "-" + suffix + "-frame"; geometry.lifetime = .keepAlways; add(geometry)
+            XCTAssertTrue(viewport.contains(frame), "Portion text must be wholly visible: \(frame) in \(viewport)")
+            XCTAssertGreaterThan(frame.width, 0)
+            XCTAssertGreaterThanOrEqual(frame.height + 2, max(minimumFont.lineHeight, required.height), label)
+            try assertReadableContrast(try XCTUnwrap(screenshot.image.cgImage), label: name + " " + suffix)
+        }
+    }
+
+    // Measure the ink and background of this visible, single-color text element.
+    // Ignore the outermost 1% of values so individual antialiasing pixels cannot pass it.
+    private func assertReadableContrast(_ text: XCUIElement) throws {
+        try assertReadableContrast(try XCTUnwrap(text.screenshot().image.cgImage), label: text.label)
+    }
+
+    @discardableResult private func assertReadableContrast(_ image: CGImage, label: String) throws -> (contrast: Double, medianLuminance: Double) {
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let bitmap = try XCTUnwrap(CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
+            bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        bitmap.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let bytes = try XCTUnwrap(bitmap.data).assumingMemoryBound(to: UInt8.self)
+        let linear = (0...255).map { byte -> Double in
+            let value = Double(byte) / 255
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = (0..<(image.width * image.height)).map { pixel in
+            let index = pixel * 4
+            return 0.2126 * linear[Int(bytes[index])] + 0.7152 * linear[Int(bytes[index + 1])]
+                + 0.0722 * linear[Int(bytes[index + 2])]
+        }.sorted()
+        let trim = luminance.count / 100
+        let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
+        XCTAssertGreaterThanOrEqual(contrast, 4.5, label)
+        return (contrast, luminance[luminance.count / 2])
+    }
+
+    private func assertDisabledApplyRejectsActivation(_ button: XCUIElement, name: String) throws {
+        reveal(button, fullyVisible: true)
+        XCTAssertEqual(button.elementType, .button)
+        XCTAssertEqual(button.label, "Apply reviewed decision")
+        XCTAssertFalse(button.isEnabled)
+        let full = button.screenshot()
+        let image = try XCTUnwrap(full.image.cgImage)
+        let frame = button.frame
+        // The native Form can include horizontal row padding in the button frame.
+        // Remove that padding plus the rounded outline; measure only central label ink/surface.
+        XCTAssertGreaterThan(frame.width, 64)
+        XCTAssertGreaterThan(frame.height, 32)
+        let scaleX = CGFloat(image.width) / frame.width
+        let scaleY = CGFloat(image.height) / frame.height
+        let crop = CGRect(x: ceil(32 * scaleX), y: ceil(16 * scaleY),
+                          width: floor((frame.width - 64) * scaleX), height: floor((frame.height - 32) * scaleY))
+        let interior = try XCTUnwrap(image.cropping(to: crop))
+        let fullAttachment = XCTAttachment(screenshot: full)
+        fullAttachment.name = name + "-whole-button"; fullAttachment.lifetime = .keepAlways; add(fullAttachment)
+        let labelAttachment = XCTAttachment(image: UIImage(cgImage: interior))
+        labelAttachment.name = name + "-label-interior"; labelAttachment.lifetime = .keepAlways; add(labelAttachment)
+        let state = XCTAttachment(string: "\(button.debugDescription)\nlabelInteriorPixels=\(crop); sourcePixels=\(image.width)x\(image.height)")
+        state.name = name + "-disabled-state-and-crop"; state.lifetime = .keepAlways; add(state)
+        try assertReadableContrast(interior, label: button.label)
+        // Send a physical tap rather than asking XCTest to activate a disabled AX element.
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(button.exists)
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertTrue(element("household.decision.cancel").exists)
+    }
+
     func testUnavailableMealFactsRemainUnknownInRequestDecision() {
         openCerealReview(extraArguments: ["--request-meals-unknown"])
         let unknown = element("household.decision.meals.unknown")
@@ -63,13 +714,28 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--request-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + extraArguments
         app.launch()
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
-        XCTAssertTrue(request.waitForExistence(timeout: 20)); tap(request)
-        tap(element("household.decision.choice")); tap(app.buttons["Add packs to this shop"])
+        XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 20))
+        for _ in 0..<8 where !request.exists { app.collectionViews.firstMatch.swipeUp() }
+        tap(request)
+        tap(element("household.decision.choice"))
+        let add = app.buttons["Add packs to this shop"]
+        // At AX5 the native menu opens scrolled to its selected option.
+        let selected = app.buttons["Save for next shop"]
+        // An offscreen AX5 menu item can be absent from the hierarchy entirely.
+        // Scroll from the visible selected menu row, not the underlying Form.
+        if (!add.exists || !add.isHittable) && selected.exists && selected.isHittable {
+            let start = selected.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 160)))
+        }
+        tap(add)
         fill("3.49", into: "household.decision.price", replacing: true)
-        tap(element("household.decision.review"))
-        XCTAssertTrue(element("household.decision.after-total").waitForExistence(timeout: 10))
+        dismissKeyboardIfPresent()
+        let review = element("household.decision.review")
+        centerForReading(review)
+        review.tap()
+        reveal(element("household.decision.after-total"))
     }
-    func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() {
+    func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() throws {
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
@@ -81,9 +747,16 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
         tap(request)
         tap(element("household.decision.choice")); tap(app.buttons["Add packs to this shop"])
-        tap(app.buttons["Compare available packs for this request"])
-        fill("8", into: "household.pack.need", replacing: true)
-        for (id, yield, price) in [("a", "4", "3.00"), ("b", "6", "4.00")] {
+        let comparePacks = app.buttons["household.pack.open"]
+        reveal(comparePacks, fullyVisible: true)
+        XCTAssertEqual(comparePacks.label, "Compare available packs for this request")
+        XCTAssertEqual(comparePacks.value as? String, "Collapsed")
+        XCTAssertGreaterThanOrEqual(comparePacks.frame.height, 44)
+        XCTAssertGreaterThan(comparePacks.frame.width, app.frame.width / 2)
+        comparePacks.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertEqual(comparePacks.value as? String, "Expanded")
+        fill("2/3", into: "household.pack.need", replacing: true)
+        for (id, yield, price) in [("a", "1/3", "3.00"), ("b", "0,5", "4.00")] {
             fill("Reviewed pack " + id, into: "household.pack.\(id).label", replacing: true)
             fill(yield, into: "household.pack.\(id).usable", replacing: true)
             fill(price, into: "household.pack.\(id).price", replacing: true)
@@ -92,34 +765,46 @@ import XCTest
             enableSwitch("household.pack.\(id).matched")
         }
         tap(element("household.pack.compare"))
+        assertText("Reviewed need: 2/3 units")
+        assertText("Usable per pack: 1/3 units")
         assertText("Cheapest sufficient option among reviewed available packs with known prices")
         capture("S24-reviewed-available-pack-result")
-        let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled); tap(use)
+        let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled)
+        XCTAssertTrue(use.isHittable, use.debugDescription); use.tap()
         tap(element("household.decision.review"))
-        let apply = element("household.decision.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
+        let apply = app.buttons["household.decision.apply"]; reveal(apply); XCTAssertFalse(apply.isEnabled)
+        try assertDisabledApplyRejectsActivation(apply, name: "S24-overage-disabled-apply")
         assertText("Reviewed shelf a")
         assertText("After this decision")
         capture("S24-actual-household-preview-before-overage-approval")
         enableSwitch("household.decision.overage")
-        reveal(apply); XCTAssertTrue(apply.isEnabled); tap(apply)
-        let confirmations = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Decision confirmed by the household"))
-        // The inbox behind the sheet displays the same receipt. Require the
-        // visible sheet receipt, rather than the covered parent's first match.
-        let visibleReceipt = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            confirmations.allElementsBoundByIndex.contains { $0.exists && $0.isHittable }
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [visibleReceipt], timeout: 10), .completed)
-        capture("S24-actual-decision-receipt")
-        tap(element("household.decision.cancel"))
+        reveal(apply); XCTAssertTrue(apply.isEnabled)
+        XCTAssertTrue(apply.isHittable, apply.debugDescription); apply.tap()
+        assertReturnedToConfirmedRequest()
+        capture("S23-updated-original-request-after-confirmed-apply")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
-        capture("S24-request-returned-once-after-sheet-dismissal")
+        capture("S23-request-returned-once-without-manual-dismissal")
+    }
+    private func assertReturnedToConfirmedRequest(file: StaticString = #filePath, line: UInt = #line) {
+        let cancel = element("household.decision.cancel")
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed,
+                       "Confirmed Apply must return without another Cancel tap", file: file, line: line)
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        let outcome = element("household.request.outcome.44444444-4444-4444-8444-444444444444")
+        // Do not scroll here: returning from the sheet must expose the original row.
+        XCTAssertTrue(request.exists && request.isHittable, file: file, line: line)
+        XCTAssertTrue(outcome.exists && outcome.isHittable, file: file, line: line)
+        XCTAssertEqual(outcome.label, "Added to the plan", file: file, line: line)
+        XCTAssertEqual(app.buttons.matching(identifier: request.identifier).count, 1, file: file, line: line)
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        dismissKeyboardIfPresent()
+        reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -127,40 +812,100 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+        let field = app.textFields[id]
+        // A partially clipped field can report hittable on the smaller iOS 17 screen.
+        reveal(field, fullyVisible: true)
+        XCTAssertTrue(field.isHittable, field.debugDescription); field.tap()
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func dismissKeyboardIfPresent() {
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        let done = app.buttons["household.decision.done"]
+        if done.exists {
+            XCTAssertTrue(done.isHittable, "The request editor must expose its Done control")
+            done.tap()
+        } else {
+            let bounds = app.frame, area = scrollableArea()
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            // Start inside the Form and keep the gesture above the keyboard. A drag
+            // along the outer sheet margin may move the sheet without scrolling it.
+            let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.minY + area.height * 0.25 - bounds.minY))
+            let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.maxY - 8 - bounds.minY))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "household.decision.done"),
+                      "The review must be unobscured after dismissing the keyboard")
+    }
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
             let area = scrollableArea()
+            // The gesture safety margin is not an obstruction over visible content.
+            let visibleArea = fullyVisible ? scrollableArea(bottomInset: 16) : area
+            if target.exists && target.isHittable &&
+                (!fullyVisible || (target.frame.minY >= visibleArea.minY && target.frame.maxY <= visibleArea.maxY)) { return }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
             scrollContent(upward: upward)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea(bottomInset: fullyVisible ? 16 : 100)
+        XCTAssertTrue(target.exists && target.isHittable &&
+            (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+            "Missing fully actionable UI element: \(target.debugDescription)")
+    }
+    private func centerForReading(_ target: XCUIElement) {
+        reveal(target)
+        let area = scrollableArea()
+        let center = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.midY - app.frame.minY))
+        for _ in 0..<12 {
+            let frame = target.frame
+            if frame.minY >= area.minY && frame.maxY <= area.maxY { return }
+            let offset = max(-area.height * 0.4, min(frame.midY - area.midY, area.height * 0.4))
+            center.press(forDuration: 0.05, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -offset)),
+                         withVelocity: .slow, thenHoldForDuration: 0.25)
+        }
+        XCTFail("Could not show the whole reading target: " + target.debugDescription)
     }
     private func revealTogether(_ targets: [XCUIElement]) {
         guard let first = targets.first, let last = targets.last else { return }
         reveal(last)
-        for _ in 0..<16 {
-            if targets.allSatisfy({ $0.exists && $0.isHittable }) { return }
+        for attempt in 0...16 {
+            // Use the same complete viewport as the following quantity checks.
+            // A partly visible lunch row can already report hittable.
+            let area = scrollableArea(bottomInset: 16)
+            let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+            if targets.allSatisfy({ $0.exists && $0.isHittable && viewport.contains($0.frame) }) { return }
+            guard attempt < 16 else { break }
             // Fine positioning avoids a whole-cell scroll hiding the first
             // amount after the second lunch becomes visible.
-            scrollContent(upward: first.exists && first.isHittable, amount: 0.12)
+            let above = targets.contains { target in
+                guard target.exists else { return false }
+                let frame = target.frame
+                return !frame.isEmpty && frame.minY < viewport.minY
+            }
+            scrollContent(upward: !above && first.exists && first.isHittable, amount: 0.12)
         }
+        XCTFail("Checkout and both protected lunches must fit wholly in the same viewport")
     }
-    private func scrollableArea() -> CGRect {
+    private func scrollableArea(bottomInset: CGFloat = 100) -> CGRect {
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        let barBottom: CGFloat
+        if useClarificationForegroundNavigation && app.navigationBars["Review request"].exists {
+            // The presented review owns the viewport; the fixture's underlying
+            // navigation bar may remain in the accessibility tree as hittable.
+            barBottom = app.navigationBars["Review request"].frame.maxY
+        } else {
+            barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
+        let bottom = min(bounds.maxY - bottomInset, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
     private func scrollContent(upward: Bool, amount: CGFloat = 0.6) {

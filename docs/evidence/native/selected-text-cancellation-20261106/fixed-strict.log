@@ -1,0 +1,38 @@
+Executed 30 of 30 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testLargeListSearchLeavesWidgetAloneAndCommittedChangesRefreshIt | Passed | 1.08 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testQueuedOpaqueURLDoesNotSurviveBackgroundThenForeground | Passed | 0.27 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testReadyOpaqueURLDoesNotReactivateAfterBackgroundBeforeTaskRuns | Passed | 0.25 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testLockedGenericEntryDoesNotPublishPrivateWidgetOrChangeLedger | Passed | 0.25 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testReadyGenericURLDoesNotReactivateAfterBackgroundBeforeTaskRuns | Passed | 0.25 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview | Passed | 0.22 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testActiveAdultGenericCaptureKeepsLedgerUnchanged | Passed | 0.20 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testBackgroundAgainCancelsDeferredURL | Passed | 0.17 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testColdGenericCaptureWaitsForAdultModels | Passed | 0.16 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testDeferredURLCannotOpenAfterAuthorityLossBeforeActivation | Passed | 0.15 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testColdCurrentURLWaitsForActiveAndReadyModels | Passed | 0.10 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges | Passed | 0.08 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testRetainedWidgetRouteCannotOpenPreviouslySelectedShop | Passed | 0.08 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testDeferredURLRevalidatesStalePickupAfterSwitch | Passed | 0.07 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testURLReceivedDuringLaterInactivityWaitsForActivation | Passed | 0.07 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testErasureAndExpiryRemovePrivateReviewCopies | Passed | 0.05 |
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testBindingBeforePickupLoadPreservesDurablePickupSurfaceState | Passed | 0.03 |
+| RoomInTheCartTests/LedgerSelectedTextPortTests/testRealLedgerRestartAcknowledgesExactReceiptWithoutDuplicate | Passed | 0.03 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testExplicitStaleReviewRetainsOperationAndPriorConfirmedAttempt | Passed | 0.02 |
+| RoomInTheCartTests/LedgerSelectedTextPortTests/testActualLedgerScopeLossPreventsMutationAndLeavesInboxPending | Passed | 0.02 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testRacingOldReceiptIsRecognizedAfterExplicitFreshReview | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testInterruptedBeforeCommitKeepsAllIDsAndDecisions | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testCommitPersistsFullReviewAndAcknowledgesOnce | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testInterruptedAcknowledgmentReopensReceiptWithoutRestaging | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testAuthorityChangingDuringCommitDoesNotAcknowledge | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testChangedScopeCannotReadOrCommitReview | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testFutureReviewSchemaFailsClosedWithoutReplacingBytes | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testJournalRejectsChangedIdentityWithoutReplacingHealthyDraft | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testReceiptMismatchCannotConsumeInbox | Passed | 0.01 |
+| RoomInTheCartTests/SurfaceIntegrationTests/testRouteStoreIdempotencyAndExactScopeRemoval | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 30 examined tests.
+

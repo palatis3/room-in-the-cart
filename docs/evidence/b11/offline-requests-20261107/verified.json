@@ -1,0 +1,55 @@
+{
+  "mergedSource": "b0565fb6b07c97da2213d45dad6260f2fee6b055",
+  "localOnlySchema": 41,
+  "stagingSchemaWhenTested": 40,
+  "clients": [
+    "iPhone 17 Pro simulator iOS 26.2, actual app with synthetic identity provider",
+    "Android 14/API 34 emulator, Chrome 156, actual production web client"
+  ],
+  "permission": "Explicit per household/member/device, maximum 24 hours; inactive by default. Role loss cleared the browser IndexedDB and hid the pending text.",
+  "requestResults": [
+    {
+      "item": "Reconnect Android oats",
+      "requestCount": 1,
+      "operationCount": 1,
+      "submittedBodies": 2,
+      "identicalBytesAcrossRetries": true
+    },
+    {
+      "item": "Reconnect Android rice",
+      "requestCount": 1,
+      "operationCount": 1,
+      "submittedBodies": 1,
+      "identicalBytesAcrossRetries": true
+    },
+    {
+      "item": "Reconnect iPhone beans",
+      "requestCount": 1,
+      "operationCount": 1,
+      "submittedBodies": 2,
+      "identicalBytesAcrossRetries": true
+    }
+  ],
+  "afterRoleLoss": {
+    "query": "Reconnect access ended",
+    "requestCount": 0,
+    "indexedDBRows": 0
+  },
+  "combinedLocalTests": {
+    "postgres": {
+      "passed": 237,
+      "tapSHA256": "562a6d17f079d184fb22dd822a202e6fc481057048506b60bb9ace04d6b0c068"
+    },
+    "service": {
+      "passed": 454,
+      "tapSHA256": "067d97dabaf82426898d1f5cde97dc598e811293f10d798a5af9f9719032e600"
+    },
+    "web": {
+      "passed": 134,
+      "tapSHA256": "7cce52ba5857e71013399e0989e5ac18535041bc9fb35ea6037f08efeba05e95"
+    }
+  },
+  "mixedDeviceResultSHA256": "3c788c37923ea29014f7d9d581dd72efcf6d58a58ce52b8cf2d3186be8d8827d",
+  "combinedNativeResultSHA256": "8229253176d71b4a772761926c61172078faa89ccb4ee7060755b2072c2cb8c6",
+  "scope": "Synthetic actors and an isolated service. Legacy web-client and restore behavior are under separate review."
+}

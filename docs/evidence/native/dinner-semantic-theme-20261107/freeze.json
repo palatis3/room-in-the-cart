@@ -1,0 +1,142 @@
+{
+  "files": {
+    "run4-normal-visual-strict.log": {
+      "sha256": "804f9a8fb76fa681870ded5d5346b5d7f5710d0fdb40246080bc2a3e876b919c",
+      "bytes": 845
+    },
+    "source-review.md": {
+      "sha256": "5856740ac425ed92e251554d15e890e9bd8a221fb8e10652677fd37cf27c48b7",
+      "bytes": 4059
+    },
+    "normal-regressions-cleanup-delete.json": {
+      "sha256": "78de5bd4b66fdcecf59d6cd3364a7a9a075312e6eb1ae9b25f9470cbf3ebe3ee",
+      "bytes": 103
+    },
+    "runtime.json": {
+      "sha256": "9dd8d60c4b490dfae42f5f595d71b27af675df26c7e3d075f64c5095d90800d3",
+      "bytes": 393
+    },
+    "workflow-check.json": {
+      "sha256": "c1944e374e6f579c20a6b2178e7e4450a77fdb64016d8bfc78f49cd030aa80a7",
+      "bytes": 15308
+    },
+    "normal-regressions-strict.log": {
+      "sha256": "7ded0990e6ba84d462966fc23eefa22c29702d5eff0c65fefa3e0a328ffca747",
+      "bytes": 515
+    },
+    "source-review-manifest.json": {
+      "sha256": "0ceb0924bee3d6b21f860a21397e58060effdfa561e257cfa725cd3d1a1f9fb7",
+      "bytes": 1781
+    },
+    "image-provenance.json": {
+      "sha256": "2518741514686e648c83d3505cf5009c34a17f96e79879a7eda0ea42de3eb3cc",
+      "bytes": 1913
+    },
+    "visual-harness.patch": {
+      "sha256": "0841a02afb88b8d464b77432c5d223c1b4f55decdec25deb596658e0c83c3469",
+      "bytes": 10855
+    },
+    "diagnostic-manifest.json": {
+      "sha256": "cc949f66a7cf0c12f1fcaed5639e414d683aae3d5cd90ec8688da14f35b0d724",
+      "bytes": 2160
+    },
+    "diagnostic.patch": {
+      "sha256": "81975c8982b82339360d156329b84e6aec55c6efbaffa55098507e4ee06f3d71",
+      "bytes": 14314
+    },
+    "agent-visual-and-event-review.md": {
+      "sha256": "fedea5cc2212f70e866ab27710342ddec8dcf2ddb5fcbbd7c2ec6a603308245e",
+      "bytes": 6392
+    },
+    "run5-diagnostic-visual-check.json": {
+      "sha256": "6fbab8ad0389efcd62bb5eb805470c41ae1102a7e6b39ff125b8607c57cecaa0",
+      "bytes": 213
+    },
+    "README.md": {
+      "sha256": "b4665be508ea9b7664ba6da2307b8e2c1861759160277163dcb46a4711a0dd91",
+      "bytes": 3458
+    },
+    "visual-harness-manifest.json": {
+      "sha256": "dfb92e583c846c5547e67f12eb9b89513844511762b3db2d514cdc5473c9b8ba",
+      "bytes": 1553
+    },
+    "proposal-manifest.json": {
+      "sha256": "158888557fe9b2edc0042a4cb551e738d5ea6a909ff80a683771ccc2d8dcc999",
+      "bytes": 2269
+    },
+    "root-visual-review.json": {
+      "sha256": "7f803ab0ecc42aa2f152d6457df5c99e8b9b2d867d58f3f51814ba335b212afd",
+      "bytes": 3123
+    },
+    "run5-diagnostic-visual-strict.log": {
+      "sha256": "e0eab79ace2d6fafac7a055099b912e75fcacc11d38280b20d3183aafde33904",
+      "bytes": 469
+    },
+    "normal-regressions-root-check.json": {
+      "sha256": "c63573c0de3077f7d9c7c74fa8b7954803bfc2d77705612f1ea6e6698629c105",
+      "bytes": 367
+    },
+    "agent-event-check.json": {
+      "sha256": "b6b26d58f4252f9cff3d38b9e964675735faa180cb3ad3c3c180c191628b46f4",
+      "bytes": 11534
+    },
+    "agent-reviewed-controls.json": {
+      "sha256": "16e955def4c1df5347d87187b2262fdc152972931cc73bd1fab601ac1c29e04b",
+      "bytes": 9525
+    },
+    "normal-regressions-cleanup-shutdown.json": {
+      "sha256": "78de5bd4b66fdcecf59d6cd3364a7a9a075312e6eb1ae9b25f9470cbf3ebe3ee",
+      "bytes": 103
+    },
+    "normal-regressions-original-sha256.json": {
+      "sha256": "16bd7907fb1bb93589994f65d29e3ddfea928a535f13818649eadedebc91e98e",
+      "bytes": 7743
+    },
+    "theme.patch": {
+      "sha256": "67c8d6d61ec3630ca37fb5e53716aea34cbb1181f685a62216d7184b73d02d37",
+      "bytes": 13107
+    },
+    "run4-normal-visual-check.json": {
+      "sha256": "1af1042998f313d91dd14311bb8fb8e8c40912fe5db17f14274d1f00a6444262",
+      "bytes": 214
+    },
+    "run4-terminal-comparison.md": {
+      "sha256": "0f40c37a2ae020022fe628e0b3febc1a9109524570f0d1d0f86e84b7887c04eb",
+      "bytes": 8714
+    },
+    "normal-regressions-selectors.txt": {
+      "sha256": "5480e1eee95d2ceb9668ff343389cb109e61e7c972b6100b98e42914c6f561a2",
+      "bytes": 227
+    },
+    "main-normal-products-binding.json": {
+      "sha256": "fc0cc2e09c45aab0f4634171021ac2e1b61c82b739f0e33c23b26331e32f7dcf",
+      "bytes": 489
+    },
+    "screens/light-idea-review-actions.png": {
+      "sha256": "b0b91d72afed3b1641129c2125c6014d6bdf31d8710ad8c2131e2c0a583d76c6",
+      "bytes": 380725
+    },
+    "screens/light-reusable-completion.png": {
+      "sha256": "778c297bf89d809d9c9972590103b71268ab92bb44eb618743d52096113cf6bb",
+      "bytes": 220105
+    },
+    "screens/light-reusable-review.png": {
+      "sha256": "4f105632ce993901a8f68f0c7ee24e7089f8a9323cfbc10c5a95370b66bd7183",
+      "bytes": 248149
+    },
+    "screens/dark-idea-review-actions.png": {
+      "sha256": "aded5339e44d0d1faefc495d805346632375e19956c1063f276342d50e9e8bb6",
+      "bytes": 324385
+    },
+    "screens/dark-reusable-completion.png": {
+      "sha256": "80c1e88fc563f90226413aa3d1bca1b0bbf32a8456ccf5678c19f092d35c8c25",
+      "bytes": 155089
+    },
+    "screens/dark-reusable-review.png": {
+      "sha256": "51e1dce9773dc17dd66e6529a9673e1a956ad36fa9c3aaac0f8a4b491020186a",
+      "bytes": 181383
+    }
+  },
+  "atUTC": "2026-11-07T07:40:10.337488+00:00",
+  "scope": "Scoped shared Dinner editor source, screenshots and normal/diagnostic evidence; no full release claim"
+}

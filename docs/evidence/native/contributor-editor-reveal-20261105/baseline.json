@@ -1,0 +1,28 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "runID": 42048736649,
+  "jobID": 127334722431,
+  "artifactID": 13431686222,
+  "artifactSHA256": "e6cf00d89664e254e3bbb6355704f9d099409f8695f78acc638c2a7a125ab545",
+  "selected": 6,
+  "passed": 5,
+  "failed": 1,
+  "strictReplayExit": 1,
+  "runtimeWarnings": 0,
+  "failedSelector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+  "failure": "Missing capture.editor TextView snapshot while reading its value after keyboard dismissal.",
+  "observations": [
+    "This was the first test in its grouped job; no earlier suite in this job had run.",
+    "The exact entered Spanish text was read successfully before the keyboard-dismissal drag.",
+    "After the downward margin drag, keyboard absence passed; the capture sheet remained visible at its top with very large instructions and no TextView in the accessibility snapshot.",
+    "The test read the editor value immediately after dismissal without revealing the row."
+  ],
+  "candidateCorrection": "Reveal the editor before reading its value, retaining exact text equality and all existing subsequent review/top-position checks.",
+  "causalLimit": "Screenshots and hierarchy support an offscreen/virtualized row explanation; no product data loss or grouping-induced contamination is established. Local follow-up validation is pending.",
+  "testLogSHA256": "3a8d96aa3cf381bec29c5387c28239639471615eeb5b242dcea025c6acf31d23",
+  "attachments": {
+    "4FC89980-8319-46B4-9568-CF58A7E90A42.png": "00adcca9411c84ff9e8bb4aab58a2a374b23b70a7f8e6acca34c144c1e475886",
+    "D3B2063B-98F9-4530-8B77-3B06DC02876C.png": "a73ffc757ea6f371dd5c613f4ced6022c42fe1b34126cb9beadfe904ae2bf4e1",
+    "762310B6-0E53-4BCF-A696-1CEF0BBA569C.txt": "47522fc55cbd00f876a19b253b6f31a9e64587762eaaf1e15b9884453c32b7b3"
+  }
+}

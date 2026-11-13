@@ -1,0 +1,14 @@
+{
+  "decidedAtUTC": "2026-11-08T16:21:22.562691+00:00",
+  "action": "SIGINT to exactly owned xcodebuild process group",
+  "pid": 66732,
+  "reason": "Static regression confirmed: experimental view omits Stop in initial stopped state; unchanged original UI test requires visible disabled Stop before Play. Preserve partial evidence and fix view before complete actualAV qualification.",
+  "viewSHA256": "90f9fa795510184296424cce4e2cc682acdf5579e4a47a4852a24ec6c3cd906a",
+  "testSHA256": "62f1f381f38a7a893dcb7310f46d697a9cb94683f52dea87a205ea93921b814e",
+  "observedLogPrefixBytes": 797728,
+  "observedLogPrefixSHA256": "9f1e17a375ce5c566fe02f7840cbfbe9822bec7d7f1fa59fc65eeb9022b13788",
+  "observedCaseStarts": [
+    "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' started."
+  ],
+  "scope": "Operator-requested correction stop, not an observed product crash/timeout or completed5case result; no actualAV assurance"
+}

@@ -1,0 +1,153 @@
+{
+  "browser": "156.0.8078.79",
+  "observations": [
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/help?lang=es",
+      "language": "es",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Ayuda",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=es",
+        "/help?lang=es",
+        "/privacy?lang=es",
+        "/terms?lang=es",
+        "/support?lang=es"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/privacy?lang=es",
+      "language": "es",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Privacidad y datos",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=es",
+        "/help?lang=es",
+        "/privacy?lang=es",
+        "/terms?lang=es",
+        "/support?lang=es"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/terms?lang=es",
+      "language": "es",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Términos de uso",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=es",
+        "/help?lang=es",
+        "/privacy?lang=es",
+        "/terms?lang=es",
+        "/support?lang=es"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/support?lang=es",
+      "language": "es",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Soporte",
+      "contactLinks": [
+        "mailto:hello@roominthecart.com"
+      ],
+      "publicLinks": [
+        "/help?lang=es",
+        "/help?lang=es",
+        "/privacy?lang=es",
+        "/terms?lang=es",
+        "/support?lang=es"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/help?lang=en",
+      "language": "en",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Help",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=en",
+        "/help?lang=en",
+        "/privacy?lang=en",
+        "/terms?lang=en",
+        "/support?lang=en"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/privacy?lang=en",
+      "language": "en",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Privacy and data",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=en",
+        "/help?lang=en",
+        "/privacy?lang=en",
+        "/terms?lang=en",
+        "/support?lang=en"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/terms?lang=en",
+      "language": "en",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Terms of use",
+      "contactLinks": [],
+      "publicLinks": [
+        "/help?lang=en",
+        "/help?lang=en",
+        "/privacy?lang=en",
+        "/terms?lang=en",
+        "/support?lang=en"
+      ]
+    },
+    {
+      "url": "https://room-in-the-cart-staging.vercel.app/support?lang=en",
+      "language": "en",
+      "width": 411,
+      "scrollWidth": 411,
+      "height": 627,
+      "dpr": 2.625,
+      "heading": "Support",
+      "contactLinks": [
+        "mailto:hello@roominthecart.com"
+      ],
+      "publicLinks": [
+        "/help?lang=en",
+        "/help?lang=en",
+        "/privacy?lang=en",
+        "/terms?lang=en",
+        "/support?lang=en"
+      ]
+    }
+  ],
+  "section": {
+    "hash": "#public-section-0",
+    "top": 16.160715103149414,
+    "heading": "Get help"
+  },
+  "errors": [],
+  "complete": true,
+  "scope": "Eight rendered public pages on the actual Android emulator browser, same primed browser; no authentication/provider/device acceptance."
+}

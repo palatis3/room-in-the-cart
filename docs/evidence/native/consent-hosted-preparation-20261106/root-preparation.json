@@ -1,0 +1,27 @@
+{
+  "diagnosticCommit": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "baseCommit": "804030e68473d022e72b464940061c01c611a0bd",
+  "branch": "codex/diagnose-consent-history-804030e",
+  "changedFiles": [
+    ".github/workflows/ios-fixtures.yml",
+    "diagnostics/measurement-consent/hosted/harness.py",
+    "diagnostics/measurement-consent/hosted/overlay-index.json",
+    "diagnostics/measurement-consent/hosted/reconcile_consent_logs.py",
+    "diagnostics/measurement-consent/hosted/reference-plan.json",
+    "diagnostics/measurement-consent/hosted/selectors.txt",
+    "diagnostics/measurement-consent/hosted/test_harness.py",
+    "diagnostics/measurement-consent/hosted/test_reconcile_consent_logs.py",
+    "ios/App/RoomInTheCartApp.swift",
+    "ios/Features/Pickup/PickupFeedback.swift",
+    "ios/UITestSupport/MeasurementUIFixture.swift",
+    "ios/UITests/MeasurementUITests.swift"
+  ],
+  "allManifestBytesMatch": true,
+  "overlayIndexMatches": true,
+  "workingTreeClean": true,
+  "offlineTestsPassed": 46,
+  "nativeExecution": false,
+  "hostedExecution": false,
+  "published": false,
+  "releaseAcceptance": false
+}

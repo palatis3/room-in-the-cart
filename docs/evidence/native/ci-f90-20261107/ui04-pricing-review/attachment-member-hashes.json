@@ -1,0 +1,44 @@
+[
+  {
+    "file": "Tests.xcresult/Data/data.0~NIzVc3P_mWErmYOTsLMZ3bkc1tS6JiAZGfFUcXjK5DL_H46cnBBSi_tCXevuNp15ASIrquX2Yu1ZIJ-tc4B1nw==",
+    "bytes": 196782,
+    "sha256": "40598b5f23a2d6ee2f521a902a5f23fb7d9f08560fb928d9cad457633526211a",
+    "zipCRC": 1464522116,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~NIzVc3P_mWErmYOTsLMZ3bkc1tS6JiAZGfFUcXjK5DL_H46cnBBSi_tCXevuNp15ASIrquX2Yu1ZIJ-tc4B1nw==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~lGdAdFSchCEBXDjRbvKcvE39efEgjY63W3svPnPKhUD-3rlnVTu3dJvqUh1D4rdwlFY4LqBpBhXflNPjeLvZ4g==",
+    "bytes": 389669,
+    "sha256": "e89ae0ae9f9e222971abb7bf0510ad094039e401a1141c3072366edb0c848b47",
+    "zipCRC": 3398908137,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~lGdAdFSchCEBXDjRbvKcvE39efEgjY63W3svPnPKhUD-3rlnVTu3dJvqUh1D4rdwlFY4LqBpBhXflNPjeLvZ4g==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~fUu-SQN3iOLZgGF7jtSXyc-Z604ah4DYH89WPrJ8YyzJ5toFIGsxWvIIVdkubnXrJYaCHVvvUBurORQdVFxA5Q==",
+    "bytes": 1073,
+    "sha256": "3065771bb294ca9a1a877bc5cb0524eab3485ffd2d393947e6112f034099d772",
+    "zipCRC": 284452094,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~fUu-SQN3iOLZgGF7jtSXyc-Z604ah4DYH89WPrJ8YyzJ5toFIGsxWvIIVdkubnXrJYaCHVvvUBurORQdVFxA5Q==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  }
+]

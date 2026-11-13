@@ -1,0 +1,98 @@
+[
+  {
+    "contrastEstimate" : 7.083026440313754,
+    "darkInkRows" : [
+      [
+        12,
+        58
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/0-images\/01135E0E-6835-403B-9ABE-F49264C9B216.png",
+    "height" : 61,
+    "luminanceP01" : 0.09824171684914516,
+    "luminanceP99" : 1,
+    "width" : 558
+  },
+  {
+    "contrastEstimate" : 15.213849827934512,
+    "darkInkRows" : [
+      [
+        11,
+        58
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/0-images\/1E62E260-B859-4EB1-B7AB-913E8E7178BB.png",
+    "height" : 61,
+    "luminanceP01" : 0.019016061803901203,
+    "luminanceP99" : 1,
+    "width" : 356
+  },
+  {
+    "contrastEstimate" : 15.213849827934512,
+    "darkInkRows" : [
+      [
+        1,
+        64
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/0-images\/C8C28711-8D2A-487F-9094-9D0120484572.png",
+    "height" : 65,
+    "luminanceP01" : 0.019016061803901203,
+    "luminanceP99" : 1,
+    "width" : 810
+  },
+  {
+    "contrastEstimate" : 15.213849827934512,
+    "darkInkRows" : [
+      [
+        59,
+        97
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/0-images\/B5C1F884-1290-4574-A8D4-71D30C890072.png",
+    "height" : 154,
+    "luminanceP01" : 0.019016061803901203,
+    "luminanceP99" : 1,
+    "width" : 1110
+  },
+  {
+    "contrastEstimate" : 15.213849827934512,
+    "darkInkRows" : [
+      [
+        31,
+        154
+      ],
+      [
+        225,
+        338
+      ],
+      [
+        408,
+        524
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/1-images\/F13B76C7-F297-4A5E-A079-9CBB6DCF7CBF.png",
+    "height" : 562,
+    "luminanceP01" : 0.019016061803901203,
+    "luminanceP99" : 1,
+    "width" : 923
+  },
+  {
+    "contrastEstimate" : 15.213849827934512,
+    "darkInkRows" : [
+      [
+        84,
+        197
+      ],
+      [
+        270,
+        383
+      ]
+    ],
+    "file" : ".build\/S24NamedAuditTargetsNov08\/measurement-r1\/run\/inspection\/1-images\/ED1A444D-B4DB-4639-B33E-05A0250C9C6B.png",
+    "height" : 466,
+    "luminanceP01" : 0.019016061803901203,
+    "luminanceP99" : 1,
+    "width" : 1110
+  }
+]

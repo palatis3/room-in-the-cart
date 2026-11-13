@@ -1,0 +1,23 @@
+{
+  "before": {
+    "url": "https://room-in-the-cart-staging.vercel.app/requests?lang=en",
+    "language": "es",
+    "text": "Room in the Cart\n\nInglés\nEspañol\n\nInicia sesión para continuar\n\nEl inicio de sesión por correo aún no está disponible.\n\nActualizar",
+    "width": 411,
+    "scrollWidth": 411,
+    "formCount": 0
+  },
+  "after": {
+    "url": "https://room-in-the-cart-staging.vercel.app/requests?lang=en",
+    "language": "es",
+    "text": "Room in the Cart\n\nInglés\nEspañol\n\nInicia sesión para continuar\n\nEl inicio de sesión por correo aún no está disponible.\n\nActualizar",
+    "width": 411,
+    "scrollWidth": 411,
+    "formCount": 0
+  },
+  "refreshPreservedUnavailableState": true,
+  "earlierObservationLimits": [
+    "First comparison captured the transient Cargando indicator before language loading finished; final check waits for main aria-busy=false on both sides.",
+    "Invited-app language selection changes rendered language without changing its query string; final target uses the observed URL."
+  ]
+}

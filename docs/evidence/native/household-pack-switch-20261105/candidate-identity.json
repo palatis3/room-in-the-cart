@@ -1,0 +1,9 @@
+{
+  "candidate_sha256": "b336f9b891198942cabadebea5331e45cffcdc74a05ec3ced69cf21b4b61389c",
+  "patch_sha256": "2344a513b647e174b1cb636251052ebf9e5694bb34c8bc96d58011c45fdae6d3",
+  "changed_archived_files": [
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "single_final_newline": true,
+  "native_validation": "NOT RUN"
+}

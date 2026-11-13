@@ -31,9 +31,27 @@ struct SharedMealChangesView: View {
     }
 }
 
+struct SharedMealPreparationFacts: View {
+    let planning: SharedMealPlanning
+    var body: some View {
+        if let exclusions = planning.exclusions, !exclusions.isEmpty {
+            LabeledContent(ht("Meal exclusions"), value: exclusions.joined(separator: ", "))
+                .accessibilityIdentifier("shared-meal-exclusions")
+        }
+        if let minutes = planning.leadTimeMinutes {
+            LabeledContent(ht("Preparation time in minutes"), value: minutes.formatted())
+                .accessibilityIdentifier("shared-meal-preparation-minutes")
+        }
+        if let steps = planning.completedSteps, !steps.isEmpty {
+            LabeledContent(ht("Completed preparation steps"), value: steps.joined(separator: "\n"))
+        }
+    }
+}
+
 struct SharedMealPlanningFacts: View {
     let planning: SharedMealPlanning
     var body: some View {
+        SharedMealPreparationFacts(planning: planning)
         if let id = planning.sourceOccurrenceId { LabeledContent(ht("Mapped local occurrence"), value: id.uuidString) }
         ForEach(planning.groups) { group in
             LabeledContent(group.name, value: "\(group.servings.numerator)/\(group.servings.denominator)")
@@ -72,6 +90,7 @@ private struct SharedMealChangeContent: View {
     @State private var clearing = false
     @State private var dismissing: SharedMealChangePage.Proposal?
     @State private var notice: String?
+    @FocusState private var inputFocus: String?
     var body: some View {
         Form {
             if let page = model.page {
@@ -121,6 +140,7 @@ private struct SharedMealChangeContent: View {
             Button(ht("Refresh shared changes")) { Task { candidate = nil; selected = nil; await model.load() } }
         }
         .disabled(model.busy || !model.live)
+        .keyboardDoneAction(visible: inputFocus != nil, title: ht("Done"), identifier: "meal-change-keyboard-done") { inputFocus = nil }
         .confirmationDialog(ht("Clear local proposal retry?"), isPresented: $clearing, titleVisibility: .visible) {
             Button(ht("Check status and clear local retry"), role: .destructive) { Task { await model.clearPendingAfterStatusReview() } }
         } message: { Text(ht("This does not withdraw or undo a proposal. The shopper may already have applied it. Exact retry remains the way to confirm the original submission.")) }
@@ -134,22 +154,27 @@ private struct SharedMealChangeContent: View {
             if let seed { LabeledContent(ht("Local source meal"), value: seed.title); LabeledContent(ht("Mapped local occurrence"), value: seed.localOccurrenceID.uuidString) }
             Picker(ht("Shared occurrence"), selection: $selected) {
                 Text(ht("Choose a meal")).tag(nil as UUID?)
-                ForEach(page.meals) { Text(verbatim: "\($0.meal.title) · \($0.meal.day) · \($0.id.uuidString.prefix(8))").tag(Optional($0.id)) }
+                ForEach(page.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day)) · \($0.id.uuidString.prefix(8))").tag(Optional($0.id)) }
             }.accessibilityIdentifier("meal-change-occurrence")
             .onChange(of: selected) { _, id in
                 candidate = page.meals.first(where: { $0.id == id })?.meal
-                if let seed, candidate != nil { candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = seed.planning }
+                if let seed, let original = candidate {
+                    var replacement = seed.planning
+                    replacement.deadline = original.planning?.deadline
+                    candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = replacement
+                }
                 reason = ""; model.cancelReview()
             }
             if page.phase != "draft" { Text(ht("The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket.")) }
         }
         if let candidate, let selected {
             Section(ht("Proposed meal")) {
-                TextField(ht("Meal name"), text: field(\.title))
+                TextField(ht("Meal name"), text: field(\.title)).focused($inputFocus, equals: "meal-name")
                 Stepper(value: field(\.portions), in: 1...1000) { LabeledContent(ht("Portions"), value: candidate.portions.formatted()) }
                 Text(ht("The shared date stays unchanged. Use the separate date proposal for a calendar move."))
-                SharedMealPlanningEditor(planning: Binding(get: { self.candidate?.planning ?? .init(groups: [], ingredients: []) }, set: { self.candidate?.planning = $0 }))
-                TextField(ht("Reason for change"), text: $reason, axis: .vertical).accessibilityIdentifier("meal-change-reason")
+                if let planning = candidate.planning { SharedMealPreparationFacts(planning: planning) }
+                SharedMealPlanningEditor(planning: Binding(get: { self.candidate?.planning ?? .init(groups: [], ingredients: []) }, set: { self.candidate?.planning = $0 }), inputFocus: $inputFocus)
+                TextField(ht("Reason for change"), text: $reason, axis: .vertical).focused($inputFocus, equals: "reason").accessibilityIdentifier("meal-change-reason")
                 Text(ht("Changing portions does not scale ingredient quantities or calculate packs here. Review each entered amount."))
                 if page.shopper {
                     Text(ht("As the assigned shopper, review this mapped meal with the actual shared packs and checkout quote before applying."))
@@ -190,37 +215,104 @@ private struct SharedMealChangeContent: View {
 
 private struct SharedMealPlanningEditor: View {
     @Binding var planning: SharedMealPlanning
+    var inputFocus: FocusState<String?>.Binding
     var body: some View {
-        ForEach($planning.groups) { $group in
-            DisclosureGroup(group.name.isEmpty ? ht("Serving group") : group.name) {
-                TextField(ht("Group name"), text: $group.name)
-                LabeledContent(ht("Serving numerator")) { TextField(ht("Serving numerator"), value: $group.servings.numerator, format: .number).keyboardType(.numberPad) }
-                LabeledContent(ht("Serving denominator")) { TextField(ht("Serving denominator"), value: $group.servings.denominator, format: .number).keyboardType(.numberPad) }
-                Toggle(ht("Protected portions"), isOn: $group.protected)
-            }
+        ForEach(planning.groups) { group in
+            SharedMealGroupEditor(group: groupBinding(group), inputFocus: inputFocus)
         }
         Button(ht("Add serving group")) { planning.groups.append(.init(name: "", servings: .init(numerator: 1), protected: false)) }.disabled(planning.groups.count >= 30)
-        ForEach($planning.ingredients) { $ingredient in
-            DisclosureGroup(ingredient.name.isEmpty ? ht("Ingredient") : ingredient.name) {
-                TextField(ht("Ingredient name"), text: $ingredient.name)
+        ForEach(planning.ingredients) { ingredient in
+            SharedMealIngredientEditor(planning: $planning, ingredient: ingredientBinding(ingredient), inputFocus: inputFocus)
+        }
+        Button(ht("Add proposed ingredient")) { planning.ingredients.append(.init(name: "", quantity: nil, groupIds: [], exclusions: [])) }.disabled(planning.ingredients.count >= 60)
+        if !(planning.bindings ?? []).isEmpty {
+            Text(ht("Group amounts must add up to the ingredient total in the same unit. Review each amount; quantities are not scaled automatically."))
+        }
+    }
+    private func ingredientBinding(_ snapshot: SharedMealPlanning.Ingredient) -> Binding<SharedMealPlanning.Ingredient> {
+        // SwiftUI can read a retiring row after removal. Resolve by identity,
+        // and never let a late field write recreate or edit a different row.
+        Binding(get: { planning.ingredients.first(where: { $0.id == snapshot.id }) ?? snapshot }, set: { value in
+            guard let index = planning.ingredients.firstIndex(where: { $0.id == snapshot.id }) else { return }
+            planning.ingredients[index] = value
+        })
+    }
+    private func groupBinding(_ snapshot: SharedMealPlanning.Group) -> Binding<SharedMealPlanning.Group> {
+        Binding(get: { planning.groups.first(where: { $0.id == snapshot.id }) ?? snapshot }, set: { value in
+            guard let index = planning.groups.firstIndex(where: { $0.id == snapshot.id }) else { return }
+            planning.groups[index] = value
+        })
+    }
+}
+
+private struct SharedMealGroupEditor: View {
+    @Binding var group: SharedMealPlanning.Group
+    var inputFocus: FocusState<String?>.Binding
+    var body: some View {
+        DisclosureGroup(group.name.isEmpty ? ht("Serving group") : group.name) {
+            TextField(ht("Group name"), text: $group.name).focused(inputFocus, equals: group.id.uuidString + ".name")
+            LabeledContent(ht("Serving numerator")) { TextField(ht("Serving numerator"), value: $group.servings.numerator, format: .number).keyboardType(.numberPad).focused(inputFocus, equals: group.id.uuidString + ".numerator") }
+            LabeledContent(ht("Serving denominator")) { TextField(ht("Serving denominator"), value: $group.servings.denominator, format: .number).keyboardType(.numberPad).focused(inputFocus, equals: group.id.uuidString + ".denominator") }
+            Toggle(ht("Protected portions"), isOn: $group.protected)
+        }
+    }
+}
+
+private struct SharedMealIngredientEditor: View {
+    @Binding var planning: SharedMealPlanning
+    @Binding var ingredient: SharedMealPlanning.Ingredient
+    var inputFocus: FocusState<String?>.Binding
+    var body: some View {
+        DisclosureGroup(ingredient.name.isEmpty ? ht("Ingredient") : ingredient.name) {
+                TextField(ht("Ingredient name"), text: $ingredient.name).focused(inputFocus, equals: ingredient.id.uuidString + ".name")
                 Toggle(ht("Known ingredient quantity"), isOn: Binding(get: { ingredient.quantity != nil }, set: { ingredient.quantity = $0 ? .init(amount: .init(numerator: 1), unit: "count", originalLiteral: "") : nil }))
                 if ingredient.quantity != nil {
-                    LabeledContent(ht("Quantity numerator")) { TextField(ht("Quantity numerator"), value: Binding(get: { ingredient.quantity?.amount.numerator ?? 1 }, set: { ingredient.quantity?.amount.numerator = $0 }), format: .number).keyboardType(.numberPad) }
-                    LabeledContent(ht("Quantity denominator")) { TextField(ht("Quantity denominator"), value: Binding(get: { ingredient.quantity?.amount.denominator ?? 1 }, set: { ingredient.quantity?.amount.denominator = $0 }), format: .number).keyboardType(.numberPad) }
-                    Picker(ht("Ingredient unit"), selection: Binding(get: { ingredient.quantity?.unit ?? "count" }, set: { ingredient.quantity?.unit = $0 })) {
-                        ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0.rawValue) }
+                    SharedMealQuantityFields(quantity: Binding(
+                        get: { ingredient.quantity ?? .init(amount: .init(numerator: 1), unit: "count", originalLiteral: "") },
+                        set: { if ingredient.quantity != nil { ingredient.quantity = $0 } }), inputFocus: inputFocus, prefix: ingredient.id.uuidString)
+                }
+                ForEach((planning.bindings ?? []).filter { $0.ingredientId == ingredient.id }) { allocation in
+                    if let group = planning.groups.first(where: { $0.id == allocation.groupId }) {
+                        VStack(alignment: .leading) {
+                            LabeledContent(ht("Amount for serving group"), value: group.name)
+                            if group.protected { Label(ht("Protected portions"), systemImage: "lock") }
+                            SharedMealQuantityFields(quantity: allocationQuantity(allocation.id), inputFocus: inputFocus, prefix: allocation.id.uuidString)
+                        }
                     }
-                    TextField(ht("Original quantity evidence"), text: Binding(get: { ingredient.quantity?.originalLiteral ?? "" }, set: { ingredient.quantity?.originalLiteral = $0 }))
                 }
                 ForEach(planning.groups) { group in
                     Toggle(group.name, isOn: Binding(get: { ingredient.groupIds.contains(group.id) }, set: { included in
-                        ingredient.groupIds.removeAll { $0 == group.id }; if included { ingredient.groupIds.append(group.id) }
+                        planning.setProposedGroup(group.id, for: ingredient.id, included: included)
                     }))
                 }
                 ForEach(ingredient.exclusions, id: \.self) { Text(verbatim: $0) }
-                Button(ht("Remove proposed ingredient"), role: .destructive) { planning.ingredients.removeAll { $0.id == ingredient.id } }
-            }
+                Button(ht("Remove proposed ingredient"), role: .destructive) { planning.removeProposedIngredient(ingredient.id) }
         }
-        Button(ht("Add proposed ingredient")) { planning.ingredients.append(.init(name: "", quantity: nil, groupIds: [], exclusions: [])) }.disabled(planning.ingredients.count >= 60)
+    }
+    private func allocationQuantity(_ id: UUID) -> Binding<SharedMealQuantity> {
+        Binding(get: {
+            planning.bindings?.first(where: { $0.id == id })?.quantity ?? .init(amount: .init(numerator: 1), unit: "count", originalLiteral: "")
+        }, set: { quantity in
+            guard let index = planning.bindings?.firstIndex(where: { $0.id == id }) else { return }
+            planning.bindings?[index].quantity = quantity
+        })
+    }
+}
+
+/// Both quantities retain their entered rational, unit and evidence. Editing a
+/// field never scales another group or converts an amount behind the scenes.
+private struct SharedMealQuantityFields: View {
+    @Binding var quantity: SharedMealQuantity
+    var inputFocus: FocusState<String?>.Binding
+    let prefix: String
+    var body: some View {
+        LabeledContent(ht("Quantity numerator")) { TextField(ht("Quantity numerator"), value: $quantity.amount.numerator, format: .number).keyboardType(.numberPad).focused(inputFocus, equals: prefix + ".numerator").accessibilityIdentifier("meal-change-quantity." + prefix.lowercased() + ".numerator") }
+        LabeledContent(ht("Quantity denominator")) { TextField(ht("Quantity denominator"), value: $quantity.amount.denominator, format: .number).keyboardType(.numberPad).focused(inputFocus, equals: prefix + ".denominator") }
+        Picker(ht("Ingredient unit"), selection: $quantity.unit) {
+            ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0.rawValue) }
+        }
+        LabeledContent(ht("Original quantity evidence")) {
+            TextField(ht("Original quantity evidence"), text: $quantity.originalLiteral).focused(inputFocus, equals: prefix + ".evidence")
+        }
     }
 }

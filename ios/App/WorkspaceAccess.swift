@@ -48,6 +48,16 @@ import LocalAuthentication
     }
 }
 
+struct HouseholdWorkspaceProtection: ViewModifier {
+    @ObservedObject var household: HouseholdModel
+    let access: WorkspaceAccess
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: household.identity?.subject) { _, subject in if subject != nil { access.protect() } }
+            .onChange(of: household.projection?.memberId) { _, id in if id != nil { access.protect() } }
+    }
+}
+
 struct WorkspaceUnlockView: View {
     @ObservedObject var access: WorkspaceAccess
     @ObservedObject var household: HouseholdModel
@@ -71,6 +81,10 @@ struct WorkspaceUnlockView: View {
                 }
               }.frame(maxWidth: .infinity, alignment: .leading).padding(20)
             }.workingSurface()
+            .navigationDestination(isPresented: Binding(
+                get: { household.showingVerifiedHousehold },
+                set: { if !$0 { household.dismissVerifiedHousehold() } }
+            )) { HouseholdSettingsView(model: household) }
         }
     }
 }

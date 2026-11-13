@@ -1,0 +1,12 @@
+{
+  "README.md": "71732f4d741c2c698e91056a229582a71f737dde55f64533df52326cd628b307",
+  "export.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "export.stdout": "f04ef8fc31394177b97f56d858c7345e048cb6c0dffc4c5685fe4f7b2204ad9a",
+  "failure-screenshot/FDBC2CEA-4667-4804-AD7A-95FC94218B21.png": "9c3cdf43b2b302a8f8b4c7b2f1ba94de8f96f1658cfc4a7068fd9a85c244d9be",
+  "failure-screenshot/manifest.json": "318494bb012bf37412f938b9da42486537660b49f6360fbbb9de6fefc337b909",
+  "receipt.json": "c4af46db08e1c94925fd50418d6cc60e092c3087ae0a3bda4705ea368127d474",
+  "review-to-failure.log": "8f103eb0a2117e133493a897cf7763e34440f487f56ad263997dec260f42f5d9",
+  "test-details.json": "02aa8594a26214669229e777a2c80f69bf08823a1ff59ecaa48c1e7f5418c94d",
+  "test-runtime-warnings.json": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+  "test-summary.json": "18690a71b41ef9c35c0c835216ce1a418abad2a018733af4e26fea05237f69f4"
+}

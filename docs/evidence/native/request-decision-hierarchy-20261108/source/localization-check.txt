@@ -1,0 +1,3 @@
+Localization checks passed: 26 catalogs, 4306 en/es entries, 4007 literal source keys, matching format arguments.
+Static coverage excludes 43 dynamic helper expressions and 117 runtime SwiftUI compositions; these require runtime review.
+US Spanish copy still requires human language review; this check verifies structure only.

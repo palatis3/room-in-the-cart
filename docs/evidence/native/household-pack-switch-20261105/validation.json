@@ -1,0 +1,25 @@
+{
+  "sourceBase": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "file": "ios/UITests/HouseholdRequestPackUITests.swift",
+  "installedSourceSHA256": "b336f9b891198942cabadebea5331e45cffcdc74a05ec3ced69cf21b4b61389c",
+  "patchSHA256": "2344a513b647e174b1cb636251052ebf9e5694bb34c8bc96d58011c45fdae6d3",
+  "selectors": [
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision"
+  ],
+  "result": "3/3 passed first local invocation, zero failures/skips/expected failures and zero recorded runtime warnings",
+  "caseSeconds": [
+    48.084,
+    161.804,
+    34.267
+  ],
+  "rootIndependentValidation": "Exact identity/count and structured runtime-warning guard passed on original native bundle; source hash matches tested candidate.",
+  "evidenceDirectory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/request-pack-candidate-rgdnvs4m/evidence",
+  "originalHostedFailure": {
+    "job": 126980959058,
+    "artifact": 13382356028,
+    "archiveSHA256": "bfbe926ad76e83781b109363bf7a4bfa6bcef99a7d29bd56d3693ca90db69372"
+  },
+  "scope": "Test-only real keyboard margin dismissal and full switch visibility. Product files, all assertions and timeouts unchanged. Both matched-pack values, overage approval, zero-write cancellations, explicit exactly-one saved decision/line, two protected lunches and revoked-access clearing passed. Local Xcode27.1/iOS26.2 build23C52 differs from hosted26.3/build23C54; fresh hosted validation pending."
+}

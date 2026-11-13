@@ -1,0 +1,78 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "artifactID": 13550343334,
+  "sourceSQLite": "iphone-performance-scroll-1/Performance.xcresult/database.sqlite3",
+  "sourceSQLiteSHA256": "1c6af40c91fd934148bd8b535b859a79b5a9f6f11e2ceb1f3501fa6a7a28691d",
+  "copy": "metric-sqlite-inspection/database.sqlite3",
+  "openedReadOnly": true,
+  "quickCheck": "ok",
+  "rows": [
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "displayName": "Memory Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "98.304,-212.992,131.072,344.064,-49.152",
+      "testCaseRun_fk": 1,
+      "samples": [
+        98.304,
+        -212.992,
+        131.072,
+        344.064,
+        -49.152
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+      "displayName": "Absolute Memory Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "116727.808,116678.656,116580.352,116940.8,117006.336",
+      "testCaseRun_fk": 1,
+      "samples": [
+        116727.808,
+        116678.656,
+        116580.352,
+        116940.8,
+        117006.336
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "displayName": "Memory Peak Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "116940.8,117202.944,116760.576,117022.72,117366.784",
+      "testCaseRun_fk": 1,
+      "samples": [
+        116940.8,
+        117202.944,
+        116760.576,
+        117022.72,
+        117366.784
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+      "displayName": "Duration (Scroll_DraggingAndDeceleration)",
+      "unitOfMeasurement": "s",
+      "measurements": "2.5504891670000003,2.583890375,2.566587583,2.581787917,2.5986351250000004",
+      "testCaseRun_fk": 1,
+      "samples": [
+        2.5504891670000003,
+        2.583890375,
+        2.566587583,
+        2.581787917,
+        2.5986351250000004
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    }
+  ],
+  "requiredScrollDurationPresent": true,
+  "jsonExactSampleEquality": true,
+  "interpretation": "Independent read-only copy of original XCTest result metadata, not app-ledger data. Current presence or absence does not rewrite historical failures or establish their cause."
+}

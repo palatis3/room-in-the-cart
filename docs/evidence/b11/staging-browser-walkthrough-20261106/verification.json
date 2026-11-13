@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "observedDate": "2026-11-06",
+  "environment": "Codex in-app browser",
+  "baseURL": "https://room-in-the-cart-staging.vercel.app",
+  "deploymentID": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+  "deploymentIdentitySource": "previously verified staging rollout; no deployment was performed by this browser walkthrough",
+  "runtimeSourceCommit": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "publicRouteLanguageViews": 8,
+  "additionalWideViews": 2,
+  "unavailableSignInLanguageViews": 2,
+  "scope": "Rendered public pages and visible unavailable sign-in state, not authenticated household routes or full release acceptance.",
+  "result": "All listed observations passed; no product defect demonstrated within this scope.",
+  "viewportWidthsCSSPixels": [
+    319,
+    1024
+  ],
+  "checks": [
+    "English and Spanish Help, Privacy, Terms and Support render with expected language and headings",
+    "Measured document width equals scroll width on every captured view",
+    "Public navigation retains the chosen language",
+    "Keyboard Tab and Return activate the Spanish skip link and focus main",
+    "Support section navigation brings its target heading into view",
+    "Support mailto targets hello@roominthecart.com",
+    "Invited-app footer links return to public pages",
+    "Unavailable email sign-in is visible in both languages; Refresh retains that state",
+    "No warning or error in the queried browser console history"
+  ],
+  "notEstablished": [
+    "Authenticated household behavior: SMTP setup deferred",
+    "Actual support mailbox delivery: no message sent",
+    "Operator approval of Privacy and Terms drafts",
+    "iOS Safari or Android Chrome device acceptance",
+    "VoiceOver, Switch Control or human Spanish-language acceptance",
+    "App Store, purchase, child-provider or deletion-provider activation"
+  ],
+  "automationNote": "A stale accessibility reference failed after viewport reset. A fresh state read and scrolled footer link succeeded; this is retained as an automation event, not a product failure.",
+  "finalState": {
+    "language": "en",
+    "viewportOverrideReset": true,
+    "url": "https://room-in-the-cart-staging.vercel.app/support?lang=en"
+  },
+  "localEvidenceDirectory": ".build/StagingBrowserWalkthrough20261106",
+  "files": [
+    {
+      "name": "completion.json",
+      "bytes": 816,
+      "sha256": "84fb09377933e14de96a613d198b1a57658f69598785e175d952de1bf1826956"
+    },
+    {
+      "name": "help-en-narrow.jpg",
+      "bytes": 30476,
+      "sha256": "052a4ec8316ef06be05e81890ff9dba3bd548665b1498c229c9eb3dccc03992e"
+    },
+    {
+      "name": "help-en-narrow.txt",
+      "bytes": 11487,
+      "sha256": "9c4c29bb14131561ddad106a89b75199786153e478ab8d0d51de74aa38b2674d"
+    },
+    {
+      "name": "help-es-narrow.jpg",
+      "bytes": 35944,
+      "sha256": "722606f7a59c4f180bb5ca071b9eff575cf33798e6ba66324a8c28eb80fb266f"
+    },
+    {
+      "name": "help-es-narrow.txt",
+      "bytes": 13444,
+      "sha256": "837d0b2271e973aeda2623a474f07687a0b5a58559a744819a3995348c01215d"
+    },
+    {
+      "name": "help-es-wide.jpg",
+      "bytes": 75609,
+      "sha256": "54912baeacd5c4d0be3ac45b944305f0c848f775efc6c3c074f4ac20e9c1664e"
+    },
+    {
+      "name": "help-es-wide.txt",
+      "bytes": 231,
+      "sha256": "aaa78da0a1786ffb3ef81cd3e54dad7015502558d96c86954814490ee53048f7"
+    },
+    {
+      "name": "observations.json",
+      "bytes": 18088,
+      "sha256": "42dffcbe4efabf2d69f98e4974f1c88138abcbff8937940fb415b8eab02bbb1f"
+    },
+    {
+      "name": "privacy-en-narrow.jpg",
+      "bytes": 35321,
+      "sha256": "a10677666a36a5e14528437f66fe67d57b8596b9a859b71a8624657a67a89381"
+    },
+    {
+      "name": "privacy-en-narrow.txt",
+      "bytes": 8504,
+      "sha256": "74e13c71e283afa370ffdb0a4b2b9408e96ffa701b0cb0ceb03c145b4594dd47"
+    },
+    {
+      "name": "privacy-es-narrow.jpg",
+      "bytes": 39276,
+      "sha256": "e5a52ef9753878304cc70270beef6c074dbaee5e074bf1581a3cff9c2ad01b94"
+    },
+    {
+      "name": "privacy-es-narrow.txt",
+      "bytes": 319,
+      "sha256": "912dd3b474f1342a8c10bf5ff7706e663868965d81cdc4353f5fd9c8b08e4540"
+    },
+    {
+      "name": "requests-en-unavailable.jpg",
+      "bytes": 13710,
+      "sha256": "0913d96fea28a856a354894d56a4b313d028ac3814c29e4a785eeff82aa09fe0"
+    },
+    {
+      "name": "requests-en-unavailable.txt",
+      "bytes": 611,
+      "sha256": "cba188618b09da3f8d5c0ff88fd030457f430ca675665be2ddb8addb21d6f039"
+    },
+    {
+      "name": "requests-es-unavailable.jpg",
+      "bytes": 16531,
+      "sha256": "3da5514a99767bf3c8e5a2ee8ffb56afa02f8cf46e9b738421867e72daaaa37d"
+    },
+    {
+      "name": "requests-es-unavailable.txt",
+      "bytes": 757,
+      "sha256": "888c68c0f119afb8a7f79438c397e2c7c3bec679a4baf365550db3d7d6afeddb"
+    },
+    {
+      "name": "section-anchor.json",
+      "bytes": 69,
+      "sha256": "80e41541a76fe2d80b8d24563a49251740eeab2cc3b992c11d2dd5567d36d6b9"
+    },
+    {
+      "name": "skip-link.json",
+      "bytes": 108,
+      "sha256": "248d319099224f6bd8ae7d52759974224b6236a4d793fd4e206f69e209c6b6e3"
+    },
+    {
+      "name": "support-en-narrow.jpg",
+      "bytes": 31490,
+      "sha256": "4fb7cffd92f466d71ca3237abbc4a7d4ab40b30978bfc1a3041064e194150e20"
+    },
+    {
+      "name": "support-en-narrow.txt",
+      "bytes": 4344,
+      "sha256": "e1bc2ef90759a69b6703788710128188e093b51236c41cf7eddcfba8ba663fca"
+    },
+    {
+      "name": "support-en-wide.jpg",
+      "bytes": 43467,
+      "sha256": "7dd937e5198e881527038b263b28fc98c48dfbc42762135031911f62227a294f"
+    },
+    {
+      "name": "support-en-wide.txt",
+      "bytes": 4344,
+      "sha256": "e1bc2ef90759a69b6703788710128188e093b51236c41cf7eddcfba8ba663fca"
+    },
+    {
+      "name": "support-es-narrow.jpg",
+      "bytes": 32345,
+      "sha256": "dca1b6a4fa830ccd52c41151bcc0b8ada830f4f4f8b6764f1314e35bc880585e"
+    },
+    {
+      "name": "support-es-narrow.txt",
+      "bytes": 4731,
+      "sha256": "ef976ec171bdda92688b4628543e1bf873eea0f41dc7cde26fe86a49cc40b55a"
+    },
+    {
+      "name": "terms-en-narrow.jpg",
+      "bytes": 31149,
+      "sha256": "993fa77b62798b05a96288d65bb545ef5285477294be02f5dc12050f95f83a3f"
+    },
+    {
+      "name": "terms-en-narrow.txt",
+      "bytes": 5351,
+      "sha256": "86ad0101a68f977beb807414162a1d26f28c17073f10460d79394abbe68a7681"
+    },
+    {
+      "name": "terms-es-narrow.jpg",
+      "bytes": 34273,
+      "sha256": "5682471a9d5d8fa3925898bd8a84d3965bc7fa7f673d99fa5fb23bd3d0e46145"
+    },
+    {
+      "name": "terms-es-narrow.txt",
+      "bytes": 5955,
+      "sha256": "3be036b5fcf451d5a30d64c81aa8d50280dd3e595da761800675979502d8df4e"
+    }
+  ]
+}

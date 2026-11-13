@@ -1,0 +1,36 @@
+{
+  "status": "Remaining design gaps; not addressed by semantic-role patch",
+  "reference": "docs/product/foundation-gen2.1/04-design.md:3,16,26",
+  "sourceManifestSHA256": "ad32a9a313a2f2763c9513adaa62513800d48ceaad1145d8cf66205ed9af6ff1",
+  "findings": [
+    {
+      "requirement": "Expected checkout large-title hero with tabular digits",
+      "current": "Expected total remains a default body-sized HouseholdDecisionFact/LabeledContent row; monospaced digits are present but no largeTitle hero styling.",
+      "source": [
+        "ios/Features/Household/HouseholdInboxView.swift:201",
+        "ios/Features/Household/HouseholdRequestMealContext.swift:121"
+      ]
+    },
+    {
+      "requirement": "One prominent primary action per decision",
+      "current": "Review decision and Apply reviewed decision remain standard Form buttons without established PrimaryAction styling.",
+      "source": [
+        "ios/Features/Household/HouseholdInboxView.swift:191",
+        "ios/Features/Household/HouseholdInboxView.swift:247",
+        "ios/App/Theme.swift:80"
+      ]
+    },
+    {
+      "requirement": "Keep fee basis and named unknowns beside the decision result",
+      "current": "Detailed fee basis is nested inside Checkout calculation details / Included charges and discounts; individual missing-fact names are rendered by nested ShopperBudgetView. The visible result has generic unresolved wording; these named details remain behind collapsed disclosure by default.",
+      "source": [
+        "ios/Features/Household/HouseholdInboxView.swift:221",
+        "ios/Features/Household/HouseholdInboxView.swift:225",
+        "ios/Features/Household/HouseholdInboxView.swift:335"
+      ]
+    }
+  ],
+  "fullS24AcceptanceClosed": false,
+  "audit41FindingsClosed": false,
+  "newImplementationProposedOrPerformed": false
+}

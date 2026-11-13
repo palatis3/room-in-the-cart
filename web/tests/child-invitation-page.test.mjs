@@ -3,7 +3,7 @@ import test from 'node:test';
 import { webcrypto } from 'node:crypto';
 import { JSDOM } from 'jsdom';
 import { ChildInvitationAPI } from '../dist/child-invitation.js';
-import { ChildInvitationPage } from '../dist/child-invitation-page.js';
+import { ChildInvitationPage, mountChildInvitationPage } from '../dist/child-invitation-page.js';
 import { createChildFixture, fixtureInput } from './fixtures/child-invitation.mjs';
 const tick=()=>new Promise(done=>setImmediate(done));
 async function ready(root){for(let count=0;count<20&&root.querySelector('main')?.getAttribute('aria-busy')==='true';count++)await tick();assert.equal(root.querySelector('main')?.getAttribute('aria-busy'),'false');}
@@ -20,6 +20,153 @@ async function setup(t,fixture=createChildFixture({configured:true}),token=fixtu
 async function signin(f){input(f.dom,'child-email',fixtureInput.email);await submit(f.dom,f.root);assert.ok(f.root.querySelector('#child-code'));input(f.dom,'child-code',fixtureInput.code);await submit(f.dom,f.root);assert.match(f.root.textContent,/Claim this child invitation/);}
 async function paired(f){await signin(f);await click(f.root,'Claim this child invitation');assert.match(f.root.querySelector('#pairing-code').textContent,/^[A-Z2-7]{8}$/);}
 async function approved(f){await paired(f);f.fixture.control('approve');await click(f.root,'Check current status');assert.match(f.root.textContent,/Your guardian confirmed/);}
+
+async function mountedInvitation(t) {
+  const fixture = createChildFixture({configured:true});
+  const dom = new JSDOM('<div id="app"></div>', {url:'https://fixture.invalid/child-invite#token='+fixtureInput.token, pretendToBeVisual:true});
+  t.after(()=>dom.window.close());
+  Object.defineProperty(dom.window,'crypto',{value:webcrypto});
+  const root=dom.window.document.querySelector('#app'), api=new ChildInvitationAPI(fixture.fetcher);
+  assert.equal(mountChildInvitationPage(root,api),true);
+  await ready(root);
+  function visibility(state) {
+    Object.defineProperty(dom.window.document,'visibilityState',{configurable:true,value:state});
+    dom.window.document.dispatchEvent(new dom.window.Event('visibilitychange'));
+  }
+  return {fixture,dom,root,api,visibility};
+}
+
+test('a supplied child invitation stays out of sign-in and claim fields',async t=>{
+  const f=await mountedInvitation(t);
+  const assertHidden=()=>{
+    assert.equal(f.root.querySelector('input[type=password]'),null);
+    assert.equal(f.root.textContent.includes(fixtureInput.token),false);
+    assert.equal([...f.root.querySelectorAll('input')].some(field=>field.value===fixtureInput.token),false);
+  };
+  assertHidden();
+  input(f.dom,'child-email',fixtureInput.email);
+  await click(f.root,'Enter a different invitation code');
+  assert.equal(f.root.querySelector('#child-email').value,fixtureInput.email);
+  assert.equal(f.dom.window.document.activeElement.id,'child-invitation');
+  input(f.dom,'child-invitation',fixtureInput.token);
+  await signin(f);
+  assertHidden();
+  await click(f.root,'Claim this child invitation');
+  assert.ok(f.root.querySelector('#pairing-code'));
+  assert.equal(f.fixture.counts.claims,1);
+});
+
+test('history snapshots omit child pairing and a restored page rechecks withdrawn access',async t=>{
+  const f=await mountedInvitation(t);await paired(f);
+  const code=f.root.querySelector('#pairing-code').textContent;
+  f.dom.window.dispatchEvent(new f.dom.window.PageTransitionEvent('pagehide',{persisted:true}));
+  assert.equal(f.root.textContent.includes(code),false);
+  f.fixture.control('withdraw');
+  f.dom.window.dispatchEvent(new f.dom.window.PageTransitionEvent('pageshow',{persisted:true}));
+  await tick();await ready(f.root);
+  assert.match(f.root.textContent,/setup ended|no current child admission/);
+  assert.equal(f.root.querySelector('#pairing-code, a[href="/requests"]'),null);
+  assert.equal(f.fixture.counts.claimPosts,1);
+});
+
+test('switching to email conceals a child OTP draft and restores it only after fresh same-account authority',async t=>{
+  const f=await mountedInvitation(t);
+  input(f.dom,'child-email',fixtureInput.email);await submit(f.dom,f.root);
+  input(f.dom,'child-code','123');
+  f.visibility('hidden');
+  assert.equal(f.root.querySelector('input'),null);
+  const authState=f.api.authState.bind(f.api);
+  f.api.authState=async()=>{throw new Error('Offline');};
+  f.visibility('visible');await tick();await ready(f.root);
+  assert.equal(f.root.querySelector('input'),null);
+  f.api.authState=authState;
+  await click(f.root,'Check current status');
+  assert.equal(f.root.querySelector('#child-code')?.value,'123');
+  assert.equal(f.fixture.counts.starts,1);
+  assert.equal(f.fixture.counts.verifies,0);
+});
+
+test('only the latest return can reveal pairing, and each return rechecks guardian authority', async t => {
+  const f = await mountedInvitation(t);
+  await paired(f);
+  const originalCode = f.root.querySelector('#pairing-code').textContent;
+  const reads = [Promise.withResolvers(), Promise.withResolvers()];
+  const availability = f.api.availability.bind(f.api);
+  let calls = 0;
+  f.api.availability = async language => {
+    const read = reads[calls++];
+    if (read) await read.promise;
+    return availability(language);
+  };
+  f.visibility('hidden');
+  f.visibility('visible');
+  f.visibility('hidden');
+  f.visibility('visible');
+  assert.equal(calls, 1);
+  reads[0].resolve();
+  await tick();
+  assert.equal(calls, 2);
+  assert.equal(f.root.textContent.includes(originalCode), false);
+  reads[1].resolve();
+  await ready(f.root);
+  assert.equal(f.root.querySelector('#pairing-code')?.textContent, originalCode);
+
+  f.visibility('hidden');
+  f.fixture.control('withdraw');
+  f.visibility('visible');
+  await ready(f.root);
+  assert.match(f.root.textContent, /setup ended|no current child admission/);
+  assert.equal(f.root.textContent.includes(originalCode), false);
+  assert.equal(f.fixture.counts.claimPosts, 1);
+  assert.equal(f.fixture.counts.finishPosts, 0);
+});
+
+test('a background history restore waits for visibility and drops the previous sign-in draft', async t => {
+  const f = await mountedInvitation(t);
+  input(f.dom, 'child-email', fixtureInput.email);
+  f.visibility('hidden');
+  const sessionReads = () => f.fixture.requests.filter(r => r.path === '/v1/auth/session').length;
+  const reads = sessionReads();
+  f.dom.window.dispatchEvent(new f.dom.window.PageTransitionEvent('pagehide', {persisted:true}));
+  f.dom.window.dispatchEvent(new f.dom.window.PageTransitionEvent('pageshow', {persisted:true}));
+  await tick();
+  assert.equal(sessionReads(), reads);
+  assert.equal(f.root.querySelector('input'), null);
+  f.visibility('visible');
+  await ready(f.root);
+  assert.equal(f.root.querySelector('#child-email')?.value, '');
+  assert.equal(f.root.querySelector('#child-invitation')?.value, '');
+  assert.equal(f.fixture.counts.starts, 0);
+});
+
+test('an account change while the child is entering an email clears the invitation and email', async t => {
+  const f = await mountedInvitation(t);
+  input(f.dom, 'child-email', fixtureInput.email);
+  f.visibility('hidden');
+  f.fixture.control('reset');
+  f.visibility('visible');
+  await ready(f.root);
+  assert.equal(f.root.querySelector('#child-email')?.value, '');
+  assert.equal(f.root.querySelector('#child-invitation')?.value, '');
+  assert.equal(f.fixture.counts.starts, 0);
+});
+
+test('a child signing in elsewhere cannot inherit an earlier invitation on this tab', async t => {
+  const f = await mountedInvitation(t);
+  const anotherInvite = fixtureInput.token.replace('22222222-', '99999999-');
+  await click(f.root, 'Enter a different invitation code');
+  input(f.dom, 'child-invitation', anotherInvite);
+  input(f.dom, 'child-email', 'previous@example.invalid');
+  f.visibility('hidden');
+  const auth = await f.api.authState();
+  await f.api.startSignin(fixtureInput, auth.csrf);
+  await f.api.verifySignin(fixtureInput.code, auth.csrf);
+  f.visibility('visible');
+  await ready(f.root);
+  assert.equal(f.root.querySelector('#child-invitation')?.value, '');
+  assert.equal(f.fixture.counts.claimPosts, 0);
+  assert.equal(f.fixture.counts.finishPosts, 0);
+});
 
 test('configured covered flow uses guardian-approved auth, server pairing confirmation and exact scoped handoff',async t=>{
   const f=await setup(t);await paired(f);
@@ -72,6 +219,8 @@ test('uncertain covered OTP send has explicit code checking and no automatic res
 test('lost verify response reconciles cookie-bound admission without another OTP or verification',async t=>{
   const f=await setup(t);input(f.dom,'child-email',fixtureInput.email);await submit(f.dom,f.root);f.fixture.control('lose-verify');input(f.dom,'child-code',fixtureInput.code);await submit(f.dom,f.root);
   assert.match(f.root.textContent,/Sign-in could not be confirmed/);await click(f.root,'Check current status');assert.match(f.root.textContent,/Claim this child invitation/);assert.equal(f.fixture.counts.starts,1);assert.equal(f.fixture.counts.verifies,1);
+  assert.equal(f.root.querySelector('#child-invitation'),null);
+  await click(f.root,'Claim this child invitation');assert.ok(f.root.querySelector('#pairing-code'));
 });
 
 test('lost claim response retries the original pairing and key, then shows confirmed pairing',async t=>{
@@ -127,4 +276,23 @@ test('availability and child session parsers reject invented authority and narro
   const falseAuthority=new ChildInvitationAPI(async()=>Response.json({available:false,reason:null}));await assert.rejects(falseAuthority.availability('en'),error=>error.code==='invalid_response');
   const generic=new ChildInvitationAPI(async()=>Response.json({available:true,authenticated:true,admitted:true,scope:null,householdId:null,inviteId:null,claimId:null,status:'none',expiresAt:null}));await assert.rejects(generic.childSession(),error=>error.code==='invalid_response');
   const f=createChildFixture({configured:true}),api=new ChildInvitationAPI(f.fetcher);const auth=await api.authState();await api.startSignin(fixtureInput,auth.csrf);await api.verifySignin(fixtureInput.code,auth.csrf);const child=await api.childSession();assert.equal(child.scope,'own_requests');assert.equal(child.admitted,true);assert.deepEqual(Object.keys(child).sort(),['admitted','authenticated','available','claimId','expiresAt','householdId','inviteId','scope','status']);
+});
+
+test('resend becoming available preserves the focused code field and partial entry', async t => {
+  const f = await setup(t);
+  input(f.dom, 'child-email', fixtureInput.email);
+  await submit(f.dom, f.root);
+  const field = f.root.querySelector('#child-code');
+  const resend = () => [...f.root.querySelectorAll('button')].find(b => b.textContent === 'Request another code');
+  assert.equal(resend().disabled, true);
+  field.focus();
+  input(f.dom, 'child-code', '123');
+  field.setSelectionRange(2, 2);
+  t.mock.method(Date, 'now', () => new Date().getTime() + 61_000);
+  f.page.checkExpiry();
+  assert.equal(f.dom.window.document.activeElement, field);
+  assert.equal(field.selectionStart, 2);
+  assert.equal(field.value, '123');
+  assert.equal(resend().disabled, false);
+  assert.equal(f.fixture.counts.starts, 1);
 });

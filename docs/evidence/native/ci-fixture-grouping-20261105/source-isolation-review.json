@@ -1,0 +1,65 @@
+[
+  {
+    "group": "01",
+    "suites": [
+      "DinnerAwayCarryoverUITests",
+      "RequestDuplicateComparisonUITests"
+    ],
+    "evidence": [
+      "Away launch initially resets its dedicated fixture directory, retaining false-reset restart in-case.",
+      "Duplicate fixture constructs a new UUID workspace per app launch; tearDown terminates app."
+    ]
+  },
+  {
+    "group": "02",
+    "suites": [
+      "ContributorRequestUITests",
+      "MeasurementUITests",
+      "StockReviewUITests"
+    ],
+    "evidence": [
+      "Contributor and Measurement use UUID-separated workspaces. Measurement has explicit initial reset.",
+      "Stock has its own named temporary directory/defaults suite and explicit initial reset.",
+      "Measurement sets a legacy standard-default consent flag by design; the other two fixture roots do not read that flag."
+    ]
+  },
+  {
+    "group": "03",
+    "suites": [
+      "HouseholdDevicesUITests",
+      "HouseholdRequestPackUITests",
+      "SharedMealCivilDateUITests"
+    ],
+    "evidence": [
+      "Device fixture has UUID revocation-store directory/scope.",
+      "Request-pack and civil-date launch distinct fixture routes with explicit language/locale arguments; each terminates app.",
+      "Civil-date timezone loop stays inside its existing case; no runner-global environment mutation found in inspected suite code."
+    ]
+  },
+  {
+    "group": "04",
+    "suites": [
+      "HistoryGrantReadUITests",
+      "RecipeLibraryAcceptanceUITests"
+    ],
+    "evidence": [
+      "History creates a UUID-namespaced workspace per launch.",
+      "Recipe uses explicit library privacy fixture reset, its own defaults mode, and no RecordsMedia selector.",
+      "Both terminate app between tests; document picker/keyboard behavior remains an unproven shared-simulator interaction risk."
+    ]
+  },
+  {
+    "group": "05",
+    "suites": [
+      "CorrectionPrivacyAcceptanceUITests",
+      "GuardianEnrollmentUITests",
+      "SharedMealChangeUITests"
+    ],
+    "evidence": [
+      "Correction uses explicit reset and its own library privacy mode/defaults.",
+      "Guardian root transition uses dedicated defaults/directory and explicit initial reset.",
+      "Each app launch selects only its intended fixture mode and each suite terminates app.",
+      "Guardian Home/foreground assertions are unchanged; no XCTest interruption-monitor installation or global accessibility preference mutation found in the inspected groupable tests."
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "rule": "0011_function_search_path_mutable",
+  "schema": "ritc",
+  "prior": [
+    "measurement_consent_immutable",
+    "measurement_feedback_eligible"
+  ],
+  "upgraded": []
+}

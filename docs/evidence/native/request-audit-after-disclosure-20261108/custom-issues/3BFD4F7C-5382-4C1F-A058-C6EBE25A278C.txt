@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11adc11d0, {{324.0, 290.5}, {46.0, 20.3}}, label: '$2.69'
+Element subtree:
+ →StaticText, 0x11adc11d0, {{324.0, 290.5}, {46.0, 20.3}}, label: '$2.69'
+Path to element:
+ →Application, 0x10d94ec30, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x10d94f8e0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11adbc550, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11adbc790, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11adbc8b0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11adbc9d0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11adbcaf0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11adbcc10, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11adbcd30, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11adbd3f0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11adbd510, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11adbd630, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11adbd750, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11adbd870, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11adc0330, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11adc07b0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11adc08d0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11adc09f0, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11adc0f90, {{32.0, 290.5}, {338.0, 20.3}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+                    ↳StaticText, 0x11adc11d0, {{324.0, 290.5}, {46.0, 20.3}}, label: '$2.69'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10634e000, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4389220400.390
+    Output: {
+      StaticText, 0x11b8b9b80, {{324.0, 290.5}, {46.0, 20.3}}, label: '$2.69'
+    }

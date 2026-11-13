@@ -1,0 +1,14 @@
+{
+  "source-manifest.json": "c81b23e4989070a11a453de52dd203d323be2de81774e1e0fb0a7bb8b4382073",
+  "observations-74951.json": "cc2c8bdb65a7a16e8a82e59fa008f0092bad336b8785d146d9a1f80158be3b5f",
+  "before-stale-denial.png": "4f6691141f74ef0d76adfac8d1e22dd7c2e023313704776bda62babe51b4b713",
+  "restart-result.json": "d44f49ce7348a4dec4db52c316d1cfc304e5b7b71e1010c9c3ad7eaa37156a13",
+  "result.json": "bbabcd9438513d9baecfb26626220f1a86fbd9c52349673f2afdb14d74d67ad8",
+  "README.md": "c71700c14c387303e721f79216e8d9005894ea1189b2792b2da0ce0c696da445",
+  "cleanup.json": "746a522b51d49c6217a714a21b11886d913ef8d3185205304fc89d2a33340f45",
+  "fixed-authorized-refresh.png": "3778d793de0022ac9fe12f73cfae20e4ff7f6b4c3e99388e478fd424804f7e24",
+  "root-browser-observations.jsonl": "f94fef66a92b114e59ff00108b6877919be415b06a526ca749db221fd5f28355",
+  "verification.json": "b87321bfc8c648ac9f3fb408bb08684a1d753f27988e211e0c6aa876042304a2",
+  "original-observations.json": "6c64849698c05419425a0d05afac815143431de00c0fc1812fd21a9651731750",
+  "web-tests.log": "70c46fd0d370b4be7b317e16a07a35fb5837f6d16fb93ec597675baebcd5c3e6"
+}

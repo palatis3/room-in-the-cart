@@ -1,0 +1,25 @@
+{
+  "files": {
+    "history-privacy-401-followup.patch": "956720cd02280ffd4d3436dfc2555704878ce98412decc571180d50bb8bec93e",
+    "history-privacy-corrected.patch": "20949b233c4a5c4425415776a577500aff672a91f3f6b34e061752889a7b25a3",
+    "permanent-browser-regression.patch": "c571e94408735ff355de97f965bc1b178be85dec0edf2b0d7f9e07847bd529d2",
+    "FOLLOWUP-REVIEW.md": "8e5f64c937c6415448586a66992154aa5aef725ed25bc12afbb41db966314a53",
+    "corrected-source-manifest.json": "e6841b38a5d5af3577c1d6cab51eafa96a7a019235fe8d41057077eb135c1a31",
+    "candidate-401-recovery-negative.log": "7a0eac02683544a930b04ad463e216eb6b9911e118f280eba9c2db623a59b070",
+    "corrected-web-tests-recovery.log": "8ce1a6fc3153de0966c760db8e4196f00867ae3ac913a24800dffd437edf0e50",
+    "permanent-fixed-recovery-browser.log": "d840569a63a85dcce6fc271c212535129e4592dec41bd24db116c07712b9cc2c",
+    "permanent-corrected-recovery-browser.log": "0c1b795a7a2111228452422d217627cf0b1f2e7085d00b410dc55913ee0dc66f",
+    "corrected-combined-browser.log": "230893d93ae293a2768e1e03206b3e00ba35bf81605f4f23becfa0224fe25702",
+    "history-mutation-review.log": "803fe658eb9ae30d0b6693afb5cb6723aab05fbf9e2116d655cd857c8d43ea10"
+  },
+  "liveOwnedBrowserProcesses": [],
+  "exits": {
+    "candidate401Unit": 1,
+    "candidate401Browser": 1,
+    "correctedUnit": 0,
+    "correctedBrowser": 0,
+    "correctedCombinedBrowser": 0
+  },
+  "sourceOnlyScratch": true,
+  "profilesAndServersClosed": true
+}

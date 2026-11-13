@@ -1,0 +1,70 @@
+{
+  "README.md": {
+    "sha256": "b1155af19d8c87ddd14cab9e4de77b08c141b49844c4b0fef00ab93eb51c8e6c",
+    "bytes": 1769
+  },
+  "discovery-offline-validation.json": {
+    "sha256": "acd24dc1eef77b1ebd30fec8e26a0e54886d928feaf5750217d057848aed909f",
+    "bytes": 126
+  },
+  "offline-validation.json": {
+    "sha256": "1a133103de559d3217f46017e211189d74d35f6875b297433eb3c6725c0a5d32",
+    "bytes": 255
+  },
+  "payload/.github/workflows/ios-toggle-diagnostic.yml": {
+    "sha256": "d2de5db93eb242d3b281537eaff4bfab7c36f8acd002724e3cc1b824d00ed365",
+    "bytes": 2827
+  },
+  "payload/diagnostics/ui09-hosted/collect.py": {
+    "sha256": "417f7efd5e83f1cbe5b4863467e255d190be7217a09296183cf399fa7b841f28",
+    "bytes": 24547
+  },
+  "payload/diagnostics/ui09-hosted/diagnostic.patch": {
+    "sha256": "5df17229f21adaddfa473ff63445cdf6efcdcfd2d3df24647393d6d68676489d",
+    "bytes": 13497
+  },
+  "payload/diagnostics/ui09-hosted/hosted.py": {
+    "sha256": "6ccf10e6c32e58c959f5925ca67deb6d5f7906fb232510ee11f55084faa717b1",
+    "bytes": 15936
+  },
+  "payload/diagnostics/ui09-hosted/pins.json": {
+    "sha256": "1fb077227700657e2e2ba44d7a49594dcec2a3541fa57103d84b48ea71b51464",
+    "bytes": 1250
+  },
+  "payload/diagnostics/ui09-hosted/ui-09.txt": {
+    "sha256": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022",
+    "bytes": 862
+  },
+  "provenance.json": {
+    "sha256": "13ecc391109886780c9752fb0c0d63d7fc2303741d24a2ae4f1988b467b5d90a",
+    "bytes": 964
+  },
+  "r4-change-review.json": {
+    "sha256": "a40bebccc618a230b54709510aa41c2ae8b35fa10ebd59b1f066fe00aa81985d",
+    "bytes": 613
+  },
+  "setup-offline-validation.json": {
+    "sha256": "fc1315e2ba10a239d7be21c32d71d221854b7b2ba832dce03a8110688a2e6b5d",
+    "bytes": 123
+  },
+  "successor.patch": {
+    "sha256": "efed76de6b936f6f193b62951e6dedf830589445d06f540d93a1eafeebc262a0",
+    "bytes": 13405
+  },
+  "validate_discovery_offline.py": {
+    "sha256": "3b72fd3660fd0de05f0d906458a9046b2ceae6ea27157499e4112f283d7ec9c7",
+    "bytes": 10143
+  },
+  "validate_offline.py": {
+    "sha256": "b8708012347eafa90c2eaef1e45ed56638d14ff583fbd57660165633e170a67b",
+    "bytes": 11582
+  },
+  "validate_setup_offline.py": {
+    "sha256": "4927cecb1100bbbe9e4c760fd3448f9730d2e88c36382049bb973bdb8c7618c7",
+    "bytes": 10600
+  },
+  "workflow-lint.json": {
+    "sha256": "b93e7d1d97977de7041bf5509b6b3f341c19fea93e3533ce55eac4dd420dbcd1",
+    "bytes": 2052
+  }
+}

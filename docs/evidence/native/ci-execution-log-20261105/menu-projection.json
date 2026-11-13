@@ -1,0 +1,19 @@
+{
+  "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testPickupControlWithoutOpeningMenu",
+  "scope": "Artificial passing one-case summary/tree slice and success banner to isolate the actual duplicate lifecycle records. Test details are read from the unchanged complete original bundle. The actual complete diagnostic failed.",
+  "actualCaseLogLines": [
+    "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' started.",
+    "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' started.",
+    "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' passed (53.207 seconds)."
+  ],
+  "outcomes": {
+    "baseline": {
+      "exitCode": 0,
+      "logSha256": "89cbc390e173b53e89be725debfec6b04139958e5368d6db1f8d7a216a0f04ad"
+    },
+    "candidate": {
+      "exitCode": 1,
+      "logSha256": "0e7f19185f8c51d12ad0a866c81550af7bc65e99bbab5224b9d42f82ac07a43b"
+    }
+  }
+}

@@ -168,10 +168,11 @@ extension PickupModel {
         guard ready, !saving, !hasPendingSave, scope.permitsReview, scope.workspaceID == sourceWorkspaceID,
               let current = journey, current.id == journeyID else { throw PickupStockReviewError.stale }
         let previous = journeys.first { $0.id == current.originShopID }
+        let instant = stockReviewDate
         let candidate = try PickupStockReviewEngine.candidate(lot, current: current, replacing: original,
-            carriedFrom: priorLot, previous: previous, at: stockReviewDate)
+            carriedFrom: priorLot, previous: previous, at: instant)
         try Self.validate(candidate)
-        let before = try current.carryoverAllocation(), after = try candidate.carryoverAllocation()
+        let before = try current.carryoverAllocation(at: instant), after = try candidate.carryoverAllocation(at: instant)
         let affectedFoods = Set([lot.foodID, original?.foodID, priorLot?.foodID].compactMap { $0 })
         let meals = candidate.physicalStockNeeds.filter { affectedFoods.contains($0.foodID) }.map { need in
             PickupStockMealEffect(need: need, before: before.demands.first { $0.id == need.id }, after: after.demands.first { $0.id == need.id })
@@ -188,7 +189,7 @@ extension PickupModel {
         if let applied = appliedStockReviewRevisions[review.id] {
             return current.revision == applied && current.stockLots.first { $0.id == review.lot.id } == review.lot
         }
-        guard current.revision == review.revision else { return false }
+        guard current.revision == review.revision, (try? current.carryoverAllocation(at: stockReviewDate)) == review.before else { return false }
         if let carriedFrom = review.carriedFrom {
             guard let previous = journeys.first(where: { $0.id == current.originShopID }),
                   previous.revision == review.sourceRevision, previous.stockLots.contains(carriedFrom) else { return false }

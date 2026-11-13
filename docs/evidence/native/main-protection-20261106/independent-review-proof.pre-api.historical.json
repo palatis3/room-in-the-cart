@@ -1,0 +1,14 @@
+{
+  "reviewedHead": "833a4b0cb00065eb4e3344105ac4e33d61d8f80c",
+  "files": {
+    ".build/CIResearch20261106/repository-gates/main-protection-request.json": "9edfb83ae60df16d6f88fb5408c7349b94d0dd6912f974a8a0fb1b46ed67a7e3",
+    ".build/CIResearch20261106/repository-gates/required-check-providers.json": "a3a2f8f23ae92784e7e4144fbc5a8aaa92b22938a1cc9218347a798a0c0560f8",
+    ".build/CIResearch20261106/repository-gates/recent-successful-core-gate.json": "520c686467fb5a32f1ed003ddfcf00c4de8788cff7cd0c310e58498780dfa992",
+    ".github/workflows/ci.yml": "12b1df6bf660aa404dca51e477683eed71f416cbc3a4e37fee8f3fa8b747e13c",
+    ".github/workflows/security.yml": "06aa8d5942f88e546c8cbbcdf0476fcab6cd21ed1a9fc7883e9276b4c9757897",
+    ".github/workflows/release-checks.yml": "e056b193ad811e2ad503cfec4f4b993e67937bac5588413cb05a1d4d1229ebe3"
+  },
+  "githubMutations": false,
+  "sharedSourceEdits": false,
+  "decision": "No remaining blocker for the corrected baseline main protection payload; not release acceptance."
+}

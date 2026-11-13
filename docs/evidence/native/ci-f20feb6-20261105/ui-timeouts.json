@@ -1,0 +1,66 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "run": 41994028642,
+  "observedAt": "2026-11-05T09:40:42.719797+00:00",
+  "shards": [
+    {
+      "shard": "ui-01",
+      "job": 127139510019,
+      "artifact": 13403275964,
+      "artifactSHA256": "1dafea47c4ac4007aea1cef7c1ba4199fcd54c0904f59dc9fafe554be0f2f354",
+      "githubDigestVerified": true,
+      "selectorPlanMatched": true,
+      "hostedConclusion": "failure",
+      "independentGuardExit": 1,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "testFailures": [
+        {
+          "failureText": "Test exceeded execution time allowance of 12 minutes",
+          "targetName": "RoomInTheCartUITests",
+          "testIdentifier": 3,
+          "testIdentifierString": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+          "testName": "testSavedOfferReopensAndUpdatesResponseAfterRestart()"
+        }
+      ],
+      "rawLogSHA256": "0915ed8dc4b5bec2516f7a61050da299fc82582830356bbe1915ca6939fd0283",
+      "diagnosis": "Execution exceeded unchanged 720-second default allowance; strict verifier also rejects the runner restart and missing ordinary pass lifecycle."
+    },
+    {
+      "shard": "ui-02",
+      "job": 127139510145,
+      "artifact": 13402114647,
+      "artifactSHA256": "cf1ed5799f716a87be53d70813110c68054f223059a0c8d55da4de25c5fc1bfa",
+      "githubDigestVerified": true,
+      "selectorPlanMatched": true,
+      "hostedConclusion": "failure",
+      "independentGuardExit": 1,
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0,
+      "testFailures": [
+        {
+          "failureText": "Test exceeded execution time allowance of 12 minutes",
+          "targetName": "RoomInTheCartUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+          "testName": "testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()"
+        }
+      ],
+      "rawLogSHA256": "ce122002be2d4534963a86dd58ff281f759adc3ebb70cc892ae7b513f41b8aa2",
+      "diagnosis": "Execution exceeded unchanged 720-second default allowance; strict verifier also rejects the runner restart and missing ordinary pass lifecycle."
+    }
+  ],
+  "ui01AdditionalFinding": {
+    "originalGuard": "Rejects two manual-list Menu warnings because both occurred under Wait for dev.roominthecart.app.debug to idle rather than previously observed Synthesize event.",
+    "revisedGuard": "Exact second phase is scoped to the same manual-list selector, Menu tap, iPhone17/iOS26.2 build23C54 and aggregate cap2. Retained standalone Menu experiment also recorded this idle phase. The timeout still fails.",
+    "activitySHA256": "379b88d6d7294a54be45f4f9271e2163ca155b90160672e0ffecd956fcd41082",
+    "pickupFindRetryPairs": 70,
+    "pickupDragGestures": 77,
+    "finalActionAttachmentSeconds": 757.09
+  },
+  "limits": "Both hosted shards remain failed. Local navigation correction is pending execution; other hosted UI/fixture jobs remain live. No timeout increase, retry or hosted restart."
+}

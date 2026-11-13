@@ -29,6 +29,61 @@ final class PickupOfferReviewTests: XCTestCase {
     }
     private func location() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString) }
 
+    @MainActor func testFutureChargeDoesNotChangePaidTotalBeforeItsEvidenceDate() async throws {
+        let url = location()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = try await placed(store: ComparisonStore(url: url))
+        let before = try XCTUnwrap(model.journey)
+        let tomorrow = now.addingTimeInterval(86_400)
+        let charge = SettlementEntry(id: UUID(), evidenceKey: "statement-37", kind: .postedCharge,
+                                     amount: Money(minorUnits: 3720), occurredAt: tomorrow)
+        let recordedEarly = await model.settle(charge)
+        XCTAssertFalse(recordedEarly)
+        let reopened = PickupModel(databaseURL: url, clock: { tomorrow })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey?.revision, before.revision)
+        XCTAssertEqual(try reopened.journey?.settlement.summary().paidSoFar.minorUnits, 0)
+
+        let recordedOnDate = await reopened.settle(charge)
+        XCTAssertTrue(recordedOnDate)
+        XCTAssertEqual(try reopened.journey?.settlement.summary().paidSoFar.minorUnits, 3720)
+        XCTAssertEqual(reopened.journey?.settlement.entries, [charge])
+    }
+
+    @MainActor func testRetryingSavedChargeAfterReopenPreservesThePickupRevision() async throws {
+        let url = location()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = try await placed(store: ComparisonStore(url: url))
+        func charge(id: UUID = UUID(), cents: Int64 = 700) -> SettlementEntry {
+            SettlementEntry(id: id, evidenceKey: "receipt-7", kind: .postedCharge,
+                            amount: Money(minorUnits: cents), occurredAt: now)
+        }
+        let entry = charge()
+        let saved = await model.settle(entry)
+        XCTAssertTrue(saved)
+        let revision = try XCTUnwrap(model.journey?.revision)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        for retry in [entry, charge()] {
+            let accepted = await reopened.settle(retry)
+            XCTAssertTrue(accepted)
+            XCTAssertEqual(reopened.journey?.revision, revision)
+        }
+        let conflict = await reopened.settle(charge(cents: 701))
+        XCTAssertFalse(conflict)
+        let reader = PickupModel(databaseURL: url)
+        await reader.load()
+        XCTAssertEqual(reader.journey?.revision, revision)
+        XCTAssertEqual(reader.journey?.settlement.entries, [entry])
+
+        let archived = try await reader.archiveSnapshot()
+        let record = try XCTUnwrap(archived.records.first)
+        try await reader.deleteArchived(id: record.id, expectedRevision: record.revision, operationID: UUID())
+        let staleRetry = await reopened.settle(entry)
+        XCTAssertFalse(staleRetry)
+        XCTAssertNil(reopened.journey)
+    }
+
     @MainActor func testReviewedUpdateSurvivesSQLiteRestartAndPreservesUnrelatedFacts() async throws {
         let url = location(); defer { try? FileManager.default.removeItem(at: url) }
         let store = try ComparisonStore(url: url), model = try await placed(store: store)
@@ -157,13 +212,19 @@ final class PickupOfferReviewTests: XCTestCase {
         XCTAssertThrowsError(try PickupOfferReview.validate(oversized, ordered: ordered))
         // Same-dimension explicit unit conversion is permitted, never count-to-mass guessing.
         XCTAssertNoThrow(try PickupOfferReview.validate(offer(lineID: lineID, remaining: 1, unit: .kilogram), ordered: quantity(2_000, .gram)))
-        let invalidLiteral = Quantity(amount: .one, unit: .count, originalLiteral: String(repeating: "x", count: 2_049))
-        XCTAssertThrowsError(try PickupOfferReview.validate(offer(lineID: lineID), ordered: invalidLiteral))
         let valid = try offer(lineID: lineID)
-        let invalidRemaining = PickupOffer(id: valid.id, lineID: lineID, replacement: valid.replacement,
-            required: valid.required, remainingOriginal: invalidLiteral, price: valid.price, ceiling: valid.ceiling,
-            deadline: valid.deadline, fallback: valid.fallback, householdPreference: "", retailerResponse: "")
-        XCTAssertThrowsError(try PickupOfferReview.validate(invalidRemaining, ordered: ordered))
+        func withQuantities(required: Quantity, remaining: Quantity) -> PickupOffer {
+            PickupOffer(id: valid.id, lineID: lineID, replacement: valid.replacement, required: required,
+                remainingOriginal: remaining, price: valid.price, ceiling: valid.ceiling,
+                deadline: valid.deadline, fallback: valid.fallback, householdPreference: "", retailerResponse: "")
+        }
+        let maximum = String(repeating: "é", count: 1_024)
+        let atLimit = Quantity(amount: try Rational(8), unit: .count, originalLiteral: maximum)
+        let overLimit = Quantity(amount: try Rational(8), unit: .count, originalLiteral: maximum + "x")
+        XCTAssertNoThrow(try PickupOfferReview.validate(withQuantities(required: atLimit, remaining: atLimit), ordered: atLimit))
+        XCTAssertThrowsError(try PickupOfferReview.validate(valid, ordered: overLimit))
+        XCTAssertThrowsError(try PickupOfferReview.validate(withQuantities(required: overLimit, remaining: valid.remainingOriginal), ordered: ordered))
+        XCTAssertThrowsError(try PickupOfferReview.validate(withQuantities(required: valid.required, remaining: overLimit), ordered: ordered))
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(valid)) as? [String: Any])
         var remaining = try XCTUnwrap(json["remainingOriginal"] as? [String: Any])
         remaining["amount"] = ["numerator": -1, "denominator": 1]

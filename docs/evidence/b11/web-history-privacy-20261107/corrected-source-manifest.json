@@ -1,0 +1,27 @@
+{
+  "baseHead": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "v1Patch": "history-privacy.patch",
+  "correctedPatch": "history-privacy-corrected.patch",
+  "installedV1Followup": "history-privacy-401-followup.patch",
+  "permanentBrowserPatch": "permanent-browser-regression.patch",
+  "correctedSources": {
+    "web/src/app.ts": "781e7e9f609e58d1ef30dadb4dfc5e5471b7b76e096db1501ed14ace31f94811",
+    "web/src/main.ts": "2d8c565430d4267acf49983209240dbb6914d20c66083c4bbfc7f1e6f1740e1c",
+    "web/tests/history-lifecycle.test.mjs": "efa9e5119a5f82e79d7d3c2eaa76838bc0e4a159ba57d59587a59858001c3f2a",
+    "web/tests/browser/history-privacy.test.mjs": "7e5199a590d92792f3cb86db1f5e1155310f6e4f6ec79eb14c14aec6ed8eedf2",
+    "web/package.json": "39d57746a050cf9e0a1476aa63a078347d9499e222a01c70749b231ab0ab111c"
+  },
+  "correctedBundle": {
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "6000eea9e16fe16a1eb758798067b7eb2ae8419b6ca3c8505e6dbd1d8ddb54d4",
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-CS4HFC9t.js": "81c9adb3be7c6f69c5f3d9bee9d35cb698b19043ad5f619f54b13c5b13db2151"
+  },
+  "unchangedBrowserRuntime": "fixed-private-max-age-zero-runtime.json",
+  "serviceContractSources": {
+    "service/src/http.ts": "26271ee8b3a87272c7e5f7246d4954700e9b2fe9adfea1142762907fd46fd559",
+    "service/src/repository.ts": "0d18c353c4a0c6cdf136f7a4b3968923be7835ecbd27b076dfa8a58c37eb9828",
+    "service/tests/browser-auth.integration.mjs": "a16b23e82f09febc4ace54f81d8c16535e7c35b7db05a15ae775516eef4bd696"
+  }
+}

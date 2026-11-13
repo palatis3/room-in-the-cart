@@ -479,6 +479,142 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.remove(occurrenceID: occurrence)], tool: .manual, ledger: ledger, state: state, access: access(ledger), phase: .draft, at: now))
         XCTAssertEqual(ledger.contributions.first?.quantity?.amount, try Rational(2))
     }
+    private func manualLunchFixture(savedBindings: Bool = true) throws -> (ShoppingLedger, DinnerPlanningState, DinnerAdjustment, DinnerPortionBinding) {
+        var ledger = ShoppingLedger(), state = DinnerPlanningState()
+        let dinner = ServingGroup(name: "Dinner", servings: try Rational(3))
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let meal = MealTemplate(title: "Wraps", servings: try Rational(4),
+            ingredients: [.init(name: "Wraps", quantity: try q(8))], servingGroups: [dinner, lunch])
+        let occurrence = try ledger.chooseMeal(meal, at: now)
+        let source = try XCTUnwrap(ledger.contributions.first?.id)
+        if savedBindings {
+            try state.setPortionBindings([
+                .init(occurrenceID: occurrence, contributionID: source, groupID: dinner.id, quantity: try q(6), servings: dinner.servings),
+                .init(occurrenceID: occurrence, contributionID: source, groupID: lunch.id, quantity: try q(2), servings: lunch.servings)
+            ], for: occurrence, ledger: ledger, access: access(ledger, paid: false), at: now)
+        }
+        let baseline = try DinnerPlanningEngine.manualPortionBindings(occurrenceID: occurrence, ledger: ledger, state: state)
+        let protected = try XCTUnwrap(baseline.first { $0.groupID == lunch.id })
+        let mutable = try XCTUnwrap(baseline.first { $0.groupID == dinner.id })
+        let resulting = DinnerPortionBinding(id: mutable.id, occurrenceID: occurrence, contributionID: source,
+            groupID: dinner.id, quantity: try q(7), servings: try Rational(4))
+        let adjustment = DinnerAdjustment(occurrenceID: occurrence, servings: try Rational(5),
+            groups: [.init(id: dinner.id, name: dinner.name, servings: try Rational(4)), lunch],
+            quantities: [.init(contributionID: source, quantity: try q(9))], portionBindings: [resulting, protected])
+        return (ledger, state, adjustment, protected)
+    }
+
+    func testFreeManualProtectedAllocationPreviewCancelApplyAndReplayPreserveTwoLunchWraps() throws {
+        var (ledger, state, adjustment, protected) = try manualLunchFixture()
+        let original = ledger, originalState = state
+        let preview = try DinnerPlanningEngine.preview(changes: [.adjust(adjustment)], tool: .manual,
+            ledger: ledger, state: state, access: access(ledger, paid: false), phase: .draft, at: now)
+        let projectedBindings = try preview.reviewedPortionBindings(from: state)
+        let line = try XCTUnwrap(ledger.lines.first?.id)
+        let projected = try LedgerPackRequirement.review(shop: preview.projectedLedger, lineID: line, bindings: projectedBindings)
+        XCTAssertEqual(projected.quantity.amount, try Rational(9))
+        XCTAssertEqual(projected.protectedQuantity.amount, try Rational(2))
+        XCTAssertEqual(projectedBindings.first { $0.id == protected.id }, protected)
+        XCTAssertEqual(ledger, original); XCTAssertEqual(state, originalState, "Discarding the preview performs no write")
+        let receipt = try DinnerPlanningEngine.apply(try roundTrip(preview.proposal), ledger: &ledger, state: &state,
+            access: access(ledger, paid: false), phase: .draft, at: now)
+        XCTAssertEqual(state.portionBindings, adjustment.portionBindings)
+        XCTAssertEqual(try LedgerPackRequirement.review(shop: ledger, lineID: line, bindings: state.portionBindings).protectedQuantity.amount, try Rational(2))
+        let pack = PackOffer(id: "eight", label: "Eight wraps", usableQuantity: try q(8), price: Money(minorUnits: 240))
+        let comparison = try PackComparison.evaluate(.init(itemName: "Wraps", needed: projected.quantity,
+            protectedAmount: projected.protectedQuantity, offerA: pack,
+            offerB: PackOffer(id: "other", label: "Eight", usableQuantity: try q(8), price: Money(minorUnits: 250))))
+        XCTAssertEqual(comparison.offerA.packsToBuy, 2)
+        _ = try ledger.addManualLine(name: "Soap", quantity: q(1), at: now)
+        let later = ledger, laterState = state
+        XCTAssertEqual(try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state,
+            access: access(ledger, paid: false), phase: .draft, at: now), receipt)
+        XCTAssertEqual(ledger, later); XCTAssertEqual(state, laterState)
+    }
+
+    func testFreeManualLegacyProportionalLunchBecomesExplicitOnlyOnApply() throws {
+        var (ledger, state, adjustment, protected) = try manualLunchFixture(savedBindings: false)
+        XCTAssertTrue(state.portionBindings.isEmpty)
+        let preview = try DinnerPlanningEngine.preview(changes: [.adjust(adjustment)], tool: .manual,
+            ledger: ledger, state: state, access: access(ledger, paid: false), phase: .draft, at: now)
+        XCTAssertTrue(state.portionBindings.isEmpty, "Reviewing the legacy baseline must not persist it")
+        XCTAssertEqual(protected.quantity.amount, try Rational(2))
+        try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state,
+            access: access(ledger, paid: false), phase: .draft, at: now)
+        XCTAssertEqual(state.portionBindings.first { $0.id == protected.id }, protected)
+        let line = try XCTUnwrap(ledger.lines.first?.id)
+        XCTAssertEqual(try LedgerPackRequirement.review(shop: ledger, lineID: line, bindings: state.portionBindings).protectedQuantity.amount, try Rational(2))
+    }
+
+    func testFreeManualProtectedAllocationRejectsMissingReducedChangedIdentityAndMismatchedRowsAtomically() throws {
+        let (ledger, state, valid, protected) = try manualLunchFixture()
+        let rows = try XCTUnwrap(valid.portionBindings), mutable = rows[0]
+        func row(_ source: DinnerPortionBinding, id: UUID? = nil, amount: Int64) throws -> DinnerPortionBinding {
+            .init(id: id ?? source.id, occurrenceID: source.occurrenceID, contributionID: source.contributionID,
+                groupID: source.groupID, quantity: try q(amount), servings: source.servings)
+        }
+        let invalid: [[DinnerPortionBinding]?] = [nil, [mutable],
+            [try row(mutable, amount: 8), try row(protected, amount: 1)],
+            [mutable, try row(protected, id: UUID(), amount: 2)],
+            [try row(mutable, amount: 6), protected]]
+        for bindings in invalid {
+            let change = DinnerAdjustment(occurrenceID: valid.occurrenceID, servings: valid.servings,
+                groups: valid.groups, quantities: valid.quantities, portionBindings: bindings)
+            XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.adjust(change)], tool: .manual,
+                ledger: ledger, state: state, access: access(ledger, paid: false), phase: .draft, at: now))
+            let proposal = DinnerProposal(id: UUID(), shopID: ledger.id, baseRevisionID: ledger.revisionID,
+                basisRevision: ledger.basisRevision, planningRevisionID: state.revisionID, proposedRevisionID: UUID(),
+                authorID: "Mia", namespace: "local:\(workspaceID.uuidString)", tool: .manual,
+                changes: [.adjust(change)], createdAt: now, isIsolatedPreview: false, quoteSelection: nil)
+            var copy = ledger, stateCopy = state
+            XCTAssertThrowsError(try DinnerPlanningEngine.apply(proposal, ledger: &copy, state: &stateCopy,
+                access: access(ledger, paid: false), phase: .draft, at: now))
+            XCTAssertEqual(copy, ledger); XCTAssertEqual(stateCopy, state)
+        }
+    }
+
+    func testFreeManualBindingsOnlyEditCannotInventZeroLunchFromIncompletePriorBindings() throws {
+        let (ledger, _, valid, protected) = try manualLunchFixture()
+        let meal = try XCTUnwrap(ledger.mealOccurrences.first), source = try XCTUnwrap(ledger.contributions.first)
+        let dinner = try XCTUnwrap(meal.servingGroups.first { !$0.isProtected })
+        var state = DinnerPlanningState()
+        let prior = DinnerPortionBinding(occurrenceID: meal.id, contributionID: source.id,
+            groupID: dinner.id, quantity: try q(8), servings: dinner.servings)
+        // Historically legal saved evidence: the ingredient total is complete,
+        // but there is no observation for the protected group.
+        try state.setPortionBindings([prior], for: meal.id, ledger: ledger, access: access(ledger, paid: false), at: now)
+        let invented = DinnerPortionBinding(id: protected.id, occurrenceID: meal.id, contributionID: source.id,
+            groupID: protected.groupID, quantity: try q(0), servings: protected.servings)
+        let change = DinnerAdjustment(occurrenceID: valid.occurrenceID, servings: meal.servings,
+            groups: meal.servingGroups, quantities: [], portionBindings: [prior, invented])
+        XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.adjust(change)], tool: .manual,
+            ledger: ledger, state: state, access: access(ledger, paid: false), phase: .draft, at: now)) {
+            XCTAssertEqual($0 as? DinnerPlanningError, .reviewRequired("allIngredientBindings"))
+        }
+        let proposal = DinnerProposal(id: UUID(), shopID: ledger.id, baseRevisionID: ledger.revisionID,
+            basisRevision: ledger.basisRevision, planningRevisionID: state.revisionID, proposedRevisionID: UUID(),
+            authorID: "Mia", namespace: "local:\(workspaceID.uuidString)", tool: .manual,
+            changes: [.adjust(change)], createdAt: now, isIsolatedPreview: false, quoteSelection: nil)
+        var copy = ledger, stateCopy = state
+        XCTAssertThrowsError(try DinnerPlanningEngine.apply(proposal, ledger: &copy, state: &stateCopy,
+            access: access(ledger, paid: false), phase: .draft, at: now))
+        XCTAssertEqual(copy, ledger); XCTAssertEqual(stateCopy, state)
+    }
+
+    func testFreeManualLegacyUnknownQuantityStaysUnresolvedAndOldAdjustmentStillDecodes() throws {
+        var (ledger, state, adjustment, _) = try manualLunchFixture(savedBindings: false)
+        let source = try XCTUnwrap(ledger.contributions.first?.id)
+        try ledger.updateContribution(contributionID: source, quantity: nil, notes: "")
+        XCTAssertThrowsError(try DinnerPlanningEngine.manualPortionBindings(occurrenceID: adjustment.occurrenceID, ledger: ledger, state: state))
+        XCTAssertTrue(state.portionBindings.isEmpty)
+        let old = DinnerAdjustment(occurrenceID: adjustment.occurrenceID, servings: adjustment.servings,
+            groups: adjustment.groups, quantities: adjustment.quantities)
+        let data = try JSONEncoder().encode(old)
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNil(object["portionBindings"])
+        XCTAssertEqual(try JSONDecoder().decode(DinnerAdjustment.self, from: data), old)
+    }
+
     func testPrivateBudgetIsAbsentFromPlannerPreviewProjection() throws {
         let ledger = ShoppingLedger(basis: ShopBasis(cap: Money(minorUnits: 3800)))
         let preview = try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: meal()))], tool: .manual, ledger: ledger,

@@ -1,0 +1,109 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "observedAt": "2026-11-05T17:08:10.129216+00:00",
+  "workflowRuns": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736328,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "updatedAt": "2026-11-05T14:54:59Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736328"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736340,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T15:05:05Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736340"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736052,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Security checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T14:50:45Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736052"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736422,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Build and test",
+      "status": "completed",
+      "updatedAt": "2026-11-05T16:53:10Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736422"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736649,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:04:53Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736649"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:24Z",
+      "databaseId": 42048735898,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "updatedAt": "2026-11-05T15:32:16Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048735898"
+    }
+  ],
+  "models": {
+    "selected": 598,
+    "passed": 598,
+    "strictReplayExit": 0,
+    "runtimeWarnings": 0
+  },
+  "ordinaryUI": {
+    "selected": 51,
+    "passed": 51,
+    "failed": 0,
+    "skipped": 0,
+    "strictPassingGroups": 10,
+    "allowedRuntimeWarnings": 5
+  },
+  "fixtures": {
+    "selectedIncludingRecords": 44,
+    "nativeOrReportedPasses": 43,
+    "failed": 1,
+    "strictPassingGroupCasesIncludingRecordsReport": 38,
+    "passesInsideFailedGroup": 5,
+    "allowedRuntimeWarnings": 6,
+    "failedGroup": "contributor-balanced-02",
+    "failedSelector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording"
+  },
+  "recordsScope": "One reported pass; restricted redacted report and compiled plan verified. No raw private result bundle, logs, images, video or hierarchy retained or replayed.",
+  "warningCorrection": "Earlier progress messages incorrectly described ordinary UI as warning-free. Final retained exports contain five allowed ordinary-UI warnings plus six allowed fixture warnings. All remain visible in per-group evidence; no policy changed during this run.",
+  "localFollowups": [
+    {
+      "commit": "39de0fc",
+      "change": "Coalesce equivalent delivery instructions",
+      "validation": "57 membership tests in each language,114 passes,zero runtime warnings"
+    },
+    {
+      "commit": "979d749",
+      "change": "Reveal capture editor before value read and require keyboard absence",
+      "validation": "Original six-case contributor group passed locally,zero runtime warnings"
+    }
+  ],
+  "limits": [
+    "Local follow-ups are not part of the hosted candidate.",
+    "Local runtime/SDK differ from hosted. Original failed fixture result remains failed.",
+    "Production backup/restore, provider setup, signing, physical-device and human acceptance remain open."
+  ]
+}

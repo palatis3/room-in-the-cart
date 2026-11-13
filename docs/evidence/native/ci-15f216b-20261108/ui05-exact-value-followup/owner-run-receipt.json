@@ -1,0 +1,19 @@
+{
+  "status": "terminal",
+  "startedAtUTC": "2026-11-08T04:37:51.089738+00:00",
+  "command": [
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-05-followup/run-reviewed.sh"
+  ],
+  "output": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-05-local-r1",
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "deviceSettings": {
+    "appearance": "light",
+    "increase_contrast": "disabled",
+    "content_size": "large"
+  },
+  "scope": "Original six-case UI05 replay with exact-value completion assertion. Local toolchain differs from hosted original.",
+  "pid": 21230,
+  "exitCode": 0,
+  "endedAtUTC": "2026-11-08T04:57:11.582617+00:00"
+}

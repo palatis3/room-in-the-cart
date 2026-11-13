@@ -1,0 +1,9 @@
+{
+  "exit": 1,
+  "body": {
+    "message": "Invalid request.\n\nNo subschema in \"anyOf\" matched.\nMore than one subschema in \"oneOf\" matched.\nNot all subschemas of \"allOf\" matched.\nFor 'anyOf/1', {\"strict\" => true, \"checks\" => [{\"context\" => \"CI gate\", \"app_id\" => 15368}, {\"context\" => \"CodeQL (javascript-typescript)\", \"app_id\" => 15368}, {\"context\" => \"CodeQL (actions)\", \"app_id\" => 15368}, {\"context\" => \"Dependency review\", \"app_id\" => 15368}], \"contexts\" => []} is not a null.",
+    "documentation_url": "https://docs.github.com/rest/branches/branch-protection#update-branch-protection",
+    "status": "422"
+  },
+  "stderr": "gh: Invalid request.\n\nNo subschema in \"anyOf\" matched.\nMore than one subschema in \"oneOf\" matched.\nNot all subschemas of \"allOf\" matched.\nFor 'anyOf/1', {\"strict\" => true, \"checks\" => [{\"context\" => \"CI gate\", \"app_id\" => 15368}, {\"context\" => \"CodeQL (javascript-typescript)\", \"app_id\" => 15368}, {\"context\" => \"CodeQL (actions)\", \"app_id\" => 15368}, {\"context\" => \"Dependency review\", \"app_id\" => 15368}], \"contexts\" => []} is not a null. (HTTP 422)\n"
+}

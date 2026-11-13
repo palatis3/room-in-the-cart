@@ -1,0 +1,14 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071958899,
+  "artifactID": 13437453122,
+  "sha256": "b634bc3305fdc0c1f944f756755496c467a2ea23d1f1d325993e7b9deb260084",
+  "githubDigestVerified": true,
+  "selected": 599,
+  "passed": 599,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "runtimeWarnings": 0,
+  "rawLogSHA256": "772144d8d239520edeb7cf511562c60d7c3a713132ef5e0db97fbc62d364cc3a"
+}

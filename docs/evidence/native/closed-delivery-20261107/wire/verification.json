@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-07",
+  "runner": "scripts/run_ios_native_wire.sh",
+  "node": "22.23.4",
+  "result": "passed",
+  "nodeIntegrationCases": 6,
+  "exactXCTestScenarios": 10,
+  "skipped": 0,
+  "scope": "SharedMealNativeWireTests.exerciseConfirmedAmendment: retailer-confirmed cancellation, posted charge and pending credit, real financial-review closure with exact retry, late arrival on retained amendment source, usable2\u21921 correction, exact command retries including old arrival after correction, unchanged closed shop/original order/current order/amendment history/financial evidence/original physical source",
+  "postconditions": {
+    "shopRevision": 9,
+    "placedRevision": 5,
+    "phase": "closed",
+    "supplyRevision": 17,
+    "deliverySources": 2,
+    "oldSourceGrams": 7,
+    "lateReceivedCount": 2,
+    "lateUsableCount": 1,
+    "financialEntries": [
+      [
+        "postedCharge",
+        3720
+      ],
+      [
+        "pendingCredit",
+        240
+      ]
+    ]
+  },
+  "retainedEvidence": [
+    "previous-root-native-wire-results",
+    "first-run-revision-expectation-failure",
+    "passing-native-wire-results"
+  ],
+  "firstRunFailure": "Swift closed journey passed; Node expected16 omitted preexisting effective-meal recovery supply increment. Exact count corrected17; no production or test gate weakening.",
+  "isolation": "Fresh task-owned PostgreSQL and Swift scratch per run; runner stopped database and removed temporary state; no hosted mutation or app simulator execution"
+}

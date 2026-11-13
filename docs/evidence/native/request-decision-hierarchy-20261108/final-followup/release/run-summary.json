@@ -1,0 +1,56 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T13:55:16.288486+00:00",
+  "source": "/Users/palatis/Room in the Cart",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/fixed-source-manifest.json",
+  "sourceManifestSHA256": "c4cbc2f604d43e021b927e849acd8b486fd3179179a1f964a7c410c6288c36e5",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "bundleCheckCommand": [
+    "python3",
+    "scripts/check_built_app.py",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+    "--configuration",
+    "Release"
+  ],
+  "scope": "Final frozen S24 decision hierarchy source unsigned arm64 generic iPhone Release; existing DD reuse; serial jobs2",
+  "toolchain": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcodebuild": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftExecutable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0"
+  },
+  "pid": 35553,
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "finishedAtUTC": "2026-11-08T13:56:03.588987+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "originalPrivateRunPath": ".build/S24DecisionPromptNov08/release-run/run.json",
+  "originalPrivateRunSHA256": "5ed4ebceb0e3f4c2ecc197f351172ef6fc6bf4d477435ff4293136007eb28914",
+  "omittedProductManifest": {
+    "entries": 173,
+    "reason": "Bounded public projection; exact private full receipt bound by SHA256."
+  }
+}

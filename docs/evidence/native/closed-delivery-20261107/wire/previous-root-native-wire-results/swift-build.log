@@ -1,0 +1,60 @@
+Xcode 27.1
+Build version 27A9275
+swift-driver version: 1.168.6 Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)
+Target: arm64-apple-macosx27.2.0
+v22.23.4
+postgres (PostgreSQL) 17.11
+LibreSSL 3.3.6
+Building for debugging...
+[Planning deferred tasks]
+[28 / 52]
+[29 / 53] HouseholdClient
+[33 / 101]
+[38 / 101]
+[41 / 101]
+[44 / 101]
+[47 / 101]
+[49 / 101]
+[53 / 101]
+[54 / 101]
+[56 / 101]
+[59 / 101]
+[62 / 101]
+[64 / 101]
+[65 / 101]
+[69 / 101] HouseholdClient
+[71 / 101] HouseholdClient
+[77 / 101] HouseholdClient
+[78 / 101] HouseholdClient
+[79 / 101] HouseholdClientTests-product
+[81 / 101] HouseholdClient
+[82 / 101] HouseholdClient
+[83 / 101]
+[85 / 101] HouseholdClient
+[91 / 102] HouseholdClientTests-product
+[96 / 146]
+[97 / 146]
+[100 / 146]
+[101 / 146]
+[104 / 146]
+[107 / 146]
+[108 / 146]
+[112 / 146]
+[113 / 146]
+[114 / 146]
+[116 / 146]
+[119 / 146]
+[120 / 146]
+[121 / 146]
+[122 / 146]
+[123 / 146]
+[124 / 146]
+[127 / 146] HouseholdClientTests-product
+[134 / 146] HouseholdClientTests-product
+[136 / 146] HouseholdClientTests-product
+[137 / 146] HouseholdClientTests-product
+[138 / 146] HouseholdClientTests-product
+[139 / 146] HouseholdClientTests-product
+[140 / 146] HouseholdClientTests-product
+[142 / 146] HouseholdClientTests-product
+Build complete! (37.03 sec)

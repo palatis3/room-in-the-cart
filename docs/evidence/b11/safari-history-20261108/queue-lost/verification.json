@@ -1,0 +1,53 @@
+{
+  "status": "passed-scoped",
+  "recordedAtUTC": "2026-11-08T03:42:43.263969+00:00",
+  "case": "queue-lost",
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "frozenManifestAndHelpersVerified": true,
+  "verifierExit": 0,
+  "verifierCommand": [
+    ".tools/node-v22.23.4-darwin-arm64/bin/node",
+    ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "queue-lost",
+    ".build/SafariQualificationNov08/proposal/runs/queue-lost/receipt.json"
+  ],
+  "receiptSHA256": "4c0633c66a286cbca5255783a8ec19723a48c374c1b37973d30d025b4003ecc4",
+  "observationPhases": [
+    "queued",
+    "reloaded",
+    "final"
+  ],
+  "pendingCommandSHA256": "2a172796034af370216630a1f65dabf0409cd75c724bd31f1d11840b18fdbf5c",
+  "supplementalAssertions": {
+    "commitThenDropEventExactlyOne": true,
+    "queuedAndReloadedOneStoredRowOneAttemptOneEffect": true,
+    "sameStoredDigestAfterNativeReload": true,
+    "zeroAutomaticPOSTDuringReload": true,
+    "explicitRetrySameActorKeyBodyDigestAndQueueGrant": true,
+    "exactRetryEventOne": true,
+    "finalTwoAttemptsOneEffectOneReceivedRow": true,
+    "finalExactReceivedNoticeMarkerReadyNotBusyNoRetryOrStoredRow": true
+  },
+  "rootVisualObservation": "After native reload the unresolved pending card and already received row both appeared. After explicit retry, pending disappeared and the received row retained its original time. Probe only records marker presence, not rendered instance counts or time; those aspects are root CUA transcript observations, not inferred from the marker Boolean.",
+  "counts": {
+    "commandAttempts": 2,
+    "commandEffects": 1,
+    "rowsA": 1,
+    "rowsB": 0
+  },
+  "cleanup": {
+    "rootReportedExecSession": 24557,
+    "rootReportedServerPID": 8055,
+    "rootReportedStopExit": 0,
+    "port": 52060,
+    "independentConnectResult": 61,
+    "independentPortState": "ECONNREFUSED"
+  },
+  "identity": "same root-owned iPhone17 Simulator/iOS26.2 MobileSafari as ../owned-simulator-safari.json",
+  "visualEvidence": "Root Device Hub CUA transcript only; no standalone PNG/video export",
+  "scope": "Synthetic committed-response transport loss; actual Safari and IndexedDB; not live service/PostgreSQL/provider/device-radio failure proof",
+  "unexecutedQueueCases": [
+    "queue-evicted",
+    "queue-revoked"
+  ]
+}

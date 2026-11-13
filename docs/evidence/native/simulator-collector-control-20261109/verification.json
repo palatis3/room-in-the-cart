@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "scope": "Standalone iOS Simulator helper and Logging collector only; no application, hosted or baseline qualification",
+  "captureQualified": true,
+  "events": {
+    "rows": 8,
+    "boundaries": 2,
+    "matchingPositiveIntervals": 3
+  },
+  "offlineControls": 13,
+  "allProcessesExitedNormally": true,
+  "rootVerifiedFiles": 136,
+  "priorFailuresPreserved": true,
+  "releaseAcceptance": false,
+  "retainedOriginals": {
+    ".build/SimulatorSignpostControlNov09/r1/compile.json": "7203ffd605b83eaef5a46d2006422aa440850115c8dc7c1beffac5afa8c03851",
+    ".build/SimulatorSignpostControlNov09/r2/analysis.json": "d4263bec50f7b99daac5867154ee5325c26c35123eb4919f5b17b123cc8371ff",
+    ".build/SimulatorSignpostControlNov09/r2/review.patch": "7688e4fdd439242231f8752f7047014f092492e06a8e73206560b65eead4d20e",
+    ".build/SimulatorSignpostControlNov09/r3/question.json": "1e27b4c8f2c4583c11d8aea89ad8971e166cb981893dcf820265bc99c9123b21",
+    ".build/SimulatorSignpostControlNov09/r3/control.py": "2bbd07517e4a64075d3ab204356f260e8568f18a929dc158a88f834cdb04f281",
+    ".build/SimulatorSignpostControlNov09/capture-r1/receipt.json": "3de41ef1876758307db94bae2051ff331031288913e5ec80df30d755d9f6ad55",
+    ".build/SimulatorSignpostControlNov09/capture-r1-reconciliation.json": "642dc78170eaf235e46446db355a7795e666d64dbf1438be5572a3757e39c36c",
+    ".build/SimulatorSignpostControlNov09/capture-r2/receipt.json": "48b876916bc8f00991cc292432de8fd2e7ed1763389884b7402316c7b46754cb",
+    ".build/SimulatorSignpostControlNov09/capture-r2-validation/event-evidence.json": "5fcbee1a2c689ea3309e46c3ebe27d23c5183a9e5a2007f2c0fa01e942bcf43b",
+    ".build/SimulatorSignpostControlNov09/capture-r3/receipt.json": "e3c8923e8a755d1197ed10c5696e07f008a3511d933ab6c82e956f5d59537f4f",
+    ".build/SimulatorSignpostControlNov09/capture-r3-inspection/export-receipt.json": "a2db9543b4e19bdf54cd177ed1981f0bfca1cc94e6e05913e62d48e6cda1d65e",
+    ".build/SimulatorSignpostControlNov09/capture-r3-validation/qualification.json": "ed30721e3685682c2faf2bed055ec6a71173e140d3f80dab4c00193b86b995d6",
+    ".build/SimulatorSignpostControlNov09/capture-r3-validation/input-manifests.json": "c5872b0ce4713795f0cbcf6b36a60fcf65e4c0f0c2752e09d5652aa9dac0cb33",
+    ".build/SimulatorSignpostControlNov09/capture-r3-validation/test-results.json": "f84afda6235cf92b605a211d5e0780007a763732c5ec69dfb27e7e57d7b89f20",
+    ".build/SimulatorSignpostControlNov09/capture-r3-validation/validate.py": "d7aa0d4a956a119cdadba35552c8d99c5a1074046a1dae0e69f344b5907b2a6a",
+    ".build/SimulatorSignpostControlNov09/capture-r3-root-final-review.json": "337bf76ba23bb38d7b7242d92b9aa27342c93d9beda53ee12ec7cba92550f89f"
+  }
+}

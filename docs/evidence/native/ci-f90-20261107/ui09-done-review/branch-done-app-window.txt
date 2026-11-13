@@ -1,0 +1,47 @@
+91074: 2026-11-08 01:59:10.349916+0000 RoomInTheCart[8951:33287] [Default] Received request to fetch matches for query: ↪︎ Descendants matching type Keyboard (First Match)
+91100: 2026-11-08 01:59:10.354858+0000 RoomInTheCart[8951:33004] [Default] [First Match] iteration with input App element pid: 8951 and transformer `Descendants matching type Keyboard`
+91387: 2026-11-08 01:59:10.385608+0000 RoomInTheCart[8951:33004] [Default] Computed elementType Keyboard.
+91388: 2026-11-08 01:59:10.385673+0000 RoomInTheCart[8951:33004] [Default] [First Match] match found and no more transformers in the current sequence - done, returning Keyboard
+91414: 2026-11-08 01:59:10.388850+0000 RoomInTheCart[8951:40400] [Default] Query ↪︎ Descendants matching type Keyboard (First Match) found matching snapshots: {(
+91417: 2026-11-08 01:59:10.389009+0000 RoomInTheCart[8951:40400] [Default] Replying to query ↪︎ Descendants matching type Keyboard (First Match) with results: <XCTElementQueryResults: 0x600000d61e90> (error: (null))
+91418: 2026-11-08 01:59:10.395448+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when the main run loop is idle
+91419: 2026-11-08 01:59:10.395663+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+91420: 2026-11-08 01:59:10.395660+0000 RoomInTheCart[8951:40376] [Default] Idle notifier finished setting up run loop observer
+91421: 2026-11-08 01:59:10.395776+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+91422: 2026-11-08 01:59:10.395921+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+91423: 2026-11-08 01:59:10.396033+0000 RoomInTheCart[8951:40400] [Default] Sending animations idle reply with error: (null)
+91458: 2026-11-08 01:59:10.540390+0000 RoomInTheCart[8951:40376] [Default] TextField, identifier: 'oneChange.branch', Keyboard Focused is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+91472: 2026-11-08 01:59:10.561076+0000 RoomInTheCart[8951:40376] [Default] App orientation is 0 (not portrait) and UIRemoteKeyboardWindow window Window is not main window
+91577: 2026-11-08 01:59:10.702791+0000 RoomInTheCart[8951:40400] [Default] TextField, identifier: 'oneChange.branch', Keyboard Focused is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+91591: 2026-11-08 01:59:10.719673+0000 RoomInTheCart[8951:40400] [Default] App orientation is 0 (not portrait) and UIRemoteKeyboardWindow window Window is not main window
+91872: 2026-11-08 01:59:10.758054+0000 RoomInTheCart[8951:40400] [Default] Received request to fetch matches for query: ↪︎ Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+91876: 2026-11-08 01:59:10.758358+0000 RoomInTheCart[8951:33287] [Default] Getting snapshot for App element pid: 8951 for query ↪︎ Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+91907: 2026-11-08 01:59:10.840930+0000 RoomInTheCart[8951:33287] [Default] TextField, identifier: 'oneChange.branch', Keyboard Focused is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+91921: 2026-11-08 01:59:10.855421+0000 RoomInTheCart[8951:33287] [Default] App orientation is 0 (not portrait) and UIRemoteKeyboardWindow window Window is not main window
+91943: 2026-11-08 01:59:10.861316+0000 RoomInTheCart[8951:33287] [Default] [Match All] applied transformer `Elements containing elements matching predicate 'hasKeyboardFocus == 1'` to input {(
+92196: 2026-11-08 01:59:10.878304+0000 RoomInTheCart[8951:33287] [Default] Query ↪︎ Elements containing elements matching predicate 'hasKeyboardFocus == 1' found matching snapshots: {(
+92199: 2026-11-08 01:59:10.878699+0000 RoomInTheCart[8951:33287] [Default] Replying to query ↪︎ Elements containing elements matching predicate 'hasKeyboardFocus == 1' with results: <XCTElementQueryResults: 0x600000dc1260> (error: (null))
+92218: 2026-11-08 01:59:11.384626+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when the main run loop is idle
+92219: 2026-11-08 01:59:11.439719+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+92220: 2026-11-08 01:59:11.439719+0000 RoomInTheCart[8951:40376] [Default] Idle notifier finished setting up run loop observer
+92221: 2026-11-08 01:59:11.439896+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+92222: 2026-11-08 01:59:11.439990+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+92553: 2026-11-08 01:59:11.531983+0000 RoomInTheCart[8951:33004] [Default] Computed elementType Keyboard.
+92664: 2026-11-08 01:59:11.552145+0000 RoomInTheCart[8951:33004] [Default] Keyboard (AX element pid: 8951, elementOrHash.elementID: 4314744448.409) faulted in {
+94749: 2026-11-08 01:59:12.059312+0000 RoomInTheCart[8951:33004] [Default] Computed elementType Keyboard.
+94860: 2026-11-08 01:59:12.103151+0000 RoomInTheCart[8951:33004] [Default] Keyboard (AX element pid: 8951, elementOrHash.elementID: 4314744448.409) faulted in {
+96729: 2026-11-08 01:59:12.477145+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when the main run loop is idle
+96730: 2026-11-08 01:59:12.477264+0000 RoomInTheCart[8951:40400] [Default] Idle notifier finished setting up run loop observer
+96731: 2026-11-08 01:59:12.477333+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+96732: 2026-11-08 01:59:12.477410+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+96733: 2026-11-08 01:59:12.477473+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+96734: 2026-11-08 01:59:12.477478+0000 RoomInTheCart[8951:40376] [Default] Sending animations idle reply with error: (null)
+97052: 2026-11-08 01:59:12.508608+0000 RoomInTheCart[8951:33004] [Default] Computed elementType Keyboard.
+97163: 2026-11-08 01:59:12.522421+0000 RoomInTheCart[8951:33004] [Default] Keyboard (AX element pid: 8951, elementOrHash.elementID: 4314744448.409) faulted in {
+99025: 2026-11-08 01:59:12.913015+0000 RoomInTheCart[8951:33287] [Default] TextField, identifier: 'oneChange.branch', Keyboard Focused is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+99039: 2026-11-08 01:59:12.919032+0000 RoomInTheCart[8951:33287] [Default] App orientation is 0 (not portrait) and UIRemoteKeyboardWindow window Window is not main window
+99370: 2026-11-08 01:59:13.284896+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when the main run loop is idle
+99371: 2026-11-08 01:59:13.285074+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+99372: 2026-11-08 01:59:13.285216+0000 RoomInTheCart[8951:33287] [Default] Idle notifier finished setting up run loop observer
+99373: 2026-11-08 01:59:13.285321+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+99374: 2026-11-08 01:59:13.288172+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle

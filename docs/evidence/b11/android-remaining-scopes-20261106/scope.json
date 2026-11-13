@@ -1,0 +1,15 @@
+{
+  "browser": "actual Android Chrome on retained emulator-5554",
+  "synthetic": true,
+  "bundleMatchesNewStaging": true,
+  "deployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "cases": [
+    "contributor queue permission revoked",
+    "fresh helper invitation",
+    "editor unsent draft reload",
+    "child wrong household scope",
+    "child accepted finish without scoped cookie and unusable response",
+    "child provider unconfigured"
+  ],
+  "originalPinnedManifestPreserved": true
+}

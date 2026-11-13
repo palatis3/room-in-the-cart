@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "scope": "Isolated full HouseholdClient package with partial-state meal client successor; not yet installed into canonical app",
+  "tests": 227,
+  "passed": 224,
+  "skipped": [
+    "-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]",
+    "-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]",
+    "-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]"
+  ],
+  "failures": 0,
+  "newTests": [
+    "-[HouseholdClientTests.HouseholdClientTests testTrackingMealCatalogChangesAndWholeUndoHTTPKeepFullAcknowledgmentAndDurableExactRetry]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testEnabledCatalogKeepsDistinctFactAndContributionIdentitiesAndAllFourLocations]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testEnabledCatalogRejectsForeignMappingsMissingPartitionsStaleStateAndChangedUnrelatedFacts]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testEnabledCatalogRejectsOmittedNullUnknownFieldsAndInventedLocation]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testExplicitDetachedQuantificationKeepsUsedIDAndRequiresSeparateIntent]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testFullMealDisclosureCannotDisappearOrDifferFromAcceptedCatalog]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testInitialMealAdoptionAlsoRequiresFullServerMealDisclosure]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testMealHistoryRouteAndSavedUndoPreserveExactCommandBytes]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testReviewedConversionAndRestrictionMappingRemainOnRowsWithoutChangingAuthoritativeFacts]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testStoreReviewRetainsExactExplicitBasisRevisionWithoutNewConsentDefaults]",
+    "-[HouseholdClientTests.SharedTrackingMealTests testWholeMealUndoRequiresExactTargetAndCompleteInverseDisclosure]"
+  ],
+  "sourceFiles": 120,
+  "sourceManifestSHA256": "da7b42c9f296549455c15b5370e17496aa71d866b885c64216fb317f31299ea3",
+  "logSHA256": "1b3419669c046f211298318e5e8aca507bff6d55d899b0920772afe515338af4",
+  "receiptSHA256": "3b225f276c6a87a74bea221edd39c0ce6da2910fc29f2c3f0876ac56f0124979",
+  "packet": ".build/SharedDemandGraphNov09/native-tracking-partial-client-r2",
+  "packetManifestSHA256": "093a6c189edd70bcc0dbdb0f2fd6735acffcc09612bb650112ad0d92cf269683",
+  "candidatePatchSHA256": "b7bc02094dcebd27f234a3637eccd3d89750beb93fb47a46d53debaa8cc39b92",
+  "canonicalPreimagesVerified": true,
+  "canonicalInstalled": false,
+  "realServiceWireQualified": false,
+  "nativeUIQualified": false,
+  "execution": ".build/TrackingPartialClientNov10/r3",
+  "earlierFailures": [
+    {
+      "execution": ".build/TrackingPartialClientNov10/r1",
+      "cause": "Optional reservation origin assigned as nonoptional; fixed with explicit rejection of missing origin."
+    },
+    {
+      "execution": ".build/TrackingPartialClientNov10/r2",
+      "cause": "Isolated execution omitted repository layout and golden shared fixture; unchanged test rerun in preserved layout."
+    }
+  ]
+}

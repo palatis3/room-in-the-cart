@@ -13,6 +13,7 @@ private final class StockScopeVault: RefreshTokenVault, @unchecked Sendable {
 }
 private final class StockScopeServer: @unchecked Sendable {
     let role: String
+    let grantedShop = UUID().uuidString
     let household = UUID().uuidString, member = UUID().uuidString, grant = UUID().uuidString
     private let lock = NSLock()
     private var count = 0
@@ -34,13 +35,17 @@ private final class StockScopeServer: @unchecked Sendable {
         } else if path.hasSuffix("/bootstrap") {
             var projection: [String: Any] = ["household":["id":household, "label":"Fixture home"], "memberId":member,
                 "role":role, "enrolled":true, "queueConsent":false, "capabilities":[]]
-            if ["helper", "editor"].contains(role) { projection["grantId"] = grant; projection["capabilities"] = ["helper_view"] }
+            if ["helper", "editor"].contains(role) {
+                projection["grantId"] = grant
+                projection["shopId"] = grantedShop
+                projection["capabilities"] = role == "editor" ? ["helper_view", "helper_propose"] : ["helper_view"]
+            }
             value = projection
         } else { throw URLError(.unsupportedURL) }
         return try JSONSerialization.data(withJSONObject: value)
     }
 }
-private final class StockScopeProtocol: URLProtocol, @unchecked Sendable {
+private final class StockScopeProtocol: URLProtocol {
     private static let lock = NSLock()
     private static var servers: [String: StockScopeServer] = [:]
     static func register(_ server: StockScopeServer, host: String) { lock.lock(); defer { lock.unlock() }; servers[host] = server }

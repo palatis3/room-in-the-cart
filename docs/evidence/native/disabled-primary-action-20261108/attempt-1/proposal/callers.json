@@ -1,0 +1,264 @@
+{
+  "buttonStyleCount": 42,
+  "directLabelCount": 1,
+  "callers": [
+    {
+      "path": "ios/App/LedgerCheckoutEntry.swift",
+      "line": 302,
+      "source": "Button(pTr(\"Apply reviewed checkout copy\")) { Task { await apply(review) } }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/LedgerCheckoutEntry.swift",
+      "line": 305,
+      "source": "Button(ledgerText(\"Save use-at-home plan\")) { Task { await apply(review) } }.buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerSaveAtHomePlan\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/LedgerCheckoutEntry.swift",
+      "line": 307,
+      "source": "Button(pTr(\"Apply reviewed checkout copy\")) { Task { await apply(review) } }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/LedgerCheckoutEntry.swift",
+      "line": 312,
+      "source": "Button(pTr(\"Continue to checkout review\")) { Task { await prepare() } }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "line": 235,
+      "source": "comparePacks.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "line": 464,
+      "source": "Button(tr(\"Save comparison\")) {}.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/App/WorkspaceAccess.swift",
+      "line": 73,
+      "source": ".buttonStyle(PrimaryAction()).disabled(access.checking)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "line": 64,
+      "source": "Button(dinnerText(\"Done\")) { dismiss() }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "line": 91,
+      "source": "PrimaryActionLabel(label: Text(dinnerText(\"Accept idea\")))",
+      "kind": "direct label"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "line": 100,
+      "source": ".buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier(\"ledgerSaveDinner\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "line": 141,
+      "source": "Section { Button(dinnerText(\"Review\"), action: review).buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier(\"ledgerReviewDinner\") }",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "line": 193,
+      "source": "reviewButton.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "line": 263,
+      "source": ".buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Household/SharedStoreQuotesView.swift",
+      "line": 99,
+      "source": ".buttonStyle(PrimaryAction()).disabled(!acknowledged).accessibilityIdentifier(\"sharedQuotes.confirm\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Household/SharedStoreQuotesView.swift",
+      "line": 217,
+      "source": "}.buttonStyle(PrimaryAction()).accessibilityIdentifier(\"sharedQuotes.reviewSave\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerHomeView.swift",
+      "line": 83,
+      "source": ".buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerStartShop\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerHomeView.swift",
+      "line": 87,
+      "source": ".buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerHomeView.swift",
+      "line": 188,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerHomeView.swift",
+      "line": 289,
+      "source": "}.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "line": 175,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "line": 211,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "line": 269,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "line": 307,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "line": 329,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(who.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 31,
+      "source": ".buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerAddDinner\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 34,
+      "source": "Button(ledgerText(\"Start pickup\")) { sheet = .newShop }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 174,
+      "source": ".buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 224,
+      "source": "Button(ledgerText(\"Review dinner\")) { review() }.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 365,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "line": 399,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave).accessibilityIdentifier(\"ledgerSaveMealDate\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackChoiceView.swift",
+      "line": 59,
+      "source": ".buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerUseAtHome\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackChoiceView.swift",
+      "line": 85,
+      "source": ".buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerReviewAtHome\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackChoiceView.swift",
+      "line": 105,
+      "source": "Button(ledgerText(\"Review whole packs\"), action: prepare).buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerReviewPacks\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackChoiceView.swift",
+      "line": 146,
+      "source": "Button(ledgerFormat(\"Choose %@ for checkout review\", offer.label)) { save(review, offerID: offer.id) }.buttonStyle(PrimaryAction()).accessibilityIdentifier(\"ledgerChoosePack-\\(offer.id)\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerSheets.swift",
+      "line": 100,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerSheets.swift",
+      "line": 178,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerSheets.swift",
+      "line": 512,
+      "source": "}.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerSheets.swift",
+      "line": 581,
+      "source": ".buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipView.swift",
+      "line": 53,
+      "source": ".buttonStyle(PrimaryAction()).disabled(!model.canPurchase)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupMealRecoveryView.swift",
+      "line": 386,
+      "source": "}.buttonStyle(PrimaryAction())",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupMealRecoveryView.swift",
+      "line": 411,
+      "source": ".buttonStyle(PrimaryAction()).disabled(!draft.identityReviewed || model.hasPendingSave)",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupRecoveryCalendarView.swift",
+      "line": 53,
+      "source": "}.buttonStyle(PrimaryAction()).accessibilityIdentifier(\"mealRecovery.calendarApply\")",
+      "kind": "button style"
+    },
+    {
+      "path": "ios/Features/Shop/ComparisonView.swift",
+      "line": 104,
+      "source": ".buttonStyle(PrimaryAction()).accessibilityIdentifier(\"compare\")",
+      "kind": "button style"
+    }
+  ]
+}

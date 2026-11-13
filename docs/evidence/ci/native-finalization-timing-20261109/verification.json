@@ -1,0 +1,93 @@
+{
+  "scope": "Native shard timing visibility and local retry diagnostic policy; no change to test acceptance or hosted verbose-diagnostic defaults",
+  "sourceSHA256": {
+    "scripts/report_ios_test_timing.py": "999557240424269f9d878bd98170090ede3f2dd12d18cab7e4bd550a6073c3e2",
+    "scripts/run_ios_test_shard.sh": "9702ab12f6412f877d8b502435d855deb5ba0eebef34cce1669787cb19774e11",
+    "scripts/test_report_ios_test_timing.py": "74c76f9f193a32b5a6c21774852780ecb743950d53f47662c5020a408d330c1b",
+    "scripts/test_local_test_diagnostics.py": "e312efce34f37b3a9f16bdb99feae94a8695cc0c4145bd7f85d9a50883a12070",
+    "docs/CI-VALIDATION.md": "7190f18188f710d117a95b7fad1c5654ca7cad7edbc8d630f217faa15e607ea2"
+  },
+  "validation": {
+    "pythonChecks": 457,
+    "failed": 0,
+    "skipped": 0,
+    "checks": [
+      {
+        "name": "python-tests",
+        "command": [
+          "/Users/palatis/Room in the Cart/.build/ci-yaml/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts",
+          "-p",
+          "test_*.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 28.614453292,
+        "logSHA256": "6e34c41eac33c677ce3e7325752ec63a8d29f0a97f1b55dd15d9f02d1e326fd8"
+      },
+      {
+        "name": "shell-syntax",
+        "command": [
+          "bash",
+          "-n",
+          "scripts/run_ios_test_shard.sh"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.008548540999999688,
+        "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "localization",
+        "command": [
+          "python3",
+          "scripts/check_localization.py"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 3.541242125,
+        "logSHA256": "a27601ca28b244b9737dc65feed1cc3bccd36a35600bb6c5dd4cae35acb443d3"
+      },
+      {
+        "name": "diff",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.04411900000000202,
+        "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "retainedEvidence": {
+    ".build/WorkflowTimingNov09/validation-r2/receipt.json": "497c5a3566335937a8f57f51f430d46ab060c4c5b6034abc7dc3a60a9d8b530b",
+    ".build/WorkflowTimingNov09/validation-r2/python-tests.log": "6e34c41eac33c677ce3e7325752ec63a8d29f0a97f1b55dd15d9f02d1e326fd8",
+    ".build/WorkflowTimingNov09/r1/retained-eight-case-timing.json": "209695366537a5daa36a73958fd2bef6ebc42256cc9bee89b4997ce3d162c8e4",
+    ".build/WorkflowTimingNov09/r1/retained-focused-timing.json": "ccd7bd787aaf96d0a42ca815fce8fc3802d920d36d20009a248ce10d6ade872d"
+  },
+  "observations": [
+    {
+      "report": ".build/WorkflowTimingNov09/r1/retained-eight-case-timing.json",
+      "sha256": "209695366537a5daa36a73958fd2bef6ebc42256cc9bee89b4997ce3d162c8e4",
+      "suiteWallSeconds": 344.985,
+      "postSuiteObserverSeconds": 600.335,
+      "diagnosticTimeoutSeconds": [
+        600.0
+      ],
+      "testLogSHA256": "8651e5dddc03c1154ba27100f720fe9db52586d73cffc889ff861e44cd6a6896"
+    },
+    {
+      "report": ".build/WorkflowTimingNov09/r1/retained-focused-timing.json",
+      "sha256": "ccd7bd787aaf96d0a42ca815fce8fc3802d920d36d20009a248ce10d6ade872d",
+      "suiteWallSeconds": 35.304,
+      "postSuiteObserverSeconds": 0.287,
+      "diagnosticTimeoutSeconds": [],
+      "testLogSHA256": "41941f504d1cfc974d3d3ea86c3cf64ef3ba67749e55ae28d32c2cdd9fdcb169"
+    }
+  ],
+  "hostedExecutionVerified": false,
+  "releaseAcceptance": false
+}

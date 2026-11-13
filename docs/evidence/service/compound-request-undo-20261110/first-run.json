@@ -1,0 +1,40 @@
+{
+  "status": "failed",
+  "qualified": false,
+  "compilerExit": 0,
+  "offline": {
+    "tests": 922,
+    "pass": 921,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "d3cf59cfd692c6f8c79654402996cfc535a663a36e239f87bb14b1e845e84afd"
+  },
+  "database": {
+    "tests": 397,
+    "pass": 388,
+    "fail": 6,
+    "skipped": 3,
+    "cancelled": 0
+  },
+  "failedTests": [
+    "ordinary request inverse after later mapping follows the current shopper and invalidates an old held preview",
+    "a later store selection cannot be treated as the original compound request store basis",
+    "v1 changed-quote first adoption records the reviewed quote and whole Undo preserves a later staple",
+    "signed quarantined restore erases 048 accepted and retired-link lineage without deleting independent same-label facts",
+    "tracked Undo lost reply and original Add replay after later reacceptance never reapply effects",
+    "a held first Apply cannot remove a later reacceptance after another Undo committed"
+  ],
+  "postgresStopped": true,
+  "privateFixtureRetained": true,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "receiptSHA256": "86116a8dafb8fb84b072aa63184dd6521fc5ccefba4587d737496aa8f582ee15",
+  "databaseLogSHA256": "81c52d8fd860bc5009b4900e3959aa667c74b80fedb046de7ca4db571d0d2140",
+  "sourceManifestSHA256": "645b9ef329356bdc13bc1e29c2fb75cd3e63555c90492627c4b7cd237785f0d1",
+  "restore048": "failed before restore phase: raw PostgreSQL bigint string compared to number; no completed restore proof",
+  "next": "fix confirmed fixture errors and diagnose request-generation uniqueness without weakening historical provenance"
+}

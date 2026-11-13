@@ -1,0 +1,7 @@
+{
+  "nativeExit": 65,
+  "strictExit": 1,
+  "originalUnchanged": true,
+  "sourceProductsUnchanged": true,
+  "scope": "Old production source plus byte-identical proposed tests; failures must be reviewed for intended temporal assertions before accepting negative control."
+}

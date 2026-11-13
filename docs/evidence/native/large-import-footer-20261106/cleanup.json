@@ -1,0 +1,24 @@
+[
+  {
+    "command": [
+      "xcrun",
+      "simctl",
+      "shutdown",
+      "CF6099BC-F92B-427C-8985-895AF8D24F8D"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "xcrun",
+      "simctl",
+      "delete",
+      "CF6099BC-F92B-427C-8985-895AF8D24F8D"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

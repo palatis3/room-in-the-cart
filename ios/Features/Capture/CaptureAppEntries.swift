@@ -102,7 +102,7 @@ struct CapturePrivateIdentity: Equatable {
             NavigationStack {
                 ScanReviewView(kind: .recipe, target: target,
                     correctionScope: CaptureCorrectionScope(profileID: "local:" + target.workspaceID.uuidString,
-                        localeIdentifier: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US"),
+                        localeIdentifier: CaptureCorrectionScope.appLanguage()),
                     authorize: { authorized(capture) }) { result in
                     guard authorized(capture), case .recipe(let template, let record) = result, record.target == target else { return }
                     review = RecipeReview(session: capture, template: template, source: record)

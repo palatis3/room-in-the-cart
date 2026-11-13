@@ -1,0 +1,185 @@
+{
+  "observedAtUtc": "2026-11-08T02:01:41Z",
+  "previousSnapshot": "monitor-20261108T015841Z.json",
+  "previousObservedAtUtc": "2026-11-08T01:58:41Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "in_progress",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 12,
+        "failure": 5,
+        "in_progress": 2
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128588297174,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588387968,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 9,
+        "failure": 1,
+        "in_progress": 2,
+        "pending": 3
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128588917127,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128589072389,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128594978722,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128595775547,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215935,
+      "jobId": 128583797613,
+      "name": "ios-tests (ui-07, 8)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128583797613",
+      "from": "in_progress",
+      "to": "failure",
+      "time": "2026-11-08T02:01:32Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128589072389,
+      "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128589072389",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T02:01:35Z"
+    }
+  ],
+  "newFailures": [
+    {
+      "runId": 42428215935,
+      "jobId": 128583797613,
+      "failedStep": "Run selected tests and verify complete execution",
+      "classification": "Native XCTest assertion after save action",
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "nativeResult": {
+        "selected": 8,
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "failedTestDurationSeconds": 181.90794897079468
+      },
+      "detail": "The Spanish test recorded the original food name and known totals, tapped saveComparison at 93.04 seconds, then failed to reveal the static text containing Guardado en este iPhone. The test failed before terminating the app and reopening the saved record. The retained log and summary establish the missing status readback.",
+      "source": [
+        {
+          "path": "ios/UITests/RoomInTheCartUITests.swift",
+          "line": 174
+        },
+        {
+          "path": "ios/UITests/RoomInTheCartUITests.swift",
+          "line": 537
+        }
+      ],
+      "artifact": {
+        "id": 13599499470,
+        "name": "iphone-results-ui-07-1",
+        "apiSize": 79094316,
+        "apiDigest": "sha256:48a37ed6a15b6b366b9dd0d5a3746dd5afd1a9d447fba17bfda6d03e5622cc0a",
+        "localReceipt": ".build/CIF90Nov07/ui-07/range-receipt.json",
+        "receiptSHA256": "b20b564375839949fe611c024a8b0dfd4b8d7d2dd81427afe17fe30248099925",
+        "transferredBytes": 52383,
+        "fullArchiveDownloaded": false,
+        "fullArchiveDigestVerified": false,
+        "verifiedMembers": [
+          {
+            "file": "Tests.log",
+            "bytes": 267348,
+            "sha256": "64e1dbd99f16e863318bd99025c3cdc9e03bd0e42948b23ffd0cf37a9cdede25",
+            "zipCRC": 3492922285,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-details.json",
+            "bytes": 5006,
+            "sha256": "865097882992065a054dd1151cba1dbb68ac1bac57e8903a9ddf1cd07dc5c4fb",
+            "zipCRC": 175003707,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-plan/ui-07.txt",
+            "bytes": 839,
+            "sha256": "ef11fd96e008a8bd18e85db473a3b6a1eb093f96f3ea831c623a195f21990304",
+            "zipCRC": 3626030059,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-runtime-warnings.json",
+            "bytes": 182,
+            "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+            "zipCRC": 2083576931,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-summary.json",
+            "bytes": 1162,
+            "sha256": "778fdf01759b964cf80435e3f03ca9e25e7e4621ec3a162b1c0f17632d0ebdbe",
+            "zipCRC": 4223795343,
+            "CRCVerified": true
+          }
+        ],
+        "consoleEvidenceLines": [
+          4744
+        ]
+      },
+      "offlineConsoleReplayFailures": [
+        "XCTest logged a failure for RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer at log line 4744.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer; found ['start', 'non-passing or unrecognized completion'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    }
+  ],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "in_progress",
+    "conclusion": null,
+    "expectedArtifact": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "artifactState": "not_listed",
+    "attribution": null
+  }
+}

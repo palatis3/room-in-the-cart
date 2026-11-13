@@ -30,7 +30,9 @@ struct SharedMealChangeSeed: Equatable {
         }
         let planning = SharedMealPlanning(groups: groups, ingredients: ingredients, sourceOccurrenceId: occurrence.id, bindings: exactBindings.map {
             .init(id: $0.id, groupId: $0.groupID, ingredientId: $0.contributionID, quantity: .init(amount: .init(numerator: Int($0.quantity.amount.numerator), denominator: Int($0.quantity.amount.denominator)), unit: $0.quantity.unit.rawValue, originalLiteral: $0.quantity.originalLiteral))
-        })
+        }, exclusions: occurrence.exclusions.isEmpty ? nil : occurrence.exclusions,
+           leadTimeMinutes: occurrence.leadTimeMinutes,
+           completedSteps: occurrence.completedSteps.isEmpty ? nil : occurrence.completedSteps)
         try planning.validate()
         self.init(localOccurrenceID: occurrence.id, title: occurrence.title, portions: Int(occurrence.servings.numerator), planning: planning)
     }

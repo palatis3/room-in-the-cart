@@ -1,0 +1,56 @@
+{
+  "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "failureAcceptedForCollectionOnly": true,
+  "captures": [
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed_0_C4419C71-00A0-4F70-B240-822545CD2F53.png",
+        "payloadId": "0~wIQdtdxiswxIabOrdCDtKl_tlN0LLQ6ggri9gegByQdhRY05xNsX-lPo-m-DWP7K2ZDlCpvgqR5UVwnDhdIYow==",
+        "timestamp": 1794162254.449,
+        "uuid": "A4C7ABE9-A701-45DF-9E79-BFF156B9455B"
+      },
+      "path": "attachment-0/A4C7ABE9-A701-45DF-9E79-BFF156B9455B.png",
+      "bytes": 125509,
+      "sha256": "77fca157b2d5c03192dd1df170e2712dc8873e46b47f72d38473200b71fc6239",
+      "exportExit": 0
+    },
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed-discovery_0_C6B35A8D-C1C4-4B22-9673-8B97E8E42E34.txt",
+        "payloadId": "0~WrnA_hnSXpYJrjsrpRd6Tmpz96rQwd14uZTBt0thoawowA4N2r5uRvWj73iFPEIzrqCW9fCUXCt4V3OCGb7rwQ==",
+        "timestamp": 1794162254.703,
+        "uuid": "2199A6AB-7463-4461-B9AD-359A60D40352"
+      },
+      "path": "attachment-1/2199A6AB-7463-4461-B9AD-359A60D40352.txt",
+      "bytes": 127,
+      "sha256": "8f2a44a04bdc52fdaced81a2af3deec8f0104c4b19a8c666d6b6750a0201c8cd",
+      "exportExit": 0
+    },
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-failure-accessibility-hierarchy_0_0699FFD2-4BA8-4302-AB75-3222E0149A66.txt",
+        "payloadId": "0~erWVROLdn3c-kZc_Weqhn6gNxWaRiyGM70uu2DTWfBAFsRX8df-8yxBumkdubZoEQX9j3skOMhSua9HZV-Fftg==",
+        "timestamp": 1794162255.575,
+        "uuid": "76E461FA-691C-415B-8DC4-DDB1E2466211"
+      },
+      "path": "attachment-2/76E461FA-691C-415B-8DC4-DDB1E2466211.txt",
+      "bytes": 20887,
+      "sha256": "11297838ea60c84c1e33beec5c450451c28e50187d55ec2b7a89bf153daaa5bf",
+      "exportExit": 0
+    }
+  ],
+  "activityReads": 1,
+  "activitySHA256": "1a827ff52503fe9eb7ff287907178b1c0ac77cf6c1efbe6e534457b316392865",
+  "inspectionCopyOnly": true,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "timeoutPerCommandSeconds": 45,
+  "perFileLimitBytes": 4000000,
+  "totalBudgetBytes": 12000000,
+  "visualReview": "pending root"
+}

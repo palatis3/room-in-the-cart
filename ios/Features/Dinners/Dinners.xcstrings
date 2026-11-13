@@ -1,6 +1,278 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Protected servings: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected servings: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones protegidas: %@"
+          }
+        }
+      }
+    },
+    "Resulting ingredient portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resulting ingredient portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones de ingredientes resultantes"
+          }
+        }
+      }
+    },
+    "Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep protected food as saved. Enter the resulting amount for every other group, including zero. Together they must equal each new ingredient total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva los alimentos protegidos tal como están guardados. Ingresa la cantidad resultante para cada otro grupo, incluido cero. La suma debe coincidir con el nuevo total de cada ingrediente."
+          }
+        }
+      }
+    },
+    "Resulting amount for this group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resulting amount for this group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad resultante para este grupo"
+          }
+        }
+      }
+    },
+    "The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current protected amount is unresolved. Review the current ingredient quantities before changing this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad protegida actual está sin resolver. Revisa las cantidades actuales de los ingredientes antes de cambiar esta cena."
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar"
+          }
+        }
+      }
+    },
+    "%@ · comparison %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · comparison %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · comparación %d"
+          }
+        }
+      }
+    },
+    "Recorded scope: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded scope: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance registrado: %@"
+          }
+        }
+      }
+    },
+    "Start a new comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar otra comparación"
+          }
+        }
+      }
+    },
+    "First store commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First store commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos de la primera tienda"
+          }
+        }
+      }
+    },
+    "Second store commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second store commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos de la segunda tienda"
+          }
+        }
+      }
+    },
+    "This comparison keeps the recorded line prices, fees, discounts, taxes and deposits.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comparison keeps the recorded line prices, fees, discounts, taxes and deposits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comparación conserva los precios de los artículos, los cargos, los descuentos, los impuestos y los depósitos registrados."
+          }
+        }
+      }
+    },
+    "Recorded cost range: %@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded cost range: %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervalo de costo registrado: de %@ a %@"
+          }
+        }
+      }
+    },
+    "Recorded cost: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded cost: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo registrado: %@"
+          }
+        }
+      }
+    },
+    "Edit other observations here. Start a new comparison to enter a different checkout total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit other observations here. Start a new comparison to enter a different checkout total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita las demás observaciones aquí. Inicia otra comparación para ingresar un total diferente."
+          }
+        }
+      }
+    },
+    "Total servings: enter a number greater than zero.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total servings: enter a number greater than zero."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones totales: introduce un número mayor que cero."
+          }
+        }
+      }
+    },
     "%@ and %@": {
       "localizations": {
         "en": {
@@ -6241,18 +6513,34 @@
         }
       }
     },
-    "Name your pickup to save dinner ideas and choose what to make.": {
+    "You can save a recipe now and choose it for a pickup later.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name your pickup to save dinner ideas and choose what to make."
+            "value": "You can save a recipe now and choose it for a pickup later."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ponle un nombre a tu recogida para guardar ideas y elegir qué preparar."
+            "value": "Puedes guardar una receta ahora y elegirla para una recogida más adelante."
+          }
+        }
+      }
+    },
+    "Start a pickup to plan dinners and review the groceries you’ll need.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a pickup to plan dinners and review the groceries you’ll need."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia una recogida para planificar las cenas y revisar qué alimentos necesitas."
           }
         }
       }
@@ -6408,19 +6696,36 @@
         }
       }
     },
-    "I agree to consider a repeated dinner": {
+    "I agree to repeat %@ for this repair": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "I agree to consider a repeated dinner"
+            "value": "I agree to repeat %@ for this repair"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acepto considerar una cena repetida"
+            "value": "Acepto repetir %@ para esta comida"
+          }
+        }
+      }
+    },
+    "Include repeated dinners in the review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include repeated dinners in the review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir cenas repetidas en la revisión"
           }
         }
       }

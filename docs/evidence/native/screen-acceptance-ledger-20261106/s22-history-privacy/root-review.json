@@ -1,0 +1,10 @@
+{
+  "atUTC": "2026-11-07T03:43:22.003136+00:00",
+  "inputFilesRehashed": 33,
+  "currentSourceBindingsRehashed": 11,
+  "executedAssertionsBound": 17,
+  "reviewSHA256": "b2c3a3d9a05604303f1baf507ec6fd25fbee18c94006a82d03a4407541b6016c",
+  "sourceResultMapSHA256": "6ec394a3d64cba816d14b32ba828d5306545dbd4f5bc88c93033cb2a6918f25c",
+  "result": "Partial scoped evidence, not full S22.05 acceptance or a confirmed defect. Actual Back/Forward/BFCache scope transitions remain to be observed.",
+  "scope": "Root inspected review and source/result binding structure and rehashed inputs; no runtime action or assertion re-execution. Future app testing remains within user authorization, outside this read-only audit."
+}

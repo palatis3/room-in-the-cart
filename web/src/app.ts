@@ -6,6 +6,11 @@ import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} fro
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
+const proposalNotices:Record<OwnProposal['status'],string> = {
+  pending:'Proposal received. The shopper must review it before anything changes.',
+  reviewed:'Suggestion reviewed',
+  dismissed:'Suggestion dismissed',
+};
 // A reviewed draft is valid only for the exact actor, role and destination that displayed it.
 function reviewScope(session: Session): string {
   return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
@@ -21,10 +26,15 @@ export class WebApp {
   private requests:OwnRequest[] = [];
   private view:CookView|null = null;
   private pending:Pending[] = [];
+  private queueState:'ready'|'unavailable'|'missing' = 'ready';
   private confirmedOperations = new Set<string>();
   private draft = blank();
   private review = false;
   private busy = false;
+  private historySuspended = false;
+  private historyAway = false;
+  private historyGeneration = 0;
+  private historyResumePending = false;
   private notice = '';
   private failurePurpose:'load'|'mutation'|null=null;
   private language:Language;
@@ -57,8 +67,11 @@ export class WebApp {
   }
   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
     if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
-    try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
-    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
+    const historyGeneration=this.historyGeneration;
+    try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
+    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
+      if(this.historyResumePending){this.historyResumePending=false;void this.start();}
+    }
   }
   private supportedRoute():boolean {
     const path=this.root.ownerDocument.defaultView?.location.pathname??'/';
@@ -66,33 +79,111 @@ export class WebApp {
     return ['/requests','/invite','/view'].includes(path.endsWith('/')?path.slice(0,-1):path);
   }
   private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
+  suspendForHistory():void {
+    // Remove private DOM before the browser can retain a history snapshot. Keep
+    // unsent work in memory until a fresh session confirms the same scope.
+    this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
+  }
+  resumeFromHistory():void {
+    this.historyAway=false;
+    if(this.busy){this.historyResumePending=true;return;}
+    void this.start();
+  }
+  resumeWithFreshAuthority():void {
+    // Visibility/pageshow can describe the same return. Keep an existing
+    // concealed read (or its deferred refresh) instead of starting another.
+    if(this.historySuspended&&!this.historyAway&&this.busy)return;
+    this.historySuspended=true;this.historyGeneration++;this.render();
+    this.resumeFromHistory();
+  }
   async start():Promise<void> {
+    if(this.historyAway)return;
     if(!this.supportedRoute()){this.render();return;}
     if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
-    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
+    this.clearInvitationDraft();this.browserAuth=null;
+    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
+  private clearInvitationDraft():void {
+    this.loginEmail='';
+    this.loginCode='';
+    this.codeRequested=false;
+    this.invitation=null;
+    this.redemption=null;
+    this.adultAttestation=false;
+    this.inviteAlias='';
+  }
+  private adoptBrowserAuth(fresh:BrowserAuthState|null):void {
+    const previous=this.browserAuth;
+    if(previous&&(previous.csrf!==fresh?.csrf||previous.authenticated!==fresh?.authenticated)){
+      const hadInvitation=this.invitation!==null;
+      this.clearInvitationDraft();
+      this.notice=hadInvitation?'Your sign-in changed. Reopen the invitation you want to use.':'';
+    }
+    this.browserAuth=fresh;
+  }
   checkExpiry():void {
+    if (this.session?.requestQueueUntil && Date.parse(this.session.requestQueueUntil) <= Date.now()) {
+      const expiredScope=scopeFor(this.session);
+      const {requestQueueGrant, requestQueueUntil, ...current} = this.session;
+      this.session = {...current, queueConsent:false};
+      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      this.notice='Offline permission expired. Check Your requests before sending again.';
+      void this.outbox.clearScope(expiredScope).catch(()=>{this.queueState='unavailable';this.render();});
+      this.render();
+    }
     if(this.view && Date.parse(this.view.expiresAt)<=Date.now()) {
       this.clearPrivate();void this.outbox.clear().catch(()=>{});
       this.notice='Access has ended. Ask your household for a new invitation.';this.render();
     }
   }
-  private async load():Promise<void> {
+  private async load(verifiedSession?:Session):Promise<void> {
     if(this.signOutPending)return;
-    const start=this.proposalGeneration,fresh=await this.api.session();
+    const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
-      this.clearPrivate();this.notice='';
+      this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
+    const previous=this.session;
+    if(!previous&&fresh&&this.browserAuth&&this.invitation!==null){
+      // A different tab can activate a household while this invitation is open.
+      try {
+        this.adoptBrowserAuth(await this.api.authState());
+      } catch(error) {
+        this.clearInvitationDraft();
+        this.browserAuth=null;
+        throw error;
+      }
+    }
     this.session=fresh;
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.browserAuth=await this.api.authState();return;}
+    if(!fresh){
+      this.requests=[];
+      this.view=null;
+      this.pending=[];
+      this.receivedSuggestions=[];
+      this.suggestionsState='unchecked';
+      this.consent=false;
+      if(previous){
+        this.clearInvitationDraft();
+        this.browserAuth=null;
+      }
+      this.render();
+    }
+    if (previous?.requestQueueGrant && previous.requestQueueGrant !== fresh?.requestQueueGrant) {
+      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      await this.outbox.clearScope(scopeFor(previous)).catch(()=>{this.queueState='unavailable';});
+    }
+    if(!fresh){
+      this.adoptBrowserAuth(await this.api.authState());
+      return;
+    }
+    if (fresh.role !== 'helper' && fresh.role !== 'editor' && !isContributorSession(fresh)) throw new ApiError('access_ended',403);
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
@@ -102,12 +193,32 @@ export class WebApp {
       if(generation!==this.proposalGeneration)return;
       this.view=view;
       if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
-      await this.readReceivedSuggestions(fresh,null);
+      const proposal=await this.readReceivedSuggestions(fresh,null);
+      if(generation!==this.proposalGeneration)return;
+      if(this.proposalReceipt){
+        this.notice=proposal?proposalNotices[proposal.status]:'Received suggestions checked.';
+        this.failurePurpose=null;
+      }
     } else {this.view=null;this.requests=await this.api.requests(fresh);}
+    this.queueState='ready';
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
-      try {await this.outbox.retainScope(scopeFor(fresh));this.pending=await this.outbox.list(scopeFor(fresh));}
-      catch {this.pending=[];this.notice='Stored pending requests could not be opened.';}
+      try {
+        await this.outbox.retainScope(scopeFor(fresh));
+        const stored=await this.outbox.list(scopeFor(fresh));
+        const storedIDs=new Set(stored.map(row=>row.id));
+        if(this.pending.some(row=>!this.confirmedOperations.has(row.id)&&!storedIDs.has(row.id))) {
+          this.queueState='missing';
+        }
+        this.pending=stored;
+      } catch {
+        this.pending=[];this.queueState='unavailable';
+      }
     } else {this.pending=[];await this.outbox.clear().catch(()=>{});}
+    if(!this.pending.length&&this.notice==='Waiting to send from this browser')this.notice='';
+    // Fresh authorized content supersedes a prior access denial, not receipt or storage warnings.
+    if(this.session===fresh&&this.notice==='Access has ended. Ask your household for a new invitation.') {
+      this.notice='';this.failurePurpose=null;
+    }
   }
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();
@@ -119,8 +230,7 @@ export class WebApp {
     this.session=fresh;return fresh;
   }
   private hideWhileSigningOut():void {
-    this.logoutPending=true;this.clearPrivate();this.browserAuth=null;this.loginEmail='';this.loginCode='';this.codeRequested=false;
-    this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+    this.logoutPending=true;this.clearPrivate();
     this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';
   }
   private async signOut(scope?:Session,identityCSRF?:string):Promise<void> {
@@ -136,13 +246,67 @@ export class WebApp {
       if(identityCSRF)this.browserAuth=await this.api.authState().catch(()=>null);
     } catch { /* Keep the private view closed until a confirmed retry. */ }
   }
-  private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
+  private async recoverBrowserIdentity(historyGeneration:number):Promise<void> {
+    this.adoptBrowserAuth(await this.api.authState().catch(()=>null));
+    if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
+  }
+  private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
+    const historyGeneration=this.historyGeneration;
     this.failurePurpose=purpose;
-    const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
+    let e=error instanceof ApiError ? error:new ApiError('unavailable',500);
+    if (e.code==='queue_permission_ended' && this.session) {
+      const prior=this.session;
+      this.clearPrivate();
+      this.render();
+      try {
+        await this.outbox.clearScope(scopeFor(prior));
+      } catch {
+        this.notice='Pending requests could not be cleared. Clear site data before sharing this browser.';
+        return;
+      }
+      try {
+        const fresh=await this.api.session();
+        if (!fresh) throw new ApiError('session_needed',401);
+        if (this.signOutPending || reviewScope(fresh)!==reviewScope(prior) || !fresh.enrolled || !isContributorSession(fresh)) {
+          throw new ApiError('access_ended',403);
+        }
+        await this.load(fresh);
+        this.notice='Offline permission changed. Check Your requests before sending again.';
+        return;
+      } catch (failure) {
+        this.clearPrivate();
+        e=failure instanceof ApiError ? failure:new ApiError('unavailable',500);
+        if (e.status!==401 && e.status!==403) {
+          this.historySuspended=true;
+          this.failurePurpose='load';
+          this.notice='Could not verify household access. Reconnect and refresh.';
+          return;
+        }
+      }
+    }
     if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
-      await this.outbox.clear().catch(()=>{});this.notice='Access has ended. Ask your household for a new invitation.';
-    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
+      this.render();
+      try {
+        await this.outbox.clear();
+        this.notice='Access has ended. Ask your household for a new invitation.';
+      } catch {
+        this.notice='Access has ended. Clear site data before sharing this browser.';
+      }
+      await this.recoverBrowserIdentity(historyGeneration);
+      return;
+    }
+    if(e.status===401) {
+      if(this.session){this.clearInvitationDraft();this.browserAuth=null;}
+      this.session=null;this.requests=[];this.view=null;this.pending=[];
+      this.receivedSuggestions=[];this.suggestionsState='unchecked';
+      this.notice=this.draft.item || this.draft.amount || this.correction
+        ? 'Sign in again to continue. Your text stays on this page.'
+        : 'Sign in again to continue.';
+      this.codeRequested=false;this.loginCode='';
+      this.render();
+      await this.recoverBrowserIdentity(historyGeneration);
+    }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
@@ -154,6 +318,8 @@ export class WebApp {
     else if(this.proposalReceipt)this.notice='Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.';
     else if(this.proposalIntent)this.notice='Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.';
     else this.notice=this.uncertainSend?'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'Not saved. Your text is still here. Reconnect and try again.';
+    // The server's decision remains authoritative if deleting a rejected copy fails.
+    if(rejectedPendingID)await this.outbox.remove(rejectedPendingID).catch(()=>{});
   }
   private date(value:string):string {
     const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(this.language==='es'?'es-US':'en-US',{dateStyle:'full',timeStyle:'short'}).format(d):value;
@@ -165,15 +331,22 @@ export class WebApp {
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
     lang.addEventListener('change',()=>{this.language=lang.value as Language;this.render();});header.append(lang);this.root.append(header);
     const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
+    // A mobile browser can retain this hidden page as its cold-start preview.
+    if(this.historyAway)return;
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
+    if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
-    } else this.renderContributor(main);
+    } else {
+      if(!this.busy&&this.queueState==='unavailable')status.append(' ',this.t('Stored pending requests could not be opened.'));
+      if(!this.busy&&this.queueState==='missing')status.append(' ',this.t('A pending request is no longer stored on this browser. Check Your requests for its status.'));
+      this.renderContributor(main);
+    }
   }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
@@ -197,25 +370,51 @@ export class WebApp {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
     main.append(this.el('h1',this.t('Continue with your invitation')),this.el('p',this.t('Open an invitation from your household to join.')));
-    const form=this.el('form');const label=this.el('label',this.t('Invitation code'));label.htmlFor='invitation';
-    const input=this.el('input');input.id='invitation';input.type='password';input.autocomplete='off';input.required=true;input.value=this.invitation??'';
-    input.maxLength=4096;input.disabled=this.redemption!==null;
-    input.addEventListener('input',()=>{this.invitation=input.value;});form.append(label,input);
+    const form=this.el('form');
+    if(this.invitation?.trim()){
+      form.append(this.el('p',this.t('Invitation code received.')));
+      if(!this.redemption)form.append(this.button('Enter a different invitation code',()=>{
+        this.invitation='';
+        this.adultAttestation=false;
+        this.render();
+        this.root.querySelector<HTMLInputElement>('#invitation')?.focus();
+      }));
+    }else{
+      const label=this.el('label',this.t('Invitation code'));
+      label.htmlFor='invitation';
+      const input=this.el('input');
+      input.id='invitation';
+      input.type='password';
+      input.autocomplete='off';
+      input.required=true;
+      input.maxLength=4096;
+      input.addEventListener('input',()=>{this.invitation=input.value;});
+      form.append(label,input);
+    }
     this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
     const alias=form.querySelector<HTMLInputElement>('#invite-alias');if(alias){alias.maxLength=80;alias.disabled=this.redemption!==null;}
+    const aliasHint=this.el('p',this.t('Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.'));aliasHint.id='invite-alias-hint';form.append(aliasHint);alias?.setAttribute('aria-describedby',aliasHint.id);
     const adultLabel=this.el('label');adultLabel.className='checkbox';const adult=this.el('input');adult.type='checkbox';adult.id='adult-attestation';adult.checked=this.adultAttestation;adult.required=true;adult.disabled=this.redemption!==null;
     adult.addEventListener('change',()=>{this.adultAttestation=adult.checked;});adultLabel.append(adult,this.el('span',this.t('I am 18 or older.')));form.append(adultLabel);
     form.append(this.el('p',this.t('An adult signs in before joining. Child access requires verified guardian setup.')));
     const submit=this.button('Join this household',()=>{},true);submit.type='submit';form.append(submit);
-    form.addEventListener('submit',e=>{e.preventDefault();if(!input.value.trim()||!this.adultAttestation)return;void this.run(async()=>{
-      this.redemption??=await this.api.redeem(input.value.trim(),this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
-      await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
-      const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
-      const opened=this.session as Session|null;
-      if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
-      if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
-      this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
-    });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const manualCode=form.querySelector<HTMLInputElement>('#invitation');
+      const token=(manualCode?.value??this.invitation)?.trim();
+      if(!token||!this.adultAttestation)return;
+      this.invitation=token;
+      void this.run(async()=>{
+        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
+        await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
+        const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
+        const opened=this.session as Session|null;
+        if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
+        if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
+        this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+      });
+    });
+    main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
@@ -240,7 +439,21 @@ export class WebApp {
       const review=this.button('Review request',()=>{},true);review.type='submit';form.append(review);
       form.addEventListener('submit',e=>{e.preventDefault();if(!this.draft.item.trim())return;this.review=true;this.render();});
     }
-    if(this.session!.enrolled&&this.session!.queueConsent) {
+    if(this.session!.enrolled&&this.session!.canSetRequestQueue) {
+      const enabled=this.session!.queueConsent;
+      form.append(this.button(enabled?'Turn off and clear pending requests':'Allow pending requests on this browser for up to 24 hours',()=>void this.run(async()=>{
+        const fresh=await this.reauthenticate();
+        await this.api.setRequestQueue(fresh,!enabled);
+        if(enabled){
+          this.pending=[];this.retryCommand=null;this.uncertainSend=false;this.consent=false;
+          const {requestQueueGrant,requestQueueUntil,...current}=fresh;
+          this.session={...current,queueConsent:false};
+          try { await this.outbox.clearScope(scopeFor(fresh)); }
+          catch { this.notice='Access has ended. Clear site data before sharing this browser.'; }
+        }
+        await this.load();
+      })),this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
+    } else if(this.session!.enrolled&&this.session!.queueConsent) {
       const label=this.el('label');label.className='checkbox';const cb=this.el('input');cb.type='checkbox';cb.checked=this.consent;cb.addEventListener('change',()=>{this.consent=cb.checked;});label.append(cb,this.el('span',this.t('Save pending requests on this browser')));form.append(label,this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
     }
     if(this.draft.item) form.append(this.button('Copy your text',()=>void this.run(async()=>{await navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);this.notice='Copied';})));
@@ -255,7 +468,13 @@ export class WebApp {
     const own=this.el('section');own.append(this.el('h2',this.t('Your requests')));
     if(!this.requests.length)own.append(this.el('p',this.t('No requests yet.')));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
-      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      if(r.fromPreviousShop)card.append(this.el('p',this.t('From an earlier pickup')));
+      if(r.status==='added'){
+        const purchaseLabel=r.purchaseOutcome==='bought'?'Shopper confirmed purchase':
+          r.purchaseOutcome==='notBought'?'Shopper confirmed the item was not bought':'Purchase not confirmed';
+        card.append(this.el('p',this.t(purchaseLabel)));
+      }
       if(r.clarification)card.append(this.el('p',r.clarification));
       if(r.ownActionAllowed){card.append(this.button('Edit',()=>{if(this.uncertainSend)return;this.draft={item:r.originalItem,amount:r.ownQuantity??'',route:r.route,editing:r,followup:null};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));}
       else if(r.status!=='withdrawn')card.append(this.button('Follow up',()=>{if(this.uncertainSend)return;this.draft={...blank(),item:r.originalItem,amount:r.ownQuantity??'',route:r.route,followup:r.requestId};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}));
@@ -277,7 +496,7 @@ export class WebApp {
     } catch(error) {
       const cached=this.session;
       if(!(error instanceof ApiError)||error.status!==0||!cached||!isContributorSession(cached)||
-         reviewScope(cached)!==this.reviewedScope||!cached.enrolled||!cached.queueConsent||!this.consent)throw error;
+         reviewScope(cached)!==this.reviewedScope||!cached.enrolled||!cached.queueConsent||(cached.requestQueueUntil && Date.parse(cached.requestQueueUntil)<=Date.now())||!(cached.canSetRequestQueue||this.consent))throw error;
       if(Date.parse(cached.replayWindow.expiresAt)<=Date.now()||
          (this.retryCommand&&this.retryCommand.replayWindow!==cached.replayWindow.id))throw new ApiError('stale_replay_window',409);
       // The last checked session can scope a local draft. Only a fresh session can send it.
@@ -290,24 +509,40 @@ export class WebApp {
     const command=this.retryCommand;
     const p:Pending={id:command.clientKey,scope:scopeFor(s),command,createdAt:new Date().toISOString()};
     let persisted=false;
-    if(this.consent&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
+    if((s.canSetRequestQueue||this.consent)&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
     if(this.signOutPending)throw new ApiError('access_ended',403);
     if(offlineError){
       if(!persisted)throw offlineError;
       this.showQueued(p);
       return;
     }
-    try{await this.api.command(s,command);}catch(error){
+    try{await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
         this.showQueued(p);return;
       }
-      if(persisted)await this.outbox.remove(p.id);throw error;
+      if(persisted) {
+        await this.fail(error,'mutation',p.id);
+        return;
+      }
+      throw error;
     }
-    this.confirmedOperations.add(command.clientKey);
-    let cleanupFailed=false;if(persisted){try{await this.outbox.remove(p.id);}catch{cleanupFailed=true;}}
-    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;this.notice=cleanupFailed?'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Received by the shopper.';
+    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
+    await this.finishReceived(p,persisted);
+  }
+  private async finishReceived(p:Pending,persisted:boolean):Promise<void> {
+    this.notice='Received by the shopper.';
+    if(persisted) {
+      try {
+        await this.outbox.remove(p.id);
+        this.pending=this.pending.filter(row=>row.id!==p.id);
+        this.confirmedOperations.delete(p.id);
+      } catch {
+        this.confirmedOperations.add(p.id);
+        this.notice='Received by the shopper. Retry to clear the copy on this browser.';
+      }
+    }
     // A successful command is received even if the subsequent refresh disconnects.
     try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
   }
@@ -318,9 +553,13 @@ export class WebApp {
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
-    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
-    if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-    await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
+    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
+    if(scopeFor(fresh)!==p.scope||!fresh.queueConsent)throw new ApiError('queue_permission_ended',409);
+    if(!this.confirmedOperations.has(p.id)) {
+      if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
+      await this.api.command(fresh,p.command,fresh.requestQueueGrant);
+    }
+    this.session=fresh;await this.finishReceived(p,true);
   }
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;
@@ -335,7 +574,7 @@ export class WebApp {
       const receipt=await this.api.sendProposal(fresh,intent);
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
       this.proposalReceipt=receipt;this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===receipt.proposalId)??null;this.proposalConflict=false;
-      this.notice='Proposal received. The shopper must review it before anything changes.';
+      this.notice=proposalNotices[this.proposalStatus?.status??receipt.status];
     }catch(error){
       if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
       this.proposalConflict=error instanceof ApiError&&error.status===409&&error.code==='stale_base';
@@ -349,9 +588,9 @@ export class WebApp {
     if(generation!==this.proposalGeneration)return;
     const status=await this.api.ownProposal(fresh,intent,receipt);
     if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
-    this.proposalStatus=status;this.receivedSuggestions=this.receivedSuggestions.map(p=>p.proposalId===status.proposalId?status:p);this.notice='Suggestion status checked.';
+    this.proposalStatus=status;this.receivedSuggestions=this.receivedSuggestions.map(p=>p.proposalId===status.proposalId?status:p);this.notice=proposalNotices[status.status];
   }
-  private async readReceivedSuggestions(fresh:Session,cursor:string|null):Promise<void> {
+  private async readReceivedSuggestions(fresh:Session,cursor:string|null):Promise<OwnProposal|undefined> {
     const view=this.view,generation=this.proposalGeneration;
     if(!view)return;
     try {
@@ -363,15 +602,17 @@ export class WebApp {
       if(cursor&&page.proposals.some(p=>this.receivedSuggestions.some(old=>old.proposalId===p.proposalId)))throw new ApiError('invalid_response',502);
       this.receivedSuggestions=cursor?[...this.receivedSuggestions,...page.proposals]:page.proposals;
       this.suggestionsCursor=page.nextCursor;this.suggestionsState='ready';
-      if(this.proposalReceipt)this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===this.proposalReceipt?.proposalId)??this.proposalStatus;
+      const proposal=page.proposals.find(p=>p.proposalId===this.proposalReceipt?.proposalId);
+      if(proposal)this.proposalStatus=proposal;
+      return proposal;
     }catch(error){if(generation!==this.proposalGeneration)return;this.suggestionsState='unavailable';throw error;}
   }
   private async recoverSuggestions(more=false):Promise<void> {
     const generation=this.proposalGeneration,fresh=await this.api.session();
     if(generation!==this.proposalGeneration)return;
     if(!fresh||!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope||!['helper','editor'].includes(fresh.role))throw new ApiError('access_ended',403);
-    await this.readReceivedSuggestions(fresh,more?this.suggestionsCursor:null);
-    if(generation===this.proposalGeneration&&this.suggestionsState==='ready')this.notice='Received suggestions checked.';
+    const proposal=await this.readReceivedSuggestions(fresh,more?this.suggestionsCursor:null);
+    if(generation===this.proposalGeneration&&this.suggestionsState==='ready')this.notice=proposal?proposalNotices[proposal.status]:'Received suggestions checked.';
   }
   private renderReceivedSuggestions(main:HTMLElement):void {
     const section=this.el('section');section.append(this.el('h2',this.t('Suggestions received by the service')),

@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "run": {
+    "id": 42502133362,
+    "name": "UI09 a305 animation observer diagnostic",
+    "event": "workflow_dispatch",
+    "head_sha": "7f3d3cefcd433ad4c233ee91ec57cd84dc265ae7",
+    "head_branch": "codex/ui09-hosted-observer-a305",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-08T16:53:02Z",
+    "run_started_at": "2026-11-08T16:53:02Z",
+    "updated_at": "2026-11-08T17:21:24Z",
+    "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42502133362",
+    "path": ".github/workflows/ios-toggle-diagnostic.yml"
+  },
+  "job": {
+    "id": 128796976031,
+    "name": "control",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-08T16:53:03Z",
+    "started_at": "2026-11-08T16:53:08Z",
+    "completed_at": "2026-11-08T17:21:24Z",
+    "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42502133362/job/128796976031",
+    "runner_name": "GitHub Actions 1000004763",
+    "labels": [
+      "macos-15"
+    ],
+    "elapsedSeconds": null,
+    "steps": [
+      {
+        "number": 7,
+        "name": "Run exactly the original eight cases while preserving PID-bound metadata",
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-11-08T17:01:21Z",
+        "completed_at": "2026-11-08T17:21:02Z"
+      }
+    ]
+  },
+  "snapshot": {
+    "path": "status-20261108T172202Z.json",
+    "sha256": "1cd80cd6dc96cb65403ad5ae50dc1d226a8f11f6908a6dcbbb72a26caa042c82"
+  },
+  "artifact": {
+    "id": 13625904410,
+    "name": "ui09-a305-observer-42502133362-1",
+    "bytes": 90391796,
+    "digest": "sha256:5c61160152afcad737ea7004c22e207c9644a44a7f6e48724e047b24f13a90ce",
+    "expiresAt": "2026-11-15T17:21:08Z"
+  },
+  "jobConsole": {
+    "wrapperExit": 1,
+    "exitLine": 509,
+    "scope": "Console does not expose native or strict result or capture coverage.",
+    "excerpt": "terminal-job-log-excerpts.txt",
+    "ranges": [
+      [
+        165,
+        168
+      ],
+      [
+        492,
+        493
+      ],
+      [
+        495,
+        510
+      ],
+      [
+        552,
+        557
+      ]
+    ],
+    "excerptSHA256": "497ce13a0378feb4598fc1db1ea14a7b4b34b5d1de29a19fbecc94a585cdb93c"
+  }
+}

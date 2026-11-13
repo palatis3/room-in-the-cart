@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "scope": "Native Undo r1 plus reviewed r1.1 package only; app models/UI/real wire not yet executed",
+  "originals": ".build/SharedDemandGraphNov09/native-operation-undo-package-r1",
+  "files": {
+    "sources.json": "21fc2fb2b97752d9e720f5df3097754e0110553a997f70294b6c983ecaa2b9da",
+    "receipt.json": "d6b31ffcd2bbc55e5b7097759a1c616b58a0117b3593d9fb2556352378181632",
+    "inventory.txt": "5baefe7747c28eec5b9a01ea2ae5f884e6a22d8cd344669700eb35fce409697e",
+    "inventory-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "first-inventory-failure.json": "a6ad632c3a3caef281ba211315fcfa36471704a5a0ed2dc45687395356b0fc1e",
+    "verified.json": "71f27b422b4f0364c4ba1185cf34f58877b354c30f4307810c48dcf97f2f359a",
+    "package.log": "3dacb28950ce654067234b21814d9fa39b7ce1528f8c77064ba8a4f894b7384f"
+  },
+  "passed": 133,
+  "expectedDatabaseWireSkips": 3,
+  "compiledInventory": 136,
+  "newUndoTests": 11,
+  "earlierMissingInventoryEntriesAdded": 14,
+  "sourceUnchanged": true,
+  "nativeUIAcceptance": false,
+  "realServiceUndoWireAcceptance": false
+}

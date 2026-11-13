@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
@@ -13,6 +14,17 @@ from check_built_app import verify_built_app
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_staging_scheme_keeps_tests_profiles_and_archives_in_the_staging_environment(self):
+        schemes = Path(__file__).resolve().parents[1] / "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes"
+        staging = ET.parse(schemes / "RoomInTheCart-Staging.xcscheme")
+        for action in ("TestAction", "LaunchAction", "ProfileAction", "AnalyzeAction", "ArchiveAction"):
+            with self.subTest(action=action):
+                self.assertEqual(staging.find(action).get("buildConfiguration"), "Staging")
+        selected = staging.findall("TestAction/Testables/TestableReference/SelectedTests/Test")
+        self.assertEqual({test.get("Identifier") for test in selected}, {"StagingServiceTests", "StagingHelpUITests"})
+        release = ET.parse(schemes / "RoomInTheCart-Release.xcscheme")
+        self.assertEqual(release.find("ArchiveAction").get("buildConfiguration"), "Release")
     def test_release_does_not_inherit_staging(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -258,6 +270,18 @@ class BuiltAppVerificationTests(unittest.TestCase):
         debug = self.make_app("Debug", "dev.roominthecart.app.debug", "roominthecart-debug", "iPhoneSimulator")
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
+
+    def test_rejects_loose_shopper_and_local_purchase_fixtures_in_distributed_bundles(self):
+        staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")
+        for app, configuration in ((self.app, "Release"), (staging, "Staging")):
+            for resource in ("SharedFallbackShop.json", "ReleaseLedger500.txt", "Local.storekit"):
+                with self.subTest(configuration=configuration, resource=resource):
+                    path = app / "PlugIns/RoomInTheCartShare.appex" / resource
+                    path.write_text("test-only input")
+                    with self.assertRaisesRegex(ValueError, "Test resource embedded"):
+                        verify_built_app(app, configuration)
+                    path.unlink()
+            verify_built_app(app, configuration)
 
     def test_rejects_incorrect_device_family_floor_and_platform(self):
         for bundle in (self.app, self.widget, self.share):

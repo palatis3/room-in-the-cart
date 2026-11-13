@@ -1,0 +1,20 @@
+{
+  "blocked-stacks.json": "6dadb06439ffd4956a4042cef1da73a02cd8fc98f6aef0833c0815b9aa1c3f2c",
+  "verification.txt": "c1bdf920d016832ec2914ed7bd532bda9b5420f15d3907d493e28f1db7e58d02",
+  "compile-fix.json": "6fcfe6f1723d368d1188611d6b5dd9561a16d206aa84273f775e16659c717752",
+  "test-summary.json": "22179c2937014fc13f90732396d1b2392454db068a50877772a5ae1b269a244f",
+  "README.md": "a79e99e2b35bb18a1a7a2b24c77f9814b80748730e4f5ef7d430ce568800a41b",
+  "cleanup.json": "a09ff011cfe4fea5dd0ab42634e44c25a4ebdf24527759f49f8450106d5aec1b",
+  "test-result.json": "95ba56cdfa7c208984d86d8c580972e04696d04cc13c236f9884aa07ccba94fe",
+  "build-fixed-result.json": "41aec75ef14de1289badf85c06b54b9a0a953d24df9fc59d5eb83cd2fc03d343",
+  "strict-status.txt": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "render-metadata.json": "400a9e4eea30aaba7585a788dc5c476ae8c0fea53f0950033f4fceb008c53afd",
+  "input-receipt.json": "3ef451ce9e2d944ae1800154d7b3a1fd66229db3aaa1291859f036e4453d8eab",
+  "build-result.json": "67835642d3b36607c48d4ccd310f750c50ea8a769e9aad7c7a378aabd7430216",
+  "uuid-bound-symbols.json": "e119ad99ef3c80cc4da7387e0e35679fa386aa237a8e90750a75ca04906483b8",
+  "reproducer/CookRenderDiagnostic.swift": "ee81219a9b551a9061dabc7792908d1c6b27fb8c0ec495f548f1a9016deeaafa",
+  "reproducer/README.md": "f0b11cdca61eb1038fd259d209596c04d401b66eb848c8593d0e33459ff43363",
+  "reproducer/CookRenderDiagnosticUITests.swift": "ea5cd8a1d89b12c0d6efbfe158840999756cec1d4e22640eb061d23e4792820b",
+  "reproducer/CookRenderDiagnostic.xcodeproj/project.pbxproj": "1de0a548da5336f9ebf7384bbf454237a62f4341ee6949e8015f2f63973b9cdb",
+  "reproducer/CookRenderDiagnostic.xcodeproj/xcshareddata/xcschemes/CookRenderDiagnostic.xcscheme": "f9d2f2a1e3912ca48585287997c3de3588d5bc9e8f88ec3acf24726552d20d3e"
+}

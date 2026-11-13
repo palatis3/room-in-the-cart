@@ -1,0 +1,155 @@
+{
+  "productSource": {
+    "reference": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+    "trackedFiles": 508,
+    "differences": [
+      "ios/UITests/FreeJourneyUITests.swift"
+    ],
+    "patchSHA256": "aafce9543eff0dfafadb547af6e0f588041806d50829ad6e6aa24ebb7d7bb47c",
+    "testSourceSHA256": "8bc0a7298099dbc3a80fd51c3872a6d825918d54cb96365aa143ab3d13fcd579"
+  },
+  "productDigestsBeforeAndAfter": {
+    "RoomInTheCart_iphonesimulator27.1-arm64.xctestrun": "5ed3a5e407ea6f8bcdffe3fee21ca7e29f634623a9afa1618499a39b744074ce",
+    "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "d22ded3e7d43836cd033d812810848d76589d2529aa8f69f34f78dd6f5cc3d04",
+    "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": "8a839d64b7626ffb0dd3524b6e3925213c1ece13b579d29de846161b0fd08591",
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": "1950f476996bf01c763d48fd36ad7d5041eadc3a05fe8c7f8368f89a82b0cc66",
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "b0bfdcc929843fbc0d8108837d8c370441d654372e84dc594c03f2b9350dd6f8"
+  },
+  "answers": [
+    {
+      "shard": "models",
+      "expected_count": 599
+    },
+    {
+      "shard": "ui-01",
+      "expected_count": 3
+    },
+    {
+      "shard": "ui-02",
+      "expected_count": 4
+    },
+    {
+      "shard": "ui-03",
+      "expected_count": 5
+    },
+    {
+      "shard": "ui-04",
+      "expected_count": 5
+    },
+    {
+      "shard": "ui-05",
+      "expected_count": 5
+    },
+    {
+      "shard": "ui-06",
+      "expected_count": 5
+    },
+    {
+      "shard": "ui-07",
+      "expected_count": 6
+    },
+    {
+      "shard": "ui-08",
+      "expected_count": 6
+    },
+    {
+      "shard": "ui-09",
+      "expected_count": 6
+    },
+    {
+      "shard": "ui-10",
+      "expected_count": 6
+    }
+  ],
+  "dedicatedOnlyCases": 15,
+  "commands": [
+    {
+      "command": [
+        "xcrun",
+        "simctl",
+        "bootstatus",
+        "D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+        "-b"
+      ],
+      "injected": false,
+      "exit": 0,
+      "seconds": 48.33
+    },
+    {
+      "command": [
+        "xcodebuild",
+        "-xctestrun",
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261105/dinner-move-b95/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+        "-parallel-testing-enabled",
+        "NO",
+        "-enumerate-tests",
+        "-test-enumeration-style",
+        "flat",
+        "-test-enumeration-format",
+        "json",
+        "-test-enumeration-output-path",
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261105/frontboard-native-3d26f1f/discovery/attempt-1.json",
+        "test-without-building"
+      ],
+      "injected": true,
+      "exit": 0
+    },
+    {
+      "command": [
+        "xcrun",
+        "simctl",
+        "install",
+        "D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261105/dinner-move-b95/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app"
+      ],
+      "injected": false,
+      "exit": 0,
+      "seconds": 9.07
+    },
+    {
+      "command": [
+        "xcrun",
+        "simctl",
+        "get_app_container",
+        "D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+        "dev.roominthecart.app.debug",
+        "app"
+      ],
+      "injected": false,
+      "exit": 0,
+      "seconds": 0.43
+    },
+    {
+      "command": [
+        "xcodebuild",
+        "-xctestrun",
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261105/dinner-move-b95/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+        "-parallel-testing-enabled",
+        "NO",
+        "-enumerate-tests",
+        "-test-enumeration-style",
+        "flat",
+        "-test-enumeration-format",
+        "json",
+        "-test-enumeration-output-path",
+        "/Users/palatis/Room in the Cart/.build/CIResearch20261105/frontboard-native-3d26f1f/discovery/attempt-2.json",
+        "test-without-building"
+      ],
+      "injected": false,
+      "exit": 0,
+      "seconds": 19.86
+    }
+  ],
+  "firstErrorOnlyInjected": true,
+  "nativeFailureReproduced": false,
+  "nativeCasesExecuted": 0,
+  "runtime": "iOS 26.2 23C54",
+  "device": "D5355D3C-ADE3-478D-96B4-7FF4EF807D6D",
+  "xcode": "Xcode 27.1\nBuild version 27A9275\n",
+  "acceptedInventorySHA256": "dadb6d525e2b213a23be483671b9ae3022e561029b6ebd64c67074df0fb41df4",
+  "sourceHostedLogSHA256": "c7f8b7bfe51ca5f014bb8f8af68dbcba8135f9b1639962c6634dca5b7b94a44d"
+}

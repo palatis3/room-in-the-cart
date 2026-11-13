@@ -1,0 +1,15 @@
+{
+  "referencedInputsHashed": 22,
+  "sourceAssertionsReviewed": [
+    "recipe count 1 to 3 to 1",
+    "both imported titles absent after undo",
+    "original recovered record equality",
+    "canonical current-ledger export equality"
+  ],
+  "acceptedClassification": "proven-in-scoped-run",
+  "clause": "S14.02",
+  "sourceCommit": "804030e68473d022e72b464940061c01c611a0bd",
+  "originalLedgerUnchanged": true,
+  "scope": "English fixture recipe undo; not physical file picker or all release requirements",
+  "referencesSHA256": "65abeff159e930f74a97d4cd9f7bfc302c0f332f15040c4d1bbc4ece83839025"
+}

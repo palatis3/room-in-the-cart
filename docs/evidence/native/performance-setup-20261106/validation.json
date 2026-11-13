@@ -1,0 +1,24 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "purpose": "Require positive installed-app inventory before absence and preserve failing setup stage.",
+  "tests": {
+    "scriptTests": 207,
+    "passed": 207,
+    "newSetupTests": 8,
+    "workflowValidation": "passed;14exact queue exceptions",
+    "macOSPlutilOpenStepConversion": "passed with representative synthetic inventory"
+  },
+  "nativeExecution": false,
+  "hostedValidation": "pending; original804run uses previous setup",
+  "noRetriesAdded": true,
+  "stepDeadlineMinutes": 8,
+  "sourceHashes": {
+    "scripts/prepare_ios_performance_simulator.py": "10b677c778802bbd8fc3e5ff1aaf9f5542b5e5f7a0565cf68e13d44f0445b020",
+    "scripts/test_prepare_ios_performance_simulator.py": "a059f4bfebc75ffa505371cfd0912e66e82de9d217046ed390ffca390cfb7164",
+    ".github/workflows/ios-performance.yml": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978"
+  },
+  "evidenceHashes": {
+    "performance-setup-tests.log": "acbfa8cca413d371a7cebe40ce5b1fa8da6dad4a7b831c8b05932faa69c0d7a7",
+    "performance-setup-workflow-lint.json": "bd37abf873b682c52fb4c6b45e750667e2d6e10155430eeac5a2dc0f99685211"
+  }
+}

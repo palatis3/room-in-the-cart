@@ -1,0 +1,28 @@
+{
+  "scope": "One unchanged local control from exact candidate; local Xcode differs from hosted. No hosted recovery or source patch.",
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "selected": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+  "actual_runtime_build": "23C54",
+  "test_exit": 0,
+  "strict_exit": 0,
+  "source_hashes_unchanged": true,
+  "product_hashes_unchanged": true,
+  "shutdown_exit": 0,
+  "delete_exit": 0,
+  "finished_at": "2026-11-06T19:51:29.031873+00:00",
+  "exit": 0,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "selectedTests": 1,
+  "passedTests": 1,
+  "runtimeWarnings": 0,
+  "durationSeconds": 53.05,
+  "interpretation": "Local nonreproduction only; original hosted consent failure remains unresolved.",
+  "evidenceHashes": {
+    "local-control-outcome.json": "6831ac17e5487a54395b3ae2b6928ef0ee02b128ab3688a7f677f0279bd2385a",
+    "local-control.json": "4fe72b9884d92e5d0df613c4d0a2415513d96747383de5fd97746019558c13d2",
+    "strict.log": "d685ce1dda6e8767c0e306f68d931be7dfad87349e993c45cfc7224195c1ea56",
+    "local-summary.json": "caa2545f204572df3fb5e16b71757d50b45b796c806c41044bb5f839aa3db8a1",
+    "local-tests.json": "4859176a411a509fe5c59902cab38c776347409424c0a973d1b2cee7c4eee67b",
+    "candidate-source-manifest.json": "c36b20e7830021b2dcab989330ec978ddb5afcded6f1b3ba2c935ba88657d9ff"
+  }
+}

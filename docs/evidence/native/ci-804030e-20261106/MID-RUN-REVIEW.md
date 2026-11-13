@@ -1,0 +1,10 @@
+# Candidate804030e: independent mid-run review
+
+This snapshot does not certify release acceptance. Core and fixture work is still collecting; the original executed consent failure and every unavailable case remain open.
+
+- Swift CodeQL: exact PR merge tree equals candidate804030e. Verified artifact digest/CRC, finalized database, all254 intended runtime inputs and258 identical repository source files.27rules report0findings.11compiler diagnostics and292unresolved AST nodes remain; semantic extraction is incomplete. [Proof](swift-security.json).
+- Scroll: runner acquired, but setup timed out after bootstatus printed Finished. No native case, metric series, saved-pickup readback or evidence-validation result was produced. The untraced step cannot identify the exact failing subcommand. This is separate from earlier executed missing-metric failures. [Proof](scroll-pretest-setup-failure.json).
+- Consent: one unchanged full local control from804030e passes1/1 in53.05s with0runtime warnings on iOS26.2/23C54. Local Xcode27.1 differs from hosted26.3. Sources/products remained identical; the owned simulator was shut down and deleted. This is nonreproduction, not a fix or replacement for the hosted failure. [Proof](measurement-local-control.json).
+- Collection correction: xcresulttool modified extracted SQLite metadata for models/UI03 because the inherited helper used original extraction paths. Original ZIPs remained digest-exact. The inspected copies were retained, original members restored byte-for-byte, and fresh-copy replays reproduced identical complete strict verdicts/warning evidence. Future replay uses copies. [Correction](replay-copy-path-correction.json) · [Confirmation](replay-copy-confirmation.json) · [Root byte-for-byte preservation review](root-replay-preservation-review.json).
+
+No hosted retry, new candidate push, deployment, threshold adjustment or source workaround was performed for this review. The complete Swift job log exceeded the collector's unchanged32MiB limit and remains explicitly unvalidated; the bounded security artifacts above were independently verified instead.

@@ -1,0 +1,12 @@
+{
+  "change": "Allowlisted structured source-location reporting for failed Records fixture, without raw recovery data.",
+  "reporterSHA256": "aa3c68e42a1472490f8a962f82f88fd06b54f62d0e332486a2d15266bc3771ec",
+  "testsSHA256": "4a48d14c3749f60cd189d209666055a4792271b3fc2375498edce16b6ac72140",
+  "rootValidation": {
+    "syntheticTestsPassed": 13,
+    "nativeRecordsRerun": false
+  },
+  "modernSchema": "Direct Failure Message child of exactly validated case, exact canonical source path, bounded integer one-based line. Actual non-Records checkout and hosted StoreKit examples confirm convention; multiple conflicting lines are rejected.",
+  "privacy": "Only constant repository-relative source name plus bounded line number may be added. Unknown, encoded/foreign/symlink paths, malformed data, conflicts and invalid selector remain suppressed. No raw Records artifacts opened.",
+  "limitations": "A failed or timed-out legacy lookup suppresses even a valid modern location. This conservative diagnostics omission does not change pass/fail/count/warning/runner gates. Original Records failure has no source location and remains unexplained."
+}

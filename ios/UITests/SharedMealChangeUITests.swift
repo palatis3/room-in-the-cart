@@ -2,6 +2,8 @@
 import XCTest
 
 /// Isolated fixture target only. Normal full-suite builds contain no shared-meal fixture tests.
+/// Shopper Apply starts with one explicitly tracked, unknown-quantity manual
+/// soup item. These journeys cover proposal editing, not initial adoption.
 @MainActor final class SharedMealChangeUITests: XCTestCase {
     private var app: XCUIApplication!
     override func setUpWithError() throws {
@@ -12,13 +14,15 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("S17-shared-meal-failure") }
         app.terminate()
     }
-    private func launch(shopperSeed: Bool = false) {
-        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : [])
+    private func launch(shopperSeed: Bool = false, deadline: Bool = false, ingredientRemoval: Bool = false) {
+        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : []) + (deadline ? ["--shared-meal-deadline-fixture"] : [])
+        if ingredientRemoval { app.launchArguments += ["--shared-meal-group-amount-fixture", "--shared-meal-removal-fixture"] }
         app.launch()
-        XCTAssertTrue(element("meal-change-occurrence").waitForExistence(timeout: 25))
+        let ready = deadline ? app.navigationBars["Shared household shop"] : app.buttons["meal-change-occurrence"]
+        XCTAssertTrue(ready.waitForExistence(timeout: 25))
     }
     private func chooseOccurrence() {
-        tap(element("meal-change-occurrence"))
+        tap(app.buttons["meal-change-occurrence"])
         tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Fixture shared soup")).firstMatch)
     }
     private func proposalFromShopper() {
@@ -29,17 +33,30 @@ import XCTest
         tap(app.buttons["Fixture guest soup"])
         tap(element("meal-change-shopper-review"))
     }
+    private func openFoodReview() {
+        tap(app.buttons["Review entered shared shop"])
+        XCTAssertTrue(app.buttons["sharedFood.cancel"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Amounts and sources"].exists)
+    }
+    private func reviewFoodAmounts() {
+        enableSwitch("I reviewed the changed meal and all retained food commitments")
+        enableSwitch("I accept unresolved quantities or restrictions for this item")
+        tap(element("sharedFood.preview"))
+        reveal(element("sharedFood.apply")); XCTAssertFalse(element("sharedFood.apply").isEnabled)
+    }
     private func approveSharedDraft() {
         assertText("Entered soup packs")
-        tap(app.buttons["Review entered shared shop"])
-        let apply = app.buttons["Publish reviewed items and quote"]
-        reveal(apply); XCTAssertFalse(apply.isEnabled)
+        openFoodReview()
         assertText("Fixture guest soup")
+        reviewFoodAmounts()
+        assertText("Entered soup packs")
+        assertText("Unresolved quantities or restrictions accepted for this item")
         capture("S17-actual-shared-pack-and-checkout-review")
-        enableSwitch("I reviewed these exact shared fields and this action")
-        tap(apply)
+        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
+        tap(element("sharedFood.apply"))
         let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: element("fixture.s17.applications"))
         XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 10), .completed)
+        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
         capture("S17-actual-shared-apply-confirmed-once")
     }
     func testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce() {
@@ -74,6 +91,98 @@ import XCTest
         approveSharedDraft()
         XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
     }
+    func testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite() {
+        launch(ingredientRemoval: true); chooseOccurrence()
+        fill("Remove only the tomato side; keep the protected lunch", into: "meal-change-reason", replacing: true)
+        tap(app.buttons["Tomato side"])
+        tap(app.buttons["Remove proposed ingredient"])
+        XCTAssertFalse(app.buttons["Tomato side"].exists)
+        tap(app.buttons["meal-change-prepare"])
+        reveal(app.buttons["meal-change-send"])
+        XCTAssertTrue(app.buttons["meal-change-send"].isEnabled)
+        capture("S17-bound-side-removed-review-keeps-other-allocations")
+        tap(app.buttons["Cancel proposal review"])
+        XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
+        XCTAssertEqual(element("fixture.s17.applications").label, "Fixture shared applications: 0")
+        tap(app.buttons["Lunch"])
+        tap(app.buttons["Refresh shared changes"])
+        chooseOccurrence()
+        let restoredSide = app.buttons["Tomato side"]
+        reveal(restoredSide, fullyVisible: true)
+        XCTAssertTrue(restoredSide.isHittable)
+        capture("S17-cancelled-side-removal-original-draft-reopened")
+    }
+    func testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline() {
+        launch(deadline: true)
+        tap(app.buttons["Edit shared items and quote"])
+        tap(app.buttons["Edit this meal"])
+        tap(element("sharedMeal.editDeadline"))
+        let preview = element("sharedMeal.deadlinePreview")
+        assertElementContains("sharedMeal.deadlinePreview", "November 1, 2026")
+        XCTAssertTrue(preview.label.contains("1:30"))
+        XCTAssertTrue(preview.label.contains("America/New_York (UTC−04:00)"))
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Repeated clock time")).firstMatch)
+        tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "UTC−05:00")).firstMatch)
+        assertElementContains("sharedMeal.deadlinePreview", "1:30")
+        XCTAssertTrue(preview.label.contains("America/New_York (UTC−05:00)"))
+        tap(element("sharedMeal.useDeadline"))
+        openFoodReview()
+        assertText("Before"); assertText("After")
+        assertDeadline(contains: "America/New_York (UTC−04:00)")
+        assertDeadline(contains: "America/New_York (UTC−05:00)")
+        reviewFoodAmounts()
+        assertDeadline(contains: "America/New_York (UTC−04:00)")
+        assertDeadline(contains: "America/New_York (UTC−05:00)")
+        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
+        tap(element("sharedFood.apply"))
+        let count = element("fixture.s17.applications")
+        let published = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: count)
+        XCTAssertEqual(XCTWaiter.wait(for: [published], timeout: 10), .completed)
+        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
+
+        tap(app.buttons["Edit shared items and quote"])
+        tap(app.buttons["Edit this meal"])
+        let picker = element("sharedMeal.day")
+        tap(picker)
+        XCTAssertEqual(element("sharedMeal.dayPreview").label, "November 1, 2026")
+        let nextDay = element("sharedMeal.dayCalendar").collectionViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "November 2")).firstMatch
+        XCTAssertTrue(nextDay.waitForExistence(timeout: 5))
+        tap(nextDay)
+        XCTAssertEqual(element("sharedMeal.dayPreview").label, "November 2, 2026")
+        tap(element("sharedMeal.cancelDay"))
+        XCTAssertEqual(picker.value as? String, "November 1, 2026")
+        assertText("America/New_York (UTC−05:00)")
+        tap(picker)
+        // Confirming the unchanged date must also preserve the reviewed deadline.
+        tap(element("sharedMeal.useDay"))
+        assertText("America/New_York (UTC−05:00)")
+        tap(picker)
+        tap(nextDay)
+        tap(element("sharedMeal.useDay"))
+        XCTAssertTrue(element("sharedMeal.dayCalendar").waitForNonExistence(timeout: 5))
+        XCTAssertEqual(picker.value as? String, "November 2, 2026")
+        assertText("The new day has no deadline until you set one.")
+        openFoodReview()
+        assertText("Before"); assertText("After")
+        assertDeadline(contains: "America/New_York (UTC−05:00)")
+        assertText("November 2, 2026")
+        assertDeadline(contains: "Unknown")
+        reviewFoodAmounts()
+        assertDeadline(contains: "America/New_York (UTC−05:00)")
+        assertDeadline(contains: "Unknown")
+        XCTAssertEqual(count.label, "Fixture shared applications: 1")
+        capture("S09-shopper-reviewed-day-move-without-deadline")
+    }
+
+    private func assertDeadline(contains expected: String) {
+        // Both original and proposed SharedMealFacts use the current fact ID.
+        // Match the distinct reviewed value rather than obsolete legacy IDs.
+        let row = app.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
+            .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", expected, expected)).firstMatch
+        reveal(row, fullyVisible: true)
+        XCTAssertTrue((row.label + " " + (row.value as? String ?? "")).contains(expected), row.debugDescription)
+    }
+
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {

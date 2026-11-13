@@ -1,0 +1,12 @@
+{
+  "passed": 9,
+  "strictExit": 0,
+  "negativeControl": "One failure at fresh carriedMeals equality: actual three, expected only the unclosed source-linked sibling",
+  "sourceUnchangedDuringRun": true,
+  "logs": {
+    "before.log": "bfcb8591b53d39be4f583ffb5c896e78054c98cb501bccd4cfea7e36116063ad",
+    "after.log": "f6f5c3aa215886d22341d8be5f5535da18fcbc39f9f9d2da417dad2d0919d899"
+  },
+  "runtime": "Xcode27.1 /27A9275, iPhone17 simulator iOS27.0",
+  "scope": "Native model operations using temporary SQLite, restart and idempotent replay. No separate visual next-shop UI claim or hosted-candidate claim."
+}

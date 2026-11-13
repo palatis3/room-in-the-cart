@@ -1,0 +1,97 @@
+{
+  "artifactID": 13597036999,
+  "requests": [
+    {
+      "file": "0001.bin",
+      "start": 64912133,
+      "end": 64912154,
+      "bytes": 22,
+      "sha256": "f7afd49eb69071fd886e354feeeb0cec054f2f24782ccd0887a5cd6d444af0e8"
+    },
+    {
+      "file": "0002.bin",
+      "start": 64912113,
+      "end": 64912132,
+      "bytes": 20,
+      "sha256": "ed68308ea72940c83be65856ed7c825fbdfccd56f2e76806c29677328ee624f7"
+    },
+    {
+      "file": "0003.bin",
+      "start": 64912057,
+      "end": 64912132,
+      "bytes": 76,
+      "sha256": "9b1161d9776f12ac910f23a71a0c1a520b0f61d3b7e7af3a37de89e611866bdc"
+    },
+    {
+      "file": "0004.bin",
+      "start": 0,
+      "end": 29,
+      "bytes": 30,
+      "sha256": "a438e8e80fa69af2897e50ed1600daeca50674bd66930d19e682fd09345e2e29"
+    },
+    {
+      "file": "0005.bin",
+      "start": 30,
+      "end": 59,
+      "bytes": 30,
+      "sha256": "4561141f8676bf3c12cdc3005ee9d2cf91f48a55ca2384b7c4f208ac43745d6c"
+    },
+    {
+      "file": "0006.bin",
+      "start": 60,
+      "end": 1048635,
+      "bytes": 1048576,
+      "sha256": "ee19ac3fac9ec1497b68bfa7d90195832292b5f606f81498f55ddbd39df21495"
+    },
+    {
+      "file": "0007.bin",
+      "start": 1048636,
+      "end": 2097211,
+      "bytes": 1048576,
+      "sha256": "3a7a72502ee1732deae544987437509f19a8802f729b8f905fb089ef7ecda98c"
+    },
+    {
+      "file": "0008.bin",
+      "start": 2097212,
+      "end": 3145787,
+      "bytes": 1048576,
+      "sha256": "b9a9e7ac66ebe72ef16f6c45c08f8968f8cffab0d3ee8d4b01ba8bf2c009ed3f"
+    },
+    {
+      "file": "0009.bin",
+      "start": 3145788,
+      "end": 4194363,
+      "bytes": 1048576,
+      "sha256": "2e7a34f0f8ed5db476c42cb8de5afc08cc6978dcd27b2fdd377ddef939fa8484"
+    },
+    {
+      "file": "0010.bin",
+      "start": 4194364,
+      "end": 5242939,
+      "bytes": 1048576,
+      "sha256": "7baa2a3692e5ab79c40239141d680ee244dd9b85c6ce1ec2e340b9f29b4586b8"
+    },
+    {
+      "file": "0011.bin",
+      "start": 5242940,
+      "end": 6291515,
+      "bytes": 1048576,
+      "sha256": "41d01b26048ffbc107fd4d25bb2e6f72ed6140938dd9b3d849279f2c5fb0b114"
+    },
+    {
+      "file": "0012.bin",
+      "start": 6291516,
+      "end": 7340091,
+      "bytes": 1048576,
+      "sha256": "52fba48554254dc7ae011d440fa32ef21fea7209f07417336aabfb0d81107d4a"
+    }
+  ],
+  "totalBytes": 7340210,
+  "fullArchiveDownloaded": false,
+  "fullArchiveAPIHashVerified": false,
+  "outerZipMemberCRCVerified": false,
+  "gzipTrailerVerified": false,
+  "scope": "Bounded streaming prefix of pinned single tar.gz; exact target only, no bulk extraction. SHA verifies downloaded target bytes, not complete archive integrity.",
+  "target": null,
+  "refusal": "AssertionError: Expanded/member/count budget refused"
+}

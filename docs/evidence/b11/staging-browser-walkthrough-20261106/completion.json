@@ -1,0 +1,23 @@
+{
+  "publicPageLanguageViews": 8,
+  "extraWideViews": 2,
+  "narrowViewportWidth": 319,
+  "wideViewportWidth": 1024,
+  "horizontalOverflowObserved": false,
+  "supportEmailHref": "mailto:hello@roominthecart.com",
+  "keyboardSkipLinkFocusedMain": true,
+  "sectionAnchorHeadingTop": 48.8984375,
+  "invitedAppFooterNavigation": true,
+  "availabilityStates": [
+    "English email unavailable",
+    "Spanish email unavailable"
+  ],
+  "refreshReturnsUnavailable": true,
+  "consoleWarningsOrErrorsObserved": 0,
+  "viewportOverrideReset": true,
+  "finalLanguage": "en",
+  "authenticatedFlows": "Not exercised: email provider setup remains deferred.",
+  "policyApproval": "Not established by rendering these draft information pages.",
+  "physicalBrowserOrAssistiveTechnologyAcceptance": false,
+  "externalMessagesSent": false
+}

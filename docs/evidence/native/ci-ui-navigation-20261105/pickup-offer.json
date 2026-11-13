@@ -1,0 +1,50 @@
+{
+  "observedAt": "2026-11-05T09:52:51.469682+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "sourceSHA256": "bb25ea698694626a8f6680c1955e37e5c760f3156d1411dd560d2a66d11f5ed0",
+  "changes": "Existence is resolved once before hittability so lazy offscreen rows do not incur XCTest Find retries. Keyboard/navigation geometry uses one captured accessibility tree, matching existing FreeJourney helper. Entire saved-offer test body is byte-identical to f20.",
+  "firstAttempt": {
+    "result": "Failed",
+    "durationSeconds": 31.733,
+    "cause": "XCTest could not determine hittability of transitioning Bring the list navigation bar.",
+    "preservedSource": "source-attempt-1",
+    "rawLogSHA256": "db3042a449598cf487d60752259a2f8f68e030087627d46e7da42f411c3da537"
+  },
+  "correctedAttempt": {
+    "result": "Passed",
+    "durationSeconds": 405.182,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "xcodeExit": 0,
+    "strictGuardExit": 0,
+    "runtimeWarnings": 0,
+    "defaultAllowanceSeconds": 720,
+    "maximumAllowanceSeconds": 900,
+    "rawLogSHA256": "55239b45b39fc88a26a9b9ccfd3b7e84febaea873cc4a5c874f7da74dc5c7de8",
+    "sourceManifestSHA256": "d0cd751e6750e1215e2c62224dbbf6446b19a8a83abc0cf5baeae3ad32cc991c",
+    "productManifestSHA256": "b38eebb916684b8cd04af30ac0d627f647c170b0a4df0b4773ed07e0c7f3afcb",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "90CD1EED-66F3-4402-A218-2782AE2B15F1",
+      "deviceName": "RITC-UI-Existence-20261105",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "internalFindRetryPairs": 15,
+    "attachments": [
+      "Offer-reviewed-joint-cost-overage",
+      "Offer-reviewed-uncovered-quantity",
+      "Offer-saved-with-price-warning",
+      "Offer-expired-resume-card-after-restart",
+      "Offer-resume-opens-actual-arrival",
+      "Offer-updated-after-restart-and-copied",
+      "Offer-cancel-keeps-saved-response"
+    ]
+  },
+  "review": "Sol6.1xhigh reviewed driver/warning diffs read-only and found no concrete regression or assertion weakening. Dot independently reviewed analogous FreeJourney diagnosis and exact Menu idle phase.",
+  "limits": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted Xcode26.3/build23C54. This does not replace failed f20 hosted evidence. FreeJourney and History changes still pending their focused native runs."
+}

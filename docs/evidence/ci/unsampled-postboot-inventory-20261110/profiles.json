@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "commit": "844238c569100e33a11d972822b13cc6aafbfb60",
+  "testsPerProfile": 650,
+  "suiteCounts": [
+    19,
+    17,
+    10,
+    12,
+    10,
+    9,
+    64,
+    174,
+    36,
+    12,
+    287
+  ],
+  "profiles": [
+    "ordinary",
+    "diagnostic",
+    "helper"
+  ],
+  "sourceFiles": 793,
+  "sourceManifestSHA256": "f8e7b3db43ae279fc5d9d9390f32f096fa5d1d8352c749fcc99ad3b43698d9c4",
+  "observerPins": 50,
+  "execution": ".build/UnsampledInventoryNov10/profiles-r1",
+  "receiptSHA256": "fca2ab87c9cbb963db9596337ee90424e27ef56dfbf9607b9a59eb4d0c00a25f",
+  "profileEvidenceSHA256": {
+    "diagnostic": {
+      "actualLogSHA256": "1abf05ec6335963acbf180c846e4886a3b13182b57e815bf432d76e00395b032",
+      "actualReceiptSHA256": "b800ed37ccd26b5f0f1dcf3671f9db9e3bacda50ae152ff1ef813581c915ecb2",
+      "configuredGuardReceiptSHA256": "bbad195799cb1aa4d3afc2143fb7a0592edfe4762017504510fcc745179b1d44"
+    },
+    "helper": {
+      "actualLogSHA256": "ed1d26c44db6d824375fecc8fd4a65f9595e6c3b199467a582386170da801db1",
+      "actualReceiptSHA256": "d37ba0868affe0993d151e788342cd33bfcb26e6ee951b3a87171278b87c54a8",
+      "configuredGuardReceiptSHA256": "8c894b5b756236af73cd72b6e2554ecf51e8408ee7878595d4056e8626f2a7ed"
+    },
+    "ordinary": {
+      "actualLogSHA256": "a52af5e8345377ce1d0947b5524fe93d0d0a2fbec6f83a1aeedae96e297c51ad",
+      "actualReceiptSHA256": "29d615a1d6e40aa5f61fce3e4aa7babef7a7d788aeb54d5bb087e1d0d6c72fda",
+      "configuredGuardReceiptSHA256": "13b5b715a9d6e66e0ccb769e76429d4fb8e37f383a28dce6b5a71a090fabf542"
+    }
+  },
+  "uncommittedProductWorkExcluded": true,
+  "nativeToolsExecuted": false,
+  "releaseAcceptance": false
+}

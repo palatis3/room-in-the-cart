@@ -1,0 +1,411 @@
+name: iOS fixture checks
+run-name: iOS fixtures · ${{ inputs.shard || 'full suite' }}
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - 'config/**'
+      - '.github/workflows/ios-fixtures.yml'
+      - 'scripts/check_ios_test_results.py'
+      - 'scripts/test_check_ios_test_results.py'
+      - 'scripts/run_ios_test_shard.sh'
+      - 'scripts/plan_ios_fixture_tests.py'
+      - 'scripts/test_plan_ios_fixture_tests.py'
+  workflow_dispatch:
+    inputs:
+      shard:
+        description: Comma-separated fixture group names for a focused run (blank runs the full suite)
+        type: string
+        required: false
+        default: ''
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixture-ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+  CI_IPHONE_NAME: iPhone 17
+
+jobs:
+  fixture-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      contributor_matrix: ${{ steps.plan.outputs.contributor_matrix }}
+      dinner_matrix: ${{ steps.plan.outputs.dinner_matrix }}
+      build_contributor: ${{ steps.plan.outputs.build_contributor }}
+      build_dinner: ${{ steps.plan.outputs.build_dinner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate fixture coverage and balanced contributor groups
+        id: plan
+        env:
+          REQUESTED_FIXTURE_SHARD: ${{ github.event_name == 'workflow_dispatch' && inputs.shard || '' }}
+        run: |
+          python3 scripts/test_ui_automation_contract.py
+          python3 scripts/generate_xcode_project.py --check
+          python3 scripts/test_plan_ios_fixture_tests.py
+          python3 scripts/test_select_ios_fixture_work.py
+          python3 scripts/select_ios_fixture_work.py --github-output "$GITHUB_OUTPUT"
+
+  # Only canonical trusted events use the connected Bitrise pool. External
+  # fork PRs/noncanonical repositories keep full coverage on GitHub runners.
+  build-contributor:
+    if: needs.fixture-plan.outputs.build_contributor == 'true'
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}0
+      queue: max
+      cancel-in-progress: false
+    name: Build contributor, stock and carryover fixtures
+    needs: fixture-plan
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    timeout-minutes: 35
+    env:
+      FIXTURE_PROFILE: contributor
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+      workspace: ${{ github.workspace }}
+    steps: &fixture-build-steps
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: &fixture-toolchain-preflight |
+          if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
+            bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
+            test -d "$bitrise_xcode"
+            test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+            if [ ! -e /Applications/Xcode_27.1.app ]; then
+              sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
+            fi
+          fi
+          sw_vers
+          uname -m
+          printf '%s\n' /Applications/Xcode*.app
+          bash scripts/check_ci_xcode27.sh
+          python3 - <<'PYCODE'
+          import os, sys
+          sys.path.insert(0, "scripts")
+          from select_ci_iphone import runtime_identity
+          runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
+          if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
+              raise SystemExit(f"Unexpected fixture runtime: {runtime}")
+          print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
+          PYCODE
+      - name: Select an iPhone simulator
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
+      - name: Activate Bitrise Xcode compilation cache
+        id: compilation-cache
+        if: runner.environment == 'self-hosted'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Report unavailable optional compilation cache
+        if: steps.compilation-cache.outcome == 'failure'
+        run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
+      - name: Build fixture app and UI tests for iPhone
+        id: build
+        shell: bash
+        run: |
+          set -o pipefail
+          configuration=Debug
+          bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
+          conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
+          # Discovery needs a ready simulator, but compilation can run during boot.
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
+          boot_pid=$!
+          build_status=0
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
+            CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
+            2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
+          boot_status=0
+          wait "$boot_pid" || boot_status=$?
+          if (( build_status != 0 )); then exit "$build_status"; fi
+          exit "$boot_status"
+      - name: Enumerate compiled tests and package fixture products
+        shell: bash
+        run: |
+          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          # The build step already waited for this simulator. Both fixture profiles run UI tests.
+          xcodebuild -xctestrun "${test_runs[0]}" -only-testing:RoomInTheCartUITests \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
+            -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
+            -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building \
+            2>&1 | tee .build/test-enumeration.log
+          python3 scripts/plan_ios_fixture_tests.py plan "$FIXTURE_PROFILE" \
+            --enumeration .build/test-enumeration.json --output-dir .build/test-plan \
+            2>&1 | tee .build/test-planning.log
+          cp .build/test-enumeration.json .build/test-plan/
+          bash scripts/package_ios_simulator_tests.sh "$RUNNER_TEMP/iphone-fixture-products.tar.lzfse"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
+        with:
+          name: iphone-fixture-products-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-fixture-products.tar.lzfse
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain fixture discovery diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-discovery-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/test-enumeration.json
+            .build/test-enumeration.log
+            .build/test-planning.log
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Retain fixture build evidence
+        if: always() && steps.build.outcome != 'skipped'
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-build-log-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          path: |
+            .build/ios-build-evidence/build.log
+            .build/ios-build-evidence/receipt.txt
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
+
+  build-dinner:
+    if: needs.fixture-plan.outputs.build_dinner == 'true'
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}1
+      queue: max
+      cancel-in-progress: false
+    name: Build dinner decision fixture
+    needs: fixture-plan
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    timeout-minutes: 35
+    env:
+      FIXTURE_PROFILE: dinner
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+    steps: *fixture-build-steps
+
+  contributor-tests:
+    if: needs.fixture-plan.outputs.build_contributor == 'true'
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
+      queue: max
+      cancel-in-progress: false
+    name: Fixture (${{ matrix.shard }})
+    needs: [fixture-plan, build-contributor]
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      # Fixture rows share five GitHub, three M2 and six M4 slots with their
+      # other jobs. Forks use only the existing GitHub queues; admit all rows.
+      matrix: ${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}
+    env:
+      TEST_PRODUCTS_ARTIFACT: ${{ needs.build-contributor.outputs.artifact }}
+      RECORDS_BUILD_WORKSPACE: ${{ needs.build-contributor.outputs.workspace }}
+      FIXTURE_PROFILE: ${{ matrix.profile }}
+      TEST_SHARD: ${{ matrix.shard }}
+    steps: &fixture-test-steps
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        # Test products and selectors come from the build artifact. Keep UI
+        # sources available for mapping XCTest failures in the result reports.
+        with:
+          sparse-checkout: |
+            scripts
+            ios/UITests
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: *fixture-toolchain-preflight
+      - name: Select isolated iPhone simulator for the pilot and fallback suite
+        timeout-minutes: 8
+        run: |
+          if [[ "$TEST_SHARD" == contributor-balanced-01 || "$TEST_SHARD" == SharedFallbackUITests ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
+      - name: Start Bitrise simulator boot during artifact download
+        id: early_boot
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/prepare_ios_simulator.sh start
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
+          path: .build/download
+          merge-multiple: true
+      - name: Restore matching fixture products and selector list
+        run: |
+          mkdir -p .build/DerivedData/Build
+          set -o pipefail
+          restore_extract_started=$SECONDS
+          printf 'Restore archive extraction started\n'
+          /usr/bin/compression_tool -decode -A lzfse -t 2 -i .build/download/iphone-fixture-products.tar.lzfse |
+            tar -xf - -C .build/DerivedData/Build
+          printf 'Restore archive extraction completed in %s seconds\n' "$((SECONDS - restore_extract_started))"
+          restore_selection_started=$SECONDS
+          mv .build/DerivedData/Build/test-plan .build/test-plan
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json, os
+          from pathlib import Path
+
+          plan = json.loads(Path(".build/test-plan/manifest.json").read_text())
+          if plan["profile"] != os.environ["FIXTURE_PROFILE"]:
+              raise SystemExit("The fixture product profile does not match this job.")
+          expected = len(plan["shards"][os.environ["TEST_SHARD"]]["test_identifiers"])
+          if expected < 1:
+              raise SystemExit("The fixture selector list is empty.")
+          print(f"EXPECTED_TEST_COUNT={expected}")
+          PY
+          printf 'Restore selection placement and manifest validation completed in %s seconds\n' "$((SECONDS - restore_selection_started))"
+      - name: Start GitHub simulator boot after fixture restore
+        id: late_boot
+        if: runner.environment != 'self-hosted'
+        run: bash scripts/prepare_ios_simulator.sh start
+      - name: Boot the iPhone simulator
+        timeout-minutes: 8
+        if: ${{ !cancelled() && (steps.early_boot.outcome == 'success' || steps.late_boot.outcome == 'success') }}
+        run: bash scripts/prepare_ios_simulator.sh wait
+      - name: Run selected fixture tests and require complete execution
+        timeout-minutes: 40
+        shell: bash
+        run: |
+          # These tests generate a recovery key that can appear in XCTest logs and screenshots.
+          if [[ "$TEST_SHARD" == RecordsMediaUITests || "$TEST_SHARD" == SharedRecordsUITests ]]; then
+            status=0
+            private_log="$RUNNER_TEMP/records-fixture.log"
+            GITHUB_STEP_SUMMARY= bash scripts/run_ios_test_shard.sh > "$private_log" 2>&1 || status=$?
+            report_status=0
+            python3 scripts/report_records_media_test.py .build "$status" "$TEST_SHARD" \
+              > .build/records-test-report.md 2>> "$private_log" || report_status=$?
+            if (( status == 0 )); then
+              status=$report_status
+            fi
+            if [[ -s .build/records-test-report.md ]]; then
+              tee -a "$GITHUB_STEP_SUMMARY" < .build/records-test-report.md
+            fi
+            if (( status != 0 )); then
+              echo '::error::Records fixture failed. Raw output contains private fixture material.'
+            fi
+            exit "$status"
+          fi
+          if [[ "$TEST_SHARD" == SharedDeliveryUITests-recovery-cook-and-closeout ]]; then
+            date '+%Y-%m-%d %H:%M:%S' > .build/test-speech-start.txt
+          fi
+          bash scripts/run_ios_test_shard.sh
+      - name: Retain speech runtime diagnostics
+        if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ -s .build/test-speech-start.txt ]]; then
+            if ! xcrun simctl spawn "$SIMULATOR_ID" log show \
+              --start "$(cat .build/test-speech-start.txt)" --style json \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "com.apple.runtime-issues" AND category == "Hang Risk"' \
+              > .build/test-speech-runtime.json 2> .build/test-speech-runtime-error.txt; then
+              echo 'Speech runtime diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+      - name: Retain scoped cook confirmation diagnostics
+        if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ -s .build/test-speech-start.txt ]]; then
+            if ! xcrun simctl spawn "$SIMULATOR_ID" log show \
+              --start "$(cat .build/test-speech-start.txt)" --style json --timezone UTC \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "dev.roominthecart.fixture" AND category == "cook-destination"' \
+              > .build/test-cook-destination.json 2> .build/test-cook-destination-error.txt; then
+              echo 'Cook confirmation diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+      - name: Clean up only the owned simulator after result and diagnostic export
+        if: always()
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
+      - name: Retain fixture results and timing
+        id: fixture_results_upload
+        continue-on-error: true
+        if: always() && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: &fixture_result_paths |
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-simulator-boot.*
+            .build/test-*.json
+            .build/test-speech-*.txt
+            .build/test-cook-*.txt
+            .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore
+      # Retry only the transfer while this runner still holds the XCTest result.
+      - name: Retry fixture result upload
+        if: ${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests' && steps.fixture_results_upload.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}-retry
+          include-hidden-files: true
+          path: *fixture_result_paths
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain privacy-safe Records verification
+        if: always() && (matrix.shard == 'RecordsMediaUITests' || matrix.shard == 'SharedRecordsUITests')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/records-test-report.md
+            .build/test-simulator-ownership.json
+            .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  dinner-tests:
+    if: needs.fixture-plan.outputs.build_dinner == 'true'
+    concurrency:
+      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && format('ritc-bitrise-m4-slot-{0}', matrix.m4_slot) || matrix.provider == 'bitrise' && format('ritc-bitrise-slot-{0}', matrix.macos_slot)) || format('ritc-macos-slot-{0}', matrix.macos_slot) }}
+      queue: max
+      cancel-in-progress: false
+    name: Fixture (${{ matrix.shard }})
+    needs: [fixture-plan, build-dinner]
+    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}
+    env:
+      TEST_PRODUCTS_ARTIFACT: ${{ needs.build-dinner.outputs.artifact }}
+      FIXTURE_PROFILE: ${{ matrix.profile }}
+      TEST_SHARD: ${{ matrix.shard }}
+    steps: *fixture-test-steps
+
+  fixture-gate:
+    name: Fixture gate
+    needs: [fixture-plan, build-contributor, build-dinner, contributor-tests, dinner-tests]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: python3 scripts/select_ios_fixture_work.py --check-results

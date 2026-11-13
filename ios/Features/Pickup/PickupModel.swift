@@ -12,18 +12,31 @@ func pCook(_ key: String, language: String) -> String {
 }
 func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
 private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
+func pExclusions(_ values: [String]) -> String {
+    var seen = Set<String>()
+    return values.filter { seen.insert($0).inserted }.joined(separator: ", ")
+}
 func pQuantity(_ quantity: Quantity, language: String? = nil) -> String {
     pQuantity(quantity.amount, unit: quantity.unit, language: language)
 }
 func pQuantity(_ amount: Rational, unit: UnitOfMeasure, language: String? = nil) -> String {
+    pQuantity(amount.description, unit: unit, singular: amount == .one, language: language)
+}
+
+// Coverage from the shared service can contain exact fractions larger than Int64.
+func pQuantity(_ exactAmount: String, unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
+    let label = pUnitLabel(unit, singular: singular, language: language)
+    return "\(exactAmount) \(label)"
+}
+
+func pUnitLabel(_ unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
     let key: String
     if unit == .count {
-        key = amount == .one ? "One count unit" : "count"
+        key = singular ? "One count unit" : "count"
     } else {
-        key = amount == .one ? unit.rawValue : "Quantity plural " + unit.rawValue
+        key = singular ? unit.rawValue : "Quantity plural " + unit.rawValue
     }
-    let label = language.map { pCook(key, language: $0) } ?? pTr(key)
-    return "\(amount.description) \(label)"
+    return language.map { pCook(key, language: $0) } ?? pTr(key)
 }
 
 enum NextShopDisposition: String, Codable, CaseIterable {
@@ -33,6 +46,43 @@ enum NextShopDisposition: String, Codable, CaseIterable {
 struct NextShopReview: Codable, Equatable {
     let sourceRevision: Int64
     let choices: [UUID: NextShopDisposition]
+}
+
+/// The review and the new draft use the same confirmed stock and remaining portions.
+struct NextShopMealNeeds: Equatable {
+    let urgent: [UrgentMealNeed]
+    let meals: [AllocationNeed]
+    let unverified: Set<UUID>
+}
+
+extension PickupJourney {
+    func nextShopMealNeeds(closing: [UUID: NextShopDisposition], at instant: Date) throws -> NextShopMealNeeds {
+        let coverage = try carryoverAllocation(at: instant)
+        let byID = Dictionary(uniqueKeysWithValues: coverage.demands.map { ($0.id, $0) })
+        let currentUrgent = recoveryCurrentUrgent
+        let urgentIDs = Set(currentUrgent.map(\.id))
+        let urgent = currentUrgent.compactMap { original -> UrgentMealNeed? in
+            guard !original.resolved, byID[original.id]?.shortfall != .zero else { return nil }
+            var need = original
+            if let demand = byID[original.id], let shortfall = demand.shortfall {
+                need.required = Quantity(amount: shortfall, unit: demand.unit, originalLiteral: shortfall.description)
+            }
+            need.carriedFromID = id
+            return need
+        }
+        let handledLines = Set(deferred.filter {
+            ["handled", "dismissed"].contains(closing[$0.id]?.rawValue ?? $0.status)
+        }.map { $0.line.id })
+        // Earlier deferrals may have no active allocation on this pickup.
+        var meals = carriedMeals.filter { !handledLines.contains($0.orderLineID) && byID[$0.id] == nil }
+        for original in recoveryCurrentAllocationNeeds where !urgentIDs.contains(original.id) && !handledLines.contains(original.orderLineID) {
+            guard let demand = byID[original.id], demand.shortfall != .zero else { continue }
+            let remaining = demand.shortfall.map { Quantity(amount: $0, unit: demand.unit, originalLiteral: $0.description) }
+            meals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name,
+                                        amount: remaining ?? original.amount, priority: original.priority))
+        }
+        return NextShopMealNeeds(urgent: urgent, meals: meals, unverified: Set(coverage.demands.filter { $0.shortfall == nil }.map(\.id)))
+    }
 }
 
 struct DeferredPickupNeed: Codable, Equatable, Identifiable {
@@ -104,6 +154,10 @@ struct PickupOffer: Codable, Equatable, Identifiable {
     var retailerResponse: String
     var evaluation: PickupOfferEvaluationEvidence? = nil
 }
+struct PickupRecoveryPreparation: Codable, Equatable {
+    let requiredLeadMinutes: Int?
+    let advanceComplete: Bool
+}
 struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let id: UUID
     let mealName: String
@@ -112,7 +166,21 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let leadTimeMinutes: Int?
     let completedSteps: [String]
     var sourceContributionID: UUID? = nil
+    var sourceOccurrenceID: UUID? = nil
+    var sourceGroupID: UUID? = nil
+    var sourceLedgerRevisionID: UUID? = nil
+    var due: Date? = nil
+    var preparationNotes: [String]? = nil
+    var recoveryPreparation: PickupRecoveryPreparation? = nil
+    var sourceURL: String? = nil
 }
+struct EarlierCheckoutQuote: Codable, Equatable, Identifiable {
+    let id: Int64 // The durable pickup revision that held this quote.
+    let basketRevisionID: UUID
+    let quote: CheckoutQuote
+    let cap: CheckoutCap?
+}
+
 struct PickupJourney: Codable, Equatable, Identifiable {
     let id: UUID
     var version = 1
@@ -122,11 +190,15 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var cap: CheckoutCap?
     var quote: CheckoutQuote?
     var quotedRevisionID: UUID?
+    var basketPriceTerms: PickupPricingTerms?
+    var earlierQuotes: [EarlierCheckoutQuote] = []
     var frozenQuotes: [UUID: CheckoutQuote] = [:]
     var pickup: PickupLedger?
     var needs: [AllocationNeed] = []
     var plannedNeeds: [AllocationNeed] = []
     var needDetails: [PickupNeedDetail] = []
+    var mealSource: PickupCheckoutMealSource?
+    var mealRecovery: PickupMealRecoveryHistory?
     var ledgerBasis: ShopBasis?
     var ledgerSourceRevisionID: UUID?
     var ledgerPackSelections: [LedgerPackSelection] = []
@@ -156,19 +228,20 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
-    var unfilledOffers: [PickupOffer] {
+    func unfilledOffers(at instant: Date) -> [PickupOffer] {
         guard closedAt == nil else { return [] }
-        let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
-        return offers.filter { !observed.contains($0.lineID) }
+        let observed = Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
+        let activeLines = Set(retailerOrderLines.map(\.id))
+        return offers.filter { activeLines.contains($0.lineID) && !observed.contains($0.lineID) }
     }
 
     func nextUnfilledOffer(at date: Date) -> PickupOffer? {
-        let outstanding = unfilledOffers.sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+        let outstanding = unfilledOffers(at: date).sorted { $0.deadline.cutoff < $1.deadline.cutoff }
         return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends
+        case recipientSends, mealSource, mealRecovery, earlierQuotes, basketPriceTerms
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -181,6 +254,8 @@ extension PickupJourney {
         cap = try container.decodeIfPresent(CheckoutCap.self, forKey: .cap)
         quote = try container.decodeIfPresent(CheckoutQuote.self, forKey: .quote)
         quotedRevisionID = try container.decodeIfPresent(UUID.self, forKey: .quotedRevisionID)
+        basketPriceTerms = try container.decodeIfPresent(PickupPricingTerms.self, forKey: .basketPriceTerms)
+        earlierQuotes = try container.decodeIfPresent([EarlierCheckoutQuote].self, forKey: .earlierQuotes) ?? []
         if let decoded = try container.decodeIfPresent([UUID: CheckoutQuote].self, forKey: .frozenQuotes) { frozenQuotes = decoded }
         pickup = try container.decodeIfPresent(PickupLedger.self, forKey: .pickup)
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .needs) { needs = decoded }
@@ -205,10 +280,19 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([PickupOfferAction].self, forKey: .offerActions) { offerActions = decoded }
         if let decoded = try container.decodeIfPresent([PickupCookNote].self, forKey: .notes) { notes = decoded }
         recipientSends = try container.decodeIfPresent([RecipientSend].self, forKey: .recipientSends)
+        mealSource = try container.decodeIfPresent(PickupCheckoutMealSource.self, forKey: .mealSource)
+        mealRecovery = try container.decodeIfPresent(PickupMealRecoveryHistory.self, forKey: .mealRecovery)
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
         feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
         closedAt = try container.decodeIfPresent(Date.self, forKey: .closedAt)
+        if let basket, !basket.amendments.isEmpty, let pickup, let branch = context?.branchID,
+           let original = basket.reportedOrderLines,
+           Dictionary(uniqueKeysWithValues: pickup.orderLines.map { ($0.id, $0) }) ==
+            Dictionary(uniqueKeysWithValues: original.map { ($0.id, PickupOrderLine(id: $0.id, branchID: branch, name: $0.name, ordered: $0.quantity)) }) {
+            self.pickup = try pickup.withOrderLines(basket.physicalOrderLines(branch: branch))
+        }
+
     }
 }
 
@@ -255,6 +339,8 @@ struct PickupPersistenceLocation {
         let payload: Data
         let requiredRevisions: [UUID: Int64]
         let selectsPickup: Bool
+        let recoveryOperationID: UUID?
+        let authorize: (@MainActor () -> Bool)?
     }
     private var pending: Pending?
     // Ephemeral review receipts allow an exact double tap to succeed without another write.
@@ -264,6 +350,15 @@ struct PickupPersistenceLocation {
         self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
+    var recoveryLedger: LedgerModel? { cookLedger }
+    func saveRecoveryCandidate(_ value: PickupJourney, operationID: UUID,
+                               authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize)
+    }
+    func retryRecoveryCandidate(operationID: UUID, matches: (PickupJourney) -> Bool) async -> Bool {
+        guard let pending, pending.recoveryOperationID == operationID, matches(pending.value) else { return false }
+        return await retrySave()
+    }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
     var cookJourney: PickupJourney? {
         guard let journey else { return nil }
@@ -291,12 +386,13 @@ struct PickupPersistenceLocation {
         return LedgerPackStockReview.basketBasisIsCurrent(value, pickupWorkspaceID: sourceWorkspaceID)
     }
     var result: CheckoutResult? {
-        guard hasCurrentBasketStockBasis, let value = journey, let quote = value.quote, value.quotedRevisionID == value.basket?.current.id else { return nil }
+        guard hasCurrentBasketStockBasis, let value = journey, let quote = value.quote,
+              value.basket?.amendments.isEmpty != false, value.quotedRevisionID == value.basket?.current.id else { return nil }
         return try? CheckoutEngine.evaluate(quote, cap: value.cap)
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
-        return try? value.carryoverAllocation()
+        return try? value.carryoverAllocation(at: clock())
     }
     var stockAllocation: StockAllocationResult? { allocation }
     var stockReviewDate: Date { clock() }
@@ -379,23 +475,37 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func start(from lines: [BasketLine], shopID: UUID, context: CheckoutContext, cap: CheckoutCap? = nil, plannedNeeds: [AllocationNeed] = [], ledgerBasis: ShopBasis? = nil,
-                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = []) async -> Bool {
+                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = [], mealSource: PickupCheckoutMealSource? = nil) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
         if journeys.contains(where: { $0.id == shopID }) { selectedID = shopID; return true }
         do {
             let basket = try BasketPlan(id: shopID, revisionID: UUID(), lines: lines, createdAt: clock())
             var value = PickupJourney(id: shopID, savedAt: clock())
+            value.basketPriceTerms = .from(context, scope: PickupPricingTerms.scope(cap: cap, basis: ledgerBasis))
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
-            value.ledgerPackSelections = ledgerPackSelections
+            value.ledgerPackSelections = ledgerPackSelections; value.mealSource = mealSource
             return await save(value)
         } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
-    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true) async -> Bool {
-        guard ready, !saving, pending == nil else { return false }
+    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
+        recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil) async -> Bool {
+        guard ready, !saving, pending == nil, authorize?() != false else { return false }
         do {
-            var candidate = value; candidate.savedAt = clock()
+            let instant = clock()
+            var candidate = value; candidate.savedAt = instant
+            let previous = journeys.first(where: { $0.id == value.id })
+            guard candidate.revision == (previous?.revision ?? 0) else {
+                error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+                return false
+            }
+            if let previous, let quote = previous.quote, let basketRevisionID = previous.quotedRevisionID,
+               previous.quote != candidate.quote || previous.cap != candidate.cap || previous.quotedRevisionID != candidate.quotedRevisionID {
+                candidate.earlierQuotes.append(EarlierCheckoutQuote(id: previous.revision, basketRevisionID: basketRevisionID,
+                                                                    quote: quote, cap: previous.cap))
+            }
+            try candidate.synchronizeRecoveryOutside(at: instant)
             let increment = candidate.revision.addingReportingOverflow(1)
             guard !increment.overflow else { throw PickupModelError.invalid }
             candidate.revision = increment.partialValue
@@ -406,13 +516,23 @@ struct PickupPersistenceLocation {
                 guard let revision = storeRevisions[source] else { throw PickupModelError.missing }
                 revisions[source] = revision
             }
-            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting)
+            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting,
+                recoveryOperationID: recoveryOperationID, authorize: authorize)
             hasPendingSave = true
             return await retrySave()
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
     }
     @discardableResult func retrySave() async -> Bool {
         guard !saving, let pending, let store else { return false }
+        guard pending.authorize?() != false else {
+            if pending.recoveryOperationID == nil {
+                discardPending()
+                error = pTr("Feedback was not saved. Check your pickup and feedback setting before trying again.")
+            } else {
+                error = recoveryText("Your access or selection changed. Discard this pending recovery and review it again.")
+            }
+            return false
+        }
         saving = true; defer { saving = false }
         do {
             let saved = try await store.save(id: pending.value.id, title: "Pickup", payload: pending.payload,
@@ -422,24 +542,48 @@ struct PickupPersistenceLocation {
             if pending.selectsPickup { selectedID = pending.value.id }
             self.pending = nil; hasPendingSave = false; error = nil; return true
         } catch ComparisonStoreError.staleRevision, ComparisonStoreError.erased {
-            self.pending = nil; hasPendingSave = false; ready = false
-            journeys = []; storeRevisions = [:]
-            await load()
-            self.error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+            self.pending = nil; hasPendingSave = false
+            await reloadAfterStaleRevision()
             return false
         } catch { self.error = pTr("Not saved. Retry this change before continuing; your last saved pickup is intact."); return false }
     }
+    private func reloadAfterStaleRevision() async {
+        ready = false
+        journeys = []; storeRevisions = [:]
+        await load()
+        error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+    }
     func discardPending() { guard !saving else { return }; pending = nil; hasPendingSave = false; error = nil }
+    func recordFeedback(_ feedback: PickupFeedback?, shopID: UUID, revision: Int64,
+                        consent: LocalPickupFeedbackConsent) async -> Bool {
+        guard let workspaceID = sourceWorkspaceID, var current = journey else { return false }
+        let currentConsent = consent.authorization(for: workspaceID)
+        let authorized: @MainActor () -> Bool = { [weak self] in
+            guard let self, self.sourceWorkspaceID == workspaceID, let selected = self.journey,
+                  selected.id == shopID, selected.revision == revision, selected.eligibleForFeedback else { return false }
+            return feedback == nil || currentConsent()
+        }
+        current.feedback = feedback
+        return await save(current, selecting: false, authorize: authorized)
+    }
+
     @discardableResult func change(_ edit: (inout PickupJourney) throws -> Void) async -> Bool {
         guard var value = journey, !saving, pending == nil else { return false }
         do { try edit(&value); return await save(value) }
         catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
-    @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?) async -> Bool {
+    @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?, reviewed draft: PickupCheckoutDraft? = nil) async -> Bool {
         guard hasCurrentBasketStockBasis else { error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false }
         return await change { value in
             guard let basket = value.basket, basket.phase != .reportedPlaced else { throw PickupModelError.invalid }
+            if let draft {
+                let expected = try draft.submission(for: value, workspaceID: sourceWorkspaceID)
+                guard expected.quote == quote, expected.cap == cap else { throw PickupCheckoutDraftError.staleSource }
+            }
             _ = try CheckoutEngine.evaluate(quote, cap: cap)
+            if value.basketPriceTerms == nil, value.quote == nil, let source = value.context {
+                value.basketPriceTerms = .from(source, scope: PickupPricingTerms.scope(cap: value.cap, basis: value.ledgerBasis))
+            }
             value.quote = quote; value.context = quote.context; value.cap = cap; value.quotedRevisionID = basket.current.id
         }
     }
@@ -479,19 +623,23 @@ struct PickupPersistenceLocation {
             value.carriedMeals.removeAll { restored.contains($0.orderLineID) }
         }
     }
-    @discardableResult func freeze() async -> Bool {
+    @discardableResult func freeze(reviewing reviewed: PickupJourney? = nil) async -> Bool {
         guard hasCurrentBasketStockBasis else { error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false }
         return await change { value in
+            if let reviewed, value.id != reviewed.id || value.revision != reviewed.revision {
+                throw PickupModelError.invalid
+            }
             guard var basket = value.basket, !basket.current.lines.isEmpty, let quote = value.quote, value.quotedRevisionID == basket.current.id else { throw PickupModelError.missing }
             if basket.snapshots.contains(where: { $0.revision.id == basket.current.id }) { return }
             let snapshot = try basket.freeze(snapshotID: UUID(), expectedRevision: basket.current.id, at: clock())
             value.frozenQuotes[snapshot.id] = quote; value.basket = basket
         }
     }
-    @discardableResult func reopenDraft() async -> Bool {
-        await change { value in
-            guard var basket = value.basket, basket.phase != .reportedPlaced,
-                  !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
+    @discardableResult func reopenDraft(reviewing reviewed: HandoffSnapshot? = nil) async -> Bool {
+        guard let snapshot = currentFrozenSnapshot(reviewing: reviewed) else { return false }
+        return await change { value in
+            guard var basket = value.basket, basket.phase == .frozen, basket.id == snapshot.basketID,
+                  basket.current.id == snapshot.revision.id, !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
             let revision = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: basket.current.lines.map { .upsert($0) })
             try basket.apply(revision, at: clock())
             value.basket = basket; value.quote = nil; value.quotedRevisionID = nil
@@ -501,8 +649,13 @@ struct PickupPersistenceLocation {
         guard let basket = journey?.basket else { return nil }
         return basket.snapshots.last { $0.revision.id == basket.current.id }
     }
-    static func datedRetailerText(_ snapshot: HandoffSnapshot) -> String {
-        "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
+    private func currentFrozenSnapshot(reviewing reviewed: HandoffSnapshot?) -> HandoffSnapshot? {
+        let current = frozenSnapshot
+        if let reviewed, reviewed != current {
+            error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+            return nil
+        }
+        return current
     }
     @discardableResult func recordHandoff(_ kind: HandoffActionKind, snapshot: HandoffSnapshot? = nil, destination: String? = nil) async -> Bool {
         guard let snapshot = snapshot ?? frozenSnapshot,
@@ -532,23 +685,78 @@ struct PickupPersistenceLocation {
         value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: clock(), action: kind, destination: destination))
         return await save(value, selecting: false)
     }
-    @discardableResult func reportPlaced(acknowledgingChangedStock: Bool = false) async -> Bool {
-        if journey?.basket?.phase == .reportedPlaced { return true }
+    @discardableResult func reportPlaced(reviewing reviewed: HandoffSnapshot? = nil, by localActorID: UUID? = nil,
+                                         acknowledgingChangedStock: Bool = false) async -> Bool {
+        guard let snapshot = currentFrozenSnapshot(reviewing: reviewed) else { return false }
+        if let existing = journey?.basket?.placements.first { return existing.snapshotID == snapshot.id }
         guard hasCurrentBasketStockBasis || acknowledgingChangedStock else {
             error = ledgerText("Confirmed stock changed. If you already placed this frozen order with the retailer, record that original order explicitly."); return false
         }
-        guard let snapshot = frozenSnapshot, !snapshot.revision.lines.isEmpty else { return false }
+        guard !snapshot.revision.lines.isEmpty else { return false }
         return await change { value in
-            guard var basket = value.basket, let context = value.context else { throw PickupModelError.missing }
-            if !basket.placements.isEmpty { return }
-            let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id, reportedAt: clock())
+            guard var basket = value.basket, basket.id == snapshot.basketID,
+                  basket.current.id == snapshot.revision.id, basket.placements.isEmpty,
+                  let context = value.context else { throw PickupModelError.invalid }
+            let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id,
+                                              reportedAt: clock(), reportedByLocalActorID: localActorID)
             try basket.reportPlaced(placement); value.basket = basket
             value.needs = value.plannedNeeds
             value.pickup = try PickupLedger(orderID: placement.id, orderLines: snapshot.revision.lines.map { PickupOrderLine(id: $0.id, branchID: context.branchID, name: $0.name, ordered: $0.quantity) })
         }
     }
+    @discardableResult func confirmRetailerAmendment(_ review: PickupAmendmentReview,
+            currentActor: @escaping @MainActor () -> UUID?) async -> Bool {
+        let base = review.base, event = review.event
+        let authorized: @MainActor () -> Bool = { [weak self] in
+            guard let self, let journey = self.journey else { return false }
+            return self.ready && self.sourceWorkspaceID == base.workspaceID && journey.id == base.shopID &&
+                journey.basket?.placements.first?.id == base.placementID && currentActor() == base.actorID &&
+                event.recordedByLocalActorID == base.actorID && event.placementID == base.placementID
+        }
+        guard authorized(), var value = journey, var basket = value.basket, let pickup = value.pickup,
+              let branch = value.context?.branchID else { return false }
+        if let saved = basket.amendments.first(where: { $0.id == event.id }) {
+            guard saved == event else { error = pTr("This confirmation has different details. Reopen the placed order."); return false }
+            return true
+        }
+        guard value.revision == base.revision, basket.amendments.last?.id == base.predecessor,
+              basket.effectiveOrderLines == base.lines else {
+            error = pTr("The order changed. Reopen the placed order and review the retailer confirmation again.")
+            return false
+        }
+        if hasPendingSave {
+            return await retryRecoveryCandidate(operationID: event.id) { $0.basket?.amendments.last == event }
+        }
+        do {
+            try review.validate(in: basket, now: clock())
+            try basket.confirmAmendment(event)
+            value.basket = basket
+            value.pickup = try pickup.withOrderLines(basket.physicalOrderLines(branch: branch))
+            return await save(value, selecting: false, recoveryOperationID: event.id, authorize: authorized)
+        } catch {
+            self.error = pTr("Check the confirmed lines, retailer reference and confirmation time.")
+            return false
+        }
+    }
+
     @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
-        await change { value in
+        guard ready, !saving, pending == nil else { return false }
+        if let usable, usable.receipt != fragment.key {
+            error = pTr("Check the amounts and units. Your saved pickup has not changed.")
+            return false
+        }
+        let receiptExists = journey?.pickup?.receipts.contains(fragment) == true
+        let observationExists = usable.map { journey?.pickup?.usableObservations.contains($0) == true } ?? true
+        if receiptExists && observationExists {
+            error = nil
+            return true
+        }
+        let observedAt = clock()
+        guard fragment.receivedAt <= observedAt, usable.map({ $0.confirmedAt <= observedAt }) ?? true else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.receive(fragment)
             if let usable { try pickup.confirmUsable(usable) }
@@ -556,7 +764,14 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func confirmUsable(_ observation: UsableObservation) async -> Bool {
-        await change { value in
+        let observedAt = clock()
+        let alreadyRecorded = journey?.pickup?.usableObservations.contains(observation) == true
+        guard alreadyRecorded || (observation.confirmedAt <= observedAt &&
+            journey?.pickup?.receipts.first(where: { $0.key == observation.receipt }).map { $0.receivedAt <= observedAt } == true) else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.confirmUsable(observation); value.pickup = pickup
         }
@@ -564,17 +779,33 @@ struct PickupPersistenceLocation {
     @discardableResult func addUrgent(_ need: UrgentMealNeed) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
-        var value = journey
-        if value?.basket != nil || value == nil { value = PickupJourney(id: UUID(), savedAt: clock()) }
-        guard var value else { return false }
-        if let existing = value.urgent.first(where: { $0.id == need.id }) {
-            guard existing == need else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
+        if let original = journeys.first(where: { $0.urgent.contains { $0.id == need.id && $0.carriedFromID == nil } }) {
+            guard original.urgent.contains(need) else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
+            saving = true
+            defer { saving = false }
+            do {
+                guard let store, let revision = storeRevisions[original.id],
+                      try await store.load(id: original.id)?.revision == revision else {
+                    await reloadAfterStaleRevision()
+                    return false
+                }
+            } catch {
+                self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+                return false
+            }
+            selectedID = original.id
+            error = nil
             return true
-        } else {
-            value.urgent.append(need)
-            value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
-            value.stockNeeds.append(StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required))
         }
+        var value: PickupJourney
+        if let current = journey, current.basket == nil, current.closedAt == nil {
+            value = current
+        } else {
+            value = PickupJourney(id: PickupCheckoutMealSource.identity("urgent-meal-plan", [need.id]), savedAt: clock())
+        }
+        value.urgent.append(need)
+        value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
+        value.stockNeeds.append(StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required))
         do { _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds) }
         catch { self.error = pTr("Check the confirmed food amounts and matching units."); return false }
         return await save(value)
@@ -601,9 +832,29 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func settle(_ entry: SettlementEntry) async -> Bool {
-        await change { value in
+        guard ready, var value = journey, !saving, pending == nil else { return false }
+        do {
             guard value.pickup != nil else { throw PickupModelError.invalid }
-            try value.settlement.append(entry)
+            guard try value.settlement.append(entry) else {
+                // Another window or Records can change or erase the pickup after this model loads.
+                saving = true
+                defer { saving = false }
+                guard let store, let expected = storeRevisions[value.id],
+                      try await store.load(id: value.id)?.revision == expected else {
+                    await reloadAfterStaleRevision()
+                    return false
+                }
+                error = nil
+                return true
+            }
+            guard entry.occurredAt <= clock() else {
+                error = pTr("Choose the date the financial evidence was observed.")
+                return false
+            }
+            return await save(value)
+        } catch {
+            self.error = pTr("Check the amounts and units. Your saved pickup has not changed.")
+            return false
         }
     }
     static func validate(_ value: PickupJourney) throws {
@@ -615,6 +866,11 @@ struct PickupPersistenceLocation {
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
         try value.validateRecipientSends()
+        try value.mealSource?.validate()
+        if let history = value.mealRecovery {
+            try history.validate()
+            try value.validateRecoveryRawBasis(history)
+        }
         try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,
@@ -631,8 +887,14 @@ struct PickupPersistenceLocation {
                   review.choices.values.allSatisfy({ $0 != .keep }) else { throw PickupModelError.invalid }
         }
         for detail in value.needDetails {
+            let hasMealProvenance = detail.sourceOccurrenceID != nil || detail.sourceGroupID != nil || detail.sourceLedgerRevisionID != nil
+            if hasMealProvenance {
+                guard detail.sourceContributionID != nil, detail.sourceOccurrenceID != nil, detail.sourceLedgerRevisionID != nil else { throw PickupModelError.invalid }
+            }
             try detail.scheduledDay?.validate()
-            guard detail.leadTimeMinutes.map({ $0 >= 0 && $0 <= 525_600 }) ?? true else { throw PickupModelError.invalid }
+            guard detail.due.map({ $0.timeIntervalSince1970.isFinite }) ?? true else { throw PickupModelError.invalid }
+            guard [detail.leadTimeMinutes, detail.recoveryPreparation?.requiredLeadMinutes]
+                .compactMap({ $0 }).allSatisfy({ (0...525_600).contains($0) }) else { throw PickupModelError.invalid }
         }
         let plannedLineIDs = Set(value.basket?.current.lines.map(\.id) ?? []).union(noPurchaseLineIDs)
         guard Set(value.plannedNeeds.map(\.id)).count == value.plannedNeeds.count,
@@ -640,14 +902,22 @@ struct PickupPersistenceLocation {
         _ = try ConfirmedStockAllocator.allocate(lots: [], needs: value.plannedNeeds.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) })
         if let pickup = value.pickup {
             guard let basket = value.basket, let placement = basket.placements.first,
-                  pickup.orderID == placement.id, let lines = basket.reportedOrderLines,
-                  Set(pickup.orderLines.map(\.id)) == Set(lines.map(\.id)),
-                  pickup.orderLines.allSatisfy({ $0.branchID == value.context?.branchID }) else { throw PickupModelError.invalid }
+                  pickup.orderID == placement.id, let branch = value.context?.branchID,
+                  Dictionary(uniqueKeysWithValues: pickup.orderLines.map { ($0.id, $0) }) ==
+                    Dictionary(uniqueKeysWithValues: basket.physicalOrderLines(branch: branch).map { ($0.id, $0) }) else { throw PickupModelError.invalid }
             let actualLineIDs = Set(pickup.orderLines.map(\.id))
             guard value.needs.allSatisfy({ actualLineIDs.contains($0.orderLineID) || noPurchaseLineIDs.contains($0.orderLineID) }) else { throw PickupModelError.invalid }
             _ = try pickup.allocate(value.needs.filter { actualLineIDs.contains($0.orderLineID) })
         } else {
             guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }
+        }
+        let basketRevisionIDs = Set(value.basket?.revisions.map(\.id) ?? [])
+        var previousRevision: Int64 = -1
+        for earlier in value.earlierQuotes {
+            guard earlier.id > previousRevision, earlier.id < value.revision, basketRevisionIDs.contains(earlier.basketRevisionID)
+            else { throw PickupModelError.invalid }
+            _ = try CheckoutEngine.evaluate(earlier.quote, cap: earlier.cap)
+            previousRevision = earlier.id
         }
         if let quote = value.quote {
             guard let revisionID = value.quotedRevisionID,
@@ -673,7 +943,8 @@ struct PickupPersistenceLocation {
     }
 
     @discardableResult func startNextShop(accept ids: Set<UUID>, closing: [UUID: NextShopDisposition] = [:],
-                                          sourceID: UUID? = nil, sourceRevision: Int64? = nil) async -> Bool {
+                                          sourceID: UUID? = nil, sourceRevision: Int64? = nil,
+                                          reviewedMeals: NextShopMealNeeds? = nil) async -> Bool {
         guard let previous = journey, sourceID == nil || sourceID == previous.id,
               sourceRevision == nil || sourceRevision == previous.revision else {
             error = pTr("Reopen the next-shop review to use the current pickup.")
@@ -710,29 +981,18 @@ struct PickupPersistenceLocation {
                                                     expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))),
                                    status: closing[need.id]?.rawValue ?? "review")
             }
-            next.urgent = previous.urgent.filter { !$0.resolved }.compactMap { original in
-                var need = original
-                if let coverage = allocation?.demands.first(where: { $0.id == original.id }), let shortfall = coverage.shortfall {
-                    if shortfall == .zero { return nil }
-                    need.required = Quantity(amount: shortfall, unit: coverage.unit, originalLiteral: shortfall.description)
-                }
-                need.carriedFromID = previous.id
-                return need
+            let remaining = try previous.nextShopMealNeeds(closing: closing, at: clock())
+            guard reviewedMeals == nil || reviewedMeals == remaining else {
+                error = pTr("Reopen the next-shop review to use the current pickup.")
+                return false
             }
-            // Carry unresolved demands for review; old stock remains dated evidence in the prior journey.
+            next.urgent = remaining.urgent
+            next.carriedMeals = remaining.meals
             next.stockNeeds = next.urgent.map { need in
                 StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
             }
-            let handledLineIDs = Set(previous.deferred.filter { ["handled", "dismissed"].contains($0.status) }.map { $0.line.id })
-            next.carriedMeals = previous.carriedMeals.filter { !handledLineIDs.contains($0.orderLineID) }
-            if let coverage = allocation {
-                for unmet in coverage.demands where unmet.shortfall != .zero {
-                    if let original = previous.needs.first(where: { $0.id == unmet.id }), !handledLineIDs.contains(original.orderLineID) {
-                        let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: $0.description) } ?? original.amount
-                        next.carriedMeals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name, amount: remaining, priority: original.priority))
-                    }
-                }
-            }
+            let carriedIDs = Set(next.carriedMeals.map(\.id) + next.stockNeeds.map(\.id))
+            next.needDetails = previous.recoveryCurrentDetails.filter { carriedIDs.contains($0.id) }
             return await save(next, reviewing: previous.id)
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
     }

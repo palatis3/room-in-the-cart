@@ -1,0 +1,21 @@
+{
+  "status": "completed",
+  "command": [
+    "/usr/bin/xcrun",
+    "swift",
+    "test",
+    "--package-path",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2",
+    "--scratch-path",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution/build",
+    "--jobs",
+    "2"
+  ],
+  "manifestSHA256": "9e24726c0664b3abd7153e92a230080132c90b261d694efd43df076e7489ac30",
+  "startedAtUTC": "2026-11-08T15:01:18.150764+00:00",
+  "scope": "Pure speech command-ordering prototype; no AVFoundation or simulator.",
+  "pid": 50591,
+  "exitCode": 0,
+  "sourceUnchanged": true,
+  "finishedAtUTC": "2026-11-08T15:01:52.157330+00:00"
+}

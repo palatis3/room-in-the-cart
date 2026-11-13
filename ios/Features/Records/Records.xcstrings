@@ -1,6 +1,329 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Recovered copies selected for deletion: %lld.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered copies selected for deletion: %lld."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias recuperadas seleccionadas para eliminar: %lld."
+          }
+        }
+      }
+    },
+    "The selected records changed. Review them again before deleting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected records changed. Review them again before deleting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros seleccionados cambiaron. Revísalos antes de eliminarlos."
+          }
+        }
+      }
+    },
+    "Check the recipe text. The optional source must be an http or https web address without a username or password.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the recipe text. The optional source must be an http or https web address without a username or password."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto de la receta. La fuente opcional debe ser una dirección web que empiece por http o https, sin nombre de usuario ni contraseña."
+          }
+        }
+      }
+    },
+    "Saved recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recetas guardadas"
+          }
+        }
+      }
+    },
+    "Import and use recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import and use recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar y usar recetas"
+          }
+        }
+      }
+    },
+    "File source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen del archivo"
+          }
+        }
+      }
+    },
+    "Record details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles del registro"
+          }
+        }
+      }
+    },
+    "Compare versions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare versions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar versiones"
+          }
+        }
+      }
+    },
+    "Record source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen del registro"
+          }
+        }
+      }
+    },
+    "Record ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record ID"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID del registro"
+          }
+        }
+      }
+    },
+    "In this file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In this file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En este archivo"
+          }
+        }
+      }
+    },
+    "Current work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current work"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trabajo actual"
+          }
+        }
+      }
+    },
+    "Previously recovered on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously recovered on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperada anteriormente en este iPhone"
+          }
+        }
+      }
+    },
+    "Personal recovery copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal recovery copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de recuperación personal"
+          }
+        }
+      }
+    },
+    "Helper copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helper copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia para ayudantes"
+          }
+        }
+      }
+    },
+    "Selected references · %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected references · %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencias seleccionadas · %lld"
+          }
+        }
+      }
+    },
+    "Selection ID · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selection ID · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID de la selección · %@"
+          }
+        }
+      }
+    },
+    "No result was saved with this draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No result was saved with this draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardó ningún resultado con este borrador."
+          }
+        }
+      }
+    },
+    "Not entered": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not entered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin indicar"
+          }
+        }
+      }
+    },
     "%lld shopping lists · %lld reusable dinners": {
       "extractionState": "manual",
       "localizations": {
@@ -69,19 +392,19 @@
         }
       }
     },
-    "Absent here — recover separately": {
+    "Ready to recover a separate copy": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Absent here — recover separately"
+            "value": "Ready to recover a separate copy"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No está aquí — recuperar por separado"
+            "value": "Puedes recuperar una copia por separado"
           }
         }
       }
@@ -1666,6 +1989,23 @@
         }
       }
     },
+    "Shared pickup record": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pickup record"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de compra compartida"
+          }
+        }
+      }
+    },
     "Shopping list and dinners": {
       "extractionState": "manual",
       "localizations": {
@@ -1968,6 +2308,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta eliminación ya se confirmó. Reintentar completa la misma operación; no elimina un registro más reciente."
+          }
+        }
+      }
+    },
+    "This file contains no records to recover.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file contains no records to recover."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo no contiene registros para recuperar."
           }
         }
       }
@@ -2278,6 +2635,22 @@
         }
       }
     },
+    "Your selection changed. Review the selected records and source references, then prepare the file again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your selection changed. Review the selected records and source references, then prepare the file again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu selección cambió. Revisa los registros y las referencias de origen seleccionados y vuelve a preparar el archivo."
+          }
+        }
+      }
+    },
     "Your notes": {
       "extractionState": "manual",
       "localizations": {
@@ -2490,6 +2863,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo leer el registro guardado. Sus datos no se han reemplazado."
+          }
+        }
+      }
+    },
+    "This pickup’s history has been retired.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup’s history has been retired."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se retiró el historial de esta compra."
           }
         }
       }
@@ -2813,40 +3202,6 @@
         }
       }
     },
-    "Expanded": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expanded"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expandido"
-          }
-        }
-      }
-    },
-    "Collapsed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collapsed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contraído"
-          }
-        }
-      }
-    },
     "Captured in a separate recovered workspace.": {
       "extractionState": "manual",
       "localizations": {
@@ -2860,6 +3215,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "Capturada en un espacio de trabajo recuperado independiente."
+          }
+        }
+      }
+    },
+    "Shared pickup history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pickup history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de compra compartida"
+          }
+        }
+      }
+    },
+    "Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye revisiones guardadas de cestas y comidas, notas de cocina, entregas, decisiones y registros financieros. No restablece el acceso al hogar."
+          }
+        }
+      }
+    },
+    "Food allocation history was not captured in this copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food allocation history was not captured in this copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia no incluye el historial de asignación de alimentos."
+          }
+        }
+      }
+    },
+    "Food allocation history is included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food allocation history is included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye el historial de asignación de alimentos."
+          }
+        }
+      }
+    },
+    "Stock-lot history was not captured in this copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock-lot history was not captured in this copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia no incluye el historial de lotes."
+          }
+        }
+      }
+    },
+    "Stock-lot history is included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock-lot history is included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye el historial de lotes."
+          }
+        }
+      }
+    },
+    "Save cancelled. Your file is still ready.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save cancelled. Your file is still ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se canceló el guardado. Tu archivo sigue listo para guardar."
+          }
+        }
+      }
+    },
+    "File saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo guardado."
+          }
+        }
+      }
+    },
+    "Encrypted recovery file saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted recovery file saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el archivo de recuperación cifrado."
+          }
+        }
+      }
+    },
+    "File saved. Its backup date is unavailable on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File saved. Its backup date is unavailable on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el archivo. La fecha de esta copia de seguridad no está disponible en este iPhone."
+          }
+        }
+      }
+    },
+    "No saved recipes yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved recipes yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay recetas guardadas."
+          }
+        }
+      }
+    },
+    "Save these recipes to your library. Open a saved recipe to review its ingredients for a pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save these recipes to your library. Open a saved recipe to review its ingredients for a pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda estas recetas en tu biblioteca. Abre una receta guardada para revisar sus ingredientes y usarlos en una recogida."
+          }
+        }
+      }
+    },
+    "Save reviewed recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed recipes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar las recetas revisadas"
           }
         }
       }

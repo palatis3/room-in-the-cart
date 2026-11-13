@@ -1,0 +1,14 @@
+[
+  {
+    "member": "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+    "size": 75552560,
+    "sha256": "e4ffba21ddbde5173cfc4ff4b5f2194972bb11944a139b31eb18642bcba896e7",
+    "path": ".build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart.debug.dylib"
+  },
+  {
+    "member": "Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+    "size": 58144,
+    "sha256": "1e88a643465952d155ce7fbc0cbc59b10ca752e45e18ffa7e4603a001def4b20",
+    "path": ".build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart"
+  }
+]

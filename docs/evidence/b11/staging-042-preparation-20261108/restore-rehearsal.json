@@ -1,0 +1,55 @@
+{
+  "status": "local actual backup restore and042 upgrade rehearsal verified; live remains041",
+  "runtimeSource": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "migration042SHA256": "1bc54c2d91fe9a38f494078463b95aaec0b20314fc486ff23ae141edc93751f8",
+  "capture": {
+    "databaseVersion": 41,
+    "status": "captured",
+    "captureManifestSHA256": "6382b309ae565566ddbac29e6028b563599ef4719438d179dd8840d1fa9e78b9",
+    "fullDumpExit": 0,
+    "keychainReopenAndHashes": true,
+    "detached": true
+  },
+  "rehearsal": {
+    "hostedAt": 41,
+    "verifiedLocalUpgrade": 42,
+    "restores": 2,
+    "originalTables": 130,
+    "originalNonRegistryTablesPreserved": 129,
+    "originalRows": 123,
+    "upgradedTables": 131,
+    "newAmendments": 0,
+    "baselineByteUnchanged": true,
+    "upgradeResultSHA256": "12aab222d5b005faa59789a8f2e8d787944c274b45d32774164629c681ad0b9d",
+    "captureManifestSHA256": "6382b309ae565566ddbac29e6028b563599ef4719438d179dd8840d1fa9e78b9",
+    "bothKeychainImagesVerifiedAndDetached": true
+  },
+  "reviewLockSHA256": "89ba73a44d6ffd4e6f85712a14d27aa0ac6c1ce3e15761d26ff7239020a5e65e",
+  "captureReceiptSHA256": "c1a40aea35084aac02b010ef2c34acc75f52f01d1ee941b44e7e5eecbdc8939f",
+  "rehearsalReceiptSHA256": "34070fdfd9fbba339d6ae2005a54e92d96f00e6209f89872b434d539b3c8d9e2",
+  "firstRehearsal": {
+    "status": "failed exact catalog verifier; preserved",
+    "cause": "Existing FK target deparsed auth.users versus users due restored login search_path taking effect only for a new session.",
+    "correctedBy": "Pin pg_catalog only during supplemental catalog collection, then restore previous session setting. No expected schema delta or string normalization changed.",
+    "twoBaselineRestoresPassed": true,
+    "serversStopped": true,
+    "baselineByteUnchanged": true
+  },
+  "rendererRegression": {
+    "status": "passed",
+    "synthetic_only": true,
+    "old_stale_vs_fresh_mismatch_reproduced": true,
+    "fixed_stale_vs_fresh_equal": true,
+    "caller_search_path_restored_on_success_and_exception": true,
+    "wrong_referenced_schema_remains_detected": true,
+    "wrong_delete_action_remains_detected": true,
+    "existing_full042_positive_unchanged": true,
+    "no_actual_restore_or_mount_or_hosted_calls": true
+  },
+  "limits": [
+    "Selected Auth/public/ritc restore, not entire managed-provider disaster recovery.",
+    "Storage object bytes, Vault keys and password reprovisioning outside proof.",
+    "No042 hosted migration/deployment approval or execution.",
+    "041 runtime rollback unsafe after amendment use; reviewed maintenance/forward-repair path required."
+  ]
+}

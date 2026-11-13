@@ -202,7 +202,7 @@ export class SharedStoreQuotes {
                 const quote = { ...shop.quote, complete: false, fee: { kind: 'fixed', amountMinor: null }, discountsMinor: null, taxesMinor: null, depositsMinor: null,
                     observedAt: new Date(ctx.now.getTime() - 1000).toISOString(), expiresAt: ctx.now.toISOString() };
                 await this.repo.execute(ctx, parseCommand({ v: 1, clientKey: input.operationId, replayWindow: (await this.repo.window(ctx)).id,
-                    kind: 'shop.patch', shopId, base: { shopRevision: revision, authorityEpoch: shop.authority_epoch }, body: { lines, quote } }));
+                    kind: 'shop.patch', shopId, base: { shopRevision: revision, authorityEpoch: shop.authority_epoch }, body: { lines, quote } }),undefined,undefined,true);
                 revision += 1;
                 await ctx.db.query('INSERT INTO ritc.store_quote_adoption(household_id,shop_id,revision,pair_id,choice,actor_id) VALUES($1,$2,$3,$4,$5,$6)', [ctx.householdId, shopId, revision, p.pair_id, selection.choice, ctx.member.member_id]);
                 await ctx.db.query('UPDATE ritc.shop SET store_basis_revision=$3,store_review_required=true WHERE household_id=$1 AND shop_id=$2', [ctx.householdId, shopId, revision]);

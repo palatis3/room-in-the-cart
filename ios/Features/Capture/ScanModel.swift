@@ -38,12 +38,14 @@ import Combine
             }
         }
     }
-    func paste(_ values: [String]) {
-        guard !closed, !busy else { return }
+    @discardableResult func paste(_ values: [String]) -> Bool {
+        guard !closed, !busy else { return false }
         let value = values.joined(separator: "\n")
-        do { try ScanLimits.text(value) } catch { failure = .tooLarge; return }
+        do { try ScanLimits.text(value) } catch { failure = .tooLarge; return false }
         draftBeforePhoto = nil
         pastedOriginal = value; accepted = nil; candidate = nil; source = .paste; text = value
+        failure = nil
+        return true
     }
     func acceptCandidate() {
         guard !closed, !busy, let candidate else { return }

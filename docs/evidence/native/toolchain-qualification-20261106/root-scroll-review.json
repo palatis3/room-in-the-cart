@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-06T18:14:31.743944+00:00",
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "runID": 42261730525,
+  "attempt": 1,
+  "jobID": 128057841463,
+  "originalArchiveArtifactID": 13526949819,
+  "originalArchiveSHA256": "06b89fd235aa764d0afcfc2d5d6e3f848c72ce860476d5be0db47d2a738c7db5",
+  "independentlyMatchedEvidenceHashes": 6,
+  "originalResultDatabaseMember": "scroll/Tests.xcresult/database.sqlite3",
+  "originalResultDatabaseSHA256": "c3549a3a5a8ec52e8b7f38e596b39e573af39e4a2b7de82c887423aa7f00e7d3",
+  "originalResultDatabaseRows": 3,
+  "originalResultDatabaseMetricIDs": [
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak"
+  ],
+  "originalResultDatabaseContainsRequiredScrollSeries": false,
+  "readOnlyTemporaryDatabaseDeleted": true,
+  "nativeCasePassed": true,
+  "missingMetricClosesOriginalIssue": false,
+  "appLedgerDatabaseReadback": "not reached; independent of the XCTest result database inspected above",
+  "releaseAcceptance": false
+}

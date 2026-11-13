@@ -1,0 +1,95 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184704871,
+  "artifactID": 13487791035,
+  "artifactName": "iphone-test-products-1",
+  "artifactSize": 50622857,
+  "sha256": "8da3dff5a1a8977c4490c4d45ad08a6d07980112d3050168d02e2bddd29cfe8b",
+  "githubDigestVerified": true,
+  "generatedPlanByteIdentical": true,
+  "models": 601,
+  "ordinaryUI": 51,
+  "groupCounts": {
+    "ui-01": 3,
+    "ui-02": 4,
+    "ui-03": 5,
+    "ui-04": 5,
+    "ui-05": 5,
+    "ui-06": 5,
+    "ui-07": 6,
+    "ui-08": 6,
+    "ui-09": 6,
+    "ui-10": 6
+  },
+  "disabledTests": [
+    "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute()",
+    "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing()"
+  ],
+  "testPlan": "RoomInTheCart",
+  "sourceSHA256": {
+    "scripts/plan_ios_tests.py": "ecb050711c2d04bedb77cb2d44a605734a5fb1c7d4141963ebd6720948c6cd62",
+    "scripts/ios_test_durations.json": "e2845b92db67176e6bc93b10dcaeac1d3f2ec2a1775e32a0dc2ae9f3c2d81cfe"
+  },
+  "comparedFilesSHA256": {
+    "manifest.json": "6a447de08e1f43c029afc8f594db9f2bb97045c2ac735886cee2181129568b48",
+    "models.txt": "625a877913e5b4d25a3b55c438662d4a0942a5d4470d6385aa6f48b0d36c8cad",
+    "ui-01.txt": "1fb3a764baab6a78feea196c20fd75603439ed316f5d925ba010c7e2f303cc04",
+    "ui-02.txt": "46712639a64c91da12df08dfeddc58045271bf36d01a0a2d8e2040f001e2e46a",
+    "ui-03.txt": "428e3157cc5a5c6ed000bbb6d102ebb96d9e0ce0f6358a0c00258325a879107d",
+    "ui-04.txt": "57effa4443ea49e34b3b9d618a21c9624f4aa699bf2a1efaba9c7012bbabd6d9",
+    "ui-05.txt": "bddf624d0750e90e48e6d656150c18610f8e7fe8306ae5de2476b2ed5e3ef162",
+    "ui-06.txt": "e7efd49b67593c3cfbbc06a94011d0ae5f2525b782c7a137a31a4df83d6f5ad3",
+    "ui-07.txt": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+    "ui-08.txt": "8cae7554555cb6ec065439eb3322b2bca7f11d6e5d88e0c5d021c796b62a8c01",
+    "ui-09.txt": "5f69dc5804d2d3085a77f440d317f1772ed0abce1413a323540c53ebf7a80ad2",
+    "ui-10.txt": "55a0fded66e882c99635fe8585d680bd59dc4c9a2fab2b408f2ccd395ff2cb0d"
+  },
+  "enumerationSHA256": "d1c85d07a51f506681f3a4c362b57d96913ed47744dc89acf1f256cd94dbae3d",
+  "archiveInspection": {
+    "zipMembers": 1,
+    "tarMembers": 365,
+    "tarDeclaredBytes": 190413984,
+    "largestTarMemberBytes": 52414288,
+    "tarLinksNotExtracted": 0,
+    "extractedOnly": [
+      "manifest.json",
+      "models.txt",
+      "test-enumeration.json",
+      "ui-01.txt",
+      "ui-02.txt",
+      "ui-03.txt",
+      "ui-04.txt",
+      "ui-05.txt",
+      "ui-06.txt",
+      "ui-07.txt",
+      "ui-08.txt",
+      "ui-09.txt",
+      "ui-10.txt"
+    ],
+    "bounds": {
+      "zipBytes": 104857600,
+      "tarMemberBytes": 536870912,
+      "tarTotalBytes": 2147483648,
+      "tarMembers": 50000,
+      "planFileBytes": 2097152
+    }
+  },
+  "limits": [
+    "Inventory/plan only; native execution is independently verified from result artifacts.",
+    "Only regular compiled test-plan files were extracted; product files and links were never extracted or executed.",
+    "No raw Records result evidence was downloaded or inspected."
+  ]
+}

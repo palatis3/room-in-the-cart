@@ -1,0 +1,30 @@
+{
+  "README.md": {
+    "bytes": 1894,
+    "sha256": "6eeb4676a3c14f0749022fa8d57856665ac84f39e9b8651a129e6dd3c3954024"
+  },
+  "build-review.json": {
+    "bytes": 599,
+    "sha256": "e5897fa3911c87b93b3cfff333441984b48412da804f056c4c983ec1f80925af"
+  },
+  "bundle-check.txt": {
+    "bytes": 105,
+    "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76"
+  },
+  "changes.patch": {
+    "bytes": 28378,
+    "sha256": "520cf08514e76d649d29386c824ff0be536f80243e471849a22e03da1e604327"
+  },
+  "fixed-source-manifest.json": {
+    "bytes": 69846,
+    "sha256": "24fc718e4ad3173ede4888f4ba9eccac148869e7cad3b1a30481773933a411ca"
+  },
+  "provenance.json": {
+    "bytes": 928,
+    "sha256": "03804074e332d19c8d4d65c7061d0d43613b40569f805ca1b652695eb931bda5"
+  },
+  "run.json": {
+    "bytes": 33066,
+    "sha256": "bd1e5b913c283ea4caf676209be6bf82344eca7319023eb8538ea6454c6855c7"
+  }
+}

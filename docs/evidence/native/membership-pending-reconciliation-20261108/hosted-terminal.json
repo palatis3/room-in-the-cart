@@ -1,0 +1,70 @@
+{
+  "headSha": "d1705d920595be12a3eb8c378f50ad04dbf65ccd",
+  "conclusion": "success",
+  "status": "completed",
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944",
+  "createdAt": "2026-11-09T01:15:17Z",
+  "updatedAt": "2026-11-09T01:28:09Z",
+  "jobs": [
+    {
+      "databaseId": 128926690657,
+      "name": "Validate shared StoreKit test plan",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:15:21Z",
+      "completedAt": "2026-11-09T01:15:33Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926690657"
+    },
+    {
+      "databaseId": 128926690943,
+      "name": "sanitizers (thread)",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:15:21Z",
+      "completedAt": "2026-11-09T01:18:20Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926690943"
+    },
+    {
+      "databaseId": 128926691220,
+      "name": "sanitizers (address)",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:15:22Z",
+      "completedAt": "2026-11-09T01:18:26Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926691220"
+    },
+    {
+      "databaseId": 128926764537,
+      "name": "Build shared LocalStoreKit test products",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:15:36Z",
+      "completedAt": "2026-11-09T01:20:42Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128926764537"
+    },
+    {
+      "databaseId": 128928192234,
+      "name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:20:45Z",
+      "completedAt": "2026-11-09T01:28:03Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128928192234"
+    },
+    {
+      "databaseId": 128928192291,
+      "name": "storekit (en, US English \u2014 local StoreKit)",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:20:45Z",
+      "completedAt": "2026-11-09T01:26:48Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128928192291"
+    },
+    {
+      "databaseId": 128930166528,
+      "name": "StoreKit build and both locales gate",
+      "conclusion": "success",
+      "startedAt": "2026-11-09T01:28:06Z",
+      "completedAt": "2026-11-09T01:28:08Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944/job/128930166528"
+    }
+  ],
+  "retainedInputsSHA256": {
+    "hosted-terminal.json": "e8ca8ee3765a3e6c99b2824fb20c2f317521a404193b687b61a6167d25e615c7",
+    "hosted-run.log": "6167e5e81ea4a9c2d2f7d2de48497e89c9337e1e8b9d4db33916d4d35e5b239e"
+  }
+}

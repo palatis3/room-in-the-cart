@@ -1,0 +1,234 @@
+{
+  "checkedAt": "2026-11-06T22:32:02.206129+00:00",
+  "mode": "protected",
+  "deployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "origin": "https://room-in-the-cart-staging-imq6dujee-doorframe-staging.vercel.app",
+  "checks": [
+    {
+      "check": "health",
+      "path": "/health",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "session",
+      "path": "/v1/session",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "email-availability",
+      "path": "/v1/auth/session",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "unauthenticated",
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "check": "invalid-token",
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "check": "wrong-origin",
+      "path": "/v1/session",
+      "status": 403,
+      "expected": 403,
+      "pass": true
+    },
+    {
+      "check": "candidate-web",
+      "path": "/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/help",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/help/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/privacy",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/privacy/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/terms",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/terms/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/support",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/support/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/requests",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/requests/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/invite",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/invite/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/view",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/view/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/child-invite",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/child-invite/",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/apple-touch-icon.png",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/assets/index-B9I61_lh.css",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/assets/index-DyqgPDmw.js",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "df99574e742b11478f4cd422d59481a8cbdf112b8b7e33622976efb2fa3b121a"
+    },
+    {
+      "check": "candidate-web",
+      "path": "/icon.png",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "expectedSHA256": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914"
+    },
+    {
+      "check": "unauthenticated-maintenance",
+      "path": "/internal/maintenance",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "unauthenticated-maintenance",
+      "path": "/api/maintenance",
+      "status": 401,
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "providerActivation": false,
+  "databaseMutation": false,
+  "scope": "Exact web-byte delivery and anonymous API boundaries; real authenticated household journey is not tested."
+}

@@ -1,0 +1,185 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184704871,
+  "group": "ui-01",
+  "artifactID": 13488854247,
+  "archiveSHA256": "8b4c6bf2223e8076d95064525e03bfc130309429fd9308ed8ffe8b234adf94b8",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "selectedInShard": 3,
+  "passedInShard": 2,
+  "failedInShard": 1,
+  "strictReplayExit": 1,
+  "runtimeWarnings": 0,
+  "failure": "Test exceeded execution time allowance of12minutes; runner restarted.",
+  "lastCompletedBusinessCheck": {
+    "sourceLine": 417,
+    "call": "verifyChosenDinnerInWeek() after final restart; reveal button identifier prefix dinnerOccurrence- and label containing Wrap dinner",
+    "logRelativeSeconds": 718.21
+  },
+  "nextTarget": {
+    "sourceLine": 420,
+    "query": "app.staticTexts.matching(NSPredicate(format:\"label == %@\",\"Next shop\")).firstMatch",
+    "firstExistsCheckSeconds": 718.45,
+    "targetFrame": null,
+    "frameLimit": "Target absent at first existence check; final coordinate snapshots have app root only, so no observed title frame."
+  },
+  "firstRepeatedAction": {
+    "startSeconds": 718.91,
+    "startPoint": [
+      201.0,
+      644.8
+    ],
+    "endPoint": [
+      201.0,
+      257.2
+    ],
+    "appFrame": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "activityPath": [
+      "Press Target Application from(201.0,644.8)to(201.0,257.2)",
+      "Synthesize event",
+      "Test exceeded execution time allowance of12minutes"
+    ]
+  },
+  "searchActions": [
+    {
+      "seconds": 718.91,
+      "direction": "upward"
+    },
+    {
+      "seconds": 725.56,
+      "direction": "upward"
+    },
+    {
+      "seconds": 729.14,
+      "direction": "upward"
+    },
+    {
+      "seconds": 732.32,
+      "direction": "upward"
+    },
+    {
+      "seconds": 736.51,
+      "direction": "upward"
+    },
+    {
+      "seconds": 741.67,
+      "direction": "upward"
+    },
+    {
+      "seconds": 749.24,
+      "direction": "upward"
+    },
+    {
+      "seconds": 754.18,
+      "direction": "upward"
+    },
+    {
+      "seconds": 759.17,
+      "direction": "upward"
+    },
+    {
+      "seconds": 763.61,
+      "direction": "upward"
+    },
+    {
+      "seconds": 768.79,
+      "direction": "upward"
+    },
+    {
+      "seconds": 774.23,
+      "direction": "upward"
+    },
+    {
+      "seconds": 779.87,
+      "direction": "upward"
+    },
+    {
+      "seconds": 785.2,
+      "direction": "upward"
+    },
+    {
+      "seconds": 789.97,
+      "direction": "upward"
+    },
+    {
+      "seconds": 793.6,
+      "direction": "upward"
+    },
+    {
+      "seconds": 796.96,
+      "direction": "downward"
+    },
+    {
+      "seconds": 800.13,
+      "direction": "downward"
+    }
+  ],
+  "searchReturnedSeconds": 803.83,
+  "revealHelper": {
+    "sourceLine": 1150,
+    "maxScrolls": 24,
+    "absentTargetSearch": "upward first16attempts, then downward"
+  },
+  "animationIdleTimeoutMessages": 0,
+  "businessMilestones": {
+    "Free-dinner-and-protected-lunch": {
+      "currentSeconds": 171.47,
+      "priorD0Seconds": 90.96
+    },
+    "Free-whole-packs-saved-for-checkout-review": {
+      "currentSeconds": 291.97,
+      "priorD0Seconds": 161.53
+    },
+    "Free-frozen-placement-unconfirmed": {
+      "currentSeconds": 348.43,
+      "priorD0Seconds": 207.25
+    },
+    "Free-observed-short-fill": {
+      "currentSeconds": 434.15,
+      "priorD0Seconds": 260.97
+    },
+    "Free-complete-cook-note": {
+      "currentSeconds": 522.08,
+      "priorD0Seconds": 317.33
+    },
+    "Free-settlement-keeps-food-separate": {
+      "currentSeconds": 630.06,
+      "priorD0Seconds": 384.15
+    },
+    "Free-one-dinner-reused-for-next-shop": {
+      "currentSeconds": 687.97,
+      "priorD0Seconds": 417.26
+    },
+    "Free-saved-repair-decision-without-inferred-outcome": {
+      "currentSeconds": 815.26,
+      "priorD0Seconds": 484.38
+    }
+  },
+  "visibleState": {
+    "image": "ui01-journey-attachments/9E3C9292-48F1-4B74-B11C-E56F1AC63539.png",
+    "capturedSeconds": 687.97,
+    "observation": "Before final restart: This week screen scrolled to bottom portion, Unscheduled Wrap dinner Servings6, Dinner changes saved; no keyboard. Next shop title not visible in this screenshot.",
+    "notFailureInstant": true
+  },
+  "postDeadlineLog": "Search eventually returns803.83s; Records/Family decision history/Saved pickup decisions flow continues, repair/outcome assertions and final capture logged815.26s, then teardown. No passing test completion; timeout/restart retained.",
+  "sourceSHA256": "4dd4a776cd60aeec66f8d6ca0a78efd1793f857944fd25e7985f7a2f68157cc9",
+  "activitiesSHA256": "d85aa4bb7a44c470a30361e2f7f516289bda24d62ef8fcb40785556bfc1ec9c1",
+  "logSHA256": "b5370d4f2bfbaa251bdf251109e730894780888bf94544e1555cca055347379e",
+  "attachments": {
+    "9E3C9292-48F1-4B74-B11C-E56F1AC63539.png": "032e9d486818a3279cb12977093cce607938ce0efe5367c83c7ee8f9dada6228",
+    "A20D3FCE-CE5E-4871-BE0A-C4569AA45655.txt": "24fd7a28ae623649dca35573fd1f704178910542d003380a9381d3949ca8c651",
+    "D1E57413-5CF6-4834-BD39-103751A8B5E9": "f34f249413a688c243da6f1a478231ff7e0a426ef1791ba191189408090aea9d",
+    "6E7F2B3F-7AA6-4875-9402-754F7B4B3E48": "f34f249413a688c243da6f1a478231ff7e0a426ef1791ba191189408090aea9d"
+  },
+  "limits": [
+    "Whole journey is slower across milestones versus prior d0 pass486.160s; comparison is observational, not controlled attribution.",
+    "No evidence here identifies a startup migration failure or the former stock/quote keyboard idle stall as the cause.",
+    "No time limit, assertion, or warning guard relaxed; no retry/source change by collector.",
+    "Final logged capture after deadline is not retained as a completed attachment; available screenshot precedes final restart."
+  ]
+}

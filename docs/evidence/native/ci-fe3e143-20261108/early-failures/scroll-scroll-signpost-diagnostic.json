@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "captureStatus": "ok",
+  "activityStatus": "ok",
+  "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+  "windows": [
+    {
+      "case": "warm-up",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.583
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 1",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.567
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 2",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.569
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 3",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.584
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 4",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.549
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 5",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.55
+        }
+      ]
+    }
+  ],
+  "parsedEventCount": 24,
+  "candidateLineCount": 24,
+  "unparsedCandidateCount": 0,
+  "timeZoneOfLog": "UTC",
+  "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+  "matchedProcessCount": 1,
+  "status": "captured"
+}

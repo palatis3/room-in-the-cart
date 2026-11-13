@@ -1,0 +1,22 @@
+{
+  "runID": 42428215935,
+  "attempt": 1,
+  "candidate": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "artifactID": 13597417339,
+  "name": "iphone-results-ui-01-1",
+  "apiSize": 20615338,
+  "apiDigest": "sha256:adb5a92cb85f6d9433f620636bfa7b8d4c4ec62cde00ec60b350aa9fe477a5fe",
+  "extracted": true,
+  "limits": {
+    "archive": 256000000,
+    "member": 50000000,
+    "total": 1000000000,
+    "members": 50000,
+    "ratio": 1000
+  },
+  "sha256": "adb5a92cb85f6d9433f620636bfa7b8d4c4ec62cde00ec60b350aa9fe477a5fe",
+  "digestVerified": true,
+  "members": 95,
+  "expandedBytes": 21854304,
+  "oversizedMembers": []
+}

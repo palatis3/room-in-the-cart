@@ -78,19 +78,9 @@ public struct ChildNativeAuthAdmitIntent: Codable, Equatable, Identifiable, Send
 }
 
 extension ChildInvitationAccess {
-    /// Reads continuity claims only from an access token already accepted through AdultAuth's authenticated provider /user check.
-    /// This parser grants no authority. The service verifies JWT signatures, current sessions, confirmed email, OTP AMR and admission.
     static func verifiedProjection(_ access: AdultAccess, expectedIssuer: String) throws -> Self {
-        let parts = access.accessToken.split(separator: ".", omittingEmptySubsequences: false)
-        guard parts.count == 3, parts.allSatisfy({ !$0.isEmpty }), parts[1].utf8.count <= 32_768,
-              parts[1].range(of: "^[A-Za-z0-9_-]+$", options: .regularExpression) != nil else { throw ClientError.sessionNeeded }
-        let payload = String(parts[1]); let padding = String(repeating: "=", count: (4 - payload.utf8.count % 4) % 4)
-        guard let data = Data(base64Encoded: payload.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/") + padding),
-              GuardianSecret.canonical(data) == payload else { throw ClientError.sessionNeeded }
-        struct Claims: Decodable { let iss: String; let sub: String; let session_id: String }
-        guard let claims = try? JSONDecoder().decode(Claims.self, from: data), claims.iss == expectedIssuer,
-              claims.sub == access.identity.subject, UUID(uuidString: claims.session_id) != nil else { throw ClientError.sessionNeeded }
-        let value = Self(issuer: claims.iss, subject: claims.sub, sessionID: claims.session_id, accessToken: access.accessToken)
+        let sessionID = try access.verifiedSessionID(expectedIssuer: expectedIssuer)
+        let value = Self(issuer: expectedIssuer, subject: access.identity.subject, sessionID: sessionID, accessToken: access.accessToken)
         try value.validate(); return value
     }
 }

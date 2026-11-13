@@ -1,0 +1,9 @@
+{
+  "priorSourceSHA256": "cb7377ee35a0d7fbe078450fc54a52d41c336acbc7db1f34f723d5626ab14c6b",
+  "priorNativeExit": 65,
+  "priorStrictExit": 1,
+  "restoredSiblingBase": "/Users/palatis/Room in the Cart/.build/DinnerTopInsetNov08/preserved/source",
+  "change": "Use native inline title only in supply editor with previously behavior-passing sibling row",
+  "patchSHA256": "6a67e63fbc8b49469bad23671a042d730db407a146841e16839b0f0bff86b8e5",
+  "preparedAt": "2026-11-09T01:46:54.203770+00:00"
+}

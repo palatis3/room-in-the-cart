@@ -1,0 +1,447 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName" : "RITC-Placed-Receipt-Nov07",
+      "modelName" : "iPhone 17",
+      "osBuildNumber" : "23C54",
+      "osVersion" : "26.2",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "0.0055s",
+                  "durationInSeconds" : 0.0054759979248046875,
+                  "name" : "testExplicitRepeatWaitsForStopAcknowledgment()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testExplicitRepeatWaitsForStopAcknowledgment()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testExplicitRepeatWaitsForStopAcknowledgment",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0017s",
+                  "durationInSeconds" : 0.001654982566833496,
+                  "name" : "testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.084s",
+                  "durationInSeconds" : 0.08375406265258789,
+                  "name" : "testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0012s",
+                  "durationInSeconds" : 0.0011739730834960938,
+                  "name" : "testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0011s",
+                  "durationInSeconds" : 0.0010809898376464844,
+                  "name" : "testIdlePreparationCancellationDoesNotRequireNativeStopSuccess()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testIdlePreparationCancellationDoesNotRequireNativeStopSuccess()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testIdlePreparationCancellationDoesNotRequireNativeStopSuccess",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.019s",
+                  "durationInSeconds" : 0.01857888698577881,
+                  "name" : "testInterruptionEndedShouldResumeNotificationNeverRestarts()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testInterruptionEndedShouldResumeNotificationNeverRestarts()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testInterruptionEndedShouldResumeNotificationNeverRestarts",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0013s",
+                  "durationInSeconds" : 0.0013240575790405273,
+                  "name" : "testInvalidationCancelsExplicitRepeatWhileStopIsHeld()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testInvalidationCancelsExplicitRepeatWhileStopIsHeld()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testInvalidationCancelsExplicitRepeatWhileStopIsHeld",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0013s",
+                  "durationInSeconds" : 0.0012979507446289062,
+                  "name" : "testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.21s",
+                  "durationInSeconds" : 0.21077501773834229,
+                  "name" : "testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0018s",
+                  "durationInSeconds" : 0.0018019676208496094,
+                  "name" : "testRepeatRechecksStartDeadlineAfterStopAcknowledgment()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testRepeatRechecksStartDeadlineAfterStopAcknowledgment()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testRepeatRechecksStartDeadlineAfterStopAcknowledgment",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0011s",
+                  "durationInSeconds" : 0.0010759830474853516,
+                  "name" : "testRevocationAndFailedStopRemainExplicitlyRetryable()",
+                  "nodeIdentifier" : "CookReadbackAsyncIntegrationTests/testRevocationAndFailedStopRemainExplicitlyRetryable()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests/testRevocationAndFailedStopRemainExplicitlyRetryable",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "CookReadbackAsyncIntegrationTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackAsyncIntegrationTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            },
+            {
+              "children" : [
+                {
+                  "duration" : "0.0011s",
+                  "durationInSeconds" : 0.0011169910430908203,
+                  "name" : "testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback()",
+                  "nodeIdentifier" : "CookReadbackTests/testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0016s",
+                  "durationInSeconds" : 0.0016169548034667969,
+                  "name" : "testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog()",
+                  "nodeIdentifier" : "CookReadbackTests/testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00086s",
+                  "durationInSeconds" : 0.0008609294891357422,
+                  "name" : "testDeniedSourceAndPrivateBudgetCannotPlay()",
+                  "nodeIdentifier" : "CookReadbackTests/testDeniedSourceAndPrivateBudgetCannotPlay()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testDeniedSourceAndPrivateBudgetCannotPlay",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00076s",
+                  "durationInSeconds" : 0.000762939453125,
+                  "name" : "testExpiredAuthorityStopsCurrentPlayback()",
+                  "nodeIdentifier" : "CookReadbackTests/testExpiredAuthorityStopsCurrentPlayback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testExpiredAuthorityStopsCurrentPlayback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0008s",
+                  "durationInSeconds" : 0.0008009672164916992,
+                  "name" : "testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID()",
+                  "nodeIdentifier" : "CookReadbackTests/testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00082s",
+                  "durationInSeconds" : 0.0008209943771362305,
+                  "name" : "testMissingPreparedVoicePreservesVisibleTextWithoutFallback()",
+                  "nodeIdentifier" : "CookReadbackTests/testMissingPreparedVoicePreservesVisibleTextWithoutFallback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testMissingPreparedVoicePreservesVisibleTextWithoutFallback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0009s",
+                  "durationInSeconds" : 0.0008989572525024414,
+                  "name" : "testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation()",
+                  "nodeIdentifier" : "CookReadbackTests/testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00077s",
+                  "durationInSeconds" : 0.0007749795913696289,
+                  "name" : "testPlaybackUsesExactAuthorizedDatedProjection()",
+                  "nodeIdentifier" : "CookReadbackTests/testPlaybackUsesExactAuthorizedDatedProjection()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testPlaybackUsesExactAuthorizedDatedProjection",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0019s",
+                  "durationInSeconds" : 0.0019420385360717773,
+                  "name" : "testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop()",
+                  "nodeIdentifier" : "CookReadbackTests/testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0009s",
+                  "durationInSeconds" : 0.000903010368347168,
+                  "name" : "testResumeRechecksAuthorityAndRequiresExplicitAction()",
+                  "nodeIdentifier" : "CookReadbackTests/testResumeRechecksAuthorityAndRequiresExplicitAction()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testResumeRechecksAuthorityAndRequiresExplicitAction",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0019s",
+                  "durationInSeconds" : 0.0018999576568603516,
+                  "name" : "testRouteCloseCannotBeReactivated()",
+                  "nodeIdentifier" : "CookReadbackTests/testRouteCloseCannotBeReactivated()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testRouteCloseCannotBeReactivated",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0035s",
+                  "durationInSeconds" : 0.0034780502319335938,
+                  "name" : "testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner()",
+                  "nodeIdentifier" : "CookReadbackTests/testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00093s",
+                  "durationInSeconds" : 0.0009260177612304688,
+                  "name" : "testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback()",
+                  "nodeIdentifier" : "CookReadbackTests/testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00068s",
+                  "durationInSeconds" : 0.0006810426712036133,
+                  "name" : "testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog()",
+                  "nodeIdentifier" : "CookReadbackTests/testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0007s",
+                  "durationInSeconds" : 0.0006989240646362305,
+                  "name" : "testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback()",
+                  "nodeIdentifier" : "CookReadbackTests/testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00088s",
+                  "durationInSeconds" : 0.0008770227432250977,
+                  "name" : "testVoiceOverIsExclusiveAndDoesNotAutoResume()",
+                  "nodeIdentifier" : "CookReadbackTests/testVoiceOverIsExclusiveAndDoesNotAutoResume()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests/testVoiceOverIsExclusiveAndDoesNotAutoResume",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "CookReadbackTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookReadbackTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            },
+            {
+              "children" : [
+                {
+                  "duration" : "0.016s",
+                  "durationInSeconds" : 0.01591503620147705,
+                  "name" : "testActiveFalseStopBypassesGettersButKeepsStartBarrierUntilExplicitRetry()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testActiveFalseStopBypassesGettersButKeepsStartBarrierUntilExplicitRetry()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testActiveFalseStopBypassesGettersButKeepsStartBarrierUntilExplicitRetry",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.017s",
+                  "durationInSeconds" : 0.016805052757263184,
+                  "name" : "testActiveStopBypassesHeldStateGettersAndCallsNativeStopExactlyOnce()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testActiveStopBypassesHeldStateGettersAndCallsNativeStopExactlyOnce()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testActiveStopBypassesHeldStateGettersAndCallsNativeStopExactlyOnce",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0053s",
+                  "durationInSeconds" : 0.005251049995422363,
+                  "name" : "testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0064s",
+                  "durationInSeconds" : 0.0064040422439575195,
+                  "name" : "testEngineCreationCallsAndDestructionUseOneNonMainThread()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testEngineCreationCallsAndDestructionUseOneNonMainThread()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testEngineCreationCallsAndDestructionUseOneNonMainThread",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.016s",
+                  "durationInSeconds" : 0.016209006309509277,
+                  "name" : "testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0049s",
+                  "durationInSeconds" : 0.004904031753540039,
+                  "name" : "testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.037s",
+                  "durationInSeconds" : 0.03707993030548096,
+                  "name" : "testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0048s",
+                  "durationInSeconds" : 0.004763960838317871,
+                  "name" : "testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.011s",
+                  "durationInSeconds" : 0.010684013366699219,
+                  "name" : "testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0052s",
+                  "durationInSeconds" : 0.005171060562133789,
+                  "name" : "testMatchedTerminalStillRequiresObservedIdleBeforeStopAcknowledgment()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testMatchedTerminalStillRequiresObservedIdleBeforeStopAcknowledgment()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testMatchedTerminalStillRequiresObservedIdleBeforeStopAcknowledgment",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0058s",
+                  "durationInSeconds" : 0.005764961242675781,
+                  "name" : "testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.01s",
+                  "durationInSeconds" : 0.010064005851745605,
+                  "name" : "testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0024s",
+                  "durationInSeconds" : 0.0023909807205200195,
+                  "name" : "testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0087s",
+                  "durationInSeconds" : 0.008677005767822266,
+                  "name" : "testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.004s",
+                  "durationInSeconds" : 0.0039520263671875,
+                  "name" : "testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.008s",
+                  "durationInSeconds" : 0.007971048355102539,
+                  "name" : "testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded()",
+                  "nodeIdentifier" : "CookSpeechOwnerLifecycleTests/testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests/testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "CookSpeechOwnerLifecycleTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/CookSpeechOwnerLifecycleTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            }
+          ],
+          "name" : "RoomInTheCartTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Passed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Passed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

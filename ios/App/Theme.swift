@@ -7,16 +7,94 @@ enum Theme {
     static let secondary = Color("secondary")
     static let action = Color("accent")
     static let onAction = Color("on_accent")
+    static let controlEdge = Color("control_edge")
+    static let error = Color("error")
     static let warning = Color("warning")
     static let warningSurface = Color("warning_surface")
 }
 
+/// Native form chrome uses the app's semantic colors in either appearance.
+/// Keep row styling on the content, where Form consumes list-row preferences.
+struct WorkingForm<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        Form {
+            Group { content }
+                .listRowBackground(Theme.surface)
+        }.workingSurface()
+    }
+}
+
+/// Keep expanded controls as separate Form rows. The native Chevron-only action
+/// lacked a useful label/hit area on iOS 17, so the disclosure header is one
+/// explicit, full-row semantic button using the normal expansion binding.
+@MainActor struct LabeledFormDisclosureStyle: DisclosureGroupStyle {
+    let label: String
+    let identifier: String
+    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
+        Button { configuration.isExpanded.toggle() } label: {
+            HStack {
+                configuration.label
+                Spacer(minLength: 12)
+                // Reserve both symbol widths so expansion cannot rewrap the label.
+                ZStack {
+                    Image(systemName: "chevron.down").opacity(configuration.isExpanded ? 1 : 0)
+                    Image(systemName: "chevron.forward").opacity(configuration.isExpanded ? 0 : 1)
+                }
+                .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
+        .accessibilityLabel(label)
+        .accessibilityValue(configuration.isExpanded ? Text("Expanded") : Text("Collapsed"))
+        if configuration.isExpanded { configuration.content }
+    }
+}
+
+/// Explicit prompt color keeps native empty-field purposes readable. Return the
+/// native TextField so callers retain their existing focus and input modifiers.
+func workingTextField(_ title: String, text: Binding<String>) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary))
+}
+
+func workingTextField(_ title: String, text: Binding<String>, axis: Axis) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary), axis: axis)
+}
+
+struct PrimaryActionLabel<Label: View>: View {
+    let label: Label
+    var isPressed = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .foregroundStyle(isEnabled ? Theme.onAction : Theme.ink)
+            // Normalize label rendering only; the enclosing control keeps its disabled state.
+            .environment(\.isEnabled, true)
+            .background(isEnabled ? Theme.action : Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                if !isEnabled {
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Theme.controlEdge, lineWidth: 1)
+                        .accessibilityHidden(true)
+                }
+            }
+            .opacity(isEnabled && isPressed ? 0.8 : 1)
+    }
+}
+
 struct PrimaryAction: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
-            .padding(.horizontal, 12).padding(.vertical, 4)
-            .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-            .opacity(configuration.isPressed ? 0.8 : 1)
+        PrimaryActionLabel(label: configuration.label, isPressed: configuration.isPressed)
     }
 }
 
@@ -26,9 +104,13 @@ extension View {
             if visible {
                 HStack {
                     Spacer()
-                    Button(title, action: dismiss)
-                        .font(.body.weight(.semibold)).frame(minHeight: 44)
-                        .accessibilityIdentifier(identifier ?? title)
+                    Button(action: dismiss) {
+                        Text(title)
+                            .font(.body.weight(.semibold))
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier(identifier ?? title)
                 }
                 .padding(.horizontal).background(.bar)
             }

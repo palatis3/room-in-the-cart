@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "scope": "offline ledger integrity checks only; no product/native tests executed",
+  "screens": 27,
+  "verbatim_check_paragraphs": 27,
+  "clauses": 123,
+  "distinct_mapped_selectors": 131,
+  "unique_hashed_input_files": 96,
+  "per_selector_proof_clauses": 15,
+  "retained_failure_clauses": 1,
+  "checks": [
+    "27 unique contiguous IDs",
+    "all full Check paragraphs byte-for-byte at exact source line",
+    "all specification sentences assigned to at least one clause",
+    "all clause quotations match source",
+    "all referenced source/evidence hashes and line numbers match",
+    "every selector exists at its exact source line",
+    "all retained result references match unique per-selector nodes",
+    "all proven clauses have only Passed bound selectors",
+    "failed clause retains a Failed selector",
+    "classification totals recomputed"
+  ],
+  "ledger_sha256": "c45309cae230c29a98ade3749244a2be49d8557aab29db036c6380fcf5da89ba"
+}

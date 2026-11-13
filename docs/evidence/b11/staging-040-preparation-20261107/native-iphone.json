@@ -1,0 +1,79 @@
+{
+  "verifiedOn": "2026-11-07",
+  "stagingService": "https://room-in-the-cart-staging.vercel.app",
+  "migrationHead": 40,
+  "scheme": "RoomInTheCart-Staging",
+  "schemeTestSource": "6c0b78a5af58e8891e6012484e4a090a82eb291f",
+  "schemeActions": {
+    "TestAction": "Staging",
+    "LaunchAction": "Staging",
+    "ProfileAction": "Staging",
+    "AnalyzeAction": "Staging",
+    "ArchiveAction": "Staging"
+  },
+  "device": "iPhone 17 Pro simulator",
+  "osVersion": "26.2",
+  "schemeTestResult": {
+    "result": "Passed",
+    "totalTestCount": 3,
+    "passedTests": 3,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "strictSelection": [
+    "Executed 3 of 3 selected tests.",
+    "",
+    "| Test | Result | Seconds |",
+    "|---|---|---|",
+    "| RoomInTheCartUITests/StagingHelpUITests/testOnlineHelpOpensItsPageInSafari | Passed | 13.24 |",
+    "| RoomInTheCartUITests/StagingHelpUITests/testOnlineSupportOpensItsPageInSafari | Passed | 12.68 |",
+    "| RoomInTheCartTests/StagingServiceTests/testInstalledAppReachesItsStagingServiceAnonymously | Passed | 1.68 |",
+    "The XCTest log confirms one start and one passing completion per selected test.",
+    "",
+    "The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests."
+  ],
+  "archive": {
+    "source": "b0565fb6b07c97da2213d45dad6260f2fee6b055",
+    "platform": "iphoneos",
+    "architecture": "arm64",
+    "bundleIdentifier": "dev.roominthecart.app.staging",
+    "signed": false,
+    "check": "Compiled Staging iPhone app verified: executable, assets, privacy, environment, and embedded extensions."
+  },
+  "localEvidenceSHA256": {
+    "summary.json": "09aae4ff17b4168f2de81b654420306a805457d9acc2c02f684922c2ddb6fbb3",
+    "strict.txt": "94c9712e7f0fc8060e46815b2705cfc78669213fc4b252817e7f008dd37e3c25",
+    "archive-check.log": "624c24ebaa249dec3c4398d5734dad8e106730056787746059be49557b48bb38",
+    "iphone-staging-help.png": "9ab4222291c2d1dfecb561255c57a7a4e8eb69e6a863eecb52d1a712ba77ad47",
+    "iphone-staging-support.png": "7206b0a4acb5b5022bdb581acadc2c75cd96bde94b99e292c35e38ef07a68a38"
+  },
+  "minimumOSExecution": {
+    "configuration": "Staging",
+    "runner": "test-without-building on the existing signed-for-simulator products from the staging smoke build",
+    "sourceCommit": "6c0b78a5af58e8891e6012484e4a090a82eb291f",
+    "device": "iPhone SE (3rd generation)",
+    "osVersion": "17.0",
+    "testCount": 3,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictResult": [
+      "Executed 3 of 3 selected tests.",
+      "",
+      "| Test | Result | Seconds |",
+      "|---|---|---|",
+      "| RoomInTheCartUITests/StagingHelpUITests/testOnlineHelpOpensItsPageInSafari | Passed | 19.33 |",
+      "| RoomInTheCartUITests/StagingHelpUITests/testOnlineSupportOpensItsPageInSafari | Passed | 15.15 |",
+      "| RoomInTheCartTests/StagingServiceTests/testInstalledAppReachesItsStagingServiceAnonymously | Passed | 1.76 |",
+      "The XCTest log confirms one start and one passing completion per selected test.",
+      "",
+      "The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests."
+    ],
+    "binarySHA256": {
+      "RoomInTheCart.debug.dylib": "25fdb76a0fe00f35531058211ca9e23b697a109de7ed5288589c473861176129",
+      "RoomInTheCartTests": "fbe7768ce9f4dce8019e3ee342c2f2ad4a1316227ecf25414ad1e3c9e9eb08f8",
+      "RoomInTheCartUITests": "2aa1c16bfdc7bf7d5b0bac74580e4cb18563a9f69e2705f1fa4f59033b3706c2"
+    },
+    "testSummarySHA256": "b95399e20d82d4ecaa427b621d38d81b0057a60872185466fff3335371ead4c1"
+  }
+}

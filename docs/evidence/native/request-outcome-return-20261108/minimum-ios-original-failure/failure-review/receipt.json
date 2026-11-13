@@ -1,0 +1,93 @@
+{
+  "activities": {
+    "path": "activities.json",
+    "bytes": 299861,
+    "sha256": "dab7b48f629dcc326446cfe8defddd58881a2e7b3147a14f452b61fcac484e27",
+    "exitCode": 0,
+    "perFileCap": 4000000,
+    "timeoutSeconds": 45,
+    "selectedReferenceCount": 4,
+    "uniqueIdenticalAttachments": 2,
+    "note": "Initial target-count check stopped on duplicated references; each UUID duplicate is identical metadata. No repeated activities export."
+  },
+  "exports": [
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-request-pack-failure_0_BA89C792-B013-43C1-A9B4-DE7DEC7F206F.png",
+        "payloadId": "0~Bgf2r5KAkydJ3yb_2WFM-TA4Z4v2waD7zWqco72wDoN5rhyEagLnaTjOa51edSS5KQO3_H3XpaCuCqayUnpYgQ==",
+        "timestamp": 1794140545.045,
+        "uuid": "81264F62-ED3C-408E-9577-3510128C1423"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-ios17-ui-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-ios17-ui-run/failure-review/png",
+        "--filter",
+        "S24-request-pack-failure_0_BA89C792-B013-43C1-A9B4-DE7DEC7F206F.png"
+      ],
+      "exitCode": 0,
+      "perFileCap": 4000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "png/81264F62-ED3C-408E-9577-3510128C1423.png",
+          "bytes": 97391,
+          "sha256": "b78df5342bd0139e524ad5a1780662f6995922bf8f73a1afd0af8d7d73fb5ee0"
+        },
+        {
+          "path": "png/manifest.json",
+          "bytes": 803,
+          "sha256": "a7023512514d5dcf5d631b85ae66567105f4b9f258a2ed781c7e81e3b0edc8bd"
+        }
+      ]
+    },
+    {
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-failure-accessibility-hierarchy_0_5262396C-FA00-471E-BA1E-78529F08D689.txt",
+        "payloadId": "0~LHIxeKCHOOJPbgrIcVGD8_B-DlYMA7oH9mC3VdqIPMJQDFCJrATZUcx6BlMqyLWizaop1NFHMgSXOw68J15DuA==",
+        "timestamp": 1794140545.933,
+        "uuid": "1E13CDDC-FD69-48F3-8036-B809CD25BD77"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-ios17-ui-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-ios17-ui-run/failure-review/txt",
+        "--filter",
+        "S24-failure-accessibility-hierarchy_0_5262396C-FA00-471E-BA1E-78529F08D689.txt"
+      ],
+      "exitCode": 0,
+      "perFileCap": 4000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "txt/1E13CDDC-FD69-48F3-8036-B809CD25BD77.txt",
+          "bytes": 17417,
+          "sha256": "8e8324ed0b7182b637e0c6a5dda74140adab99fbcaa4fcd8526b7dc8de06478c"
+        },
+        {
+          "path": "txt/manifest.json",
+          "bytes": 814,
+          "sha256": "c140fdd0f5fb56e878c44fad0c58488268b1b13f57d0aae987c18efae1d6c649"
+        }
+      ]
+    }
+  ],
+  "originalUnchanged": true,
+  "scope": "Only one exact failure PNG and hierarchy TXT; no video or full attachment export"
+}

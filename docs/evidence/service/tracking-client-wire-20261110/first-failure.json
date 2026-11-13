@@ -1,0 +1,30 @@
+{
+  "status": "failed",
+  "nodePassed": 20,
+  "nodeFailed": 1,
+  "swiftPassed": 65,
+  "swiftFailed": 1,
+  "swiftNotExecuted": [
+    "tracking-request-undo-lost",
+    "tracking-request-undo-retry",
+    "tracking-request-undo-reaccept",
+    "tracking-request-undo-replay-after-reaccept"
+  ],
+  "original19Node60SwiftAllPassed": true,
+  "newCompoundMealFourPhasesPassed": true,
+  "failedScenario": "tracking-request-undo-cancel",
+  "observedError": "ClientError.invalidResponse; exact first throwing call not recorded",
+  "demonstratedFixtureMismatch": "Persisted packs insertion order differs from candidate basket order; strict preview input requires authoritative candidate order. Test-only exact-ID reorder and stage markers prepared; rerun remains required.",
+  "postgresStopped": true,
+  "privateFailedFixtureRetained": true,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "run": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-tracking-client-contract-wire-r1",
+  "hashes": {
+    "receipt.json": "47b490aa406dde05ea6a644f9010a83da00ac65a953af9cfc8afe818cffb3ba5",
+    "combined-wire.log": "a17dffec922bc85d3aba8808dd5fd0b464f405ffe23c3567c7a15ebca0b589ce",
+    "source-manifest.json": "36873137175ef50ff4ec516b700d531008768b29c4ef2cf4c46b536abde63b8e",
+    "compiled-service-manifest.json": "59d63a95e99ad5a91944ab2376c745f928fcd7be7120cde83d2b2ec4f2e12a30",
+    "wire-result-manifest.json": "676a34be4b22c6e7226b4451297d8492e74d8e45355c76fbab1d5fd84a74d3aa"
+  },
+  "qualified": false
+}

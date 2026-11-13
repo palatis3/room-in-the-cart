@@ -1,0 +1,266 @@
+Building for debugging...
+[Planning deferred tasks]
+[1 / 11]
+[2 / 12] HouseholdClient
+[5 / 23] HouseholdClient
+[7 / 23] HouseholdClient
+[9 / 24] HouseholdClient
+[12 / 24] HouseholdClient
+[14 / 23] HouseholdClient
+[16 / 23] HouseholdClient
+[16 / 23]
+[16 / 23] HouseholdClient
+[18 / 23] HouseholdClient
+[20 / 23] HouseholdClientTests-product
+[23 / 34] HouseholdClientTests-product
+[24 / 34] HouseholdClientTests-product
+[25 / 34] HouseholdClientTests-product
+[26 / 34] HouseholdClientTests-product
+[27 / 34] HouseholdClientTests-product
+[28 / 34] HouseholdClientTests-product
+[29 / 34] HouseholdClientTests-product
+[31 / 34] HouseholdClientTests-product
+[36 / 38] HouseholdClientTests-product
+[38 / 38] HouseholdClientTests-product
+Build complete! (31.90 sec)
+Test Suite 'All tests' started at 2026-11-07 21:53:15.328.
+Test Suite 'HouseholdClientTests.xctest' started at 2026-11-07 21:53:15.330.
+Test Suite 'HouseholdClientTests' started at 2026-11-07 21:53:15.330.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testAllDeviceSignOutRequestsGlobalScope]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testAllDeviceSignOutRequestsGlobalScope]' passed (0.013 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testAmendmentReceiptMustMatchExactOperationPlacementEpochAndRevision]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testAmendmentReceiptMustMatchExactOperationPlacementEpochAndRevision]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts]' passed (0.006 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderChainRejectsRetiredIdentitiesWrongHeadsAndChangedNames]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderChainRejectsRetiredIdentitiesWrongHeadsAndChangedNames]' passed (0.013 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderReadRechecksShopperCapabilityAndResponseScope]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderReadRechecksShopperCapabilityAndResponseScope]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderReviewKeepsOriginalAndRequiresChangedIndependentEvidence]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testConfirmedOrderReviewKeepsOriginalAndRequiresChangedIndependentEvidence]' passed (0.010 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyCommandsBindSealedFactsAndRejectMismatchedReceipts]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyCommandsBindSealedFactsAndRejectMismatchedReceipts]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyHistoryAndBaselineRejectDuplicatesWrongMealRecipientAndAbsentHead]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyHistoryAndBaselineRejectDuplicatesWrongMealRecipientAndAbsentHead]' passed (0.040 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyUnknownOrMalformedFactIndexFallsBackWithoutChangingReviewedText]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCookCopyUnknownOrMalformedFactIndexFallsBackWithoutChangingReviewedText]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCoverageRequiresAllSealedRowsAndCurrentReviewedPhysicalSources]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testCoverageRequiresAllSealedRowsAndCurrentReviewedPhysicalSources]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeliveryPaginationKeepsSealedLinesAndRejectsStaleOrDuplicatedSources]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeliveryPaginationKeepsSealedLinesAndRejectsStaleOrDuplicatedSources]' passed (0.009 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceIntentStorePreservesExactRetryAndScopedPurgeInvalidatesStaleEpoch]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceIntentStorePreservesExactRetryAndScopedPurgeInvalidatesStaleEpoch]' passed (0.004 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceInventoryUsesEnrolledHeadersAndValidatesCurrentReferenceAndGuardianScope]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceInventoryUsesEnrolledHeadersAndValidatesCurrentReferenceAndGuardianScope]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceRevocationRejectsCurrentDeviceRevokedTargetAndTamperedStoredIntent]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceRevocationRejectsCurrentDeviceRevokedTargetAndTamperedStoredIntent]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceRevocationRetainsExactTargetBytesAndRejectsReceiptSubstitution]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDeviceRevocationRetainsExactTargetBytesAndRejectsReceiptSubstitution]' passed (0.004 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDurableRetryPreservesExactEnvelopeAndRejectsChangedKey]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testDurableRetryPreservesExactEnvelopeAndRejectsChangedKey]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testEnrollmentResumesSameDeviceAfterClientRecreation]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testEnrollmentResumesSameDeviceAfterClientRecreation]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFallbackFreeCatalogWithdrawAndPaidNamedSeatGateAcrossRelaunch]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFallbackFreeCatalogWithdrawAndPaidNamedSeatGateAcrossRelaunch]' passed (0.010 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFallbackOptionsBindReviewedTargetSourceQuantityAndWholePackTerms]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFallbackOptionsBindReviewedTargetSourceQuantityAndWholePackTerms]' passed (0.067 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFoodFractionsRetainArbitraryPrecisionThroughAdditionAndConversion]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testFoodFractionsRetainArbitraryPrecisionThroughAdditionAndConversion]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildClaimAndFinishUseSeparateWireSchemaAndExactDeviceSecret]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildClaimAndFinishUseSeparateWireSchemaAndExactDeviceSecret]' passed (0.007 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildContinuityProjectionRequiresVerifiedUserAndStrictIssuerSubjectSession]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildContinuityProjectionRequiresVerifiedUserAndStrictIssuerSubjectSession]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionLateBootstrapCannotPersistAfterClose]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionLateBootstrapCannotPersistAfterClose]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionPersistsOnlyAfterOwnScopeBootstrapAndNeverRegistersDevice]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionPersistsOnlyAfterOwnScopeBootstrapAndNeverRegistersDevice]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionRejectsWrongSessionBootstrapAndUnrelatedVaultWithoutWriting]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialAdoptionRejectsWrongSessionBootstrapAndUnrelatedVaultWithoutWriting]' passed (0.016 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialColdLaunchResumeRefreshesSameSessionAndPreservesValidatedMarker]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialColdLaunchResumeRefreshesSameSessionAndPreservesValidatedMarker]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialResumeRejectsMissingForeignTamperedMarkersAndReplacedSession]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildCredentialResumeRejectsMissingForeignTamperedMarkersAndReplacedSession]' passed (0.011 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildLateResultIsRejectedAfterLiveSessionChanges]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianChildLateResultIsRejectedAfterLiveSessionChanges]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianConsentBindsExactIntendedChildEmailOnlyAfterExplicitReviewAndRetainsExactRetry]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianConsentBindsExactIntendedChildEmailOnlyAfterExplicitReviewAndRetainsExactRetry]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianIntentStorePreservesExactSecretAndRejectsTamperedBytesAndConcurrentActions]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianIntentStorePreservesExactSecretAndRejectsTamperedBytesAndConcurrentActions]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianInvitationLostResponseRetriesPersistedSecretAndNeverUsesSharedOutbox]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianInvitationLostResponseRetriesPersistedSecretAndNeverUsesSharedOutbox]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianLateResultCannotRestoreClearedScope]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianLateResultCannotRestoreClearedScope]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNativeChallengeAndAdmissionRetryExactSecretsWithNoGenericCodeRequest]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNativeChallengeAndAdmissionRetryExactSecretsWithNoGenericCodeRequest]' passed (0.013 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNativeChallengeLateResultCannotReviveAfterClose]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNativeChallengeLateResultCannotReviveAfterClose]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNoticeAvailabilityAndDeclarationFailClosedWithoutCreatingSetup]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianNoticeAvailabilityAndDeclarationFailClosedWithoutCreatingSetup]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianPublicAvailabilityRejectsMalformedInconsistentAndLateResponses]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianPublicAvailabilityRejectsMalformedInconsistentAndLateResponses]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianPublicAvailabilityUsesOnlyConfiguredOriginAndNoAuthenticatedIdentity]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianPublicAvailabilityUsesOnlyConfiguredOriginAndNoAuthenticatedIdentity]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianRejectsStaleReviewAndWrongEnrollmentReceipt]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianRejectsStaleReviewAndWrongEnrollmentReceipt]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianScopedPurgeInvalidatesLateSaveAndPreservesOtherHousehold]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianScopedPurgeInvalidatesLateSaveAndPreservesOtherHousehold]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianSecretsAreThirtyTwoCanonicalRandomBytesAndPairingIsEightBase32Symbols]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianSecretsAreThirtyTwoCanonicalRandomBytesAndPairingIsEightBase32Symbols]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianVerificationIsSeparateFromConsentAndRetriesOriginalRevisionAndBytes]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testGuardianVerificationIsSeparateFromConsentAndRetriesOriginalRevisionAndBytes]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHelperProposalRetriesExactBytesAndStopsAfterRevocation]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHelperProposalRetriesExactBytesAndStopsAfterRevocation]' passed (0.011 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHelperRejectsServerIgnoringSelectedGrant]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHelperRejectsServerIgnoringSelectedGrant]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryObservationRetryKeepsOriginalBytesAndStopsAfterSourceAuthorityLoss]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryObservationRetryKeepsOriginalBytesAndStopsAfterSourceAuthorityLoss]' passed (0.007 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPagesRejectDuplicateIdentityAndInvalidCursorWithoutBroadeningQuery]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPagesRejectDuplicateIdentityAndInvalidCursorWithoutBroadeningQuery]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPaidLapseKeepsFreeSavedRecordsAndOwnedShopsAvailable]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPaidLapseKeepsFreeSavedRecordsAndOwnedShopsAvailable]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPartialPeriodRejectsEnvelopeAndHiddenSourceMetadata]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPartialPeriodRejectsEnvelopeAndHiddenSourceMetadata]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPeriodRetryDoesNotRebaseAfterLostReceiptAndPaidScopeLossStopsSend]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPeriodRetryDoesNotRebaseAfterLostReceiptAndPaidScopeLossStopsSend]' passed (0.021 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPeriodValidatesIdentityDatesReservationsAndScopeWithoutDoubleSubtractingReserve]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryPeriodValidatesIdentityDatesReservationsAndScopeWithoutDoubleSubtractingReserve]' passed (0.015 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryWirePreservesExactTextNullsAndDistinctPackDimensions]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryWirePreservesExactTextNullsAndDistinctPackDimensions]' passed (0.004 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryWrongEnrollmentCannotRestoreOrSendPersistedIntents]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testHistoryWrongEnrollmentCannotRestoreOrSendPersistedIntents]' passed (0.006 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testIdentityMismatchNeverStoresSession]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testIdentityMismatchNeverStoresSession]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testInvalidRefreshClearsStoredCredential]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testInvalidRefreshClearsStoredCredential]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testInvitationRedemptionSendsTokenOnlyInBodyAndRequiresAdultDeclaration]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testInvitationRedemptionSendsTokenOnlyInBodyAndRequiresAdultDeclaration]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testJointFoodCoverageEnforcesPhysicalTotalCategoryAndSealedRequirements]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testJointFoodCoverageEnforcesPhysicalTotalCategoryAndSealedRequirements]' passed (0.026 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testLegacySnapshotSaveCannotEraseOrResurrectReviewActions]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testLegacySnapshotSaveCannotEraseOrResurrectReviewActions]' passed (0.009 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testLifecycleStoreRetainsFixedMembershipBytesAcrossRecreation]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testLifecycleStoreRetainsFixedMembershipBytesAcrossRecreation]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryDeskRejectsForeignSourcesProvenanceAndAlteredText]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryDeskRejectsForeignSourcesProvenanceAndAlteredText]' passed (0.011 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryPreviewPreservesUnknownsAndRequiresRepeatConsent]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryPreviewPreservesUnknownsAndRequiresRepeatConsent]' passed (0.055 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryReceiptAndPendingBytesBindReviewedTarget]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMealRecoveryReceiptAndPendingBytesBindReviewedTarget]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMeasurementCodesKeepUnverifiedBenefitUnknownAndKnownLateTieZero]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMeasurementCodesKeepUnverifiedBenefitUnknownAndKnownLateTieZero]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMeasurementConsentSendRemovalAndWithdrawalUseOnlyExplicitAllowlistedFields]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMeasurementConsentSendRemovalAndWithdrawalUseOnlyExplicitAllowlistedFields]' passed (0.004 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMembershipCreationRetriesExactIntentAndRejectsWrongAccount]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testMembershipCreationRetriesExactIntentAndRejectsWrongAccount]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNamedDeliveryCoverageChecksEveryReservationAndKeepsZeroBackedClaims]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNamedDeliveryCoverageChecksEveryReservationAndKeepsZeroBackedClaims]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNamedDeliveryReservationBindsReviewedGroupHeadMatchAndExplicitRelease]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNamedDeliveryReservationBindsReviewedGroupHeadMatchAndExplicitRelease]' passed (0.006 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOldHouseholdFailureCannotClearNewEnrollment]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOldHouseholdFailureCannotClearNewEnrollment]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOTPVerifiesIdentityAndRotatesRefreshOnlyInVault]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOTPVerifiesIdentityAndRotatesRefreshOnlyInVault]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOwnPurchaseReadbackAcceptsOnlyRecordedOutcomesAndRejectsPrivateLinks]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOwnPurchaseReadbackAcceptsOnlyRecordedOutcomesAndRejectsPrivateLinks]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOwnRequestCursorUsesQueryAndRequiresUUID]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testOwnRequestCursorUsesQueryAndRequiresUUID]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPantryReceiptRequiresSameLotOriginalShopAndBothCounters]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPantryReceiptRequiresSameLotOriginalShopAndBothCounters]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementCaptureFetchesReviewedSnapshotAndWindowOnceBeforeLocalOfflineSeal]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementCaptureFetchesReviewedSnapshotAndWindowOnceBeforeLocalOfflineSeal]' passed (0.008 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementMinimalReporterDTOsRejectUnexpectedCurrentBudgetFields]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementMinimalReporterDTOsRejectUnexpectedCurrentBudgetFields]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementOfflineSealMatchesServerDigestAndPreservesOriginalWindowTimeAndSnapshot]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementOfflineSealMatchesServerDigestAndPreservesOriginalWindowTimeAndSnapshot]' passed (0.011 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementReporterUsesOriginalShopAfterSelectionChangeAndNeverRefreshesShopOrWindowOnRetry]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementReporterUsesOriginalShopAfterSelectionChangeAndNeverRefreshesShopOrWindowOnRetry]' passed (0.015 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementReviewerExactRetryAndLostRoleKeepReporterEvidenceUsable]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPlacementReviewerExactRetryAndLostRoleKeepReporterEvidenceUsable]' passed (0.019 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPreviewUsesReviewedBaseAndDecisionRetryKeepsExactBytes]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPreviewUsesReviewedBaseAndDecisionRetryKeepsExactBytes]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPurchaseMatchRequiresTheReviewedPlacedLineAndCurrentAuthorityEvenAfterClose]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPurchaseMatchRequiresTheReviewedPlacedLineAndCurrentAuthorityEvenAfterClose]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReadableHistoryShopDiscoveryUsesContributorSessionAndValidatesSeparateCursor]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReadableHistoryShopDiscoveryUsesContributorSessionAndValidatesSeparateCursor]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRejectsInsecureOrPrivilegedAuthConfiguration]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRejectsInsecureOrPrivilegedAuthConfiguration]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRequestingEmailCodeDoesNotSignIn]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRequestingEmailCodeDoesNotSignIn]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testResolutionRouteUsesProposalRevisionAndRejectsMismatchedReceipt]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testResolutionRouteUsesProposalRevisionAndRejectsMismatchedReceipt]' passed (0.011 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRetryIsBoundedHonorsServerDelayAndStopsConflicts]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testRetryIsBoundedHonorsServerDelayAndStopsConflicts]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewIntentsEncodeOnlyExactDiscriminatedFieldsAndPersistLegacyState]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewIntentsEncodeOnlyExactDiscriminatedFieldsAndPersistLegacyState]' passed (0.006 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewReceiptRejectsWrongScopeRevisionAndResolution]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewReceiptRejectsWrongScopeRevisionAndResolution]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewRetryReconcilesOriginalBytesAfterRevisionAdvancesAndStopsAfterAuthorityLoss]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewRetryReconcilesOriginalBytesAfterRevisionAdvancesAndStopsAfterAuthorityLoss]' passed (0.007 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewStoreAtomicallyPreservesOtherIntentsAndRejectsPrePurgeEpoch]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewStoreAtomicallyPreservesOtherIntentsAndRejectsPrePurgeEpoch]' passed (0.005 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewTamperedStoredBytesAndWrongIdentityNeverSend]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testReviewTamperedStoredBytesAndWrongIdentityNeverSend]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testScopedHelperCannotUseDeviceManagementAndRevokedSessionClearsEnrollment]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testScopedHelperCannotUseDeviceManagementAndRevokedSessionClearsEnrollment]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSelectedShopIsPinnedAcrossEnrollmentAndClearedForHouseholdOverview]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSelectedShopIsPinnedAcrossEnrollmentAndClearedForHouseholdOverview]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testServiceRetriesIdenticalBodyAndClearsRevokedScope]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testServiceRetriesIdenticalBodyAndClearsRevokedScope]' passed (0.002 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedCandidateRejectsDuplicateLinesAndInvalidQuoteTimes]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedCandidateRejectsDuplicateLinesAndInvalidQuoteTimes]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedQuoteEncodesRequiredNullsAndOnlyActiveFeeFields]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedQuoteEncodesRequiredNullsAndOnlyActiveFeeFields]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedShopCreationRetriesExactBytesAfterBecomingShopperAndDeniesContributor]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSharedShopCreationRetriesExactBytesAfterBecomingShopperAndDeniesContributor]' passed (0.003 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testShopperDecisionsEncodeOnlyDocumentedDiscriminatedFields]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testShopperDecisionsEncodeOnlyDocumentedDiscriminatedFields]' passed (0.000 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testShopperSuggestionPagesStayBoundToGrantAndCursor]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testShopperSuggestionPagesStayBoundToGrantAndCursor]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSignOutClearsLocalCredentialsWhenNetworkFails]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSignOutClearsLocalCredentialsWhenNetworkFails]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSignOutInvalidatesInflightVerification]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testSignOutInvalidatesInflightVerification]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteContractRejectsNegativeCashAndMissingIdentityBinding]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteContractRejectsNegativeCashAndMissingIdentityBinding]' passed (0.006 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteDefaultShopPinsHeaderAndExactRetrySurvivesStaleRevisionThenRevocation]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteDefaultShopPinsHeaderAndExactRetrySurvivesStaleRevisionThenRevocation]' passed (0.016 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteDifferentSelectedShopCannotReadOrReplay]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteDifferentSelectedShopCannotReadOrReplay]' passed (0.001 seconds).
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteUnknownsEncodeNullAndAdoptionDoesNotLeakOtherActionFields]' started.
+Test Case '-[HouseholdClientTests.HouseholdClientTests testStoreQuoteUnknownsEncodeNullAndAdoptionDoesNotLeakOtherActionFields]' passed (0.000 seconds).
+Test Suite 'HouseholdClientTests' passed at 2026-11-07 21:53:15.980.
+	 Executed 105 tests, with 0 failures (0 unexpected) in 0.641 (0.650) seconds
+Test Suite 'NativeServiceWireTests' started at 2026-11-07 21:53:15.980.
+Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' started.
+/Users/palatis/Room in the Cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/NativeServiceWireTests.swift:28: -[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres] : Test skipped - Run the PostgreSQL integration suite with RITC_TEST_NATIVE_WIRE=1.
+Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' skipped (0.001 seconds).
+Test Suite 'NativeServiceWireTests' passed at 2026-11-07 21:53:15.981.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'SharedMealNativeWireTests' started at 2026-11-07 21:53:15.981.
+Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' started.
+/Users/palatis/Room in the Cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift:30: -[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres] : Test skipped - Run isolated shared meal PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.
+Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' skipped (0.000 seconds).
+Test Suite 'SharedMealNativeWireTests' passed at 2026-11-07 21:53:15.982.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'StoreQuoteNativeWireTests' started at 2026-11-07 21:53:15.982.
+Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' started.
+/Users/palatis/Room in the Cart/ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteNativeWireTests.swift:24: -[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres] : Test skipped - Run isolated store quote PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.
+Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' skipped (0.000 seconds).
+Test Suite 'StoreQuoteNativeWireTests' passed at 2026-11-07 21:53:15.982.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'HouseholdClientTests.xctest' passed at 2026-11-07 21:53:15.982.
+	 Executed 108 tests, with 3 tests skipped and 0 failures (0 unexpected) in 0.643 (0.652) seconds
+Test Suite 'All tests' passed at 2026-11-07 21:53:15.982.
+	 Executed 108 tests, with 3 tests skipped and 0 failures (0 unexpected) in 0.643 (0.654) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

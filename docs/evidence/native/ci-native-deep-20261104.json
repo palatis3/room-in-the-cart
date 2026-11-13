@@ -1,0 +1,50 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998676",
+  "conclusion": "success",
+  "toolchain": "Xcode 26.3 on standard macos-15 arm64",
+  "storeKit": {
+    "en": {
+      "job": 126927541851,
+      "configuration": "US English \u2014 local StoreKit",
+      "passedTests": 15,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "artifacts": {
+        "storekit-summary.json": "70170191dec5aaf95c1694c416ac8bcf08d34dd23c0625cb49cf92144ae61b88",
+        "StoreKit.log": "02e9720652885de9b438de776ffdf2aecc77e8048945e066440a7141de052542"
+      }
+    },
+    "es": {
+      "job": 126927542334,
+      "configuration": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront",
+      "passedTests": 15,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "artifacts": {
+        "storekit-summary.json": "0cce1a527b91a49ab66525e905004bae9d8d2a9a281aec8e5f6244efa473844d",
+        "StoreKit.log": "b782212ee494e2f25576af960c9630ec17bef0828cfb5253d17b655e63898f27"
+      }
+    }
+  },
+  "sanitizerEvidence": "ci-native-sanitizers-20261104.json",
+  "scope": "Both local StoreKit configurations and both package sanitizer jobs passed. Local StoreKit does not establish live App Store product configuration, signed sandbox purchase or TestFlight acceptance."
+}

@@ -6,6 +6,14 @@ struct CaptureCorrectionScope: Equatable, Hashable, Sendable {
     let profileID: String
     let localeIdentifier: String
     let accountID: String?
+    fileprivate var previousFileKey: String?
+    var isPreviousRegion: Bool { previousFileKey != nil }
+
+    // The language of the app's labels can differ from the region used for formatting.
+    static func appLanguage(_ localization: String = Bundle.main.preferredLocalizations.first ?? "en") -> String {
+        Locale(identifier: localization).language.languageCode?.identifier == "es" ? "es-US" : "en-US"
+    }
+
     init(profileID: String, localeIdentifier: String) {
         self.init(profileID: profileID, localeIdentifier: localeIdentifier, accountID: nil)
     }
@@ -57,16 +65,60 @@ actor CaptureCorrectionStore {
         }
         return snapshot
     }
+    /// Older list captures keyed private spellings by the full formatting locale.
+    /// Keep those opt-ins separate: an absent current-language file may mean the user opted out.
+    func previousRegionalScopes(for scope: CaptureCorrectionScope) throws -> [CaptureCorrectionScope] {
+        try validate(scope)
+        guard scope.accountID == nil, try !isErased(scope) else { return [] }
+        let directory = try profileDirectory(scope)
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        let prefix = Self.digest(scope.profileID) + "-"
+        let currentKeys = [Self.digest("en-US"), Self.digest("es-US")]
+        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        let keys = files.compactMap { url -> String? in
+            let stem = url.deletingPathExtension().lastPathComponent
+            guard url.pathExtension == "json", stem.hasPrefix(prefix) else { return nil }
+            let key = String(stem.dropFirst(prefix.count))
+            guard key.utf8.count == 64, key.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
+                  !currentKeys.contains(key) else { return nil }
+            return key
+        }
+        guard !keys.isEmpty else { return [] }
+        var names = Self.regionalNames
+        let current = Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
+        names[Self.digest(current)] = current
+        return keys.sorted().map { key in
+            // Legacy filenames contain only a hash. A custom region may no longer
+            // be identifiable, but its owner can still inspect and delete that file.
+            var previous = CaptureCorrectionScope(profileID: scope.profileID, localeIdentifier: names[key] ?? "und")
+            previous.previousFileKey = key
+            return previous
+        }
+    }
+
+    private static let regionalNames: [String: String] = {
+        var names = [String: String]()
+        for id in Locale.availableIdentifiers {
+            let locale = Locale(identifier: id)
+            guard ["en", "es"].contains(locale.language.languageCode?.identifier ?? "") else { continue }
+            let name = locale.identifier.replacingOccurrences(of: "_", with: "-")
+            names[digest(name)] = name
+        }
+        return names
+    }()
+
     func setEnabled(_ enabled: Bool, scope: CaptureCorrectionScope) throws {
         if !enabled {
             let url = try file(scope)
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
             return
         }
+        guard !scope.isPreviousRegion else { throw CaptureCorrectionFailure.invalidScope }
         var value = try load(scope); value.enabled = true
         try save(value, scope: scope)
     }
     func remember(original: String, replacement: String, scope: CaptureCorrectionScope) throws {
+        guard !scope.isPreviousRegion else { throw CaptureCorrectionFailure.invalidScope }
         guard Self.validProduct(original), Self.validProduct(replacement), Self.key(original) != Self.key(replacement) else {
             throw CaptureCorrectionFailure.invalidProduct
         }
@@ -88,7 +140,7 @@ actor CaptureCorrectionStore {
         try validate(scope)
         let directory = try profileDirectory(scope)
         try retire(at: marker(scope))
-        let prefix = digest(scope.profileID) + "-"
+        let prefix = Self.digest(scope.profileID) + "-"
         for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             where url.lastPathComponent.hasPrefix(prefix) && url.pathExtension == "json" {
             try FileManager.default.removeItem(at: url)
@@ -114,7 +166,7 @@ actor CaptureCorrectionStore {
     }
     private func validate(_ scope: CaptureCorrectionScope) throws {
         guard !scope.profileID.isEmpty, scope.profileID.utf8.count <= 300,
-              !scope.profileID.contains("@"), ["en", "es"].contains(Locale(identifier: scope.localeIdentifier).language.languageCode?.identifier ?? "") else {
+              !scope.profileID.contains("@"), scope.isPreviousRegion || ["en", "es"].contains(Locale(identifier: scope.localeIdentifier).language.languageCode?.identifier ?? "") else {
             throw CaptureCorrectionFailure.invalidScope
         }
     }
@@ -132,11 +184,11 @@ actor CaptureCorrectionStore {
         return applicationSupport.appendingPathComponent("RoomInTheCart/CaptureCorrections", isDirectory: true)
     }
     private func marker(_ scope: CaptureCorrectionScope) throws -> URL {
-        try profileDirectory(scope).appendingPathComponent(digest(scope.profileID) + ".erased")
+        try profileDirectory(scope).appendingPathComponent(Self.digest(scope.profileID) + ".erased")
     }
     private func accountDirectory(_ subject: String) throws -> URL {
         try root().appendingPathComponent("Connected", isDirectory: true)
-            .appendingPathComponent(digest(subject), isDirectory: true)
+            .appendingPathComponent(Self.digest(subject), isDirectory: true)
     }
     private func profileDirectory(_ scope: CaptureCorrectionScope) throws -> URL {
         if let subject = scope.accountID { return try accountDirectory(subject) }
@@ -149,9 +201,9 @@ actor CaptureCorrectionStore {
     }
     private func file(_ scope: CaptureCorrectionScope) throws -> URL {
         try validate(scope)
-        return try profileDirectory(scope).appendingPathComponent(digest(scope.profileID) + "-" + digest(scope.localeIdentifier) + ".json")
+        return try profileDirectory(scope).appendingPathComponent(Self.digest(scope.profileID) + "-" + (scope.previousFileKey ?? Self.digest(scope.localeIdentifier)) + ".json")
     }
-    private func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
+    private static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
     private func prepareDirectory(_ url: URL) throws {
         var directory = url
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -187,21 +239,24 @@ actor CaptureCorrectionStore {
 @MainActor final class CaptureCorrectionsModel: ObservableObject {
     @Published private(set) var snapshot = CaptureCorrectionSnapshot()
     @Published private(set) var scope: CaptureCorrectionScope?
+    @Published private(set) var previousRegions: [CaptureCorrectionScope] = []
     @Published private(set) var failed = false
     private let store: CaptureCorrectionStore
     private var generation = UUID()
     init(store: CaptureCorrectionStore = .shared) { self.store = store }
-    func bind(_ scope: CaptureCorrectionScope?) async {
+    func bind(_ scope: CaptureCorrectionScope?, includePreviousRegions: Bool = false) async {
         invalidate(); self.scope = scope
         guard let scope else { return }
         let generation = self.generation
         do {
             let value = try await store.load(scope)
+            let previous = includePreviousRegions ? try await store.previousRegionalScopes(for: scope) : []
             guard self.generation == generation, self.scope == scope else { return }
+            previousRegions = previous
             snapshot = value
         } catch { if self.generation == generation { failed = true } }
     }
-    func invalidate() { generation = UUID(); scope = nil; snapshot = .init(); failed = false }
+    func invalidate() { generation = UUID(); scope = nil; snapshot = .init(); previousRegions = []; failed = false }
     func suggestion(for original: String) -> CaptureCorrection? {
         guard scope != nil, snapshot.enabled else { return nil }
         return snapshot.entries.first { CaptureCorrectionStore.key($0.original) == CaptureCorrectionStore.key(original) }

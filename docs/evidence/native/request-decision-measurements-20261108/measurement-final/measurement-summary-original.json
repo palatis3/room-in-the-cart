@@ -1,0 +1,4202 @@
+{
+  "status": "complete-export-inventory",
+  "acceptance": "not assessed",
+  "limits": "Complete attachment inventory only. No test, font-scaling, contrast, accessibility-audit or physical acceptance pass is inferred. Ink masks may include decoration or miss pale glyphs; review crops. Bitmap row order is retained.",
+  "manifest": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/manifest.json",
+    "bytes": 40379,
+    "sha256": "381c3867cd86ebe312baa1577db961ad8de896ec10b502e34e95e02740813630"
+  },
+  "deviceConfiguration": [
+    "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "RITC-Placed-Receipt-Nov07",
+    "Test Scheme Action"
+  ],
+  "expectedGroups": 21,
+  "observedGroups": 21,
+  "expectedAttachments": 84,
+  "observedAttachments": 84,
+  "imageFiles": {
+    "small/after": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/04D4F79E-51E9-4803-A114-51A6C61DE983.png",
+        "bytes": 5657,
+        "sha256": "a98c5ce1c44af89819a1ac1a1f63f39937405eef348315b6f840eab0be7ce086",
+        "dimensionsPixels": [
+          151,
+          54
+        ],
+        "attachmentName": "S24-measure-small-after-crop_0_6750B707-3944-42CB-9818-CAED5CE9851B.png",
+        "timestamp": 1794112499.914
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/99483CE3-3193-485B-96F8-4FCEF0005022.png",
+        "bytes": 296505,
+        "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-after-screen_0_F2718C66-D00B-4F5D-9172-91F5E5EBDB4E.png",
+        "timestamp": 1794112500.444
+      }
+    },
+    "small/over": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A48FD624-8ACD-4ADF-81A4-E4608299757A.png",
+        "bytes": 4977,
+        "sha256": "daa2a924fafc0b5b877219d86ee5355649ddb70abe3b2fc9b765a9e18632e3d3",
+        "dimensionsPixels": [
+          122,
+          54
+        ],
+        "attachmentName": "S24-measure-small-over-crop_0_11A4C3D1-BE30-4BEC-B8C5-B25B13626C9A.png",
+        "timestamp": 1794112518.626
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/15CB6B8E-8825-4BED-B14B-BCB101249DFB.png",
+        "bytes": 296505,
+        "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-over-screen_0_BB45DF76-0013-4F40-8B76-49F4DE7054D1.png",
+        "timestamp": 1794112518.865
+      }
+    },
+    "small/before": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8AE48017-80A7-443B-8C56-48C665EBC3C2.png",
+        "bytes": 5136,
+        "sha256": "80a64c5156377c04823a0b2625859a266db047d5c0951a16ff5df91eced74352",
+        "dimensionsPixels": [
+          151,
+          54
+        ],
+        "attachmentName": "S24-measure-small-before-crop_0_28E740B4-6575-4AFD-8319-5A4E478FA492.png",
+        "timestamp": 1794112536.745
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/203932DD-D180-48DA-AD54-ECAF71DE72CB.png",
+        "bytes": 296505,
+        "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-before-screen_0_FC2EF6C7-59A3-43D5-91F9-F5046BF3F7DF.png",
+        "timestamp": 1794112537.001
+      }
+    },
+    "small/change": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/75DD92B5-32B7-4D2C-A281-B87C169BC761.png",
+        "bytes": 4700,
+        "sha256": "38b3558d5ca54e9e497d2d1d190b0c10ee2c765fe5d07208fa37cbf3940b1173",
+        "dimensionsPixels": [
+          122,
+          54
+        ],
+        "attachmentName": "S24-measure-small-change-crop_0_43046236-78BA-4B97-AB35-21C851AE5D6A.png",
+        "timestamp": 1794112552.683
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/459701E1-A725-47E7-9B14-9183AE053704.png",
+        "bytes": 296505,
+        "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-change-screen_0_3FA1BF3B-6E32-42A4-9B54-DB6920089129.png",
+        "timestamp": 1794112552.929
+      }
+    },
+    "small/cap": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/451230D2-F645-43B7-A4E2-80F274D0AE98.png",
+        "bytes": 5147,
+        "sha256": "468b1bac9b9acb43bc3f7ec495d13d8745505309b9fd66f4809a0369bf82879d",
+        "dimensionsPixels": [
+          151,
+          54
+        ],
+        "attachmentName": "S24-measure-small-cap-crop_0_93A1F16C-D1AD-453D-86CF-98F453915268.png",
+        "timestamp": 1794112564.481
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3FABA6C8-2CD1-43A9-992E-1DA61B848D2D.png",
+        "bytes": 296713,
+        "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-cap-screen_0_4230A125-F5C1-49C6-A4DC-EDD40F331C4C.png",
+        "timestamp": 1794112564.715
+      }
+    },
+    "small/review-decision": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/0AF084B3-0131-4E7C-9844-6389F346828E.png",
+        "bytes": 11744,
+        "sha256": "cb04e8ec9c991bca1a2cd0e438544884e8c9e3ea7325a659405712cece40036e",
+        "dimensionsPixels": [
+          1110,
+          150
+        ],
+        "attachmentName": "S24-measure-small-review-decision-crop_0_71FB7FE1-CC52-491C-B2C8-F58B8FDA56DD.png",
+        "timestamp": 1794112576.237
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E82FD4B0-05BC-428E-A2D2-695788C9C856.png",
+        "bytes": 296713,
+        "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-review-decision-screen_0_710D2122-ED4E-414D-834F-2894B90E9846.png",
+        "timestamp": 1794112576.489
+      }
+    },
+    "small/review-heading": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/08259782-BA95-4195-86A8-39A5FCAE6375.png",
+        "bytes": 11844,
+        "sha256": "b1a989ddefb436e38c020d671a222a348bb98b20a3c07e23737c63826c455704",
+        "dimensionsPixels": [
+          1110,
+          114
+        ],
+        "attachmentName": "S24-measure-small-review-heading-crop_0_60198E0A-1AD0-4C6E-B4F7-783B1919B651.png",
+        "timestamp": 1794112586.341
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/16D1D573-C5F8-4948-BCCA-802D91B62E17.png",
+        "bytes": 296713,
+        "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-review-heading-screen_0_BA8D8B0A-2B96-4DF3-8367-EE156F734FEB.png",
+        "timestamp": 1794112586.576
+      }
+    },
+    "large/after": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3012C6B7-66AC-4AAD-A6EA-297E4EAFD702.png",
+        "bytes": 6115,
+        "sha256": "49cd24ac2d6351d0a7d0fc3eccebfc371709299f6968763a8d975d6563e7bbdf",
+        "dimensionsPixels": [
+          168,
+          60
+        ],
+        "attachmentName": "S24-measure-large-after-crop_0_15680B24-1F2C-4B53-B4B0-079192F9CF41.png",
+        "timestamp": 1794112360.815
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/40065F46-C313-48A8-BB52-9C58F2411C0B.png",
+        "bytes": 286331,
+        "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-after-screen_0_B7F765D5-F1AE-4C93-BF53-FFB2D7128478.png",
+        "timestamp": 1794112361.064
+      }
+    },
+    "large/over": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D6404208-59A0-4342-95CD-CE1CE4FD7776.png",
+        "bytes": 5465,
+        "sha256": "546cd9925a6e75047818abf707eca8382baa3719fa59d17890f48c3d1087fa83",
+        "dimensionsPixels": [
+          138,
+          60
+        ],
+        "attachmentName": "S24-measure-large-over-crop_0_C3CABEB8-B541-4242-B3FF-17596C0B81F5.png",
+        "timestamp": 1794112378.531
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3649576B-322B-440A-AD46-93C971AD0A94.png",
+        "bytes": 286331,
+        "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-over-screen_0_238D99BC-245E-40FB-9AE4-BE170084EBA5.png",
+        "timestamp": 1794112378.78
+      }
+    },
+    "large/before": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3B54A243-03AD-478B-B1E7-4F975A3D09FC.png",
+        "bytes": 5650,
+        "sha256": "bc82a5166f0052181f5f748cf1b133fa8a06ba7d5a9843c9d0cea2900696eca3",
+        "dimensionsPixels": [
+          168,
+          61
+        ],
+        "attachmentName": "S24-measure-large-before-crop_0_2E702525-A0ED-496F-BFD9-992FF3510722.png",
+        "timestamp": 1794112399.292
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/43D6208C-7F63-49F7-8FF4-D629846B9C16.png",
+        "bytes": 301814,
+        "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-before-screen_0_977F98A3-C03C-4BA2-8A5C-88AB37BB7257.png",
+        "timestamp": 1794112399.521
+      }
+    },
+    "large/change": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DEDC6B4E-169B-4F94-B5A0-BD230E4A9DDA.png",
+        "bytes": 5055,
+        "sha256": "63ff7d4deb4bcd53f292eefd8f10e84b9bef3059ecf344734f06f237fb6e1b13",
+        "dimensionsPixels": [
+          138,
+          60
+        ],
+        "attachmentName": "S24-measure-large-change-crop_0_7A8B99CC-C42B-4C80-BAFF-84C527CDD788.png",
+        "timestamp": 1794112414.328
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3AF63466-4D50-4219-9CF9-37A78BEAE634.png",
+        "bytes": 301814,
+        "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-change-screen_0_82E5360F-1D5C-443C-ADF6-5CC8266ECA45.png",
+        "timestamp": 1794112414.56
+      }
+    },
+    "large/cap": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E24850B7-68EC-4CC6-B193-56DA9BDAD9EA.png",
+        "bytes": 5580,
+        "sha256": "73ef4d79d068a18d5947415b38263bc24cbf08043c7f70fdc5cc906c0724ca87",
+        "dimensionsPixels": [
+          168,
+          60
+        ],
+        "attachmentName": "S24-measure-large-cap-crop_0_F327F147-7F32-4450-830A-8C19ADF162B9.png",
+        "timestamp": 1794112425.081
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9C341EBB-E0BF-4C9A-B774-D88904C4ACE3.png",
+        "bytes": 301814,
+        "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-cap-screen_0_2131D927-D437-4253-A0EA-DC1D19C41EF2.png",
+        "timestamp": 1794112425.324
+      }
+    },
+    "large/review-decision": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/915EBD8F-AC46-48F1-9E63-1B2E5AB1A6DB.png",
+        "bytes": 12727,
+        "sha256": "1e684bf58c624abc9fba20a89c9eb600e4883715257ffd995b2042e5e0815987",
+        "dimensionsPixels": [
+          1110,
+          156
+        ],
+        "attachmentName": "S24-measure-large-review-decision-crop_0_DCBE7E0E-5FFC-49CB-A0F1-47CE2FB881BB.png",
+        "timestamp": 1794112435.917
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/5008A570-FF4F-4A9F-8256-1716524FC352.png",
+        "bytes": 301814,
+        "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-review-decision-screen_0_DCCED764-BFEA-4D5F-8537-A14F827FCD00.png",
+        "timestamp": 1794112436.138
+      }
+    },
+    "large/review-heading": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D3DB691C-D0ED-4DFB-8747-36A993D059FA.png",
+        "bytes": 13276,
+        "sha256": "584663c4c6229fe7f6696d2a9ec59a45e815ba15448ee2276c96ebaaa95df0bb",
+        "dimensionsPixels": [
+          1110,
+          121
+        ],
+        "attachmentName": "S24-measure-large-review-heading-crop_0_C1FF6F85-9473-40C4-92A0-244AE56CB352.png",
+        "timestamp": 1794112445.305
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/068A98E7-8FC8-4ABC-91CD-5B8F7DCD8057.png",
+        "bytes": 302096,
+        "sha256": "79730e03eb905d251e404a3e755388e042730822a0f4970a24777da429fdec27",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-review-heading-screen_0_450D28D3-93C2-4A94-9232-0421D6EA9549.png",
+        "timestamp": 1794112445.538
+      }
+    },
+    "ax5/after": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/33FC58BD-ECDE-477C-ACA5-C9B2FE2362D2.png",
+        "bytes": 18901,
+        "sha256": "f44da3605f3a03a11604a7177fe26a1551c91f648de5e09db9bb33399e48f393",
+        "dimensionsPixels": [
+          520,
+          190
+        ],
+        "attachmentName": "S24-measure-ax5-after-crop_0_713C3751-3299-4424-A8CE-4C4ACF7201D6.png",
+        "timestamp": 1794112216.53
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/C21BFBB3-FD43-4EE8-A18E-0CC45B9D8623.png",
+        "bytes": 291764,
+        "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-after-screen_0_A468DFC6-B658-4B44-89B4-93789F4E77FA.png",
+        "timestamp": 1794112216.758
+      }
+    },
+    "ax5/over": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D2D37F03-DA05-4E78-A83C-5CA68A814561.png",
+        "bytes": 16250,
+        "sha256": "a6784106217cdf6ffbe3bc5f6b55bd67582836dbf9b2ef43e6fcb7e0e3827977",
+        "dimensionsPixels": [
+          424,
+          188
+        ],
+        "attachmentName": "S24-measure-ax5-over-crop_0_6AE4F792-F593-46BB-8CD1-F0510F404D5F.png",
+        "timestamp": 1794112229.902
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A4F0B729-1780-4640-8EE3-FFC19B46E81D.png",
+        "bytes": 291764,
+        "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-over-screen_0_0F68BC10-72D4-40C4-88D7-7DAA98FE38CE.png",
+        "timestamp": 1794112230.108
+      }
+    },
+    "ax5/before": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/47702D8C-E226-4BA4-8036-C4F02956E3E3.png",
+        "bytes": 16965,
+        "sha256": "24c1000038583a79de2a5acdb4d74b33c39eec66589107c65838f61758eddb1a",
+        "dimensionsPixels": [
+          520,
+          188
+        ],
+        "attachmentName": "S24-measure-ax5-before-crop_0_56C6A2C9-D799-495D-A727-1249010F6C46.png",
+        "timestamp": 1794112250.168
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E253F1E0-31B2-4886-93B3-80A72ABA87E6.png",
+        "bytes": 271150,
+        "sha256": "951143505199d565360d8a5ef251fa309a0bc7520b6cd1042b4bafa0df486098",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-before-screen_0_F001E2EA-95AE-404C-8629-33E18661D64A.png",
+        "timestamp": 1794112250.393
+      }
+    },
+    "ax5/change": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/CC3378D7-9788-4FC1-9B40-754ED38A0240.png",
+        "bytes": 14743,
+        "sha256": "39ee71cd992f30b51faac6c27a8625ea3adf9f5916b8f424de4715be94362c89",
+        "dimensionsPixels": [
+          424,
+          190
+        ],
+        "attachmentName": "S24-measure-ax5-change-crop_0_E50B1DB2-EA21-4CA4-A009-3A63A628AC6F.png",
+        "timestamp": 1794112261.772
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/81ED0857-2633-4FB6-8169-34E99354B487.png",
+        "bytes": 270447,
+        "sha256": "a24e3cd827eb1b16a79b1709358ce0d1f982b20cbcbdcb7da47d0762f8680d15",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-change-screen_0_A50802EB-350E-4317-BE6C-0DC686A93E00.png",
+        "timestamp": 1794112261.997
+      }
+    },
+    "ax5/cap": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/02506B8C-325B-450A-A3D7-22004F0D6656.png",
+        "bytes": 17407,
+        "sha256": "16abd232ff90a056d41fcd0d5095f480e02aa0d6fa88af75916c698ded2acede",
+        "dimensionsPixels": [
+          520,
+          188
+        ],
+        "attachmentName": "S24-measure-ax5-cap-crop_0_8B1077A4-8FD1-4747-81B3-F170B8FA1D94.png",
+        "timestamp": 1794112273.982
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9089DFF7-B3BD-4968-BF96-E449A8067F82.png",
+        "bytes": 283192,
+        "sha256": "fd22b6de1a6ba8f0226710ee71cba5671ce225af3142cbec98efe8a11f38bb6b",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-cap-screen_0_9B2CE7CF-091A-4B1A-A5F2-6580A0574EE3.png",
+        "timestamp": 1794112274.207
+      }
+    },
+    "ax5/review-decision": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8842E8D6-5F16-444E-BC49-8D5D88533BEA.png",
+        "bytes": 37557,
+        "sha256": "7b6145053289ae7da4abf3ddd119be7a7be77b254e0f6f38259859f4f14b9121",
+        "dimensionsPixels": [
+          1110,
+          466
+        ],
+        "attachmentName": "S24-measure-ax5-review-decision-crop_0_8E5B119A-500D-49E8-99B2-607B33370BA8.png",
+        "timestamp": 1794112298.028
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1588AB5B-282A-4BD4-A929-11CB9F2F2844.png",
+        "bytes": 261802,
+        "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-review-decision-screen_0_9CC16E63-F479-49DD-9BB3-CFE04485A932.png",
+        "timestamp": 1794112298.258
+      }
+    },
+    "ax5/review-heading": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9E79F1B1-E4D1-4E9B-AEEB-140E0B579791.png",
+        "bytes": 40137,
+        "sha256": "15d7b6b9a5ebe08718bda3c2a63ad0f79deeed0ec60008f3992c9c89c837dfae",
+        "dimensionsPixels": [
+          1110,
+          436
+        ],
+        "attachmentName": "S24-measure-ax5-review-heading-crop_0_6FEEF33A-43A4-4D86-BCF5-4513D23C18DA.png",
+        "timestamp": 1794112307.364
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D5E67E83-5A8C-4EB7-B92B-6C8D045504CB.png",
+        "bytes": 261802,
+        "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-review-heading-screen_0_6F7568D2-F6A3-49F3-B796-D0EFB37562F9.png",
+        "timestamp": 1794112307.592
+      }
+    }
+  },
+  "measurements": [
+    {
+      "size": "small",
+      "key": "after",
+      "label": "$40.69",
+      "ownerLabel": "Expected total, $40.69",
+      "ownerIdentifier": "household.decision.after-total",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 18,
+        "width": 50.333333333333314,
+        "x": 319.6666666666667,
+        "y": 580.6666666666667
+      },
+      "ownerFrame": {
+        "height": 18,
+        "width": 338,
+        "x": 32,
+        "y": 580.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        151,
+        54
+      ],
+      "pixelsPerPoint": [
+        3.0000000000000013,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1998,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1889,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 49.5263671875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 50.2880859375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 37.7373046875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 40,
+            "width": 42.27870225906372,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/2C317481-7EE8-4BF8-9F6D-592270F7554C.txt",
+          "bytes": 39175,
+          "sha256": "94573e0771e5c47e81d7298e30efedac610c9a8f5bba5b42e513c17440af2c11",
+          "attachmentName": "S24-measure-small-after-ancestry_0_F1629FB7-7D1B-458E-A9AF-42A143ED8413.txt",
+          "timestamp": 1794112507.124
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/04D4F79E-51E9-4803-A114-51A6C61DE983.png",
+          "bytes": 5657,
+          "sha256": "a98c5ce1c44af89819a1ac1a1f63f39937405eef348315b6f840eab0be7ce086",
+          "dimensionsPixels": [
+            151,
+            54
+          ],
+          "attachmentName": "S24-measure-small-after-crop_0_6750B707-3944-42CB-9818-CAED5CE9851B.png",
+          "timestamp": 1794112499.914
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1183C0F3-50AF-4D6C-9ECF-A8B1EE0EAC59.txt",
+          "bytes": 4211,
+          "sha256": "1ec7bd0ec1b89327af2c101d75535f226c31ce932c64f7bdb04f11b7bd945d54",
+          "attachmentName": "S24-measure-small-after-metrics_0_B9D052E8-73A7-400D-AF21-300F3D8DDC82.json",
+          "timestamp": 1794112510.417
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/99483CE3-3193-485B-96F8-4FCEF0005022.png",
+          "bytes": 296505,
+          "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-after-screen_0_F2718C66-D00B-4F5D-9172-91F5E5EBDB4E.png",
+          "timestamp": 1794112500.444
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "over",
+      "label": "$2.69",
+      "ownerLabel": "Over cap, $2.69",
+      "ownerIdentifier": "household.decision.over-cap",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 18,
+        "width": 41.333333333333314,
+        "x": 328.6666666666667,
+        "y": 606.6666666666667
+      },
+      "ownerFrame": {
+        "height": 18,
+        "width": 338,
+        "x": 32,
+        "y": 606.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        122,
+        54
+      ],
+      "pixelsPerPoint": [
+        2.951612903225808,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 118,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1600,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 39.978142076502714,
+            "x": 1.0163934426229504,
+            "y": 2.6666666666666665
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 118,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1517,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 39.978142076502714,
+            "x": 1.0163934426229504,
+            "y": 2.6666666666666665
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 40.078125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 41.07421875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 30.572265625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 40,
+            "width": 32.45938539505005,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/19391763-018B-4229-8515-A0CE70A3F3CB.txt",
+          "bytes": 39069,
+          "sha256": "4c119cf77927d5906c29a1dfddd60cfb74177cafbdfec1f8ff28b210c2a8d875",
+          "attachmentName": "S24-measure-small-over-ancestry_0_DD4FFDED-8A7F-4B17-B7EA-16129DBF6A27.txt",
+          "timestamp": 1794112525.173
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A48FD624-8ACD-4ADF-81A4-E4608299757A.png",
+          "bytes": 4977,
+          "sha256": "daa2a924fafc0b5b877219d86ee5355649ddb70abe3b2fc9b765a9e18632e3d3",
+          "dimensionsPixels": [
+            122,
+            54
+          ],
+          "attachmentName": "S24-measure-small-over-crop_0_11A4C3D1-BE30-4BEC-B8C5-B25B13626C9A.png",
+          "timestamp": 1794112518.626
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1DB7394B-ECD2-4DB3-A418-8C53F337EDF8.txt",
+          "bytes": 4192,
+          "sha256": "cfa3697dd35ef986552b5c61dcb25a94604288bd417a6e162233471cce25974e",
+          "attachmentName": "S24-measure-small-over-metrics_0_C40AABE4-E3C8-4690-B0D5-5E6878E1CE3C.json",
+          "timestamp": 1794112528.432
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/15CB6B8E-8825-4BED-B14B-BCB101249DFB.png",
+          "bytes": 296505,
+          "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-over-screen_0_BB45DF76-0013-4F40-8B76-49F4DE7054D1.png",
+          "timestamp": 1794112518.865
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "before",
+      "label": "$37.20",
+      "ownerLabel": "Before this decision, $37.20",
+      "ownerIdentifier": "household.decision.before-total",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 18,
+        "width": 50.333333333333314,
+        "x": 319.6666666666667,
+        "y": 658.6666666666667
+      },
+      "ownerFrame": {
+        "height": 18,
+        "width": 338,
+        "x": 32,
+        "y": 658.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        151,
+        54
+      ],
+      "pixelsPerPoint": [
+        3.0000000000000013,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1705,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1622,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 47.0361328125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 50.2880859375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 35.9111328125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 49.587271213531494,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/5A73BB36-0811-4393-8364-8236DE78ABA5.txt",
+          "bytes": 39247,
+          "sha256": "47be3e9193f71a81622b64fcf9e97457651de900c3d5ce3a1c7954357ee287b2",
+          "attachmentName": "S24-measure-small-before-ancestry_0_1D02C8AC-91BB-43AA-A53C-9530E9EE9FF7.txt",
+          "timestamp": 1794112543.342
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8AE48017-80A7-443B-8C56-48C665EBC3C2.png",
+          "bytes": 5136,
+          "sha256": "80a64c5156377c04823a0b2625859a266db047d5c0951a16ff5df91eced74352",
+          "dimensionsPixels": [
+            151,
+            54
+          ],
+          "attachmentName": "S24-measure-small-before-crop_0_28E740B4-6575-4AFD-8319-5A4E478FA492.png",
+          "timestamp": 1794112536.745
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D18C7D3C-3914-45CB-B259-E2435AA1EAC6.txt",
+          "bytes": 4219,
+          "sha256": "6cb5bb0cb3cd57f207e51e1b6968b4b9d1d05bd269ad3341631d8e07c3a1b168",
+          "attachmentName": "S24-measure-small-before-metrics_0_B9A6EAD1-4D52-4949-8D25-F329F72E070A.json",
+          "timestamp": 1794112546.72
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/203932DD-D180-48DA-AD54-ECAF71DE72CB.png",
+          "bytes": 296505,
+          "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-before-screen_0_FC2EF6C7-59A3-43D5-91F9-F5046BF3F7DF.png",
+          "timestamp": 1794112537.001
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "change",
+      "label": "$3.49",
+      "ownerLabel": "Cost change, $3.49",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 18,
+        "width": 41.333333333333314,
+        "x": 328.6666666666667,
+        "y": 684.6666666666666
+      },
+      "ownerFrame": {
+        "height": 18,
+        "width": 338,
+        "x": 32,
+        "y": 684.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        122,
+        54
+      ],
+      "pixelsPerPoint": [
+        2.951612903225808,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 118,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1564,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 39.978142076502714,
+            "x": 1.0163934426229504,
+            "y": 2.6666666666666665
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 118,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1479,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 39.978142076502714,
+            "x": 1.0163934426229504,
+            "y": 2.6666666666666665
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 40.3857421875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 41.07421875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 30.7978515625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 40,
+            "width": 32.850494384765625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DA255F43-02EC-4AA7-8C96-E152C466330D.txt",
+          "bytes": 16689,
+          "sha256": "fded8077ab8311d3809ddd2236d16504256ad3533352b06974be632425fc3fe3",
+          "attachmentName": "S24-measure-small-change-ancestry_0_8E798B9C-CEB4-4E9E-8759-25AFF75C4A60.txt",
+          "timestamp": 1794112556.692
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/75DD92B5-32B7-4D2C-A281-B87C169BC761.png",
+          "bytes": 4700,
+          "sha256": "38b3558d5ca54e9e497d2d1d190b0c10ee2c765fe5d07208fa37cbf3940b1173",
+          "dimensionsPixels": [
+            122,
+            54
+          ],
+          "attachmentName": "S24-measure-small-change-crop_0_43046236-78BA-4B97-AB35-21C851AE5D6A.png",
+          "timestamp": 1794112552.683
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A8280D1C-D3EB-4E25-A350-D1C9D0BF7709.txt",
+          "bytes": 4175,
+          "sha256": "91c6d27cf0cb2b86033a48b044f2c3d7a00b75235778ccdf838b86cc1a26ecf4",
+          "attachmentName": "S24-measure-small-change-metrics_0_B47B39B9-6540-40BB-949A-6D71EE33FC87.json",
+          "timestamp": 1794112558.552
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/459701E1-A725-47E7-9B14-9183AE053704.png",
+          "bytes": 296505,
+          "sha256": "2816f0073ff21f300e4568424f2facb1fb14e1bb7806a905f5a1fe7058030918",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-change-screen_0_3FA1BF3B-6E32-42A4-9B54-DB6920089129.png",
+          "timestamp": 1794112552.929
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "cap",
+      "label": "$38.00",
+      "ownerLabel": "Cap, $38.00",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 18,
+        "width": 50.333333333333314,
+        "x": 319.6666666666667,
+        "y": 710.6666666666666
+      },
+      "ownerFrame": {
+        "height": 18,
+        "width": 338,
+        "x": 32,
+        "y": 710.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        151,
+        54
+      ],
+      "pixelsPerPoint": [
+        3.0000000000000013,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1938,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 146,
+            "x": 3,
+            "y": 8
+          },
+          "pixelCount": 1841,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 48.66666666666664,
+            "x": 0.9999999999999996,
+            "y": 2.6666666666666665
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 49.27734375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 50.2880859375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 37.5546875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 40,
+            "width": 42.26673245429993,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9ECB6E23-7DAF-4C3A-9D7B-6F030E02559D.txt",
+          "bytes": 16611,
+          "sha256": "bbfd9a4518b8597b209773a51af13ea2123af62a54d9dfb17ceb899b7573b8f5",
+          "attachmentName": "S24-measure-small-cap-ancestry_0_3B56B1CF-2739-4AE5-9611-C1E6EB58F693.txt",
+          "timestamp": 1794112568.294
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/451230D2-F645-43B7-A4E2-80F274D0AE98.png",
+          "bytes": 5147,
+          "sha256": "468b1bac9b9acb43bc3f7ec495d13d8745505309b9fd66f4809a0369bf82879d",
+          "dimensionsPixels": [
+            151,
+            54
+          ],
+          "attachmentName": "S24-measure-small-cap-crop_0_93A1F16C-D1AD-453D-86CF-98F453915268.png",
+          "timestamp": 1794112564.481
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/AA1EC43F-0577-4697-9C51-41A67740B030.txt",
+          "bytes": 4163,
+          "sha256": "60f454a5bb6606f7315172eb17ace9687133b0207acb7e494dd7564aaffeb06e",
+          "attachmentName": "S24-measure-small-cap-metrics_0_2FC0FF48-C383-46DA-B4EB-0DECCF9F7236.json",
+          "timestamp": 1794112570.198
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3FABA6C8-2CD1-43A9-992E-1DA61B848D2D.png",
+          "bytes": 296713,
+          "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-cap-screen_0_4230A125-F5C1-49C6-A4DC-EDD40F331C4C.png",
+          "timestamp": 1794112564.715
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "review-decision",
+      "label": "Review decision",
+      "ownerLabel": "Review decision",
+      "ownerIdentifier": "household.decision.review",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 50,
+        "width": 370,
+        "x": 16,
+        "y": 384.3333333333333
+      },
+      "ownerFrame": {
+        "height": 50,
+        "width": 370,
+        "x": 16,
+        "y": 384.3333333333333
+      },
+      "cropScope": "whole plain text button including padding",
+      "cropDimensionsPixels": [
+        1110,
+        150
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 93,
+            "width": 1110,
+            "x": 0,
+            "y": 57
+          },
+          "pixelCount": 6107,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 31.0,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 19.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 35,
+            "width": 322,
+            "x": 52,
+            "y": 57
+          },
+          "pixelCount": 3599,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 11.666666666666666,
+            "width": 107.33333333333333,
+            "x": 17.333333333333332,
+            "y": 19.0
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.297771630528558,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 109.78271484375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 109.78271484375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 84.05224609375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 114.56262052059174,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/68B32F96-FC68-4F54-8225-E691B7F48FCE.txt",
+          "bytes": 6980,
+          "sha256": "317f0caea150f580a54f06da7489c6d97a9aca972e97f530390b4f7953b3772e",
+          "attachmentName": "S24-measure-small-review-decision-ancestry_0_E90A8561-031F-45D4-8532-34A794FA3317.txt",
+          "timestamp": 1794112578.658
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/0AF084B3-0131-4E7C-9844-6389F346828E.png",
+          "bytes": 11744,
+          "sha256": "cb04e8ec9c991bca1a2cd0e438544884e8c9e3ea7325a659405712cece40036e",
+          "dimensionsPixels": [
+            1110,
+            150
+          ],
+          "attachmentName": "S24-measure-small-review-decision-crop_0_71FB7FE1-CC52-491C-B2C8-F58B8FDA56DD.png",
+          "timestamp": 1794112576.237
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9413716E-29D2-405B-AC37-AFA4C2B8816E.txt",
+          "bytes": 4216,
+          "sha256": "c71c47ea296bca1e099d54b2ceaa7d1838786d85914bad15a6eb5d2b56b7b9a3",
+          "attachmentName": "S24-measure-small-review-decision-metrics_0_9E15D372-A587-4695-8A7D-F77E0C01483A.json",
+          "timestamp": 1794112580.816
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E82FD4B0-05BC-428E-A2D2-695788C9C856.png",
+          "bytes": 296713,
+          "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-review-decision-screen_0_710D2122-ED4E-414D-834F-2894B90E9846.png",
+          "timestamp": 1794112576.489
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "review-heading",
+      "label": "Review before applying",
+      "ownerLabel": "Review before applying",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 38,
+        "width": 370,
+        "x": 16,
+        "y": 451.6666666666667
+      },
+      "ownerFrame": {
+        "height": 38,
+        "width": 370,
+        "x": 16,
+        "y": 451.6666666666667
+      },
+      "cropScope": "section heading static text including padding",
+      "cropDimensionsPixels": [
+        1110,
+        114
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 494,
+            "x": 51,
+            "y": 38
+          },
+          "pixelCount": 7171,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.666666666666666,
+            "width": 164.66666666666666,
+            "x": 17.0,
+            "y": 12.666666666666666
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 492,
+            "x": 52,
+            "y": 38
+          },
+          "pixelCount": 6934,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.666666666666666,
+            "width": 164.0,
+            "x": 17.333333333333332,
+            "y": 12.666666666666666
+          }
+        }
+      ],
+      "percentileContrastEstimate": 6.347532211213864,
+      "backgroundLuminance": 0.8909690727455939,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 159.23583984375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 159.23583984375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 121.97216796875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 166.34191989898682,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/48239EA7-3484-48C1-9EC1-EEE9C799A47C.txt",
+          "bytes": 15886,
+          "sha256": "b5b1f2541d309c4102c165baffd588ad23a75a8b90007378c7a71e605265067e",
+          "attachmentName": "S24-measure-small-review-heading-ancestry_0_37C7ACA3-489E-4517-9733-59B849FA48D6.txt",
+          "timestamp": 1794112589.431
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/08259782-BA95-4195-86A8-39A5FCAE6375.png",
+          "bytes": 11844,
+          "sha256": "b1a989ddefb436e38c020d671a222a348bb98b20a3c07e23737c63826c455704",
+          "dimensionsPixels": [
+            1110,
+            114
+          ],
+          "attachmentName": "S24-measure-small-review-heading-crop_0_60198E0A-1AD0-4C6E-B4F7-783B1919B651.png",
+          "timestamp": 1794112586.341
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E2F1FA7A-D900-4F04-BA0E-9AB38126338C.txt",
+          "bytes": 4264,
+          "sha256": "1370f128fac9993c860f67d3e23cb2a1000d982e5f7c2eed3589ca907cd4992b",
+          "attachmentName": "S24-measure-small-review-heading-metrics_0_A0CB7FDB-77C8-4D39-8290-96F1746FBE98.json",
+          "timestamp": 1794112591.309
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/16D1D573-C5F8-4948-BCCA-802D91B62E17.png",
+          "bytes": 296713,
+          "sha256": "edaf03af676e0745e706e5bb1fdadc50bd0369abb57cf770da6f9f871fc887b3",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-review-heading-screen_0_BA8D8B0A-2B96-4DF3-8367-EE156F734FEB.png",
+          "timestamp": 1794112586.576
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "after",
+      "label": "$40.69",
+      "ownerLabel": "Expected total, $40.69",
+      "ownerIdentifier": "household.decision.after-total",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 20.33333333333337,
+        "width": 56,
+        "x": 314,
+        "y": 696.6666666666666
+      },
+      "ownerFrame": {
+        "height": 20.33331298828125,
+        "width": 338,
+        "x": 32,
+        "y": 696.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        168,
+        60
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.950819672131142
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2468,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2420,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 55.1337890625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 55.9970703125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 40.74609375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 44,
+            "width": 47.08578443527222,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8D213330-391A-48D4-8E04-CED7620E23CF.txt",
+          "bytes": 40389,
+          "sha256": "12fc2a146292316177912f8e6be1daa37f0b312e504349ea72160e143909e279",
+          "attachmentName": "S24-measure-large-after-ancestry_0_D267116D-AF23-45D0-B2C8-08F48FC2AEA2.txt",
+          "timestamp": 1794112367.342
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3012C6B7-66AC-4AAD-A6EA-297E4EAFD702.png",
+          "bytes": 6115,
+          "sha256": "49cd24ac2d6351d0a7d0fc3eccebfc371709299f6968763a8d975d6563e7bbdf",
+          "dimensionsPixels": [
+            168,
+            60
+          ],
+          "attachmentName": "S24-measure-large-after-crop_0_15680B24-1F2C-4B53-B4B0-079192F9CF41.png",
+          "timestamp": 1794112360.815
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DE8E50D3-708C-4993-AB5B-B4EA1E51B616.txt",
+          "bytes": 4219,
+          "sha256": "8dcb79766893bfe6e56e736ac394fcd0e733f39abc1a986eb5636d1808c7b0fc",
+          "attachmentName": "S24-measure-large-after-metrics_0_48870524-1F19-412A-ABE2-8EC925E1B222.json",
+          "timestamp": 1794112370.495
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/40065F46-C313-48A8-BB52-9C58F2411C0B.png",
+          "bytes": 286331,
+          "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-after-screen_0_B7F765D5-F1AE-4C93-BF53-FFB2D7128478.png",
+          "timestamp": 1794112361.064
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "over",
+      "label": "$2.69",
+      "ownerLabel": "Over cap, $2.69",
+      "ownerIdentifier": "household.decision.over-cap",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 20.33333333333337,
+        "width": 46,
+        "x": 324,
+        "y": 725
+      },
+      "ownerFrame": {
+        "height": 20.33331298828125,
+        "width": 338,
+        "x": 32,
+        "y": 725
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        138,
+        60
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.950819672131142
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 132,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 1977,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 44.0,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 132,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 1931,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 44.0,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 44.591796875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 45.720703125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 33,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 44,
+            "width": 36.12324094772339,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/39D13139-92D8-41EF-93A4-2732DE62BF56.txt",
+          "bytes": 40281,
+          "sha256": "527124e26f57843265d35d475918194b32f31b08ef314a7e55bb2f6ff62db808",
+          "attachmentName": "S24-measure-large-over-ancestry_0_12B7F554-1C21-41A8-B95E-12EA1F6427BD.txt",
+          "timestamp": 1794112385.532
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D6404208-59A0-4342-95CD-CE1CE4FD7776.png",
+          "bytes": 5465,
+          "sha256": "546cd9925a6e75047818abf707eca8382baa3719fa59d17890f48c3d1087fa83",
+          "dimensionsPixels": [
+            138,
+            60
+          ],
+          "attachmentName": "S24-measure-large-over-crop_0_C3CABEB8-B541-4242-B3FF-17596C0B81F5.png",
+          "timestamp": 1794112378.531
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/12E877D9-BE96-4E28-A03F-3F060B37BAEA.txt",
+          "bytes": 4166,
+          "sha256": "bacd1998e47e1010276216380df5d5f0872cbad0033055065f8fc98f39bc5f2f",
+          "attachmentName": "S24-measure-large-over-metrics_0_97A22E59-4E98-42E1-ABE9-18DF9C6DA1D3.json",
+          "timestamp": 1794112388.928
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3649576B-322B-440A-AD46-93C971AD0A94.png",
+          "bytes": 286331,
+          "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-over-screen_0_238D99BC-245E-40FB-9AE4-BE170084EBA5.png",
+          "timestamp": 1794112378.78
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "before",
+      "label": "$37.20",
+      "ownerLabel": "Before this decision, $37.20",
+      "ownerIdentifier": "household.decision.before-total",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 20.333333333333258,
+        "width": 56,
+        "x": 314,
+        "y": 539.6666666666667
+      },
+      "ownerFrame": {
+        "height": 20.33331298828125,
+        "width": 338,
+        "x": 32,
+        "y": 539.6666870117188
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        168,
+        61
+      ],
+      "pixelsPerPoint": [
+        3,
+        3.000000000000011
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2120,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.666666666666613,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 2.999999999999989
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2052,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.666666666666613,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 2.999999999999989
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 52.3115234375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 55.9970703125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 38.75390625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 55.20281362533569,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/08BB12FB-0763-4BB9-AD3E-945AAC9ADD5A.txt",
+          "bytes": 37093,
+          "sha256": "7dae4912e6933ed0185df479f212a051cdbc99626294f8a7fd2f052975fa5cc9",
+          "attachmentName": "S24-measure-large-before-ancestry_0_F64C9DCC-85A1-44E1-A607-AD6F97E1FC0E.txt",
+          "timestamp": 1794112405.455
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3B54A243-03AD-478B-B1E7-4F975A3D09FC.png",
+          "bytes": 5650,
+          "sha256": "bc82a5166f0052181f5f748cf1b133fa8a06ba7d5a9843c9d0cea2900696eca3",
+          "dimensionsPixels": [
+            168,
+            61
+          ],
+          "attachmentName": "S24-measure-large-before-crop_0_2E702525-A0ED-496F-BFD9-992FF3510722.png",
+          "timestamp": 1794112399.292
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/C06639E2-471C-40A0-9FC8-6783EC537DBB.txt",
+          "bytes": 4227,
+          "sha256": "2a05af5decedaf29ab52e67662215a795bbb2e16b9fdb3edb36fef1f4cbf0b2f",
+          "attachmentName": "S24-measure-large-before-metrics_0_54614C0F-FDB2-4C5D-9D92-A971CCC57C12.json",
+          "timestamp": 1794112408.74
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/43D6208C-7F63-49F7-8FF4-D629846B9C16.png",
+          "bytes": 301814,
+          "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-before-screen_0_977F98A3-C03C-4BA2-8A5C-88AB37BB7257.png",
+          "timestamp": 1794112399.521
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "change",
+      "label": "$3.49",
+      "ownerLabel": "Cost change, $3.49",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 20.33333333333337,
+        "width": 46,
+        "x": 324,
+        "y": 568
+      },
+      "ownerFrame": {
+        "height": 20.33331298828125,
+        "width": 338,
+        "x": 32,
+        "y": 568
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        138,
+        60
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.950819672131142
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 132,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 1937,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 44.0,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 132,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 1890,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 44.0,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 44.9404296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 45.720703125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 33.24609375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 44,
+            "width": 36.566497802734375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D906056B-F2DA-4A1B-A26B-8FD880F1EEBC.txt",
+          "bytes": 16141,
+          "sha256": "0b7530dabdda4e97e2ee63a75e0dca7c18e133d29365fba02ffe0fe1c5c089ea",
+          "attachmentName": "S24-measure-large-change-ancestry_0_D6AF30D8-2F06-4504-A0B9-A9765E2DDCA4.txt",
+          "timestamp": 1794112417.794
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/DEDC6B4E-169B-4F94-B5A0-BD230E4A9DDA.png",
+          "bytes": 5055,
+          "sha256": "63ff7d4deb4bcd53f292eefd8f10e84b9bef3059ecf344734f06f237fb6e1b13",
+          "dimensionsPixels": [
+            138,
+            60
+          ],
+          "attachmentName": "S24-measure-large-change-crop_0_7A8B99CC-C42B-4C80-BAFF-84C527CDD788.png",
+          "timestamp": 1794112414.328
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/89F97CF5-40B8-4FF2-BABB-1C5593076ED9.txt",
+          "bytes": 4154,
+          "sha256": "fc4283f7217ed0c891db154ff86379b5ef0d1fc6b75bf7cea4d271ec65a7dbe0",
+          "attachmentName": "S24-measure-large-change-metrics_0_BB4C08D7-6F86-4273-9265-5F2E3872EA8F.json",
+          "timestamp": 1794112419.543
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/3AF63466-4D50-4219-9CF9-37A78BEAE634.png",
+          "bytes": 301814,
+          "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-change-screen_0_82E5360F-1D5C-443C-ADF6-5CC8266ECA45.png",
+          "timestamp": 1794112414.56
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "cap",
+      "label": "$38.00",
+      "ownerLabel": "Cap, $38.00",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 20.33333333333337,
+        "width": 56,
+        "x": 314,
+        "y": 596.3333333333334
+      },
+      "ownerFrame": {
+        "height": 20.33331298828125,
+        "width": 338,
+        "x": 32,
+        "y": 596.3333129882812
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        168,
+        60
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.950819672131142
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2414,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 44,
+            "width": 163,
+            "x": 3,
+            "y": 9
+          },
+          "pixelCount": 2365,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.91111111111114,
+            "width": 54.333333333333336,
+            "x": 1.0,
+            "y": 3.0500000000000056
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 54.8515625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 55.9970703125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 40.546875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 44,
+            "width": 47.07221865653992,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A8B7DAC5-EB98-4B9B-84D7-C5B0CC471E06.txt",
+          "bytes": 16063,
+          "sha256": "a9774989d8c628bb6176a68d08776d7b89999e834e211120707b6eddac522f42",
+          "attachmentName": "S24-measure-large-cap-ancestry_0_C5F908D1-94BF-4369-A034-59D005534C0E.txt",
+          "timestamp": 1794112428.645
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E24850B7-68EC-4CC6-B193-56DA9BDAD9EA.png",
+          "bytes": 5580,
+          "sha256": "73ef4d79d068a18d5947415b38263bc24cbf08043c7f70fdc5cc906c0724ca87",
+          "dimensionsPixels": [
+            168,
+            60
+          ],
+          "attachmentName": "S24-measure-large-cap-crop_0_F327F147-7F32-4450-830A-8C19ADF162B9.png",
+          "timestamp": 1794112425.081
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/7F6A7179-52D4-40E7-A3B0-867D793CC342.txt",
+          "bytes": 4171,
+          "sha256": "3c261b8d0df1b6ea9310b47cd3c9f9c180010638367cc02d4b7ea3aa0f48198a",
+          "attachmentName": "S24-measure-large-cap-metrics_0_8DDD8F92-18D8-4003-BD21-5843CE967031.json",
+          "timestamp": 1794112430.393
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9C341EBB-E0BF-4C9A-B774-D88904C4ACE3.png",
+          "bytes": 301814,
+          "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-cap-screen_0_2131D927-D437-4253-A0EA-DC1D19C41EF2.png",
+          "timestamp": 1794112425.324
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "review-decision",
+      "label": "Review decision",
+      "ownerLabel": "Review decision",
+      "ownerIdentifier": "household.decision.review",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 52,
+        "width": 370,
+        "x": 16,
+        "y": 249.66666666666663
+      },
+      "ownerFrame": {
+        "height": 52,
+        "width": 370,
+        "x": 16,
+        "y": 249.66666666666663
+      },
+      "cropScope": "whole plain text button including padding",
+      "cropDimensionsPixels": [
+        1110,
+        156
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 97,
+            "width": 1110,
+            "x": 0,
+            "y": 59
+          },
+          "pixelCount": 7218,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 32.333333333333336,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 19.666666666666668
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 39,
+            "width": 359,
+            "x": 52,
+            "y": 59
+          },
+          "pixelCount": 4503,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.0,
+            "width": 119.66666666666667,
+            "x": 17.333333333333332,
+            "y": 19.666666666666668
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.297771630528558,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 121.93017578125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 121.93017578125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 90.638671875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 127.34740221500397,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/82456843-07F1-4AD4-988D-4D33D7680DB3.txt",
+          "bytes": 6692,
+          "sha256": "b2b6bb7492927d21c2fe17caaa3478a125fb1f4ee395bd9d425a585a1835776d",
+          "attachmentName": "S24-measure-large-review-decision-ancestry_0_372D0B7F-44EA-44ED-A127-B1341C1639D1.txt",
+          "timestamp": 1794112438.146
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/915EBD8F-AC46-48F1-9E63-1B2E5AB1A6DB.png",
+          "bytes": 12727,
+          "sha256": "1e684bf58c624abc9fba20a89c9eb600e4883715257ffd995b2042e5e0815987",
+          "dimensionsPixels": [
+            1110,
+            156
+          ],
+          "attachmentName": "S24-measure-large-review-decision-crop_0_DCBE7E0E-5FFC-49CB-A0F1-47CE2FB881BB.png",
+          "timestamp": 1794112435.917
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/0F6D9829-EDE5-423E-BF1B-D96760A136B7.txt",
+          "bytes": 4224,
+          "sha256": "1d792ddb47c78e5c8a7571fa4e6f5004b6f8dd903b329c637714f10e62c1c661",
+          "attachmentName": "S24-measure-large-review-decision-metrics_0_B1BCCD15-BE61-4B9E-A398-CB2482EA3AEC.json",
+          "timestamp": 1794112439.849
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/5008A570-FF4F-4A9F-8256-1716524FC352.png",
+          "bytes": 301814,
+          "sha256": "401d1b0cc3f8a0415aa535f9479da754b3be0cfa111630e03d360ae577ea6325",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-review-decision-screen_0_DCCED764-BFEA-4D5F-8537-A14F827FCD00.png",
+          "timestamp": 1794112436.138
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "review-heading",
+      "label": "Review before applying",
+      "ownerLabel": "Review before applying",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 40.333333333333314,
+        "width": 370,
+        "x": 16,
+        "y": 319
+      },
+      "ownerFrame": {
+        "height": 40.333333333333314,
+        "width": 370,
+        "x": 16,
+        "y": 319
+      },
+      "cropScope": "section heading static text including padding",
+      "cropDimensionsPixels": [
+        1110,
+        121
+      ],
+      "pixelsPerPoint": [
+        3,
+        3.0000000000000013
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 49,
+            "width": 548,
+            "x": 52,
+            "y": 40
+          },
+          "pixelCount": 9091,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 16.333333333333325,
+            "width": 182.66666666666666,
+            "x": 17.333333333333332,
+            "y": 13.333333333333327
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 49,
+            "width": 548,
+            "x": 52,
+            "y": 40
+          },
+          "pixelCount": 8845,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 16.333333333333325,
+            "width": 182.66666666666666,
+            "x": 17.333333333333332,
+            "y": 13.333333333333327
+          }
+        }
+      ],
+      "percentileContrastEstimate": 6.347532211213864,
+      "backgroundLuminance": 0.8909690727455939,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 176.81494140625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 176.81494140625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 131.513671875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 184.86849880218506,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/368A298A-798C-4694-A33E-F32BEBF7DFA3.txt",
+          "bytes": 15338,
+          "sha256": "ea3e9de2db01af6e8d4b9a7cae5f9ba88fa11dccc8cc659327903f144526268f",
+          "attachmentName": "S24-measure-large-review-heading-ancestry_0_240F7EDB-A0E5-46A2-B8F2-9122B2666C07.txt",
+          "timestamp": 1794112448.251
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D3DB691C-D0ED-4DFB-8747-36A993D059FA.png",
+          "bytes": 13276,
+          "sha256": "584663c4c6229fe7f6696d2a9ec59a45e815ba15448ee2276c96ebaaa95df0bb",
+          "dimensionsPixels": [
+            1110,
+            121
+          ],
+          "attachmentName": "S24-measure-large-review-heading-crop_0_C1FF6F85-9473-40C4-92A0-244AE56CB352.png",
+          "timestamp": 1794112445.305
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/28045E7D-D3D6-44F3-A94A-BE9C675748B0.txt",
+          "bytes": 4291,
+          "sha256": "7d17447eeaf185dfdb3b5a79874422ef7947d56e4d31cc44c5bbd1b42cd987e6",
+          "attachmentName": "S24-measure-large-review-heading-metrics_0_A5F02F6C-ED28-4AA3-A4AF-91DDA0D72DF9.json",
+          "timestamp": 1794112450.13
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/068A98E7-8FC8-4ABC-91CD-5B8F7DCD8057.png",
+          "bytes": 302096,
+          "sha256": "79730e03eb905d251e404a3e755388e042730822a0f4970a24777da429fdec27",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-review-heading-screen_0_450D28D3-93C2-4A94-9232-0421D6EA9549.png",
+          "timestamp": 1794112445.538
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "after",
+      "label": "$40.69",
+      "ownerLabel": "Expected total, $40.69",
+      "ownerIdentifier": "household.decision.after-total",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 63.33333333333337,
+        "width": 173.66666666666666,
+        "x": 32,
+        "y": 545.6666666666666
+      },
+      "ownerFrame": {
+        "height": 130.66665649414062,
+        "width": 320,
+        "x": 32,
+        "y": 478.3333435058594
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        520,
+        190
+      ],
+      "pixelsPerPoint": [
+        2.9942418426103647,
+        2.9999999999999982
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 504,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 21166,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.33333333333336,
+            "width": 168.3230769230769,
+            "x": 3.0057692307692307,
+            "y": 9.000000000000005
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 504,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 20946,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.33333333333336,
+            "width": 168.3230769230769,
+            "x": 3.0057692307692307,
+            "y": 9.000000000000005
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 140.8330078125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 173.4404296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 141.681640625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 146.6593440771103,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9BDC73FA-B0AD-4E2A-8F0A-72993FD38FAE.txt",
+          "bytes": 30939,
+          "sha256": "5571cb120f6165b1d29e0f29e4da93a411580ddffb1c7fe81586766b9df0e934",
+          "attachmentName": "S24-measure-ax5-after-ancestry_0_AED3725F-8885-4028-8AE7-EBA533FF1F68.txt",
+          "timestamp": 1794112221.373
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/33FC58BD-ECDE-477C-ACA5-C9B2FE2362D2.png",
+          "bytes": 18901,
+          "sha256": "f44da3605f3a03a11604a7177fe26a1551c91f648de5e09db9bb33399e48f393",
+          "dimensionsPixels": [
+            520,
+            190
+          ],
+          "attachmentName": "S24-measure-ax5-after-crop_0_713C3751-3299-4424-A8CE-4C4ACF7201D6.png",
+          "timestamp": 1794112216.53
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/4AEAA6B4-6BD4-455F-87AF-BDD473D29C11.txt",
+          "bytes": 4303,
+          "sha256": "bdfbd006e70dc97d595af3517be70823613701d5b57cce563f338ef58ea30656",
+          "attachmentName": "S24-measure-ax5-after-metrics_0_2290908E-1B13-4E65-8124-48C7738AC927.json",
+          "timestamp": 1794112223.784
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/C21BFBB3-FD43-4EE8-A18E-0CC45B9D8623.png",
+          "bytes": 291764,
+          "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-after-screen_0_A468DFC6-B658-4B44-89B4-93789F4E77FA.png",
+          "timestamp": 1794112216.758
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "over",
+      "label": "$2.69",
+      "ownerLabel": "Over cap, $2.69",
+      "ownerIdentifier": "household.decision.over-cap",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 63.33333333333326,
+        "width": 141.33333333333334,
+        "x": 32,
+        "y": 684.3333333333334
+      },
+      "ownerFrame": {
+        "height": 130.6666259765625,
+        "width": 202.6666717529297,
+        "x": 32,
+        "y": 617
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        424,
+        188
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.9684210526315824
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 407,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 16984,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687938,
+            "width": 135.66666666666666,
+            "x": 3.0,
+            "y": 9.095744680851054
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 407,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 16794,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687938,
+            "width": 135.66666666666666,
+            "x": 3.0,
+            "y": 9.095744680851054
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 140.39306640625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 141.091796875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 114.4287109375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 111.59178340435028,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/F6F805D0-FF6B-4592-BFA9-E8DA59840485.txt",
+          "bytes": 30833,
+          "sha256": "ce88a93279630d6c211770630e8ffcdb6626364702054227e1cd6e8d3c786290",
+          "attachmentName": "S24-measure-ax5-over-ancestry_0_C980AB9C-8E49-4D68-B107-FB4D3846A947.txt",
+          "timestamp": 1794112234.434
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D2D37F03-DA05-4E78-A83C-5CA68A814561.png",
+          "bytes": 16250,
+          "sha256": "a6784106217cdf6ffbe3bc5f6b55bd67582836dbf9b2ef43e6fcb7e0e3827977",
+          "dimensionsPixels": [
+            424,
+            188
+          ],
+          "attachmentName": "S24-measure-ax5-over-crop_0_6AE4F792-F593-46BB-8CD1-F0510F404D5F.png",
+          "timestamp": 1794112229.902
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1E401619-EF08-46C3-B85A-A3963787756C.txt",
+          "bytes": 4273,
+          "sha256": "5d97bdbe4c70cb124e25472352a56a3ebb3554bb6c071607d9063f77bbc4f282",
+          "attachmentName": "S24-measure-ax5-over-metrics_0_7767848F-D998-45BF-A7B5-48AD758C57CA.json",
+          "timestamp": 1794112236.868
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A4F0B729-1780-4640-8EE3-FFC19B46E81D.png",
+          "bytes": 291764,
+          "sha256": "ab43fc5d4ad0da873c03ca2e1c1f29efedf85cf8092542cff818d3caef9bef3d",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-over-screen_0_0F68BC10-72D4-40C4-88D7-7DAA98FE38CE.png",
+          "timestamp": 1794112230.108
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "before",
+      "label": "$37.20",
+      "ownerLabel": "Before this decision, $37.20",
+      "ownerIdentifier": "household.decision.before-total",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 63.333333333333314,
+        "width": 173.66666666666666,
+        "x": 32,
+        "y": 501.9999999999997
+      },
+      "ownerFrame": {
+        "height": 192.66665649414062,
+        "width": 248.66668701171875,
+        "x": 32,
+        "y": 372.6666564941406
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        520,
+        188
+      ],
+      "pixelsPerPoint": [
+        2.9942418426103647,
+        2.9684210526315797
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 503,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 18197,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687942,
+            "width": 167.98910256410255,
+            "x": 3.0057692307692307,
+            "y": 9.09574468085106
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 503,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 18014,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687942,
+            "width": 167.98910256410255,
+            "x": 3.0057692307692307,
+            "y": 9.09574468085106
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 163.11474609375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 173.4404296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 132.96826171875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 170.17846179008484,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/4948D284-C046-4EC1-AD61-1FFF81C943C2.txt",
+          "bytes": 29261,
+          "sha256": "b9fa22af48aa70e20e23e9e24f68053cdbe906bfae1601aa9534996cc440d9f9",
+          "attachmentName": "S24-measure-ax5-before-ancestry_0_EA74B35B-C90D-42B0-AF93-1C5F2975A457.txt",
+          "timestamp": 1794112254.636
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/47702D8C-E226-4BA4-8036-C4F02956E3E3.png",
+          "bytes": 16965,
+          "sha256": "24c1000038583a79de2a5acdb4d74b33c39eec66589107c65838f61758eddb1a",
+          "dimensionsPixels": [
+            520,
+            188
+          ],
+          "attachmentName": "S24-measure-ax5-before-crop_0_56C6A2C9-D799-495D-A727-1249010F6C46.png",
+          "timestamp": 1794112250.168
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E835E590-9C17-4150-B61B-DB8212E84A5C.txt",
+          "bytes": 4327,
+          "sha256": "2e7b64335b5383caa5d9fa29966f1171e2cbd6e2e0f94e735bec5ccdafac4499",
+          "attachmentName": "S24-measure-ax5-before-metrics_0_47FC9F1B-69FF-4DE6-8E5A-57370D3F0D84.json",
+          "timestamp": 1794112257.031
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/E253F1E0-31B2-4886-93B3-80A72ABA87E6.png",
+          "bytes": 271150,
+          "sha256": "951143505199d565360d8a5ef251fa309a0bc7520b6cd1042b4bafa0df486098",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-before-screen_0_F001E2EA-95AE-404C-8629-33E18661D64A.png",
+          "timestamp": 1794112250.393
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "change",
+      "label": "$3.49",
+      "ownerLabel": "Cost change, $3.49",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 63.33333333333337,
+        "width": 141.33333333333334,
+        "x": 32,
+        "y": 640.6666666666663
+      },
+      "ownerFrame": {
+        "height": 130.66668701171875,
+        "width": 285.3333435058594,
+        "x": 32,
+        "y": 573.3333129882812
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        424,
+        190
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.9999999999999982
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 407,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 16389,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.33333333333336,
+            "width": 135.66666666666666,
+            "x": 3.0,
+            "y": 9.000000000000005
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 407,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 16233,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.33333333333336,
+            "width": 135.66666666666666,
+            "x": 3.0,
+            "y": 9.000000000000005
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 140.3154296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 141.091796875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 114.36572265625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 112.87444460391998,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/B4079660-9587-4C84-AE2B-3B451BA371DB.txt",
+          "bytes": 15277,
+          "sha256": "75c7d44786227bed6a5ca9bdf0b8ccff6873a2c1090b342b92d56b40bf2ec4a8",
+          "attachmentName": "S24-measure-ax5-change-ancestry_0_30E5C31B-E112-4482-B9F8-5CB285EBDF31.txt",
+          "timestamp": 1794112264.849
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/CC3378D7-9788-4FC1-9B40-754ED38A0240.png",
+          "bytes": 14743,
+          "sha256": "39ee71cd992f30b51faac6c27a8625ea3adf9f5916b8f424de4715be94362c89",
+          "dimensionsPixels": [
+            424,
+            190
+          ],
+          "attachmentName": "S24-measure-ax5-change-crop_0_E50B1DB2-EA21-4CA4-A009-3A63A628AC6F.png",
+          "timestamp": 1794112261.772
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/B84B736A-7C12-45E8-A087-716774BDADA5.txt",
+          "bytes": 4267,
+          "sha256": "1691f5670aef79ca974292ca50b21cf995c7c306114b1b389b4b1a66520f6a92",
+          "attachmentName": "S24-measure-ax5-change-metrics_0_81026E7C-4B4C-4538-9141-0C0570E09C41.json",
+          "timestamp": 1794112266.329
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/81ED0857-2633-4FB6-8169-34E99354B487.png",
+          "bytes": 270447,
+          "sha256": "a24e3cd827eb1b16a79b1709358ce0d1f982b20cbcbdcb7da47d0762f8680d15",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-change-screen_0_A50802EB-350E-4317-BE6C-0DC686A93E00.png",
+          "timestamp": 1794112261.997
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "cap",
+      "label": "$38.00",
+      "ownerLabel": "Cap, $38.00",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 63.33333333333326,
+        "width": 173.66666666666666,
+        "x": 32,
+        "y": 537.3333333333328
+      },
+      "ownerFrame": {
+        "height": 130.6666259765625,
+        "width": 173.6666717529297,
+        "x": 32,
+        "y": 470
+      },
+      "cropScope": "exact amount child of exact combined row",
+      "cropDimensionsPixels": [
+        520,
+        188
+      ],
+      "pixelsPerPoint": [
+        2.9942418426103647,
+        2.9684210526315824
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 503,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 20802,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687938,
+            "width": 167.98910256410255,
+            "x": 3.0057692307692307,
+            "y": 9.095744680851054
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 136,
+            "width": 503,
+            "x": 9,
+            "y": 27
+          },
+          "pixelCount": 20579,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 45.81560283687938,
+            "width": 167.98910256410255,
+            "x": 3.0057692307692307,
+            "y": 9.095744680851054
+          }
+        }
+      ],
+      "percentileContrastEstimate": 7.083026440313754,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 171.939453125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 173.4404296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 140.1279296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 146.1167083978653,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Production body with monospacedDigit; reference metrics, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/106B1BDA-35A3-4AC3-BB05-445F4AFF2BDC.txt",
+          "bytes": 15205,
+          "sha256": "c1c1057b85fe3d2b5179a1aa509e28c3bb1b0cec10434f54d7fe2ce8793473b2",
+          "attachmentName": "S24-measure-ax5-cap-ancestry_0_DE626320-3300-4D02-9B18-1D6D25DBD242.txt",
+          "timestamp": 1794112276.764
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/02506B8C-325B-450A-A3D7-22004F0D6656.png",
+          "bytes": 17407,
+          "sha256": "16abd232ff90a056d41fcd0d5095f480e02aa0d6fa88af75916c698ded2acede",
+          "dimensionsPixels": [
+            520,
+            188
+          ],
+          "attachmentName": "S24-measure-ax5-cap-crop_0_8B1077A4-8FD1-4747-81B3-F170B8FA1D94.png",
+          "timestamp": 1794112273.982
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/AE0B0366-9BEA-4489-AA63-0E11C00E9DCF.txt",
+          "bytes": 4256,
+          "sha256": "03d60941e22b1967065fa9dc581abd61c700a68032938cabfeade9b3af528b3b",
+          "attachmentName": "S24-measure-ax5-cap-metrics_0_4E2245B8-301B-4057-9E83-9D484095DA23.json",
+          "timestamp": 1794112278.411
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9089DFF7-B3BD-4968-BF96-E449A8067F82.png",
+          "bytes": 283192,
+          "sha256": "fd22b6de1a6ba8f0226710ee71cba5671ce225af3142cbec98efe8a11f38bb6b",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-cap-screen_0_9B2CE7CF-091A-4B1A-A5F2-6580A0574EE3.png",
+          "timestamp": 1794112274.207
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "review-decision",
+      "label": "Review decision",
+      "ownerLabel": "Review decision",
+      "ownerIdentifier": "household.decision.review",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 155.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 371.3333333333335
+      },
+      "ownerFrame": {
+        "height": 155.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 371.3333333333335
+      },
+      "cropScope": "whole plain text button including padding",
+      "cropDimensionsPixels": [
+        1110,
+        466
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.999999999999999
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 382,
+            "width": 1110,
+            "x": 0,
+            "y": 84
+          },
+          "pixelCount": 41848,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 127.33333333333337,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 28.000000000000007
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 300,
+            "width": 551,
+            "x": 52,
+            "y": 84
+          },
+          "pixelCount": 38680,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 100.00000000000003,
+            "width": 183.66666666666666,
+            "x": 17.333333333333332,
+            "y": 28.000000000000007
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.297771630528558,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 360.57080078125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 63.248046875,
+            "width": 360.57080078125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 51.314453125,
+            "width": 294.11328125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 199.4291696548462,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/6DF41A94-A6D4-4D9B-839B-68338829093B.txt",
+          "bytes": 5874,
+          "sha256": "3588fed31db1f80bd36a32358f3d9ee4efc0230f20b090d1a37a3ba7687ae688",
+          "attachmentName": "S24-measure-ax5-review-decision-ancestry_0_C56BA491-AE91-470A-91A0-DEC15369ADBD.txt",
+          "timestamp": 1794112300.142
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/8842E8D6-5F16-444E-BC49-8D5D88533BEA.png",
+          "bytes": 37557,
+          "sha256": "7b6145053289ae7da4abf3ddd119be7a7be77b254e0f6f38259859f4f14b9121",
+          "dimensionsPixels": [
+            1110,
+            466
+          ],
+          "attachmentName": "S24-measure-ax5-review-decision-crop_0_8E5B119A-500D-49E8-99B2-607B33370BA8.png",
+          "timestamp": 1794112298.028
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9ADDF0FD-FCDB-4383-A7F2-633721DE9E5B.txt",
+          "bytes": 4316,
+          "sha256": "5dc0e373c7ddfa27867319caa5c3f1f25ac64e218e296cf08fcc85f2afd6e560",
+          "attachmentName": "S24-measure-ax5-review-decision-metrics_0_CC17674A-EAFB-4C98-AF0F-8A9C3590365B.json",
+          "timestamp": 1794112302.43
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/1588AB5B-282A-4BD4-A929-11CB9F2F2844.png",
+          "bytes": 261802,
+          "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-review-decision-screen_0_9CC16E63-F479-49DD-9BB3-CFE04485A932.png",
+          "timestamp": 1794112298.258
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "review-heading",
+      "label": "Review before applying",
+      "ownerLabel": "Review before applying",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 145.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 544
+      },
+      "ownerFrame": {
+        "height": 145.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 544
+      },
+      "cropScope": "section heading static text including padding",
+      "cropDimensionsPixels": [
+        1110,
+        436
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.999999999999999
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 331,
+            "width": 992,
+            "x": 52,
+            "y": 65
+          },
+          "pixelCount": 78154,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 110.33333333333337,
+            "width": 330.6666666666667,
+            "x": 17.333333333333332,
+            "y": 21.66666666666667
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 331,
+            "width": 992,
+            "x": 52,
+            "y": 65
+          },
+          "pixelCount": 77101,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 110.33333333333337,
+            "width": 330.6666666666667,
+            "x": 17.333333333333332,
+            "y": 21.66666666666667
+          }
+        }
+      ],
+      "percentileContrastEstimate": 6.347532211213864,
+      "backgroundLuminance": 0.8909690727455939,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 325.84130859375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 126.49609375,
+            "width": 325.84130859375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 102.314453125,
+            "width": 265.83154296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 344.5249185562134,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/269E915F-EAA4-45EA-A7FF-ABFB7258255D.txt",
+          "bytes": 15114,
+          "sha256": "576763d790014f9e0d6197619fb583d2fce67bdb6e3edba5ddc525bf51915327",
+          "attachmentName": "S24-measure-ax5-review-heading-ancestry_0_05AD635B-EB57-4EDA-BB50-2EFA45BFED7C.txt",
+          "timestamp": 1794112310.359
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/9E79F1B1-E4D1-4E9B-AEEB-140E0B579791.png",
+          "bytes": 40137,
+          "sha256": "15d7b6b9a5ebe08718bda3c2a63ad0f79deeed0ec60008f3992c9c89c837dfae",
+          "dimensionsPixels": [
+            1110,
+            436
+          ],
+          "attachmentName": "S24-measure-ax5-review-heading-crop_0_6FEEF33A-43A4-4D86-BCF5-4513D23C18DA.png",
+          "timestamp": 1794112307.364
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/A352E49A-84FD-43ED-92D4-2D6AB6CF8961.txt",
+          "bytes": 4338,
+          "sha256": "86556965f4dccd6beefd0209c9163af3a46dcb44fd140ab81763c4bee52317cc",
+          "attachmentName": "S24-measure-ax5-review-heading-metrics_0_6830E397-39DE-4E9E-AAF4-2D573885E1BA.json",
+          "timestamp": 1794112312.524
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r2/inspection/attachments/D5E67E83-5A8C-4EB7-B92B-6C8D045504CB.png",
+          "bytes": 261802,
+          "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-review-heading-screen_0_6F7568D2-F6A3-49F3-B796-D0EFB37562F9.png",
+          "timestamp": 1794112307.592
+        }
+      }
+    }
+  ]
+}

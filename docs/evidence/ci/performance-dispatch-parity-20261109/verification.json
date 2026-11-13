@@ -1,0 +1,161 @@
+{
+  "scope": "Actual unchanged Ubuntu preflight step executed locally; local OS/Python are not the GitHub runner",
+  "hostedFirstFailure": {
+    "runID": 42697685059,
+    "headSHA": "28925824771db1ff014112c91b8e14de77b9add9",
+    "firstStage": "performance-plan",
+    "macJobsRan": false,
+    "receiptSHA256": "62e4d4f7886fe5b865a508cc70c515a5ab2eed3a8fced97d4053765275524346"
+  },
+  "fixes": [
+    "Isolate ordinary mock fixtures from inherited observer settings",
+    "Verify ordinary and diagnostic artifact branches",
+    "Run the entire actual cheap step with workflow-derived profile and bind its source inputs"
+  ],
+  "runs": {
+    "dispatch-parity-final-diagnostic": {
+      "receiptSHA256": "5b32004de5e46d20896afbd4ce99516b98a401a5ef1055ab752c94a35050d36f",
+      "sourceManifestSHA256": "937a0b7492613cbae71102d8c037b2b0cfd53a63bb83cc020464c93559680467",
+      "logSHA256": "9fd8d0d8650b517466f549c2a39e3a2efbff25d160ff22e304b4c28b13e275e3",
+      "sourceFiles": 693,
+      "seconds": 5.883,
+      "inputs": {
+        "case": "scroll",
+        "observe_app_scroll_signposts": true,
+        "capture_scroll_signposts": false,
+        "capture_preflight_only": false,
+        "fresh_performance_simulator": true,
+        "enable_performance_diagnostics": false,
+        "enforce_baselines": false
+      },
+      "workflowEnvironment": {
+        "DEVELOPER_DIR": "/Applications/Xcode_27.1.app/Contents/Developer",
+        "CI_IPHONE_RUNTIME": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+        "CI_IPHONE_NAME": "iPhone 17",
+        "ENFORCE_BASELINES": "false",
+        "REQUESTED_PERFORMANCE_CASE": "scroll",
+        "ENABLE_PERFORMANCE_DIAGNOSTICS": "false",
+        "CAPTURE_SCROLL_SIGNPOSTS": "false",
+        "CAPTURE_PREFLIGHT_ONLY": "false",
+        "OBSERVE_APP_SCROLL_SIGNPOSTS": "true",
+        "FRESH_PERFORMANCE_SIMULATOR": "true",
+        "GITHUB_EVENT_NAME": "workflow_dispatch"
+      },
+      "checks": 227,
+      "suites": 8
+    },
+    "dispatch-parity-final-ordinary": {
+      "receiptSHA256": "e5a2d9d4d98366b3117414e0709139c533f847b981ccf61afb3d15bdb83d7f92",
+      "sourceManifestSHA256": "937a0b7492613cbae71102d8c037b2b0cfd53a63bb83cc020464c93559680467",
+      "logSHA256": "d03ab5e3b7db7564246aa173b10444f7c863064b9a06c88dd078a5c006620b3a",
+      "sourceFiles": 693,
+      "seconds": 5.86,
+      "inputs": {
+        "case": "all",
+        "observe_app_scroll_signposts": false,
+        "capture_scroll_signposts": false,
+        "capture_preflight_only": false,
+        "fresh_performance_simulator": false,
+        "enable_performance_diagnostics": false,
+        "enforce_baselines": false
+      },
+      "workflowEnvironment": {
+        "DEVELOPER_DIR": "/Applications/Xcode_27.1.app/Contents/Developer",
+        "CI_IPHONE_RUNTIME": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+        "CI_IPHONE_NAME": "iPhone 17",
+        "ENFORCE_BASELINES": "false",
+        "REQUESTED_PERFORMANCE_CASE": "",
+        "ENABLE_PERFORMANCE_DIAGNOSTICS": "false",
+        "CAPTURE_SCROLL_SIGNPOSTS": "false",
+        "CAPTURE_PREFLIGHT_ONLY": "false",
+        "OBSERVE_APP_SCROLL_SIGNPOSTS": "false",
+        "FRESH_PERFORMANCE_SIMULATOR": "false",
+        "GITHUB_EVENT_NAME": "workflow_dispatch"
+      },
+      "checks": 227,
+      "suites": 8
+    }
+  },
+  "parityToolControlsPassed": 6,
+  "parityToolSHA256": "0944a3ee47ab7c190cb962b951d72e53d812cdf5ad27c21907547b6fefe9ed6e",
+  "parityTestsSHA256": "ff7490831711e7287565343197cd0f0cc40408c0004a45ddfce171b10072f8aa",
+  "incrementalPreparationCountIsNotFinalPreflightQualification": true,
+  "preservedLocalSetupAttempts": [
+    "dispatch-parity-r1",
+    "dispatch-parity-r2",
+    "dispatch-parity-r3"
+  ],
+  "nativeOrSimulatorExecuted": false,
+  "fullAppOrBaselineQualified": false,
+  "parityToolControlsLogSHA256": "e504fe7649acfb157039d59eb938eff63ea4efb63af539b744a74520bb9f2e72",
+  "supportedEvents": [
+    "workflow_dispatch",
+    "pull_request"
+  ],
+  "workflowCallRejected": true,
+  "hostedSuccessor": {
+    "runID": 42700832046,
+    "headSHA": "506fef51dff21f894a9f0bc85a1ccb20640a7b01",
+    "ubuntuChecksPassed": 227,
+    "result": "Producer rejected xcodebuild SHA before build; consumer skipped",
+    "observedToolHashAvailable": false,
+    "artifactCount": 0,
+    "monitoringReceiptSHA256": "da2030d513306ad03228cc1aae4ca9389365f2b5f159edde52ae529f60d3e034"
+  },
+  "failureIdentityRetention": {
+    "acceptedIdentitiesAndGuardsUnchanged": true,
+    "focusedControlsPassed": 16,
+    "previousRevisionNegativeSubcases": 4,
+    "sourceSHA256": {
+      "scripts/app_scroll_observation/contract.py": "092373084feabc5e49b56ce458415360fa141a38d5c1ab32cf0bcd5238d66a58",
+      "scripts/app_scroll_observation/producer.py": "ef786d87b033c8efb5294a5ec7d17d23afe1058458d475c7505937577818beed",
+      "scripts/app_scroll_observation/contract.json": "5f3fbaae851fe72b57bfdfe3922907fb746a18e5735045a9602e52011cc92e26",
+      "scripts/test_app_scroll_preflight_retention.py": "d1b0d6a56b3ee1d3ee09d921dde07e85de77e799362b858361ee40f58bb34067",
+      ".github/workflows/ios-performance.yml": "11cfe9a9032b74b193344f8d117e67e3933949b2b2075ce49a7194a3a1fce839"
+    },
+    "frozenR2ReceiptSHA256": "d9cc6cb3fcd8a0c31aa8d8f9aaa7d065aede85290c79b2707e6c1a0bb8ee2763",
+    "frozenR2ManifestSHA256": "64e45a91bb461d6b52e1003e0eb6af5dd9345623fb8456658604958f4313663b",
+    "localInventorySHA256": "f81d34fb672832164da0773f53b850ac26628ab88068be8116dc1a905ce80616",
+    "localInventoryScope": "Read-only r1 inventory, no native commands; r2 changes mandatory deadline/drift handling only",
+    "workflowLintSHA256": "b399aa8597f392b3de0fc25191971e2aef57e0893d4ee68388c88d61b492a677",
+    "queueDefinitionsVerified": 17,
+    "finalProfiles": {
+      "dispatch-retention-final-diagnostic": {
+        "receiptSHA256": "7a9bd9ec559b0db5a6286a48649b8cb96213baed8447a34d6188107fb99e24dc",
+        "checks": 243,
+        "suites": 9,
+        "sourceManifestSHA256": "8869328413f01d76025003a2964934c7b7d52800adb85378bd843a396791c102",
+        "logSHA256": "1561dcb6ef3001a646fcd75ff8c4f81428cf4f8a4332630ee10b04e2056c1803",
+        "sourceFiles": 694,
+        "seconds": 6.425,
+        "inputs": {
+          "case": "scroll",
+          "observe_app_scroll_signposts": true,
+          "capture_scroll_signposts": false,
+          "capture_preflight_only": false,
+          "fresh_performance_simulator": true,
+          "enable_performance_diagnostics": false,
+          "enforce_baselines": false
+        }
+      },
+      "dispatch-retention-final-ordinary": {
+        "receiptSHA256": "fdb9d855280bf90ca459e3662aae0bdb703db8e4d75932781f8ca60d3ae2d693",
+        "checks": 243,
+        "suites": 9,
+        "sourceManifestSHA256": "8869328413f01d76025003a2964934c7b7d52800adb85378bd843a396791c102",
+        "logSHA256": "a93362c667edfda93ef5ab38a35403e2474e898792e17c11a546a7f792d26fb6",
+        "sourceFiles": 694,
+        "seconds": 6.408,
+        "inputs": {
+          "case": "all",
+          "observe_app_scroll_signposts": false,
+          "capture_scroll_signposts": false,
+          "capture_preflight_only": false,
+          "fresh_performance_simulator": false,
+          "enable_performance_diagnostics": false,
+          "enforce_baselines": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T18:15:15.031903+00:00",
+  "finishedAtUTC": "2026-11-08T18:15:44.523217+00:00",
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "runnerSHA256": "5da4bd09dadb5d8b5e67b690a44e8a44a5af02252aa3eef56ed17ed138a1e18c",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "bundleCheckCommand": [
+    "python3",
+    "scripts/check_built_app.py",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+    "--configuration",
+    "Release"
+  ],
+  "scope": "Unchanged portion typography candidate unsigned generic iPhone arm64 Release and compiled-bundle validation; no distribution or physical acceptance",
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "toolchain": {
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1"
+  },
+  "originalRunReceipt": {
+    "path": ".build/S24PortionTypographyNov08/release-r1/run/run.json",
+    "sha256": "45b596542d9bc1d600580cf24f7fe2eaf504cdac775455b5c329b309970c1754"
+  },
+  "verifier": {
+    "path": "scripts/check_built_app.py",
+    "sha256": "6fe1934c8f806aa36418c2243688c706f20c132ca34d569e0bf9d72b91e4d6e6",
+    "matchesPreparedPin": true
+  },
+  "selectedProductHashes": {
+    "RoomInTheCart": {
+      "bytes": 58223168,
+      "sha256": "aecfa2e540e81f5f65a3f803730149b534022ca1b31937de0221ec18402e9e96",
+      "matchesExistingProduct": true
+    },
+    "Info.plist": {
+      "bytes": 2765,
+      "sha256": "39bb34189c6fa158bb8a0259f4dec91818020a6d646c647dfaa510a229f775b7",
+      "matchesExistingProduct": true
+    },
+    "PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare": {
+      "bytes": 653960,
+      "sha256": "00602f3dea0583fb28e7d326633fbd3bae6e8c65c6fc4b95130ad984f6e85224",
+      "matchesExistingProduct": true
+    },
+    "PlugIns/RoomInTheCartShare.appex/Info.plist": {
+      "bytes": 1156,
+      "sha256": "40d2fc7c17943199d3032c72a407add61f6938ee8f89084b9ef49cc3e6af97d2",
+      "matchesExistingProduct": true
+    },
+    "PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget": {
+      "bytes": 572344,
+      "sha256": "13fdd82ba1f5c672b0a102f2786d387cd7a2479ffe9cbf500f326dd1cb3c9658",
+      "matchesExistingProduct": true
+    },
+    "PlugIns/RoomInTheCartWidget.appex/Info.plist": {
+      "bytes": 1013,
+      "sha256": "4a015a803b604d7d82fbf1adb46cf91ac0dbfb4a91db8e0e378b88cbafa3584c",
+      "matchesExistingProduct": true
+    }
+  },
+  "buildLog": {
+    "sha256": "f58c676957487f7e902f862860e1a80c5aea280cb8fb4d0eb80355390cea11e9",
+    "bytes": 51610
+  },
+  "bundleCheckOutput": {
+    "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+    "bytes": 105
+  }
+}

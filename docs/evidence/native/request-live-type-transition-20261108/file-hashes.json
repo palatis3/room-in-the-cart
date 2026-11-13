@@ -1,0 +1,107 @@
+[
+  {
+    "path": "README.md",
+    "bytes": 3487,
+    "sha256": "4ee6e91a38d283bd106debeeba3918fc022f65c7960243aa4cfa879145f745b1"
+  },
+  {
+    "path": "attachment-binding.json",
+    "bytes": 4973,
+    "sha256": "d6b9de5c466e9b7e5f2b853fbc498289a14e3afef8c3a8adc09fff4729d1792c"
+  },
+  {
+    "path": "geometry/AX5-expiry-date-geometry.txt",
+    "bytes": 221,
+    "sha256": "9ec02edbf27ba2496015147eecfd5e763cbd3cc3f141c4b7128ddc411882cb34"
+  },
+  {
+    "path": "geometry/AX5-expiry-title-geometry.txt",
+    "bytes": 201,
+    "sha256": "d8817a7e069b655061ae80f3222a53ed29f25758c54af3caf6a6abc1ee628183"
+  },
+  {
+    "path": "geometry/before-expiry-date-geometry.txt",
+    "bytes": 230,
+    "sha256": "4fcc5856479e927b600b64f201ed60328a22a9fd9700e43437d34043b6835c07"
+  },
+  {
+    "path": "geometry/before-expiry-title-geometry.txt",
+    "bytes": 193,
+    "sha256": "6169bc40e038f88db3ab233829aacaf755dd30a6052f3a57c6b12f75fae4057e"
+  },
+  {
+    "path": "geometry/restored-expiry-date-geometry.txt",
+    "bytes": 218,
+    "sha256": "37c3b00aa562280cf00fe6dda156e14538d5624ab64242b3db3416a06c47d654"
+  },
+  {
+    "path": "geometry/restored-expiry-title-geometry.txt",
+    "bytes": 181,
+    "sha256": "e1b3146937d3eb7708b5822605ad0cc8ac13c8b7ed7091fc6c7aab8615076203"
+  },
+  {
+    "path": "geometry.json",
+    "bytes": 2935,
+    "sha256": "ca3b1d164595154fa86976342b8c879a13dafa46ed90e2b6cc615a012685fbac"
+  },
+  {
+    "path": "screens/AX5-expiry-date-ink.png",
+    "bytes": 45596,
+    "sha256": "81ccb905b8a11fba972e2daddd317ba996b76ad521492dfa1c6c5adef92246a7"
+  },
+  {
+    "path": "screens/AX5-expiry-date.png",
+    "bytes": 286347,
+    "sha256": "af1a418a73efd22559068e34a07ed0b1ea9397efbb63de9388999f8ed65f6014"
+  },
+  {
+    "path": "screens/AX5-expiry-title-ink.png",
+    "bytes": 26967,
+    "sha256": "29785fc5bae6e204b60664a45863476d3770c3c1d42fe0a51e086ff5bfeb9a59"
+  },
+  {
+    "path": "screens/before-expiry-date-ink.png",
+    "bytes": 13884,
+    "sha256": "82c64744a179bb4a0ca774f34d46617ca32702821cb7fc4283efad28e97afa7d"
+  },
+  {
+    "path": "screens/before-expiry-date.png",
+    "bytes": 334211,
+    "sha256": "c7eded82db8173f57427c3d288328285f7196491950b71bda9a51eb5ee109cbc"
+  },
+  {
+    "path": "screens/before-expiry-title-ink.png",
+    "bytes": 8592,
+    "sha256": "c94ff2682549d6d733d1c96c5d8ac6e17dd09c698b7a1c0463d4847016c42d77"
+  },
+  {
+    "path": "screens/restored-expiry-date-ink.png",
+    "bytes": 13884,
+    "sha256": "82c64744a179bb4a0ca774f34d46617ca32702821cb7fc4283efad28e97afa7d"
+  },
+  {
+    "path": "screens/restored-expiry-date.png",
+    "bytes": 328383,
+    "sha256": "9b0ce44540ba2c934ff683c2e7ecc774bb83bc1ff27944d62abc1d510bc05dd2"
+  },
+  {
+    "path": "screens/restored-expiry-title-ink.png",
+    "bytes": 8592,
+    "sha256": "c94ff2682549d6d733d1c96c5d8ac6e17dd09c698b7a1c0463d4847016c42d77"
+  },
+  {
+    "path": "source-receipt-hashes.json",
+    "bytes": 903,
+    "sha256": "bda627e65881de54f04eccf8ac6a3b2eee029c553be299cc7d82a74ac2e29f80"
+  },
+  {
+    "path": "verification.json",
+    "bytes": 2385,
+    "sha256": "d86d0d3697ed13cfaf448c4dcd073134029693d0d4a073ed550110d9504b3a09"
+  },
+  {
+    "path": "visual-review.json",
+    "bytes": 3028,
+    "sha256": "71368200ead7c6f19942cbb84b4be4754335523479406ca06bd1d333894c74f8"
+  }
+]

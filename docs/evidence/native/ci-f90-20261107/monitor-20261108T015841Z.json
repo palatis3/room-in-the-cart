@@ -1,0 +1,213 @@
+{
+  "observedAtUtc": "2026-11-08T01:58:41Z",
+  "previousSnapshot": "monitor-20261108T015144Z.json",
+  "previousObservedAtUtc": "2026-11-08T01:51:44Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "in_progress",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 12,
+        "failure": 4,
+        "in_progress": 3
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128583797613,
+          "name": "ios-tests (ui-07, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588297174,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588387968,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 9,
+        "failure": 1,
+        "in_progress": 1,
+        "pending": 4
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128588917127,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128589072389,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128594978722,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128595775547,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215935,
+      "jobId": 128579225683,
+      "name": "ios-tests (ui-06, 8)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128579225683",
+      "from": "in_progress",
+      "to": "failure",
+      "time": "2026-11-08T01:54:30Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128588917127,
+      "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128588917127",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T01:54:33Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128590839245,
+      "name": "Fixture (SharedFallbackUITests)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128590839245",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T01:55:22Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128595775547,
+      "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128595775547",
+      "from": "not_listed",
+      "to": "pending",
+      "time": "2026-11-08T01:55:22Z"
+    }
+  ],
+  "newFailures": [
+    {
+      "runId": 42428215935,
+      "jobId": 128579225683,
+      "failedStep": "Run selected tests and verify complete execution",
+      "classification": "Native XCTest execution timeout and runner restart",
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+      "nativeResult": {
+        "selected": 8,
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 1,
+        "failedTestDurationSeconds": 720
+      },
+      "detail": "The 720-second limit expired while revealing Compare two store trips after the second relaunch. The test continued and tapped the button at 721.93 seconds, opened the original comparison and attached its stale-proof screenshot at 753.74 seconds. XCTest restarted the runner for later tests. Earlier waits of 20.53 and 16.82 seconds flank the same checkout-plus-trip difference query. The underlying cause of the elapsed duration remains open.",
+      "source": [
+        {
+          "path": "ios/UITests/ContextualNavigationUITests.swift",
+          "line": 610
+        },
+        {
+          "path": "ios/UITests/ContextualNavigationUITests.swift",
+          "line": 703
+        }
+      ],
+      "artifact": {
+        "id": 13599975417,
+        "name": "iphone-results-ui-06-1",
+        "apiSize": 29920421,
+        "apiDigest": "sha256:9f17675363410ebf5fb08bfebb140fc3f5efff0ede13cc1041df3e28f3b06ef6",
+        "localReceipt": ".build/CIF90Nov07/ui-06/range-receipt.json",
+        "receiptSHA256": "2d01544091d3f2fafd559b3994da63d05e47d50d832c067b7227c9db702d3c64",
+        "transferredBytes": 80416,
+        "fullArchiveDownloaded": false,
+        "fullArchiveDigestVerified": false,
+        "verifiedMembers": [
+          {
+            "file": "Tests.log",
+            "bytes": 356821,
+            "sha256": "09307dbd243f120dfa011584b2ace62b9d5e41461e3fd198bccc6d26fd9ee59b",
+            "zipCRC": 1275854375,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-details.json",
+            "bytes": 5031,
+            "sha256": "e98ce4ac463045dbcdae45f628e442dedfd908cd5c52ac734f22abf5bea3249f",
+            "zipCRC": 923013547,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-plan/ui-06.txt",
+            "bytes": 863,
+            "sha256": "bfe7c9da303c5852039a19b8fb174429af0c96f062c4a59d29d7e669fd7c9f12",
+            "zipCRC": 1356243676,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-runtime-warnings.json",
+            "bytes": 182,
+            "sha256": "d1dedd4459c8366ea425e688ed12d3d2b3c661e7da9c0f48d1e386ae62184a92",
+            "zipCRC": 2083576931,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-summary.json",
+            "bytes": 1232,
+            "sha256": "f4af6fe0c7d14875285bc8cfe7e5eb10ae64dc0aa0eb36e114d41f13c5910fb4",
+            "zipCRC": 1183229310,
+            "CRCVerified": true
+          }
+        ],
+        "consoleEvidenceLines": [
+          1546,
+          1547,
+          1548,
+          2683,
+          2747,
+          2757
+        ]
+      },
+      "offlineConsoleReplayFailures": [
+        "XCTest restarted its runner at log line 2757.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    }
+  ],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "pending",
+    "runnerId": null,
+    "expectedArtifact": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "artifactState": "not_listed",
+    "attribution": null
+  }
+}

@@ -1,3 +1,18 @@
+import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
+import {PartitionError} from './shared-demand-tracking.js';
+import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
+import {readSharedRecordSnapshot} from './shared-records.js';
+import {readTrackingRecordSnapshot} from './shared-records-tracking.js';
+import {readSharedRecordHistory} from './shared-records-history.js';
+import {SharedDemandError} from './shared-demand-domain.js';
+import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
+import { readConfirmedOrder } from './order-amendments.js';
+import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
+import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
+import {loadRecoveryPublication,previewSharedRecovery,readRecoveryDesk} from './shared-recovery-publication.js';
+import { cookCorrectionFacts, cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
+import { readPantry, readJointCoverage } from './pantry-lots.js';
+import { readDelivery, readDeliveryCoverage } from './delivery-evidence.js';
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
@@ -22,6 +37,7 @@ import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
+import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
@@ -31,6 +47,22 @@ async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
 }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{return JSON.parse((await rawBody(req,maxBytes)).toString('utf8'));}catch(error){if(error instanceof ServiceError)throw error;throw invalid();}}
 
+// A disclosed recipe may be larger than an ordinary command. Keep the
+// command's byte limit for every other kind, including JSON whitespace.
+async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/demand/tracking/candidates')||path.endsWith('/demand/tracking/previews'))return body(req,1_800_000);
+  if(path.endsWith('/demand/previews')) return body(req,1_800_000);
+  if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
+  if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
+  if(path!=='/commands') return body(req);
+  const raw=await rawBody(req,1_800_000);
+  let payload:unknown;
+  try {payload=JSON.parse(raw.toString('utf8'));} catch {throw invalid();}
+  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind==='mealRecovery.apply'))
+    throw new ServiceError(413,'body_too_large','Send one bounded command.');
+  return payload;
+}
+
 function equal(a:string,b:string){const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&timingSafeEqual(aa,bb);}
 function cookie(req:IncomingMessage,name='ritc_session'):string|null {
   return req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.slice(name.length+1)??null;
@@ -39,6 +71,7 @@ export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
   const decisions = new DecisionHistory(options.billing);
+  const fallbacks = new SharedFallbackRegistry(repository,options.billing);
   const mealMoves = new MealMoves(repository,options.billing);
   const mealIdeas = new SharedMealIdeas(repository,mealMoves);
   const mealChanges = new SharedMealChanges(repository,mealMoves);
@@ -149,7 +182,11 @@ export function createHTTPServer(options:HTTPOptions) {
         }
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
-      if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
+      if(url.pathname==='/v1/invites/redeem'&&method==='POST'){
+        const review=inviteRedeemSchema.parse(await body(req));
+        const language=req.headers['accept-language']?.toLowerCase()==='es'?'es':'en';
+        send(200,await lifecycle.redeem(auth.identity,review,language));return;
+      }
       if(url.pathname==='/v1/child-invitations/native-auth/admit'&&method==='POST'){send(200,await guardian.nativeSigninAdmit(auth.identity,childNativeAdmitSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/claim'&&method==='POST'){send(200,await guardian.claim(auth.identity,childClaimSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){const result=await guardian.finish(auth.identity,childFinishSchema.parse(await body(req,4096)));if(browserIdentity){const scoped=await repository.startWebSession(result.householdId,auth.identity,undefined,true,undefined,result.deviceToken);res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);const {deviceToken:_,...receipt}=result;send(200,receipt);return;}send(200,result);return;}
@@ -187,13 +224,17 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
-      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req):undefined;
+      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await householdBody(req,path):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
       const historicalReportShopId=placementCommand?.shopId??(ownPlacement&&method==='GET'?uuid.parse(ownPlacement[1]):placementRead?uuid.parse(placementRead[1]):undefined);
       const scopedAuth=historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
+        if(path==='/devices/current/request-queue' && method==='PUT'){
+          const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
+          return repository.setRequestQueuePermission(ctx,enabled);
+        }
         if(ownPlacement&&method==='GET')return placementReports.own(ctx,uuid.parse(ownPlacement[1]),uuid.parse(ownPlacement[2]),z.string().regex(/^[0-9a-f]{64}$/).parse(url.searchParams.get('commandDigest')));
         if(path==='/devices/current'&&method==='DELETE')return repository.logout(ctx);
         if(path==='/devices'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return devices.list(ctx,cursor);}
@@ -241,7 +282,7 @@ export function createHTTPServer(options:HTTPOptions) {
          if(financial[2]==='financial-reviews'&&method==='POST')return history.review(ctx,shopId,financialReviewSchema.parse(payload));
          if(financial[2]==='history-retire'&&method==='POST')return history.retire(ctx,shopId,historyRetireSchema.parse(payload));
         }
-        if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
+        if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned','history-owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
         const replacement=/^\/views\/([^/]+)\/replacements$/.exec(path);
         if(replacement&&method==='POST')return helperReview.replace(ctx,uuid.parse(replacement[1]),viewReplacementSchema.parse(payload));
         const proposalStatus=/^\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(path);
@@ -269,7 +310,12 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }
-        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload));
+        if(path==='/commands'&&method==='POST') {
+          const command=parseCommand(payload), header=req.headers['x-request-queue-grant'];
+          const queueGrant=header===undefined?undefined:uuid.parse(header).toLowerCase();
+          if(queueGrant && !['request.send','request.edit','request.withdraw'].includes(command.kind))throw invalid();
+          return repository.execute(ctx,command,options.billing,queueGrant);
+        }
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
@@ -299,6 +345,54 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if(tail==='/accepted-fallbacks' && method==='GET')return fallbacks.read(ctx,shopId.toLowerCase(),url.searchParams.get('cursor'));
+          if(tail==='/accepted-fallbacks' && method==='POST')return fallbacks.change(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/accepted-fallbacks/source' && method==='POST')return fallbacks.source(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/meal-recovery/options' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            await requireAssistance(ctx,options.billing);
+            return rankSharedFallbacks(ctx,shop,payload,loadRecoveryPublication);
+          }
+          if((tail==='/meal-recovery' || tail==='/meal-recovery/coverage') && method==='GET' || tail==='/meal-recovery/preview' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            if(tail==='/meal-recovery/coverage') return readSharedRecoveryCoverage(ctx,shop,loadRecoveryPublication);
+            return method==='GET' ? readRecoveryDesk(ctx,shop) : previewSharedRecovery(ctx,shop,payload,options.billing);
+          }
+          if((tail==='/pantry-lots' || tail==='/pantry-lots/coverage') && method==='GET' ||
+             tail==='/pantry-lots/observation-preview' && method==='POST'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
+            if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
+            const cursor=url.searchParams.get('cursor');
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies' && method==='GET') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            const cursor=url.searchParams.get('cursor');
+            return cookCopyHistory(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')),cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies/correction' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(!options.billing) throw new ServiceError(503,'billing_unavailable','Try again when membership can be verified.');
+            await options.billing.requirePaidSeat(ctx);
+            return cookCorrectionFacts(ctx,shop,payload);
+          }
+          if(tail==='/cook-copies/baseline' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookCopyBaseline(ctx,shop,payload);
+          }
+          if(tail==='/confirmed-order' && method==='GET') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return readConfirmedOrder(ctx,shop);
+          }
+          if((tail==='/delivery-evidence' || tail==='/delivery-evidence/coverage') && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(tail==='/delivery-evidence/coverage') return readDeliveryCoverage(ctx,shop);
+            const cursor=url.searchParams.get('cursor');
+            return readDelivery(ctx,shop,cursor===null?null:uuid.parse(cursor));
+          }
           if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
           if(tail==='/meal-plan/ideas'&&method==='GET')return mealIdeas.read(ctx,shopId);
           if(tail==='/meal-plan/ideas'&&method==='POST')return mealIdeas.write(ctx,shopId,sharedIdeaWriteSchema.parse(payload));
@@ -309,7 +403,33 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
+          if(tail==='/records/history/v1'&&method==='GET'){
+            const shop=await repository.shop(ctx,shopId);
+            return readSharedRecordHistory(repository,ctx,shop,url.searchParams.get('includeRetirementStatus')==='true');
+          }
+          if((tail==='/records/snapshot'||tail==='/records/snapshot/v1'||tail==='/records/snapshot/v2')&&method==='GET'){
+            const recordShop=await repository.shop(ctx,shopId);
+            return tail==='/records/snapshot/v2'||(tail==='/records/snapshot'&&repository.options.trackingV2)
+              ?readTrackingRecordSnapshot(repository,ctx,recordShop):readSharedRecordSnapshot(repository,ctx,recordShop);
+          }
+          if(tail==='/demand/tracking/operations'&&method==='GET')return readTrackingHistory(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking'&&method==='GET')return readTracking(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking/action-sources'&&method==='POST')return readTrackingActionSources(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/tracking/meal-action-sources'&&method==='POST')return readTrackingMealActionSources(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/tracking/candidates'&&method==='POST')return createTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/tracking/previews'&&method==='POST')return acceptTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/records/tracking-snapshot'&&method==='GET')return readTrackingRecord(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/action-sources'&&method==='POST')return readActionDemandSources(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/requests/operations'&&method==='GET')return readRequestAcceptanceHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));
+          if(tail==='/requests/operation-undo-candidates'&&method==='POST')return readRequestUndoCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/requests/operation-undo-previews'&&method==='POST')return previewRequestUndo(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/operations'&&method==='GET')return readFoodOperationHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));
+          if(tail==='/demand/operation-undo-candidates'&&method==='POST')return readFoodOperationUndoCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/operation-undo-previews'&&method==='POST')return previewFoodOperationUndo(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/previews'&&method==='POST')return previewDemand(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail===''&&method==='GET')return repository.adultShop(ctx,shopId);
+          if(tail==='/deferred-requests'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor!==null)uuid.parse(cursor);return repository.deferredRequests(ctx,shopId,cursor);}
           if(tail==='/inbox'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.requests(ctx,cursor,shopId);}
           if(tail==='/previews'&&method==='POST')return repository.preview(ctx,shopId,previewSchema.parse(payload));
         }
@@ -320,6 +440,8 @@ export function createHTTPServer(options:HTTPOptions) {
       let safe:ServiceError;
       if(error instanceof ServiceError)safe=error;
       else if(error instanceof z.ZodError)safe=invalid();
+      else if(error instanceof PartitionError)safe=new ServiceError(409,error.code,'Review the current tracking facts and sources.');
+      else if(error instanceof SharedDemandError)safe=new ServiceError(422,error.code,'Review the shared source quantities and allocation choices.');
       else if(error&&typeof error==='object'&&'code'in error&&error.code==='23505')safe=new ServiceError(409,'identity_conflict','Refresh current records before retrying.');
       else if(error&&typeof error==='object'&&'code'in error&&['23503','23514'].includes(String(error.code)))safe=new ServiceError(422,'invalid_candidate','Review linked records and required values.');
       else {safe=new ServiceError(503,'storage_unavailable','Keep your draft and retry the same operation key.');if(!res.destroyed&&!res.headersSent)res.setHeader('Retry-After','1');}

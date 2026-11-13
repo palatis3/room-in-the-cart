@@ -6,9 +6,12 @@ import DeviceSurfaces
 @MainActor public final class SurfaceCaptureRequests: ObservableObject {
     public static let shared = SurfaceCaptureRequests()
     @Published public private(set) var pending = false
-    private init() {}
     public func requestCapture() { pending = true }
-    public func consumeAfterRouting() { pending = false }
+    @discardableResult public func takePending() -> Bool {
+        guard pending else { return false }
+        pending = false
+        return true
+    }
 }
 
 struct OpenShoppingCaptureIntent: AppIntent {

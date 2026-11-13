@@ -41,14 +41,28 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
     public let capScope: String; public let fee: Fee; public let taxesMinor: Int?
     public let depositsMinor: Int?; public let discountsMinor: Int?; public let observedAt: String; public let expiresAt: String
     public init(scope: String, complete: Bool, capMinor: Int?, capScope: String, fee: Fee,
-                taxesMinor: Int?, depositsMinor: Int?, discountsMinor: Int?, observedAt: Date, expiresAt: Date) throws {
+                taxesMinor: Int?, depositsMinor: Int?, discountsMinor: Int?, observedAt: Date, expiresAt: Date,
+                preservingTimestampsFrom original: ShopperQuote? = nil) throws {
         let amounts = [capMinor, fee.amountMinor, fee.thresholdMinor, fee.belowMinor, fee.aboveMinor, taxesMinor, depositsMinor, discountsMinor].compactMap { $0 }
         guard ["wholeCheckout", "item", "dinner"].contains(scope), ["wholeCheckout", "item", "dinner", "unknown"].contains(capScope),
               ["fixed", "threshold"].contains(fee.kind), amounts.allSatisfy({ (0...1_000_000_000).contains($0) }),
               observedAt.timeIntervalSince1970.isFinite, expiresAt.timeIntervalSince1970.isFinite, expiresAt > observedAt else { throw ClientError.configuration }
         currency = "USD"; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
         self.taxesMinor = taxesMinor; self.depositsMinor = depositsMinor; self.discountsMinor = discountsMinor
-        let formatter = ISO8601DateFormatter(); self.observedAt = formatter.string(from: observedAt); self.expiresAt = formatter.string(from: expiresAt)
+        self.observedAt = Self.timestamp(observedAt, original: original?.observedAt)
+        self.expiresAt = Self.timestamp(expiresAt, original: original?.expiresAt)
+        // The service compares the serialized instants at millisecond precision.
+        guard let observation = HistoryValidation.date(self.observedAt), let expiry = HistoryValidation.date(self.expiresAt),
+              expiry > observation else { throw ClientError.configuration }
+    }
+    private static func timestamp(_ date: Date, original: String?) -> String {
+        // Retain the service's exact offset and fractional digits when its field was untouched.
+        if let original, HistoryValidation.date(original) == date { return original }
+        let formatter = ISO8601DateFormatter()
+        if date.timeIntervalSince1970.rounded(.down) != date.timeIntervalSince1970 {
+            formatter.formatOptions.insert(.withFractionalSeconds)
+        }
+        return formatter.string(from: date)
     }
     private enum CodingKeys: String, CodingKey { case currency, scope, complete, capMinor, capScope, fee, taxesMinor, depositsMinor, discountsMinor, observedAt, expiresAt }
     public func encode(to encoder: Encoder) throws {
@@ -74,12 +88,33 @@ public struct ShopperShopCandidate: Codable, Equatable, Sendable {
 }
 public struct SharedMeal: Codable, Equatable, Sendable {
     public var title: String
-    public var day: String
+    public var day: String?
     public var kind: String
     public var portions: Int
     public var protected: Bool
     public var planning: SharedMealPlanning?
-    public init(title: String, day: String, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
+    private enum CodingKeys: CodingKey { case title, day, kind, portions, protected, planning }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        title = try values.decode(String.self, forKey: .title)
+        day = try values.decode(String?.self, forKey: .day)
+        kind = try values.decode(String.self, forKey: .kind)
+        portions = try values.decode(Int.self, forKey: .portions)
+        protected = try values.decode(Bool.self, forKey: .protected)
+        planning = try values.decodeIfPresent(SharedMealPlanning.self, forKey: .planning)
+        try planning?.deadline?.validate(day: day)
+    }
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(title, forKey: .title)
+        // A required null means deliberately unscheduled; an omitted key is malformed.
+        try values.encode(day, forKey: .day)
+        try values.encode(kind, forKey: .kind)
+        try values.encode(portions, forKey: .portions)
+        try values.encode(protected, forKey: .protected)
+        try values.encodeIfPresent(planning, forKey: .planning)
+    }
+    public init(title: String, day: String?, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
         self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected; self.planning = planning
     }
 }
@@ -99,6 +134,7 @@ public struct SharedMealEdit: Equatable, Sendable {
         self.occurrenceID = occurrenceID; self.meal = meal; self.proposalID = proposalID; self.changeProposalID = changeProposalID
     }
     public func commandValue() throws -> JSONValue {
+        try meal?.validatePlanning()
         let value = try meal.map { try JSONDecoder().decode(JSONValue.self, from: encoded($0)) } ?? .null
         var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
         fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null
@@ -145,33 +181,20 @@ public struct ShopperPreview: Codable, Equatable, Sendable {
     public var base: CommandBase { .init(shopRevision: shopRevision, authorityEpoch: authorityEpoch, requestRevision: requestRevision) }
 }
 public struct ShopperReceipt: Codable, Equatable, Sendable {
+    public private(set) var amendmentId: UUID? = nil
+    public private(set) var placedRevision: Int? = nil
+    public private(set) var sourceRequestId: String? = nil
+    public private(set) var purchaseOutcome: String? = nil
+    public private(set) var recoveryRevision: Int? = nil
+    public private(set) var revisionId: UUID? = nil
+    public private(set) var occurrenceId: UUID? = nil
+    public private(set) var lotId: UUID? = nil
+    public private(set) var pantryRevision: Int? = nil
+    public private(set) var copyId: UUID? = nil
+    public private(set) var sourceId: UUID? = nil
+    public private(set) var supplyRevision: Int? = nil
     public let operationId: String; public let kind: String; public let shopId: String; public let shopRevision: Int
     public let authorityEpoch: Int; public let disposition: String; public let requestId: String?; public let requestRevision: Int?
-}
-
-public struct ShopperFinancialEntry: Decodable, Equatable, Identifiable, Sendable {
-    public enum Kind: String, Decodable, Sendable {
-        case postedCharge, postedTopUp, pendingCredit, postedCredit, includedCredit, paymentHold, holdRelease
-    }
-    public let id: UUID
-    public let kind: Kind
-    public let amountMinor: Int
-    public let currency: String
-    public let occurredAt: String
-    public let sourceText: String
-}
-
-struct ShopperFinancialPage: Decodable, Sendable {
-    struct Version: Decodable, Equatable, Sendable {
-        let shopRevision: Int
-        let authorityEpoch: Int
-        let financialRevision: Int
-    }
-    let shopId: UUID
-    let sourceVersion: Version
-    let evidenceSource: String
-    let entries: [ShopperFinancialEntry]
-    let nextCursor: UUID?
 }
 
 public struct SharedMealPlan: Decodable, Sendable {

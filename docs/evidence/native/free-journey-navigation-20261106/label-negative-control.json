@@ -1,0 +1,47 @@
+{
+  "candidateBaseline": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "scope": "Negative control for a newly asserted persistent accessible ingredient-exclusion name after real typing.",
+  "navigationPatchSHA256": "236c0cfebada490aba208728404a06bb6efc54790146c30b347d36711d21fe64",
+  "failedTests": 1,
+  "passedTests": 0,
+  "strictExit": 1,
+  "durationSeconds": 50.2,
+  "runtimeWarnings": 0,
+  "failure": "After real No sesame entry, the multiline field retains its value but no accessible name or placeholder, so the exact named editable-control query cannot resolve it.",
+  "failureSource": "Unmodified DinnerEditors.swift from b359d07; new value assertions are identical in the follow-up build.",
+  "metadataDiagnostics": "XCTest reports legacy TextField/modern TextView automation-type mismatch details; these are retained, not reported as proof of a different cause.",
+  "proposedFix": "Set the existing localized ingredient-exclusion accessibility label explicitly.",
+  "nextBuildSourceComparison": {
+    "sameSourceManifestKeys": true,
+    "sourceFiles": 514,
+    "onlyChangedFile": "ios/Features/Dinners/DinnerEditors.swift"
+  },
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true
+  },
+  "ownedSimulatorDeleted": true,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "77CE51A2-5668-48F6-84FA-699B4D963DA2",
+    "deviceName": "RITC Free journey navigation 20261106",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "scratchDirectory": ".build/FreeJourneyNavigation20261106/validation",
+  "sha256": {
+    "test-summary.json": "5e2b6a3ab44d56f96bb2f4d1dfd78b565674490804da1242ce8b86e9a14c9409",
+    "test-details.json": "4ae53d7b503608f950de704e49d2ffd37f01bed5471d5e77636107a80e35c0bd",
+    "Tests.log": "4c8920dafcb6e91b3084682495ee15e170babce11f07403dc32e1e5d930365df",
+    "strict.log": "bbedb936d0fd82b35ae9bace58092227940d8bf89b7ddab7069742f764220358",
+    "source-sha256.json": "5b24769daeac11f07c4c43001a36017ac98ea658d8607fc166445cff4a00c53b",
+    "product-sha256.json": "46bd9a6112a7829d9ab6fafc706c388cc2082c8920c7fdb100cf1a655e81839e",
+    "boot.log": "4705d18285febc6cbba6492df4e1e9d0b8f47d9219ae852f37ed5405e57be0eb"
+  },
+  "limits": [
+    "The full journey stops at this new accessibility assertion; no complete journey pass is claimed.",
+    "The follow-up full journey is still running; original hosted UI01 deadline failure remains a separate retained result."
+  ]
+}

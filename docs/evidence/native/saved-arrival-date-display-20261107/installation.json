@@ -1,0 +1,11 @@
+{
+  "productSource": "ios/Features/Pickup/PickupArrivalView.swift",
+  "compiledAndInstalledSHA256": "b268310a4f202ab48757aaecdf472319c7b4a9b3bbcadbaacddbf530179ea595",
+  "nativeBuildExit": 0,
+  "completeEnglishCasePassedSeconds": 160.032,
+  "fullTwoCaseNativeExit": 65,
+  "fullTwoCaseStrictExit": 1,
+  "spanishReachedArrivalScreen": false,
+  "allSourceProductsOriginalResultHashesVerified": true,
+  "scratchHarnessInstalled": false
+}

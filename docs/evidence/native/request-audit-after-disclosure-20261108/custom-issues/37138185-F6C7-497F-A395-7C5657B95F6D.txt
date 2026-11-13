@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11c669640, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Element subtree:
+ →StaticText, 0x11c669640, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Path to element:
+ →Application, 0x11c13e680, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x11c13b630, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11c660d00, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11c660f40, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11c661060, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11c661180, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11c6612a0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11c6613c0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11c6614e0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11c661ba0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11c661cc0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11c661de0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11c661f00, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11c662020, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11c668c20, {{16.0, 766.0}, {370.0, 52.0}}
+                ↳Other, 0x11c6690a0, {{16.0, 766.0}, {370.0, 52.0}}
+                 ↳Other, 0x11c6691c0, {{16.0, 766.0}, {370.0, 52.0}}
+                  ↳Other, 0x11c6692e0, {{16.0, 766.0}, {370.0, 52.0}}
+                   ↳StaticText, 0x11c669400, {{16.0, 766.0}, {370.0, 52.0}}, label: 'Preview expires, Dec 31, 2098 at 7:00 PM'
+                    ↳StaticText, 0x11c669640, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11c694930, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4910660528.431
+    Output: {
+      StaticText, 0x11c5a7f90, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+    }

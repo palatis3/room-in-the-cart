@@ -1,0 +1,13 @@
+{
+  "scope": "Exact app-specific stdout exported from original result bundle; bounded known-severe signatures only, not a claim of no OS diagnostics.",
+  "file_sha256": "4c5abfb6fdc8f377d864187a3d4511a1daab87c6a1d398c5ffbb786a43980d57",
+  "counts": {
+    "sqlite_api_misuse": 0,
+    "sqlite_misuse_other": 0,
+    "xctest_restart": 0,
+    "uncaught_exception": 0,
+    "fatal_error": 0,
+    "memory_crash_signature": 0
+  },
+  "line_numbers": {}
+}

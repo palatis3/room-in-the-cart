@@ -1,0 +1,118 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "d3e226800bfad5a52e296b72deb58942e70b0e6112448ef885ca0274c6d2609a",
+      "bytes": 5219
+    },
+    "capture-summary.json": {
+      "sha256": "be4d6fface3a39e79ee528432b23fd57f27d45aa1e20a89fccdaf8cc8753d76b",
+      "bytes": 14679
+    },
+    "context-receipt-summary.json": {
+      "sha256": "060a9c77f14d747af46608107c8fc522b3599453ee0706d6327a309f329ec09e",
+      "bytes": 1053
+    },
+    "copy-and-verification-receipt.json": {
+      "sha256": "23fd9297363a08bc074977d5ddd5eb74cb2ce76339801afc00efca6bc554f550",
+      "bytes": 6310
+    },
+    "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png": {
+      "sha256": "2a38de0d7626e4a5510b95dc2f17319d17c25a0f544b278ccd337213adaf282b",
+      "bytes": 29204
+    },
+    "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png": {
+      "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4",
+      "bytes": 2246
+    },
+    "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png": {
+      "sha256": "29a1d6a00cd0cd8530e24c6e25382581443f7f85de145b5dd02effc8bb922d7f",
+      "bytes": 29229
+    },
+    "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png": {
+      "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4",
+      "bytes": 2246
+    },
+    "images/S24-standard-Mia-portions-label.png": {
+      "sha256": "f1f1be5f6f23b600d0ff93a86ccf9b6657118cbc9ed8e1ca86e2888232922967",
+      "bytes": 9100
+    },
+    "images/S24-standard-Mia-portions-value.png": {
+      "sha256": "43c1802bcc362b19c6a2899c91a27a5e7f88002c0f238cd0580fa2c2781b6228",
+      "bytes": 1336
+    },
+    "images/S24-standard-Sam-portions-label.png": {
+      "sha256": "39ef5daeca79a846f3c34420e0194c460f3b441477870e0ac5b52ca9236dbcae",
+      "bytes": 9114
+    },
+    "images/S24-standard-Sam-portions-value.png": {
+      "sha256": "6a314569b4ab219e504a2fbd2289c29198827d84787d8dfdb536b2739923cfc8",
+      "bytes": 1336
+    },
+    "images/standard-checkout-and-two-lunches.png": {
+      "sha256": "39953b4fdd1a7420d7768b86a54079544ff8824e302e42a9acc647491ff01ffe",
+      "bytes": 331191
+    },
+    "measurement/measure_field.py": {
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0",
+      "bytes": 9050
+    },
+    "measurement/results.json": {
+      "sha256": "01a475ec1db0065f3d2c2bad1bd811c8f2f1b50ac34a1407bccd2aab2514e4da",
+      "bytes": 7420
+    },
+    "provenance/product.patch": {
+      "sha256": "2cf5719f069ce01f4c89cb0c92093acdc5c36ed6b0a5b2b8b61032c93f6204ce",
+      "bytes": 541
+    },
+    "provenance/root-installation.json": {
+      "sha256": "619a257672fdebacb9ec1348fc3efced691cb8c25159f833fdced1ef98ea7afc",
+      "bytes": 526
+    },
+    "provenance/source-pins.json": {
+      "sha256": "4b5e7262455824583719e3d1122f11480bc40ec5e0c3cf616972a0eb14e703ae",
+      "bytes": 583
+    },
+    "provenance/test-only.patch": {
+      "sha256": "1b6d9f4a5629680d696a1ba5e3c4d78928e3e63c991b11882b7d61279b9d41ba",
+      "bytes": 4116
+    },
+    "provenance/verified-inputs.json": {
+      "sha256": "b25e615dc95ffc6f2a9e05efe4c0ffc7c2ff88e0d307d993590556681cefb3e4",
+      "bytes": 817
+    },
+    "root-review.json": {
+      "sha256": "9b76086fbc49ee7a06a1252da93068a93523d4e4f4f6394630bd83c20cc70d7f",
+      "bytes": 999
+    },
+    "run/receipt-summary.json": {
+      "sha256": "39ff9a139512431eaf97e817efbd29e512e98a39259c7f19a7b2deb7e8da9d36",
+      "bytes": 2936
+    },
+    "run/selectors.txt": {
+      "sha256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9",
+      "bytes": 234
+    },
+    "run/strict.txt": {
+      "sha256": "00f6adbc39650aad8d061d30b8d34bbb6be57b6f79b301aa5c11ba15b243aed4",
+      "bytes": 832
+    },
+    "run/summary.json": {
+      "sha256": "9bf620a9715687abedb09ad66e63aa1197de6a12961d269225c8eeb16343c506",
+      "bytes": 1021
+    },
+    "run/test-runtime-warnings.json": {
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8",
+      "bytes": 179
+    },
+    "run/tests.json": {
+      "sha256": "eb31c11de5fd9a90774462c6f9f98b9680e28b305042657df1096dca0c1b8b70",
+      "bytes": 2496
+    },
+    "run/verification.json": {
+      "sha256": "56a90af9d605eb1602143ceb3875b124c1f50353bdeef93cd4b1db9fb744cfb6",
+      "bytes": 269
+    }
+  },
+  "fileCount": 28,
+  "totalBytes": 474282
+}

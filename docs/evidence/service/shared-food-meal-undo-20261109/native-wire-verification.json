@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "newNativeRunQualified": true,
+  "sourceManifestSHA256": "a62ca8beabecf8733bdcff6707a5a6ea3744eb590b54016cb6f0f44ed4fec644",
+  "buildMode": "verified-meal-undo-r3-dist-copy-and-one-fresh-Swift-build",
+  "wrapperUnchanged": true,
+  "expectedNodeCases": 14,
+  "expectedSwiftInvocations": 40,
+  "cleanup": {
+    "schemaVersion": 1,
+    "attempt": "attempt.UgFMHr",
+    "exitCode": 0,
+    "postgresStopped": true,
+    "privateStateRetained": false,
+    "retention": "Private state is local only; ephemeral CI runner teardown removes it. No private state is uploaded."
+  },
+  "sourcesDependenciesToolsProductsUnchanged": true,
+  "sourceInputs": 335,
+  "backendBuildInputs": 77,
+  "logSHA256": "30aeb7dd52e04711679abab135a144e121ca59aba0417ec18ab7d1010463d262",
+  "seconds": 165.873,
+  "receiptSHA256": "8b1108ad133abc3e8a790789a77f6f9ab777bf34f877c77e6bad6db7cf22f00b",
+  "firstAttempt": {
+    "status": "failed",
+    "nodePassed": 12,
+    "nodeFailed": 2,
+    "swiftPhasesPassed": 37,
+    "swiftPhasesUnexecuted": 3,
+    "cause": "Two new assertions assumed graph contribution/basket storage order; complete unique rows now compare by stable identity while meaningful line and meal order stays exact.",
+    "receiptSHA256": "05a51cbe7f0c9062cdb107424d3a252a6cb797efcec67e6638805ff67040f1c6"
+  },
+  "scope": "Actual typed Swift HTTPS/PostgreSQL tests with synthetic identity/proposal fixtures; not live provider, mixed-device UI or release acceptance"
+}

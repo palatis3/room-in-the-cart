@@ -1,0 +1,36 @@
+{
+  "recordedAtUTC": "2026-11-08T16:35:23.442358+00:00",
+  "nativeExit": 0,
+  "nativePasses": 5,
+  "selected": 5,
+  "strictExit": 1,
+  "runtimeWarningTitles": [
+    {
+      "isAssociatedWithFailure": false,
+      "startTime": 1794155471.161,
+      "title": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    },
+    {
+      "isAssociatedWithFailure": false,
+      "startTime": 1794155471.244,
+      "title": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    }
+  ],
+  "diagnosticAttachmentsAvailable": false,
+  "controlTapsSeconds": {
+    "Play": 34.86,
+    "Pause": 37.72,
+    "Resume": 39.35,
+    "Stop": 40.95
+  },
+  "playbackBranch": "Real playback-control branch reached; voice-unavailable branch not taken. UI control evidence is not acoustic or callback identity proof.",
+  "idleMessagesObserved": 0,
+  "runnerRestartsObserved": 0,
+  "sourceAndProductsUnchanged": true,
+  "canonicalSpeechInstalled": false,
+  "originalWarningResolved": false,
+  "nativeLogSHA256": "0467282393477113597eb0c372d6e75ca183912851128a3dde86f07b0ae90c8c",
+  "nativeLogLines": 2941,
+  "localEnvironment": "Xcode27.1/27A9275, iPhone17 Simulator iOS26.2/23C54 light/Large",
+  "nextAction": "Retain strict warning failure. Obtain supported bounded warning stack evidence before attributing either inversion or claiming the owner fixes it; separately complete actual API callback/repeat/Spanish coverage."
+}

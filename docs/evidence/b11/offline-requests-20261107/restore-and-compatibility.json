@@ -1,0 +1,55 @@
+{
+  "scope": "Synthetic local SCRAM PostgreSQL, restricted service runtime, HTTP/BFF, isolated 040 and 041 source. 040 web source against the actual current BFF uses a Node IndexedDB implementation. Browser/device validation is a separate run.",
+  "baseline": "eae1e72 (schema 040 released web)",
+  "subject": "b0565fb (041) with cd2cc12, a30a9b2, 7449efb, ae79727, fec58e1 and 76b3c6f",
+  "findings": {
+    "upgrade": "Seeded two households on schema 040. pg_dump / pg_restore then migrated to 041. 103 original tables match counts, SHA-256 row contents, ACLs, policies and RLS; 40 registry entries preserved. New table starts empty with forced RLS and zero preexisting grants.",
+    "restore": "With positive grants present on two households, a full dump/restore preserved all 104 tables and all 41 registry entries. Raw restored old opted-in generation improperly accepted a request superseded in the newer source database. Verified quarantine plan clears every queue grant, verifies zero at release and refuses a reinserted grant. Fresh opt-in creates a distinct generation; ordinary received request history, sibling devices and source data remain available under their original authority.",
+    "database_only_recovery": "For a restore outside signed journal tooling, block application traffic and clear ritc.request_queue_permission on verified quarantine before allowing access. An isolated raw dump cannot learn of a later opt-out.",
+    "runtime": "Checked bounded generation and validity interval, scoped household/device/role and selected helper denial, grant disable/re-enable, replay window, signed worker erasure, household exit and organizer SECURITY DEFINER revoke. A committed exact request can return its prior receipt for the original authenticated contributor, device, queue generation and live replay window; changed payload, foreign/replaced grants and never-committed requests are rejected.",
+    "clients": "Released compiled 040 API + IndexedDB outbox before fix retained offline text and sent a generation-free command after two grant rotations. With repaired 041 response, direct online send succeeds and old IndexedDB rejects retaining it. 041 PUT and session decode the same explicit grant/expiry; legacy boolean remains false."
+  },
+  "tests": {
+    "database": {
+      "passed": 238,
+      "failed": 0
+    },
+    "service": {
+      "passed": 454,
+      "failed": 0
+    },
+    "web": {
+      "passed": 136,
+      "failed": 0
+    },
+    "household_client_swift": {
+      "passed": 101,
+      "skipped_opt_in_integration": 3,
+      "failed": 0
+    },
+    "additional_focused_real_db": [
+      "verified signed quarantine gate and idempotent cleaning",
+      "normal organizer revocation destroys only target device grant"
+    ]
+  },
+  "evidence_hashes": {
+    "040-identical-at-041.json": "8986cbb4cf17d24537c103acd1836e554ba7d7ba066cf44ef2c48f9548bbed57",
+    "040-inventory.json": "dce76e8cb5d10f615bd44530c7ff095457bb1ea61e9b9a3e1b6eedaa2c3406af",
+    "041-positive.json": "eb8a63ae0de2e9202a613ce560304e145b10732e971b4f57bf687c99d2144ff3",
+    "041-restored-positive.json": "3ff6cd686a92eb783e3c86bd0d16620b663f0a94dbc78eb49f1b8250c2a6127f",
+    "device-revoke.tap": "61feed52c4c1aea3164b8c55c47bb8319033e30b626dcbcc27bd9344ad56f64e",
+    "final-grant.tap": "4fc57686457cffdbfb1719fbd8afc6589e1239eaf5ad1f7bc8c7b88a4079005b",
+    "final-roundtrip.tap": "32816c930f9a8759bd5ce24af79ea8db0167ade5f54f77731b112c3bf40916d8",
+    "focus-journal.zsh": "a4929492a38d46df21279faa75b8c07de1c1da218abb8e665025e91da9f74e60",
+    "full-database.tap": "01ba6f393f42f1353a78ee7128ed0a8be69a3f4a29a31d9d91944fd976d04d9c",
+    "full-service.tap": "8767aa0108f105c9b68ca1bdc9e66fa3d3f19e36be2d4ab91d7ede4fc5111426",
+    "inspect.mjs": "a3d5c7ea898e3bc250c9bf0dd68e54371191cc51ff1ba81a967a06a7a0479146",
+    "legacy-after.tap": "e675de30a96d4a8e92edfb302ec61f0677bb96a0c76130b219b8f7bb5a2a1509",
+    "legacy-before.tap": "72a609d9d57449628d024bf6256706f7fd6b4c185eb43f660989933610a9c856",
+    "qa-041.local.mjs": "7f22d3a4fe47f9bb9f5c55a56d4cc10c08e1dc122683574e4961b99154d9bf53",
+    "quarantine-guard.tap": "250081b29d413f3561c14fa94a30f4e9702cdcff27ba24041dfcc9273638844b",
+    "swift.tap": "198ac8ad949d5162a727e0ab9203726a7e7890baa5e1a3962e752fdd4a077ec4",
+    "verified-roundtrip.zsh": "fe213034a1717e39834c04d3f0f1648d92b4b32e2e41cc39768e190e7559b658",
+    "web-ack.tap": "cd5487d767dbda06666821bf503ff8a9d53a97dd9abbe5c26d87ee72e24276ff"
+  }
+}

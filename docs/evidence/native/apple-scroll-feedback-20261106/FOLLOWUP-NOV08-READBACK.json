@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "status": "local-retained-evidence-readback-not-submitted",
+  "readbackDate": "2026-11-08",
+  "sourceCommit": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+  "sourceBindingEvidence": ".build/CIFe3e143Nov08/monitor/status-20261108T184523Z.json",
+  "recordedRunId": 42509307171,
+  "recordedJobId": 128821661268,
+  "recordedRunAttempt": 1,
+  "sourceBindingLimit": "Run/source identity comes from retained monitor snapshot; no fresh remote lookup or archive provenance reconstruction was performed.",
+  "connection": {
+    "uri": "file:///Users/palatis/Room%20in%20the%20Cart/.build/CIFe3e143Nov08/performance-scroll-artifact/Performance.xcresult/database.sqlite3?mode=ro&immutable=1",
+    "sqliteVersion": "3.54.0",
+    "mode": "ro",
+    "immutable": true
+  },
+  "schemaAndCounts": [
+    {
+      "sql": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'PerformanceMetrics'",
+      "rows": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'PerformanceMetrics'",
+      "rows": [
+        [
+          "CREATE TABLE PerformanceMetrics (identifier TEXT, orderInTestCase INTEGER, maxStandardDeviation REAL, displayName TEXT, polarity TEXT, maxPercentRegression REAL, baselineAverage REAL, testCaseRun_fk INTEGER NOT NULL REFERENCES TestCaseRuns, unitOfMeasurement TEXT, baselineName TEXT, maxRegression REAL, measurements TEXT, maxPercentRelativeStandardDeviation REAL)"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) FROM PerformanceMetrics",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT identifier, unitOfMeasurement, measurements FROM PerformanceMetrics",
+      "rows": []
+    },
+    {
+      "sql": "SELECT rowid, result, duration, testCase_fk FROM TestCaseRuns",
+      "rows": [
+        [
+          1,
+          "Failure",
+          102.4055290222168,
+          1
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT testCaseRun_fk, compactDescription, issueType FROM TestIssues",
+      "rows": [
+        [
+          1,
+          "Received unexpected number of metrics: 3 in iteration with index 4. Got 4 in iteration with index 0",
+          "Performance Regression"
+        ]
+      ]
+    }
+  ],
+  "sourceFiles": [
+    {
+      "gitObject": "fe3e14306eee08f0464215b560dccaf21054c6a8:ios/UITests/ReleasePerformanceUITests.swift",
+      "bytes": 15547,
+      "sha256": "af3ce3e975b57940a45314f29f8f6b97fe81d7ae48b7d676b0d2a497af79b788"
+    },
+    {
+      "gitObject": "fe3e14306eee08f0464215b560dccaf21054c6a8:.github/workflows/ios-performance.yml",
+      "bytes": 11411,
+      "sha256": "c2b95f1250ac05eae91d63f2c6b3ff5bf7a40d06c62e207fcdcc3b5cf5d11861"
+    },
+    {
+      "gitObject": "fe3e14306eee08f0464215b560dccaf21054c6a8:scripts/check_ios_performance.py",
+      "bytes": 19069,
+      "sha256": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7"
+    },
+    {
+      "gitObject": "fe3e14306eee08f0464215b560dccaf21054c6a8:ios/UITests/Fixtures/ReleaseLedger500.txt",
+      "bytes": 16099,
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+    }
+  ],
+  "retainedInputs": [
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/Performance.xcresult/database.sqlite3",
+      "bytes": 294912,
+      "sha256": "e676aefd1c419a27bb2f3114adccdf333aff66bf9b6805c22a9bdda8c6eaa30b"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/Performance.xcresult/Info.plist",
+      "bytes": 715,
+      "sha256": "e44fcc6821ac634c76dac25b015451d31eee33437d9377ab9de57b82fa35cce5"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/Performance.log",
+      "bytes": 19291,
+      "sha256": "154d225701cc539f20f6c02a6b65d16e5797352c8c9fbf7e2ef98780e0dcb8b8"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/metrics.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/test-summary.json",
+      "bytes": 1221,
+      "sha256": "4c3d170a79d82ead96a3421afe66daca7dd92305220ef4e69d3bdec9319eee35"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/test-details.json",
+      "bytes": 1373,
+      "sha256": "166544ea126a2f91356852a4c0274be2bd292b2c7ec351e8cf76050be85f504b"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/toolchain.txt",
+      "bytes": 32,
+      "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/scroll-signpost-diagnostic.json",
+      "bytes": 1493,
+      "sha256": "746d54788c2ee6e6bbb865e91664e1936b097ea76a2c928859b9a4cb6568c522"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/performance-scroll-artifact/attachments/manifest.json",
+      "bytes": 10761,
+      "sha256": "66898526813cb571a8a5ea61131c6b4ce86cd814003e6f01f9c167cf949f5be9"
+    },
+    {
+      "path": ".build/CIFe3e143Nov08/monitor/status-20261108T184523Z.json",
+      "bytes": 39392,
+      "sha256": "f260870fe6da25d02ee2c0e7549031d3808848ef0b10d8d8d5b51d4994ecb876"
+    }
+  ],
+  "retainedInputHashesUnchangedAfterReadback": true,
+  "databaseSidecarsPresent": [],
+  "nativeExecution": false,
+  "buildExecution": false,
+  "externalSubmission": false,
+  "interpretation": "Empty retained PerformanceMetrics storage corroborates empty export; it cannot identify which producer returned fewer measurements or whether individual reports were empty."
+}

@@ -1,0 +1,150 @@
+{
+  "copiedFiles": [
+    {
+      "path": "baseline/run.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/run.json",
+      "bytes": 2286,
+      "sha256": "f7b832b68747a181475859665a51cb1ed242c0568598294eb62451160c449091"
+    },
+    {
+      "path": "baseline/selectors.txt",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/selectors.txt",
+      "bytes": 120,
+      "sha256": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45"
+    },
+    {
+      "path": "baseline/inspection/verification.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/inspection/verification.json",
+      "bytes": 176,
+      "sha256": "860f6425f1abef1bfafbf2d9364677cdcb5e821121caa41dd940d50eda6d2489"
+    },
+    {
+      "path": "baseline/inspection/strict.txt",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/inspection/strict.txt",
+      "bytes": 1255,
+      "sha256": "05831db349e4350e830aec0dc691cb38dae97e25b47844600a77282e2f97959f"
+    },
+    {
+      "path": "baseline/inspection/summary.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/inspection/summary.json",
+      "bytes": 1713,
+      "sha256": "9134f972b50817646b6e6ab7ff791c662d2f8b3f9427ce419966b568160de081"
+    },
+    {
+      "path": "baseline/inspection/tests.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/inspection/tests.json",
+      "bytes": 2477,
+      "sha256": "763e0654a9ce6207ba2560e0bf74d33ed27cfb5079b481d35f455e1d2f6c7b18"
+    },
+    {
+      "path": "baseline/inspection/test-runtime-warnings.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb"
+    },
+    {
+      "path": "baseline/failure-review/manifest.sha256.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/manifest.sha256.json",
+      "bytes": 1022,
+      "sha256": "d6d8353cc1f85bc38178908f20fc955110e596f68a1b52b6b27ab5e056c1a995"
+    },
+    {
+      "path": "baseline/failure-review/png/F054BF36-F432-487E-9C1E-A69D62D17708.png",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/png/F054BF36-F432-487E-9C1E-A69D62D17708.png",
+      "bytes": 151684,
+      "sha256": "e8353655b3ee7275f016fc92a915e86e28214fb7e315f4c91c6781ee48c2398d"
+    },
+    {
+      "path": "baseline/failure-review/png/manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/png/manifest.json",
+      "bytes": 799,
+      "sha256": "b6fcc5a4008ae075c96d11be29dd3d80482a39eb615bd5ab363cfd7043f7af19"
+    },
+    {
+      "path": "baseline/failure-review/png.stderr",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/png.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "baseline/failure-review/png.stdout",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/png.stdout",
+      "bytes": 420,
+      "sha256": "fffe9d82c3c75cebb797cc69fa487988eae6e1acb487701fd7eb96ec0baa502a"
+    },
+    {
+      "path": "baseline/failure-review/receipt.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/receipt.json",
+      "bytes": 2283,
+      "sha256": "47d8ea8a4edbdce2b2eb14ae3156005686c97cb95a4ffc8e7fa1e3faf9693e78"
+    },
+    {
+      "path": "baseline/failure-review/review.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/review.json",
+      "bytes": 903,
+      "sha256": "23c69d13c4ecf174f7617aa023d58679c3caa2e7835b3a03e689d28c32f96e43"
+    },
+    {
+      "path": "baseline/failure-review/root-visual-review.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/root-visual-review.json",
+      "bytes": 651,
+      "sha256": "826b31b75e60c72ab9c27b91dfe74570f7d446a03da31e96bc54bf4b72dd4538"
+    },
+    {
+      "path": "baseline/failure-review/txt/C96354F9-E031-452A-9E86-15EDDB029A91.txt",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/txt/C96354F9-E031-452A-9E86-15EDDB029A91.txt",
+      "bytes": 13884,
+      "sha256": "baa646c99b10c5d6c54507ecca763920a47602a9d241c112f834929937345ffe"
+    },
+    {
+      "path": "baseline/failure-review/txt/manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/txt/manifest.json",
+      "bytes": 809,
+      "sha256": "93d1bcaaaef9d07dded15c45d20d365fd0ef25bda0205d04f962c64797605e3e"
+    },
+    {
+      "path": "baseline/failure-review/txt.stderr",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/txt.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "baseline/failure-review/txt.stdout",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-run/failure-review/txt.stdout",
+      "bytes": 431,
+      "sha256": "872539a055f3318c15fe628d054e14cceb621cc3e5d09bf5fdda328b6ba7e8bd"
+    },
+    {
+      "path": "baseline/source/baseline-preparation.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-preparation.json",
+      "bytes": 328,
+      "sha256": "cf0bc6890f70ccae9b6eb08fbcae7a11dabd3ce61328f72f4d274b2b6fa9f687"
+    },
+    {
+      "path": "baseline/source/baseline-source-manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "eba296b885fb3974937ecbb01c471addf2d3b28c1801e959c6e0dc39eb62d416"
+    },
+    {
+      "path": "baseline/source/baseline-test-overlay-manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/baseline-test-overlay-manifest.json",
+      "bytes": 69846,
+      "sha256": "51abebb2be52cd9b4960879eaa08105007730cbe209b524cd823deb0701c8e80"
+    },
+    {
+      "path": "baseline/source/test-only/HouseholdRequestPackUITests.swift",
+      "sourcePath": ".build/S24OutcomeReturnNov08/test-only/HouseholdRequestPackUITests.swift",
+      "bytes": 25419,
+      "sha256": "62240fc0e69fbaf958ab14f1e4df346f1d15d98a7dd147dedaa3cdbfde516858"
+    },
+    {
+      "path": "baseline/source/test-only/ui-return.patch",
+      "sourcePath": ".build/S24OutcomeReturnNov08/test-only/ui-return.patch",
+      "bytes": 4229,
+      "sha256": "728e953c043ea25c8f6e6bde205235648b634cdd4aecb19a3afee4e66e9065b4"
+    }
+  ],
+  "sourceOriginalsUnchanged": true,
+  "secretsScan": "No bearer/GitHub token or signed credential URL detected in copied text; single synthetic-fixture PNG already visually reviewed by root."
+}

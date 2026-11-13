@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "verifiedAt": "2026-11-09T15:35:24.063273+00:00",
+  "checks": {
+    "offline": 438,
+    "queueDefinitions": 17,
+    "nativeExitCode": 0,
+    "strictExitCode": 0,
+    "metricValidationExitCode": 0,
+    "traceRetained": false
+  },
+  "sourceFiles": {
+    ".github/workflows/ios-performance.yml": "31268e0e4b37a9e90d72e22f974beb8c2fad5e6c2da83a9cfc4dd1c983327fc6",
+    "scripts/plan_ios_performance_tests.py": "4ad37265f5d08b74bdd9a801faafc212120711518f958c975bee4ced889bd098",
+    "scripts/test_plan_ios_performance_tests.py": "a0efafaa36f9da33fae314a89d2e2d565b8d58a07086bd08e450224b31355b32"
+  },
+  "originals": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceDiagnosticsNov09/offline-tests.log",
+      "sha256": "10f51f27154c4a696ea1ac95537deb2b5d09b6efbd34cfc03a397f93453a638f",
+      "bytes": 2111
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceDiagnosticsNov09/workflow-lint.json",
+      "sha256": "ca150756179a887b316c041c9a158cc7f931afc2ef418cad05ca930be9fa7036",
+      "bytes": 18239
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/execution.json",
+      "sha256": "7ebbaf92b30850bda1b9595fca09d968b32376dad7cf63329dc4e154b74f7ad4",
+      "bytes": 3664
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/inspection/receipt.json",
+      "sha256": "ff46b0873431cadef30a8430e946d69d4d8b56e0d3a59231e8604a06cff484bd",
+      "bytes": 2604
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/metrics.json",
+      "sha256": "cbe119616ba6fda1e9dafc80b6ef4539f3e360673fafb5ba9730f9cf2a01991e",
+      "bytes": 2084
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/attachments/manifest.json",
+      "sha256": "104a4d886488388d453c40fea41501ccf9c9bd8876929cb56ca9344e2bd4522c",
+      "bytes": 1236
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/inspection/original-result-files.json",
+      "sha256": "a4b2b1e0e665c823ae5efa500456e751a056373ca975f7571315604f3f5eb034",
+      "bytes": 6003
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/diagnostics/0_Test_RITC Local Performance Capture Nov09_Diagnostics/RoomInTheCartUITests-50E0F7CA-F0A7-4535-90F6-CF4886718EF6-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-412BA4C9-53EB-4B25-B196-96907509A9F9/Session-RoomInTheCartUITests-2026-11-09_103024-oaV4N0.log",
+      "sha256": "d975fcbe14063263bd1519fb283adf52417b61621225eafef7e2c285648e0ef8",
+      "bytes": 3684337
+    }
+  ],
+  "limits": [
+    "Local diagnostic uses existing dual-architecture products; not hosted arm64 qualification.",
+    "Flag accepted but no trace retained; no hosted repeat dispatched.",
+    "Animation hitch samples unavailable.",
+    "No approved Xcode27.1 baseline, combined qualification or release acceptance."
+  ]
+}

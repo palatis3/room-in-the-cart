@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "commit": "36374e94f8511ce4a0edd03e0ebe17434d1c0ec0",
+  "checksPerProfile": {
+    "diagnostic": 553,
+    "helper": 553,
+    "ordinary": 553
+  },
+  "sourceFiles": 748,
+  "sourceManifestSHA256": "f444ac96888dbbb5ac1fa74c216313a0dcc73b70fac35e6ea298e824bdeb8f49",
+  "observerPins": 50,
+  "receipt": "/Users/palatis/Room in the Cart/.build/PerformanceFinalCommitParityNov09/sampler-sigint-36374e94-qualification/receipt.json",
+  "receiptSHA256": "9c6ef934d67f4afdf6ea7760082725b2ed5239c2fccc832c89a1ba9905898a25",
+  "profileEvidenceSHA256": {
+    "diagnostic": {
+      "actualLogSHA256": "f2bce41637db1d48fc55b47f87f81b44565f39d73b01daf9c5e3deaa79ba3617",
+      "actualReceiptSHA256": "c7f0617414f86ac8ef5c0cbd1b671cbd1c4b87bd2184b6e5a49ff0711138a4bc",
+      "configuredGuardReceiptSHA256": "fd103c6e6428b1bd54c3436b0a79149e8c787b3dc4d347dc2456b6abd9587ea6"
+    },
+    "helper": {
+      "actualLogSHA256": "4243a58c72a72e66ece88f9bcf65ae1709d427ef14d835dbd04fbdffc5f96387",
+      "actualReceiptSHA256": "ceaffa4f4b5872eaeceb7857e962067ad9c7ee8e1d30446accf6b8ef7f928c27",
+      "configuredGuardReceiptSHA256": "9629b62d809ec0b5d865d18b0bf287035a18cfb4a0343014843edf387dedd84c"
+    },
+    "ordinary": {
+      "actualLogSHA256": "bcf9f8eeb21ee7e211b3dd448fbbac58e2631d290106311d81d1049091a4ef98",
+      "actualReceiptSHA256": "a70ec68ed51ca668cf38f9fcf147046760adaf218a069f21ba91da9b6e395249",
+      "configuredGuardReceiptSHA256": "59ee5879b11768ab647a777449329904cf034e3ffc027b1015a61eee33cf608a"
+    }
+  },
+  "scope": "three profiles of the actual Ubuntu preflight and configured guard; no native tools, dispatch or acceptance"
+}

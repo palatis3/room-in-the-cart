@@ -56,11 +56,13 @@ struct PlacementBudgetFacts: View {
 
 struct PlacementMealFacts: View {
     let meals: [SharedMealOccurrence]
+    @Environment(\.locale) private var locale
     var body: some View {
         ForEach(meals) { occurrence in
             VStack(alignment: .leading, spacing: 4) {
                 Text(occurrence.meal.title).font(.headline)
-                LabeledContent(PlacementCopy.text("Meal day as entered"), value: occurrence.meal.day)
+                LabeledContent(PlacementCopy.text("Meal day as entered"),
+                    value: occurrence.meal.day ?? sharedMealScheduleText(nil, locale: locale))
                 LabeledContent(PlacementCopy.text("Meal kind"), value: PlacementCopy.mealKind(occurrence.meal.kind))
                 LabeledContent(PlacementCopy.text("Meal portions"), value: occurrence.meal.portions.formatted())
                 Text(occurrence.meal.protected ? PlacementCopy.text("Protected meal") : PlacementCopy.text("Flexible meal"))

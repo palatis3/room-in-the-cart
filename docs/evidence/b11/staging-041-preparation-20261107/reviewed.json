@@ -1,0 +1,76 @@
+{
+  "builtRuntimeSource": "b9fd773ece0deb80d7cd7703889ca822977f1a31",
+  "manifestSource": "02f9b872a9bfe919039cbd7f8117f1faf5983396",
+  "dryRunRegularFiles": 163,
+  "regularFileBytes": 1601107,
+  "pathAndSHA256Manifest": "c24822aaea571f611db3f697d94b085ce4dd62ed52aad082b88a75b7996dcb9b",
+  "onlyAdditionalPathSince040": "service/migrations/041_request_queue_permission.sql",
+  "migration041SHA256": "a684f4efae760e0d8b960ffea5edda1c77ff3a2995474c24d1d2c73c64f8d642",
+  "changedRuntimePathsSince040": [
+    ".vercelignore",
+    "service/API-HOUSEHOLD-REVIEW.md",
+    "service/API-LIFECYCLE.md",
+    "service/PRIVACY-JOURNAL.md",
+    "service/src/http.ts",
+    "service/src/repository.ts",
+    "web/README.md",
+    "web/src/api.ts",
+    "web/src/app.ts",
+    "web/src/i18n.ts",
+    "web/src/outbox.ts",
+    "web/src/public-pages.ts"
+  ],
+  "webAssetSHA256": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-BcYhp7mE.js": "5bec4196cdf13ce38656be49ea5db6d18877a1e57d2c60aee62a77812fce5a61",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "00e32d49f4136b5dc6e2115812ae27f69cda69f43a313b3fd283af13047ae84b"
+  },
+  "scope": "Local dry run and clean builds. Hosted staging is at migration 040.",
+  "rollbackDeployment": "dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr",
+  "currentHostedRegistry": {
+    "count": 40,
+    "latest": "040_deferred_request_carry.sql",
+    "table041Absent": true,
+    "aggregateOfFileSHA256": "428934ab0728f9691cbd7592e41419bd",
+    "aggregation": "MD5 of ordered, newline-separated filename=SHA256 values, matched to the local candidate."
+  },
+  "checks": {
+    "full-database.tap": {
+      "passed": 239,
+      "sha256": "96a399f1dbd29860d8e402dafc665273db9b9a50d2016c7ec6a6866ecfd0d88e"
+    },
+    "full-service.tap": {
+      "passed": 454,
+      "sha256": "34f70adeb1efa41a13717afb9cbd6784235d2ce8923ec03bd9110963b033e59e"
+    },
+    "web.tap": {
+      "passed": 140,
+      "sha256": "79b03964f457757fbb28d31a80ec2e6fa69a5238beaaede0ff78fe3d929c8e23"
+    },
+    "chrome.tap": {
+      "passed": 14,
+      "sha256": "324da8c358710ec18b88b8b193f810674e1529fe562bb77cd29237578a4092a9"
+    }
+  },
+  "backupAndLocalUpgrade": {
+    "hostedAt": 40,
+    "verifiedLocalUpgrade": 41,
+    "restores": 2,
+    "originalTables": 129,
+    "originalNonRegistryTablesPreserved": 128,
+    "originalRows": 122,
+    "upgradedTables": 130,
+    "newQueueGrants": 0,
+    "baselineByteUnchanged": true,
+    "upgradeResultSHA256": "8707d1b4e085a2af9e4819439e4d79bc6ce0f6d360bf476337e536b947f094ae",
+    "captureManifestSHA256": "5a06d9b73dd2255cf85dd27e9e04e5e98c382062fcd5ffbb91a28a4382b4c3ed",
+    "bothKeychainImagesVerifiedAndDetached": true
+  },
+  "preflight": {
+    "status": "A third private restore ran the reviewed application migration runner. The read-only live preflight verified the original schema, table hashes, role memberships, migration timestamps, and effective security properties.",
+    "transcriptSHA256": "a44aca53480e45f3d5fdbe9b6249042ea7a1394bf47a129c58e9b1131aec9391",
+    "encryptedVolumesDetached": true
+  }
+}

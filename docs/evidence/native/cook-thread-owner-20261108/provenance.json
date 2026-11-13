@@ -1,0 +1,173 @@
+{
+  "packagedAtUTC": "2026-11-08T16:18:52.270807+00:00",
+  "scope": "Completed r2/r3 build and 40 model/real-owner fake-engine qualification only",
+  "baseHead": "e8b3c9f506f52025897a0d0eab9e96fd78215f44",
+  "installedOnlyIn": "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart",
+  "canonicalInstallation": false,
+  "nativeExecutionByPackager": false,
+  "pendingActualAVFixtureLogRead": false,
+  "r2FrozenManifestSHA256": "f82128f1a348f917b3e97ae359d228eb7eb38f6e79da1682075df8b5e00eb9e5",
+  "r3FrozenManifestSHA256": "fb550a7abf98f7cfa58f2c6351114fc46df9e8a15f379abca6ed97de9b43e1e8",
+  "sourceManifestSHA256": "6fb75b908ad294becfb3abdf06778bb8d2b98c4a411fbef8f15c068729726ae3",
+  "changedFiles": [
+    {
+      "path": "ios/Features/Capture/Capture.xcstrings",
+      "baseSHA256": "14a590622c1c3ff6d6bf86defc796a300d9c87e254c5aa2e72a28a7d3cfab385",
+      "candidateSHA256": "08ea209b6328a335378f9e53e95988c8420a29b328c724ed8b30a576cd64ffbe"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackModel.swift",
+      "baseSHA256": "e37edd16f7f23a15d1d7fdab2b0a010a9a33a4f8af51e874b182ed937cb553b8",
+      "candidateSHA256": "05f2fc6b9260f9bcf240fcca3d691f4d83eccea714a000b679790e147e4ae24f"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackView.swift",
+      "baseSHA256": "7cc39b277f05f301ba84615c55dfdba8a04d29e8df0db6988f1402a6d4d137cd",
+      "candidateSHA256": "90f9fa795510184296424cce4e2cc682acdf5579e4a47a4852a24ec6c3cd906a"
+    },
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "baseSHA256": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+      "candidateSHA256": "3014055bdd290bfc50f9709d4b82491ef11b6f58781f0cf490bba1549da213b0"
+    },
+    {
+      "path": "ios/Tests/CookReadbackTests.swift",
+      "baseSHA256": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543",
+      "candidateSHA256": "529a9af6062203b29e855e3c13ee2d163ddc5615fce702db2c3da01721509f11"
+    }
+  ],
+  "copies": [
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/phase1/run.json",
+      "destination": "receipts/r2-failed-build.json",
+      "sha256": "7694f4a19263b9bb5e00460df94d436c31201d251397b6901d2f3fe9043602de",
+      "bytes": 1159
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3/r2-compile-diagnostics.json",
+      "destination": "receipts/r2-primary-diagnostics.json",
+      "sha256": "d3d9236cd3a42f162346a003c9832571d517d05f9aab731720127ece7c38f8f9",
+      "bytes": 6914
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/phase1/run.json",
+      "destination": "receipts/r3-build.json",
+      "sha256": "32a3d071bdf8382b73f4f74f36994759a208e09aac824e8e60980aeb274c2354",
+      "bytes": 1192
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/build-review.json",
+      "destination": "receipts/r3-build-review.json",
+      "sha256": "1ccd2733eb5e1a89553efcb4f1ae86136f55501a2d826395abeb36548567c230",
+      "bytes": 4370
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/phase2/run.json",
+      "destination": "receipts/r3-model-run.json",
+      "sha256": "c31b253ff92027a1f805f4d840634c0f3b44d5fcaed02ab014d90ab29f0951fe",
+      "bytes": 6743
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/verification.json",
+      "destination": "receipts/strict-verification.json",
+      "sha256": "55e0b8e2cbf4ecfcff06247dc9aaca34668dc83a3ae9a275ad1c97e869c7c7a8",
+      "bytes": 498
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/summary.json",
+      "destination": "receipts/summary.json",
+      "sha256": "a4c7c87261fa6756446c9c1a3692ff17f6e07368dc9a28dd8ed4a9e2546d736c",
+      "bytes": 1207
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/test-runtime-warnings.json",
+      "destination": "receipts/runtime-warnings.json",
+      "sha256": "e4c4f3385dadccd73f259baf7319feac17e11efe8af7dd555c94f584bf493173",
+      "bytes": 181
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/r2-preservation.json",
+      "destination": "receipts/r2-preservation.json",
+      "sha256": "8b90bbf8d63ac97ad512128b5ccdb85af698b22b937cfc57b717a3b918247ae2",
+      "bytes": 19622
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/compiled-products.json",
+      "destination": "receipts/compiled-products.json",
+      "sha256": "a4337498897c306d3f8b201c52bf54205083ff82e8c0ee82d01b98351e1b9976",
+      "bytes": 48185
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/original-before.json",
+      "destination": "receipts/original-result-before.json",
+      "sha256": "7bbf7f8cccf976b3a99f6adfef0953f6a0cb53d6c9575bd9478e3ab2c188b167",
+      "bytes": 22506
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution/run.json",
+      "destination": "receipts/pure-prototype-run.json",
+      "sha256": "f9e142525df9d70c470b461e615a6712c20d97fb01aa6e02642796d9cc721e97",
+      "bytes": 732
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/strict.txt",
+      "destination": "tests/strict.txt",
+      "sha256": "a64352ef8a6593b7b07fa5eeb64e4b225603c011f3a279182fb9dc7b3165a8ad",
+      "bytes": 5589
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/inspection/selectors.txt",
+      "destination": "tests/selectors.txt",
+      "sha256": "d071d8c71691fd64fbebaf636cfdf20c2558fad315364a217abae05bb4c814a8",
+      "bytes": 4231
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2/preparation.json",
+      "destination": "source/r2-preparation.json",
+      "sha256": "028f114ecf7f2eaddad0c530b10e5680e7e59e544927b92b715d061335a4bedc",
+      "bytes": 4751
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3/preparation.json",
+      "destination": "source/r3-preparation.json",
+      "sha256": "3aaee3c00f7bddb6257f7060d63b9123d269af2c3c312edb66e9b09b68b6b75b",
+      "bytes": 2308
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3/r2-to-r3.patch",
+      "destination": "source/r3-correction.patch",
+      "sha256": "4f28502063b7b668326ca8261f207cf3901afb3b1fb6673fb920860cf53367ca",
+      "bytes": 1194
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3/isolated-ios-candidate-manifest.json",
+      "destination": "source/final-source-manifest.json",
+      "sha256": "6fb75b908ad294becfb3abdf06778bb8d2b98c4a411fbef8f15c068729726ae3",
+      "bytes": 104427
+    },
+    {
+      "source": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3/overlay/ios/Tests/CookReadbackTests.swift",
+      "destination": "source/CookReadbackTests.swift",
+      "sha256": "529a9af6062203b29e855e3c13ee2d163ddc5615fce702db2c3da01721509f11",
+      "bytes": 52729
+    }
+  ],
+  "privateFullLogPins": [
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/phase1/native.log",
+      "bytes": 903132,
+      "sha256": "b885f90659ab422d5226c6f02d6b5069a8e2197979a2eb214ae5e6c2c7930c90"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/phase2/native.log",
+      "bytes": 19680,
+      "sha256": "5bb8c053711e94ddfb8a36351253fb58840c747cc59475f1a577d0471e5c68b8"
+    }
+  ],
+  "reviewProvenance": {
+    "kind": "Chat-delivered static reviews, not execution receipts",
+    "root": "Reviewed owner/mailbox/facade/model/view; identified shutdown liveness, terminal capacity, explicit retry visibility; accepted narrow r3 compiler corrections and owned executions.",
+    "ci_log_record_fix": "Independent reviewer found whole-turn reentrancy gap; verified corrected full-turn guard and forced nested-source regression, final40 selectors and unchanged original16, final frozen r2 identities.",
+    "limits": "Static review and fake-engine passes do not establish real AV API support, acoustics, physical routes, minimum-OS native playback, or resolution of original QoS wait."
+  }
+}

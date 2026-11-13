@@ -1,0 +1,37 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "run": 42316648565,
+  "attempt": 1,
+  "job": 128234291592,
+  "artifact": 13552159373,
+  "archiveSHA256": "19a4f56b006c56a686066b8d9acf1c20499e83356359b9ce87cde85b4ea1f4c8",
+  "defaultArchiveGuard": "refused member 97779296 > 50000000 bytes; unchanged; no full extraction or strict replay",
+  "summary": {
+    "passed": 3,
+    "failed": 1,
+    "skipped": 0
+  },
+  "failedSelector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+  "durationSeconds": 331.4234889745712,
+  "failure": "No visible back control while returning to \"Record what came home\" Button",
+  "sourceSHA256": "44b99fdf50ef9d62a962f52d1e48cea3c32c836719de668976fb9b9cc3236256",
+  "chronology": {
+    "placedOrderTap": 323.98,
+    "firstBackTap": 325.13,
+    "secondBackTap": 326.9,
+    "targetRecheck": 328.23,
+    "settingsButtonResolved": 328.83,
+    "tearDown": 329.62,
+    "failureAttachment": 329.82
+  },
+  "phase": "After restart and retailer placement; back(to:) at source407 fails in helper1316 before pickup entry408. This is an assertion failure, not the per-test deadline. No inference about app navigation cause from log alone.",
+  "runtimeFromBoundedTestDetails": {
+    "device": "iPhone 17",
+    "architecture": "arm64",
+    "iOS": "26.2",
+    "build": "23C54"
+  },
+  "warnings": "Bounded details reports Multiple Runtime Warnings on passing manual-list case; counts/classification unavailable from these members. Do not claim zero warnings or strict acceptance.",
+  "separateRootInspection": "/Users/palatis/Room in the Cart/.build/UI01ReturnReview20261106/isolated-extraction.json",
+  "separateRootInspectionStatus": "Root scoped strict replay is now separately retained in ../ui01-root-scoped-replay/receipt.json; default collector guard unchanged."
+}

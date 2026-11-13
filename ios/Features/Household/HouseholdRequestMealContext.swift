@@ -20,7 +20,11 @@ struct HouseholdRequestMealContext: Equatable {
 
     private func sorted(_ values: [SharedMealOccurrence]) -> [SharedMealOccurrence] {
         values.sorted {
-            if $0.meal.day != $1.meal.day { return $0.meal.day < $1.meal.day }
+            if $0.meal.day != $1.meal.day {
+                guard let left = $0.meal.day else { return false }
+                guard let right = $1.meal.day else { return true }
+                return left < right
+            }
             return $0.id.uuidString < $1.id.uuidString
         }
     }
@@ -37,7 +41,11 @@ struct HouseholdRequestMealContextView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(ht("Protected meal commitments"), systemImage: "lock").font(.headline)
+            Text(ht("Protected meal commitments"))
+                .font(.headline)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             if context.meals == nil {
                 Text(ht("Meal commitments are unavailable. Check the meal plan before deciding."))
                     .accessibilityIdentifier("household.decision.meals.unknown")
@@ -52,10 +60,12 @@ struct HouseholdRequestMealContextView: View {
                     DisclosureGroup(ht("Other meals in this shop")) {
                         ForEach(context.otherMeals) { occurrence in HouseholdRequestMealFacts(occurrence: occurrence) }
                     }
+                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Other meals in this shop"),
+                                                                     identifier: "household.decision.otherMeals"))
                 }
             }
             Text(ht("Check usable food separately; this review does not confirm meal coverage."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.secondary)
         }
     }
 }
@@ -76,12 +86,68 @@ private struct HouseholdRequestMealFacts: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(occurrence.meal.title).font(.subheadline.weight(.semibold))
-            Text([kind, sharedMealDayText(occurrence.meal.day, locale: locale) ?? ht("Meal day unknown")].joined(separator: " · "))
+                .fixedSize(horizontal: false, vertical: true)
+            Text([kind, sharedMealScheduleText(occurrence.meal.day, locale: locale)].joined(separator: " · "))
                 .font(.caption)
-            LabeledContent(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
-                .font(.caption)
+                .fixedSize(horizontal: false, vertical: true)
+            HouseholdDecisionFact(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
+                .font(.body)
         }
+        .lineLimit(nil)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("household.decision.meal.\(occurrence.id.uuidString.lowercased())")
+    }
+}
+
+/// Preserve LabeledContent's native stacked layout at accessibility sizes.
+struct HouseholdDecisionFact: View {
+    enum ValueRole {
+        case essential
+        case metadata
+
+        var foregroundColor: Color {
+            switch self {
+            case .essential: Theme.ink
+            case .metadata: Theme.secondary
+            }
+        }
+    }
+
+    let title: String
+    let value: String
+    let valueRole: ValueRole
+
+    init(_ title: String, value: String, valueRole: ValueRole = .essential) {
+        self.title = title
+        self.value = value
+        self.valueRole = valueRole
+    }
+
+    var body: some View {
+        LabeledContent {
+            Text(value).foregroundStyle(valueRole.foregroundColor)
+        } label: {
+            Text(title)
+        }
+        .accessibilityElement(children: .combine)
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// A native Dynamic Type checkout amount; LabeledContent stacks at accessibility sizes.
+struct HouseholdDecisionTotal: View {
+    let value: String
+
+    var body: some View {
+        LabeledContent {
+            Text(value).font(.largeTitle.weight(.semibold))
+                .monospacedDigit().foregroundStyle(Theme.ink)
+        } label: {
+            Text(ht("Expected total"))
+        }
+        .accessibilityElement(children: .combine)
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }

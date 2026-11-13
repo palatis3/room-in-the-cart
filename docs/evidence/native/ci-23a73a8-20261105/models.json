@@ -1,0 +1,34 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "run": 42021894668,
+  "artifact": {
+    "id": 13413845551,
+    "sha256": "f4f082c5f0bf74c49a3dc38e6adcd4223d62855922200a51bd0722e13d379ba5",
+    "githubDigestVerified": true
+  },
+  "compiledSelectorCount": 580,
+  "passed": 580,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "runtimeWarnings": 0,
+  "detailExportCount": 580,
+  "rawLog": "Exactly one start and one passing completion per selected case; no restart or SQLite API-misuse diagnostics.",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+    "deviceName": "iPhone 17",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "hashes": {
+    "Tests.log": "d411eff02183233bb37b6149f6bc87cc038ecdc36ff29d87213a68b232e2e388",
+    "test-summary.json": "ef6c4d6b2c9593639fda03c2570757ebc8f552492f72b29bf56e4930de527ce1",
+    "test-details.json": "4837e575bff2f7404ad48818ebab706bc598e5ae68605d5259d3d4e24e682823",
+    "test-runtime-warnings.json": "5814d7a0311056ad2f2be5bf961d565877906d02f665a556e806164168d76c3d",
+    "replay-verification.txt": "0aa379864d531fad75e56cd9b8a3c4d6f67ea8a26bec511181414ba82c05d7aa"
+  },
+  "limits": "Ordinary models for this immutable candidate. StoreKit opt-in cases are separately reported and include the Spanish failure; no candidate-wide acceptance."
+}

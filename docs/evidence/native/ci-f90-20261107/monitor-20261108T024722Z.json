@@ -1,0 +1,596 @@
+{
+  "observedAtUtc": "2026-11-08T02:47:22Z",
+  "previousSnapshot": "monitor-20261108T024347Z.json",
+  "previousObservedAtUtc": "2026-11-08T02:43:47Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 7
+      },
+      "remainingJobs": []
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 18,
+        "failure": 2
+      },
+      "remainingJobs": []
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128600647338,
+      "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128600647338",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:46:48Z"
+    }
+  ],
+  "newFailures": [],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "completed",
+    "conclusion": "failure",
+    "artifactState": "collected",
+    "originalEvidence": "speech-runtime-original/proof.json",
+    "causalEvidence": "speech-causal-review/proof.json"
+  },
+  "cohortTerminal": true,
+  "cohortRuns": [
+    {
+      "runId": 42428216003,
+      "name": "iOS deep checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428216003",
+      "status": "completed",
+      "conclusion": "failure",
+      "updatedAt": "2026-11-08T00:38:38Z"
+    },
+    {
+      "runId": 42428215928,
+      "name": "Security checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215928",
+      "status": "completed",
+      "conclusion": "success",
+      "updatedAt": "2026-11-08T00:07:40Z"
+    },
+    {
+      "runId": 42428215958,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215958",
+      "status": "completed",
+      "conclusion": "success",
+      "updatedAt": "2026-11-08T00:08:15Z"
+    },
+    {
+      "runId": 42428215952,
+      "name": "iOS Release performance",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215952",
+      "status": "completed",
+      "conclusion": "success",
+      "updatedAt": "2026-11-08T01:11:45Z"
+    },
+    {
+      "runId": 42428215935,
+      "name": "Build and test",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "completed",
+      "conclusion": "failure",
+      "updatedAt": "2026-11-08T02:27:08Z"
+    },
+    {
+      "runId": 42428215965,
+      "name": "iOS fixture checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "completed",
+      "conclusion": "failure",
+      "updatedAt": "2026-11-08T02:46:48Z"
+    }
+  ],
+  "fixtureTerminalInventory": {
+    "run": {
+      "conclusion": "failure",
+      "event": "pull_request",
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "id": 42428215965,
+      "path": ".github/workflows/ios-fixtures.yml",
+      "run_attempt": 1,
+      "status": "completed",
+      "updated_at": "2026-11-08T02:46:49Z",
+      "workflow_id": 407500252
+    },
+    "plannedRows": 17,
+    "listedRows": 17,
+    "notListedRows": [],
+    "successfulRows": 15,
+    "failedRows": 2,
+    "aggregate": {
+      "selected": 67,
+      "executed": 67,
+      "passed": 65,
+      "failed": 2,
+      "runnerRestarts": 0,
+      "selectedInStrictlyPassingJobs": 52,
+      "casesWithAvailableRuntimeWarningEvidence": 62,
+      "runtimeWarningsInAvailableEvidence": 0,
+      "warningUnavailableJobIds": [
+        128589072389
+      ]
+    },
+    "sourceInventory": "monitor-20261108T023154Z.json",
+    "rows": [
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-02",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 11,
+        "jobId": 128575557547,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T00:55:56Z",
+        "artifact": {
+          "id": 13598141213,
+          "name": "iphone-fixture-results-contributor-balanced-02-1",
+          "size": 23518353,
+          "apiDigest": "sha256:3854b91e20cb0669d859d704e96cdce54aa4de5ab495a3856dc2ff71a1aace33"
+        },
+        "native": {
+          "selected": 11,
+          "executed": 11,
+          "passed": 11,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-05",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 14,
+        "jobId": 128575557670,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T01:24:01Z",
+        "artifact": {
+          "id": 13598123480,
+          "name": "iphone-fixture-results-contributor-balanced-05-1",
+          "size": 20724454,
+          "apiDigest": "sha256:22372f95fd327a444f036c26627ab9233f9a8f1ab7a32a19046d9140243814b0"
+        },
+        "native": {
+          "selected": 14,
+          "executed": 14,
+          "passed": 14,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-01",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 3,
+        "jobId": 128575557741,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T01:32:11Z",
+        "artifact": {
+          "id": 13599096773,
+          "name": "iphone-fixture-results-contributor-balanced-01-1",
+          "size": 24436913,
+          "apiDigest": "sha256:e091a9cdd813543306db9a6edebe538e8b165f74be3d9ee4dcd75d5a9059d2c2"
+        },
+        "native": {
+          "selected": 3,
+          "executed": 3,
+          "passed": 3,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-04",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128575557772,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T01:23:18Z",
+        "artifact": {
+          "id": 13598613707,
+          "name": "iphone-fixture-results-contributor-balanced-04-1",
+          "size": 9750619,
+          "apiDigest": "sha256:ce617e0436f3ab8cf46f01ec97eb29fd04d228645df4893c55625b9fc082fd4e"
+        },
+        "native": {
+          "selected": 5,
+          "executed": 5,
+          "passed": 5,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-03",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 10,
+        "jobId": 128575557708,
+        "conclusion": "failure",
+        "completedAt": "2026-11-08T01:51:28Z",
+        "artifact": {
+          "id": 13599104299,
+          "name": "iphone-fixture-results-contributor-balanced-03-1",
+          "size": 54480673,
+          "apiDigest": "sha256:6dd0afced63ef9b8781e4f87f8f184e3b42619fb4bae88949ff27340ca9403d4"
+        },
+        "native": {
+          "selected": 10,
+          "executed": 10,
+          "passed": 9,
+          "failed": 1,
+          "failedSelectors": [
+            "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite"
+          ],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "RecordsMediaUITests",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128582738305,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T01:33:28Z",
+        "artifact": {
+          "id": 13599121026,
+          "name": "iphone-fixture-results-RecordsMediaUITests-1",
+          "size": 32567,
+          "apiDigest": "sha256:9fcda3f3f00f29c1559996a3651d2faa4099497f6c0ccd56c98ef91ae11250ac"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "runtimeWarnings": 0,
+          "failedSelectors": [],
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-stock-and-purchase",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 4,
+        "jobId": 128588917127,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:11:59Z",
+        "artifact": {
+          "id": 13600167020,
+          "name": "iphone-fixture-results-SharedDeliveryUITests-stock-and-purchase-1",
+          "size": 5126303,
+          "apiDigest": "sha256:a416892f586d89319f603a82ab612e83d52a1e95946f94b67805a6e358f46053"
+        },
+        "native": {
+          "selected": 4,
+          "executed": 4,
+          "passed": 4,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128589072389,
+        "conclusion": "failure",
+        "completedAt": "2026-11-08T02:16:26Z",
+        "artifact": {
+          "id": 13600750432,
+          "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+          "size": 63221229,
+          "apiDigest": "sha256:3f26f9d25354dfbc75d516f72044efbe2e73ec9bd9fb4c308cd4a01c04083da6"
+        },
+        "native": {
+          "selected": 5,
+          "executed": 5,
+          "passed": 4,
+          "failed": 1,
+          "failedSelectors": [
+            "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+          ],
+          "runtimeWarnings": null,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedFallbackUITests",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 2,
+        "jobId": 128590839245,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T01:55:22Z",
+        "artifact": {
+          "id": 13599139577,
+          "name": "iphone-fixture-results-SharedFallbackUITests-1",
+          "size": 4970900,
+          "apiDigest": "sha256:37791d6d1fdb952ad4732521d4ddd5324c4880d6c6774adfb97b4a174f3083f1"
+        },
+        "native": {
+          "selected": 2,
+          "executed": 2,
+          "passed": 2,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128591114527,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:38:37Z",
+        "artifact": {
+          "id": 13600733570,
+          "name": "iphone-fixture-results-SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-1",
+          "size": 8064977,
+          "apiDigest": "sha256:6b602df575b13391d8393ca3514e4cf72f40a253f068874e751a314e45c946a7"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128594978722,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:17:38Z",
+        "artifact": {
+          "id": 13600805025,
+          "name": "iphone-fixture-results-SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn-1",
+          "size": 5104653,
+          "apiDigest": "sha256:bef0a179173de4bcddd62f20bf2beb30b15dcc751811381f1b41de05906b4d71"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128595775547,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:21:49Z",
+        "artifact": {
+          "id": 13600681473,
+          "name": "iphone-fixture-results-SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult-1",
+          "size": 2850952,
+          "apiDigest": "sha256:00044c4e264621ea7b8ce602b912333f96e7a6990f2224a2496ae021f475daa6"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "macos_slot": 2,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128599384101,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:32:31Z",
+        "artifact": {
+          "id": 13600264453,
+          "name": "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1",
+          "size": 10680339,
+          "apiDigest": "sha256:bc655198b171473b321aca3f82e3e940bc31b4a0e0ce12ad52f00a700031273e"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "macos_slot": 3,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128600385824,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:28:34Z",
+        "artifact": {
+          "id": 13599719686,
+          "name": "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1",
+          "size": 5856083,
+          "apiDigest": "sha256:6ef6964f892963255349fa4792a08722a21d74d77c159c2e5d5d87025a7fb597"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "macos_slot": 4,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128600647338,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:46:48Z",
+        "artifact": {
+          "id": 13600779523,
+          "name": "iphone-fixture-results-SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable-1",
+          "size": 2528373,
+          "apiDigest": "sha256:94ac2c7245d49377302227ff87c405448bc1f0bcac6237761023ea35e46682c8"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "macos_slot": 0,
+        "selectedFromPinnedSource": 1,
+        "jobId": 128601563444,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:35:15Z",
+        "artifact": {
+          "id": 13601051159,
+          "name": "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1",
+          "size": 6300621,
+          "apiDigest": "sha256:fe12135fe4244bbec06807948642f81e55a6c8141f8837cb9605c4f6c18de8ef"
+        },
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      },
+      {
+        "profile": "dinner",
+        "shard": "DinnerDecisionSheetUITests",
+        "macos_slot": 1,
+        "selectedFromPinnedSource": 5,
+        "jobId": 128603089001,
+        "conclusion": "success",
+        "completedAt": "2026-11-08T02:40:54Z",
+        "artifact": {
+          "id": 13600886867,
+          "name": "iphone-fixture-results-DinnerDecisionSheetUITests-1",
+          "size": 4699000,
+          "apiDigest": "sha256:1f29f1665d55e02ffa2e73e17b2db56876208590eed572c4960dca7ab3e5c813"
+        },
+        "native": {
+          "selected": 5,
+          "executed": 5,
+          "passed": 5,
+          "failed": 0,
+          "failedSelectors": [],
+          "runtimeWarnings": 0,
+          "runnerRestarts": 0
+        }
+      }
+    ],
+    "scope": "Exact pinned planner, hosted verifier summaries, and redacted Records report. The contributor compiled plan replays byte-for-byte from the original redacted archive. All seventeen result artifacts are pinned by API metadata.",
+    "recordsRedactedReceipt": {
+      "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+      "runId": 42428215965,
+      "jobId": 128582738305,
+      "artifactId": 13599121026,
+      "archiveBytes": 32567,
+      "archiveSHA256": "9fcda3f3f00f29c1559996a3651d2faa4099497f6c0ccd56c98ef91ae11250ac",
+      "archiveDigestVerified": true,
+      "exactMemberAllowlistVerified": true,
+      "compiledPlanReplayByteEqual": true,
+      "allowedMembers": [
+        "records-test-report.md",
+        "test-plan/RecordsMediaUITests.txt",
+        "test-plan/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+        "test-plan/SharedDeliveryUITests-stock-and-purchase.txt",
+        "test-plan/SharedFallbackUITests.txt",
+        "test-plan/SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt",
+        "test-plan/SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.txt",
+        "test-plan/SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.txt",
+        "test-plan/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+        "test-plan/SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt",
+        "test-plan/SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.txt",
+        "test-plan/SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt",
+        "test-plan/contributor-balanced-01.txt",
+        "test-plan/contributor-balanced-02.txt",
+        "test-plan/contributor-balanced-03.txt",
+        "test-plan/contributor-balanced-04.txt",
+        "test-plan/contributor-balanced-05.txt",
+        "test-plan/manifest.json",
+        "test-plan/test-enumeration.json"
+      ],
+      "reportSHA256": "c67d2e46f00ad827219757db8a4be5e0ad5085705b693e968df4dbe8a933d924",
+      "nativeResult": {
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": 0
+      },
+      "scope": "Verified only the redacted report and contributor selector plan."
+    },
+    "recordsLocalReceipt": ".build/CIF90Nov07/records-redacted/receipt.json"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "sessionSurvived": false,
+  "durableOutboxRows": 1,
+  "privateTextHidden": true,
+  "noRetryWithoutAuthorization": true,
+  "commandPosts": 0,
+  "limitations": [
+    "API-only offline fixture leaves shell reachable.",
+    "Actual device Chrome restart lost fixture session; authenticated session-survival branch untested.",
+    "Initial DevTools reconnect happened before Chrome socket ready and failed ECONNRESET; later attach succeeded without another restart."
+  ]
+}

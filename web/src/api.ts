@@ -1,10 +1,11 @@
+import type { Language } from './i18n.js';
 import type { OwnRequest, CommandEnvelope } from '../../shared/contracts/service-v1.js';
 export type { OwnRequest };
 export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
@@ -80,7 +81,7 @@ function integer(value: unknown, minimum = 0): number {
 function boolean(value: unknown): boolean { if (typeof value !== 'boolean') return invalid(); return value; }
 function optionalText(value: unknown, max = 2048): string | null { return value === null ? null : text(value, max); }
 const ownKinds = ['request.send', 'request.edit', 'request.withdraw'];
-export function isContributorSession(session: Session): boolean { return ['contributor', 'shopper', 'organizer'].includes(session.role); }
+export function isContributorSession(session: Session): boolean { return session.canContribute !== false && ['contributor', 'shopper', 'organizer'].includes(session.role); }
 
 /** Validate persisted commands too: an outbox can carry only this person's request operations. */
 export function validateOwnCommand(command: Command): void {
@@ -103,12 +104,34 @@ function ownRequest(value: unknown): OwnRequest {
   const route = r.route, status = r.status;
   if (route !== 'current' && route !== 'next') return invalid();
   if (!['pending', 'clarified', 'added', 'deferred', 'handled', 'dismissed', 'withdrawn'].includes(String(status))) return invalid();
+  const purchaseOutcome = r.purchaseOutcome;
+  if (purchaseOutcome !== undefined &&
+      (status !== 'added' || (purchaseOutcome !== 'bought' && purchaseOutcome !== 'notBought'))) return invalid();
   const ownActionAllowed = boolean(r.ownActionAllowed);
   if (ownActionAllowed && status !== 'pending' && status !== 'clarified') return invalid();
+  if (r.carriedForward !== undefined && (r.carriedForward !== true || ownActionAllowed || route !== 'next')) return invalid();
+  if (r.fromPreviousShop !== undefined && r.fromPreviousShop !== true) return invalid();
   return {requestId:identity(r.requestId), shopId:identity(r.shopId), revision:integer(r.revision, 1),
     originalItem:text(r.originalItem, 240), ownQuantity:optionalText(r.ownQuantity, 80),
     authoredAt:timestamp(r.authoredAt), receivedAt:timestamp(r.receivedAt), route, status:status as OwnRequest['status'], ownActionAllowed,
+    ...(r.carriedForward === true ? {carriedForward:true} : {}),
+    ...(r.fromPreviousShop === true ? {fromPreviousShop:true} : {}),
+    ...(purchaseOutcome === undefined ? {} : {purchaseOutcome}),
     clarification:optionalText(r.clarification ?? null, 300), followupTo:r.followupTo == null ? null : identity(r.followupTo)};
+}
+
+function requestQueueState(d: Record<string,unknown>) {
+  const canSetRequestQueue = Array.isArray(d.capabilities) && d.capabilities.includes('request_queue_permission');
+  boolean(d.queueConsent); // Retained on the wire for clients without generation-bound replay.
+  if ((d.requestQueueGrant != null) !== (d.requestQueueUntil != null)) return invalid();
+  const requestQueueGrant = d.requestQueueGrant == null ? undefined : identity(d.requestQueueGrant);
+  const requestQueueUntil = requestQueueGrant ? timestamp(d.requestQueueUntil) : undefined;
+  if (requestQueueGrant && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(requestQueueGrant)) return invalid();
+  const queueConsent = !!requestQueueUntil && Date.parse(requestQueueUntil)>Date.now();
+  if (!canSetRequestQueue && (d.requestQueueGrant != null || d.requestQueueUntil != null)) return invalid();
+  return { queueConsent,
+    ...(canSetRequestQueue?{canSetRequestQueue:true}:{}),
+    ...(requestQueueGrant && requestQueueUntil ? {requestQueueGrant,requestQueueUntil} : {}) };
 }
 
 function parseSession(value: unknown): Session | null {
@@ -117,10 +140,15 @@ function parseSession(value: unknown): Session | null {
   if (d.authenticated !== true || !['contributor', 'shopper', 'organizer', 'helper', 'editor'].includes(String(d.role))) return invalid();
   const household = record(d.household), replay = record(d.replayWindow);
   const grantId = d.grantId == null ? undefined : identity(d.grantId);
-  if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
+  const scoped = d.role === 'helper' || d.role === 'editor';
+  if (scoped !== Boolean(grantId) || (scoped && (d.enrolled !== true || d.shopId == null))) {
+    throw new ApiError('access_ended', 403);
+  }
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
-    enrolled: boolean(d.enrolled), queueConsent: boolean(d.queueConsent), ...(grantId ? { grantId } : {}) };
+    enrolled: boolean(d.enrolled), ...requestQueueState(d),
+    ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
+    ...(grantId ? { grantId } : {}) };
 }
 
 function parseBrowserAuth(value:unknown):BrowserAuthState {
@@ -131,8 +159,8 @@ function parseBrowserAuth(value:unknown):BrowserAuthState {
 }
 export class API {
   constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
-  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string): Promise<unknown> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string, extraHeaders: Record<string,string> = {}): Promise<unknown> {
+    const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (csrf) headers['X-CSRF-Token'] = csrf;
     let response: Response;
@@ -163,10 +191,11 @@ export class API {
     const result=record(await this.call('/v1/auth/session','DELETE',undefined,csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:boolean(result.providerRevoked)};
   }
   async session(): Promise<Session | null> { return parseSession(await this.call('/v1/session')); }
-  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string}): Promise<InviteRedemption> {
+  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string; defaultAliasLanguage?: Language}): Promise<InviteRedemption> {
     if (!token.trim() || token.length > 4096 || !review.adultAttestation) throw new ApiError('invalid_entry', 422);
     const d = record(await this.call('/v1/invites/redeem', 'POST', {token, intent:'join', adultAttestation:true,
-      ...(review.alias?.trim() ? {alias:text(review.alias.trim(), 80)} : {})}, csrf));
+      ...(review.alias?.trim() ? {alias:text(review.alias.trim(), 80)} : {})}, csrf, undefined,
+      review.defaultAliasLanguage ? {'Accept-Language':review.defaultAliasLanguage} : {}));
     if (d.role !== 'contributor' && d.role !== 'helper' && d.role !== 'editor') return invalid();
     const grantId = d.grantId == null ? undefined : identity(d.grantId);
     if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
@@ -175,6 +204,12 @@ export class API {
   async activateSession(householdId: string, csrf?: string, grantId?: string): Promise<void> {
     const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {})}, csrf));
     if (!active || active.household.id !== householdId || (grantId && active.grantId !== grantId)) return invalid();
+  }
+  async setRequestQueue(session:Session,enabled:boolean):Promise<void>{
+    const result=record(await this.call(`/v1/households/${segment(session.household.id)}/devices/current/request-queue`,'PUT',{enabled},session.csrf));
+    const state=requestQueueState(result);
+    if (!state.canSetRequestQueue || identity(record(result.household).id)!==session.household.id ||
+        identity(result.memberId)!==session.memberId || (enabled ? !state.queueConsent : !!state.requestQueueGrant)) invalid();
   }
   async requests(session: Session): Promise<OwnRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
@@ -194,22 +229,24 @@ export class API {
     } while (cursor);
     return rows;
   }
-  async command(session: Session, command: Command): Promise<void> {
+  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<void> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     validateOwnCommand(command);
-    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf));
+    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant ? {'X-Request-Queue-Grant':requestQueueGrant} : {}));
     identity(receipt.operationId);
     const request = ownRequest(receipt.request);
     if (receipt.kind !== command.kind || request.shopId !== command.shopId
         || (command.kind !== 'request.send' && request.requestId !== command.body.requestId)) return invalid();
   }
   async view(session: Session): Promise<CookView> {
-    if (!['helper', 'editor'].includes(session.role) || !session.grantId) throw new ApiError('access_ended', 403);
+    if (!['helper', 'editor'].includes(session.role) || !session.enrolled || !session.grantId || !session.shopId) throw new ApiError('access_ended', 403);
     const d = record(await this.call(`/v1/views/${segment(session.grantId)}/current`));
     if (!Array.isArray(d.items) || d.items.length > 500 || !['en', 'es'].includes(String(d.language)) || !['read', 'edit'].includes(String(d.mode)) || d.grantId !== session.grantId
-        || (session.shopId !== null && d.shopId !== session.shopId)) return invalid();
+        || d.shopId !== session.shopId) return invalid();
+    const expiresAt = timestamp(d.expiresAt);
+    if (Date.parse(expiresAt) <= Date.now()) throw new ApiError('access_ended', 403);
     return {grantId:identity(d.grantId), shopId:identity(d.shopId), shopLabel:text(d.shopLabel, 512), revision:integer(d.revision, 1),
-      asOf:timestamp(d.asOf), expiresAt:timestamp(d.expiresAt), canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
+      asOf:timestamp(d.asOf), expiresAt, canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
       instructions:d.items.map(value => { const i = record(value), amount = optionalText(i.amount, 80), unit = optionalText(i.unit, 80);
         return {item:text(i.label, 240), amount:amount === null ? null : [amount, unit].filter(Boolean).join(' '), action:text(i.action, 500)}; })};
   }

@@ -1,0 +1,17 @@
+{
+  "startedAtUTC": "2026-11-08T22:31:36.234179+00:00",
+  "nativeExit": 65,
+  "expectedCount": 1,
+  "diagnosticOnly": true,
+  "originalBeforeSHA256": "522247addb329790ad69e8c8fef8a90488305e10d141c0003aa9746c7e79a3a2",
+  "cloneExit": 0,
+  "summaryExportExit": 0,
+  "testsExportExit": 0,
+  "strictExit": 1,
+  "probeCollectionExit": 0,
+  "probeSHA256": "97e8c35c1b3f43a35e911c2aaf5a00ce0c0be0d77cd1d897916c41bc85dfced7",
+  "sourceUnchanged": true,
+  "finishedAtUTC": "2026-11-08T22:31:38.972096+00:00",
+  "originalUnchanged": true,
+  "originalAfterSHA256": "522247addb329790ad69e8c8fef8a90488305e10d141c0003aa9746c7e79a3a2"
+}

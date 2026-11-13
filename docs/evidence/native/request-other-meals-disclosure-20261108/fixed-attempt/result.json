@@ -1,0 +1,51 @@
+{
+  "sourceManifestSHA256": "3edd1ef0a08defb65ff1cc7b60882f157f4fd65702422df77cb2887a1731744d",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "startedAtUTC": "2026-11-08T18:35:37.910339+00:00",
+  "finishedAtUTC": "2026-11-08T18:47:55.016212+00:00",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "result": "Failed; partial rendered evidence only",
+  "caseSeconds": 101.782,
+  "capturedControlFrames": "311 x 44 points in initial collapsed and expanded states",
+  "captures": [
+    {
+      "file": "00.png",
+      "sha256": "9c52d1c31f599002b27df73aa79c09e5e2d179ca8146ad4724402d5ad52e0e35",
+      "bytes": 123075
+    },
+    {
+      "file": "01.txt",
+      "sha256": "554fd2faba5f53e9c6e37d8bdb95f18c6b8f2b5782dfa0b5db2d5763aef02bd7",
+      "bytes": 127
+    },
+    {
+      "file": "02.txt",
+      "sha256": "edb32c5eb9809ff81908f1c5bbbe1dbca4b52a8f7dbb0070be9c1221afdaa2f2",
+      "bytes": 127
+    },
+    {
+      "file": "03.png",
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e",
+      "bytes": 150760
+    },
+    {
+      "file": "04.txt",
+      "sha256": "db79974a87e05ae1a4f70294c80576bb1787ab3007618677392c837415e77b03",
+      "bytes": 126
+    },
+    {
+      "file": "05.txt",
+      "sha256": "f2b1b77ad6ea6cb5a30a94e6fff4ab3048fa6a7953c1aee0d950624bd561ed1a",
+      "bytes": 126
+    },
+    {
+      "file": "06.png",
+      "sha256": "4222f4e33a7801bcc75477efb51714067958d8acb5159769aae50baa30d3408e",
+      "bytes": 150760
+    }
+  ],
+  "crash": "SIGSEGV in XCTest accessibility-query/logging instrumentation. This does not establish product causality or a framework repair.",
+  "uncompleted": "Second review of facts, collapse and final no-write assertions were not completed."
+}

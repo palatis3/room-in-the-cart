@@ -1,0 +1,54 @@
+{
+  "collectedAtUTC": "2026-11-08T22:31:38.486361+00:00",
+  "source": "/Users/palatis/Library/Developer/CoreSimulator/Devices/858A2244-001F-4BAD-AFE0-A6E7AF02F41A/data/Containers/Data/Application/F3D96E41-D04C-4750-A377-14987805EBAE/tmp/english-price-animation-51410.ndjson",
+  "copy": "/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/test-run/inspection/english-price-animation-51410.ndjson",
+  "bytes": 123820,
+  "sha256": "97e8c35c1b3f43a35e911c2aaf5a00ce0c0be0d77cd1d897916c41bc85dfced7",
+  "pid": 51410,
+  "device": "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+  "processWitness": {
+    "event": "processPresent",
+    "observedUTC": "2026-11-08T22:17:24.772731+00:00",
+    "elapsedSeconds": 8.2647025,
+    "pid": 51410,
+    "executableRelativeToOwnedDevice": "data/Containers/Bundle/Application/A3DE380D-7B10-4FA7-ABFC-2C4B7EE34F7E/RoomInTheCart.app/RoomInTheCart",
+    "logByteOffsetObserved": 2935,
+    "psMS": 172.45295799999917
+  },
+  "caseStartWitness": {
+    "event": "caseMarker",
+    "observedUTC": "2026-11-08T22:17:22.535185+00:00",
+    "elapsedSeconds": 6.027166833,
+    "test": "FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+    "state": "started",
+    "logByteOffset": 1492,
+    "logLineBytes": 125
+  },
+  "boundary": {
+    "event": "priceDoneBoundary",
+    "pid": 51410,
+    "unixTime": 1794176808.718723,
+    "uptime": 989600.4344487919
+  },
+  "finished": {
+    "event": "finished",
+    "measuredProbeTotalMS": 57.507250108756125,
+    "reason": "windowComplete",
+    "t": 67.21044629160315
+  },
+  "sinkFooter": {
+    "bytesBeforeFooter": 123673,
+    "droppedRecords": 4,
+    "event": "sinkFinished",
+    "mainThreadEncodeMaxMS": 2.276791608892381,
+    "writeMaxMS": 0.31741673592478037
+  },
+  "monitorReceiptSHA256": "594e7aa6c14b83abeff995b780d4cdd34d26b42b30fb363d1e0f18ef1e5045cf",
+  "exactlyOneCollected": true,
+  "sourceFileUnchanged": true,
+  "readCandidatePaths": [
+    "/Users/palatis/Library/Developer/CoreSimulator/Devices/858A2244-001F-4BAD-AFE0-A6E7AF02F41A/data/Containers/Data/Application/F3D96E41-D04C-4750-A377-14987805EBAE/tmp/english-price-animation-51410.ndjson"
+  ],
+  "timingLimits": "two-second monitor sampling, ps duration and log buffering;3s allowance for observer order, not exact native-event alignment",
+  "interpretation": "Diagnostic only. Dropped records, truncation, overhead stops, lateness and nonreproduction remain evidence limits."
+}

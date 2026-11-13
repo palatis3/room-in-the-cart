@@ -43,7 +43,7 @@ private final class H09Server: @unchecked Sendable {
             value["shopId"] = selected.map { $0 as Any } ?? NSNull(); return try json(value)
         }
         if path.hasSuffix("/shops") {
-            let owned = URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first(where: { $0.name == "scope" })?.value == "owned"
+            let owned = URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first(where: { $0.name == "scope" })?.value == "history-owned"
             let shops: [[String:Any]] = !owned && enabled ? [["shopId":Self.shop,"createdAt":"2026-11-01T12:00:00Z","phase":"draft","role":"contributor","revision":3,"authorityEpoch":2]]:[]
             return try json(["shops":shops,"nextCursor":NSNull()])
         }
@@ -72,7 +72,7 @@ private final class H09Server: @unchecked Sendable {
         return try unavailable()
     }
 }
-private final class H09Protocol: URLProtocol, @unchecked Sendable {
+private final class H09Protocol: URLProtocol {
     static var server: H09Server?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

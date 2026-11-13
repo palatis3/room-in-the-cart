@@ -123,6 +123,14 @@ public struct PickupLedger: Codable, Equatable, Sendable {
         self.orderID = orderID; self.orderLines = orderLines
     }
 
+    /// Rebase ordered expectations on retailer evidence, keeping independently recorded physical facts.
+    public func withOrderLines(_ lines: [PickupOrderLine]) throws -> Self {
+        var result = try Self(orderID: orderID, orderLines: lines)
+        for receipt in receipts { try result.receive(receipt) }
+        for observation in usableObservations { try result.confirmUsable(observation) }
+        return result
+    }
+
     private enum CodingKeys: String, CodingKey { case orderID, orderLines, receipts, usableObservations }
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -451,7 +459,13 @@ public struct SettlementLedger: Codable, Equatable, Sendable {
         return true
     }
 
-    public func summary() throws -> SettlementSummary {
+    public func summary() throws -> SettlementSummary { try Self.summary(of: entries) }
+
+    public func summary(asOf date: Date) throws -> SettlementSummary {
+        try Self.summary(of: entries.filter { $0.occurredAt <= date })
+    }
+
+    public static func summary(of entries: [SettlementEntry]) throws -> SettlementSummary {
         var paid: Int64 = 0, pending: Int64 = 0, included: Int64 = 0, holds: Int64 = 0
         let settledCredits = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))
         for entry in entries {

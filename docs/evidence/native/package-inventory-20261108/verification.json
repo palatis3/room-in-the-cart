@@ -1,0 +1,19 @@
+{
+  "status": "reviewed compiled package inventory repaired",
+  "compiled": 108,
+  "passed": 105,
+  "approvedWireSkips": 3,
+  "added": [
+    "HouseholdClientTests.HouseholdClientTests/testAmendmentReceiptMustMatchExactOperationPlacementEpochAndRevision",
+    "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderChainRejectsRetiredIdentitiesWrongHeadsAndChangedNames",
+    "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReadRechecksShopperCapabilityAndResponseScope",
+    "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReviewKeepsOriginalAndRequiresChangedIndependentEvidence"
+  ],
+  "oldInventoryFailure": "Compiled tests differ from the reviewed inventory. Missing []. Unexpected ['HouseholdClientTests.HouseholdClientTests/testAmendmentReceiptMustMatchExactOperationPlacementEpochAndRevision', 'HouseholdClientTests.HouseholdClientTests/testConfirmedOrderChainRejectsRetiredIdentitiesWrongHeadsAndChangedNames', 'HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReadRechecksShopperCapabilityAndResponseScope', 'HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReviewKeepsOriginalAndRequiresChangedIndependentEvidence'].",
+  "unchangedOtherPackageInventories": true,
+  "skipPolicyUnchanged": true,
+  "checkerUnitTestsPassed": 8,
+  "inventorySHA256": "87b060a165de775e13aee6a3f8e6f2ff4d8b81918cf3a7a63b1d600659f46ecb",
+  "executionLogSHA256": "3078192c4f12c661b2c5a5ccc27000e0bd9248f774a2b3a61cd958c81d0a924d",
+  "scope": "Full actual HouseholdClient SwiftPM run plus compiled list; original old-inventory rejection retained. Other package suites and sanitizer executions were not repeated for this inventory-only correction."
+}

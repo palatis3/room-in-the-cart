@@ -1,0 +1,93 @@
+{
+  "captures": [
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-cereal-checkout-with-two-named-protected-lunches_0_4C149BC6-CB1B-4BF5-BBEA-6D326512EDDC.png",
+        "payloadId": "0~QuIjJBANUk6wGzZrTpyI0Lzr_xJRlf5DwFlEMpubMa51Wuul4MZEOthqghryGr-2zWDWjhmudBUt4_Wf6XUwRQ==",
+        "timestamp": 1794143694.376,
+        "uuid": "ACCF55E1-0AB8-40FF-B5AA-5786267E1F33"
+      },
+      "path": "png-0-0/ACCF55E1-0AB8-40FF-B5AA-5786267E1F33.png",
+      "sha256": "db71e01598123ff0041dc7a47787848b30d592ec496e3b002d1b367eeb0b18a0",
+      "bytes": 331104,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-shopper-access-ended-clears-private-context_0_65C0EB3F-4464-4AAF-A74B-2A80B3F1BF14.png",
+        "payloadId": "0~YTqhiK_V-RVlAowodnq20Z49bAgkgSG31PBXYX1LOjqOPFSab-_OBYpVOtbV1XKLOK9QkA3Y2wBOhiT7iUdvuA==",
+        "timestamp": 1794143704.177,
+        "uuid": "D85259D6-B4F2-449D-98A4-38D98886150B"
+      },
+      "path": "png-0-1/D85259D6-B4F2-449D-98A4-38D98886150B.png",
+      "sha256": "7b54609dcea3d4eca3446e609649990f23ca7e24afa59e5796ff1e5e0c8e1f4e",
+      "bytes": 132190,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S23-shopper-itemized-checkout-details_0_0C730E38-BB07-4A56-8D3A-26D15E1F5B17.png",
+        "payloadId": "0~DTZUPjZ5Xn-CZ3eMXEVn9g_md_5vnkH-RLpQvFDss2iiblXp6Urr2pk1zej9HmCPF_Sm7xJP4LconcbpJGwtpQ==",
+        "timestamp": 1794143869.278,
+        "uuid": "EC682278-C4E1-41CF-90F7-DFBDA8ABD18D"
+      },
+      "path": "png-1-0/EC682278-C4E1-41CF-90F7-DFBDA8ABD18D.png",
+      "sha256": "c2ff65e70dee86df4f84aa9e227b782df65c4a63d17f447591cbf7bf4a3e94f0",
+      "bytes": 297880,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text Sam\u2019s wrap lunch_0_FBB597C3-F58C-4160-8A56-19F3928577E4.png",
+        "payloadId": "0~_BVqj4NjQpYlWlAIS22MLLfjqY9lw11nxP5j6ZXGYd6JWi-DWdRv9H6kvdj3SCxuNH3V7sc8GCKX4MUZicLNKw==",
+        "timestamp": 1794143786.494,
+        "uuid": "8FDE22AC-0886-4316-B952-31AADA03773A"
+      },
+      "path": "png-2-0/8FDE22AC-0886-4316-B952-31AADA03773A.png",
+      "sha256": "adbd476f74bc78386cd9b9fe96ff81f8f60cbf3edbf302cf8d268647f2f960f5",
+      "bytes": 286032,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text Mia\u2019s wrap lunch_0_78ED5EA7-C50C-44B2-87CB-17C916381B63.png",
+        "payloadId": "0~pKa4W32sh61EdXtyHBomPzGaGu5BTZ1v8uy2_58h6hhCeu0oa9As02Fzr_tpeRXPE2EYrcauMoh1aJedQJcIsw==",
+        "timestamp": 1794143792.541,
+        "uuid": "82A5AAD2-6AEF-48E4-803A-87EE37732A03"
+      },
+      "path": "png-2-1/82A5AAD2-6AEF-48E4-803A-87EE37732A03.png",
+      "sha256": "497d80548db1f9c8494aee5605f4a536039cf10efc47526d4b6829b7b5aff824",
+      "bytes": 283005,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text review actions_0_96DAD10D-D279-450D-A70E-7DF5CF9B0061.png",
+        "payloadId": "0~nvTyz9TSpi28zh2CmCiAHrPaQuNjiLKpE98EgL29Ztvrx0Q1rwlQY2WvJOCFaav8VkavpOtS2oVEZUTGAAqHGQ==",
+        "timestamp": 1794143808.974,
+        "uuid": "38D3C8A5-F6FC-43FB-B15F-3E97C348CE6C"
+      },
+      "path": "png-2-2/38D3C8A5-F6FC-43FB-B15F-3E97C348CE6C.png",
+      "sha256": "ae1f1faafe021dcd781d49f6f1e413e9a13d33d517775ebda0fdfa9df19663eb",
+      "bytes": 248899,
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "perFileLimitBytes": 4000000,
+  "timeoutPerCommandSeconds": 45,
+  "visualReview": "pending root"
+}

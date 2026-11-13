@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: history restoration conceals private content until fresh authority succeeds
+    # Subtest: private, max-age=0: unchanged
+    ok 1 - private, max-age=0: unchanged
+      ---
+      duration_ms: 1629.621416
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: changed-delayed
+    ok 2 - private, max-age=0: changed-delayed
+      ---
+      duration_ms: 618.815333
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: revoked-delayed
+    ok 3 - private, max-age=0: revoked-delayed
+      ---
+      duration_ms: 541.608459
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: revoked-offline
+    ok 4 - private, max-age=0: revoked-offline
+      ---
+      duration_ms: 655.122042
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: expired-identity-same
+    not ok 5 - private, max-age=0: expired-identity-same
+      ---
+      duration_ms: 511.102875
+      type: 'test'
+      location: '/Users/palatis/Room in the Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:87:15'
+      failureType: 'testCodeFailure'
+      error: |-
+        401 must expose sign-in without a Refresh loop
+        
+        0 !== 1
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 1
+      actual: 0
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:143:22)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:87:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: expired-identity-changed
+    not ok 6 - private, max-age=0: expired-identity-changed
+      ---
+      duration_ms: 533.377667
+      type: 'test'
+      location: '/Users/palatis/Room in the Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:87:15'
+      failureType: 'testCodeFailure'
+      error: |-
+        401 must expose sign-in without a Refresh loop
+        
+        0 !== 1
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 1
+      actual: 0
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:143:22)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:87:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: no-store: unchanged
+    ok 7 - no-store: unchanged
+      ---
+      duration_ms: 656.444708
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: changed-delayed
+    ok 8 - no-store: changed-delayed
+      ---
+      duration_ms: 595.958208
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: revoked-delayed
+    ok 9 - no-store: revoked-delayed
+      ---
+      duration_ms: 603.074708
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: revoked-offline
+    ok 10 - no-store: revoked-offline
+      ---
+      duration_ms: 540.023667
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: expired-identity-same
+    ok 11 - no-store: expired-identity-same
+      ---
+      duration_ms: 918.783583
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: expired-identity-changed
+    ok 12 - no-store: expired-identity-changed
+      ---
+      duration_ms: 1153.100541
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    1..12
+not ok 1 - history restoration conceals private content until fresh authority succeeds
+  ---
+  duration_ms: 11002.130833
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/WebHistoryPrivacy20261106/fixed/web/tests/browser/history-privacy.test.mjs:24:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Chrome 158.0.8127.18; synthetic loopback authority; API Cache-Control:no-store
+1..1
+# tests 13
+# suites 0
+# pass 10
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11708.494

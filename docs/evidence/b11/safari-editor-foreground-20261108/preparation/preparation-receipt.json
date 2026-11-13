@@ -1,0 +1,62 @@
+{
+  "status": "prepared-not-executed",
+  "recordedAtUTC": "2026-11-08T11:41:20.183829+00:00",
+  "manifestIdentity": "7dd7b55a7e0c35ef9a67b3190ed9260ecf9a04a213bd07d2d469b9aff1d5eaf1",
+  "manifestSHA256": "e6f31dcd034ad87be6d5906fce59b43bc5ccf576d0aed6d8c74b7dfd75f57737",
+  "scope": [
+    "editor-foreground-revoked"
+  ],
+  "sourceEqualityReceiptSHA256": "26ab6f4fae3ac9bcccf59bc237afce3c7713c6fbbbe1c9e9c1ccb0fd44474567",
+  "currentHeadAtPreparation": "8f5adbf47217aa29f23f80f1d31e5d01a612b02c",
+  "reusedBuildCommit": "58419f9822b26a93820c2f4cfa4a45e7cd257a11",
+  "runtimeInputsEqual": 24,
+  "preservedOriginalFiles": 32,
+  "offlineTestCommand": ".tools/node-v22.23.4-darwin-arm64/bin/node --test --test-concurrency=1 --test-timeout=15000 .build/SafariQualificationNov08/editor-foreground-r1/fixture.test.mjs .build/SafariQualificationNov08/editor-foreground-r1/foreground.test.mjs .build/SafariQualificationNov08/editor-foreground-r1/probe.test.mjs .build/SafariQualificationNov08/editor-foreground-r1/source-probe.test.mjs",
+  "tests": {
+    "selected": 71,
+    "passed": 71,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "exitCode": 0,
+    "perTestTimeoutMs": 15000,
+    "internalBoundaryTimeoutMs": 3000,
+    "log": "offline-tests-r6.log",
+    "logSHA256": "db8b39f02c30506987ba5b16be0a68cbbff51e35d28b33640609fcae9e99d4d1"
+  },
+  "priorPreparationLogs": [
+    {
+      "file": "offline-tests-r1.log",
+      "sha256": "27e61f7b70c30fc279ca43aab10dd79771f0e1c185fa24a27f8ca2e83a2f3c6c"
+    },
+    {
+      "file": "offline-tests-r2.log",
+      "sha256": "3edbc15128614a9d4046be57a00b6f46cdbbcb80b61dfdc7673fb71acf6dcea1"
+    },
+    {
+      "file": "offline-tests-r3.log",
+      "sha256": "4ea53e3a7141ec02f3ca41e6ed3bbe6f8f066e6fb3dadf7e303dcadad54ed663"
+    },
+    {
+      "file": "offline-tests-r4.log",
+      "sha256": "b9586025ba1baf2a4e1affc5d330b576965700944a540caab69e16e2b2858724"
+    },
+    {
+      "file": "offline-tests-r5.log",
+      "sha256": "6845ac083ddd05f70bbd566d06c6f0a11e291087d92a8a48ee3d56d5f7eaaa21"
+    }
+  ],
+  "syntax": {
+    "files": 13,
+    "failed": 0,
+    "receiptSHA256": "37d6b5796aac79d6f0058a6822927d7986e95f229cc335db1ba6c4c0cc135e3a"
+  },
+  "nativeRuns": 0,
+  "browserRuns": 0,
+  "listenersStarted": 0,
+  "canonicalProductEdits": 0,
+  "originalsChanged": 0,
+  "actualSafariResult": null,
+  "productionBackendIsolationClaim": false,
+  "limit": "Synthetic response accounting and DOM/offline controls only. Actual root-owned Home\u2192Safari qualification remains pending."
+}

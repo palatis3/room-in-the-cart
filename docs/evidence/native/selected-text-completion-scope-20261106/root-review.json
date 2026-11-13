@@ -1,0 +1,25 @@
+{
+  "base": "42a7401ea8a974f2ee52d82c71bc4f803811dcc9",
+  "negative": {
+    "executed": 1,
+    "failed": 1,
+    "reason": "Old completion republishes review after background clears it",
+    "runtimeWarnings": 0
+  },
+  "fixed": {
+    "executed": 31,
+    "passed": 31,
+    "strictExit": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "compilerDiagnosticLines": 0,
+    "unchangedSourceFilesDuringExecution": 457
+  },
+  "compiler": "Xcode27.1/27A9275",
+  "runtime": "iPhone17 iOS26.2/23C54",
+  "interruption": "Existing injected ledger clock invokes background after confirmation is journaled and before the SQLite write is awaited.",
+  "observation": "Combine observes transient nonnil draft publications after clearing.",
+  "recovery": "Explicit foreground and review acknowledge exactly one committed import; pending receipt and committing journal retained until then.",
+  "scope": "Actual model/SQLite paths. No physical background gesture, different-account disclosure, or process termination simulated.",
+  "releaseAcceptance": false
+}

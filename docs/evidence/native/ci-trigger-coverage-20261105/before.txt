@@ -1,0 +1,373 @@
+..
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/App/FutureComposition.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/Features/Dinners/FutureEditor.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/Packages/LocalStore/Sources/LocalStore/FutureStore.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/Tests/FutureModelTests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/UITests/FutureJourneyUITests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/Resources/Localizable.xcstrings')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='ios/RoomInTheCart.xcodeproj/project.pbxproj')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/App/FutureComposition.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/Features/Dinners/FutureEditor.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/Packages/LocalStore/Sources/LocalStore/FutureStore.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/Tests/FutureModelTests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/UITests/FutureJourneyUITests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/Resources/Localizable.xcstrings')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='ios/RoomInTheCart.xcodeproj/project.pbxproj')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/App/FutureComposition.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/Features/Dinners/FutureEditor.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/Packages/LocalStore/Sources/LocalStore/FutureStore.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/Tests/FutureModelTests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/UITests/FutureJourneyUITests.swift')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/Resources/Localizable.xcstrings')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_app_source_and_package_changes_select_all_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='ios/RoomInTheCart.xcodeproj/project.pbxproj')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 49, in test_app_source_and_package_changes_select_all_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_docs_only_and_mixed_changes_remain_distinct (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 79, in test_docs_only_and_mixed_changes_remain_distinct
+    self.assertTrue(selects(workflow, docs + ["ios/App/FutureComposition.swift"]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_docs_only_and_mixed_changes_remain_distinct (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 79, in test_docs_only_and_mixed_changes_remain_distinct
+    self.assertTrue(selects(workflow, docs + ["ios/App/FutureComposition.swift"]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_docs_only_and_mixed_changes_remain_distinct (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 79, in test_docs_only_and_mixed_changes_remain_distinct
+    self.assertTrue(selects(workflow, docs + ["ios/App/FutureComposition.swift"]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='shared/contracts/theme.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='shared/fixtures/checkout.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='config/public-contact.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='scripts/generate_xcode_project.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='scripts/app_configuration.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='scripts/select_ci_iphone.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-deep.yml', path='scripts/check_built_app.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='shared/contracts/theme.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='shared/fixtures/checkout.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='config/public-contact.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='scripts/generate_xcode_project.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='scripts/app_configuration.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='scripts/select_ci_iphone.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-fixtures.yml', path='scripts/check_built_app.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='shared/contracts/theme.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='shared/fixtures/checkout.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='config/public-contact.json')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='scripts/generate_xcode_project.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='scripts/app_configuration.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='scripts/select_ci_iphone.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_shared_generation_and_configuration_inputs_select_native_regressions (__main__.CITriggerCoverageTests) (workflow='ios-performance.yml', path='scripts/check_built_app.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 59, in test_shared_generation_and_configuration_inputs_select_native_regressions
+    self.assertTrue(selects(workflow, [path]))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_wire_contract_changes_select_native_integration (__main__.CITriggerCoverageTests) (path='shared/contracts/service-v1.d.ts')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/test_ci_trigger_coverage.py", line 67, in test_wire_contract_changes_select_native_integration
+    self.assertTrue(selects("ios-native-wire.yml", [path]))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.012s
+
+FAILED (failures=46)

@@ -1,0 +1,17 @@
+{
+  "inspectedAtUTC": "2026-11-08T21:45:00.541046+00:00",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "expectedCount": 1,
+  "auditSourceManifestSHA256": "1243ca4127d0149a0775fe561e4db6ddc5f9607a6820ddae3e9eacb0872b13b6",
+  "canonicalSourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "exports": {
+    "custom-issues": 0,
+    "automatic-issues": 0,
+    "viewport": 0
+  },
+  "exportBytes": 429878,
+  "scope": "All unfiltered findings retained. A failed audit remains a failure; counts alone do not close old findings."
+}

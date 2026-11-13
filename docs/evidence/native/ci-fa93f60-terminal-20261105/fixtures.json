@@ -1,0 +1,291 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": 41968854891,
+  "jobs": 22,
+  "selected": 44,
+  "results": [
+    {
+      "shard": "ContributorRequestUITests",
+      "selected": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest"
+      ],
+      "artifactID": 13390426153,
+      "artifactSHA256": "ec3cc6b81db51e8649a9dee68ba0397c2dd876f3f49e4dbe27d77c0bce68a06a",
+      "passed": 2,
+      "seconds": 495.1738370656967,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "CorrectionPrivacyAcceptanceUITests",
+      "selected": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp"
+      ],
+      "artifactID": 13390812117,
+      "artifactSHA256": "b3f758976f66131d0c6328d8aa1f6d543817a969a891724e447235868f046140",
+      "passed": 1,
+      "seconds": 152.12774097919464,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "DinnerAwayCarryoverUITests",
+      "selected": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase"
+      ],
+      "artifactID": 13389992758,
+      "artifactSHA256": "f1c6ed6279edc7efba48dbb7606da74ac4a3e6656f1767931af5ac61bf52a932",
+      "passed": 1,
+      "seconds": 241.5474829673767,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "DinnerDecisionSheetUITests",
+      "selected": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "artifactID": 13394064023,
+      "artifactSHA256": "37e7a24757366ecde8c1ddab5ec4e01f4b8dfe7c017e181f3200bef1d055d9d7",
+      "passed": 5,
+      "seconds": 211.096675157547,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "GuardianEnrollmentUITests",
+      "selected": [
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification"
+      ],
+      "artifactID": 13390963565,
+      "artifactSHA256": "c167be45cbb593b1c653894517194995fcae00bd7b805cf9e4aa3f978d64eba1",
+      "passed": 8,
+      "seconds": 494.996591091156,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "HistoryGrantReadUITests",
+      "selected": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
+      ],
+      "artifactID": 13390352567,
+      "artifactSHA256": "bcac9c36924c6ce9b30805bdb6d0afc57a9c82f82b4071e0e2d5eacda58fb314",
+      "passed": 2,
+      "seconds": 310.07370710372925,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "HouseholdDevicesUITests",
+      "selected": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke"
+      ],
+      "artifactID": 13391585332,
+      "artifactSHA256": "c07cf4c3358fe2774481cea5b1687a25f407bf1dd75e95874341a8a937b065c8",
+      "passed": 2,
+      "seconds": 301.0712640285492,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "HouseholdRequestPackUITests",
+      "selected": [
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision"
+      ],
+      "artifactID": 13391507674,
+      "artifactSHA256": "2aa4299ca9753f7d83feafd80299ba3fdc465b76097b4ee7bdd629739f3668dc",
+      "passed": 3,
+      "seconds": 449.45675003528595,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "MeasurementUITests",
+      "selected": [
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped"
+      ],
+      "artifactID": 13391434761,
+      "artifactSHA256": "2cb788f53b8b3d3627460c1c3b70dc202786b664df7a1bc4b687d7624cf71044",
+      "passed": 2,
+      "seconds": 221.86348402500153,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "RecipeLibraryAcceptanceUITests",
+      "selected": [
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "artifactID": 13392207692,
+      "artifactSHA256": "071f1126e8119162ba5accbe75eeb95904e6228a459b30348e7396d78ef2ffcb",
+      "passed": 2,
+      "seconds": 500.2023630142212,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "RecordsMediaUITests",
+      "selected": [
+        "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto"
+      ],
+      "artifactID": 13392057744,
+      "artifactSHA256": "334d07fe3a92cb9ed9f76039d9c69a2f8d5e7fe75cd671b92028a7f9592a6f96",
+      "verification": "Redacted hosted report: 1 pass, no failures/skips/expected failures/warnings. Raw recovery evidence intentionally not published."
+    },
+    {
+      "shard": "RequestDuplicateComparisonUITests",
+      "selected": [
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+      ],
+      "artifactID": 13393096770,
+      "artifactSHA256": "e1e83d3091569e8f459d21e50137725e85c78fe2cf331b8ca3e933ad44177307",
+      "passed": 2,
+      "seconds": 940.9009429216385,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedMealChangeUITests",
+      "selected": [
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+      ],
+      "artifactID": 13393030921,
+      "artifactSHA256": "072dc762b0c29022043cdce5e06f2c34310bd66325f829b00b23fea0ea4ed1af",
+      "passed": 2,
+      "seconds": 406.47698509693146,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedMealCivilDateUITests",
+      "selected": [
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "artifactID": 13391739989,
+      "artifactSHA256": "140b5e91ed183dfa05bfeca1ebd9a83a7e6b774b65d1d79b007bb31e262a0091",
+      "passed": 2,
+      "seconds": 112.86258506774902,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "selected": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      ],
+      "artifactID": 13392929627,
+      "artifactSHA256": "4c9633d292fa9f55743fb4cb2dcc59365d7d539f2a9c200c12686e34c236583a",
+      "passed": 1,
+      "seconds": 380.71145009994507,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+      "selected": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "artifactID": 13394306262,
+      "artifactSHA256": "b7467cef872969762dbf41525cbc4f454acf837786cbd9d022d4e869c2fc21de",
+      "passed": 1,
+      "seconds": 286.8424320220947,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "selected": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "artifactID": 13393767641,
+      "artifactSHA256": "d166c5df6b23c84c55aa67ecba4282d67daf98d606d1236280b56c81fc55c6ee",
+      "passed": 1,
+      "seconds": 109.59917604923248,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "selected": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      ],
+      "artifactID": 13393759788,
+      "artifactSHA256": "fdef00e7b46a902a9bf84efae0486e0f48beb46839fe794dd2ab8b6a84cb61e6",
+      "passed": 1,
+      "seconds": 652.5892419815063,
+      "runtimeWarnings": 2,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "selected": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "artifactID": 13394206969,
+      "artifactSHA256": "bd4424a609c906ca340b0b8b3005b47f97bec1fb45defc2a4d09534a79431038",
+      "passed": 1,
+      "seconds": 388.52599799633026,
+      "runtimeWarnings": 2,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+      "selected": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "artifactID": 13394660848,
+      "artifactSHA256": "56066fe3f78f1a25eb36ce60cd98e1e47fa0b98b4c879c2778c5596a27dd7a14",
+      "passed": 1,
+      "seconds": 153.76067101955414,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "selected": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "artifactID": 13393734724,
+      "artifactSHA256": "13a16fa2359b1e362a77b02fbe12a59fcccf0761183ab36be68661f27ab87daa",
+      "passed": 1,
+      "seconds": 423.7999360561371,
+      "runtimeWarnings": 2,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    },
+    {
+      "shard": "StockReviewUITests",
+      "selected": [
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "artifactID": 13394317774,
+      "artifactSHA256": "7a2633f1f56d4a3dff33d8e19384a470ecd52233fab2ef9a6cebb2c21838c373",
+      "passed": 2,
+      "seconds": 185.25146389007568,
+      "runtimeWarnings": 0,
+      "verification": "Root replayed exact selectors, result counts and raw execution lifecycle. Hosted warning report passed; detailed warning exports not independently replayed in this checkpoint."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "status": "bounded-copy-review-complete",
+  "textFilesReviewed": 72,
+  "signedQueryOrBearerCredentialPatternFindings": [],
+  "contentScope": "Synthetic request-review fixture, local source/result paths and diagnostic device identifiers. No real household payload intended. Original PNGs copied without edits.",
+  "scopeLimits": "Pattern scan is not a universal secret detector; fixed fixture/source provenance and bounded file selection were also inspected."
+}

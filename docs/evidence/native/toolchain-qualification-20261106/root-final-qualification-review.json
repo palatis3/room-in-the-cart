@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-06T18:36:11.482203+00:00",
+  "runID": 42261730525,
+  "attempt": 1,
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "independentlyRehashedFiles": 507,
+  "freezeSHA256": "f41d1a1e0c943f866d09b1645081b1127ec974ae4a0c896dfbd67bd701e7fca9",
+  "releaseAcceptance": false,
+  "causeFixed": false
+}

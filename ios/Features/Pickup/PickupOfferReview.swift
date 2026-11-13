@@ -28,11 +28,12 @@ enum PickupOfferReview {
     static func validate(_ offer: PickupOffer, ordered: Quantity) throws {
         guard text(offer.replacement, maximum: 512, required: true),
               text(offer.fallback), text(offer.householdPreference), text(offer.retailerResponse),
-              offer.required.amount > .zero else { throw PickupOfferReviewError.invalid }
-        // converted validates literal and any declared conversion basis; validate() is internal to CoreDomain.
+              text(ordered.originalLiteral), offer.required.amount > .zero else { throw PickupOfferReviewError.invalid }
+        // Offer evidence has a 2 KiB text limit. List imports can retain longer source labels.
+        // Conversion also verifies any declared cross-unit basis.
         _ = try ordered.converted(to: ordered.unit)
         for quantity in [offer.required, offer.remainingOriginal] {
-            guard quantity.amount >= .zero, quantity.amount <= (try Rational(largestAmount)),
+            guard text(quantity.originalLiteral), quantity.amount >= .zero, quantity.amount <= (try Rational(largestAmount)),
                   quantity.unit.dimension == ordered.unit.dimension,
                   let converted = try quantity.converted(to: ordered.unit),
                   converted <= (try Rational(largestAmount)) else { throw PickupOfferReviewError.invalid }
@@ -77,6 +78,10 @@ extension PickupModel {
         let matching = current.offers.filter { $0.id == offer.id }
         guard matching.count <= 1 else { return false }
         if matching.first == offer { error = nil; return true } // Exact replay: no new revision or action.
+        guard original != nil || current.retailerOrderLines.contains(where: { $0.id == offer.lineID }) else {
+            error = pTr("This item was removed from the confirmed order. Review its saved history.")
+            return false
+        }
         guard matching.first == original else {
             error = pTr("This offer changed. Reopen it before saving your review."); return false
         }

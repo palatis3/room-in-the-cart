@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "tests": 295,
+  "exitCode": 0,
+  "seconds": 2.342584958,
+  "logSHA256": "e01b4b0cecfc9359159e83d872728076f5178bcbd8ab614be62c312d1c10f025",
+  "packetManifestSHA256": "04394453c8feb81dab41ab75f8844d21c5d1b0672d4e04733217c096e00f095c",
+  "patchSHA256": "2091d975b057442dcd81caaaae0edbf25ffa8259e00e0d3dbda49db287c5533d",
+  "sourcePins": 50,
+  "changedFiles": {
+    "scripts/simulator_signpost_control/run.py": {
+      "before": "8e33f98fa4f06e513d51f174b4dab0423155d848ae4038bf28397416f7658349",
+      "after": "8737573966027cde59956c88b255f768dec9996a8dca6cc30e39979178526a15"
+    },
+    "scripts/simulator_signpost_control/runner.py": {
+      "before": "d73f94ee3cce0633862ff5561a7293b2999664d34737b8b0f2c09be1341aa787",
+      "after": "89bbd5b9e23df5f2d14f03fbf830029e9e850a46d0e170aa7031c8b847392296"
+    },
+    "scripts/test_simulator_signpost_control.py": {
+      "before": "1a64479eb187dbda5309f6a9b5df3a3ccc7485ffa0317678b819ae632802ca3e",
+      "after": "5c0eea88179b62903d16360f24981ceb4a8cdd4c5935fc6915a4a2c6491e1cc2"
+    },
+    "scripts/app_scroll_observation/contract.json": {
+      "before": "18c8b4253c57e92e4724c332e1a0441616e265ef7f7f62f0b069834445fbbebb",
+      "after": "f425cc8f41431e21465bca860ebd0e80279cabd977f31a404fc0acbb5c0fe6f7"
+    }
+  },
+  "hostedAcceptance": false,
+  "originalParserFailurePreserved": true
+}

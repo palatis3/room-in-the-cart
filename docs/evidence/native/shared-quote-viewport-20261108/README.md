@@ -1,0 +1,9 @@
+# Shared quote entry viewport qualification
+
+The quote-entry test could tap a field beneath the app's Done strip. Requiring full visibility alone did not fix this because the viewport measured only the keyboard and navigation bar. Adding the Done bound then exposed a second problem: repeated center drags did not bring the subtotal field into view while the source field retained focus.
+
+The installed test helper requires the whole field inside the measured viewport, includes the existing Done/Listo control in its lower bound, and drags through the existing side gutter. It retains the original field taps, targeted typing, equality and business assertions, time limits, and 30-attempt reveal bound. Product behavior is unchanged. Later failure screenshots support the occlusion and text-interaction hypotheses; they do not prove the geometry at every earlier event.
+
+The complete original known-trip journey passes strict 1/1 in 427.20 seconds. The same compiled products then pass the four other affected cases: financial labels/named-adult action, lost reply/relaunch, Spanish largest text, and stale-save/locked-shop behavior. Strict 4/4 passes with unchanged source/product hashes. All five cases record zero runtime warnings, runner restarts, and matching animation-idle messages in their supplied logs. This does not establish the absence of every possible idle delay.
+
+[Verification](verification.json) records exact source, product provenance, result hashes, case durations and preserved original failures. Qualification used Xcode 27.1 and iOS 26.2 build 23C54 on the iPhone 17 simulator. Hosted Xcode 26.3 confirmation remains pending; the current 14ac1e3 CI cohort does not contain this correction. This is neither physical-device acceptance nor a repair for the separate keyboard-animation symptom.

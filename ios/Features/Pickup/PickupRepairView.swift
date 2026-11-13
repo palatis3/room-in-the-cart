@@ -20,10 +20,26 @@ struct UrgentRepairView: View {
         Form {
             PickupSaveStatus(model: model)
             Text(pTr("Make a private meal need from food you have checked. This does not create an order, delivery or charge."))
-            TextField(pTr("Food that is short"), text: $food).focused($field, equals: .food)
-            TextField(pTr("Meal or purpose"), text: $meal).focused($field, equals: .meal)
-            TextField(pTr("Required amount"), text: $required).focused($field, equals: .required).keyboardType(.decimalPad)
-            TextField(pTr("Usable amount available now"), text: $available).focused($field, equals: .available).keyboardType(.decimalPad)
+            TextField(pTr("Food that is short"), text: $food)
+                .focused($field, equals: .food)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .onSubmit { field = .meal }
+            TextField(pTr("Meal or purpose"), text: $meal)
+                .focused($field, equals: .meal)
+                .autocorrectionDisabled()
+                .submitLabel(.next)
+                .onSubmit { field = .required }
+            TextField(pTr("Required amount"), text: $required)
+                .focused($field, equals: .required)
+                .keyboardType(.numbersAndPunctuation)
+                .submitLabel(.next)
+                .onSubmit { field = .available }
+            TextField(pTr("Usable amount available now"), text: $available)
+                .focused($field, equals: .available)
+                .keyboardType(.numbersAndPunctuation)
+                .submitLabel(.done)
+                .onSubmit { field = nil }
             Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Toggle(pTr("I checked this food’s identity and usable amount"), isOn: Binding(
                 get: { confirmedAt != nil }, set: { confirmedAt = $0 ? Date() : nil }
@@ -55,6 +71,49 @@ struct UrgentRepairView: View {
     }
 }
 
+struct PickupRepairDraft {
+    struct Fields: Equatable {
+        var needID: UUID?
+        var instruction = ""
+        var minutes = ""
+        var knownDue = false
+        var due = Date()
+    }
+
+    let shopID: UUID?
+    let id = UUID()
+    var fields = Fields() {
+        didSet {
+            if fields != oldValue {
+                extraTrip = false
+                repeatMeal = false
+            }
+        }
+    }
+    var extraTrip = false
+    var repeatMeal = false
+
+    mutating func synchronize(with journey: PickupJourney?) {
+        if shopID != journey?.id {
+            self = PickupRepairDraft(shopID: journey?.id)
+        } else if journey?.repairs.contains(where: { $0.id == id }) == true {
+            var next = PickupRepairDraft(shopID: shopID, fields: fields)
+            next.fields.instruction = ""
+            self = next
+        }
+    }
+
+    func instruction(in journey: PickupJourney, at now: Date) -> PickupRepair? {
+        guard shopID == journey.id, let needID = fields.needID,
+              !fields.instruction.isEmpty,
+              fields.minutes.isEmpty || Int(fields.minutes).map({ (0...10080).contains($0) }) == true else { return nil }
+        let savedDue = journey.savedMealDeadline(for: needID)
+        return PickupRepair(id: id, needID: needID, instruction: fields.instruction, createdAt: now,
+                            extraTripAgreed: extraTrip, repeatMealAgreed: repeatMeal, elapsedMinutes: Int(fields.minutes),
+                            due: fields.knownDue ? min(fields.due, savedDue ?? fields.due) : savedDue)
+    }
+}
+
 struct PickupRepairView: View {
     @Environment(\.pickupLedger) private var fallbackLedger
     @ObservedObject var model: PickupModel
@@ -65,14 +124,8 @@ struct PickupRepairView: View {
     @State private var purpose = ""
     @State private var amount = ""
     @State private var priority: AllocationPriority = .required
-    @State private var needID: UUID?
-    @State private var instruction = ""
-    @State private var extraTrip = false
-    @State private var repeatMeal = false
-    @State private var minutes = ""
-    @State private var knownDue = false
-    @State private var due = Date()
-    @State private var repairID = UUID()
+    @State private var repairDraft = PickupRepairDraft(shopID: nil)
+    @State private var submittingRepair = false
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -84,17 +137,17 @@ struct PickupRepairView: View {
                         ForEach(pickup.orderLines) { Text($0.name).tag(Optional($0.id)) }
                     }
                     TextField(pTr("Meal or protected purpose"), text: $purpose).focused($field, equals: .purpose)
-                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.decimalPad).focused($field, equals: .amount)
+                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.numbersAndPunctuation).focused($field, equals: .amount)
                     Picker(pTr("Priority"), selection: $priority) {
                         Text(pTr("Protected")) .tag(AllocationPriority.protected)
                         Text(pTr("Required")).tag(AllocationPriority.required)
                         Text(pTr("Flexible")).tag(AllocationPriority.flexible)
                     }
                     Button(pTr("Add reviewed need")) { addNeed() }
-                    ForEach(model.journey?.needs ?? []) { need in
+                    ForEach(model.journey?.currentRepairNeeds ?? []) { need in
                         VStack(alignment: .leading) {
                             Text("\(need.name): \(pQuantity(need.amount))")
-                            if let detail = model.journey?.needDetails.first(where: { $0.id == need.id }) {
+                            if let detail = model.journey?.recoveryCurrentDetails.first(where: { $0.id == need.id }) {
                                 if !detail.exclusions.isEmpty { Text("\(pTr("Keep these exclusions")): \(detail.exclusions.joined(separator: ", "))") }
                                 if let day = detail.scheduledDay { Text("\(day.iso8601) · \(day.timeZoneIdentifier)") }
                                 if let minutes = detail.leadTimeMinutes { Text("\(pTr("Saved elapsed preparation minutes")): \(minutes)") }
@@ -107,7 +160,7 @@ struct PickupRepairView: View {
                     }
                 }
             }
-            ForEach(model.journey?.urgent ?? []) { need in
+            ForEach(model.journey?.recoveryCurrentUrgent ?? []) { need in
                 Section(need.meal) {
                     Text(need.food)
                     Text("\(pTr("Required")): \(pQuantity(need.required))")
@@ -129,31 +182,36 @@ struct PickupRepairView: View {
             }
             if model.journey?.closedAt == nil { PickupNewStockSection(model: model, field: $stockField).id(model.selectedID) }
             if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
+            if let ledger = fallbackLedger, let pickupID = model.journey?.id,
+               model.journey?.basket?.phase == .reportedPlaced {
+                NavigationLink(recoveryText("Current dinners after arrival")) {
+                    PickupMealRecoveryEntry(model: model, ledger: ledger, pickupID: pickupID)
+                }.accessibilityIdentifier("pickup.mealRecovery")
+            }
             if let ledger = fallbackLedger {
                 NavigationLink(dinnerText("Recover with an accepted dinner")) {
-                    PickupFallbackReviewEntry(model: model, ledger: ledger) { option, target, deadline in
-                        needID = target; instruction = option.instruction
-                        minutes = String(option.minutes); due = deadline; knownDue = true
-                        extraTrip = option.requiresTrip; repeatMeal = option.repeatRequired
+                    PickupFallbackReviewEntry(model: model, ledger: ledger) { selected in
+                        guard selected.shopID == model.journey?.id else { return }
+                        repairDraft = selected
                     }
                 }
             }
             Section(pTr("Free manual meal repair")) {
-                Picker(pTr("Affected meal need"), selection: $needID) {
+                Picker(pTr("Affected meal need"), selection: $repairDraft.fields.needID) {
                     Text(pTr("Choose a need")).tag(UUID?.none)
-                    ForEach(model.journey?.needs ?? []) { Text($0.name).tag(Optional($0.id)) }
-                    ForEach(model.journey?.urgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
+                    ForEach(model.journey?.currentRepairNeeds ?? []) { Text($0.name).tag(Optional($0.id)) }
+                    ForEach(model.journey?.recoveryCurrentUrgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
                 }
-                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $instruction, axis: .vertical).focused($field, equals: .instruction)
-                Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $extraTrip)
-                Toggle(pTr("I agree to repeat a meal for this repair"), isOn: $repeatMeal)
-                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $minutes).keyboardType(.numberPad).focused($field, equals: .minutes)
-                Toggle(pTr("Meal deadline is known"), isOn: $knownDue)
-                if knownDue { DatePicker(pTr("Meal deadline"), selection: $due) }
+                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $repairDraft.fields.instruction, axis: .vertical).focused($field, equals: .instruction)
+                Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $repairDraft.extraTrip)
+                Toggle(pTr("I agree to repeat a meal for this repair"), isOn: $repairDraft.repeatMeal)
+                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $repairDraft.fields.minutes).keyboardType(.numberPad).focused($field, equals: .minutes)
+                Toggle(pTr("Meal deadline is known"), isOn: $repairDraft.fields.knownDue)
+                if repairDraft.fields.knownDue { DatePicker(pTr("Meal deadline"), selection: $repairDraft.fields.due) }
                 Text(pTr("Include thawing, soaking and marinating time unless those steps are already complete. A note does not confirm new stock or settle a shortage."))
                 Button(pTr("Save reviewed repair instructions")) { saveRepair() }
-            }
-            ForEach(model.journey?.repairs ?? []) { repair in
+            }.disabled(submittingRepair || model.saving || model.hasPendingSave)
+            ForEach(model.journey?.currentRepairInstructions ?? []) { repair in
                 Section(pTr("Saved meal instruction")) {
                     Text(repair.instruction)
                     Text(pTr(repair.timingConfirmed ? "Entered preparation time fits the deadline" : "Timing conditional or deadline missed · review before cooking"))
@@ -162,6 +220,8 @@ struct PickupRepairView: View {
             }
             NavigationLink(pTr("Preview a dated cook instruction")) { PickupCookView(model: model) }
         }.navigationTitle(pTr("Repair the meal"))
+            .onChange(of: model.journey?.id, initial: true) { _, _ in repairDraft.synchronize(with: model.journey) }
+            .onChange(of: model.journey?.repairs.last?.id) { _, _ in repairDraft.synchronize(with: model.journey) }
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: field != nil || stockField != nil, title: tr("Done")) {
                 field = nil
@@ -187,9 +247,22 @@ struct PickupRepairView: View {
         } catch { model.error = pTr("Choose the food, purpose and a valid quantity.") }
     }
     private func saveRepair() {
-        guard let needID, !instruction.isEmpty, minutes.isEmpty || (Int(minutes).map { $0 >= 0 && $0 <= 10080 } ?? false) else { model.error = pTr("Choose a need and enter instructions and valid preparation minutes."); return }
-        let repair = PickupRepair(id: repairID, needID: needID, instruction: instruction, createdAt: Date(), extraTripAgreed: extraTrip, repeatMealAgreed: repeatMeal, elapsedMinutes: Int(minutes), due: knownDue ? due : nil)
-        Task { if await model.change({ value in if !value.repairs.contains(where: { $0.id == repair.id }) { value.repairs.append(repair) } }) { repairID = UUID(); instruction = "" } }
+        guard !submittingRepair, !model.saving, !model.hasPendingSave, let journey = model.journey else { return }
+        repairDraft.synchronize(with: journey)
+        guard let repair = repairDraft.instruction(in: journey, at: Date()) else {
+            model.error = pTr("Choose a need and enter instructions and valid preparation minutes.")
+            return
+        }
+        submittingRepair = true
+        Task {
+            defer { submittingRepair = false }
+            if await model.change({ value in
+                guard value.id == journey.id else { throw MealRecoveryError.stale }
+                try value.recordRepair(repair)
+            }) {
+                repairDraft.synchronize(with: model.journey)
+            }
+        }
     }
 }
 
@@ -200,6 +273,7 @@ struct PickupCookView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var readback: PickupCookReadbackBinding?
     @State private var language = "en-US"
+    @State private var requestedLanguage: String?
     @State private var includeBudget = false
     @State private var text = ""
     @State private var prepared: CookHandoffReview?
@@ -214,11 +288,13 @@ struct PickupCookView: View {
         Form {
             PickupSaveStatus(model: model)
             CookLiveViewContextLink()
-            Picker(pTr("Recipient language"), selection: $language) {
+            Picker(pTr("Recipient language"), selection: Binding(get: { language }, set: selectLanguage)) {
                 Text(pTr("English (US)")).tag("en-US")
                 Text(pTr("Español (EE. UU.)")).tag("es-US")
             }
-            Toggle(pTr("Include private budget in this copy"), isOn: $includeBudget)
+            Toggle(pTr("Include private budget in this copy"), isOn: Binding(
+                get: { includeBudget }, set: { includeBudget = $0; readback = nil }
+            ))
             Button(pTr("Prepare complete dated instruction")) { prepare() }
             TextEditor(text: $text).frame(minHeight: 220).accessibilityLabel(pTr("Editable cook instruction"))
             if let readback {
@@ -228,13 +304,16 @@ struct PickupCookView: View {
                 }
             }
             Button(pTr("Save dated copy")) { Task { await saveNote() } }.disabled(text.isEmpty)
-            if let noteID {
-                Button(pTr("Share saved dated copy")) { Task {
-                    guard let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language),
+            if let noteID, let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language) {
+                CookSavedCopyShareButton(copy: copy) {
+                    guard access.unlocked, scenePhase == .active, self.noteID == copy.versionID,
+                          language == copy.language, text == copy.fullText,
                           await model.recordCookShare(.shareOpened, copy: copy), access.unlocked,
-                          model.journey?.id == copy.shopID, self.noteID == copy.versionID else { return }
+                          scenePhase == .active, model.journey?.id == copy.shopID, self.noteID == copy.versionID,
+                          language == copy.language, text == copy.fullText else { return }
                     sharing = copy
-                } }
+                }
+                .id(noteID)
                 PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
                     .id(noteID)
             }
@@ -249,6 +328,14 @@ struct PickupCookView: View {
                 }
             }
         }.navigationTitle(pTr("Tell the cook"))
+            .alert(pTr("Replace your edited instruction?"), isPresented: Binding(
+                get: { requestedLanguage != nil }, set: { if !$0 { requestedLanguage = nil } }
+            ), presenting: requestedLanguage) { next in
+                Button(pTr("Prepare in the new language")) { changeLanguage(to: next) }
+                Button(pTr("Cancel"), role: .cancel) {}
+            } message: { _ in
+                Text(pTr("Changing the recipient language prepares a new instruction from the pickup and replaces your unsaved wording."))
+            }
             .onAppear { includeBudget = false; readback = nil }
             .onDisappear { readback = nil }
             .onChange(of: text) { _, value in
@@ -256,9 +343,9 @@ struct PickupCookView: View {
                 if value != readback?.text { readback = nil }
                 if let noteID, model.journey?.notes.first(where: { $0.id == noteID })?.text != value { self.noteID = nil }
             }
-            .onChange(of: language) { _, _ in readback = nil }
-            .onChange(of: includeBudget) { _, _ in readback = nil }
-            .onChange(of: model.journey?.id) { _, _ in readback = nil; noteID = nil; prepared = nil; text = "" }
+            .onChange(of: model.journey?.id) { _, _ in
+                requestedLanguage = nil; readback = nil; noteID = nil; editingSavedID = nil; prepared = nil; text = ""
+            }
             .onChange(of: model.journey?.revision) { _, _ in readback = nil }
             .onReceive(model.cookLedgerRevisions) { _ in readback = nil }
             .onChange(of: readbackContext) { _, _ in readback = nil }
@@ -280,9 +367,41 @@ struct PickupCookView: View {
         return readback.isCurrent(journey: model.cookJourney, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at)
     }
+    private func selectLanguage(_ next: String) {
+        guard next != language else { return }
+        let savedText = model.journey?.notes.first { $0.id == noteID }?.text
+        if !text.isEmpty && text != savedText && (prepared == nil || text != preparedText) {
+            requestedLanguage = next
+        } else {
+            changeLanguage(to: next)
+        }
+    }
+
+    private func changeLanguage(to next: String) {
+        if text.isEmpty {
+            language = next
+            includeBudget = false
+            readback = nil
+            editingSavedID = nil
+            prepared = nil
+            noteID = nil
+            return
+        }
+        guard let journey = model.cookJourney, !model.saving, !model.hasPendingSave else {
+            model.error = pTr("The source changed. Prepare and review the current instruction.")
+            return
+        }
+        language = next
+        includeBudget = false
+        prepare(journey)
+    }
+
     private func prepare() {
         readback = nil
         guard let value = model.cookJourney, !model.saving, !model.hasPendingSave else { return }
+        prepare(value)
+    }
+    private func prepare(_ value: PickupJourney) {
         let at = Date(), timeZone = TimeZone.current
         text = PickupCookProjection.text(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, at: at, timeZone: timeZone)
@@ -324,5 +443,33 @@ struct PickupCookView: View {
             noteID = id; editingSavedID = id; prepared = nil; includeBudget = false; return true
         }
         return false
+    }
+}
+
+private struct CookSavedCopyShareButton: View {
+    let copy: HandoffCopy
+    let share: @MainActor () async -> Void
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var includePrivateWording = false
+    @State private var opening = false
+
+    var body: some View {
+        if copy.needsPrivateReview {
+            Toggle(pTr("Include the saved private or edited wording in this share"), isOn: $includePrivateWording)
+        }
+        Button(pTr("Share saved dated copy")) {
+            guard !opening, !copy.needsPrivateReview || includePrivateWording else { return }
+            includePrivateWording = false
+            opening = true
+            Task {
+                await share()
+                opening = false
+            }
+        }
+        .disabled(opening || (copy.needsPrivateReview && !includePrivateWording))
+        .onDisappear { includePrivateWording = false }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { includePrivateWording = false }
+        }
     }
 }

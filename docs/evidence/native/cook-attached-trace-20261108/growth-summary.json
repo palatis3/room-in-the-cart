@@ -1,0 +1,38 @@
+{
+  "sourceSHA256": "de2a7c4aabc5207541f91e960847a1555689b73d11286c83b1d6d8ceebfdf8b1",
+  "sampleRows": 356,
+  "peakObservedTraceSample": {
+    "kind": "sample",
+    "utc": "2026-11-08T18:03:40.622915+00:00",
+    "monotonic": 83.206008291,
+    "freeBytes": 51209662464,
+    "volumeFreeDecreaseBytes": 4980297728,
+    "trace": {
+      "files": 2,
+      "bytes": 4915062376,
+      "allocatedBytes": 4915064832,
+      "scanTruncated": false,
+      "scanSeconds": 0.0007807909999968388
+    },
+    "tracePID": 91815,
+    "traceExit": null,
+    "nativePID": 91601,
+    "nativeExit": null,
+    "appPIDsObserved": null,
+    "logByteOffset": 25040,
+    "sincePriorSampleSeconds": 0.5065926660000031
+  },
+  "minimumObservedFreeBytes": 44093472768,
+  "maximumObservedSamplingIntervalSeconds": 1.1683657909999994,
+  "finalTrace": {
+    "files": 137,
+    "bytes": 12387518,
+    "allocatedBytes": 12689408,
+    "scanTruncated": false,
+    "scanSeconds": 0.003744499999982054
+  },
+  "finalRawMemberAbsent": true,
+  "peakToFinalSizeChangeInterpretation": "Files changed during interrupted finalization; final smaller bundle is not evidence of successful compact storage or retained event data.",
+  "sharedStagingInspected": false,
+  "sharedServiceKilled": false
+}

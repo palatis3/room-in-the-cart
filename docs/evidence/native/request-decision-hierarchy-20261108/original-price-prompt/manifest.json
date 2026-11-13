@@ -1,0 +1,42 @@
+[
+  {
+    "path": ".build/S24DecisionHierarchyNov08/price-prompt-review/REVIEW.md",
+    "bytes": 3488,
+    "sha256": "7369c9eb25406badbb97e8d323a46f41b9b218c2faac5363e1b71dd5ed96df05"
+  },
+  {
+    "path": ".build/S24DecisionHierarchyNov08/price-prompt-review/ledger-check.json",
+    "bytes": 496,
+    "sha256": "e4f64784b22cae2b1c00884240ea62b15e7891fa89b0b5fc53599cc2d3bd4c48"
+  },
+  {
+    "path": ".build/S24DecisionHierarchyNov08/price-prompt-review/measure_prompt.py",
+    "bytes": 4039,
+    "sha256": "96d35ae2486034fd5d01feb7853f927c6e803f0040d4360f398d409e145079be"
+  },
+  {
+    "path": ".build/S24DecisionHierarchyNov08/price-prompt-review/measurement.json",
+    "bytes": 5109,
+    "sha256": "8a4adf8ca938877a0d13d06b659aeca1c3bd173ec1495c0dba41157af47ce1fb"
+  },
+  {
+    "path": ".build/S24DecisionHierarchyNov08/light-run/captures/png-3-0/434F6C14-31BF-4639-838D-25A4691710B2.png",
+    "bytes": 305796,
+    "sha256": "a70bb7b0630f9c79be8ece0951eb4aeede559519c5d7411120eaa8263ff2f10a"
+  },
+  {
+    "path": ".build/S24DecisionHierarchyNov08/light-run/captures/png-3-0/manifest.json",
+    "bytes": 810,
+    "sha256": "bfac9d0cc1150ed5376c30488d5076555c943132e83fd72fab6ae239d718337b"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdInboxView.swift",
+    "bytes": 28030,
+    "sha256": "b63ea38d622257dc129a791a19d0aae0278f0b1de95401388b3d29bbdc3c2ddb"
+  },
+  {
+    "path": "ios/App/Theme.swift",
+    "bytes": 4500,
+    "sha256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3"
+  }
+]

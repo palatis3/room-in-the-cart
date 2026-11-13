@@ -1,0 +1,38 @@
+{
+  "startedAtUTC": "2026-11-08T09:23:45.191829+00:00",
+  "nativeExitCode": 0,
+  "strictExitCode": 0,
+  "attachmentExportStatus": "complete",
+  "geometryQualified": false,
+  "passingDiagnosticProvesRepair": false,
+  "runSHA256": "654e46d743bbacd28d8629bf27c01bc70f0b83268712acaf98c04d458dcef91b",
+  "nativeLogSHA256": "8145bdb1f1fed6da867ab7f83908c4201af6ffb238e69351ab94bf128a25a173",
+  "inspectionPackageSHA256": "6e6df2c5ca686b3cac9fa015cac7e6f2264b07e36638ee37caab7d10c7957ea9",
+  "executionPackageSHA256": "a9b23f8d81f402c0388fb2c24d2f8f077cbec43ec143ecadb994647d6cd05aa8",
+  "strictArgv": [
+    "check_ios_test_results.py",
+    "--selectors",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/selectors.txt",
+    "--expected-count",
+    "1",
+    "--summary",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/test-summary.json",
+    "--tests",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/test-details.json",
+    "--result-bundle",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/inspection/native.xcresult",
+    "--test-log",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/keyboard-fixed-inset-control-r8/run/native.log"
+  ],
+  "strictBoundedExports": [
+    {
+      "kind": "test-details",
+      "url": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins"
+    }
+  ],
+  "functionalAttachmentAudit": "passed",
+  "originalBundleUnchanged": true,
+  "runAndLogUnchanged": true,
+  "endedAtUTC": "2026-11-08T09:23:46.113280+00:00",
+  "inspectionExitCode": 0
+}

@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import UniformTypeIdentifiers
 
 public enum InboxDisposition: String, Codable, Sendable { case pending, consumed, discarded, expired }
 public struct InboxReceipt: Equatable, Sendable {
@@ -20,6 +21,7 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
 /// Only selected text and bounded deduplication receipts belong in this database.
 /// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
 public actor SelectedTextInbox {
+    public enum ReviewLimit: Error { case tooManyItems }
     public static let maximumEntryBytes = 65_536
     public static let maximumLines = 500
     public static let maximumPending = 20
@@ -43,6 +45,9 @@ public actor SelectedTextInbox {
                 guard existing.digest == digest else { throw SurfaceError.changedReplay }
                 return existing
             }
+            // Prior receipts bind the original and edited text, even if this wording
+            // could not open a ledger review. Apply fresh limits only to new writes.
+            try Self.validateReviewItems(editedText ?? originalText)
             let counts = try database.rows("SELECT COUNT(*), COALESCE(SUM(CASE WHEN disposition='pending' THEN 1 ELSE 0 END),0), COALESCE(SUM(bytes),0) FROM inbox")[0]
             guard let all = Int(counts[0] ?? ""), let pending = Int(counts[1] ?? ""), let bytes = Int(counts[2] ?? "") else { throw SurfaceError.corrupt }
             let size = originalText.utf8.count + (editedText?.utf8.count ?? 0)
@@ -94,15 +99,79 @@ public actor SelectedTextInbox {
         guard validDate(a), validDate(b), b > a else { throw SurfaceError.corrupt }
         return InboxReceipt(operationID: id, digest: digest, createdAt: a, expiresAt: b, disposition: disposition)
     }
+    public static func fitsEnvelope(original: String, edited: String? = nil) -> Bool {
+        let remaining = maximumEntryBytes - original.utf8.count
+        guard remaining >= 0, (edited?.utf8.count ?? 0) <= remaining else { return false }
+        func fitsSourceLines(_ text: String) -> Bool {
+            text.lazy.filter { $0 == "\n" }.prefix(maximumLines).count < maximumLines
+        }
+        return fitsSourceLines(original) && (edited.map(fitsSourceLines) ?? true)
+    }
+
+    private static func validateReviewItems(_ text: String) throws {
+        // The ledger recognizes CRLF, bare CR and Unicode newline scalars as well as LF.
+        var items = 0
+        var atStart = true
+        for scalar in text.unicodeScalars {
+            if CharacterSet.newlines.contains(scalar) { atStart = true }
+            else if atStart && !CharacterSet.whitespaces.contains(scalar) {
+                items += 1
+                guard items <= maximumLines else { throw ReviewLimit.tooManyItems }
+                atStart = false
+            }
+        }
+    }
+
     private static func digest(original: String, edited: String?) throws -> String {
-        let size = original.utf8.count + (edited?.utf8.count ?? 0)
-        guard size <= maximumEntryBytes, !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+        guard fitsEnvelope(original: original, edited: edited), !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !original.contains("\0"), edited?.contains("\0") != true,
-              original.split(separator: "\n", omittingEmptySubsequences: false).count <= maximumLines,
-              (edited?.split(separator: "\n", omittingEmptySubsequences: false).count ?? 0) <= maximumLines,
               edited == nil || !edited!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw SurfaceError.invalid }
         struct Body: Encodable { let original: String; let edited: String? }
         return SHA256.hash(data: try canonical(Body(original: original, edited: edited))).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+extension SelectedTextInbox {
+    /// Consume the system's temporary copy inside the provider callback.
+    public static func loadPlainText(from provider: NSItemProvider,
+                                     completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
+        guard let type = provider.registeredTypeIdentifiers.compactMap({ UTType($0) })
+            .first(where: { $0.conforms(to: .plainText) }) else {
+            completion(.failure(.unsupported))
+            return
+        }
+        provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
+            guard error == nil, let url, url.isFileURL else { completion(.failure(.unavailable)); return }
+            do { completion(.success(try readPlainText(at: url, type: type))) }
+            catch { completion(.failure(error as? SurfaceError ?? .unavailable)) }
+        }
+    }
+
+    private static func readPlainText(at url: URL, type: UTType) throws -> String {
+        let attributes = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard attributes.isRegularFile == true, attributes.isSymbolicLink != true,
+              let size = attributes.fileSize, size > 0 else { throw SurfaceError.invalid }
+        guard size <= maximumEntryBytes else { throw SurfaceError.capacity }
+        let file = try FileHandle(forReadingFrom: url)
+        defer { try? file.close() }
+        let bytes = try file.read(upToCount: maximumEntryBytes + 1) ?? Data()
+        guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
+        guard bytes.count == size else { throw SurfaceError.invalid }
+
+        let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
+        let text: String?
+        if hasUTF16Mark || type == .utf16ExternalPlainText || type == .utf16PlainText {
+            // Foundation can silently discard a trailing half of a UTF-16 code unit.
+            guard bytes.count.isMultiple(of: 2) else { throw SurfaceError.invalid }
+            let encoding: String.Encoding = !hasUTF16Mark && type == .utf16PlainText ? .utf16LittleEndian : .utf16
+            text = String(data: bytes, encoding: encoding)
+        } else {
+            let payload = bytes.starts(with: [0xEF, 0xBB, 0xBF]) ? bytes.dropFirst(3) : bytes[...]
+            text = String(data: payload, encoding: .utf8)
+        }
+        guard let text, !text.isEmpty, !text.contains("\0") else { throw SurfaceError.invalid }
+        guard fitsEnvelope(original: text) else { throw SurfaceError.capacity }
+        return text
     }
 }
 

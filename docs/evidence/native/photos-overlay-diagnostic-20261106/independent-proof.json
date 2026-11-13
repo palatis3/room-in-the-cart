@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "candidate": "03f67132794a17dec9bf4ddf97e4230b4b4b07ca",
+  "runID": 42139997301,
+  "jobID": 127637648927,
+  "workflowConclusion": "success",
+  "diagnosticConclusion": "inconclusive_both_trials_timed_out",
+  "jobStarted": "2026-11-06T01:09:43Z",
+  "jobCompleted": "2026-11-06T01:17:59Z",
+  "jobSeconds": 496,
+  "artifacts": [
+    {
+      "artifactID": 13468816220,
+      "name": "swift-photos-overlay-1",
+      "bytes": 20559,
+      "digest": "sha256:c2232e1ccc6a06cd734ead997f474668d1b4e9f393feddab87123914b94bb759",
+      "sizeVerified": true,
+      "digestVerified": true
+    }
+  ],
+  "toolchain": {
+    "candidate": "03f67132794a17dec9bf4ddf97e4230b4b4b07ca",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "swift": "swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)\nTarget: arm64-apple-macosx15.0",
+    "sdk": "26.2",
+    "host": "arm64"
+  },
+  "codeqlVersion": "2.27.4",
+  "sourceBytesVerifiedAgainstCommit": {
+    "scripts/diagnostics/photos_overlay_probe.py": "8763b6a959e62ee57d328e5f1c39d756ec0ecb6b2cb6b9f589d0b63c4cd0312f",
+    "scripts/diagnostics/photos-overlay/compile.sh": "e3a251cc6d6713675198b66cb994b9cf8ccfda06dd86e6e620f3944e604520b3",
+    "scripts/diagnostics/photos-overlay/PhotoProbe.swift": "5c3292c77777137361bbccafd993bdac13a39cd94f4ed3037b05a295d381c726",
+    "scripts/diagnostics/photos-overlay/Probe.ql": "cb7e6b069d902d016f2953704d4be344850126d4fd31fd1bb1e81a3df2f5091d",
+    "scripts/diagnostics/photos-overlay/qlpack.yml": "0906bf6711dbbbae4920cc16f8f61063f47e552e50ed8d5453b741488444bcb5",
+    ".github/workflows/ios-toggle-diagnostic.yml": "9922c0624345d4a9c6617e5a81fa0587939c59e1c00cc1230b35275ff927a9d1"
+  },
+  "variants": [
+    {
+      "variant": "baseline",
+      "timeoutSeconds": 220.218,
+      "exitCode": 143,
+      "plannedExtractorInvocations": 1,
+      "flagInPlannedInvocation": false,
+      "extractorLogCount": 0,
+      "compilerDiagnosticResult": null,
+      "resolvedPickerResult": null,
+      "sourceArchiveRetained": false,
+      "queryExecuted": false,
+      "extractorExecutionBeyondLoggerProven": false
+    },
+    {
+      "variant": "enabled",
+      "timeoutSeconds": 220.141,
+      "exitCode": 143,
+      "plannedExtractorInvocations": 1,
+      "flagInPlannedInvocation": true,
+      "extractorLogCount": 1,
+      "compilerDiagnosticResult": null,
+      "resolvedPickerResult": null,
+      "sourceArchiveRetained": false,
+      "queryExecuted": false,
+      "extractorExecutionBeyondLoggerProven": false
+    }
+  ],
+  "interpretation": "Both 220-second trials were terminated during traced build startup. Baseline retained no extractor log; enabled retained logging initialization only. Tracer plans include the intended enabled flag and omit it in baseline, but no executed frontend argument dump, compiler diagnostics, source archive or resolved-declaration query proves semantic behavior. Empty arrays in comparison.json are unavailable results, not zero diagnostics.",
+  "supportsFlagHypothesis": null,
+  "countsAsCandidateAcceptance": false,
+  "retries": 0,
+  "rawEvidence": ".build/CIResearch20261105/photos-overlay-probe/hosted-42139997301"
+}

@@ -1,0 +1,13 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "artifactID": 13489089994,
+  "archiveSHA256": "282232bb0e74058b94af76bd56ef9c8c9402161337ebeb03c112e8427dd8478a",
+  "archiveBytes": 84454366,
+  "members": 257,
+  "totalExpandedBytes": 85930684,
+  "exactObservedMemberException": {
+    "Tests.xcresult/Data/data.0~4um3enTrXaPS2ZUvg4vFIRtQKbVPl3DeDUGOBzz5ihjkjoNgRhdqK42TlOxRP62LMnJpUL1hrarutPLo4Ju4GA==": 72147823
+  },
+  "allOtherMembersUnderBytes": 50000000,
+  "scope": "Scratch artifact read only; path/type/duplicate/encryption/total/digest bounds retained. No test/runtime/acceptance limit change."
+}

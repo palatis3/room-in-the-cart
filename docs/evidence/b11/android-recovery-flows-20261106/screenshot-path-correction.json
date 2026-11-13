@@ -1,0 +1,153 @@
+{
+  "reason": "URL.pathname contained percent-encoded workspace spaces; screenshot bytes moved to intended scratch path and hashes verified, without recapture.",
+  "files": [
+    {
+      "name": "child-finished.png",
+      "sha256": "1069c658ca3026cc5ada66976bba6e018451b1eac0228201480e057563f60d7e"
+    },
+    {
+      "name": "invite-review.png",
+      "sha256": "076bd381e5d90917f6a0f2a4d01f662d76de26599e468ae5ed15b373108b6157"
+    },
+    {
+      "name": "offline-cold.png",
+      "sha256": "92175a972f5534bc04b49436f087cf902acd78e59ed0e73cd76f2155d3ed0516"
+    },
+    {
+      "name": "explicit-retry-received.png",
+      "sha256": "01fbd9418bf7dd9033b69e4a3c1fdb9b219a3202d073c31346614581e3e3aab2"
+    },
+    {
+      "name": "child-pending-guardian.png",
+      "sha256": "f1bf608863777549571d054e35fc27259d116e2d264e4f1177e656c874966a1c"
+    },
+    {
+      "name": "review-after-native-tap.png",
+      "sha256": "35b6782e22da28ed5d5bc10502bdf07b7fcf36f945fc9463e1a477113656e78e"
+    },
+    {
+      "name": "interrupted-signout.png",
+      "sha256": "68b240a62bdcb8ea7f1833aca85ed0f4ba6e3dfbcbbc643c46eadc5df6e3735c"
+    },
+    {
+      "name": "child-synthetic-approved.png",
+      "sha256": "2dc9387f74948a9648f8ee2f7c3ca83be419b928f68626d14827dbca1544f7a6"
+    },
+    {
+      "name": "online-recovered-unsent.png",
+      "sha256": "3778d793de0022ac9fe12f73cfae20e4ff7f6b4c3e99388e478fd424804f7e24"
+    },
+    {
+      "name": "editor-lost-receipt.png",
+      "sha256": "43f86c8393e0e5d413db6280c3ff02d8e270e49b67166e7d8e6aeec859c89f88"
+    },
+    {
+      "name": "eviction-preparation-blocked.png",
+      "sha256": "bd21be85375bd3585ef38d65804e7a92cc95d95a68de2707fb545cad1a5aaf09"
+    },
+    {
+      "name": "lost-receipt-pending.png",
+      "sha256": "adf2d10132e547b667f33d2eb31f1eacf6dc86ec48c5bec226c03aa89cd371c7"
+    },
+    {
+      "name": "lost-receipt-explicit-retry.png",
+      "sha256": "01fbd9418bf7dd9033b69e4a3c1fdb9b219a3202d073c31346614581e3e3aab2"
+    },
+    {
+      "name": "helper-revoked.png",
+      "sha256": "294a41763a62375c074a7163ae843ef5bc3af1ddf7b4e4b6870fa54b9e614190"
+    },
+    {
+      "name": "child-finished-cold.png",
+      "sha256": "1069c658ca3026cc5ada66976bba6e018451b1eac0228201480e057563f60d7e"
+    },
+    {
+      "name": "before-targeted-eviction.png",
+      "sha256": "adf2d10132e547b667f33d2eb31f1eacf6dc86ec48c5bec226c03aa89cd371c7"
+    },
+    {
+      "name": "review-click-timeout.png",
+      "sha256": "b90ce08dfccbd14cb591eaec80a5fde2ae48f2768c8c8d4d0272efb6d64e6e45"
+    },
+    {
+      "name": "offline-pending.png",
+      "sha256": "adf2d10132e547b667f33d2eb31f1eacf6dc86ec48c5bec226c03aa89cd371c7"
+    },
+    {
+      "name": "child-code-requested.png",
+      "sha256": "0f34100a50fe50828f675070dc3e385ac75ffa8508d6030f440a70e0050f9e66"
+    },
+    {
+      "name": "child-browser-restart.png",
+      "sha256": "a4265f852d4051983bf5be31a5e2510520b1de426dc5e41a61328fa6f54b13cc"
+    },
+    {
+      "name": "after-targeted-eviction.png",
+      "sha256": "9296d1c76ea12f6372453cf542bec0e0c6aead04929e3d423e6fe111b33317ef"
+    },
+    {
+      "name": "interrupted-signout-reload.png",
+      "sha256": "68b240a62bdcb8ea7f1833aca85ed0f4ba6e3dfbcbbc643c46eadc5df6e3735c"
+    },
+    {
+      "name": "editor-exact-retry.png",
+      "sha256": "8212f885eb828ebd2e6fbfad67927022e41a14721cf4fa780cdf2995b75e6c13"
+    },
+    {
+      "name": "confirmed-signout.png",
+      "sha256": "ce44a646fe35e3945fc86042183800b00499f722eb314d575bb09ba2dafd4bcf"
+    },
+    {
+      "name": "fresh-invite.png",
+      "sha256": "1a8d8e7ef56cc70665658138d0494db5c1112e8aa42eba7844f3c4c0787822f4"
+    },
+    {
+      "name": "helper-english.png",
+      "sha256": "b64470543a8f7795fb63bacbc19b01fdccdd9a63c16101f3f50922438359a5a5"
+    },
+    {
+      "name": "offline-request-review.png",
+      "sha256": "59be94e362ca36ff2683ab186e160f395abbfece44c997c7a5d97016dca3d633"
+    },
+    {
+      "name": "contributor-joined.png",
+      "sha256": "3778d793de0022ac9fe12f73cfae20e4ff7f6b4c3e99388e478fd424804f7e24"
+    },
+    {
+      "name": "helper-reloaded.png",
+      "sha256": "d832e891f18615f9ba0c8ad1d5bbfa4549400f2c9c6e644f8cbd9f4eb3059e4c"
+    },
+    {
+      "name": "editor-received-reload.png",
+      "sha256": "aca9bc940c1a3597aacae815d7f9fd259179aee0b43aa357e229aee0bf1e64c4"
+    },
+    {
+      "name": "primed-contributor.png",
+      "sha256": "4175eca4ac0f21373428940fd7f9fc79afac6416b871d67a8e04119a2d82e201"
+    },
+    {
+      "name": "child-fresh.png",
+      "sha256": "8b99b68f0aca7767473fb8cbbd5b130eb60a7e5b43e8cfc9f2e2cd7f2cf87824"
+    },
+    {
+      "name": "child-authenticated.png",
+      "sha256": "37b3dbff8a84d713f42850fbfa9094f993723622fc4d585971cae9a76ac27065"
+    },
+    {
+      "name": "helper-spanish.png",
+      "sha256": "8f474e7c46c45edd4d8d8a3fd77c95b5a6aa293ec4b57aeff8c9cc64130ec639"
+    },
+    {
+      "name": "child-spanish.png",
+      "sha256": "482e950093a37fbb8de2fb4da1df702279a79be5887f5aa11c8ddfe941a6d274"
+    },
+    {
+      "name": "code-entry.png",
+      "sha256": "9db567b88b0a90db18873df24e8bc03a0fb212ff3fc628d40937b0fc87d011fc"
+    },
+    {
+      "name": "editor-initial.png",
+      "sha256": "b64470543a8f7795fb63bacbc19b01fdccdd9a63c16101f3f50922438359a5a5"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+Executed 19 of 19 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedExactRetryRetainsNewCleanupWarning | Passed | 3.02 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedExactRetryClearsObsoleteDeliveryNotice | Passed | 2.96 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedExactRetryRetainsNewRefreshWarning | Passed | 2.55 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnrelatedReceiptAndChangedAuthorityCannotReturnToDecisionOutcome | Passed | 0.17 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testAccessEndsDuringConfirmedRefreshWithoutAnOutcomeReturn | Passed | 0.08 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testOutcomeReturnRequiresKnownStateAndAllowsNewerDurableOutcome | Passed | 0.07 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testOutcomePageCycleOrShopChangePreservesReceiptWithoutPublishingPartialRows | Passed | 0.04 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testLostReplyAndConflictDoNotReturnEvenWhenRefreshedRowHasOutcome | Passed | 0.03 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedApplyRefreshFailureWaitsForSuccessfulRefresh | Passed | 0.02 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testReviewedSelectionFeedsActualPreviewAndRequiresExplicitOverageBeforeAtomicApply | Passed | 0.02 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedApplyFindsOriginalOutcomeOnLaterInboxPage | Passed | 0.02 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testConfirmedApplyWaitsForRefreshedOriginalOutcomeBeforeReturning | Passed | 0.01 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testRefreshScopeAndAccessLossInvalidatePackSelectionAndLinkStaysZeroAddition | Passed | 0.01 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment | Passed | 0.01 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testCheapestUsesWholePacksAndUsableYieldRatherThanStickerPrice | Passed | 0.00 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnknownConversionAndYieldNeverInferProductQuantityOrPrice | Passed | 0.00 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testTiesAndExplicitFreePriceRemainDifferentFromUnknown | Passed | 0.00 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testFixtureInterceptsEveryRequestAndRejectsUnexpectedNetworkDestinations | Passed | 0.00 |
+| RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnavailableInsufficientUnknownAndUnmatchedAreNotCertifiedCheapest | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 555 log lines (19 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 19 examined tests.
+

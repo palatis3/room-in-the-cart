@@ -1,0 +1,85 @@
+{
+  "sourceCommit": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41968854930",
+  "selectorsSHA256": "61a37a131db3fc847fb8d4861814389cfc18d2827b68e76348869adad96bf0ca",
+  "checkerSHA256": "fa0fd489dd75560ef5a097796c79f6503c4db65043e8d8f50bb4b8e537c74314",
+  "locales": {
+    "en": {
+      "artifact": 13388404973,
+      "job": 127052107634,
+      "artifactDigest": "920c366b19777bb6e98efc45c21360dc31749732d2b57d0b91c25a8c4278bd14",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "profile": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 15,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "US English \u2014 local StoreKit"
+          }
+        }
+      ],
+      "rootStrictVerifier": "passed",
+      "sha256": {
+        "storekit-summary.json": "d2ad3347d127ab0db6a6d33018239640497488b294b6b8770c96b079506d954a",
+        "storekit-tests.json": "92311e5b519c1eb70ebe5c163a1c8b62d4b2242402d155b00303c2934063a658",
+        "StoreKit.log": "75bedaba92aa17c04d7005301ab9f1715f3bcf65c2f561af3647c4849cdf5492",
+        "root-verification/report.txt": "01338baf6fe4f285b429a3703a7350bcb6ad82fa2a9dd8893a737a74ab22a8bb",
+        "root-verification/test-runtime-warnings.json": "e53e392d02a0f2d30975bb3c9757d1fafcc6fe351e82aa62ae5e49918bf554af"
+      }
+    },
+    "es": {
+      "artifact": 13389332409,
+      "job": 127052107588,
+      "artifactDigest": "99d086bf61f66037599d3119189eb994550bdb8b09a343857ffae941542bed42",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "profile": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 15,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+          }
+        }
+      ],
+      "rootStrictVerifier": "passed",
+      "sha256": {
+        "storekit-summary.json": "1546d6820de60f2ef76858ab6a499c35428009a345873056e13e7fa711c4d67c",
+        "storekit-tests.json": "b9e3e94e651a3793772a5a9f7cc7b8e260fd25268716c3bafd602c713ad266d3",
+        "StoreKit.log": "832ec852f4ce671a68f213137eda250ad9f9921962126dc684426c22d73dbbbb",
+        "root-verification/report.txt": "938be1cc534f85fdf61d96353328e1aed3c924267ab71ca19c97c2c11fcc273f",
+        "root-verification/test-runtime-warnings.json": "e53e392d02a0f2d30975bb3c9757d1fafcc6fe351e82aa62ae5e49918bf554af"
+      }
+    }
+  },
+  "scope": "Local StoreKit configuration on hosted simulator. Exact 15 selectors per locale, full result identity/warning export and one-start/one-pass logs verified. Not signed sandbox billing or App Store transaction acceptance."
+}

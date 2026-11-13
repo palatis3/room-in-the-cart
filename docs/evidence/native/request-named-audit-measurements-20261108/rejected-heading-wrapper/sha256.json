@@ -1,0 +1,13 @@
+{
+  "0-failure-tree/09FA37E6-66B4-4813-A8D6-6DDFEAA60AEF.txt": "43c87694d2f796f63bdc84d7544aa5f909fd452e165d0511a03887762cbc6fe5",
+  "0-failure-tree/manifest.json": "cbc0df3f7930d5c2e135eab58c444fe123e571bf9697f42b46e8e85b1ec0ac52",
+  "1-failure-tree/8D7C2DBF-71CF-41F8-87E8-595A462B9B30.txt": "1489d30d2c290265c970aa7552b67ff8cf8a10200f9a35d00fd2b635aff5d7d7",
+  "1-failure-tree/manifest.json": "8ebb2178e89d36d8d012afd87ef23f2580640c6b874713bd206b11aa1b7ad4d6",
+  "README.md": "0dc352dc4e5b2b1ee99c4dd1c34f651317e26558341334f32eb8a566de3ac429",
+  "candidate.patch": "8c242b6eefec356a219b42ca30be4270e90ce6fb3dd0399a06135eb326ea85d4",
+  "strict.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "strict.stdout": "7c609539de5becbbc78d1d58454eca7f8047383537bdaf6be885a1cbe423d73a",
+  "summary.json": "7dbcce658085b1605122e17a1aee170df60f49e8ff63b89100804c65c332b2a5",
+  "tests.json": "5fb16bb4fe39160b2801bdccfd267e573b6b2fed044023385e1c125e5c2baaf8",
+  "verification.json": "c587a0d0c2c98fbd05040aab2b38176daaa670c1871d5a4deb50771749f6a056"
+}

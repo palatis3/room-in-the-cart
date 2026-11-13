@@ -1,0 +1,129 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "attempt": 1,
+  "trigger": "ordinary pull_request push, not rerun",
+  "fixtureRunID": 42272379477,
+  "fixtureConclusion": "failure",
+  "nativeWireRunID": 42272379461,
+  "nativeWireConclusion": "success",
+  "sourceFileCount": 56,
+  "compiledSourceUnionCount": 45,
+  "all45SelectorsAccountedFor": true,
+  "resultCounts": {
+    "selected": 45,
+    "passed": 44,
+    "failed": 1,
+    "skipped": 0,
+    "expectedFailures": 0,
+    "executed": 45
+  },
+  "strictPassingRawCasesInEntirelyPassingShards": 37,
+  "passedCasesInFailedShard": 6,
+  "recordsRedactedPasses": 1,
+  "failedSelector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+  "failureProof": "fixture-measurement-assertion-failure.json",
+  "failureTriageProof": "measurement-triage/triage-proof.json",
+  "nonexecutionCount": 0,
+  "cancelledJobs": 0,
+  "runtimeWarningOccurrences": 6,
+  "scopedWarningRows": [
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "count": 2,
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Wait for dev.roominthecart.app.debug to idle"
+      }
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "count": 2,
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Synthesize event"
+      }
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "count": 2,
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Synthesize event"
+      }
+    }
+  ],
+  "recordsRedactedRuntimeWarnings": 0,
+  "runtimeEnvironment": {
+    "modelName": "iPhone 17",
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "architecture": "arm64",
+    "platform": "iOS Simulator"
+  },
+  "xcodeVersion": "26.3",
+  "xcodeBuild": "17C529",
+  "testAllowances": {
+    "default": 720,
+    "maximum": 900
+  },
+  "ordinaryLogsConfirmTestAllowanceFlags": {
+    "contributor-balanced-03": true,
+    "contributor-balanced-04": true,
+    "contributor-balanced-02": true,
+    "contributor-balanced-05": true,
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": true,
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": true,
+    "contributor-balanced-01": true,
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": true,
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": true,
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": true,
+    "DinnerDecisionSheetUITests": true,
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": true,
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": true
+  },
+  "xctestRunnerRestarts": 0,
+  "hostedRetryBundles": 0,
+  "auditedResultArchives": 15,
+  "artifactBoundsUnchanged": true,
+  "productArchivesRead": false,
+  "rawRecordsRead": false,
+  "nativeWire": {
+    "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+    "runID": 42272379461,
+    "attempt": 1,
+    "jobID": 128079947669,
+    "artifactID": 13530906746,
+    "artifactSHA256": "2054e0505c513dd85a3fb91eb5d8fe0a20074c014e6e162bc749c2cc59228c70",
+    "nativeWireValid": true,
+    "nodeIntegrationCases": 4,
+    "swiftExactInvocations": 6,
+    "swiftInvocationOrderMatchesExpected": true,
+    "nodeCaseOrderMatchesExpected": true,
+    "databaseStopped": true,
+    "observedScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "recordedFileSHA256": {
+      "swift-build.log": "143c5a33db5ad2c6b3a251cb45684666db7d5ded5c36f497a737bb7ea9830c71",
+      "tests.tap": "eb39f10207abf336824a87a9a2f2014c075495fcba3bdf6acbeb99a2a89c9031",
+      "postgres.log": "01412c30b74429674e88bbebd7fff982ebcac1e51117ad3b96fd4dacf72380c7"
+    },
+    "scope": "Recorded Swift transport over pinned loopback HTTPS and disposable PostgreSQL; no deployed-provider acceptance."
+  },
+  "allEvidenceCollected": true,
+  "allRequestedChecksPassing": false,
+  "collectorSession": 34355,
+  "collectorStoppedAtTerminal": true,
+  "scope": "Exact804 hosted evidence only. Local source/Git edits, native execution, retries/dispatch/cancellation not performed by collector. Separate root diagnostic excluded."
+}

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import HouseholdClient
 
 struct HouseholdShopView: View {
@@ -14,6 +15,7 @@ private struct SharedShopContent: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     @State private var clearingRetry = false
+    @State private var mealDaySelection: SharedMealDaySelection?
     var body: some View {
         Form {
             if model.authorized {
@@ -29,9 +31,18 @@ private struct SharedShopContent: View {
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery
+                if model.canReadConfirmedOrder, let shop = model.shop, shop.placedRevision != nil {
+                    NavigationLink(OrderAmendmentCopy.text("Confirmed order and amendments")) {
+                        SharedOrderAmendmentView(model: model, shopID: shop.shopId)
+                    }.accessibilityIdentifier("sharedShop.confirmedOrder")
+                }
+                if model.canReadDelivery, let shop = model.shop, shop.placedRevision != nil, ["placed", "closed"].contains(shop.phase) {
+                    NavigationLink(ht("What came home")) { SharedDeliveryView(model: model, household: household, shopID: shop.shopId) }
+                        .accessibilityIdentifier("sharedShop.deliveryEvidence")
+                }
                 if model.pending == nil {
                     if let shop = model.shop {
-                        Section(ht("Current shared shop")) {
+                        Section(["placed", "closed"].contains(shop.phase) ? OrderAmendmentCopy.text("Original checkout") : ht("Current shared shop")) {
                             LabeledContent(ht("Revision"), value: shop.shopRevision.formatted())
                             Text(phaseName(shop.phase))
                             if shop.storeReviewRequired == true {
@@ -46,15 +57,21 @@ private struct SharedShopContent: View {
                                 ForEach(meals) { SharedMealFacts(meal: $0.meal) }
                             }
                             if model.canManage {
-                                NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model) }
+                                NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model, shopID: shop.shopId) }
+                                    .accessibilityIdentifier("sharedShop.financial")
                             }
                             if model.canManage, shop.phase == "closed", shop.placedRevision != nil, let id = UUID(uuidString: shop.shopId) {
                                 NavigationLink(pTr("Optional pickup feedback")) { SharedMeasurementFeedbackView(household: household, shopID: id) }
                             }
                             if household.canReviewHouseholdRequests { NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: household) } }
                             if shop.phase == "draft", model.canManage {
-                                Button(ht("Edit shared items and quote")) { model.beginEditing() }
-                                Button(ht("Review freezing this shop")) { model.reviewPhaseChange("shop.freeze") }
+                                NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedTrackingShopView(owner: model) }
+                                    .accessibilityIdentifier("sharedShop.foodQuantities")
+                                NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: model) }
+                                    .accessibilityIdentifier("sharedShop.savedChanges")
+                                Button(ht("Edit shared items and quote")) { model.beginEditing() }.accessibilityIdentifier("sharedShop.edit")
+                                NavigationLink(ht("Review freezing this shop")) { SharedTrackingShopView(owner: model, freezing: true) }
+                                    .accessibilityIdentifier("sharedShop.reviewTrackingFreeze")
                             } else if shop.phase == "frozen", model.canManage {
                                 Text(ht("Requests received after freezing are saved for next shop. Reopening does not move them into this shop automatically."))
                                 Button(ht("Review reopening this shop")) { model.reviewPhaseChange("shop.reopen") }
@@ -76,7 +93,9 @@ private struct SharedShopContent: View {
                     }
                     if model.creatingAnother && model.editing { Text(ht("Enter a new shared shop. Your existing shop stays separate.")) }
                     if model.editing {
-                        if !model.creatingAnother, model.canManage, let meals = model.shop?.meals { SharedMealEditor(model: model, meals: meals) }
+                        if !model.creatingAnother, model.canManage, let meals = model.shop?.meals {
+                            SharedMealEditor(model: model, meals: meals) { mealDaySelection = $0 }
+                        }
                         SharedShopEditor(model: model)
                     }
                     if let review = model.review {
@@ -89,9 +108,9 @@ private struct SharedShopContent: View {
                             }
                             if let edit = review.mealEdit {
                                 if let previous = model.shop?.meals?.first(where: { $0.id == edit.occurrenceID }) {
-                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal)
+                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal, deadlineIdentifier: "sharedMeal.review.previousDeadline")
                                 }
-                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal) }
+                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal, deadlineIdentifier: "sharedMeal.review.proposedDeadline") }
                                 else { Text(ht("Remove this occurrence from the shared plan.")) }
                             }
                             if let candidate = review.candidate { SharedShopFields(quote: candidate.quote, lines: candidate.lines) }
@@ -106,6 +125,12 @@ private struct SharedShopContent: View {
                 if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.shop.notice") } }
                 if model.busy { ProgressView(ht("Checking service…")) }
             } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
+        }.sheet(item: $mealDaySelection) { selected in
+            SharedMealDaySheet(model: model, selection: selected)
+        }.sheet(item: Binding(get: { model.foodEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
+            NavigationStack { SharedDemandFlowView(shopModel: model, editor: context) }
+        }.sheet(item: Binding(get: { model.trackingEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
+            NavigationStack { SharedTrackingShopView(owner: model, editor: context) }
         }.disabled(model.busy).task { await model.load() }
         .confirmationDialog(ht("Clear this local shared-shop retry?"), isPresented: $clearingRetry, titleVisibility: .visible) {
             Button(ht("I reviewed the current shop; clear retry"), role: .destructive) { Task { await model.clearPendingAfterReview() } }
@@ -117,13 +142,22 @@ private struct SharedShopContent: View {
         case .waiting:
             Section(ht("Shared shop action waiting")) {
                 Text(ht("The result is not confirmed. Retry the same saved action to avoid creating another shop or repeating a change."))
-                Button(ht("Retry the same shared shop action")) { Task { await model.retry() } }
+                Button(ht("Retry the same shared shop action")) { Task { await model.retry() } }.accessibilityIdentifier("sharedShop.retry")
                 if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
             }
         case .needsReview:
             Section {
-                Text(ht("Refresh the current shared shop before clearing this retry and reviewing a fresh action."))
-                if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
+                if model.pending?.sharedTrackingBinding != nil || model.pending?.sharedRequestUndoBinding != nil {
+                    Text(st("The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it."))
+                    Button(st("Refresh access for exact retry")) { Task { await model.load() } }
+                        .accessibilityIdentifier("sharedTracking.refreshRetry")
+                } else if model.pending == nil {
+                    Text(st("This review can no longer be applied. Refresh current facts and review a new action explicitly."))
+                    Button(st("Refresh current facts")) { Task { await model.load() } }
+                } else {
+                    Text(ht("Refresh the current shared shop before clearing this retry and reviewing a fresh action."))
+                    if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
+                }
             }
         case .confirmed(let receipt):
             Section { Label(ht("Shared shop change confirmed"), systemImage: "checkmark.circle"); LabeledContent(ht("Revision"), value: receipt.shopRevision.formatted()) }
@@ -141,13 +175,16 @@ private struct SharedShopEditor: View {
     var body: some View {
         Section(ht("Entered shared items")) {
             Text(ht("Enter each actual pack separately from its price. A blank price remains unknown."))
-            ForEach($model.draft.lines) { $line in
+            ForEach(model.draft.lines) { snapshot in
+                let line = dinnerDraftBinding(snapshot, in: $model.draft.lines)
+                let id = snapshot.id
                 VStack(alignment: .leading) {
-                    TextField(ht("Pack or item name"), text: $line.item)
-                    Stepper(value: $line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.packs.formatted()) }
-                    TextField(ht("Price per pack in USD, blank if unknown"), text: $line.price).keyboardType(.decimalPad)
-                    Toggle(ht("Counts toward the retailer fee threshold"), isOn: $line.feeEligible)
-                    Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == line.id } }
+                    TextField(ht("Pack or item name"), text: line.item)
+                        .accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".item")
+                    Stepper(value: line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.wrappedValue.packs.formatted()) }
+                    TextField(ht("Price per pack in USD, blank if unknown"), text: line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".price")
+                    Toggle(ht("Counts toward the retailer fee threshold"), isOn: line.feeEligible)
+                    Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == id } }
                 }
             }
             Button(ht("Add shared line")) { model.draft.lines.append(.init()) }.disabled(model.draft.lines.count >= 200)
@@ -170,18 +207,24 @@ private struct SharedShopEditor: View {
             costField("Deposits in USD, blank if unknown", $model.draft.deposits)
             costField("Discounts in USD, blank if unknown", $model.draft.discounts)
             DatePicker(ht("Quote recorded"), selection: $model.draft.observedAt)
-            DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt)
+            DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt).accessibilityIdentifier("sharedShop.quote.expires")
             Text(ht("Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."))
-            Button(ht("Review entered shared shop")) { model.reviewDraft() }
+            Button(ht("Review entered shared shop")) {
+                // Finish editing before the busy state disables the form. On
+                // iOS 17, disabling a focused field otherwise sends its editing
+                // callbacks during SwiftUI's view update.
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                Task { await model.reviewEditor() }
+            }.accessibilityIdentifier("sharedShop.reviewEditor")
             Button(ht("Cancel shared shop edit")) { model.cancelEditing() }
         }
     }
     @ViewBuilder private var scopeOptions: some View {
         Text(ht("Whole checkout")).tag("wholeCheckout"); Text(ht("Item only")).tag("item"); Text(ht("Dinner only")).tag("dinner")
     }
-    private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad) }
+    private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.cost." + key) }
 }
-private struct SharedShopFields: View {
+struct SharedShopFields: View {
     let quote: ShopperQuote; let lines: [ShopperBasketLine]
     var body: some View {
         ForEach(lines) { line in
@@ -207,47 +250,5 @@ private struct SharedShopFields: View {
         LabeledContent(ht("Discounts"), value: householdMoney(quote.discountsMinor, currency: quote.currency))
         LabeledContent(ht("Quote recorded"), value: householdTime(quote.observedAt))
         LabeledContent(ht("Quote expires"), value: householdTime(quote.expiresAt))
-    }
-}
-
-private struct SharedFinancialEvidenceView: View {
-    @ObservedObject var model: HouseholdShopModel
-
-    var body: some View {
-        List {
-            if model.canManage {
-                Text(ht("Charges, credits and holds entered by the shopper for this shared shop."))
-                if let entries = model.financialEntries {
-                    if entries.isEmpty { Text(ht("No financial evidence has been entered for this shop.")) }
-                    ForEach(entries.reversed()) { entry in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(label(entry.kind)).font(.headline)
-                            Text((Decimal(entry.amountMinor) / 100).formatted(.currency(code: "USD")))
-                            Text(entry.sourceText)
-                            if let date = try? Date(entry.occurredAt, strategy: .iso8601.time(includingFractionalSeconds: true)) {
-                                Text(date.formatted(date: .abbreviated, time: .shortened)).font(.footnote)
-                            } else { Text(entry.occurredAt).font(.footnote) }
-                        }
-                    }
-                }
-                if model.busy { ProgressView(ht("Checking service…")) }
-                if let notice = model.notice { Text(notice) }
-                Button(ht("Refresh shared shop")) { Task { await model.loadFinancialEntries() } }.disabled(model.busy)
-            } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
-        }
-        .navigationTitle(ht("Shared financial evidence"))
-        .task(id: model.scope.shopId) { await model.loadFinancialEntries() }
-    }
-
-    private func label(_ kind: ShopperFinancialEntry.Kind) -> String {
-        switch kind {
-        case .postedCharge: pTr("Posted charge")
-        case .postedTopUp: pTr("Posted top-up purchase")
-        case .pendingCredit: pTr("Pending credit")
-        case .postedCredit: pTr("Posted credit")
-        case .includedCredit: pTr("Credit already included in net charge")
-        case .paymentHold: pTr("Payment hold")
-        case .holdRelease: pTr("Confirmed full hold release")
-        }
     }
 }

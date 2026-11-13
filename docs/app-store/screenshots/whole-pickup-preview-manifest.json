@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "bfaf8be83acb874aa7c7337b805a6bf24eab6f2d",
+  "device": "iPhone 17 simulator, iOS 27.0 (24A434)",
+  "configuration": "Release with synthetic household and identity endpoints configured in the simulator bundle.",
+  "date": "2026-11-12",
+  "currency": "USD",
+  "checkoutBeforeCents": 3720,
+  "cerealCents": 349,
+  "checkoutPreviewCents": 4069,
+  "capCents": 3800,
+  "overageCents": 269,
+  "protectedLunchPortions": 2,
+  "decisionApplied": false,
+  "captures": [
+    {
+      "locale": "en-US",
+      "file": "en-US/07-whole-pickup-preview.jpg",
+      "sha256": "7e57222300397440047e6e2203c5ea741b81782128d9bb9b956405363f429424",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "original": ".build/S24StorePickupNov12/en/capture-originals/4B391E38-3B9B-46BB-8027-9CD1CCD4672E.png",
+      "originalSHA256": "9eef3c2dec2f15b8c0316b57f368ea32ec825e6a5f2e60564ff75ae6f26d4843",
+      "localResult": ".build/S24StorePickupNov12/en/capture.xcresult",
+      "simulatorExecutableSHA256": "fce6bd05e295fb77035ce03e7755d8e7a4175c4560aa417c3c2a3ee6c190e1f4"
+    },
+    {
+      "locale": "es-US",
+      "file": "es-MX/07-whole-pickup-preview.jpg",
+      "sha256": "a58dde6b9384167c6b86fbfce284aaa5ad93cbba3935b163dc7d6c009057ed68",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "original": ".build/S24StorePickupNov12/es/localized-originals/EE576E5A-9B59-4FF6-B8A1-0F8A49AF57B3.png",
+      "originalSHA256": "75173448502f1e01abf505307fd1242e9ab0d768a67cf59188eac5f00cc289fd",
+      "localResult": ".build/S24StorePickupNov12/es/localized.xcresult",
+      "simulatorExecutableSHA256": "04581bb5ab0c5a8a7b503cfa7c7d8cea1daeb532b20a4a6b2098feb17d56d405"
+    }
+  ]
+}

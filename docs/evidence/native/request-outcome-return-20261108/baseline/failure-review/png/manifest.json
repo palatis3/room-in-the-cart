@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "F054BF36-F432-487E-9C1E-A69D62D17708.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-request-pack-failure_0_CC7367B2-B46D-4C68-BB9C-9671C5EA3436.png",
+        "timestamp" : 1794138258.049
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite"
+  }
+]

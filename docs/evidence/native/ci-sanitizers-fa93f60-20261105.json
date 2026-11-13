@@ -1,0 +1,106 @@
+{
+  "sourceCommit": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41968854930",
+  "inventorySHA256": "b32c4ac951e59ff73c13529de1b9d5d886c872b9e7f0c56d6ec4a9e77a276f6d",
+  "lanes": {
+    "address": {
+      "job": 127052107453,
+      "artifact": 13389485298,
+      "artifactDigest": "c756ac9955f20e9ddcdf7eeac749fabc02f05fba585b652b44c0274b377fbcda",
+      "rootInventoryReplay": "passed",
+      "packages": {
+        "CoreDomain": {
+          "passed": 171,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "DeviceSurfaces": {
+          "passed": 29,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "HouseholdClient": {
+          "passed": 82,
+          "skipped": 3,
+          "skipSelectors": [
+            "HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+            "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+            "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+          ]
+        },
+        "LocalStore": {
+          "passed": 74,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "RecordArchive": {
+          "passed": 33,
+          "skipped": 0,
+          "skipSelectors": []
+        }
+      },
+      "sha256": {
+        "CoreDomain.inventory.txt": "9fe0f7000e5324040254d0f825f46565d5fa17ac465350c5211ab866ef767010",
+        "CoreDomain.log": "9ee9cc334ec8695aa9e6a6d4db4a45e3f6b6f5c08299b1017bda47f558b5df26",
+        "DeviceSurfaces.inventory.txt": "c9bd74e33bf704bed09dc91d0674ddf7d8eda71512918a9b1d1215c7640f7952",
+        "DeviceSurfaces.log": "e61d7e3de09867e7d811710c86073e8beb10cbbeb78ab438040abcf5e024f83c",
+        "HouseholdClient.inventory.txt": "122ed9ff7db3cd9c20b95501a55744f34737f759b7980a619f6f2cade8314108",
+        "HouseholdClient.log": "492b7341edfcb56203f9cfd98a41c81a0c51940ca624ec5f487879f2be241ead",
+        "LocalStore.inventory.txt": "f8a7fab26efdb5e84d2d2e7f511316a5436c4f910a8c6cbac44370c3d376fe92",
+        "LocalStore.log": "a116660cf566823a3dde1740c7217546296ed51cc96f24ebb409c2e108c140d2",
+        "RecordArchive.inventory.txt": "edbcb1027dadea3e5345f263bb09fc73b61cf20f65e3354b6ff85e13100d759d",
+        "RecordArchive.log": "cb96db2bb3078eba8885817bed2acd8141eb06c214fda47d8069c7b35457596d"
+      }
+    },
+    "thread": {
+      "job": 127052107187,
+      "artifact": 13388757362,
+      "artifactDigest": "31a3451edcec4504f1e68d22e322e6faeab52f4aad91d9d724c7990f417bf406",
+      "rootInventoryReplay": "passed",
+      "packages": {
+        "CoreDomain": {
+          "passed": 171,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "DeviceSurfaces": {
+          "passed": 29,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "HouseholdClient": {
+          "passed": 82,
+          "skipped": 3,
+          "skipSelectors": [
+            "HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+            "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+            "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+          ]
+        },
+        "LocalStore": {
+          "passed": 74,
+          "skipped": 0,
+          "skipSelectors": []
+        },
+        "RecordArchive": {
+          "passed": 33,
+          "skipped": 0,
+          "skipSelectors": []
+        }
+      },
+      "sha256": {
+        "CoreDomain.inventory.txt": "9fe0f7000e5324040254d0f825f46565d5fa17ac465350c5211ab866ef767010",
+        "CoreDomain.log": "869bdc4570c659c5e7d1c60f9eedacf0c32f82b86d4e173e757498b34b242abf",
+        "DeviceSurfaces.inventory.txt": "c9bd74e33bf704bed09dc91d0674ddf7d8eda71512918a9b1d1215c7640f7952",
+        "DeviceSurfaces.log": "5dc1554369c9a85217c6e58ed8d508a1d4d5328dec7592e37d00cba8d4d1bc0f",
+        "HouseholdClient.inventory.txt": "122ed9ff7db3cd9c20b95501a55744f34737f759b7980a619f6f2cade8314108",
+        "HouseholdClient.log": "0717a89507d6ec315a5d9ce587714dcd09f0f417bed5eb7967a1f9360f5857a7",
+        "LocalStore.inventory.txt": "f8a7fab26efdb5e84d2d2e7f511316a5436c4f910a8c6cbac44370c3d376fe92",
+        "LocalStore.log": "05c9c999d3254e210125c1f5d44a2b45173327aea00bf76d4841f14b528d99e2",
+        "RecordArchive.inventory.txt": "edbcb1027dadea3e5345f263bb09fc73b61cf20f65e3354b6ff85e13100d759d",
+        "RecordArchive.log": "3aa2533b860dd5b3b76057fc9b2791cc3cf2a1fd84f9cc11bb2d1f5ae837944d"
+      }
+    }
+  },
+  "scope": "Package-only address/thread sanitizer runs. Three explicit native integration methods are deliberately skipped here and covered by the separately verified hosted native HTTPS lane. This is not all app UI or production-provider acceptance."
+}

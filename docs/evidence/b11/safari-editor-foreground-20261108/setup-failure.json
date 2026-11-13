@@ -1,0 +1,8 @@
+{
+  "atUTC": "2026-11-08T11:47:48.818784+00:00",
+  "exitCode": 1,
+  "error": "ENOENT creating runs/editor-foreground-revoked because the runs parent directory was absent",
+  "listenerStarted": false,
+  "browserOpened": false,
+  "correction": "Create empty runs parent only; immutable helper files remain unchanged"
+}

@@ -1,0 +1,50 @@
+{
+  "scopeNote": "All intended runtime source input coverage is checked against pinned archived source; known semantic extraction limitations remain, no complete-semantic-coverage claim.",
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "merge": "74f41b06614e91d14974051afad08523ee8824c0",
+  "workflowRun": 42234317004,
+  "jobID": 127947893397,
+  "conclusion": "success",
+  "artifactID": 13515496946,
+  "digestVerified": "sha256:a1980e2e5a6e1cb3daf3158901db4f977773a22aecff3997b7a4a1cf5e29c216",
+  "artifactBytesVerified": 37703618,
+  "identicalRepositorySourceFiles": 258,
+  "expectedRuntimeInputsPresent": 254,
+  "additionalManifests": [
+    "ios/Packages/CoreDomain/Package.swift",
+    "ios/Packages/DeviceSurfaces/Package.swift",
+    "ios/Packages/HouseholdClient/Package.swift",
+    "ios/Packages/LocalStore/Package.swift",
+    "ios/Packages/RecordArchive/Package.swift"
+  ],
+  "finalized": true,
+  "analysisID": 2112874104,
+  "rules": 27,
+  "findings": 0,
+  "compilerDiagnosticCount": 11,
+  "compilerDiagnosticFiles": [
+    "ios/Features/Capture/CaptureReviewView.swift",
+    "ios/Features/Capture/ScanReviewView.swift",
+    "ios/Features/Membership/MembershipView.swift"
+  ],
+  "metrics": {
+    "swift/diagnostics/unresolved-ast-nodes": 292,
+    "swift/diagnostics/ast-nodes": 1903649,
+    "swift/diagnostics/successfully-extracted-lines": 36052
+  },
+  "steps": [
+    {
+      "name": "Compile Release Swift sources for CodeQL",
+      "started_at": "2026-11-06T14:38:33Z",
+      "completed_at": "2026-11-06T15:07:50Z",
+      "conclusion": "success"
+    },
+    {
+      "name": "Analyze Swift security findings",
+      "started_at": "2026-11-06T15:07:50Z",
+      "completed_at": "2026-11-06T15:10:04Z",
+      "conclusion": "success"
+    }
+  ],
+  "compilerDiagnosticsIdenticalTo3d26f1f": true
+}

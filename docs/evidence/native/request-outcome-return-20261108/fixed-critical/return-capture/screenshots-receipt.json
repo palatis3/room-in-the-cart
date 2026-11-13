@@ -1,0 +1,87 @@
+{
+  "exports": [
+    {
+      "testIdentifier": "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+      "activityAttachment": {
+        "lifetime": "keepAlways",
+        "name": "S23-request-returned-once-without-manual-dismissal_0_412D9CC6-8BA5-4361-8B81-B8589736E450.png",
+        "payloadId": "0~cHlpgJsPVZm7CycZGyJkt0l4r5Je5DT3t5e-S9IVVhkReUKdOQsibljLhdGJmUOwt_7fLtqSxOiKBDSDaqQEVw==",
+        "timestamp": 1794139082.554,
+        "uuid": "ED422AC4-799A-4AFC-AE75-90B9BDACD1F8"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-0",
+        "--filter",
+        "S23-request-returned-once-without-manual-dismissal_0_412D9CC6-8BA5-4361-8B81-B8589736E450.png"
+      ],
+      "exitCode": 0,
+      "perFileLimitBytes": 4000000,
+      "aggregatePostCheckBytes": 8000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "png-0/manifest.json",
+          "bytes": 825,
+          "sha256": "89709617df2842f6bf3b37de7165119e5936d180ef62dab7c369f8a2a89264eb"
+        },
+        {
+          "path": "png-0/ED422AC4-799A-4AFC-AE75-90B9BDACD1F8.png",
+          "bytes": 219316,
+          "sha256": "b1e2b8b8967e64a2ba6da5915e3eb4e380130546474b7b2bf5a1ba0a18781f54"
+        }
+      ]
+    },
+    {
+      "testIdentifier": "RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling()",
+      "activityAttachment": {
+        "lifetime": "keepAlways",
+        "name": "S23-later-page-Lee-returned-to-durable-outcome-without-scroll_0_E0E3CA2D-4FEA-4DD8-A3F3-8A424CA949F4.png",
+        "payloadId": "0~DwmdDGqrOPDahXrVOoiuYsmkEch0MBarraB7eCez0K8JACbYEJV1-01p7ExTGfEH0PDrfY2Q4UaMOPa1eoS5bw==",
+        "timestamp": 1794139214.988,
+        "uuid": "1DBFF268-F32F-42C2-B8BE-081520294909"
+      },
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/inspection/native.xcresult",
+        "--test-id",
+        "RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-1",
+        "--filter",
+        "S23-later-page-Lee-returned-to-durable-outcome-without-scroll_0_E0E3CA2D-4FEA-4DD8-A3F3-8A424CA949F4.png"
+      ],
+      "exitCode": 0,
+      "perFileLimitBytes": 4000000,
+      "aggregatePostCheckBytes": 8000000,
+      "timeoutSeconds": 45,
+      "files": [
+        {
+          "path": "png-1/1DBFF268-F32F-42C2-B8BE-081520294909.png",
+          "bytes": 296856,
+          "sha256": "af16f39ccdde9fe24ba39f9253fa93a54b96c420edcb6b902c42410aaf6e712c"
+        },
+        {
+          "path": "png-1/manifest.json",
+          "bytes": 846,
+          "sha256": "fca623c04956bf3d3ad9d8c7d04c47177186d96daecf96436861de12bfd92aaa"
+        }
+      ]
+    }
+  ],
+  "originalUnchanged": true,
+  "exportScope": "Exactly one selected final-return PNG per passed case; no video or unfiltered export",
+  "visualReview": "Pending root review"
+}

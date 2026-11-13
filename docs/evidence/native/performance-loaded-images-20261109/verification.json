@@ -1,0 +1,130 @@
+{
+  "sourceManifestSHA256": "a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791",
+  "releaseProductsManifestSHA256": "3de01fde66170f6ffdbcf9b3fe7d7fa2bdd477e3a0a44e220e4fb6c5d58138a8",
+  "localNativeExitCode": 0,
+  "strictExitCode": 0,
+  "requiredMetricCheckExitCode": 0,
+  "durationSamplesSeconds": [
+    2.549833791,
+    2.583578583,
+    2.598977708,
+    2.56684875,
+    2.581955166
+  ],
+  "durationMedianSeconds": 2.581955166,
+  "loadedImages": {
+    "budgetExceeded": false,
+    "callbacks": 1130,
+    "collectionComplete": true,
+    "diagnosticOnly": true,
+    "libraries": [
+      {
+        "architecture": "arm64",
+        "cpuSubtype": 0,
+        "cpuType": 16777228,
+        "matchCount": 1,
+        "name": "libMainThreadChecker.dylib",
+        "status": "complete",
+        "uuid": "E40A186A-8D7D-3029-B5CD-D42C967992C0"
+      },
+      {
+        "matchCount": 0,
+        "name": "libRPAC.dylib",
+        "status": "no-match"
+      }
+    ],
+    "parsedBytes": 5263912,
+    "phase": "post-measure",
+    "processID": 93763,
+    "processRole": "xctest-runner",
+    "releaseAcceptance": false,
+    "schemaVersion": 1,
+    "scope": "Images observed during post-measure dyld registration; not proof of loading, initialization or metric transport during measurement.",
+    "status": "no-match"
+  },
+  "store": {
+    "sqliteQuickCheck": "ok",
+    "revision": 3,
+    "payloadSHA256": "e7adf586f0f6a0590adc2165bc5d672275c3970d4858ae57ea9e35639052aae8",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 0,
+    "checkedRowIDs": []
+  },
+  "originals": [
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/source-contract.json",
+      "sha256": "5052f8173c28f23b4ab45264f4f7f608661c61f9ee3ef65b02a25f44fc7a87be"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/parser-controls.log",
+      "sha256": "99bba3d5cd370f41d02f605d3ff757078878664ff95ff92cbcab3fe8c5e23ccc"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/parser-controls-r2.log",
+      "sha256": "24b50a666cb3ad309a938c7e06b4c2d326bc54418362c4da8ffb74d7c6ab228b"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/workflow-lint.json",
+      "sha256": "7f1b12fc375861e38f04af56fd3a0b5171043f50e30cfdb823c9de892bc83488"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/source.json",
+      "sha256": "a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/build-release/run.json",
+      "sha256": "85607072ffbb0de2fda9186246b9224c4f4685f1c0ffcab9b71fc2610bfe60c5"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/build-release/products.json",
+      "sha256": "3de01fde66170f6ffdbcf9b3fe7d7fa2bdd477e3a0a44e220e4fb6c5d58138a8"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/build-release/inventory.json",
+      "sha256": "3f4cd477d8d23683c927b1f8f8cb94c93ae20b79bb035fa962fd0960b66e03ac"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-original/execution.json",
+      "sha256": "196e0c386a3306f59ccde5605f2da874c5018698f813017cc52de63f1cb86c7a"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-observer-r2/execution.json",
+      "sha256": "503cfa7cfe71b3ed660eb8a2a49785e16e55990f9ff728e1edf3e1123ef1cae4"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-observer-r2/metrics.json",
+      "sha256": "fa21d6e9c3e05da86c3c8778d44eef6cd37b019dbe3540f470ec8da2bef1eec2"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/inspection-observer-r2/receipt.json",
+      "sha256": "893eb1c627a4294b0e626cad596f3fb1774666160d133985577ee2ae35d6d438"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/inspection-observer-r2/custody-review.json",
+      "sha256": "cedc008a95adf95af8e280e3ad8249850d96ed55a883eb6b0148b486ab8b7dd6"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/execution-r1/inspection-observer-r2/ledger-readback.sqlite",
+      "sha256": "3b449b884db3d32c2ca5aeb9dcd6b1fea5df649e74997bccd491090556e249e2"
+    },
+    {
+      "path": ".build/PerformanceLoadedImagesNov09/offline-final.log",
+      "sha256": "1f44d145909ec9c8d52cf0cddc1cff7196330392257bfcb12dcc4584868c67ce"
+    },
+    {
+      "path": ".github/workflows/ios-performance.yml",
+      "sha256": "83181f33c55f0c0a54b939d9f6f0c61ab846e54784412dc89dfed9f045eca54c"
+    },
+    {
+      "path": "scripts/test_performance_plan_provenance.py",
+      "sha256": "fb40439af510157cf1fbfae05b24c0811b9e82f3929a80a0e61850979081e04d"
+    }
+  ],
+  "releaseAcceptance": false,
+  "arm64OnlyProducerQualification": "Hosted run42639339096 atdc343f3e verifies arm64 products, producer/consumer identity and native scroll. Required scroll duration remains missing; no release acceptance.",
+  "offlineTestsPassed": 433,
+  "workflowQueueDefinitionsValidated": 17
+}

@@ -1,0 +1,21 @@
+{
+  "baselineHead": "8f5adbf47217aa29f23f80f1d31e5d01a612b02c",
+  "sourceFilesVerified": 556,
+  "changedFromBaselineManifest": [
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "unchangedProductAndOtherFiles": 555,
+  "baselineManifestSHA256": "eba296b885fb3974937ecbb01c471addf2d3b28c1801e959c6e0dc39eb62d416",
+  "overlayManifestSHA256": "51abebb2be52cd9b4960879eaa08105007730cbe209b524cd823deb0701c8e80",
+  "originalTestSHA256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f",
+  "overlayTestSHA256": "62240fc0e69fbaf958ab14f1e4df346f1d15d98a7dd147dedaa3cdbfde516858",
+  "overlayPatchSHA256": "728e953c043ea25c8f6e6bde205235648b634cdd4aecb19a3afee4e66e9065b4",
+  "baselineSourceMatchesFrozenOverlayManifest": true,
+  "nativeLogSHA256": "33d0b2d4aacf8dc9f8ca687629a89a8e00a350f751a2ef768ea6fd353435ef1b",
+  "failureBoundarySourceLines": [
+    9620,
+    9633
+  ],
+  "scope": "Original product plus only frozen UI test overlay. No fixed-source result inspected or claimed.",
+  "failureBoundaryLineNumbering": "physical LF"
+}

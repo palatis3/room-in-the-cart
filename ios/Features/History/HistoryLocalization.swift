@@ -2,7 +2,9 @@ import Foundation
 import HouseholdClient
 
 enum HistoryCopy {
-    static func text(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "History") }
+    static func text(_ key: String, bundle: Bundle = .main) -> String {
+        String(localized: String.LocalizationValue(key), table: "History", bundle: bundle)
+    }
     static func money(_ minor: Int) -> String {
         let formatter = NumberFormatter(); formatter.numberStyle = .currency; formatter.currencyCode = "USD"
         formatter.minimumFractionDigits = 2; formatter.maximumFractionDigits = 2
@@ -23,30 +25,30 @@ enum HistoryCopy {
     static func shop(_ value: HistoryOwnedShop) -> String {
         HistoryCopy.text("Assigned shop") + " · " + date(value.createdAt) + " · " + phase(value.phase) + " · " + String(value.shopId.suffix(8))
     }
-    static func phase(_ value: String) -> String {
+    static func phase(_ value: String, bundle: Bundle = .main) -> String {
         switch value {
-        case "draft": return HistoryCopy.text("Draft")
-        case "frozen": return HistoryCopy.text("Frozen")
-        case "closed": return HistoryCopy.text("Closed")
-        case "placed": return HistoryCopy.text("Placed")
-        default: return HistoryCopy.text("Assigned shop")
+        case "draft": HistoryCopy.text("Draft", bundle: bundle)
+        case "frozen": HistoryCopy.text("Frozen", bundle: bundle)
+        case "closed": HistoryCopy.text("Closed", bundle: bundle)
+        case "placed": HistoryCopy.text("Placed", bundle: bundle)
+        default: HistoryCopy.text("Assigned shop", bundle: bundle)
         }
     }
-    static func channel(_ value: String) -> String {
+    static func channel(_ value: String, bundle: Bundle = .main) -> String {
         switch value {
-        case "storeShelf": return HistoryCopy.text("Store shelf")
-        case "warehouse": return HistoryCopy.text("Warehouse")
-        case "retailerWebsite": return HistoryCopy.text("Retailer website")
-        case "retailerApp": return HistoryCopy.text("Retailer app")
-        case "other": return HistoryCopy.text("Other channel")
-        default: return HistoryCopy.text("Unspecified channel")
+        case "storeShelf": HistoryCopy.text("Store shelf", bundle: bundle)
+        case "warehouse": HistoryCopy.text("Warehouse", bundle: bundle)
+        case "retailerWebsite": HistoryCopy.text("Retailer website", bundle: bundle)
+        case "retailerApp": HistoryCopy.text("Retailer app", bundle: bundle)
+        case "other": HistoryCopy.text("Other channel", bundle: bundle)
+        default: HistoryCopy.text("Unspecified channel", bundle: bundle)
         }
     }
-    static func mode(_ value: String) -> String {
+    static func mode(_ value: String, bundle: Bundle = .main) -> String {
         switch value {
-        case "pickup": return HistoryCopy.text("Pickup")
-        case "delivery": return HistoryCopy.text("Delivery")
-        default: return HistoryCopy.text("In store")
+        case "pickup": HistoryCopy.text("Pickup", bundle: bundle)
+        case "delivery": HistoryCopy.text("Delivery", bundle: bundle)
+        default: HistoryCopy.text("In store", bundle: bundle)
         }
     }
     static func unit(_ value: String) -> String {

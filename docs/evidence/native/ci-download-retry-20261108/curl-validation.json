@@ -1,0 +1,32 @@
+{
+  "scope": "Actual local curl command options from workflow, substituted localhost URL/output only",
+  "workflowSHA256": "049ab26fb6249510e17440dee1043e849a9df818e0236ae7f0dcd08443da2fdd",
+  "cases": [
+    {
+      "case": "/recover",
+      "exit": 0,
+      "attempts": 2,
+      "elapsedSeconds": 1.029,
+      "expectedExit": 0,
+      "expectedAttempts": 2,
+      "exactPayload": true
+    },
+    {
+      "case": "/notfound",
+      "exit": 22,
+      "attempts": 1,
+      "elapsedSeconds": 0.016,
+      "expectedExit": 22,
+      "expectedAttempts": 1
+    },
+    {
+      "case": "/persistent",
+      "exit": 22,
+      "attempts": 4,
+      "elapsedSeconds": 7.045,
+      "expectedExit": 22,
+      "expectedAttempts": 4
+    }
+  ],
+  "pinnedVersionAndChecksumUnchanged": true
+}

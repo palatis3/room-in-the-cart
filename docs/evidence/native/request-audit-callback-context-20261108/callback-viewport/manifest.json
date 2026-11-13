@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "7969322E-249C-40B5-86D5-67149090D72E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-36_0_7A21D7F8-DFCA-422E-BB32-2FD1FF099524.png",
+        "timestamp" : 1794175605.309
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "6AB62207-85AE-4FA0-9A39-8799DB24E7AA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-35_0_D45929DD-82E4-4CF7-B865-4477A816F5CA.png",
+        "timestamp" : 1794175603.667
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C26F1EB5-D2A4-42B9-A568-72EEF1FDF074.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-4_0_2CA54A80-E984-4832-8E5A-9078C22D9B31.png",
+        "timestamp" : 1794175579.207
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "4B166019-3B5A-4EF1-9170-82A535709B77.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-3_0_8F4DF24A-4E4D-4B55-BE19-0B828E0B6E0F.png",
+        "timestamp" : 1794175578.23
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "8280A56B-FF6C-425B-86BE-58B544DF9DBE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-2_0_EBAA2051-BD57-450D-A8D3-7CB7E100481B.png",
+        "timestamp" : 1794175572.929
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "E0180304-1C5A-4868-BA9B-E9542DB7FC82.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-audit-callback-viewport-1_0_0C213E25-9E2C-4B6B-9014-4E1B16DDA7A1.png",
+        "timestamp" : 1794175571.15
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite"
+  }
+]

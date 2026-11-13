@@ -1,0 +1,48 @@
+diff --git a/ios/UITests/HouseholdRequestPackUITests.swift b/ios/UITests/HouseholdRequestPackUITests.swift
+index aeff914..7728871 100644
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -320,7 +320,7 @@ import XCTest
+         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+     }
+     private func fill(_ text: String, into id: String, replacing: Bool = false) {
+-        let field = element(id)
++        let field = app.textFields.matching(NSPredicate(format: "identifier == %@", id)).firstMatch
+         // A partially clipped field can report hittable on the smaller iOS 17 screen.
+         reveal(field, fullyVisible: true); tap(field)
+         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+@@ -342,15 +342,17 @@ import XCTest
+     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+         for attempt in 0..<24 {
+             let area = scrollableArea()
++            // The gesture safety margin is not an obstruction over visible content.
++            let visibleArea = fullyVisible ? scrollableArea(bottomInset: 16) : area
+             if target.exists && target.isHittable &&
+-                (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)) { return }
++                (!fullyVisible || (target.frame.minY >= visibleArea.minY && target.frame.maxY <= visibleArea.maxY)) { return }
+             let upward: Bool
+             if target.exists && !target.frame.isEmpty {
+                 upward = target.frame.midY > area.midY
+             } else { upward = attempt < 16 }
+             scrollContent(upward: upward)
+         }
+-        let area = scrollableArea()
++        let area = scrollableArea(bottomInset: fullyVisible ? 16 : 100)
+         XCTAssertTrue(target.exists && target.isHittable &&
+             (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+             "Missing fully actionable UI element: \(target.debugDescription)")
+@@ -379,12 +381,12 @@ import XCTest
+             scrollContent(upward: first.exists && first.isHittable, amount: 0.12)
+         }
+     }
+-    private func scrollableArea() -> CGRect {
++    private func scrollableArea(bottomInset: CGFloat = 100) -> CGRect {
+         let bounds = app.frame
+         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
+         let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
+-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
++        let bottom = min(bounds.maxY - bottomInset, keyboardTop - 16)
+         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+     }
+     private func scrollContent(upward: Bool, amount: CGFloat = 0.6) {

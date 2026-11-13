@@ -1,0 +1,53 @@
+{
+  "scope": "One preserved invocation of both original SharedMealIdea selectors using a locally built test-only candidate and byte-identical original hosted app. Overall failed; not acceptance.",
+  "sourceBase": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "patchSHA256": "1a6b9fdd320f8e0b3686a67b842f42afdd9bde1a557b61f550f5bf6e6e4653c4",
+  "result": "Failed",
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "firstCaseSeconds": 254.798,
+  "siblingCaseSeconds": 720,
+  "xcodebuildExit": 65,
+  "strictGuardExit": 1,
+  "runnerRestarts": 1,
+  "runtimeWarnings": 0,
+  "failure": "Unchanged lifecycle sibling exceeded original 720-second allowance after repeated missing animation-completion notifications. The runner restarted with zero further tests.",
+  "device": "A0FE6565-F825-49E9-8DCA-BE89B797E070",
+  "deviceFinalState": "Shutdown",
+  "profile": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "A0FE6565-F825-49E9-8DCA-BE89B797E070",
+        "deviceName": "RITC Shared Meal Idea Visible Supply Candidate",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "binaryVerification": "Root rehashed original and candidate input files and matched installed app launcher/dylib and runner/UITest hashes to those inputs.",
+  "artifacts": ".build/CIResearch20261104/candidate-f0e2ac3/shared-meal-idea-diagnostic/private-visible-supply-candidate",
+  "sha256": {
+    "Tests.log": "0ab29805fb237b9173e7d6a6bc6679ed845451f4a02946d7596b7d8741c6dc9d",
+    "test-summary.json": "345b81d00aa38d5251407b233c509ee91034418001409aeffbf252d5288432f2",
+    "test-details.json": "83104ac66f5d821e0e8fa69fc24d3a99258f1f2dd3b440332c16e004916631f5",
+    "test.patch": "1a6b9fdd320f8e0b3686a67b842f42afdd9bde1a557b61f550f5bf6e6e4653c4",
+    "installed-checksums.txt": "77d5d305a50d3167a6ff20f719a604ead67c6dc5685ba451666fb6fac015e26d",
+    "current-guard.log": "73e2aac37b4fc581571228839822d7c3be5218a1867defbcbce57de24678e5ff",
+    "guard-sha256.txt": "27debd2968dc61e3597f993e252b966689eecdd1e109859dfba171ec2210002f",
+    "testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-details.json": "216aa77d769822aa4bc8119c11da8d94f71350b0a9eb79d3b22ea1f28ffbd7fd",
+    "testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn-details.json": "baec0c99d6a55b3c052acf01d71ceef5540715bee5f0e224eefa1e21f1d43f96"
+  },
+  "next": "One unchanged-binary sibling-only fresh-simulator diagnostic; original failed pair remains failed. No timeout increase, automatic retry or product animation change."
+}

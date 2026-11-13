@@ -1,0 +1,1 @@
+found after 0 gestures; target=dinnerAcceptIdea; frame=(16.0, 539.6666666666661, 370.0, 101.33333333333337)

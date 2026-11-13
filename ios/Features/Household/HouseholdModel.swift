@@ -45,7 +45,7 @@ struct DeviceReminderPersona: Equatable {
     let configured: Bool
     let guardianChildOnly: Bool
     let emailOTPEnabled: Bool
-    private(set) var serviceURL: URL?
+    var serviceURL: URL? { service?.baseURL }
     var onScopeChange: (() -> Void)?
     private(set) var accountDeletion: AccountDeletionModel?
     private(set) var householdExit: HouseholdExitModel?
@@ -56,6 +56,7 @@ struct DeviceReminderPersona: Equatable {
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
+    let fallbackPendingStore: FallbackPendingStore
     private let quotePendingStore: StoreQuotesPendingStore
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
@@ -76,6 +77,8 @@ struct DeviceReminderPersona: Equatable {
     private var attempts = 0
     private var retryAfter = Date.distantPast
     private var generation = UUID()
+    // An explicit OTP from private Settings may continue on the protected root for this session.
+    @Published private var verifiedHouseholdSubject: String?
     private var contributorEnrollmentRevision = UUID()
     private var contributorDeviceID: String?
     private var contributorReplayWindow: (value: ReplayWindow, expiresAt: Date)?
@@ -94,6 +97,7 @@ struct DeviceReminderPersona: Equatable {
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
+        fallbackPendingStore = FallbackPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("fallback-recipes.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
         let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
@@ -114,7 +118,6 @@ struct DeviceReminderPersona: Equatable {
         }
         let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + "." + (projectURL.host ?? "auth")
         let managedAuth = AdultAuth(configuration: authConfig, vault: KeychainRefreshTokenVault(service: namespace))
-        self.serviceURL = serviceURL
         self.auth = managedAuth
         let householdService = HouseholdService(configuration: serviceConfig, auth: managedAuth,
             deviceVault: KeychainRefreshTokenVault(service: namespace, account: "household-device"))
@@ -135,7 +138,18 @@ struct DeviceReminderPersona: Equatable {
             notice = ht("Check your email for a sign-in code.") }
         catch { await show(error, start: start) }
     }
-    func verifyCode() async {
+    var showingVerifiedHousehold: Bool {
+        guard let verifiedHouseholdSubject else { return false }
+        return !locked && verifiedHouseholdSubject == identity?.subject
+    }
+    func dismissVerifiedHousehold() { verifiedHouseholdSubject = nil }
+
+    private func invalidateSessionActions() {
+        generation = UUID()
+        dismissVerifiedHousehold()
+    }
+
+    func verifyCode(continueInHousehold: () -> Bool = { false }) async {
         guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
         guard let auth, let service, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
@@ -143,6 +157,7 @@ struct DeviceReminderPersona: Equatable {
         do {
             let access = try await auth.verifyEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines), code: code)
             guard start == generation else { return }
+            verifiedHouseholdSubject = identity == nil && continueInHousehold() ? access.identity.subject : nil
             identity = access.identity; code = ""; locked = false
             configureLifecycle(access.identity)
             let result = try await service.workspaces()
@@ -179,6 +194,7 @@ struct DeviceReminderPersona: Equatable {
                 try await prefetchContributorReplayWindow(service, start: start)
             }
             // Old device-bound operations require review; never attach them to this new enrollment.
+            try await clearExpiredQueuedRequests(value)
             let old = try await outbox.operations()
             guard start == generation else { return }
             if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && $0.targetsShop(value.shopId) }) {
@@ -251,6 +267,8 @@ struct DeviceReminderPersona: Equatable {
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
+            try await clearExpiredQueuedRequests(fresh, permissionChanged: prior.requestQueueGrant != fresh.requestQueueGrant)
+            guard start == generation else { return }
             configureShopperInbox(fresh); configureSharedShop(fresh); lifecycle?.setScope(fresh)
             notice = nil
             if fresh.capabilities.contains("own_requests") {
@@ -301,6 +319,34 @@ struct DeviceReminderPersona: Equatable {
         }
         contributorReplayWindow = (window, expiresAt)
     }
+    private func clearExpiredQueuedRequests(_ current: HouseholdBootstrap, permissionChanged: Bool = false) async throws {
+        let stored = try await outbox.operations()
+        // A direct online attempt without permission lives only in this session. A changed
+        // permission ends that retry, but older protected receipts still use their original key.
+        if permissionChanged, let pending, pending.requestQueueGrant == nil, !stored.contains(where: { $0.id == pending.id }) {
+            self.pending = nil; delivery = .localDraft
+        }
+        for operation in stored where operation.householdID == current.household.id && operation.memberID == current.memberId {
+            guard let grant = operation.requestQueueGrant, !current.requestQueueEnabled || grant != current.requestQueueGrant else { continue }
+            try await outbox.remove(operation.id)
+            if pending?.id == operation.id { pending = nil; delivery = .localDraft }
+        }
+    }
+
+    func setRequestQueuePermission(_ enabled: Bool) async {
+        guard !busy, !locked, let service, let prior = projection, prior.canSetRequestQueue == true else { return }
+        busy = true; defer { busy = false }
+        let start = generation
+        do {
+            let updated = try await service.setRequestQueuePermission(enabled)
+            guard start == generation, projection == prior, updated.memberId == prior.memberId, updated.household.id == prior.household.id else { return }
+            projection = updated
+            try await clearExpiredQueuedRequests(updated, permissionChanged: !enabled || prior.requestQueueGrant != updated.requestQueueGrant)
+            if enabled { try await prefetchContributorReplayWindow(service, start: start) }
+            notice = nil
+        } catch { await show(error, start: start) }
+    }
+
     private func prefetchContributorReplayWindow(_ service: HouseholdService, start: UUID) async throws {
         do {
             let window = try await service.replayWindow()
@@ -326,6 +372,10 @@ struct DeviceReminderPersona: Equatable {
                 window = try await service.replayWindow()
                 offline = false
             } catch ClientError.transport {
+                guard projection.requestQueueEnabled else {
+                    notice = ht("Enable offline requests while connected before saving a request offline.")
+                    return
+                }
                 guard let cached = contributorReplayWindow, cached.expiresAt > Date() else { throw ClientError.transport }
                 window = cached.value
                 offline = true
@@ -347,13 +397,9 @@ struct DeviceReminderPersona: Equatable {
             }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: scope.targetShopID, kind: kind,
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: scope.editing?.revision), body: body)
-            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection, requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
             guard start == generation, currentContributorRequestScope() == scope else { return }
-            try await outbox.append(operation)
-            guard start == generation else { return }
-            pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
-            if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
-            else { await deliver(operation, start: start) }
+            try await submitRequest(operation, projection: projection, offline: offline, start: start)
         } catch { await show(error, start: start) }
     }
     func edit(_ request: OwnRequest) {
@@ -374,13 +420,27 @@ struct DeviceReminderPersona: Equatable {
             guard start == generation else { return }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: request.shopId, kind: "request.withdraw",
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: request.revision), body: ["requestId": .string(request.requestId)])
-            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection,
+                requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
             guard start == generation else { return }
+            try await submitRequest(operation, projection: projection, offline: false, start: start)
+        } catch { await show(error, start: start) }
+    }
+    private func submitRequest(_ operation: PendingOperation, projection: HouseholdBootstrap, offline: Bool, start: UUID) async throws {
+        let durableGrant = projection.requestQueueEnabled && operation.requestQueueGrant != nil
+        if offline && !durableGrant {
+            notice = ht("Enable offline requests while connected before saving a request offline.")
+            return
+        }
+        // Older service enrollments and guardian-managed online submissions retain their
+        // protected same-key recovery. A capable adult needs a live generation to write to disk.
+        if durableGrant || projection.canSetRequestQueue == nil || guardianChildOnly {
             try await outbox.append(operation)
             guard start == generation else { return }
-            pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
-            await deliver(operation, start: start)
-        } catch { await show(error, start: start) }
+        }
+        pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
+        if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
+        else { await deliver(operation, start: start) }
     }
     func retry() async {
         guard let pending, !busy, !locked, case .waiting = delivery else { return }
@@ -399,6 +459,21 @@ struct DeviceReminderPersona: Equatable {
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
         } catch {
             guard start == generation else { return }
+            if case .service(_, "queue_permission_ended", _, _) = error as? ClientError, let endedGrant = operation.requestQueueGrant {
+                contributorReplayWindow = nil
+                do {
+                    for queued in try await outbox.operations() where queued.householdID == operation.householdID &&
+                        queued.memberID == operation.memberID && queued.deviceID == operation.deviceID && queued.requestQueueGrant == endedGrant {
+                        try await outbox.remove(queued.id)
+                    }
+                    guard start == generation else { return }
+                    pending = nil; delivery = .localDraft
+                    notice = ht("Enable offline requests while connected before saving a request offline.")
+                } catch {
+                    if start == generation { notice = ht("Could not clear the local retry. Try again.") }
+                }
+                return
+            }
             if let failure = error as? ClientError {
                 if let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
                 else if failure != .accessEnded && failure != .sessionNeeded && failure != .cancelled {
@@ -427,19 +502,24 @@ struct DeviceReminderPersona: Equatable {
             placementEvidenceIdentity = (identity.subject, scope.household.id, scope.memberId)
         }
         accountDeletion?.clearReview(); householdExit?.clear()
-        onScopeChange?(); generation = UUID(); locked = identity != nil
+        onScopeChange?(); invalidateSessionActions(); locked = identity != nil
         clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
-    func unlock() async {
+    func unlock(context: LAContext = LAContext()) async {
         guard !guardianChildOnly, let auth, let service, !busy else { return }
         busy = true; defer { busy = false }; let start = generation
-        let context = LAContext(); var error: NSError?
+        var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             notice = ht("Sign in again to reopen household access on this device."); return
         }
+        let confirmed = try? await context.evaluatePolicy(.deviceOwnerAuthentication,
+            localizedReason: ht("Reopen your protected household account"))
+        guard start == generation else { return }
+        guard confirmed == true else {
+            notice = ht("Your household access is still protected. Try unlocking this iPhone again.")
+            return
+        }
         do {
-            guard try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: ht("Reopen your protected household account")) else { return }
-            guard start == generation else { return }
             let access = try await auth.access(); let list = try await service.workspaces()
             guard start == generation else { return }
             if let prior = suspendedReminderPersona, let householdID = prior.householdID {
@@ -460,11 +540,11 @@ struct DeviceReminderPersona: Equatable {
         guard let identity, identity.subject == intent.subject else { return }
         if let saved = placementEvidenceIdentity, saved.subject == intent.subject,
            saved.householdID == intent.householdID, saved.memberID == intent.memberID {
-            generation = UUID(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
+            invalidateSessionActions(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
         }
         workspaces.removeAll { $0.householdId == intent.householdID }
         if projection?.household.id == intent.householdID, projection?.memberId == intent.memberID {
-            generation = UUID(); onScopeChange?(); clearProjection()
+            invalidateSessionActions(); onScopeChange?(); clearProjection()
             await service?.clearScope()
             if self.identity == identity, !locked { configureLifecycle(identity) }
         }
@@ -481,6 +561,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await fallbackPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
@@ -532,7 +613,7 @@ struct DeviceReminderPersona: Equatable {
         busy = true; defer { busy = false }
         onScopeChange?()
         accountDeletion?.clearReview(); householdExit?.clear()
-        generation = UUID(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
+        invalidateSessionActions(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
         delivery = .localDraft; code = ""; email = ""; item = ""; quantity = ""; codeSent = false; locked = false
         keepLocalPrivate = false; editing = nil
         var failed = false
@@ -544,6 +625,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
+        do { try await fallbackPendingStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
         do { try await guardianIntentStore.purge() } catch { failed = true }
         do { try await deviceRevocationStore.purge() } catch { failed = true }
@@ -629,7 +711,9 @@ struct DeviceReminderPersona: Equatable {
     private func configureShopperInbox(_ projection: HouseholdBootstrap) {
         guard canReviewHouseholdRequests, let service else { shopperInbox?.clear(); shopperInbox = nil; return }
         if let shopperInbox, shopperInbox.authorized, shopperInbox.householdID == projection.household.id,
-           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId { return }
+           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId,
+           shopperInbox.supportsPurchaseConfirmation == projection.capabilities.contains("request_purchase_confirmation"),
+           shopperInbox.supportsDeferredRequests == projection.capabilities.contains("deferred_requests") { return }
         shopperInbox?.clear()
         let start = generation
         shopperInbox = HouseholdInboxModel(bootstrap: projection, service: service, outbox: shopperOutbox) { [weak self] in
@@ -646,7 +730,7 @@ struct DeviceReminderPersona: Equatable {
         }
         sharedShop?.clear()
         let start = generation
-        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox) { [weak self] in
+        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox, financialStore: historyStore, financialSubject: identity?.subject) { [weak self] in
             guard let self, self.generation == start else { return }; await self.refresh()
         } onAccessEnded: { [weak self] in await self?.show(ClientError.accessEnded, start: start) }
     }
@@ -655,7 +739,7 @@ struct DeviceReminderPersona: Equatable {
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded:
             onScopeChange?()
-            generation = UUID(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
+            invalidateSessionActions(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
             notice = ht("Access needs to be checked again. Your private work stays on this phone.")
             await service?.clearScope()
             do { try await outbox.purge() }
@@ -669,6 +753,8 @@ struct DeviceReminderPersona: Equatable {
             do { try await historyStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await placementStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await fallbackPendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

@@ -1,0 +1,15 @@
+[
+  {
+    "file": "README.md",
+    "bytes": 2240,
+    "sha256": "3be944a3470b622ae81fcf5df815d21cfc0a3b0d5698f8e5ae278f8acfb9fd11"
+  },
+  {
+    "file": "baseline/file-hashes.json",
+    "sha256": "bdc4b39cfccc0da281623c30024600a8bb15b11e8732f89b0e0b6699aefe0e56"
+  },
+  {
+    "file": "fixed/file-hashes.json",
+    "sha256": "1fd66c13bed10af94179dccde174fa398d17b66f269cf244dde12c397ee480c9"
+  }
+]

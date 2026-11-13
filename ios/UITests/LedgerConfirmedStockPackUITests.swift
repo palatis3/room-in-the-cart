@@ -19,13 +19,7 @@ import XCTest
     func testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack() {
         createListAndConfirmStock(amount: "8")
         tap(element("ledgerPackChoice"))
-        fill("Eight wraps", into: "First pack label")
-        fill("8", into: "First pack usable amount")
-        fill("3.00", into: "First pack price, USD")
-        fill("Six wraps", into: "Second pack label")
-        fill("6", into: "Second pack usable amount")
-        fill("2.50", into: "Second pack price, USD")
-        fill("Reviewed shelf", into: "Where you checked these packs and prices")
+        enterReviewedPacks()
         tap(element("ledgerReviewPacks"))
         let count = element("ledgerPackCount-a"); reveal(count)
         XCTAssertTrue(count.label.contains("1"), count.label)
@@ -63,22 +57,73 @@ import XCTest
         capture("use-at-home-plan-durable-without-retailer-placement")
     }
 
-    private func createListAndConfirmStock(amount: String) {
+    func testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock() {
+        createWrapList()
+        tap(app.buttons["Inspect wraps"])
+        XCTAssertFalse(element("ledgerShowProtectedNeeds").exists)
+        tap(app.buttons["Protect an amount for lunch or another need"])
+        fill("School lunch", into: "Who or what this is for")
+        fill("2", into: "Amount, unknown if blank")
+        tap(element("ledgerProtectedReservation"))
+        tap(app.buttons["Within 12 items"])
+        tap(app.buttons["Save protected need"])
+        assertText("Protected: School lunch")
+
+        let visibility = app.switches["ledgerShowProtectedNeeds"]
+        reveal(visibility)
+        XCTAssertEqual(visibility.value as? String, "1")
+        // SwiftUI exposes a row-wide switch containing the actual trailing
+        // control; tapping the row center can hit its noninteractive label.
+        visibility.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(visibility.value as? String, "0")
+        XCTAssertFalse(app.staticTexts["Protected: School lunch"].exists)
+        assertText("Hidden protected needs still count toward the total and whole packs.")
+        let total = element("ledgerIngredientTotal")
+        reveal(total)
+        XCTAssertEqual(total.label, "12 items")
+
+        tap(element("ledgerPackChoice"))
+        // The reservation must remain protected, not merely absorbed by the
+        // unchanged imported total after its row disappears from the detail.
+        XCTAssertTrue(app.staticTexts["Protected inside that amount, 2 items"].waitForExistence(timeout: 5))
+        enterReviewedPacks()
+        tap(element("ledgerReviewPacks"))
+        let packs = element("ledgerPackCount-a")
+        reveal(packs)
+        XCTAssertEqual(packs.label, "Whole packs to buy, 2")
+        capture("hidden-lunch-still-needs-two-eight-packs")
+        tap(app.buttons["Cancel"])
+        reveal(visibility)
+        XCTAssertEqual(visibility.value as? String, "0")
+        visibility.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        assertText("Protected: School lunch")
+
+        app.terminate(); launch(reset: false); shopRoot()
+        tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
+        assertText("Protected: School lunch")
+        reveal(total)
+        XCTAssertEqual(total.label, "12 items")
+    }
+
+    private func createWrapList() {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Confirmed stock packs", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport"))
-        let original = element("ledgerImportText")
+        let original = editableElement("ledgerImportText")
         tap(original); app.typeText("12 wraps")
         dismissKeyboard()
         XCTAssertEqual(original.value as? String, "12 wraps")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+    }
+
+    private func createListAndConfirmStock(amount: String) {
+        createWrapList()
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"])
         shopRoot(); tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
         tap(app.buttons["Confirm pantry or freezer food"])
         fill("Checked freezer wraps", into: "Actual food or freezer batch")
-        let usableAmount = element("Confirmed usable amount")
+        let usableAmount = editableElement("Confirmed usable amount")
         tap(usableAmount); app.typeText(amount)
         dismissKeyboard()
         XCTAssertEqual(usableAmount.value as? String, amount)
@@ -96,11 +141,34 @@ import XCTest
         XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+    private func editableElement(_ id: String) -> XCUIElement {
+        // Persistent labels can share an input's accessible name. Select only
+        // an editable control, including lazily materialized multiline fields.
+        let types: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
+        return app.descendants(matching: .any).matching(identifier: id)
+            .matching(NSPredicate(format: "elementType IN %@", types.map { $0.rawValue })).firstMatch
+    }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func fill(_ text: String, into id: String) {
-        tap(element(id)); app.typeText(text)
+        tap(editableElement(id)); app.typeText(text)
         let done = app.buttons["Done"]
         if done.exists && done.isHittable { done.tap() }
+    }
+    private func enterReviewedPacks() {
+        let fields = [
+            ("First pack label", "Eight wraps"), ("First pack usable amount", "8"), ("First pack price, USD", "3.00"),
+            ("Second pack label", "Six wraps"), ("Second pack usable amount", "6"), ("Second pack price, USD", "2.50"),
+            ("Where you checked these packs and prices", "Reviewed shelf")
+        ]
+        // These are consecutive fields on one form. Finish editing once after entering the evidence source.
+        for (label, value) in fields {
+            let field = editableElement(label)
+            reveal(field, keyboardDone: app.buttons["Done"])
+            field.tap()
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        dismissKeyboard()
     }
     private func dismissKeyboard() {
         let done = app.buttons["Done"]
@@ -113,15 +181,20 @@ import XCTest
         if control.value as? String == "0" { control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         XCTAssertEqual(control.value as? String, "1")
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, keyboardDone: XCUIElement? = nil) {
         for attempt in 0..<20 {
-            if target.exists && target.isHittable { return }
-            let upward = target.exists && !target.frame.isEmpty ? target.frame.midY > app.frame.midY : attempt < 13
-            let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.78 : 0.28))
-            let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: upward ? 0.28 : 0.78))
+            let bounds = app.frame
+            let bottom = keyboardDone.flatMap { $0.exists ? $0.frame.minY : nil } ?? bounds.maxY
+            let height = bottom - bounds.minY
+            let frame = target.exists ? target.frame : .zero
+            if !frame.isEmpty && target.isHittable && frame.midY < bottom { return }
+            let upward = frame.isEmpty ? attempt < 13 : frame.midY > bounds.minY + height * 0.5
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: bounds.width * 0.5, dy: height * (upward ? 0.78 : 0.28)))
+            let end = origin.withOffset(CGVector(dx: bounds.width * 0.5, dy: height * (upward ? 0.28 : 0.78)))
             start.press(forDuration: 0.05, thenDragTo: end)
         }
-        XCTAssertTrue(target.exists && target.isHittable, target.debugDescription)
+        XCTFail("Could not reveal " + target.debugDescription)
     }
     private func shopRoot() {
         tap(app.tabBars.buttons["Shop"])

@@ -1,0 +1,14 @@
+{
+  "reviewedAtUTC": "2026-11-08T18:49:58.590894+00:00",
+  "status": "partial evidence reviewed, full journey failed",
+  "sourceManifestSHA256": "3edd1ef0a08defb65ff1cc7b60882f157f4fd65702422df77cb2887a1731744d",
+  "reviewedPNGs": 3,
+  "reviewedTextAttachments": 4,
+  "observations": [
+    "Collapsed and Expanded each expose one correctly named Button with 311x44-point frame containing label.",
+    "Expanded screenshot shows both protected lunches and Family rice dinner dated November 6, 2026 with 4 portions.",
+    "Expanded ordinary PNG matches expanded header viewport.",
+    "Second reviewed-facts check and collapse were not completed; app SIGSEGV in XCTest query instrumentation."
+  ],
+  "nextChange": "Only two test queries change to staticTexts; unchanged assertions and logging."
+}

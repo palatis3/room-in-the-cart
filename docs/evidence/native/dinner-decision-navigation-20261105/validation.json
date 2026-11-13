@@ -1,0 +1,271 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "hostedRun": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865/job/126980957450",
+  "artifact": {
+    "id": 13384221439,
+    "sizeBytes": 141668779,
+    "sha256": "7b9cfc4891ed7e5eb65521de5bcc4765aacbcb2893db7b284f1cb85894446a45"
+  },
+  "artifactAndExportsLocalDirectory": ".build/CIResearch20261104/candidate-f0e2ac3/dinner-decision",
+  "hostedEnvironment": {
+    "xcode": "26.3",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    }
+  },
+  "hostedCounts": {
+    "totalTestCount": 5,
+    "passedTests": 1,
+    "failedTests": 4,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "hostedResults": [
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+      "result": "Failed",
+      "durationSeconds": 70.9183338880539,
+      "failureLine": 17
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+      "result": "Failed",
+      "durationSeconds": 73.3125239610672,
+      "failureLine": 68
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+      "result": "Passed",
+      "durationSeconds": 23.03836703300476,
+      "failureLine": null
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+      "result": "Failed",
+      "durationSeconds": 55.29558300971985,
+      "failureLine": 17
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+      "result": "Failed",
+      "durationSeconds": 105.5111700296402,
+      "failureLine": 68
+    }
+  ],
+  "hostedRuntimeWarnings": {
+    "status": "passed",
+    "summaryWarningCount": 0,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 5,
+    "detailExportCount": 0,
+    "warnings": []
+  },
+  "hostedEvidenceSha256": {
+    "Tests.log": "824c54a86ab2424b7a6acccdb8a59301dbc14175246a4bbc8dc7fabc6f7ba66c",
+    "test-summary.json": "435cf99bc2b376c871ca4d5d8d14526adea6431caa39816b28100ad4f88c6be8",
+    "test-details.json": "929d78e5b3f96407d720ed7fd53cef833da758b4df28c9dcebcecb9cd2ddacd3",
+    "test-plan/manifest.json": "f9ee3474b22009bf9ffff5d16627a46eead35dd77832bad158b8b09ff5cf36f0",
+    "test-plan/test-enumeration.json": "c53b23d263f93810111249c5e5717f0a25c996a8f75a8e8bee7aa1c9e2e9893f",
+    "test-plan/DinnerDecisionSheetUITests.txt": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74",
+    "en-boundary-activities.json": "b024afcd2365c0e535f476e64a9366487544de7c0dc7aebe799147432ff846ef",
+    "en-boundary-attachments/09EA435B-E0FD-48A3-8ED3-B4E5D5BE5F0D.mp4": "99fbeb53f3821d0f0278fc2b5f78e081e43eedc24addc2ddf21d0f82fa63733e",
+    "hosted-diagnosis/en-root-t32.mov.png": "5c9f58ccb80d90431567f2c1a38ff78444c5e351194b86c4c57deda0521e2dbd",
+    "hosted-diagnosis/test-summary.json": "7feefb99a6cb29945416720b78b60695d2afde62d30f4fa0a0bcda1899596f5b",
+    "hosted-diagnosis/test-details.json": "c1184e56ad84e5910c5c14d0b57cc4f3645186a4aed7e0f54e132498b131c6f0",
+    "hosted-diagnosis/test-runtime-warnings.json": "ca4b28b0a9b510694aa54e2cfabff2d052a978f7e51f726952ebb04bf1130d79"
+  },
+  "diagnosis": "All four failures searched for the Arroz occurrence directly from the Dinners root. The original English boundary screen recording shows the root with This week and All chosen dinners during the unsuccessful search. Source places individual occurrence links in those destinations. The largest-text pairing selector never made the obsolete navigation assumption and passed.",
+  "candidate": {
+    "patch": "chosen-dinners-navigation.patch",
+    "patchSha256": "e1fa1c9ac942e579af6c91809cf5092545e832157a8321bdd5ed2991f955e526",
+    "sourceSha256": "4786c11060087a5dea77c86e7ad61fa9f6ed74386c37666b458d77c14fa0826f",
+    "scope": "Use the existing localized All chosen dinners link before looking up occurrence identities. Follow the extra back destination before revisiting Pairing. Preserve the original five test methods, calculations, cancellation, apply, lunch readbacks and time limits.",
+    "staticValidation": [
+      "git apply --check",
+      "Swift parse checked by patch author",
+      "Exact selectors match archived compiled enumeration and frozen source methods"
+    ],
+    "nativeValidation": "Passed all five original selectors on local iPhone 17 iOS 26.2 (23C52), with zero recorded runtime warnings. Hosted confirmation remains pending."
+  },
+  "localCandidateRun": {
+    "directory": ".build/CIResearch20261104/candidate-f0e2ac3/dinner-decision/local-candidate",
+    "source": "Frozen f0e2ac3 tree plus only the reviewed navigation patch.",
+    "configuration": "ARM64 Debug, DINNER_DECISION_UI_FIXTURE",
+    "xcode": [
+      "Xcode 27.1",
+      "Build version 27A9275"
+    ],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "EC2D6382-8B0A-46BB-A537-2543F87750B6",
+      "deviceName": "CI Dinner Decision Navigation Candidate 20261105",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "buildPassed": true,
+    "counts": {
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "exactResults": [
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "result": "Passed",
+        "durationSeconds": 38.442514061927795
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "result": "Passed",
+        "durationSeconds": 44.805376052856445
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "result": "Passed",
+        "durationSeconds": 19.569813013076782
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "result": "Passed",
+        "durationSeconds": 31.771417021751404
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+        "result": "Passed",
+        "durationSeconds": 47.05734097957611
+      }
+    ],
+    "runtimeWarnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "simulatorShutdown": true,
+    "observedNavigation": [
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "chosenDinnersTaps": [
+          "Tap \"All chosen dinners, including earlier dates\" Button"
+        ],
+        "occurrenceTaps": [
+          "Tap \"dinnerOccurrence-92733F3E-A2BF-410C-B6A8-42B3E73A57B7\" Button"
+        ],
+        "applyTaps": 1
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "chosenDinnersTaps": [
+          "Tap \"All chosen dinners, including earlier dates\" Button",
+          "Tap \"All chosen dinners, including earlier dates\" Button"
+        ],
+        "occurrenceTaps": [
+          "Tap \"dinnerOccurrence-FBE66D3D-15A7-4856-9373-23D9E65E3950\" Button",
+          "Tap \"dinnerOccurrence-4ABF728B-1A1F-409D-8368-077F4958AD85\" Button",
+          "Tap \"dinnerOccurrence-FBE66D3D-15A7-4856-9373-23D9E65E3950\" Button"
+        ],
+        "applyTaps": 1
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "chosenDinnersTaps": [],
+        "occurrenceTaps": [],
+        "applyTaps": 0
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "chosenDinnersTaps": [
+          "Tap \"Todas las cenas elegidas, incluidas las fechas anteriores\" Button"
+        ],
+        "occurrenceTaps": [
+          "Tap \"dinnerOccurrence-562C5685-75D1-4B69-AE5C-E5194A48F204\" Button"
+        ],
+        "applyTaps": 1
+      },
+      {
+        "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+        "chosenDinnersTaps": [
+          "Tap \"Todas las cenas elegidas, incluidas las fechas anteriores\" Button",
+          "Tap \"Todas las cenas elegidas, incluidas las fechas anteriores\" Button"
+        ],
+        "occurrenceTaps": [
+          "Tap \"dinnerOccurrence-8A8F89EE-0F71-4C9C-81FE-5973740714D4\" Button",
+          "Tap \"dinnerOccurrence-DB14BA73-14B8-4CBD-8CB4-54BD1242F0EA\" Button",
+          "Tap \"dinnerOccurrence-8A8F89EE-0F71-4C9C-81FE-5973740714D4\" Button"
+        ],
+        "applyTaps": 1
+      }
+    ],
+    "assertions": "English and Spanish package boundary, fee and checkout values, cancel/apply servings readbacks and protected lunch all passed. Both paid replacement journeys returned from the extra destination, reopened the localized route after Apply, and verified Tacos plus the original Arroz occurrence and protected Almuerzo. The largest-text test again verified Pairing cancel returns to its initiating control.",
+    "productSha256": {
+      "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+      "appExecutable": "fac4fdf1b20526a18d4c0a25e559adbda74b85ca45bfd82b82bd05116566322e",
+      "uiTestExecutable": "f1e6a5aa0b6a721fe8bab386550a39d429a1198c2d14336d98e243d2dac25fdc"
+    },
+    "evidenceSha256": {
+      "Tests.log": "09e1d3cee6c2b60a5e54e4ae5652784c87a9d15207c5f970b806b4dd9f472597",
+      "test-summary.json": "ad65c4404d7df2e7e06becb66a685e582bfd17bc5b9a656e8b098edc74e08756",
+      "test-details.json": "978c8b1ef8de0c180ac2977eb08f0cfd4ef8ef108b716ec41a85aee8ac5b3d92",
+      "test-runtime-warnings.json": "ca4b28b0a9b510694aa54e2cfabff2d052a978f7e51f726952ebb04bf1130d79",
+      "root-verification.txt": "ce04137ddba55a64951d17701f2b945b1f477cf49caee56ac7dcbfb299efb840",
+      "attachments/manifest.json": "66833d210f78392f62ad5d31f9c2a341bdf47f9b8cef28a02bade435429b14d4",
+      "testEnglishGuestPackageBoundaryCheckoutAndCancel-activities.json": "53222ac6fe12864ca20bab9b778359d695658bf095fc091297add9f693869282",
+      "testEnglishPaidGroupReplacementAndGuestCancellation-activities.json": "efc2c3a94d11abb3054fedd7947abe531f7bce9d86401ee396daeb6051bc48f4",
+      "testLargestTypePairingSheetReturnsToItsInitiatingControl-activities.json": "422c5c4ee96137c83e25a30518cfc79b46ee1d2ae87319e06c86b54f8af1f7f0",
+      "testSpanishGuestPackageBoundaryCheckoutAndCancel-activities.json": "bbe701cffd9049aafe72e2e0005aeb66c63856033f19269c48b768a1b1b80bd8",
+      "testSpanishPaidGroupReplacementAndGuestCancellation-activities.json": "cb88dd7cbca604c2a614267a4d2d9dee04902a8fd9ee36a4b50f28864f48b94f"
+    },
+    "screenshots": {
+      "S16-S17-whole-pack-and-fee-en_0_F6F97733-CAFF-4814-9181-A68E3F110FE9.png": {
+        "file": "attachments/4630E90F-ADE2-4F2B-8DD6-5A320E29FCA2.png",
+        "sha256": "2b14ce0097e3451746cdaabe3fdd67188147f47e3d1450f309f31eab8b42a423"
+      },
+      "S15-retained-lunch-en_0_2361DF4C-ECC5-4956-92ED-9E90B266053D.png": {
+        "file": "attachments/D53670A9-5312-46D0-8DFC-98A65534AA7E.png",
+        "sha256": "bd0096030e0cd36135e43f1c72ea3b9d1f2710e5c637de22483d1b684457de3c"
+      },
+      "S15-S17-en_0_DFD487D7-77C3-44AB-889C-01E45C43357A.png": {
+        "file": "attachments/D26FF8C5-4A69-4A06-97C6-CF4E8FD2315A.png",
+        "sha256": "e7a52bde2f0c9086c961e723738f2083d25007e56f75358a3dfe4d273a1ba9c8"
+      },
+      "S16-S17-en_0_1813CC52-0D19-48D2-B648-D0F89FD4097F.png": {
+        "file": "attachments/82340DE9-DAE4-43BF-AA12-60D1039DE4EA.png",
+        "sha256": "7881c7708e288c4975db82b4296ee655f58d7dd30407ec37110c78528ddeebe0"
+      },
+      "S15-largest-text_0_C345BC86-07B2-4D30-B074-DDBCED5989CE.png": {
+        "file": "attachments/4B155552-D39B-47AE-ABF8-3D3A5D9FDC09.png",
+        "sha256": "e9abb11829729530928b7faad0526acdd0e6b3addee4e5f34e288d971d23805b"
+      },
+      "S16-S17-whole-pack-and-fee-es_0_33D240B4-173F-47EF-BE68-881B1239DEFC.png": {
+        "file": "attachments/E98588D8-C841-42BB-B649-1CBC1FB90913.png",
+        "sha256": "ec5f357a8541a4e53e5caae911d88dfa22177e6f2b809a59b123adbc2e776ff5"
+      },
+      "S15-retained-lunch-es_0_4BCBA26B-E1C4-481E-9F0B-4018F564749E.png": {
+        "file": "attachments/4F82C906-7642-4A33-8617-552B1F4A27B4.png",
+        "sha256": "1b85efa642abe571dd1d409e004c0af8c4488278921cd2a2a2a7aaef6fe34b28"
+      },
+      "S15-S17-es_0_FAEBC9CA-53AA-4154-B505-6FE0FA7A85AC.png": {
+        "file": "attachments/E82B58CD-80DB-4C74-8B06-DDB053A7C8C6.png",
+        "sha256": "0fe9b137b303fe974691613286b23b47682a6085313591432153aff34000bc4a"
+      },
+      "S16-S17-es_0_757D8FB5-CA08-4C71-9B55-3ED34530D1E9.png": {
+        "file": "attachments/CBFCF890-274C-4AB7-BF4D-D37561178429.png",
+        "sha256": "08a4d797ff18fdcea917f7bcb7308d4241cf6b0379629ea10fd392ee216294ad"
+      }
+    },
+    "scope": "One serial execution of all five original selectors. Local Xcode 27.1 and iOS 26.2 build 23C52 differ from hosted Xcode 26.3 and runtime 23C54."
+  }
+}

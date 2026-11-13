@@ -1,0 +1,70 @@
+{
+  "scope": "Four named Quote fixture attachments located by XCTest activity metadata",
+  "imagesReviewed": true,
+  "images": [
+    {
+      "phase": "quote-en",
+      "moment": "review-before-cancel",
+      "attachmentName": "Food-editor-en-review-before-cancel_0_76B08AC7-ED8A-4F1A-89BF-7CE11ABA34F1.png",
+      "attachmentUUID": "BCE48905-BE60-465A-9AB7-EE8AAF141039",
+      "payloadID": "0~ueUnppkgmPXnIZMiBx7wnrnmL3o1x0DEE1OtqjHXBo-VxZzCTqxK2Q7ejRxjP2zo2lHM8gWmbbJ7U__5O7CFEw==",
+      "pngPath": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-inspection.xcresult/Data/data.0~ueUnppkgmPXnIZMiBx7wnrnmL3o1x0DEE1OtqjHXBo-VxZzCTqxK2Q7ejRxjP2zo2lHM8gWmbbJ7U__5O7CFEw==",
+      "bytes": 407714,
+      "sha256": "d5843da36040fd6a7d55cb4e08f339b92cf36425519fbace5929e1517cd9d6cf",
+      "log": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en.log",
+      "logLine": 686,
+      "activitySeconds": 122.55
+    },
+    {
+      "phase": "quote-en",
+      "moment": "relaunch-exact-retry-preserved-sources",
+      "attachmentName": "Food-editor-en-relaunch-exact-retry-preserved-sources_0_B145F54D-5272-4723-A6F8-2A60397424F4.png",
+      "attachmentUUID": "C1F123CD-B601-4961-B57E-C427368AFAE6",
+      "payloadID": "0~jKp_boShAut38B0mtZS5PvlnwvJRj1OEtyaaJPOPD4c0cXskbrGcnsxtIVw0VdtK-d_IGuCV2BMH2rUtOYNIXQ==",
+      "pngPath": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-inspection.xcresult/Data/data.0~jKp_boShAut38B0mtZS5PvlnwvJRj1OEtyaaJPOPD4c0cXskbrGcnsxtIVw0VdtK-d_IGuCV2BMH2rUtOYNIXQ==",
+      "bytes": 246338,
+      "sha256": "df8f5eee269fd3707b1ef999f44144f852c985b7ea6e71ba0578d731759f28fd",
+      "log": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en.log",
+      "logLine": 1293,
+      "activitySeconds": 240.55
+    },
+    {
+      "phase": "quote-es",
+      "moment": "review-before-cancel",
+      "attachmentName": "Food-editor-es-review-before-cancel_0_2AC27E0F-C32B-46DA-AF3E-C2133AC37A3C.png",
+      "attachmentUUID": "240D1E18-CFBB-4C8C-A559-9207B31428FE",
+      "payloadID": "0~E3N_Sj_4gV9dl69GZUCv9tl9B-qwjSfWZGPJv7Gqz3M7r4XeFiOJIWpAUT0Xlkz9g8eYAyT8RHo962_OtPfMkQ==",
+      "pngPath": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-inspection.xcresult/Data/data.0~E3N_Sj_4gV9dl69GZUCv9tl9B-qwjSfWZGPJv7Gqz3M7r4XeFiOJIWpAUT0Xlkz9g8eYAyT8RHo962_OtPfMkQ==",
+      "bytes": 401868,
+      "sha256": "f78bf6ad25a390a3b412e99c02be27f269aeb42af293df1735e43065ca4522e3",
+      "log": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es.log",
+      "logLine": 677,
+      "activitySeconds": 118.39
+    },
+    {
+      "phase": "quote-es",
+      "moment": "relaunch-exact-retry-preserved-sources",
+      "attachmentName": "Food-editor-es-relaunch-exact-retry-preserved-sources_0_2D806699-DEB7-4598-9992-AD9A93AA6B61.png",
+      "attachmentUUID": "C2DB753C-C7AC-49EF-B477-A811D7A563AC",
+      "payloadID": "0~VbiZE-W9_X3iKENmmlWJ6vvXlll0aJ5UhAA-Vd3I653WQgf22Wr2a3ipQzZoE9R-e-EZ_CxtD9WFbo8SqZKUyQ==",
+      "pngPath": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-inspection.xcresult/Data/data.0~VbiZE-W9_X3iKENmmlWJ6vvXlll0aJ5UhAA-Vd3I653WQgf22Wr2a3ipQzZoE9R-e-EZ_CxtD9WFbo8SqZKUyQ==",
+      "bytes": 265230,
+      "sha256": "e110e5bc85c0e3ef81b6b720ebfe4838857cf7f12d076186ae6d7931bdf0afbc",
+      "log": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es.log",
+      "logLine": 1308,
+      "activitySeconds": 240.68
+    }
+  ],
+  "reviewer": "root",
+  "result": "No visible overlap or truncated required review/source wording in these four captured viewports.",
+  "observations": [
+    "English and Spanish review show usable pack amount, unresolved quantities/restrictions disclosure, unchecked confirmation and disabled Apply.",
+    "Post-relaunch images show one write/one exact retry fixture counters; manual twelve and unknown extra-wrap source wording remain visible.",
+    "Spanish source names intentionally preserve entered English wording; app labels are localized."
+  ],
+  "limits": [
+    "Four fixture screenshots at recorded simulator size only.",
+    "No physical-device, VoiceOver, largest Dynamic Type, full-route or human translation acceptance.",
+    "Fixture review expiry in 2098 is test data, not a production expiry qualification."
+  ]
+}

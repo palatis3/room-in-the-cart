@@ -1,0 +1,20 @@
+{
+  "preparedAtUTC": "2026-11-08T12:56:57.230055+00:00",
+  "sourceManifestSHA256": "daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc",
+  "changedFiles": [
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "evidence": "Prior screenshot/hierarchy:field535\u2013579 fullyvisible in667viewport, navbottom96,nokeyboard;24alternating275.4ptdrags due gesturebottom567. Prior clippedfield652\u2013696 stilloutside new651contentbottom.",
+  "change": "Fullvisibility containment uses16point bottomclearance; swipegeometry/direction still uses original100point gesturemargin. Nativehittability,keyboard/navclearance,24attempts andtimeoutlimits remain. All productionfiles unchanged.",
+  "files": {
+    "qualification_common.py": "0c9ffd00e6fc65d36639f6a777cf1f7c91985ba0f8e238116cd1fff350d85bb6",
+    "baseline-HouseholdRequestPackUITests.swift": "4fff6a5bee695558efd5627dae91f50c444461559701e587b98f6abc04c44531",
+    "ios17-selectors.txt": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45",
+    "fixed-source-manifest.json": "daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc",
+    "inspect-ui.py": "cee53d437cef58ecff996b003a2af4348a4bd47719c28e412e756468fb201859",
+    "test-only.patch": "f9b1ec5f79ae8518691cd76e01bdb2bd8fb339a904a85cd92270a39ce3f25c6d",
+    "baseline-source-manifest.json": "d8935f41e0cc374eb022d93f25d86427b6c340bcf2eb4f1bdc71e49c9b3d31f2",
+    "ios26-selectors.txt": "5ee9aae41f5dde27016aedb42e41f73718d11ef660be10546026c8ffbe26d10d",
+    "run-ui.py": "b718d6c7ab440650bd83e2a06343e13b15c72a9b4269f196103b4bda86be12d6"
+  }
+}

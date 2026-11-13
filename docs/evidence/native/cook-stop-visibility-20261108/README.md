@@ -1,0 +1,7 @@
+# Keep Stop visible before playback and after revocation
+
+Review found a presentation regression in the isolated speech-owner candidate: moving Stop outside the private-instruction branch had also hidden it while stopped. The original shared-cook UI test requires Stop to remain visible and disabled immediately after approval, before Play. R4 always renders that one Stop control outside the private content branch and disables it only when stopped; retry after revoked access and a completed failed Stop remains reachable.
+
+Root intentionally interrupted the r3 fixture run after confirming the conflicting view and unchanged test source. One of five cases had started; the playback case had not run. Native73/strict1 and the partial result remain preserved. This is an operator-directed interruption for a confirmed source regression, not an observed app crash or a completed playback qualification. The source/result/products were unchanged when inspected.
+
+The correction changes only CookReadbackView.swift. All40 model test bodies and the full SharedDeliveryUITests file remain unchanged. The completed [40-test qualification](../cook-thread-owner-20261108/README.md) covers the unchanged model/owner implementation; it does not prove the corrected view or actual speech. The original five-case fixture run with r4 was started separately under root session21863. Its outcome remains pending at this checkpoint. Canonical speech source is unchanged; the corrected candidate exists only in the isolated checkout.

@@ -1,0 +1,55 @@
+{
+  "scope": "Local PostgreSQL 17.11 additive migration 030; hosted staging remains at approved migration 029.",
+  "reviewedAt": "2026-11-06",
+  "migration": "service/migrations/030_measurement_trigger_search_path.sql",
+  "migrationSHA256": "8706c4ae16b6670c43b7360bb7dcd563ac1413aee9c2c0ebce1204bdc1abb97f",
+  "testSHA256": "dc352d4e281e7ea5d7602279982a67ee9ad711fcdb5db97d0eaacfe0ceaa0eb2",
+  "negativeControl": {
+    "migration": 29,
+    "tests": 9,
+    "passed": 7,
+    "failed": 2,
+    "skipped": 0,
+    "explanation": "New caller-search-path subtest fails with Missing expected rejection; parent fails as a consequence. Seven sibling cases pass."
+  },
+  "upgradedResult": {
+    "migration": 30,
+    "tests": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "verification": {
+    "priorMigrationRegistryPreserved": true,
+    "all30ChecksumsMatch": true,
+    "functionBodiesOwnersOIDsACLsPreserved": true,
+    "functionsRemainSecurityInvoker": true,
+    "existingConsentAndFeedbackPreserved": true,
+    "migrationReexecutionIdempotent": true,
+    "officialAdvisorTargetedWarningsBefore": 2,
+    "officialAdvisorTargetedWarningsAfter": 0,
+    "rootVerifiedAll40SourceAnd12OutputHashes": true
+  },
+  "retainedEvidenceDirectory": ".build/measurement-trigger-hardening-20261106",
+  "retainedFileSHA256": {
+    "rerun.sh": "df5b24bce0f20afd4531b5d087982417ba6da0798a300aae50d5756b2f9a79ef",
+    "verify-local.sh": "693a0d66589ec8545684148914882e3c89a35cb64f1d046074694a2963b59f5a",
+    "measurement-029.tap": "bdf4e61b3bcbe6a5fcfc567b78914db73da05db566accd0073099c013087dc4f",
+    "measurement-030.tap": "2c83ddcc44262be3fdb50f64f05d5387aa0d34f54de83b6b2397e3df9831aead",
+    "harness.log": "9b9b233c7818d5422fd4c095438cfdc9ba43fa96cc8337ecdc7a016da367e2f5",
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-sha256.txt": "0ef738f6098d2050de796887d9007ea70349423b7dee82c941d3345992b59584",
+    "outputs-sha256.txt": "5d5e7cfc4df269a1899db9ea41edc3261103fd9bc69f66a258758b74db847b16",
+    "0011_function_search_path_mutable.sql": "8de1844919acd3e9387b2787ac5335ae3400d9c622e273972b495abb81522978"
+  },
+  "cleanup": "Owned disposable cluster stopped and removed; no hosted changes in this verification.",
+  "limits": [
+    "This proves local trigger behavior under an intentionally supplied shadow formatter, not an elevated-privilege exploit.",
+    "Hosted 030 application has not occurred.",
+    "The first unretained unit-suite run is not counted as retained verification."
+  ],
+  "references": [
+    "https://www.postgresql.org/docs/17/sql-alterfunction.html",
+    "https://github.com/supabase/splinter/blob/5fc6b905d74298f9c86accfb627a729e65f65695/lints/0011_function_search_path_mutable.sql"
+  ]
+}
