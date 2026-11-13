@@ -31,6 +31,16 @@ The [review draft](APP-STORE-LISTING-DRAFT.json) preserves the supplied English 
 
 Both drafts fit the current field limits. Review the Spanish wording and confirm that the submitted build supports every shared and paid claim. Support and privacy URLs still need verified publication, and the operator must supply the submission contact and copyright. [Version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information)
 
+## First-release notes for review
+
+**English (US)**
+
+Compare two grocery packs by how much usable food you need and what each choice will cost. As you plan your pickup, set aside lunch portions and see what’s left for dinner. When fewer groceries come home than you expected, review the shortage and choose what to carry into your next shopping list.
+
+**Spanish for the US storefront**
+
+Compara dos presentaciones del mismo alimento según la cantidad que necesitas y cuánto te costaría cada opción. Al planear la compra, aparta porciones para el almuerzo y revisa cuánto queda para la cena. Si al recoger el pedido recibes menos de lo previsto, revisa qué falta y elige qué agregar a tu próxima lista de compras.
+
 ## Feature claim ledger
 
 The following are draft claim boundaries, not permission to publish them while required launch services are unavailable. The complete Foundation scope remains the intended release; deferred setup is not evidence that shared or paid features are working in the distributed build.
