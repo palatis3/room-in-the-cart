@@ -76,7 +76,7 @@ jobs:
       CI_IPHONE_NAME: iPhone 17
       SANITIZER: ${{ matrix.sanitizer }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: bash scripts/check_ci_xcode27.sh
       - name: Check package tests for memory errors or data races
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check both locale configurations and artifact workflow before macOS
         run: |
           python3 -m venv .build/storekit-workflow-venv
@@ -130,7 +130,7 @@ jobs:
     outputs:
       artifact: ${{ steps.upload.outputs['artifact-id'] }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: bash scripts/check_ci_xcode27.sh
       - name: Select iPhone
@@ -233,7 +233,7 @@ jobs:
       CI_IPHONE_NAME: iPhone 17
       REQUIRE_CURRENT_STOREKIT: ${{ inputs.require_current_storekit }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then

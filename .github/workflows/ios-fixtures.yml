@@ -45,7 +45,7 @@ jobs:
       build_contributor: ${{ steps.plan.outputs.build_contributor }}
       build_dinner: ${{ steps.plan.outputs.build_dinner }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate fixture coverage and balanced contributor groups
         id: plan
         env:
@@ -75,7 +75,7 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
       workspace: ${{ github.workspace }}
     steps: &fixture-build-steps
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require the reviewed Xcode 27.1 toolchain
         run: &fixture-toolchain-preflight |
           if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
@@ -221,7 +221,7 @@ jobs:
       FIXTURE_PROFILE: ${{ matrix.profile }}
       TEST_SHARD: ${{ matrix.shard }}
     steps: &fixture-test-steps
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         # Test products and selectors come from the build artifact. Keep UI
         # sources available for mapping XCTest failures in the result reports.
         with:
@@ -407,5 +407,5 @@ jobs:
     env:
       JOB_RESULTS: ${{ toJSON(needs) }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: python3 scripts/select_ios_fixture_work.py --check-results
