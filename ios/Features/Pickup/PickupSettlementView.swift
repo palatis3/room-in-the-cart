@@ -8,9 +8,18 @@ struct PickupSettlementView: View {
     @State private var evidence = ""
     @State private var creditID = ""
     @State private var charge = ""
+    @State private var holdKey = ""
+    private enum Field { case amount, evidence, creditID }
+    @FocusState private var field: Field?
     @State private var date = Date()
     @State private var entryID = UUID()
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
+    private var openHolds: [SettlementEntry] {
+        let entries = model.journey?.settlement.entries ?? []
+        let released = Set(entries.compactMap(\.holdEvidenceKey))
+        return entries.filter { $0.kind == .paymentHold && !released.contains($0.evidenceKey) }
+    }
+    private var selectedHold: SettlementEntry? { openHolds.first { $0.evidenceKey == holdKey } }
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
@@ -45,25 +54,30 @@ struct PickupSettlementView: View {
                     Text(pTr("Posted credit")).tag(SettlementKind.postedCredit)
                     Text(pTr("Credit already included in net charge")).tag(SettlementKind.includedCredit)
                 }
-                PickupEvidenceField(title: "Amount", amount: $amount)
+                if kind == .holdRelease {
+                    Picker(pTr("Original payment hold"), selection: $holdKey) {
+                        Text(pTr("Choose a hold")).tag("")
+                        ForEach(openHolds) { entry in
+                            Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey)
+                        }
+                    }
+                    if let selectedHold { LabeledContent(pTr("Amount"), value: pMoney(selectedHold.amount)) }
+                } else {
+                    PickupEvidenceField(title: "Amount", amount: $amount).focused($field, equals: .amount)
+                }
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
                 if isCredit {
                     TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .creditID)
                     Picker(pTr("Original posted charge"), selection: $charge) {
                         Text(pTr("Choose a charge")).tag("")
                         ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
                     }
                 }
-                if kind == .holdRelease {
-                    Picker(pTr("Original payment hold"), selection: $charge) {
-                        Text(pTr("Choose a hold")).tag("")
-                        ForEach(model.journey?.settlement.entries.filter { $0.kind == .paymentHold } ?? []) { entry in
-                            Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey)
-                        }
-                    }
-                }
                 DatePicker(pTr("Evidence date"), selection: $date)
                 Button(pTr("Save financial evidence")) { save() }
+                    .disabled(model.hasPendingSave || (kind == .holdRelease && selectedHold == nil))
             }
             Section(pTr("Saved financial records")) {
                 ForEach(model.journey?.settlement.entries ?? []) { entry in
@@ -88,15 +102,26 @@ struct PickupSettlementView: View {
             }
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
+        .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
+        .onChange(of: kind) { _, _ in holdKey = "" }
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
             .disabled(model.saving)
     }
     private func save() {
         do {
-            guard let money = try ComparisonModel.money(amount), !evidence.isEmpty,
+            let recordedAmount = kind == .holdRelease ? selectedHold?.amount : try ComparisonModel.money(amount)
+            guard let money = recordedAmount, !evidence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !isCredit || (!creditID.isEmpty && !charge.isEmpty) else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let entry = SettlementEntry(id: entryID, evidenceKey: evidence, kind: kind, amount: money, occurredAt: date, creditID: isCredit ? creditID : nil, chargeEvidenceKey: isCredit ? charge : nil, holdEvidenceKey: kind == .holdRelease ? charge : nil)
-            Task { if await model.settle(entry) { entryID = UUID(); amount = ""; evidence = "" } }
+            let entry = SettlementEntry(id: entryID, evidenceKey: evidence, kind: kind, amount: money, occurredAt: date, creditID: isCredit ? creditID : nil, chargeEvidenceKey: isCredit ? charge : nil, holdEvidenceKey: kind == .holdRelease ? selectedHold?.evidenceKey : nil)
+            Task {
+                if await model.settle(entry) {
+                    entryID = UUID()
+                    amount = ""
+                    evidence = ""
+                    holdKey = ""
+                    field = nil
+                }
+            }
         } catch { model.error = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.") }
     }
 }
