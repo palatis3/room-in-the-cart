@@ -1,5 +1,21 @@
 # Local CI validation
 
+## November 13 GitHub fixture startup
+
+Across four full runs before simulator boot overlapped artifact transfer, the six
+GitHub-hosted fixture jobs took a median 91 seconds from download start to boot
+completion (24 observations). Across the next four comparable runs that median
+was 272.5 seconds (24 observations). In the latest batch, three restores alone
+took 212–281 seconds. The English skipped-dinner Undo job logged 197 seconds
+inside archive extraction and four seconds placing and validating its selectors.
+
+GitHub-hosted fixture jobs now finish restoring their products before starting
+the simulator. Bitrise fixture jobs still start it during transfer. Measure the
+same download-to-boot interval and the last required gate on the next full run.
+[Earlier fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43347397950)
+· [Subsequent fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43383423697)
+· [Undo extraction log](https://github.com/palatis3/room-in-the-cart/actions/runs/43390234553/job/131770559537)
+
 ## November 13 simulator test downloads
 
 The core and fixture producers omit top-level object files and Swift compiler

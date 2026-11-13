@@ -82,7 +82,20 @@ exit 72
                 self.assertEqual(sorted((select, start, download, restore, wait, test, cleanup)),
                                  [select, start, download, restore, wait, test, cleanup])
                 self.assertEqual(steps[wait]["timeout-minutes"], 8)
-                self.assertEqual(steps[wait]["if"], "${{ !cancelled() }}")
+                starters = [i for i, s in enumerate(steps) if s.get("run") == steps[start]["run"]]
+                if workflow == "ios-fixtures.yml":
+                    early, late = starters
+                    self.assertLess(restore, late)
+                    self.assertLess(late, wait)
+                    self.assertEqual(steps[early]["if"], "runner.environment == 'self-hosted'")
+                    self.assertEqual(steps[late]["if"], "runner.environment != 'self-hosted'")
+                    for i in starters:
+                        self.assertFalse(steps[i].get("continue-on-error", False))
+                    self.assertEqual(steps[wait]["if"], "${{ !cancelled() && (steps." + steps[early]["id"] +
+                                     ".outcome == 'success' || steps." + steps[late]["id"] + ".outcome == 'success') }}")
+                else:
+                    self.assertEqual(starters, [start])
+                    self.assertEqual(steps[wait]["if"], "${{ !cancelled() }}")
                 for step in (steps[start], steps[wait], steps[test]):
                     self.assertFalse(step.get("continue-on-error", False))
 
