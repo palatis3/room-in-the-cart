@@ -98,11 +98,15 @@ final class NativeServiceWireTests: XCTestCase {
             let period = try HistoryBudgetPeriod(title: "Dos compras", startsAt: date.string(from: Date().addingTimeInterval(-86400)),
                 endsAt: date.string(from: Date().addingTimeInterval(86400)), timeZoneId: "America/New_York",
                 shopBudgetMinor: 50000, alreadyExcludedReserveMinor: 0, shopIds: [shop, other], reservations: [], reviewedCompleteAt: nil)
+            let selectedSources = try await service.historyOwnedShops()
+            XCTAssertEqual(selectedSources.shops.map(\.shopId), [shop])
             do {
                 _ = try await service.prepareBudgetPeriod(period, baseRevision: 0)
                 XCTFail("The selected shop must not authorize a second shop.")
             } catch ClientError.service(status: 404, code: "unavailable", correlationID: _, retryAfter: _) { }
             _ = try await service.selectShop(nil)
+            let overviewSources = try await service.historyOwnedShops()
+            XCTAssertTrue(Set([shop, other]).isSubset(of: Set(overviewSources.shops.map(\.shopId))))
             let pending = try await service.prepareBudgetPeriod(period, baseRevision: 0)
             let receipt = try await service.executeBudgetPeriod(pending)
             let retained = try await service.savedBudgetPeriod(periodID: receipt.periodId)

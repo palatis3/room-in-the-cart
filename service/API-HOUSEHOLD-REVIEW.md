@@ -16,7 +16,7 @@ Each management mutation binds `(household, actor, clientKey)` to the canonical 
 
 ## Shop selection
 
-`GET /v1/households/{h}/shops?scope=active|owned&cursor={shopId}` returns `ShopPage`, bounded at 50 rows. Active returns active shops independently available for contributing or shopping; owned returns only shops where the caller is the current adult shopper, including closed shops. It contains dates/phases and own shopper revisions, never quotes, line text, prices or hidden-shop counts. A helper-only member without shopper/contributor authority gets no shop enumeration, and selected helper contexts cannot use this route.
+`GET /v1/households/{h}/shops?scope=active|owned|history-owned&cursor={shopId}` returns `ShopPage`, bounded at 50 rows. Active returns active shops independently available for contributing or shopping; owned returns only shops where the caller is the current adult shopper, including closed shops. The history-owned scope additionally excludes retired history and respects the selected pickup. The page contains dates/phases and own shopper revisions, never quotes, line text, prices or hidden-shop counts. A helper-only member without shopper/contributor authority gets no shop enumeration, and selected helper contexts cannot use this route.
 
 Native sends `X-Shop-ID: <uuid>` on selected-shop requests. It is distinct from, and incompatible with, `X-View-Grant-ID`. The service validates current access at each authorization, and shop-specific reads/commands must match the selection. Unknown, inaccessible or stale membership cannot fall back to a different shop. Remove the selection when explicitly creating a new shop; the new shop's UUID does not exist before creation.
 

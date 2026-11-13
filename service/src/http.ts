@@ -282,7 +282,7 @@ export function createHTTPServer(options:HTTPOptions) {
          if(financial[2]==='financial-reviews'&&method==='POST')return history.review(ctx,shopId,financialReviewSchema.parse(payload));
          if(financial[2]==='history-retire'&&method==='POST')return history.retire(ctx,shopId,historyRetireSchema.parse(payload));
         }
-        if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
+        if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned','history-owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
         const replacement=/^\/views\/([^/]+)\/replacements$/.exec(path);
         if(replacement&&method==='POST')return helperReview.replace(ctx,uuid.parse(replacement[1]),viewReplacementSchema.parse(payload));
         const proposalStatus=/^\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(path);

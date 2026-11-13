@@ -110,7 +110,7 @@ extension HouseholdClientTests {
             if path.hasSuffix("/price-observations/\(observation.id)") { return (200, try JSONSerialization.data(withJSONObject: ["observation": self.historyObject(observation)])) }
             if path.hasSuffix("/budget-periods") { return (200, try encoded(HistoryBudgetPeriodPage(periods: [.init(periodId: self.historyPeriod, revision: 1, updatedAt: self.historyDate)], nextCursor: nil))) }
             if path.hasSuffix("/record") { return (200, try encoded(HistorySavedBudgetPeriod(periodId: self.historyPeriod, revision: 1, period: self.historyPlan()))) }
-            XCTAssertEqual(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems, [.init(name: "scope", value: "owned")])
+            XCTAssertEqual(URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems, [.init(name: "scope", value: "history-owned")])
             return (200, try encoded(HistoryOwnedShopPage(shops: [.init(shopId: self.historyShop, createdAt: self.historyDate, phase: "closed", revision: 3, authorityEpoch: 2)], nextCursor: nil)))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)

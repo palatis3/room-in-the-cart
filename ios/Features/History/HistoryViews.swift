@@ -86,6 +86,9 @@ struct HistoryEntryView: View {
         } message: {
             Text(HistoryCopy.text("Current access and saved status will be checked first. Clearing a retry does not undo a write already received. Exact retry is the way to recover the original receipt."))
         }
+        .onChange(of: model.ownedShops) { _, shops in
+            if !shops.contains(where: { $0.shopId == selectedShop }) { selectedShop = "" }
+        }
         .onChange(of: useStartDate) { _, enabled in model.filter.from = enabled ? startDate : nil }
         .onChange(of: useEndDate) { _, enabled in model.filter.through = enabled ? endDate : nil }
         .onChange(of: startDate) { _, value in if useStartDate { model.filter.from = value } }
@@ -298,9 +301,8 @@ struct HistoryEntryView: View {
         Section(HistoryCopy.text("Assigned shops")) {
             shopPicker(selection: $selectedShop)
             Button(HistoryCopy.text("Assign selected shop")) {
-                guard !selectedShop.isEmpty, !(model.periodDraft?.shopIDs.contains(selectedShop) ?? true) else { return }
-                model.periodDraft?.shopIDs.append(selectedShop)
-            }.disabled(model.busy || selectedShop.isEmpty || (model.periodDraft?.shopIDs.count ?? 100) >= 100).frame(minHeight: 44)
+                model.assignPeriodShop(selectedShop)
+            }.disabled(!model.canAssignPeriodShop(selectedShop)).frame(minHeight: 44)
             ForEach(model.periodDraft?.shopIDs ?? [], id: \.self) { id in
                 HStack {
                     Text(id).font(.caption).textSelection(.enabled)

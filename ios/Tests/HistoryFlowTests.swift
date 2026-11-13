@@ -147,6 +147,22 @@ import HouseholdClient
         await model.applyReviewed(); XCTAssertTrue(service.observationSends.isEmpty)
         let state = await store.read(); XCTAssertTrue(state.pending.isEmpty)
     }
+    func testPeriodAssignmentRejectsAStaleSelectionAfterSourcesRefresh() async throws {
+        let (model, service, _, _) = try await setup()
+        model.beginPeriod()
+        model.periodDraft?.shopIDs = []
+        XCTAssertTrue(model.canAssignPeriodShop(shop))
+        service.ownedSources = []
+        await model.loadOwnedShops()
+        model.assignPeriodShop(shop)
+        XCTAssertEqual(model.periodDraft?.shopIDs, [])
+        service.ownedSources = nil
+        await model.loadOwnedShops()
+        model.assignPeriodShop(shop)
+        model.assignPeriodShop(shop)
+        XCTAssertEqual(model.periodDraft?.shopIDs, [shop])
+        XCTAssertFalse(model.canAssignPeriodShop(shop))
+    }
     func testSavedPeriodUsesFreshPagedOwnershipForRawAndCalculatedEditActions() async throws {
         let (model, service, _, _) = try await setup()
         let owned = try await service.historyOwnedShops(cursor: nil)

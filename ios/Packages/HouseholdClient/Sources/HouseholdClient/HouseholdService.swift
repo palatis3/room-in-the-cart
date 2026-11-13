@@ -941,7 +941,7 @@ public actor HouseholdService {
         }
     }
     public func historyOwnedShops(cursor: String? = nil) async throws -> HistoryOwnedShopPage {
-        let query = try [.init(name: "scope", value: "owned")] + historyCursor(cursor)
+        let query = try [.init(name: "scope", value: "history-owned")] + historyCursor(cursor)
         let page: HistoryOwnedShopPage = try await historyRead("shops", query: query)
         try validateHistoryPage(ids: page.shops.map(\.shopId), next: page.nextCursor, cursor: cursor, limit: 50)
         guard page.shops.allSatisfy({ $0.role == "shopper" && ["draft", "frozen", "placed", "closed"].contains($0.phase) && $0.revision > 0 && $0.authorityEpoch > 0 && HistoryValidation.date($0.createdAt) != nil }) else { throw ClientError.invalidResponse }

@@ -184,11 +184,30 @@ export class HouseholdRepository {
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
-  async shops(ctx:Context,scope:'active'|'owned',after:string|null){
+  async shops(ctx:Context,scope:'active'|'owned'|'history-owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
-    let cursor:string|undefined;
-    if(after){const record=(await ctx.db.query("SELECT created_at::text AS created_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ($3='active' AND phase<>'closed' AND (shopper_id=$4 OR $5::boolean OR EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=ritc.shop.household_id AND g.shop_id=ritc.shop.shop_id AND g.member_id=$4 AND g.enabled AND g.authority_epoch=ritc.shop.authority_epoch)) OR $3='owned' AND shopper_id=$4)",[ctx.householdId,after,scope,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows[0];if(!record)throw unavailable();cursor=record.created_at;}
-    const rows=(await ctx.db.query("SELECT shop_id,shopper_id,created_at,phase,revision,authority_epoch FROM ritc.shop WHERE household_id=$1 AND ($2='active' AND phase<>'closed' AND (shopper_id=$3 OR $6::boolean OR EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=ritc.shop.household_id AND g.shop_id=ritc.shop.shop_id AND g.member_id=$3 AND g.enabled AND g.authority_epoch=ritc.shop.authority_epoch)) OR $2='owned' AND shopper_id=$3) AND ($4::timestamptz IS NULL OR (created_at,shop_id)<($4,$5::uuid)) ORDER BY created_at DESC,shop_id DESC LIMIT 51",[ctx.householdId,scope,ctx.member.member_id,cursor??null,after,ctx.member.can_contribute||ctx.member.organizer])).rows;
+    const values:unknown[]=[ctx.householdId,ctx.member.member_id];
+    let visible='s.shopper_id=$2';
+    if(scope==='active'){
+      visible=`s.phase<>'closed' AND (s.shopper_id=$2 OR $3::boolean OR EXISTS(
+        SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id
+        AND g.member_id=$2 AND g.enabled AND g.authority_epoch=s.authority_epoch))`;
+      values.push(ctx.member.can_contribute||ctx.member.organizer);
+    }else if(scope==='history-owned'){
+      visible+=' AND s.history_retired_at IS NULL AND ($3::uuid IS NULL OR s.shop_id=$3)';
+      values.push(ctx.selectedShopId??null);
+    }
+    const source=`FROM ritc.shop s WHERE s.household_id=$1 AND ${visible}`;
+    let boundary='';
+    if(after){
+      const cursorValues=[...values,after];
+      const record=(await ctx.db.query(`SELECT s.created_at::text AS created_at ${source} AND s.shop_id=$${cursorValues.length}`,cursorValues)).rows[0];
+      if(!record)throw unavailable();
+      values.push(record.created_at,after);
+      boundary=` AND (s.created_at,s.shop_id)<($${values.length-1}::timestamptz,$${values.length}::uuid)`;
+    }
+    const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch
+      ${source}${boundary} ORDER BY s.created_at DESC,s.shop_id DESC LIMIT 51`,values)).rows;
     return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
   private get carryNotice() {return this.options.allowChildNetwork?this.options.noticeVersion:null;}

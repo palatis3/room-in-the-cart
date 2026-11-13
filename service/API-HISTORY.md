@@ -18,7 +18,8 @@ All `{h}` paths are `/v1/households/{h}`. POST mutations require the existing br
 
 | Route | Input | Result |
 |---|---|---|
-| `GET /history-readable-shops?cursor={shopId}` | — | `{shopIds:UUID[],nextCursor}`. Free discovery of at most 50 current budget-readable, nonretired sources. Only permitted IDs are returned, with selected-shop narrowing. A revoked, foreign or out-of-scope cursor is rejected. It does not change `GET /shops?scope=owned`, which still supplies the shopper-only mutation picker. |
+| `GET /history-readable-shops?cursor={shopId}` | — | `{shopIds:UUID[],nextCursor}`. Free discovery of at most 50 current budget-readable, nonretired sources. Only permitted IDs are returned, with selected-shop narrowing. A revoked, foreign or out-of-scope cursor is rejected. |
+| `GET /shops?scope=history-owned&cursor={shopId}` | — | Shopper-only history picker. Returns up to 50 current, nonretired assigned shops, including closed pickups. A selected pickup narrows both discovery and pagination. |
 | `GET /shops/{s}/financial-evidence?cursor={entryId}` | — | `FinancialPage`, at most 50 entries and the current `SourceVersion`. Free/current budget reader. |
 | `POST /shops/{s}/financial-evidence` | `FinancialAppend` | `FinancialAppendReceipt`. Free/manual evidence. |
 | `POST /shops/{s}/financial-reviews` | `FinancialReview` | `FinancialReviewReceipt`. `allEvidenceEntered:true` requires paid tools; closing alone is Free. |

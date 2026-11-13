@@ -91,6 +91,41 @@ test('Free readable-shop discovery pages only current permitted sources and pres
  const foreign=await fixture();assert.notEqual((await call(foreign.owner,f.base+'/history-readable-shops')).status,200);
 });
 
+test('history picker pages current writable shops and narrows rows and cursors to the selected pickup',async()=>{
+ const f=await fixture(),path=f.base+'/shops?scope=history-owned',ids=[f.shopId];
+ for(let n=0;n<51;n++)ids.push(await f.shop());
+ const closed=ids[1];
+ ok(await call(f.owner,f.base+`/shops/${closed}/financial-reviews`,'POST',{
+  clientKey:randomUUID(),sourceVersion:await f.version(closed),allEvidenceEntered:false,closeShop:true
+ }));
+ const retired=ids[2];
+ ok(await call(f.owner,f.base+`/shops/${retired}/history-retire`,'POST',{
+  clientKey:randomUUID(),sourceVersion:await f.version(retired),confirm:true
+ }));
+ const first=ok(await call(f.owner,path));
+ assert.equal(first.shops.length,50);
+ assert.equal(first.nextCursor,first.shops.at(-1).shopId);
+ const next=ok(await call(f.owner,path+'&cursor='+first.nextCursor));
+ assert.equal(next.nextCursor,null);
+ const rows=[...first.shops,...next.shops];
+ assert.deepEqual(rows.map(s=>s.shopId).sort(),ids.filter(id=>id!==retired).sort());
+ assert.equal(rows.find(s=>s.shopId===closed).phase,'closed');
+ const selected={'X-Shop-ID':f.shopId};
+ assert.deepEqual(ok(await call(f.owner,path,'GET',undefined,selected)).shops.map(s=>s.shopId),[f.shopId]);
+ assert.equal((await call(f.owner,path+'&cursor='+closed,'GET',undefined,selected)).status,404);
+ assert.equal((await call(f.owner,path+'&cursor='+retired)).status,404);
+ assert.deepEqual(ok(await call(f.owner,path,'GET',undefined,{'X-Shop-ID':retired})),{shops:[],nextCursor:null});
+ // Ordinary shop switching keeps its original scope, including a retired shop's non-history work.
+ for(const scope of ['owned','active']){
+  const picker=f.base+'/shops?scope='+scope;
+  const head=ok(await call(f.owner,picker,'GET',undefined,selected));
+  const tail=ok(await call(f.owner,picker+'&cursor='+head.nextCursor,'GET',undefined,selected));
+  const expected=scope==='active'?ids.filter(id=>id!==closed):ids;
+  assert.deepEqual([...head.shops,...tail.shops].map(s=>s.shopId).sort(),[...expected].sort());
+ }
+ const reader=await joinAdult(f);await budgetGrant(f,f.owner,reader);
+ assert.deepEqual(ok(await call(reader,path)),{shops:[],nextCursor:null});
+});
 test('a saved period regains full read scope through an explicit grant and loses all envelope signals on revocation',async()=>{
  const f=await fixture();await f.paid();const second=await f.shop(20000),p=period([f.shopId,second]);
  const input={clientKey:randomUUID(),baseRevision:0,period:p};ok(await call(f.owner,f.base+'/budget-periods','POST',input));

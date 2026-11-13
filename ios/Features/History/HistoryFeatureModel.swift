@@ -227,6 +227,15 @@ enum HistoryReviewedWrite: Equatable {
         periodAnalysis = nil
         cancelReview()
     }
+    func canAssignPeriodShop(_ id: String) -> Bool {
+        guard canEdit, let draft = periodDraft, draft.shopIDs.count < 100,
+              !ownedCurrentShop(id).isEmpty else { return false }
+        return !draft.shopIDs.contains { $0.lowercased() == id.lowercased() }
+    }
+    func assignPeriodShop(_ id: String) {
+        guard canAssignPeriodShop(id) else { return }
+        periodDraft?.shopIDs.append(id)
+    }
     func editSelectedPeriod() { guard canEditSelectedPeriod, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
     func reviewObservation() {
         guard canReviewObservation else { return }
