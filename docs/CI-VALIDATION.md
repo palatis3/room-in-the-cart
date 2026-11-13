@@ -23,9 +23,10 @@ on the next combined run. A local cold iOS 27.0/24A434 simulator returned from s
 allowed independent archive creation to finish at 0.129 seconds and confirmed
 boot at 25.474 seconds. This verifies overlap, not hosted transfer performance.
 All 1,000 offline CI checks and workflow validation passed. Local evidence is
-recorded in `.build/ConsumerBootNov12`; do not launch a full repeat solely for this change
-while the known English expired-quote fixture still needs its calendar dismissal
-correction.
+recorded in `.build/ConsumerBootNov12`. The subsequent calendar-dismissal
+correction passed both original English and Spanish journeys under
+`.build/FoodCalendar94dNov12/local`; include both changes in the next combined
+regression instead of launching a separate full repeat for startup alone.
 
 ## Current development priority — November 12
 

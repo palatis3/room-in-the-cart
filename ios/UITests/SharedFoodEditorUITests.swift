@@ -149,7 +149,19 @@ import XCTest
         XCTAssertEqual(days.count, 1, "The native date must have exactly one matching calendar cell")
         let day = days.firstMatch
         tap(day)
-        if day.exists && day.isHittable { app.navigationBars.firstMatch.tap() }
+        if day.exists {
+            // The compact calendar can overlap the navigation bar. Use the
+            // visible margin beside the actual calendar instead of asking
+            // XCTest to scroll an obscured navigation bar into view.
+            let calendar = app.datePickers.containing(.button, identifier: "DatePicker.NextMonth").firstMatch
+            XCTAssertTrue(calendar.exists)
+            let bounds = app.frame, calendarFrame = calendar.frame
+            let point = CGPoint(x: bounds.maxX - 12, y: calendarFrame.midY)
+            XCTAssertTrue(bounds.contains(point))
+            XCTAssertFalse(calendarFrame.insetBy(dx: -8, dy: -8).contains(point), "Expected a clear margin beside the calendar")
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
+        }
         XCTAssertTrue(day.waitForNonExistence(timeout: 5))
     }
     /// Pure Foundation controls run before either UI journey. They exercise the
