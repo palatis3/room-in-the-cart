@@ -139,8 +139,8 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
-          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
-          xcodebuild -xctestrun "${test_runs[0]}" \
+          # The build step already waited for this simulator. Both fixture profiles run UI tests.
+          xcodebuild -xctestrun "${test_runs[0]}" -only-testing:RoomInTheCartUITests \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
             -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
             -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building \
