@@ -518,10 +518,18 @@ jobs:
           set -o pipefail
           configuration=Debug
           bash scripts/record_ios_build_receipt.sh "$configuration" "$REQUESTED_IOS_SCOPE"
+          # Discovery needs a ready simulator, but compilation can run during boot.
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
+          boot_pid=$!
+          build_status=0
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing \
-            2>&1 | tee .build/ios-build-evidence/build.log
+            2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
+          boot_status=0
+          wait "$boot_pid" || boot_status=$?
+          if (( build_status != 0 )); then exit "$build_status"; fi
+          exit "$boot_status"
       - name: Verify the compiled simulator app
         run: python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
       - name: Discover compiled tests and balance UI groups

@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = Path(".build/ios-build-evidence")
 DEVELOPER_DIR = "/Applications/Xcode_27.1.app/Contents/Developer"
 SOURCE_SHA = "0123456789abcdef0123456789abcdef01234567"
+SIMULATOR_ID = "8C9F4118-331E-4250-B1FC-194972BA6726"
 CASES = (
     ("ci.yml", "ios-build", "REQUESTED_IOS_SCOPE", "full", None),
     ("ci.yml", "ios-build", "REQUESTED_IOS_SCOPE", "dinner", None),
@@ -25,7 +26,7 @@ class IOSBuildEvidenceTests(unittest.TestCase):
     def steps(self, workflow, job):
         return parse_workflow(ROOT / ".github/workflows" / workflow)[0]["jobs"][job]["steps"]
 
-    def run_build(self, steps, profile_variable, profile, exit_code, version_exit_code=0):
+    def run_build(self, steps, profile_variable, profile, exit_code, version_exit_code=0, boot_exit_code=0):
         build = next(step for step in steps if step.get("id") == "build")
         self.assertEqual(build["shell"], "bash")
         self.assertFalse(build.get("continue-on-error"))
@@ -34,7 +35,20 @@ class IOSBuildEvidenceTests(unittest.TestCase):
             (checkout / "scripts").symlink_to(ROOT / "scripts", target_is_directory=True)
             # Use the current interpreter, bypassing the macOS Xcode-dependent /usr/bin shim.
             (checkout / "python3").symlink_to(sys.executable)
-            tools = {"git": """#!/bin/sh
+            # Gate each stub on the other's start. A serialized build fails promptly.
+            rendezvous = """#!/bin/bash
+touch "$1"
+for (( attempt = 0; attempt < 50; attempt++ )); do
+    [ -f "$2" ] && exit 0
+    sleep 0.1
+done
+exit 72
+"""
+            tools = {"rendezvous": rendezvous, "xcrun": """#!/bin/sh
+[ "$*" = "simctl bootstatus $SIMULATOR_ID -b" ] || exit 2
+rendezvous boot-started compiler-started || exit $?
+exit "$FAKE_BOOT_EXIT"
+""", "git": """#!/bin/sh
 test "$*" = 'rev-parse --verify HEAD' || exit 2
 printf '%s\n' "$CHECKOUT_SHA"
 """, "xcodebuild": """#!/bin/sh
@@ -42,6 +56,7 @@ if [ "$1" = -version ]; then
     printf 'Xcode 27.1\nBuild version 27A9275\n'
     exit "$FAKE_VERSION_EXIT"
 fi
+rendezvous compiler-started boot-started || exit $?
 printf '%s\n' "$@" > build-args.txt
 printf 'build stdout\n'
 printf 'build stderr\n' >&2
@@ -58,14 +73,15 @@ exit "$FAKE_BUILD_EXIT"
                 "GITHUB_RUN_ID": "12345",
                 "GITHUB_RUN_ATTEMPT": "2",
                 "DEVELOPER_DIR": DEVELOPER_DIR,
-                "SIMULATOR_ID": "stub-iphone",
+                "SIMULATOR_ID": SIMULATOR_ID,
+                "FAKE_BOOT_EXIT": str(boot_exit_code),
                 profile_variable: profile,
                 "FAKE_BUILD_EXIT": str(exit_code),
                 "FAKE_VERSION_EXIT": str(version_exit_code),
             }
             # Use errexit but no implicit pipefail: the build step must enable pipefail itself.
             result = subprocess.run(["/bin/bash", "-e", "-c", build["run"]],
-                                    cwd=checkout, env=env, capture_output=True, text=True)
+                                    cwd=checkout, env=env, capture_output=True, text=True, timeout=15)
             files = {}
             for path in (EVIDENCE / "receipt.txt", EVIDENCE / "build.log", Path("build-args.txt")):
                 if (checkout / path).is_file():
@@ -86,13 +102,21 @@ exit "$FAKE_BUILD_EXIT"
                         f"profile={profile}", f"developer_dir={DEVELOPER_DIR}", "Xcode 27.1", "Build version 27A9275",
                     ])
                     args = ["-project", "ios/RoomInTheCart.xcodeproj", "-scheme", "RoomInTheCart",
-                            "-configuration", "Debug", "-destination", "platform=iOS Simulator,id=stub-iphone"]
+                            "-configuration", "Debug", "-destination", f"platform=iOS Simulator,id={SIMULATOR_ID}"]
                     if conditions:
                         args += ["-parallel-testing-enabled", "NO"]
                     args += ["-jobs", "2", "-derivedDataPath", ".build/DerivedData", "CODE_SIGN_IDENTITY=-"]
                     if conditions:
                         args += [f"SWIFT_ACTIVE_COMPILATION_CONDITIONS={conditions}"]
                     self.assertEqual(files["build-args.txt"], args + ["build-for-testing"])
+
+    def test_boot_failure_blocks_publication_and_does_not_mask_compiler_errors(self):
+        for workflow, job, variable, profile, _ in CASES:
+            for build_status in (0, 65):
+                with self.subTest(job=job, profile=profile, build_status=build_status):
+                    result, _ = self.run_build(self.steps(workflow, job), variable, profile,
+                                               build_status, boot_exit_code=70)
+                    self.assertEqual(result.returncode, build_status or 70, result)
 
     def test_receipt_failure_prevents_build(self):
         for workflow, job, profile_variable, profile, _ in CASES:

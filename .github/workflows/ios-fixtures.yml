@@ -120,11 +120,19 @@ jobs:
           configuration=Debug
           bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
           conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
+          # Discovery needs a ready simulator, but compilation can run during boot.
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
+          boot_pid=$!
+          build_status=0
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
             CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
-            2>&1 | tee .build/ios-build-evidence/build.log
+            2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
+          boot_status=0
+          wait "$boot_pid" || boot_status=$?
+          if (( build_status != 0 )); then exit "$build_status"; fi
+          exit "$boot_status"
       - name: Enumerate compiled tests and package fixture products
         shell: bash
         run: |
