@@ -553,7 +553,7 @@ struct RecordsToolsView: View {
                         .accessibilityLabel(recordsText("Selected reduced source photo"))
                         .accessibilityIdentifier("records.mediaImage." + attachment.id)
                 }
-                Text(source.originalText).textSelection(.enabled).accessibilityIdentifier("records.mediaWording." + attachment.id)
+                SourceReferenceWording(source: source, originalIdentifier: "records.mediaWording." + attachment.id)
                 if let barcode = source.barcode { Text(barcode.value).textSelection(.enabled) }
                 ForEach(source.receiptLines) { row in
                     VStack(alignment: .leading) {

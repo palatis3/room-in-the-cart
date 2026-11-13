@@ -22,7 +22,7 @@ import UIKit
         let bytes = try RecordsNativeCodec.canonical(LedgerDocument(workspace: workspace))
         let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: workspaceID, containerID: shop.id,
             objectID: shop.lines[0].id, revision: Int64(shop.revision), kind: .packageReference),
-            originalText: "Private package wording", reviewedLabel: "Rice reference", imageJPEG: nil,
+            originalText: "Private package wording", reviewedText: "Corrected private wording", reviewedLabel: "Rice reference", imageJPEG: nil,
             barcode: CapturedBarcode(symbology: "manual", value: "12345"), receiptLines: [], capturedAt: Date(timeIntervalSince1970: 100))
         let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + workspaceID.uuidString,
             revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title, savedAtMilliseconds: 100_000,

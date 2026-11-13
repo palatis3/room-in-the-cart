@@ -2937,6 +2937,23 @@
         }
       }
     },
+    "Reviewed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto revisado"
+          }
+        }
+      }
+    },
     "Reviewed line wording": {
       "localizations": {
         "en": {
