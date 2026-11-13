@@ -1,6 +1,15 @@
 import SwiftUI
 import CoreDomain
 
+private struct InvalidImportAmount {
+    let text: String
+    let unit: UnitOfMeasure
+}
+
+private enum LedgerImportField: Hashable {
+    case original, name(UUID), amount(UUID)
+}
+
 struct LedgerImportView: View {
     @ObservedObject var model: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -13,6 +22,7 @@ struct LedgerImportView: View {
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
     @State private var choices: [UUID: ImportResolution] = [:]
+    @State private var invalidAmounts: [UUID: InvalidImportAmount] = [:]
     @State private var explicitSeparate: Set<UUID> = []
     @State private var matchesAreCurrent = true
     @State private var source: ImportSource = .typed
@@ -21,7 +31,7 @@ struct LedgerImportView: View {
     @State private var captureBinding: LedgerCaptureBinding?
     @State private var capturePresentation: LedgerCapturePresentation?
     @ScaledMetric(relativeTo: .body) private var importEditorHeight: CGFloat = 180
-    @FocusState private var originalFocused: Bool
+    @FocusState private var inputFocus: LedgerImportField?
     private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
@@ -45,6 +55,8 @@ struct LedgerImportView: View {
                     Section {
                         ForEach(Array(preview.lines.enumerated()), id: \.element.id) { index, row in
                             LedgerImportRowView(number: index + 1, line: rowBinding(row, at: index, previewID: preview.id),
+                                                inputFocus: $inputFocus, invalidAmount: Binding(get: { invalidAmounts[row.id] },
+                                                    set: { invalidAmounts[row.id] = $0 }),
                                                 matches: review.matches[row.id] ?? [],
                                                 choice: Binding(get: { review.choices[row.id] },
                                                                 set: { setChoice($0, for: row.id) }),
@@ -68,7 +80,7 @@ struct LedgerImportView: View {
                         Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
-                            .focused($originalFocused)
+                            .focused($inputFocus, equals: .original)
                             .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                         PasteButton(payloadType: String.self) { values in
                             original = values.joined(separator: "\n")
@@ -82,9 +94,10 @@ struct LedgerImportView: View {
                         Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
                         Button(ledgerText("Review list")) {
                             guard let shop else { return }
-                            originalFocused = false
+                            inputFocus = nil
                             do {
                                 let staged = try shop.stageImport(text: original, source: source, importID: importID)
+                                invalidAmounts = [:]
                                 preview = staged
                                 choices = LedgerImportReview.initialChoices(staged)
                                 explicitSeparate = []
@@ -118,7 +131,7 @@ struct LedgerImportView: View {
                             .background(Theme.canvas)
                     }
                 }
-                .keyboardDoneAction(visible: originalFocused, title: ledgerText("Done")) { originalFocused = false }
+                .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
                 .interactiveDismissDisabled(model.saving)
                 .sheet(item: $capturePresentation) { presentation in
@@ -164,7 +177,8 @@ struct LedgerImportView: View {
     }
 
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
-        Button(ledgerText("Add reviewed list")) {
+        let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
+        return Button(ledgerText("Add reviewed list")) {
             Task {
                 guard captured == nil || captureAuthorized else {
                     model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
@@ -175,7 +189,7 @@ struct LedgerImportView: View {
                     dismiss()
                 } else { focus = .status }
             }
-        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete)
+        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection)
             .accessibilityIdentifier("ledgerCommitImport")
     }
 
@@ -194,7 +208,7 @@ struct LedgerImportView: View {
     private var captureAuthorized: Bool { captureBinding != nil && liveCaptureBinding == captureBinding }
     private func beginCapture() {
         guard let binding = liveCaptureBinding, let shop, !model.saving, !model.hasPendingSave else { return }
-        originalFocused = false
+        inputFocus = nil
         capturePresentation = LedgerCapturePresentation(binding: binding, destination: shop.title,
             text: original, source: source == .paste ? .paste : .typed, reviewed: captured)
     }
@@ -206,6 +220,7 @@ struct LedgerImportView: View {
             captureBinding = binding
             captured = capture; importID = capture.id; original = capture.originalText
             source = staged.preview.source; preview = staged.preview
+            invalidAmounts = [:]
             choices = LedgerImportReview.initialChoices(staged.preview)
             explicitSeparate = []
             matchesAreCurrent = true
@@ -218,6 +233,7 @@ struct LedgerImportView: View {
     private func invalidateCapture() {
         guard capturePresentation != nil || captureBinding != nil else { return }
         capturePresentation = nil; captured = nil; captureBinding = nil
+        invalidAmounts = [:]
         preview = nil; choices = [:]; original = ""; importID = UUID()
     }
 
@@ -389,19 +405,24 @@ struct LedgerPackLabelFacts: View {
 private struct LedgerImportRowView: View {
     let number: Int
     @Binding var line: StagedImportLine
+    let inputFocus: FocusState<LedgerImportField?>.Binding
+    @Binding var invalidAmount: InvalidImportAmount?
     let matches: [LedgerImportReview.Match]
     @Binding var choice: ImportResolution?
     let onEdited: () -> Void
     @State private var amount: String
     @State private var unit: UnitOfMeasure
-    init(number: Int, line: Binding<StagedImportLine>, matches: [LedgerImportReview.Match], choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
+    init(number: Int, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
+         invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match], choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
         self.number = number
         _line = line
+        self.inputFocus = inputFocus
+        _invalidAmount = invalidAmount
         self.matches = matches
         _choice = choice
         self.onEdited = onEdited
-        _amount = State(initialValue: line.wrappedValue.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: line.wrappedValue.quantity?.unit ?? .count)
+        _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? line.wrappedValue.quantity.map { ledgerAmountInput($0.amount) } ?? "")
+        _unit = State(initialValue: invalidAmount.wrappedValue?.unit ?? line.wrappedValue.quantity?.unit ?? .count)
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -416,14 +437,20 @@ private struct LedgerImportRowView: View {
                 Text(captureText("Destination") + ": " + capture.destination)
                 if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
             } else {
-            TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
-            TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
-                .accessibilityIdentifier("ledgerImportAmount-\(number)")
-            Picker(ledgerText("Unit"), selection: $unit) {
-                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
+                    .focused(inputFocus, equals: .name(line.id))
+                TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
+                    .focused(inputFocus, equals: .amount(line.id))
+                    .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                Picker(ledgerText("Unit"), selection: $unit) {
+                    ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
             }
-            }
-            if line.quantity == nil {
+            if invalidAmount != nil && choice != .skip {
+                Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
+                    .foregroundStyle(Theme.warning)
+                    .accessibilityIdentifier("ledgerImportAmountError-\(number)")
+            } else if line.quantity == nil {
                 Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
                 if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
             }
@@ -438,8 +465,15 @@ private struct LedgerImportRowView: View {
             .onChange(of: line.name) { _, _ in onEdited() }
     }
     private func updateQuantity() {
-        line.quantity = try? LedgerEntry.quantity(amount, unit)
-        line.unresolvedReason = line.quantity == nil ? "quantityUnknown" : nil
+        do {
+            line.quantity = try LedgerEntry.quantity(amount, unit)
+            line.unresolvedReason = line.quantity == nil ? "quantityUnknown" : nil
+            invalidAmount = nil
+        } catch {
+            invalidAmount = InvalidImportAmount(text: amount, unit: unit)
+            line.quantity = nil
+            line.unresolvedReason = nil
+        }
         onEdited()
     }
 }

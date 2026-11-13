@@ -121,7 +121,10 @@ import UIKit
         reveal(amount)
         let value = amount.value as? String
         XCTAssertTrue(value == "" || (value != nil && value == amount.placeholderValue))
-        fill("14", into: "ledgerImportAmount-1")
+        fill("1/0", into: "ledgerImportAmount-1")
+        XCTAssertFalse(element("ledgerCommitImport").isEnabled)
+        XCTAssertTrue(element("ledgerImportAmountError-1").exists)
+        fill("14", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect wraps"]
         reveal(food)
