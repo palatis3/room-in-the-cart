@@ -21,7 +21,7 @@ struct HouseholdSettingsView: View {
             }
             // Shop selection briefly clears the projection. Keep this destination
             // mounted while it rechecks the new scope before showing records.
-            if !model.locked, model.identity != nil {
+            if !model.locked, model.identity != nil, model.projection?.grantId == nil {
                 Section {
                     NavigationLink(HistoryCopy.text("Prices and period budgets")) {
                         HistoryRecordsEntryView(household: model)

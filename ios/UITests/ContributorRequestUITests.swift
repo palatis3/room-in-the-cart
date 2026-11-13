@@ -19,9 +19,10 @@ import XCTest
         ] {
             app.launchArguments = ["--ui-testing", "--helper-revision-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", language + "_US"]
             app.launch()
-            let open = app.buttons[entry]
-            XCTAssertTrue(open.waitForExistence(timeout: 30))
-            tap(open)
+            // The helper link can be below the visible rows of the settings Form.
+            XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 30))
+            XCTAssertFalse(app.buttons["household.priceBudgetHistory"].exists)
+            tap(app.buttons[entry])
             func read(_ number: Int, _ action: String) {
                 let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", action)).firstMatch
                 XCTAssertTrue(instruction.waitForExistence(timeout: 10))
