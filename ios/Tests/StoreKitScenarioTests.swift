@@ -8,6 +8,8 @@ import StoreKitTest
     private let productID = "local.testing.household.annual"
     private let accountToken = UUID()
     private var session: SKTestSession!
+    // Hosted StoreKit has taken over 32 seconds to return from a deferred purchase.
+    private let askToBuyResponseTimeout: Duration = .seconds(60)
     private var cancellationTraceStart: ContinuousClock.Instant?
     private var cancellationTraceCount = 0
 
@@ -236,9 +238,7 @@ import StoreKitTest
         let purchase = beginPurchase(model)
         defer { model.stop() }
         do {
-            // A fresh hosted StoreKit session took 15s to return its pending result.
-            // Keep the complete pending boundary while allowing that first response.
-            try await eventually("A real Ask to Buy request reaches pending approval", timeout: .seconds(30)) {
+            try await eventually("A real Ask to Buy request reaches pending approval", timeout: askToBuyResponseTimeout) {
                 purchase.finished && model.purchaseReport == .pending
                     && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
             }
@@ -438,22 +438,26 @@ import StoreKitTest
         assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
         try await AppStore.sync()
-        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
-        var pendingCount = 0, purchasedCount = 0, failedCount = 0, deferredCount = 0
-        var currentCount = 0, verifiedCount = 0, unverifiedCount = 0
-        repeat {
-            let transactions = session.allTransactions().filter { $0.identifier == request.identifier }
-            pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
-            purchasedCount = transactions.filter { $0.state == .purchased }.count
-            failedCount = transactions.filter { $0.state == .failed }.count
-            deferredCount = transactions.filter { $0.state == .deferred }.count
-            let current = await storefront.currentTransactions()
-            currentCount = current.count
-            verifiedCount = current.filter { if case .verified = $0 { return true }; return false }.count
-            unverifiedCount = current.filter { if case .unverified = $0 { return true }; return false }.count
-            if purchase.finished && pendingCount == 0 && currentCount == 0 { break }
+        // The session can reconcile the decline before the purchase API returns.
+        let responseDeadline = ContinuousClock.now.advanced(by: askToBuyResponseTimeout)
+        try await eventually("The decline clears the pending flag and grants no entitlement") {
+            guard !self.session.allTransactions().contains(where: {
+                $0.identifier == request.identifier && $0.pendingAskToBuyConfirmation
+            }) else { return false }
+            return await storefront.currentTransactions().isEmpty
+        }
+        while !purchase.finished && ContinuousClock.now < responseDeadline {
             try await Task.sleep(for: .milliseconds(100))
-        } while ContinuousClock.now < deadline
+        }
+        let transactions = session.allTransactions().filter { $0.identifier == request.identifier }
+        let pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
+        let purchasedCount = transactions.filter { $0.state == .purchased }.count
+        let failedCount = transactions.filter { $0.state == .failed }.count
+        let deferredCount = transactions.filter { $0.state == .deferred }.count
+        let current = await storefront.currentTransactions()
+        let currentCount = current.count
+        let verifiedCount = current.filter { if case .verified = $0 { return true }; return false }.count
+        let unverifiedCount = current.filter { if case .unverified = $0 { return true }; return false }.count
         var returnedDeclinedRequest = false
         for await result in StoreKit.Transaction.currentEntitlements {
             if case .verified(let transaction) = result, transaction.id == UInt64(request.identifier),
