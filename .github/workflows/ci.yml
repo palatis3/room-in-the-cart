@@ -658,7 +658,9 @@ jobs:
           else
             xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
           fi
-      - name: Start simulator boot during artifact download
+      - name: Start Bitrise simulator boot during artifact download
+        id: early_boot
+        if: runner.environment == 'self-hosted'
         run: bash scripts/prepare_ios_simulator.sh start
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -677,9 +679,13 @@ jobs:
           restore_selection_started=$SECONDS
           mv .build/DerivedData/Build/test-plan .build/test-plan
           printf 'Restore selection placement completed in %s seconds\n' "$((SECONDS - restore_selection_started))"
+      - name: Start GitHub simulator boot after test product restore
+        id: late_boot
+        if: runner.environment != 'self-hosted'
+        run: bash scripts/prepare_ios_simulator.sh start
       - name: Wait for simulator boot
         timeout-minutes: 8
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (steps.early_boot.outcome == 'success' || steps.late_boot.outcome == 'success') }}
         run: bash scripts/prepare_ios_simulator.sh wait
       - name: Run selected tests and verify complete execution
         timeout-minutes: 40
