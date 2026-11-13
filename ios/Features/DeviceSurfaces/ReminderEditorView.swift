@@ -91,6 +91,7 @@ public struct ReminderEditorContext: Sendable {
             }
             if let message { Text(message).accessibilityAddTraits(.updatesFrequently) }
             Button(SurfaceCopy.text("Turn off this reminder"), role: .destructive) { turnOff() }.frame(minHeight: 44).accessibilityIdentifier("reminder.turnOff")
+                .disabled(!statusLoaded || statusLoadFailed || saved == nil || saved?.status == .cancelled)
         }.disabled(busy).navigationTitle(SurfaceCopy.text("Reminder"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text(saved?.status == .scheduled ? "Done" : "Cancel")) { dismiss() }.disabled(busy).accessibilityIdentifier("reminder.close") } }
             .keyboardDoneAction(visible: timeZoneFocused, title: SurfaceCopy.text("Done"), identifier: "reminder.keyboardDone") { timeZoneFocused = false }
@@ -162,12 +163,27 @@ public struct ReminderEditorContext: Sendable {
         }
     }
     private func turnOff() {
-        guard currentAuthorization() != nil else { clearReview(); return }
+        guard let generation = currentAuthorization(), let expectedVersion = saved?.version else { clearReview(); return }
         busy = true
         Task {
             defer { busy = false }
-            do { try await coordinator.cancel(context.reminderID); saved = try await coordinator.current(context.reminderID); version = saved?.version; statusLoaded = true; statusLoadFailed = false; clearReview(); message = SurfaceCopy.text("Reminder turned off.") }
-            catch { message = SurfaceCopy.text("Could not turn off the reminder. Try again.") }
+            do {
+                let cancelled = try await coordinator.cancel(context.reminderID, expectedVersion: expectedVersion)
+                guard currentAuthorization() == generation else { clearReview(); return }
+                saved = cancelled
+                version = cancelled.version
+                clearReview()
+                message = SurfaceCopy.text("Reminder turned off.")
+            } catch {
+                guard currentAuthorization() == generation else { clearReview(); return }
+                if error as? SurfaceError == .stale {
+                    clearReview()
+                    statusLoadFailed = true
+                    message = errorText(error)
+                } else {
+                    message = SurfaceCopy.text("Could not turn off the reminder. Try again.")
+                }
+            }
         }
     }
     private func errorText(_ error: Error) -> String {

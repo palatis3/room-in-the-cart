@@ -16,6 +16,12 @@ final class DeviceSurfacesTests: XCTestCase {
             localTime: CivilReminderTime(year: 2027, month: 1, day: day, hour: 13, minute: 0, timeZoneID: "America/New_York"),
             expiresAt: Date(timeIntervalSince1970: 1_810_000_000), cutoff: Date(timeIntervalSince1970: 1_810_000_000), language: .english, now: now)
     }
+    private func editedReminder(_ original: ReminderIntent) throws -> ReminderIntent {
+        try ReminderIntent(id: original.id, personaID: original.personaID, targetID: original.targetID,
+            subject: original.subject, sourceRevision: original.sourceRevision, routeHandle: original.routeHandle,
+            localTime: CivilReminderTime(year: 2027, month: 1, day: 21, hour: 13, minute: 0, timeZoneID: original.localTime.timeZoneID),
+            expiresAt: original.expiresAt, cutoff: original.cutoff, language: original.language, now: now)
+    }
     private func loadTextFile(_ bytes: Data, type: UTType = .utf8PlainText) async throws -> Result<String, SurfaceError> {
         let source = try file("shopping.txt")
         try bytes.write(to: source)
@@ -231,6 +237,66 @@ final class DeviceSurfacesTests: XCTestCase {
         let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
         let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
     }
+    func testTurnOffFromAnOlderEditorCannotCancelTheReplacementOrRemoveItsNotification() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        let original = try intent()
+        let first = try await coordinator.save(original, expectedVersion: nil, requestPermission: true, authorized: { true })
+        let replacement = try editedReminder(original)
+        let second = try await coordinator.save(replacement, expectedVersion: first.version, requestPermission: true, authorized: { true })
+        do {
+            _ = try await coordinator.cancel(original.id, expectedVersion: first.version)
+            XCTFail("An editor showing the old reminder must require another review")
+        } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let current = try await coordinator.current(original.id)
+        let identifier = ReminderNotification.identifier(original.id)
+        let stillPending = await scheduler.pending[identifier]
+        XCTAssertEqual(current, second)
+        XCTAssertEqual(stillPending, ReminderNotification(replacement))
+
+        let cancelled = try await coordinator.cancel(original.id, expectedVersion: second.version)
+        let pending = await scheduler.pending
+        XCTAssertEqual(cancelled.status, .cancelled)
+        XCTAssertTrue(pending.isEmpty)
+    }
+
+    func testReschedulingRetiresThePreviousPendingOrDeliveredNoticeEvenIfRegistrationFails() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        for wasDelivered in [false, true] {
+            let original = try intent()
+            let identifier = ReminderNotification.identifier(original.id)
+            let saved = try await coordinator.save(original, expectedVersion: nil, requestPermission: false)
+            if wasDelivered { await scheduler.deliver(identifier) }
+            let replacement = try editedReminder(original)
+            await scheduler.setFailure(true)
+            let failed = try await coordinator.save(replacement, expectedVersion: saved.version, requestPermission: false)
+            XCTAssertEqual(failed.status, .retryNeeded)
+            let oldPending = await scheduler.pending[identifier], oldDelivered = await scheduler.delivered[identifier]
+            XCTAssertNil(oldPending, "The previous time must no longer be able to fire")
+            XCTAssertNil(oldDelivered, "A delivered notice at the previous time must be withdrawn")
+            // Older versions could leave the previous OS request beside retryNeeded.
+            let reopened = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+            await scheduler.setFailure(false)
+            try await scheduler.add(ReminderNotification(original))
+            if wasDelivered { await scheduler.deliver(identifier) }
+            await scheduler.setFailure(true)
+            try await reopened.reconcileAll()
+            let legacyPending = await scheduler.pending[identifier], legacyDelivered = await scheduler.delivered[identifier]
+            XCTAssertNil(legacyPending)
+            XCTAssertNil(legacyDelivered)
+            await scheduler.setFailure(false)
+            try await reopened.reconcileAll()
+            let retried = try await reopened.current(original.id)
+            let pending = await scheduler.pending[identifier], delivered = await scheduler.delivered[identifier]
+            XCTAssertEqual(retried?.status, .scheduled)
+            XCTAssertEqual(pending, ReminderNotification(replacement))
+            XCTAssertNil(delivered)
+        }
+    }
+
     func testElapsedOfferNoticesSurviveReconciliationUntilTurnOffOrPermissionLoss() async throws {
         let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
         let delivered = try intent(), delayed = try intent()

@@ -219,6 +219,13 @@ public actor ReminderCoordinator {
         let cancelled = try await store.cancel(id)
         await enqueue(id, requestPermission: false, version: cancelled?.version).value
     }
+    /// Cancel only the saved reminder that the editor actually displayed.
+    public func cancel(_ id: UUID, expectedVersion: Int64) async throws -> SavedReminder {
+        guard let cancelled = try await store.cancel(id, matchingVersion: expectedVersion) else { throw SurfaceError.stale }
+        await enqueue(id, requestPermission: false, version: cancelled.version).value
+        guard try await store.get(id) == cancelled else { throw SurfaceError.stale }
+        return cancelled
+    }
     /// Removal is idempotent. A concurrent new version fails rather than deleting it.
     public func erase(_ id: UUID) async throws {
         try await cancel(id)
@@ -251,6 +258,11 @@ public actor ReminderCoordinator {
         guard saved?.version == version else { return }
         guard let row = saved else { await scheduler.remove([identifier]); return }
         if row.status == .cancelled { await scheduler.remove([identifier]); return }
+        // An edited reminder keeps its OS identifier. Retire the previous pending
+        // or delivered notice even if permission or the replacement registration fails.
+        if row.version > 1, row.status == .desired || row.status == .retryNeeded {
+            await scheduler.remove([identifier])
+        }
         let currentTime = now()
         do {
             try row.intent.validate(now: currentTime, allowPastFire: true)
