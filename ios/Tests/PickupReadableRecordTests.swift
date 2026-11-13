@@ -59,6 +59,9 @@ import CoreDomain
         try j.settlement.append(.init(id: UUID(), evidenceKey: "statement", kind: .postedCharge, amount: Money(minorUnits: 350), occurredAt: at(12)))
         try j.settlement.append(.init(id: UUID(), evidenceKey: "claim slip", kind: .pendingCredit, amount: Money(minorUnits: 150),
                                     occurredAt: at(13), creditID: "counter receipt", chargeEvidenceKey: "statement"))
+        // Older private files could save a credit dated after this record's snapshot.
+        try j.settlement.append(.init(id: UUID(), evidenceKey: "later-statement", kind: .postedCredit, amount: Money(minorUnits: 150),
+                                    occurredAt: at(25), creditID: "counter receipt", chargeEvidenceKey: "statement"))
         let bytes = try RecordsNativeCodec.canonical(j)
         let saved = try RecordsNativeCodec.pickup(bytes)
         let text = try PickupReadableRecord.text(saved, locale: Locale(identifier: "en_US"))
@@ -68,7 +71,7 @@ import CoreDomain
             let match = try XCTUnwrap(remainder.range(of: marker), marker)
             remainder = remainder[match.upperBound...]
         }
-        for marker in ["Saved checkout quote\nCheckout evidence recorded at:", "one dozen wraps", "ocho en total", "still checking tax", "Fee waiver threshold: $5.00",
+        for marker in ["later-statement", "This entry is dated later and is excluded from these totals.", "Saved checkout quote\nCheckout evidence recorded at:", "one dozen wraps", "ocho en total", "still checking tax", "Fee waiver threshold: $5.00",
                        "Still short: 3 units", "Preferimos maíz", "Retailer response: Pending", "Cancelled",
                        "Lunch · Excluded from this dish", "Tacos · Approved for this dish", "Paid so far: $3.50",
                        "Payment holds · not spending: $8.00", "Credit reference: counter receipt", "Original posted charge: statement",

@@ -18,14 +18,14 @@ struct PickupSettlementView: View {
         let entries = model.journey?.settlement.entries ?? []
         let settled = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))
         return entries.filter { entry in
-            entry.kind == .pendingCredit && entry.chargeEvidenceKey == charge &&
+            entry.kind == .pendingCredit && entry.occurredAt <= model.stockReviewDate && entry.chargeEvidenceKey == charge &&
                 entry.creditID.map { !settled.contains($0) } == true
         }
     }
     private var openHolds: [SettlementEntry] {
         let entries = model.journey?.settlement.entries ?? []
         let released = Set(entries.compactMap(\.holdEvidenceKey))
-        return entries.filter { $0.kind == .paymentHold && !released.contains($0.evidenceKey) }
+        return entries.filter { $0.kind == .paymentHold && $0.occurredAt <= model.stockReviewDate && !released.contains($0.evidenceKey) }
     }
     private var selectedHold: SettlementEntry? { openHolds.first { $0.evidenceKey == holdKey } }
     @State private var nextShopRequested = false
@@ -33,7 +33,7 @@ struct PickupSettlementView: View {
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
-            if let summary = try? model.journey?.settlement.summary() {
+            if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
                     LabeledContent(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
                     LabeledContent(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
@@ -78,7 +78,7 @@ struct PickupSettlementView: View {
                 if isCredit {
                     Picker(pTr("Original posted charge"), selection: $charge) {
                         Text(pTr("Choose a charge")).tag("")
-                        ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
+                        ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) && $0.occurredAt <= model.stockReviewDate } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
                     }
                     if [.postedCredit, .includedCredit].contains(kind), !pendingCredits.isEmpty {
                         Picker(financialText("Credit being settled"), selection: Binding(
@@ -96,7 +96,7 @@ struct PickupSettlementView: View {
                     TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
                         .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .creditID)
                 }
-                DatePicker(pTr("Evidence date"), selection: $date)
+                DatePicker(pTr("Evidence date"), selection: $date, in: ...model.stockReviewDate)
                 Button(pTr("Save financial evidence")) { save() }
                     .disabled(model.hasPendingSave || (kind == .holdRelease && selectedHold == nil))
             }
@@ -105,6 +105,12 @@ struct PickupSettlementView: View {
                     VStack(alignment: .leading) {
                         Text("\(pTr(entry.kind.rawValue)) · \(pMoney(entry.amount))")
                         Text(entry.evidenceKey).font(.caption)
+                        LabeledContent(pTr("Evidence date")) {
+                            Text(entry.occurredAt, format: .dateTime.month().day().year().hour().minute())
+                        }
+                        if entry.occurredAt > model.stockReviewDate {
+                            Text(pTr("This entry is dated later and is excluded from these totals."))
+                        }
                         if let id = entry.creditID {
                             LabeledContent(pTr("Credit ID"), value: id)
                         }

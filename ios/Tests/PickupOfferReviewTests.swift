@@ -29,6 +29,27 @@ final class PickupOfferReviewTests: XCTestCase {
     }
     private func location() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString) }
 
+    @MainActor func testFutureChargeDoesNotChangePaidTotalBeforeItsEvidenceDate() async throws {
+        let url = location()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = try await placed(store: ComparisonStore(url: url))
+        let before = try XCTUnwrap(model.journey)
+        let tomorrow = now.addingTimeInterval(86_400)
+        let charge = SettlementEntry(id: UUID(), evidenceKey: "statement-37", kind: .postedCharge,
+                                     amount: Money(minorUnits: 3720), occurredAt: tomorrow)
+        let recordedEarly = await model.settle(charge)
+        XCTAssertFalse(recordedEarly)
+        let reopened = PickupModel(databaseURL: url, clock: { tomorrow })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey?.revision, before.revision)
+        XCTAssertEqual(try reopened.journey?.settlement.summary().paidSoFar.minorUnits, 0)
+
+        let recordedOnDate = await reopened.settle(charge)
+        XCTAssertTrue(recordedOnDate)
+        XCTAssertEqual(try reopened.journey?.settlement.summary().paidSoFar.minorUnits, 3720)
+        XCTAssertEqual(reopened.journey?.settlement.entries, [charge])
+    }
+
     @MainActor func testRetryingSavedChargeAfterReopenPreservesThePickupRevision() async throws {
         let url = location()
         defer { try? FileManager.default.removeItem(at: url) }

@@ -1054,6 +1054,23 @@
         }
       }
     },
+    "Choose the date the financial evidence was observed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the date the financial evidence was observed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la fecha en que se observó el comprobante financiero."
+          }
+        }
+      }
+    },
     "Choose a charge": {
       "extractionState": "manual",
       "localizations": {
@@ -5673,6 +5690,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se supone que haya existencias ni compras actuales para esta necesidad pendiente."
+          }
+        }
+      }
+    },
+    "This entry is dated later and is excluded from these totals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This entry is dated later and is excluded from these totals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este registro tiene una fecha posterior y se excluye de estos totales."
           }
         }
       }

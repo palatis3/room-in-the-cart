@@ -461,6 +461,10 @@ public struct SettlementLedger: Codable, Equatable, Sendable {
 
     public func summary() throws -> SettlementSummary { try Self.summary(of: entries) }
 
+    public func summary(asOf date: Date) throws -> SettlementSummary {
+        try Self.summary(of: entries.filter { $0.occurredAt <= date })
+    }
+
     public static func summary(of entries: [SettlementEntry]) throws -> SettlementSummary {
         var paid: Int64 = 0, pending: Int64 = 0, included: Int64 = 0, holds: Int64 = 0
         let settledCredits = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))

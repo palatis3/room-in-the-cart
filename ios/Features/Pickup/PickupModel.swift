@@ -794,6 +794,10 @@ struct PickupPersistenceLocation {
                 error = nil
                 return true
             }
+            guard entry.occurredAt <= clock() else {
+                error = pTr("Choose the date the financial evidence was observed.")
+                return false
+            }
             return await save(value)
         } catch {
             self.error = pTr("Check the amounts and units. Your saved pickup has not changed.")

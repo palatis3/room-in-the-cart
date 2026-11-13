@@ -264,6 +264,7 @@ struct PickupReadableRecord {
         }
         for entry in j.settlement.entries {
             var rows = [money(entry.amount), entry.evidenceKey]
+            if entry.occurredAt > j.savedAt { rows.append(pickupLabel("This entry is dated later and is excluded from these totals.")) }
             if let charge = entry.chargeEvidenceKey { rows.append(field("Original posted charge", charge)) }
             if let credit = entry.creditID { rows.append(field("Credit reference", credit)) }
             if let hold = entry.holdEvidenceKey { rows.append(field("Original payment hold", hold)) }
@@ -271,7 +272,7 @@ struct PickupReadableRecord {
         }
         if let closed = j.closedAt { event(closed, pickupLabel("Pickup closed")) }
         if !j.settlement.entries.isEmpty {
-            let summary = try j.settlement.summary()
+            let summary = try j.settlement.summary(asOf: j.savedAt)
             current.append([field("Paid so far", money(summary.paidSoFar)), field("Pending credits · not deducted", money(summary.pendingCredits)),
                             field("Credits already included in charges", money(summary.includedCredits)),
                             field("Payment holds · not spending", money(summary.paymentHolds))].joined(separator: "\n"))
