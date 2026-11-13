@@ -261,8 +261,10 @@ struct HistoryEntryView: View {
                     LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map(HistoryCopy.money) ?? HistoryCopy.text("Unknown"))
                     LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor))
                     Text(value.reconciledEnteredPeriod ? HistoryCopy.text("Entered evidence has been reconciled for this period. This is not bank verification.") : HistoryCopy.text("This period is incomplete. Remaining amounts are conditional, not a verified balance."))
-                    Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
-                        .disabled(model.busy).frame(minHeight: 44)
+                    if model.canEditSelectedPeriod {
+                        Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
+                            .frame(minHeight: 44)
+                    }
                 }
             }
         } else if let selected = model.selectedPeriod {
@@ -270,8 +272,10 @@ struct HistoryEntryView: View {
                 HistoryPeriodDetails(period: selected.period)
                 Text(HistoryCopy.text("This raw record does not calculate a remaining balance or establish current membership."))
                     .font(.footnote)
-                Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
-                    .disabled(model.busy).frame(minHeight: 44)
+                if model.canEditSelectedPeriod {
+                    Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
+                        .frame(minHeight: 44)
+                }
             }
         }
     }

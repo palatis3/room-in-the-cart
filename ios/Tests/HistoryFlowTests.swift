@@ -90,7 +90,8 @@ import HouseholdClient
         model.observationDraft.shopID = granted; model.observationDraft.itemName = "Read-only grant"
         model.reviewObservation(); model.approved = true; await model.applyReviewed()
         XCTAssertNil(model.reviewed); XCTAssertTrue(service.observationSends.isEmpty)
-        model.beginPeriod(); XCTAssertNotNil(model.periodDraft,"Future planning must not infer entitlement or require an assigned shop in this observation-only guard")
+        model.beginPeriod(); XCTAssertEqual(model.periodDraft?.shopIDs, [])
+        XCTAssertNotNil(model.periodDraft,"Future planning must not infer entitlement or require an assigned shop in this observation-only guard")
     }
     func testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned() async throws {
         let (model, service, _, box) = try await setup()
@@ -145,6 +146,24 @@ import HouseholdClient
         service.beforePrepare = { await store.purge() }
         await model.applyReviewed(); XCTAssertTrue(service.observationSends.isEmpty)
         let state = await store.read(); XCTAssertTrue(state.pending.isEmpty)
+    }
+    func testSavedPeriodUsesFreshPagedOwnershipForRawAndCalculatedEditActions() async throws {
+        let (model, service, _, _) = try await setup()
+        let owned = try await service.historyOwnedShops(cursor: nil)
+        let other = HistoryOwnedShop(shopId: UUID().uuidString.lowercased(), createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)
+        service.ownedPages[nilKey] = .init(shops: [other], nextCursor: other.shopId)
+        service.ownedPages[other.shopId] = owned
+        for analyze in [false, true] {
+            await model.openPeriod(service.saved.periodId, analyze: analyze)
+            XCTAssertTrue(model.canEditSelectedPeriod)
+            service.ownedPages[other.shopId] = .init(shops: [], nextCursor: nil)
+            await model.openPeriod(service.saved.periodId, analyze: analyze)
+            XCTAssertNotNil(model.selectedPeriod)
+            XCTAssertFalse(model.canEditSelectedPeriod)
+            model.editSelectedPeriod()
+            XCTAssertNil(model.periodDraft)
+            service.ownedPages[other.shopId] = owned
+        }
     }
     func testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan() async throws {
         let (model, service, _, _) = try await setup()
@@ -279,6 +298,7 @@ private let nilKey = "initial"
     var saved: HistorySavedBudgetPeriod
     let subtotal: HistoryPermittedSubtotal
     var analysis: HistoryPeriodResponse
+    var ownedPages: [String: HistoryOwnedShopPage] = [:]
     var ownedSources: [HistoryOwnedShop]?
     var pricePages: [String: HistoryPriceObservationPage] = [:]
     var readablePages: [String: HistoryReadableShopPage] = [:]
@@ -297,7 +317,7 @@ private let nilKey = "initial"
     func observation(channel: HistoryPriceChannel = .storeShelf, mode: HistoryFulfillmentMode = .inStore, branch: String = "North") throws -> HistoryPriceObservation {
         try .init(shopId: shop, itemName: "Oats", packLabel: "12 oz", usablePack: nil, price: .exact(minor: 349), store: "Store", branch: branch, channel: channel, mode: mode, eligibility: "", observedAt: "2025-01-02T12:00:00Z", sourceText: "Shelf label", sourceLocale: "en-US")
     }
-    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
+    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { ownedPages[cursor ?? nilKey] ?? .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
     func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }
