@@ -304,6 +304,39 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(reopened.journeys.count, 2)
     }
 
+    @MainActor func testNextShopRequiresUpdatedShortfallReviewWhenDatedStockBecomesAvailable() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let database = directory.appendingPathComponent("pickup.sqlite")
+        let arrival = now.addingTimeInterval(60)
+        var instant = now
+        let model = PickupModel(databaseURL: database, clock: { instant })
+        let need = UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(3),
+                                  available: quantity(1), due: arrival, confirmedAt: now)
+        try requireSaved(await model.addUrgent(need))
+        try requireSaved(await model.change { shop in
+            shop.stockLots.append(.init(id: UUID(), foodID: need.id, name: "Rice", usable: quantity(1), confirmedAt: arrival))
+        })
+        let source = try XCTUnwrap(model.journey)
+        let review = try source.nextShopMealNeeds(closing: [:], at: instant)
+        XCTAssertEqual(review.urgent.map(\.required.amount), [try Rational(2)])
+        instant = arrival
+        let stale = await model.startNextShop(accept: [], sourceID: source.id, sourceRevision: source.revision, reviewedMeals: review)
+        XCTAssertFalse(stale)
+        XCTAssertEqual(model.journeys, [source])
+        let updated = try source.nextShopMealNeeds(closing: [:], at: instant)
+        XCTAssertEqual(updated.urgent.map(\.required.amount), [.one])
+        try requireSaved(await model.startNextShop(accept: [], sourceID: source.id, sourceRevision: source.revision, reviewedMeals: updated))
+        let freshID = try XCTUnwrap(model.journey?.id)
+        let reopened = PickupModel(databaseURL: database, clock: { arrival })
+        await reopened.load()
+        let saved = try XCTUnwrap(reopened.journeys.first { $0.id == freshID })
+        XCTAssertEqual(saved.urgent, updated.urgent)
+        XCTAssertEqual(saved.urgent.first?.due, arrival)
+        XCTAssertTrue(saved.stockLots.isEmpty)
+        XCTAssertEqual(reopened.journeys.first { $0.id == source.id }, source)
+    }
+
     @MainActor func testReviewedNextShopDispositionIsScopedAndNeverRewritesSource() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

@@ -1087,6 +1087,10 @@ import XCTest
         restart()
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Start the next shop"])
+        let shortfall = app.staticTexts["Dinner: Rice · 2 units"]
+        XCTAssertTrue(shortfall.waitForExistence(timeout: 5), "Preview only the two units still needed after using one at home")
+        XCTAssertFalse(app.staticTexts["Dinner: Rice · 3 units"].exists)
+        XCTAssertFalse(app.staticTexts["Open meal need"].exists)
         tap(app.buttons["Cancel"])
         XCTAssertTrue(app.navigationBars["Pickup"].exists)
         tap(app.buttons["Start the next shop"])

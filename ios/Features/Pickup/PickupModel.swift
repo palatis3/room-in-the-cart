@@ -48,6 +48,43 @@ struct NextShopReview: Codable, Equatable {
     let choices: [UUID: NextShopDisposition]
 }
 
+/// The review and the new draft use the same confirmed stock and remaining portions.
+struct NextShopMealNeeds: Equatable {
+    let urgent: [UrgentMealNeed]
+    let meals: [AllocationNeed]
+    let unverified: Set<UUID>
+}
+
+extension PickupJourney {
+    func nextShopMealNeeds(closing: [UUID: NextShopDisposition], at instant: Date) throws -> NextShopMealNeeds {
+        let coverage = try carryoverAllocation(at: instant)
+        let byID = Dictionary(uniqueKeysWithValues: coverage.demands.map { ($0.id, $0) })
+        let currentUrgent = recoveryCurrentUrgent
+        let urgentIDs = Set(currentUrgent.map(\.id))
+        let urgent = currentUrgent.compactMap { original -> UrgentMealNeed? in
+            guard !original.resolved, byID[original.id]?.shortfall != .zero else { return nil }
+            var need = original
+            if let demand = byID[original.id], let shortfall = demand.shortfall {
+                need.required = Quantity(amount: shortfall, unit: demand.unit, originalLiteral: shortfall.description)
+            }
+            need.carriedFromID = id
+            return need
+        }
+        let handledLines = Set(deferred.filter {
+            ["handled", "dismissed"].contains(closing[$0.id]?.rawValue ?? $0.status)
+        }.map { $0.line.id })
+        // Earlier deferrals may have no active allocation on this pickup.
+        var meals = carriedMeals.filter { !handledLines.contains($0.orderLineID) && byID[$0.id] == nil }
+        for original in recoveryCurrentAllocationNeeds where !urgentIDs.contains(original.id) && !handledLines.contains(original.orderLineID) {
+            guard let demand = byID[original.id], demand.shortfall != .zero else { continue }
+            let remaining = demand.shortfall.map { Quantity(amount: $0, unit: demand.unit, originalLiteral: $0.description) }
+            meals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name,
+                                        amount: remaining ?? original.amount, priority: original.priority))
+        }
+        return NextShopMealNeeds(urgent: urgent, meals: meals, unverified: Set(coverage.demands.filter { $0.shortfall == nil }.map(\.id)))
+    }
+}
+
 struct DeferredPickupNeed: Codable, Equatable, Identifiable {
     let id: UUID
     let sourceShopID: UUID
@@ -890,7 +927,8 @@ struct PickupPersistenceLocation {
     }
 
     @discardableResult func startNextShop(accept ids: Set<UUID>, closing: [UUID: NextShopDisposition] = [:],
-                                          sourceID: UUID? = nil, sourceRevision: Int64? = nil) async -> Bool {
+                                          sourceID: UUID? = nil, sourceRevision: Int64? = nil,
+                                          reviewedMeals: NextShopMealNeeds? = nil) async -> Bool {
         guard let previous = journey, sourceID == nil || sourceID == previous.id,
               sourceRevision == nil || sourceRevision == previous.revision else {
             error = pTr("Reopen the next-shop review to use the current pickup.")
@@ -927,33 +965,15 @@ struct PickupPersistenceLocation {
                                                     expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))),
                                    status: closing[need.id]?.rawValue ?? "review")
             }
-            next.urgent = previous.recoveryCurrentUrgent.filter { !$0.resolved }.compactMap { original in
-                var need = original
-                if let coverage = allocation?.demands.first(where: { $0.id == original.id }), let shortfall = coverage.shortfall {
-                    if shortfall == .zero { return nil }
-                    need.required = Quantity(amount: shortfall, unit: coverage.unit, originalLiteral: shortfall.description)
-                }
-                need.carriedFromID = previous.id
-                return need
+            let remaining = try previous.nextShopMealNeeds(closing: closing, at: clock())
+            guard reviewedMeals == nil || reviewedMeals == remaining else {
+                error = pTr("Reopen the next-shop review to use the current pickup.")
+                return false
             }
-            // Carry unresolved demands for review; old stock remains dated evidence in the prior journey.
+            next.urgent = remaining.urgent
+            next.carriedMeals = remaining.meals
             next.stockNeeds = next.urgent.map { need in
                 StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
-            }
-            let handledLineIDs = Set(previous.deferred.filter { need in
-                // Apply this review's closing choices without rewriting prior history.
-                ["handled", "dismissed"].contains(closing[need.id]?.rawValue ?? need.status)
-            }.map { $0.line.id })
-            next.carriedMeals = previous.carriedMeals.filter { !handledLineIDs.contains($0.orderLineID) }
-            if let coverage = allocation {
-                let urgentIDs = Set(previous.recoveryCurrentUrgent.map(\.id))
-                for unmet in coverage.demands where unmet.shortfall != .zero && !urgentIDs.contains(unmet.id) {
-                    if let original = previous.recoveryCurrentAllocationNeeds.first(where: { $0.id == unmet.id }), !handledLineIDs.contains(original.orderLineID) {
-                        let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: $0.description) } ?? original.amount
-                        next.carriedMeals.removeAll { $0.id == original.id }
-                        next.carriedMeals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name, amount: remaining, priority: original.priority))
-                    }
-                }
             }
             let carriedIDs = Set(next.carriedMeals.map(\.id) + next.stockNeeds.map(\.id))
             next.needDetails = previous.recoveryCurrentDetails.filter { carriedIDs.contains($0.id) }

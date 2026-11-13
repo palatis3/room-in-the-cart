@@ -223,7 +223,8 @@ private struct PickupNextShopSelection: View {
     @State private var choices: [UUID: NextShopDisposition] = [:]
 
     var body: some View {
-        Form {
+        let remaining = try? source.nextShopMealNeeds(closing: choices, at: model.stockReviewDate)
+        return Form {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
             ForEach(source.deferred.filter { $0.status == "review" }) { need in
@@ -244,23 +245,30 @@ private struct PickupNextShopSelection: View {
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: source.id) }
             Section(pTr("Open meal needs")) {
-                ForEach(source.urgent.filter { !$0.resolved }) { need in
-                    Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
-                }
-                if model.journey?.id == source.id {
-                    ForEach(model.allocation?.demands.filter { $0.shortfall != .zero } ?? []) { coverage in
-                        Text(source.needs.first { $0.id == coverage.id }?.name ?? pTr("Open meal need"))
+                if let remaining {
+                    ForEach(remaining.urgent) { need in
+                        Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
+                        if remaining.unverified.contains(need.id) { Text(pTr("Short or unverified amount. Review.")) }
+                        if let due = need.due { LabeledContent(pTr("Needed by"), value: due.formatted()) }
                     }
+                    ForEach(remaining.meals) { need in
+                        Text("\(need.name) · \(pQuantity(need.amount))")
+                        if remaining.unverified.contains(need.id) { Text(pTr("Short or unverified amount. Review.")) }
+                        if let due = source.savedMealDeadline(for: need.id) { LabeledContent(pTr("Needed by"), value: due.formatted()) }
+                    }
+                } else {
+                    Text(pTr("Could not prepare this change. Your saved pickup has not changed."))
                 }
                 Text(pTr("Prior receipts and money remain with the previous pickup for review."))
             }
             Button(pTr("Create fresh next-shop draft")) {
                 Task {
+                    guard let remaining else { return }
                     let accepted = Set(choices.filter { $0.value == .accept }.keys)
                     let closing = choices.filter { $0.value == .handled || $0.value == .dismissed }
-                    _ = await model.startNextShop(accept: accepted, closing: closing, sourceID: source.id, sourceRevision: source.revision)
+                    _ = await model.startNextShop(accept: accepted, closing: closing, sourceID: source.id, sourceRevision: source.revision, reviewedMeals: remaining)
                 }
-            }.buttonStyle(.borderedProminent).disabled(model.saving || model.hasPendingSave)
+            }.buttonStyle(.borderedProminent).disabled(remaining == nil || model.saving || model.hasPendingSave)
         }
         .navigationTitle(pTr("Next shop"))
         .onChange(of: model.selectedID) { _, newID in
