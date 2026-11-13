@@ -546,12 +546,14 @@ jobs:
           if-no-files-found: error
       - name: Package test products and exact selection
         run: |
-          tar -czf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
+          set -o pipefail
+          tar -cf - -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan |
+            /usr/bin/compression_tool -encode -A lzfse -t 2 -o "$RUNNER_TEMP/iphone-test-products.tar.lzfse"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:
           name: iphone-test-products-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/iphone-test-products.tar.gz
+          path: ${{ runner.temp }}/iphone-test-products.tar.lzfse
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
@@ -649,7 +651,9 @@ jobs:
       - name: Restore iPhone test products and selection
         run: |
           mkdir -p .build/DerivedData/Build
-          tar -xzf .build/download/iphone-test-products.tar.gz -C .build/DerivedData/Build
+          set -o pipefail
+          /usr/bin/compression_tool -decode -A lzfse -t 2 -i .build/download/iphone-test-products.tar.lzfse |
+            tar -xf - -C .build/DerivedData/Build
           mv .build/DerivedData/Build/test-plan .build/test-plan
       - name: Select isolated iPhone simulator for ui-01 and ui-05
         timeout-minutes: 8
