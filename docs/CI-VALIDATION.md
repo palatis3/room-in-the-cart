@@ -1,5 +1,32 @@
 # Local CI validation
 
+## Consumer boot overlaps artifact transfer — November 12
+
+In the `94d7aece` [core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43347398002),
+UI10 downloaded the 66.5 MB test artifact in 305 seconds, then spent another
+49 seconds booting its simulator. UI09 spent 111 seconds downloading and
+35 seconds booting. These were the last two native groups to finish. The logs
+show successful downloads, not retries; the network delay's cause is unverified.
+
+Core and fixture consumers now select their original simulator and start the
+existing checked boot command before artifact download. They collect its saved
+exit status after restoration, before any XCTest execution. Failed downloads
+still fail the job; boot failures, including CoreSimulator's zero-exit migration
+failure, still prevent testing. The eight-minute boot wait, test selections,
+runner assignments and XCTest limits are preserved. A failed or missing boot
+receipt cannot count as readiness. Ordinary result artifacts retain the boot log.
+
+This overlaps startup with transfer rather than changing the download or adding
+workers. The 49/35 seconds are overlap opportunities from that sample, not
+measured savings. Compare consumer start-to-test time and the last required gate
+on the next combined run. A local cold iOS 27.0/24A434 simulator returned from start in 0.005 seconds,
+allowed independent archive creation to finish at 0.129 seconds and confirmed
+boot at 25.474 seconds. This verifies overlap, not hosted transfer performance.
+All 1,000 offline CI checks and workflow validation passed. Local evidence is
+recorded in `.build/ConsumerBootNov12`; do not launch a full repeat solely for this change
+while the known English expired-quote fixture still needs its calendar dismissal
+correction.
+
 ## Current development priority — November 12
 
 The user has asked to stop overengineering and prioritize completing the app.

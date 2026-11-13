@@ -230,6 +230,17 @@ jobs:
             ios/UITests
       - name: Require the reviewed Xcode 27.1 toolchain
         run: *fixture-toolchain-preflight
+      - name: Select isolated iPhone simulator for the pilot and fallback suite
+        timeout-minutes: 8
+        run: |
+          if [[ "$TEST_SHARD" == contributor-balanced-01 || "$TEST_SHARD" == SharedFallbackUITests ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
+      - name: Start simulator boot during artifact download
+        run: bash scripts/prepare_ios_simulator.sh start
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
@@ -254,18 +265,10 @@ jobs:
               raise SystemExit("The fixture selector list is empty.")
           print(f"EXPECTED_TEST_COUNT={expected}")
           PY
-      - name: Select isolated iPhone simulator for the pilot and fallback suite
-        timeout-minutes: 8
-        run: |
-          if [[ "$TEST_SHARD" == contributor-balanced-01 || "$TEST_SHARD" == SharedFallbackUITests ]]; then
-            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
-              --create-owned .build/test-simulator-ownership.json
-          else
-            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-          fi
       - name: Boot the iPhone simulator
         timeout-minutes: 8
-        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+        if: ${{ !cancelled() }}
+        run: bash scripts/prepare_ios_simulator.sh wait
       - name: Run selected fixture tests and require complete execution
         timeout-minutes: 40
         shell: bash
@@ -335,6 +338,7 @@ jobs:
           path: &fixture_result_paths |
             .build/Tests*.xcresult
             .build/Tests*.log
+            .build/test-simulator-boot.*
             .build/test-*.json
             .build/test-speech-*.txt
             .build/test-cook-*.txt

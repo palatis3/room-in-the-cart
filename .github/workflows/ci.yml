@@ -651,6 +651,17 @@ jobs:
               raise SystemExit(f"Unexpected core consumer runtime: {runtime}")
           print(f"Core consumer runtime: {runtime['version']}/{runtime['buildversion']}")
           PYCODE
+      - name: Select isolated iPhone simulator for ui-01 and ui-05
+        timeout-minutes: 8
+        run: |
+          if [[ "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
+      - name: Start simulator boot during artifact download
+        run: bash scripts/prepare_ios_simulator.sh start
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.ios-build.outputs.test_products_artifact }}
@@ -663,18 +674,10 @@ jobs:
           /usr/bin/compression_tool -decode -A lzfse -t 2 -i .build/download/iphone-test-products.tar.lzfse |
             tar -xf - -C .build/DerivedData/Build
           mv .build/DerivedData/Build/test-plan .build/test-plan
-      - name: Select isolated iPhone simulator for ui-01 and ui-05
-        timeout-minutes: 8
-        run: |
-          if [[ "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
-            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
-              --create-owned .build/test-simulator-ownership.json
-          else
-            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-          fi
       - name: Wait for simulator boot
         timeout-minutes: 8
-        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+        if: ${{ !cancelled() }}
+        run: bash scripts/prepare_ios_simulator.sh wait
       - name: Run selected tests and verify complete execution
         timeout-minutes: 40
         run: bash scripts/run_ios_test_shard.sh
@@ -691,6 +694,7 @@ jobs:
           path: |
             .build/Tests*.xcresult
             .build/Tests*.log
+            .build/test-simulator-boot.*
             .build/test-*.json
             .build/test-plan/
           retention-days: 7

@@ -279,7 +279,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 self.assertEqual(len(create), 1); self.assertEqual(len(clean), 1)
                 self.assertEqual(steps[create[0]]['timeout-minutes'], 8)
                 performance = key == ('ios-performance.yml', 'performance-tests')
-                boot_command = 'scripts/prepare_ios_performance_simulator.py' if performance else 'scripts/boot_ios_simulator.py'
+                boot_command = 'scripts/prepare_ios_performance_simulator.py' if performance else 'scripts/prepare_ios_simulator.sh wait'
                 test_command = 'test-without-building' if performance else 'bash scripts/run_ios_test_shard.sh'
                 boot = next(i for i, s in enumerate(steps) if boot_command in s.get('run', ''))
                 run = next(i for i, s in enumerate(steps) if test_command in s.get('run', ''))
