@@ -887,12 +887,17 @@ import UIKit
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String, nativeThumb: Bool = false) {
         let control = app.switches[label]
-        revealContent(control)
+        let native = control.switches.firstMatch
+        let offThumb = CGVector(dx: 0.25, dy: 0.5)
+        if nativeThumb {
+            revealContent(native, tapOffset: offThumb)
+        } else {
+            revealContent(control)
+        }
         if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "before-tap") }
         if nativeThumb {
             XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the quote row")
-            let native = control.switches.firstMatch
-            let coordinate = native.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            let coordinate = native.coordinate(withNormalizedOffset: offThumb)
             XCTAssertTrue(control.isEnabled && control.isHittable && native.isEnabled && native.isHittable)
             XCTAssertTrue(scrollableArea().contains(coordinate.screenPoint), "The native thumb must be inside visible content")
             if native.value as? String == "0" { coordinate.tap() }
@@ -986,11 +991,12 @@ import UIKit
         if done.exists && done.isHittable { done.tap() }
     }
     private func revealContent(_ target: XCUIElement, above inputBar: XCUIElement? = nil,
-                               initiallyUpward: Bool = true) {
+                               initiallyUpward: Bool = true, tapOffset: CGVector? = nil) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             if target.exists && !target.frame.isEmpty {
-                let center = CGPoint(x: target.frame.midX, y: target.frame.midY)
+                let point = tapOffset.map { target.coordinate(withNormalizedOffset: $0).screenPoint }
+                    ?? CGPoint(x: target.frame.midX, y: target.frame.midY)
                 let bounds = app.frame
                 let navigation = app.navigationBars.firstMatch
                 let tabs = app.tabBars.firstMatch
@@ -1007,8 +1013,10 @@ import UIKit
                 let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top))
                 // A partly visible Form row can be hittable while its center is
                 // behind the tab bar. Scroll its tap point into clear content.
-                if viewport.insetBy(dx: 0, dy: 4).contains(center) && target.isHittable { return }
-                scrollContent(upward: center.y > area.midY, besideFields: inputBar != nil)
+                let clearContent = viewport.insetBy(dx: 0, dy: 4)
+                let tapArea = tapOffset == nil ? clearContent : clearContent.intersection(area)
+                if tapArea.contains(point) && target.isHittable { return }
+                scrollContent(upward: point.y > area.midY, besideFields: inputBar != nil)
             } else {
                 scrollContent(upward: attempt < 16 ? initiallyUpward : !initiallyUpward,
                               besideFields: inputBar != nil)
