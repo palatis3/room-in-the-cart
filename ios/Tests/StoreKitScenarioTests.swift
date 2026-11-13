@@ -555,18 +555,26 @@ import StoreKitTest
     }
 
     func testRenewalKeepsOriginalPurchaseAndNoLocalUnlock() async throws {
-        session.timeRate = .oneRenewalEveryTwoSeconds
         let original = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
-        try await eventually("Renewal creates another transaction") {
-            self.session.allTransactions().contains { $0.identifier != UInt(original.id) }
-        }
+        // Start with a completed prior term. The renewal itself must stay subject
+        // to the app's normal service verification and delivery rules.
+        await original.finish()
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
+        try await eventually("The previous term is current and its purchase is complete") {
+            let current = await storefront.currentTransactions()
+            let unfinished = await storefront.unfinishedTransactions()
+            return current.contains { self.id($0) == String(original.id) }
+                && !unfinished.contains { self.id($0) == String(original.id) }
+        }
+        try session.forceRenewalOfSubscription(productIdentifier: productID)
         try await eventually("The renewed transaction retains the original purchase identity") {
             await storefront.currentTransactions().contains {
                 guard case .verified(let transaction) = $0 else { return false }
                 return transaction.originalTransactionID == String(original.originalID)
                     && transaction.transactionID != String(original.id)
+                    && transaction.appAccountToken == self.accountToken
+                    && self.session.allTransactions().contains { String($0.identifier) == transaction.transactionID }
             }
         }
         await model.refresh()
