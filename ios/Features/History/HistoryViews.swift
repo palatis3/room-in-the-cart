@@ -15,8 +15,11 @@ struct HistoryEntryView: View {
     @State private var endDate = Date()
     @State private var selectedShop = ""
     @State private var clearingRetry = false
-    private enum PeriodAmount: Hashable { case budget, excludedReserve, reservation(String) }
-    @FocusState private var focusedAmount: PeriodAmount?
+    private enum NumericField: Hashable {
+        case packNumerator, packDenominator, exactPrice, lowerPrice, upperPrice
+        case budget, excludedReserve, reservation(String)
+    }
+    @FocusState private var focusedAmount: NumericField?
 
     var body: some View {
         Form {
@@ -172,7 +175,9 @@ struct HistoryEntryView: View {
             Toggle(HistoryCopy.text("Record a usable pack quantity"), isOn: $model.observationDraft.hasUsablePack)
             if model.observationDraft.hasUsablePack {
                 TextField(HistoryCopy.text("Quantity numerator"), text: $model.observationDraft.packNumerator).keyboardType(.numberPad)
+                    .focused($focusedAmount, equals: .packNumerator)
                 TextField(HistoryCopy.text("Quantity denominator"), text: $model.observationDraft.packDenominator).keyboardType(.numberPad)
+                    .focused($focusedAmount, equals: .packDenominator)
                 Picker(HistoryCopy.text("Pack unit"), selection: $model.observationDraft.packUnit) {
                     ForEach(HistoryUnit.allCases, id: \.rawValue) { unit in Text(HistoryCopy.unit(unit.rawValue)).tag(unit) }
                 }
@@ -180,7 +185,7 @@ struct HistoryEntryView: View {
                 Text(HistoryCopy.text("A mass ounce and a fluid ounce are different units. Enter the quantity shown; no density conversion is inferred."))
                     .font(.footnote)
             }
-        }.disabled(model.busy)
+        }.autocorrectionDisabled().disabled(model.busy)
         Section(HistoryCopy.text("Price evidence · USD")) {
             Picker(HistoryCopy.text("Price certainty"), selection: $model.observationDraft.priceKind) {
                 Text(HistoryCopy.text("Exact entered price")).tag("exact")
@@ -189,9 +194,12 @@ struct HistoryEntryView: View {
             }
             if model.observationDraft.priceKind == "exact" {
                 TextField(HistoryCopy.text("Price in USD"), text: $model.observationDraft.exactPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .exactPrice)
             } else if model.observationDraft.priceKind == "bounded" {
                 TextField(HistoryCopy.text("Lower price in USD"), text: $model.observationDraft.lowerPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .lowerPrice)
                 TextField(HistoryCopy.text("Upper price in USD"), text: $model.observationDraft.upperPrice).keyboardType(.decimalPad)
+                    .focused($focusedAmount, equals: .upperPrice)
             }
             if model.observationDraft.priceKind != "exact" {
                 TextField(HistoryCopy.text("Why the price is uncertain"), text: $model.observationDraft.priceReason, axis: .vertical)
@@ -212,7 +220,7 @@ struct HistoryEntryView: View {
             DatePicker(HistoryCopy.text("Evidence date and time"), selection: $model.observationDraft.observedAt)
             TextField(HistoryCopy.text("Source language or locale"), text: $model.observationDraft.sourceLocale).textInputAutocapitalization(.never)
             TextField(HistoryCopy.text("Original source text"), text: $model.observationDraft.sourceText, axis: .vertical).lineLimit(3...10)
-        }.disabled(model.busy)
+        }.autocorrectionDisabled().disabled(model.busy)
         Section {
             Button(HistoryCopy.text("Review this observation")) { model.reviewObservation() }
                 .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.reviewObservation").disabled(!model.canReviewObservation)
