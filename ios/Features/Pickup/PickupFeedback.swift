@@ -274,7 +274,10 @@ struct SharedMeasurementFeedbackView: View {
     @State private var decision: PickupDecision?
     @State private var baseline: PickupBaseline?
     @State private var comparison: PickupComparison?
-    @State private var busy = false
+    @State private var draftScope: String?
+    @State private var draftConsentID: UUID?
+    @State private var activeRequest: UUID?
+    private var busy: Bool { activeRequest != nil }
     @State private var failed = false
     @State private var actionResult: MeasurementActionResult?
     @AccessibilityFocusState private var resultFocused: Bool
@@ -286,7 +289,7 @@ struct SharedMeasurementFeedbackView: View {
     var body: some View {
         ScrollViewReader { proxy in
         Form {
-            if scope != nil {
+            if let scope, scope == draftScope {
                 Text(actionResult?.text ?? (page?.feedback != nil ? pTr("Household response recorded") : pTr("Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device.")))
                     .id("measurement-feedback-result")
                     .accessibilityIdentifier("measurement.feedback.result")
@@ -297,7 +300,7 @@ struct SharedMeasurementFeedbackView: View {
                         Text(localDecision(feedback.outcome).label)
                         if feedback.incrementalBenefit == 0 { Text(pTr("This response counts as zero additional benefit.")) }
                         Button(pTr("Remove household response"), role: .destructive) {
-                            run(successText: pTr("Household response removed.")) { service in try await service.removeMeasurementFeedback(shopID: shopID, feedbackID: feedback.feedbackId) }
+                            run(reportRemoval: true) { service in try await service.removeMeasurementFeedback(shopID: shopID, feedbackID: feedback.feedbackId) }
                         }
                     } else if status?.consent != nil {
                         Picker(pTr("What happened?"), selection: $decision) {
@@ -316,21 +319,22 @@ struct SharedMeasurementFeedbackView: View {
                             guard let decision, let baseline, let comparison, let consent = status?.consent else { return }
                             let outcome: MeasurementAnswer.Outcome = decision == .tooLate ? .late : decision == .alreadyKnew ? .alreadyKnew : MeasurementAnswer.Outcome(rawValue: decision.rawValue)!
                             let answer = MeasurementAnswer(outcome: outcome, baseline: MeasurementAnswer.Baseline(rawValue: baseline.rawValue)!, comparison: MeasurementAnswer.Comparison(rawValue: comparison.rawValue)!)
-                            run(successText: pTr("Household response recorded")) { service in _ = try await service.sendMeasurementFeedback(shopID: shopID, answer: answer, consent: consent) }
+                            run { service in _ = try await service.sendMeasurementFeedback(shopID: shopID, answer: answer, consent: consent) }
                         }.disabled(decision == nil || baseline == nil || comparison == nil)
                     }
                 }
-                if status?.consent == nil {
+                if let status, status.consent == nil {
                     NavigationLink(pTr("Review optional household measurement")) { MeasurementSettingsView(household: household) }
                 }
                 Button(pTr("Refresh household response")) { run { _ in } }
                 if failed { Text(pTr("The service result is unconfirmed. Refresh before trying again.")) }
                 if busy { ProgressView() }
-            } else { Text(pTr("Return to the current authenticated adult household.")) }
+            } else if scope == nil { Text(pTr("Return to the current authenticated adult household.")) }
+            else { ProgressView() }
         }.navigationTitle(pTr("Optional pickup feedback"))
             .disabled(busy)
             .task(id: scope) {
-                clearDraft()
+                activeRequest = nil; draftScope = scope; draftConsentID = nil; clearDraft()
                 status = nil; page = nil; actionResult = nil; resultFocused = false
                 if scope != nil { run { _ in } }
             }
@@ -346,24 +350,35 @@ struct SharedMeasurementFeedbackView: View {
             }
         }
     }
-    private func run(successText: String? = nil, _ operation: @escaping (HouseholdService) async throws -> Void) {
-        guard !busy, let expected = scope, let service = household.service else { return }
-        busy = true; failed = false; actionResult = nil; resultFocused = false
+    private func run(reportRemoval: Bool = false, _ operation: @escaping (HouseholdService) async throws -> Void) {
+        guard !busy, let expected = scope, expected == draftScope, let service = household.service else { return }
+        let request = UUID()
+        activeRequest = request
+        status = nil; page = nil; failed = false; actionResult = nil; resultFocused = false
         Task {
-            defer { busy = false }
+            defer { if activeRequest == request { activeRequest = nil } }
+            guard activeRequest == request, scope == expected else { return }
             do {
                 try await operation(service)
                 let currentStatus = try await service.measurementStatus()
                 let currentPage = try await service.measurementFeedback(shopID: shopID)
-                guard scope == expected else { status = nil; page = nil; return }
+                guard activeRequest == request, scope == expected else { return }
                 // Keep unsent choices on an ordinary refresh of the same live
                 // consent. A recorded answer or changed consent ends that draft.
-                if currentPage.feedback != nil || currentStatus.consent?.consentId != status?.consent?.consentId {
+                if currentPage.feedback != nil || currentStatus.consent?.consentId != draftConsentID {
                     clearDraft()
                 }
+                draftConsentID = currentStatus.consent?.consentId
                 status = currentStatus; page = currentPage
-                if let successText { actionResult = MeasurementActionResult(scope: expected, text: successText) }
-            } catch { guard scope == expected else { status = nil; page = nil; return }; failed = true }
+                if currentPage.feedback != nil {
+                    actionResult = MeasurementActionResult(scope: expected, text: pTr("Household response recorded"))
+                } else if reportRemoval {
+                    actionResult = MeasurementActionResult(scope: expected, text: pTr("Household response removed."))
+                }
+            } catch {
+                guard activeRequest == request, scope == expected else { return }
+                failed = true
+            }
         }
     }
     private func clearDraft() {

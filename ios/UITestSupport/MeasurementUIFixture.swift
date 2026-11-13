@@ -21,6 +21,8 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
     private let url: URL
     private var state: [String: Any]
     private var statusReadsUntilFailure = ProcessInfo.processInfo.environment["RITC_MEASUREMENT_FAIL_SECOND_STATUS_READ"] == "1" ? 2 : 0
+    private let failFeedbackReplies = ProcessInfo.processInfo.environment["RITC_MEASUREMENT_FAIL_FEEDBACK_REPLIES"] == "1"
+    private var feedbackReads = 0
     var changed: (@Sendable (Int, Int, Int, Int) -> Void)?
     init(url: URL) throws {
         self.url = url
@@ -87,7 +89,11 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
             return try json(["withdrawn": true])
         }
         if path.hasSuffix("/shops/" + Self.shop + "/measurement-feedback") {
-            if method == "GET" { return try json(["shopId": Self.shop, "eligibleWeek": "2026-W45", "feedback": state["feedback"] ?? NSNull()]) }
+            if method == "GET" {
+                feedbackReads += 1
+                if failFeedbackReplies && feedbackReads == 2 { throw URLError(.notConnectedToInternet) }
+                return try json(["shopId": Self.shop, "eligibleWeek": "2026-W45", "feedback": state["feedback"] ?? NSNull()])
+            }
             if method == "POST" {
                 guard Set(input.keys) == ["consentId", "noticeVersion", "outcome", "baseline", "comparison"], input["noticeVersion"] as? String == version,
                       let current = state["consent"] as? [String: String], (input["consentId"] as? String)?.lowercased() == current["consentId"],
@@ -96,12 +102,16 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
                       let comparison = MeasurementAnswer.Comparison(rawValue: input["comparison"] as? String ?? "") else { return try denied("measurement_consent_required", 409) }
                 let answer = MeasurementAnswer(outcome: outcome, baseline: baseline, comparison: comparison)
                 state["feedback"] = ["feedbackId": UUID().uuidString.lowercased(), "shopId": Self.shop, "eligibleWeek": "2026-W45", "consentVersion": version, "outcome": outcome.rawValue, "baseline": baseline.rawValue, "comparison": comparison.rawValue, "incrementalBenefit": answer.incrementalBenefit.map { $0 as Any } ?? NSNull(), "recordedAt": "2026-11-03T16:01:00Z"]
-                try save("sends"); return try json(state["feedback"]!)
+                try save("sends")
+                if failFeedbackReplies { throw URLError(.networkConnectionLost) }
+                return try json(state["feedback"]!)
             }
             if method == "DELETE" {
                 guard Set(input.keys) == ["feedbackId"], let feedback = state["feedback"] as? [String: Any],
                       (input["feedbackId"] as? String)?.lowercased() == feedback["feedbackId"] as? String else { return try denied("invalid_command", 422) }
-                state["feedback"] = nil; try save("deletes"); return try json(["removed": true])
+                state["feedback"] = nil; try save("deletes")
+                if failFeedbackReplies { throw URLError(.networkConnectionLost) }
+                return try json(["removed": true])
             }
         }
         return try denied()

@@ -120,6 +120,52 @@ import XCTest
         XCTAssertFalse(app.staticTexts["Household measurement is enabled"].exists)
         assertCounter("grants", "Consents: 1"); assertCounter("sends", "Sends: 1")
         assertCounter("deletes", "Deletes: 1"); assertCounter("withdrawals", "Withdrawals: 1")
+        exerciseUnconfirmedFeedbackReplies()
+    }
+    private func exerciseUnconfirmedFeedbackReplies() {
+        app.terminate()
+        app.launchEnvironment["RITC_MEASUREMENT_FAIL_FEEDBACK_REPLIES"] = "1"
+        launch(reset: true)
+        tap(app.buttons["Optional household measurement"])
+        tap(app.buttons["I agree to optional household measurement"])
+        assertResultVisible("measurement.consent.result", text: "Household measurement is enabled")
+        tap(app.tabBars.buttons["Shared shop"])
+        tap(app.buttons["Optional pickup feedback"])
+        let send = app.buttons["Send this coded household response"]
+        let remove = app.buttons["Remove household response"]
+        let refresh = app.buttons["Refresh household response"]
+        func assertUnread() {
+            assertText("The service result is unconfirmed.")
+            XCTAssertFalse(send.exists)
+            XCTAssertFalse(remove.exists)
+            XCTAssertFalse(app.buttons["Review optional household measurement"].exists)
+            XCTAssertFalse(app.staticTexts["Household response recorded"].exists)
+        }
+        choose("What happened?", value: "I already knew")
+        choose("Usual workflow", value: "My usual list or notes")
+        choose("Compared with your usual workflow", value: "Same result")
+        tap(refresh)
+        assertUnread()
+        tap(refresh)
+        reveal(send)
+        XCTAssertTrue(send.isEnabled, "Refreshing the same consent should preserve the unsent choices")
+        assertCounter("sends", "Sends: 0")
+        tap(send)
+        waitCounter("sends", "Sends: 1")
+        assertUnread()
+        tap(refresh)
+        assertText("I already knew")
+        assertText("This response counts as zero additional benefit")
+        assertCounter("sends", "Sends: 1")
+        tap(remove)
+        waitCounter("deletes", "Deletes: 1")
+        assertUnread()
+        tap(refresh)
+        reveal(send)
+        XCTAssertFalse(send.isEnabled)
+        XCTAssertFalse(remove.exists)
+        assertCounter("sends", "Sends: 1")
+        assertCounter("deletes", "Deletes: 1")
     }
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "--measurement-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
