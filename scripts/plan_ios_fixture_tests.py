@@ -174,6 +174,8 @@ def matrix(inventory=None):
         "contributor-balanced-05": 7,
         # Avoid the observed UI02 wait after the Bitrise work had finished.
         "SharedFallbackUITests": 7,
+        # Move the quote retry off the M2 queue shared with contributor group 02.
+        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
     }
     m4_slots = {
         # This fixture shared M2 slot 0 with the last-finishing core UI05 job.

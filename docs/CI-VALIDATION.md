@@ -1,5 +1,18 @@
 # Local CI validation
 
+## November 13 contributor fixture queue
+
+The contributor build finished at 06:12:05 UTC. Group 02 started at 06:34:32
+and finished last at 07:00:36. The store-quote lost-reply test occupied M2 slot
+1 for 6m40s while group 02 waited. M2 slot 2 finished its final job at 06:37:15.
+The quote test now uses slot 2 on the same M2 pool. External forks run that
+test on GitHub slot 2. Compare the wait after the contributor build and the
+time to the last required check on the next full run. In the two preceding
+batches the quote test took 6m59s and 6m49s, and slot 2 finished before slot 1
+in both. Queue order affects how much of that time can be recovered.
+[Fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43376088757)
+· [Store-quote job](https://github.com/palatis3/room-in-the-cart/actions/runs/43376088757/job/131725842327)
+
 ## Rechecking several failed fixture groups
 
 For a manual iOS fixture run, enter the exact group names in the existing
