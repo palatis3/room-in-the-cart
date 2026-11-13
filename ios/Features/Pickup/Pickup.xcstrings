@@ -1190,6 +1190,23 @@
         }
       }
     },
+    "Close this meal plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close this meal plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar este plan de comidas"
+          }
+        }
+      }
+    },
     "Close this pickup": {
       "extractionState": "manual",
       "localizations": {

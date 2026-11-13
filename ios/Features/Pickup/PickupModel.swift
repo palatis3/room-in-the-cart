@@ -779,17 +779,33 @@ struct PickupPersistenceLocation {
     @discardableResult func addUrgent(_ need: UrgentMealNeed) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
-        var value = journey
-        if value?.basket != nil || value == nil { value = PickupJourney(id: UUID(), savedAt: clock()) }
-        guard var value else { return false }
-        if let existing = value.urgent.first(where: { $0.id == need.id }) {
-            guard existing == need else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
+        if let original = journeys.first(where: { $0.urgent.contains { $0.id == need.id && $0.carriedFromID == nil } }) {
+            guard original.urgent.contains(need) else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
+            saving = true
+            defer { saving = false }
+            do {
+                guard let store, let revision = storeRevisions[original.id],
+                      try await store.load(id: original.id)?.revision == revision else {
+                    await reloadAfterStaleRevision()
+                    return false
+                }
+            } catch {
+                self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+                return false
+            }
+            selectedID = original.id
+            error = nil
             return true
-        } else {
-            value.urgent.append(need)
-            value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
-            value.stockNeeds.append(StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required))
         }
+        var value: PickupJourney
+        if let current = journey, current.basket == nil, current.closedAt == nil {
+            value = current
+        } else {
+            value = PickupJourney(id: PickupCheckoutMealSource.identity("urgent-meal-plan", [need.id]), savedAt: clock())
+        }
+        value.urgent.append(need)
+        value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
+        value.stockNeeds.append(StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required))
         do { _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds) }
         catch { self.error = pTr("Check the confirmed food amounts and matching units."); return false }
         return await save(value)

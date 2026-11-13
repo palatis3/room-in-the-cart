@@ -153,6 +153,52 @@ final class PickupModelTests: XCTestCase {
         XCTAssertNil(reopened.journey?.urgent.first?.due)
         XCTAssertEqual(reopened.journey?.settlement.entries.count, 0)
     }
+    @MainActor func testNewUrgentNeedAfterClosurePreservesOriginalAndReplaysOnce() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("pickup.sqlite")
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let model = PickupModel(databaseURL: url)
+        let first = UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(3),
+                                   available: quantity(1), due: nil, confirmedAt: Date())
+        let second = UrgentMealNeed(id: UUID(), food: "Rice", meal: "Lunch", required: quantity(4),
+                                    available: quantity(0), due: nil, confirmedAt: Date())
+        let added = await model.addUrgent(first)
+        XCTAssertTrue(added)
+        let closed = await model.change { $0.closedAt = Date() }
+        XCTAssertTrue(closed)
+        let original = try XCTUnwrap(model.journey)
+        let otherWindow = PickupModel(databaseURL: url)
+        await otherWindow.load()
+        let saved = await model.addUrgent(second)
+        XCTAssertTrue(saved)
+        let fresh = try XCTUnwrap(model.journey)
+        XCTAssertNotEqual(fresh.id, original.id)
+        XCTAssertNil(fresh.closedAt)
+        XCTAssertNil(fresh.pickup)
+        XCTAssertNil(fresh.basket)
+        XCTAssertTrue(fresh.settlement.entries.isEmpty)
+        XCTAssertEqual(fresh.urgent, [second])
+        XCTAssertEqual(fresh.stockNeeds.map(\.id), [second.id])
+        let staleSave = await otherWindow.addUrgent(second)
+        XCTAssertFalse(staleSave)
+        let recovered = await otherWindow.addUrgent(second)
+        XCTAssertTrue(recovered)
+        XCTAssertEqual(otherWindow.journey, fresh)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        reopened.selectedID = original.id
+        let replay = await reopened.addUrgent(second)
+        XCTAssertTrue(replay)
+        XCTAssertEqual(reopened.journey, fresh)
+        XCTAssertEqual(reopened.journeys.first { $0.id == original.id }, original)
+        XCTAssertEqual(reopened.journeys.count, 2)
+        var conflicting = second
+        conflicting.required = quantity(9)
+        let overwritten = await reopened.addUrgent(conflicting)
+        XCTAssertFalse(overwritten)
+        XCTAssertEqual(reopened.journey, fresh)
+    }
+
     @MainActor func testFailedPersistenceNeverPublishesCandidateAndRetryKeepsIdentity() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

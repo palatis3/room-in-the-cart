@@ -35,6 +35,19 @@ struct PickupHomeView: View {
                     }
                     NavigationLink(pTr("Repair a meal")) { PickupRepairView(model: model) }
                     NavigationLink(pTr("Tell the cook")) { PickupCookView(model: model) }
+                    if value.basket == nil, !value.urgent.isEmpty {
+                        if let closed = value.closedAt {
+                            LabeledContent(pTr("Closed"), value: closed.formatted())
+                        } else {
+                            Button(pTr("Close this meal plan")) {
+                                Task { await model.change { current in
+                                    guard current.id == value.id, current.revision == value.revision,
+                                          current.closedAt == nil else { throw CocoaError(.validationMissingMandatoryProperty) }
+                                    current.closedAt = model.stockReviewDate
+                                } }
+                            }.disabled(model.hasPendingSave)
+                        }
+                    }
                     Button(pTr("Start the next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused)
                 }
             } else {
