@@ -81,7 +81,7 @@ import CoreDomain
         try shop.handle(lineID: shop.lines[1].id, by: "Private helper")
         for i in 1...35 { _ = try shop.addManualLine(name: "Package number \(i)", quantity: nil) }
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
-        let renderer = LetterPageRenderer(list: listing.printText())
+        let renderer = LetterPageRenderer(text: listing.printText())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
             let count = renderer.numberOfPages
             renderer.prepare(forDrawingPages:NSRange(location:0,length:count))
@@ -108,7 +108,7 @@ import CoreDomain
     }
 }
 
-private final class LetterPageRenderer: ShoppingListPageRenderer {
+private final class LetterPageRenderer: PickupPrintPageRenderer {
     override var paperRect: CGRect { CGRect(x:0,y:0,width:612,height:792) }
     override var printableRect: CGRect { paperRect.insetBy(dx:36,dy:36) }
 }

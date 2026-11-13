@@ -178,7 +178,7 @@ struct LargePrintList: View {
         let controller = UIPrintInteractionController.shared
         let info = UIPrintInfo(dictionary:nil); info.jobName = shop.title; info.outputType = .grayscale
         controller.printInfo = info
-        controller.printPageRenderer = ShoppingListPageRenderer(list: printText())
+        controller.printPageRenderer = PickupPrintPageRenderer(text: printText())
         let presented = controller.present(animated: true) { _, _, error in
             if error != nil { printError = true }
         }
@@ -186,11 +186,11 @@ struct LargePrintList: View {
     }
 }
 
-class ShoppingListPageRenderer: UIPrintPageRenderer {
-    init(list: NSAttributedString) {
+class PickupPrintPageRenderer: UIPrintPageRenderer {
+    init(text: NSAttributedString) {
         super.init()
         footerHeight = 30
-        let formatter = UISimpleTextPrintFormatter(attributedText: list)
+        let formatter = UISimpleTextPrintFormatter(attributedText: text)
         formatter.perPageContentInsets = UIEdgeInsets(top: 32, left: 32, bottom: 32, right: 32)
         addPrintFormatter(formatter, startingAtPageAt: 0)
     }

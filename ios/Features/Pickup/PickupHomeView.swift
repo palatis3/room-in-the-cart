@@ -690,6 +690,7 @@ struct PickupHandoffView: View {
                       model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                 sharing = RetailerShare(snapshot: snapshot, text: copy.fullText)
             } }.disabled(!model.hasCurrentBasketStockBasis)
+            HandoffPrintButton(copy: copy, allowed: access.unlocked && model.isCurrent(copy))
             PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
                                    language: recipientLanguage)
                 .id(snapshot.id)

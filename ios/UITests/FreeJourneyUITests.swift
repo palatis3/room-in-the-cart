@@ -374,6 +374,9 @@ import XCTest
         XCTAssertTrue(preview.label.hasPrefix("Compra revisada"))
         XCTAssertTrue(preview.label.contains("Wraps — 2 unidades"))
         let spanish = preview.label
+        tap(app.buttons["Print dated list"])
+        dismissSystemPrintSheet()
+        XCTAssertEqual(preview.label, spanish)
         tap(app.buttons["Copy dated list"])
         capture("Retailer-English-interface-Spanish-copy")
 
@@ -1083,6 +1086,19 @@ import XCTest
         let share = app.buttons["Share saved dated copy"]
         reveal(share)
         XCTAssertFalse(share.isEnabled)
+        let printCopy = app.buttons["Print saved cook instruction"]
+        tap(printCopy)
+        let privatePrint = app.buttons["Print this private copy"]
+        XCTAssertTrue(privatePrint.waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
+        XCTAssertTrue(privatePrint.waitForNonExistence(timeout: 5))
+        tap(printCopy)
+        tap(privatePrint)
+        dismissSystemPrintSheet()
+        tap(printCopy)
+        XCTAssertTrue(privatePrint.waitForExistence(timeout: 5))
+        app.buttons["Cancel"].firstMatch.tap()
+        XCTAssertFalse(share.isEnabled)
         let confirmCorrection = "Include the saved custom or private wording in this correction"
         enableSwitch(confirmCorrection)
         tap(app.buttons["Review correction"])
@@ -1093,7 +1109,7 @@ import XCTest
         reveal(confirmation, initiallyUpward: false)
         XCTAssertEqual(confirmation.value as? String, "0")
         XCTAssertFalse(app.buttons["Review correction"].isEnabled)
-        fill("Ana", into: "handoffRecipient")
+        fill("Ana", into: "handoffRecipient", useVisibleCenter: true)
         tap(app.buttons["I sent this version to this recipient"])
         assertText("Acknowledgment unknown")
         tap(app.buttons["The recipient acknowledged this version"])
@@ -1464,13 +1480,7 @@ import XCTest
         assertText("Milk"); assertText("Apples")
         capture("Large-print-shopping-list")
         tap(element("printShoppingList"))
-        // The native print sheet can expose its dismiss action as Close or Cancel.
-        let printOptions = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Options", "Printer Options"])).firstMatch
-        let dismissPrint = printOptions.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
-        let dismissReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: dismissPrint)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissReady], timeout: 12), .completed, app.debugDescription)
-        dismissPrint.tap()
-        XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
+        dismissSystemPrintSheet()
         let largePrint = app.navigationBars["Large-print list"]
         tap(largePrint.buttons["Done"])
         XCTAssertTrue(largePrint.waitForNonExistence(timeout: 8), app.debugDescription)
@@ -2184,6 +2194,16 @@ import XCTest
         let trim = luminance.count / 100
         let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
         XCTAssertGreaterThanOrEqual(contrast, 4.5, button.label)
+    }
+
+    private func dismissSystemPrintSheet() {
+        // The native print sheet can expose its dismiss action as Close or Cancel.
+        let printOptions = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Options", "Printer Options"])).firstMatch
+        let dismissPrint = printOptions.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
+        let dismissReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: dismissPrint)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissReady], timeout: 12), .completed, app.debugDescription)
+        dismissPrint.tap()
+        XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
     private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false) {
