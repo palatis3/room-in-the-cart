@@ -932,6 +932,39 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testOfferRetryCoalescesLoadsAndPreservesAnIndependentRestoreFailure() async {
+        let store = FakeMembershipStorefront()
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let model = makeModel(service, store)
+        await model.restore()
+        XCTAssertEqual(model.notice, .failed(.unavailable))
+        var resume: CheckedContinuation<Void, Never>?
+        var calls = 0
+        store.waitDuringLoad = {
+            calls += 1
+            if calls == 1 {
+                await withCheckedContinuation { resume = $0 }
+                throw MembershipFailure.unavailable
+            }
+        }
+
+        let initial = Task { await model.loadOffer() }
+        await settle { resume != nil }
+        XCTAssertTrue(model.isLoadingOffer)
+        await model.loadOffer()
+        XCTAssertEqual(calls, 1)
+        resume?.resume()
+        await initial.value
+        XCTAssertFalse(model.isLoadingOffer)
+        XCTAssertNil(model.offer)
+
+        await model.loadOffer()
+        XCTAssertEqual(calls, 2)
+        XCTAssertNotNil(model.offer)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.statusMessages, [.otherNotice(.failed(.unavailable))])
+    }
+
     func testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice() async {
         let service = FakeMembershipService(snapshot: snapshot())
         let model = makeModel(service, FakeMembershipStorefront())
@@ -1380,12 +1413,14 @@ import Combine
     var onFinish: (() -> Void)?
     var keepsUpdatesOpen = false
     var onLoad: (() -> Void)?
+    var waitDuringLoad: (() async throws -> Void)?
     var observerStarts = 0
     var activeObservers: Int { continuations.count }
     private var continuations: [UUID: AsyncStream<MembershipPurchaseOutcome>.Continuation] = [:]
     func emit(_ outcome: MembershipPurchaseOutcome) { for continuation in continuations.values { continuation.yield(outcome) } }
     func load(productID: String) async throws -> MembershipOffer {
         onLoad?()
+        try await waitDuringLoad?()
         return .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
     }
     func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {

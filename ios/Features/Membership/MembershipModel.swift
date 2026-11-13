@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor final class MembershipModel: ObservableObject {
     @Published private(set) var state = MembershipState()
     @Published private(set) var offer: MembershipOffer?
+    @Published private(set) var isLoadingOffer = false
     @Published private(set) var isBusy = false
     @Published private(set) var notice: Notice?
     // Apple does not identify a request/transaction in a pending purchase result.
@@ -200,20 +201,23 @@ import SwiftUI
         purchaseRejection = nil
         purchaseReport = nil; deliveryOutcomes = [:]; callbackRejections = []
         offer = nil
+        isLoadingOffer = false
         inFlightTransactions.removeAll()
     }
 
     func loadOffer() async {
-        guard !isStopped else { return }
-        guard let id = configuration.productID else { notice = .failed(.notConfigured); return }
+        guard !isStopped, !isLoadingOffer, let id = configuration.productID else { return }
         let session = generation
+        isLoadingOffer = true
+        defer { isLoadingOffer = false }
         do {
             let loaded = try await storefront.load(productID: id)
             guard session == generation else { return }
             offer = loaded
         } catch {
             guard session == generation else { return }
-            offer = nil; notice = .failed(.unavailable)
+            // The offer section shows its own retry. Preserve purchase and restore notices.
+            offer = nil
         }
     }
 

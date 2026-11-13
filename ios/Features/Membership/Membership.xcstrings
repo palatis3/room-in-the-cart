@@ -256,6 +256,22 @@
         }
       }
     },
+    "Loading the subscription offer…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading the subscription offer…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando la oferta de suscripción…"
+          }
+        }
+      }
+    },
     "Manage Subscription": {
       "extractionState": "manual",
       "localizations": {

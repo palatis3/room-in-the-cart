@@ -52,7 +52,9 @@ struct MembershipView: View {
                     Button(mtr("Subscribe to Household")) { Task { await model.purchase() } }
                         .buttonStyle(PrimaryAction()).disabled(!model.canPurchase)
                         .accessibilityIdentifier("membership.subscribe")
-                } else {
+                } else if model.isLoadingOffer {
+                    ProgressView(mtr("Loading the subscription offer…"))
+                } else if model.configuration.productID != nil {
                     Text(mtr("The subscription offer is unavailable. Your Free access is ready to use."))
                     Button(mtr("Retry offer")) { Task { await model.loadOffer() } }.disabled(model.isBusy)
                 }

@@ -536,7 +536,14 @@ import StoreKitTest
         await model.loadOffer()
         XCTAssertNil(model.offer)
         XCTAssertFalse(model.canPurchase)
-        XCTAssertEqual(model.notice, .failed(.unavailable))
+        XCTAssertFalse(model.isLoadingOffer)
+        assertFree(model)
+
+        try await session.setSimulatedError(nil, forAPI: .loadProducts)
+        await model.loadOffer()
+        XCTAssertEqual(model.offer?.productID, productID)
+        XCTAssertTrue(model.canPurchase)
+        XCTAssertTrue(model.statusMessages.isEmpty)
         assertFree(model)
     }
 
