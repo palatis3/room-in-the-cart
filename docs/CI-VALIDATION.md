@@ -1,5 +1,16 @@
 # Local CI validation
 
+## November 13 UI05 queue
+
+UI05 was ready at 04:54:43 UTC and started at 05:21:16 in the
+[core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43367808820).
+The known-trip quote adoption fixture used the same M2 slot for 9m14s.
+It took 9m01s and 9m14s in the preceding two batches. Move that fixture to
+M4 slot 0, whose last core job in this run finished at 05:21:40. Compare
+UI05's wait and the final combined gate on subsequent full runs. Queue order
+and the job's M4 execution time will affect the observed saving.
+[Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43367808533)
+
 ## Browser and StoreKit startup — November 13
 
 On the [November 13 core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43356633331),
@@ -208,7 +219,7 @@ The following jobs share the six M4 slots.
 
 | Job or group | M4 slot | Original GitHub fallback |
 | --- | --- | --- |
-| Full core UI01 and UI03 | 0 | 1 and 3 |
+| Full core UI01, UI03 and known-trip quote adoption | 0 | 1, 3 and 0 |
 | Unsigned Release, core UI06, Spanish expired quote and contributor balanced-04 | 1 | 1, 1, 4 and 0 |
 | Contributor balanced-03, core UI07 and core UI10 | 2 | 4, 2 and 0 |
 | Delivery recovery/cook/closeout, core UI04 and core UI08 | 3 | 1, 1 and 3 |

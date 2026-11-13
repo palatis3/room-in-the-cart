@@ -176,6 +176,8 @@ def matrix(inventory=None):
         "SharedFallbackUITests": 7,
     }
     m4_slots = {
+        # This fixture shared M2 slot 0 with the last-finishing core UI05 job.
+        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 0,
         "contributor-balanced-03": 2,
         "contributor-balanced-04": 1,
         "contributor-balanced-05": 5,

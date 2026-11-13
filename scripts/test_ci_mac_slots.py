@@ -47,7 +47,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
-            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('bitrise-m4', 4), ('bitrise-m4', 0), ('bitrise', 1), ('bitrise', 2),
             ('bitrise-m4', 0), ('github', 1),
         ])
         self.assertEqual({row['shard']: (row['provider'], row['macos_slot'])
@@ -78,6 +78,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('SharedFoodEditorUITests-testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney', 4, 1),
             ('SharedOperationUndoUITests-testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple', 2, 4),
             ('SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult', 4, 4),
+            ('SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption', 0, 0),
             ('SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction', 0, 5)])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedRecordsUITests'], ['contributor'])
         self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
