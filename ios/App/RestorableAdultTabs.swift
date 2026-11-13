@@ -42,7 +42,7 @@ struct RestoredDestinationView: View {
                 case .comparison(let actor, let workspace, let id):
                     if actor == access.localActorID, app.ready, app.hasLoadedRecords, app.error == nil, app.store?.workspaceID == workspace,
                        let record = app.records.first(where: { $0.id == id }), let draft = try? app.decode(record) {
-                        ComparisonView(draft: draft, savedAt: record.savedAt)
+                        ComparisonView(draft: draft, saved: record)
                     } else { unavailable }
                 case .household(let destination, let identity):
                     if let scope = contextualScope(household), identity.matches(scope), scope.permits(destination) {

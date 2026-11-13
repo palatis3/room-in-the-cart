@@ -401,6 +401,22 @@
         }
       }
     },
+    "This saved comparison changed. Reopen it to review the latest prices before saving your edits.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved comparison changed. Reopen it to review the latest prices before saving your edits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comparación guardada cambió. Vuelve a abrirla para revisar los precios más recientes antes de guardar tus cambios."
+          }
+        }
+      }
+    },
     "Could not save on this iPhone. Your entries are still here. Try again.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",

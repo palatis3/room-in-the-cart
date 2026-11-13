@@ -206,6 +206,42 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testEditingTwoCopiesOfAComparisonPreservesTheNewerSavedPrice() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try ComparisonStore(url: directory.appendingPathComponent("local.sqlite"))
+        let draft = makeDraft(unknownSecondYield: false)
+        let first = ComparisonModel(draft: draft)
+        let other = ComparisonModel(draft: draft)
+        await first.save(in: store)
+        await other.save(in: store)
+        XCTAssertNil(other.error)
+
+        first.draft.aPrice = "5.25"
+        await first.save(in: store)
+        XCTAssertNil(first.error)
+        other.draft.bPrice = "6.75"
+        await other.save(in: store)
+        XCTAssertEqual(other.error, tr("This saved comparison changed. Reopen it to review the latest prices before saving your edits."))
+        XCTAssertNil(other.savedAt)
+        XCTAssertEqual(other.draft.bPrice, "6.75")
+        let loaded = try await store.load(id: draft.id)
+        let saved = try XCTUnwrap(loaded)
+        XCTAssertEqual(saved.revision, 2)
+        let latestDraft = try JSONDecoder().decode(SavedPayload.self, from: saved.payload).draft
+        XCTAssertEqual(latestDraft, first.draft)
+        let reopened = ComparisonModel(draft: latestDraft, savedRevision: saved.revision)
+        reopened.draft.bPrice = other.draft.bPrice
+        await reopened.save(in: store)
+        XCTAssertNil(reopened.error)
+        let updated = try await store.load(id: draft.id)
+        XCTAssertEqual(updated?.revision, 3)
+        let newRecord = try XCTUnwrap(updated)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: newRecord.payload).draft, reopened.draft)
+        try await store.close()
+    }
+
+    @MainActor
     func testConfirmedConversionSaveReopenKeepsOriginalBasisAndAnUnchangedRetry() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -229,7 +265,7 @@ final class AppModelTests: XCTestCase {
         let app = AppModel(databaseURL: url)
         await app.open()
         let reopened = try XCTUnwrap(app.records.first)
-        let restored = ComparisonModel(draft: try app.decode(reopened), clock: { Date(timeIntervalSince1970: 1_800_000_000) })
+        let restored = ComparisonModel(draft: try app.decode(reopened), savedRevision: reopened.revision, clock: { Date(timeIntervalSince1970: 1_800_000_000) })
         XCTAssertEqual(restored.draft, original)
         restored.compare()
         XCTAssertEqual(restored.result, result)
@@ -540,7 +576,7 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(reopened.records, [record])
         let restoredDraft = try reopened.decode(XCTUnwrap(reopened.records.first))
         XCTAssertEqual(restoredDraft, draft)
-        let restored = ComparisonModel(draft: restoredDraft, clock: { fixedTime.addingTimeInterval(30) })
+        let restored = ComparisonModel(draft: restoredDraft, savedRevision: record.revision, clock: { fixedTime.addingTimeInterval(30) })
         restored.compare()
         XCTAssertNil(restored.error)
         XCTAssertEqual(restored.result, originalResult)

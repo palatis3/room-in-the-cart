@@ -167,9 +167,11 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     @Published var error: String?
     @Published var savedAt: Date?
     @Published var saving = false
+    private var savedRevision: Int64
     let clock: () -> Date
-    init(draft: ComparisonDraft, clock: @escaping () -> Date = Date.init) {
+    init(draft: ComparisonDraft, savedRevision: Int64 = 0, clock: @escaping () -> Date = Date.init) {
         self.draft = draft
+        self.savedRevision = savedRevision
         self.clock = clock
     }
 
@@ -249,9 +251,13 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
                 calculationVersion: SavedPayload.currentCalculationVersion,
                 normalizedRequest: normalized, answer: answer,
                 roundingPolicy: SavedPayload.currentRoundingPolicy))
-            let saved = try await store.save(id: savedDraft.id, title: savedDraft.item, payload: payload, savedAt: clock())
+            let saved = try await store.save(id: savedDraft.id, title: savedDraft.item, payload: payload, savedAt: clock(),
+                                             requiring: [savedDraft.id: savedRevision])
+            savedRevision = saved.revision
             if draft == savedDraft { savedAt = saved.savedAt }
             error = nil
+        } catch ComparisonStoreError.staleRevision {
+            error = tr("This saved comparison changed. Reopen it to review the latest prices before saving your edits.")
         } catch { Diagnostics.record(.localSaveFailed); self.error = tr("Could not save on this iPhone. Your entries are still here. Try again.") }
     }
 }

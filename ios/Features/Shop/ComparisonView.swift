@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreDomain
+import LocalStore
 
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
@@ -10,11 +11,11 @@ struct ComparisonView: View {
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
-    init(draft: ComparisonDraft = ComparisonDraft(), savedAt: Date? = nil) {
-        let model = ComparisonModel(draft: draft)
-        model.savedAt = savedAt
+    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil) {
+        let model = ComparisonModel(draft: draft, savedRevision: saved?.revision ?? 0)
+        model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
-        _reviewing = State(initialValue: savedAt != nil)
+        _reviewing = State(initialValue: saved != nil)
     }
 
     var body: some View {

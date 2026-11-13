@@ -284,7 +284,7 @@ struct RecordsToolsEntryView: View {
             NavigationStack {
                 Group {
                     switch destination.content {
-                    case let .comparison(app, draft, date): ComparisonView(draft: draft, savedAt: date).environmentObject(app)
+                    case let .comparison(app, draft, record): ComparisonView(draft: draft, saved: record).environmentObject(app)
                     case let .ledger(model):
                         List {
                             Text(recordsText("This is a separate recovered workspace. Your current pickup is unchanged."))
@@ -335,7 +335,7 @@ private struct RecordsRecoveredDinnersView: View {
 
 @MainActor private final class RecordsComposition: ObservableObject {
     struct Destination: Identifiable {
-        enum Content { case comparison(AppModel, ComparisonDraft, Date), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), sharedRecord(ArchiveRecord, String), ledgerDeletion(WholeLedgerDeletionReview) }
+        enum Content { case comparison(AppModel, ComparisonDraft, SavedComparison), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), sharedRecord(ArchiveRecord, String), ledgerDeletion(WholeLedgerDeletionReview) }
         let id: String
         let content: Content
     }
@@ -767,7 +767,7 @@ private struct RecordsRecoveredDinnersView: View {
             let isolated = AppModel(databaseURL: url); await isolated.open()
             try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize(), isolated.ready, let record = isolated.records.first else { throw ArchiveError.unavailable }
-            destination = Destination(id: saved.id, content: .comparison(isolated, try isolated.decode(record), record.savedAt))
+            destination = Destination(id: saved.id, content: .comparison(isolated, try isolated.decode(record), record))
         case .ledger:
             _ = try RecordsNativeCodec.ledger(bytes)
             let url = folder.appendingPathComponent("ledger.sqlite")
