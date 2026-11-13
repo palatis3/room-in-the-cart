@@ -1268,6 +1268,7 @@ import XCTest
         restart()
         openShoppingList()
         reveal(element(id))
+        XCTAssertEqual(element(id).value as? String, "2 items")
         tap(element("ledgerImport"))
         fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport"))

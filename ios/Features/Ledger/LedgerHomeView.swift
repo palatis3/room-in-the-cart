@@ -207,7 +207,9 @@ struct LedgerHomeView: View {
     }
 
     private func row(_ line: ShoppingLine, shop: ShoppingLedger) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
+        let details = [quantity, line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        return HStack(alignment: .top, spacing: 10) {
             Button {
                 Task {
                     _ = await model.editShop(key: "check-\(line.id)", shopID: shop.id) { try $0.setChecked(lineID: line.id, checked: true) }
@@ -223,11 +225,12 @@ struct LedgerHomeView: View {
             } label: {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(line.name).font(.headline)
-                    Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).foregroundStyle(Theme.secondary)
+                    Text(quantity).foregroundStyle(Theme.secondary)
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle).font(.footnote).foregroundStyle(Theme.secondary) }
                 }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
             }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                .accessibilityValue(Text(verbatim: details))
                 .accessibilityIdentifier("ledgerInspect-\(line.id)")
         }
     }
