@@ -49,6 +49,33 @@ import CoreDomain
         XCTAssertEqual(decoded.listLayout,LedgerListLayout())
     }
 
+    func testManualOrderPreservesHiddenPositionsThroughReorderAndReopen() throws {
+        var shop = try populated("Corner Market")
+        let ids = shop.lines.map(\.id)
+        let checked = ids[0], handled = ids[1], trashed = ids[2]
+        let first = try shop.addManualLine(name: "Wraps", quantity: nil)
+        let second = try shop.addManualLine(name: "Wraps", quantity: nil)
+        var layout = ShopListLayout()
+        layout.mode = .manual
+        // The trashed item and the second Wraps row have never been manually ranked.
+        layout.lineOrder = [first, handled, checked]
+        try shop.setChecked(lineID: checked, checked: true)
+        try shop.handle(lineID: handled, by: "Shopper")
+        try shop.trash(lineID: trashed)
+        try layout.setActiveOrder([second, first], in: shop)
+        XCTAssertEqual(layout.lineOrder, [second, handled, checked, trashed, first])
+        XCTAssertThrowsError(try layout.setActiveOrder([first, first], in: shop))
+        XCTAssertThrowsError(try layout.setActiveOrder([second], in: shop))
+        try shop.reopen(lineID: checked)
+        try shop.reopen(lineID: handled)
+        try shop.restore(lineID: trashed)
+        var saved = LedgerListLayout()
+        saved.shopLayouts[shop.id.uuidString.lowercased()] = layout
+        let restored = try JSONDecoder().decode(LedgerListLayout.self, from: JSONEncoder().encode(saved))
+        XCTAssertEqual(restored.groups(shop: shop).flatMap(\.lines).map(\.id), [second, handled, checked, trashed, first])
+        XCTAssertEqual(shop.lines.map(\.id), ids + [first, second])
+    }
+
     func testSystemPrintFormatterPaginatesAndOmitsPrivateNotesAndInactiveItems() throws {
         var shop = try populated("Corner Market")
         try shop.handle(lineID: shop.lines[1].id, by: "Private helper")

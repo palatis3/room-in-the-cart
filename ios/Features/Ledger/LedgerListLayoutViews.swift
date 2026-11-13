@@ -106,8 +106,7 @@ struct LedgerLayoutEditor: View {
             var layout = workspace.listLayout.layout(for: shop)
             layout.mode = mode
             if mode == .manual {
-                let active = Set(lineIDs)
-                layout.lineOrder = lineIDs + layout.lineOrder.filter { !active.contains($0) }
+                try layout.setActiveOrder(lineIDs, in: shop)
             }
             if mode == .aisle {
                 layout.branch = branch
