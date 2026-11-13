@@ -22,7 +22,9 @@ extension HouseholdClientTests {
         let auth = try auth(), vault = MemoryVault(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         var service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
         var commands: [Data] = [], previews = 0, windows = 0, deny = false, committed = 0
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let value = self.authResponse(request) { return value }
             let path = try XCTUnwrap(request.url?.path)
             if path.hasSuffix("/devices") { return (201, try undoHTTPData(["deviceId": "device", "deviceToken": "test"])) }
@@ -53,12 +55,12 @@ extension HouseholdClientTests {
         let history = try await service.sharedOperationHistory(shopID: page.shopId.uuid, page: page)
         XCTAssertEqual(history.items, [target])
         let candidate = try await service.sharedOperationUndoCandidate(page: page, shop: shop, target: target)
-        XCTAssertEqual(windows, 0); XCTAssertEqual(previews, 0); XCTAssertTrue(commands.isEmpty)
+        XCTAssertEqual(stateLock.withLock { windows }, 0); XCTAssertEqual(stateLock.withLock { previews }, 0); XCTAssertTrue(stateLock.withLock { commands.isEmpty })
         // Dropping a candidate is a read-only Cancel; the server supplies no Apply token.
         do { _ = try await service.previewSharedOperationUndo(page: page, shop: shop, target: target, candidate: candidate, packs: []); XCTFail("Missing pack review reached HTTP") } catch {}
-        XCTAssertEqual(previews, 0)
+        XCTAssertEqual(stateLock.withLock { previews }, 0)
         let review = try await service.previewSharedOperationUndo(page: page, shop: shop, target: target, candidate: candidate, packs: packs)
-        XCTAssertTrue(commands.isEmpty); XCTAssertEqual(windows, 0)
+        XCTAssertTrue(stateLock.withLock { commands.isEmpty }); XCTAssertEqual(stateLock.withLock { windows }, 0)
         let operation = try await service.prepareSharedOperationUndoApply(review)
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         var expected = try review.response.action.commandAction.bodyValues()
@@ -80,19 +82,20 @@ extension HouseholdClientTests {
         service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport()); _ = try await service.enroll(householdID: household)
         let restored = try await OperationOutbox(url: url).operations()
         let receipt = try await service.executeSharedDemand(try XCTUnwrap(restored.first))
-        XCTAssertEqual(commands, [operation.bytes, operation.bytes]); XCTAssertEqual(committed, 1)
+        XCTAssertEqual(stateLock.withLock { commands }, [operation.bytes, operation.bytes]); XCTAssertEqual(stateLock.withLock { committed }, 1)
         XCTAssertEqual(receipt.operationId, review.response.preview.receipt.operationId.string)
-        XCTAssertEqual(previews, 1); XCTAssertEqual(windows, 1)
+        XCTAssertEqual(stateLock.withLock { previews }, 1); XCTAssertEqual(stateLock.withLock { windows }, 1)
         var expiredFixture = f, expiredResponse = f["response"] as! [String: Any]
         expiredResponse["expiresAt"] = "2020-01-01T00:00:00Z"; expiredFixture["response"] = expiredResponse
         let expired = try SharedOperationUndoReview(context: review.context, page: page, shop: shop, target: target, candidate: candidate,
             request: review.request, response: OperationUndoFixture.decode(expiredFixture["response"]!))
         do { _ = try await service.prepareSharedOperationUndoApply(expired); XCTFail("Expired preview prepared an Apply") } catch {}
-        XCTAssertEqual(windows, 1); XCTAssertEqual(commands.count, 2)
-        deny = true
+        XCTAssertEqual(stateLock.withLock { windows }, 1); XCTAssertEqual(stateLock.withLock { commands.count }, 2)
+        stateLock.withLock { deny = true }
         do { _ = try await service.executeSharedDemand(operation); XCTFail("Revoked authority sent retry") } catch {}
-        XCTAssertEqual(commands.count, 2)
-        deny = false; _ = try await service.enroll(householdID: household)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 2)
+        stateLock.withLock { deny = false }
+        _ = try await service.enroll(householdID: household)
         let held = HeldResponse(), arrived = expectation(description: "held read-only candidate")
         MockURLProtocol.intercept = { request in
             if request.request.url?.path.hasSuffix("/operation-undo-candidates") == true { held.set(request); arrived.fulfill(); return true }; return false
@@ -102,7 +105,7 @@ extension HouseholdClientTests {
         await fulfillment(of: [arrived], timeout: 2)
         await active.clearScope(); held.finish(status: 200, data: try undoHTTPData(f["candidate"]!))
         do { _ = try await task.value; XCTFail("Held candidate survived revoked context") } catch {}
-        XCTAssertEqual(commands.count, 2)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 2)
     }
 }
 
@@ -159,7 +162,9 @@ extension HouseholdClientTests {
         let fixture = try undoMembershipExpiryFixture(restoring: restoring), original = try OperationUndoFixture.review(fixture)
         let auth = try auth(), service = HouseholdService(configuration: try ServiceConfiguration(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var windows = 0, commands = 0
+        let stateLock = NSLock()
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let value = self.authResponse(request) { return value }
             let path = try XCTUnwrap(request.url?.path)
             if path.hasSuffix("/devices") { return (201, try undoHTTPData(["deviceId": "device", "deviceToken": "test"])) }
@@ -175,14 +180,14 @@ extension HouseholdClientTests {
         if restoring {
             do { _ = try await service.prepareSharedOperationUndoApply(review); XCTFail("Expired historical price was restored") }
             catch let error as ClientError { XCTAssertEqual(error, .service(status: 409, code: "food_undo_expired_quote", correlationID: nil, retryAfter: nil)) }
-            XCTAssertEqual(windows, 0)
+            XCTAssertEqual(stateLock.withLock { windows }, 0)
         } else {
             let operation = try await service.prepareSharedOperationUndoApply(review)
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
             XCTAssertEqual(envelope.kind, "shop.patch"); XCTAssertEqual(envelope.body["lines"], .array([]))
             XCTAssertEqual(operation.sharedDemandBinding?.reservedOperationID, review.response.preview.receipt.operationId)
-            XCTAssertEqual(windows, 1)
+            XCTAssertEqual(stateLock.withLock { windows }, 1)
         }
-        XCTAssertEqual(commands, 0, "Preparation is not Apply")
+        XCTAssertEqual(stateLock.withLock { commands }, 0, "Preparation is not Apply")
     }
 }

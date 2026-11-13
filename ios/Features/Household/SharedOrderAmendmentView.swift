@@ -30,6 +30,7 @@ struct SharedOrderAmendmentView: View {
                         if model.delivery == .waiting {
                             Button(ht("Retry the same shared shop action")) { Task { await model.retry(); await refresh() } }
                                 .id("shared-order-retry").accessibilityFocused($retryFocused)
+                                .accessibilityIdentifier("sharedOrder.retry")
                         }
                         Text(OrderAmendmentCopy.text("The result is not confirmed. Retry the saved action without creating another confirmation."))
                     }

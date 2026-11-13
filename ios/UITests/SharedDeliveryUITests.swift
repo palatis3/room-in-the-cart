@@ -89,11 +89,14 @@ import XCTest
         XCTAssertFalse(app.staticTexts["Native market ABC-51"].exists)
         XCTAssertFalse(row("sharedOrder.current").exists)
         prepare();tap(app.buttons["sharedOrder.confirm"])
-        let retry=app.buttons[spanishLargestText ? "Reintentar la misma acción de compra compartida" : "Retry the same shared shop action"]
+        let retry = app.buttons["sharedOrder.retry"]
+        let retryLabel = spanishLargestText ? "Reintentar la misma acción de compra compartida" : "Retry the same shared shop action"
         XCTAssertTrue(retry.waitForExistence(timeout:10), "A lost reply must retain the original durable operation")
+        XCTAssertEqual(retry.label, retryLabel)
         app.terminate();open(reset:false)
         reveal(retry)
         XCTAssertTrue(retry.waitForExistence(timeout:10))
+        XCTAssertEqual(retry.label, retryLabel)
         tap(retry)
         XCTAssertTrue(retry.waitForNonExistence(timeout:10))
         reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("\(packsLabel) 1"))
