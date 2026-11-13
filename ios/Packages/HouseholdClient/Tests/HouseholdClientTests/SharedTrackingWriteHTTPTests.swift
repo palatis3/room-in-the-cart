@@ -106,8 +106,10 @@ extension HouseholdClientTests {
         let f = try F.scenario(), page: SharedTrackingPage = try F.decode(f["page"]!), intent = try F.intent(f)
         let auth = try auth(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let stateLock = NSLock()
         var currentPage: Any = f["page"]!, deny = false, commandError: String?, wrongReceipt = false, commands = 0, windows = 0
         MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -124,40 +126,40 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let candidate = try await service.sharedTrackingCandidate(page: page, kind: intent.kind)
         let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
-        currentPage = F.edit(currentPage, "state.privacyRevision", 6)
+        stateLock.withLock { currentPage = F.edit(currentPage, "state.privacyRevision", 6) }
         do { _ = try await service.prepareSharedTrackingApply(accepted); XCTFail("Stale privacy read prepared") } catch {}
-        XCTAssertEqual(windows, 0); XCTAssertEqual(commands, 0)
-        currentPage = f["page"]!
+        XCTAssertEqual(stateLock.withLock { windows }, 0); XCTAssertEqual(stateLock.withLock { commands }, 0)
+        stateLock.withLock { currentPage = f["page"]! }
         let operation = try await service.prepareSharedTrackingApply(accepted)
         var object = try JSONSerialization.jsonObject(with: encoded(operation)) as! [String: Any]
         let envelope = try JSONSerialization.jsonObject(with: operation.bytes)
         object["bytes"] = try F.bytes(F.edit(envelope, "body.demandReview.trackingVersion", 1)).base64EncodedString()
         let tampered: PendingOperation = try F.decode(object)
         do { _ = try await service.executeSharedTracking(tampered); XCTFail("Changed durable token reached HTTP") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        XCTAssertEqual(commands, 0)
+        XCTAssertEqual(stateLock.withLock { commands }, 0)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         let outbox = OperationOutbox(url: directory.appendingPathComponent("outbox.json"))
         let unrelated = try PendingOperation(envelope: .init(replayWindow: F.id(80), shopId: F.id(2), kind: "shop.freeze", base: .init(shopRevision: 8, authorityEpoch: 3), body: [:]), householdID: F.id(99), memberID: member, deviceID: "device")
         try await outbox.append(unrelated)
-        deny = true
+        stateLock.withLock { deny = true }
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Revoked shopper sent command") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(commands, 0)
+        XCTAssertEqual(stateLock.withLock { commands }, 0)
         var pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated])
-        deny = false; commandError = "tracking_replay_unavailable"
+        stateLock.withLock { deny = false; commandError = "tracking_replay_unavailable" }
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Erased source retry accepted") } catch {}
         pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated])
-        commandError = "tracking_store_permission"
+        stateLock.withLock { commandError = "tracking_store_permission" }
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Revoked store source retry accepted") } catch {}
         pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated])
-        commandError = "tracking_stale_state"
+        stateLock.withLock { commandError = "tracking_stale_state" }
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Stale command accepted") } catch {}
         pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated, operation])
-        commandError = nil; wrongReceipt = true
+        stateLock.withLock { commandError = nil; wrongReceipt = true }
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Wrong receipt removed pending command") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
         pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated, operation])
-        XCTAssertEqual(windows, 1)
-        wrongReceipt = false
+        XCTAssertEqual(stateLock.withLock { windows }, 1)
+        stateLock.withLock { wrongReceipt = false }
         _ = try await service.sendSharedTracking(operation, outbox: outbox)
         pending = try await outbox.operations(); XCTAssertEqual(pending, [unrelated])
     }
