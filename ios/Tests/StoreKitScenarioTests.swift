@@ -433,7 +433,7 @@ import StoreKitTest
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
         let pendingEntitlements = await storefront.currentTransactions()
         XCTAssertTrue(pendingEntitlements.isEmpty, "The pending request has no current entitlement")
-        if purchase.finished { XCTAssertEqual(model.notice, .pending) }
+        if purchase.finished { XCTAssertEqual(model.purchaseReport, .pending) }
         else { XCTAssertTrue(model.isBusy) }
         assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
@@ -471,7 +471,14 @@ import StoreKitTest
         XCTAssertEqual(pendingCount, 0, "Declined request still carries a pending flag. " + diagnostic)
         XCTAssertEqual(currentCount, 0, "Declined request must not be a current entitlement. " + diagnostic)
         XCTAssertFalse(returnedDeclinedRequest, diagnostic)
-        XCTAssertTrue(model.notice == .pending || model.notice == .cancelled || model.notice == .failed(.unavailable))
+        // A callback for the expired purchase can update the separate delivery notice.
+        // Check what this purchase reported and what the shopper can see.
+        switch model.purchaseReport {
+        case .pending: XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+        case .cancelled: XCTAssertTrue(model.statusMessages.contains(.cancelledReport))
+        case .failed(.unavailable): XCTAssertTrue(model.statusMessages.contains(.purchaseFailure(.unavailable)))
+        default: XCTFail("Unexpected declined purchase report: \(String(describing: model.purchaseReport)). " + diagnostic)
+        }
         assertFree(model)
     }
 
@@ -548,8 +555,8 @@ import StoreKitTest
     }
 
     func testRenewalKeepsOriginalPurchaseAndNoLocalUnlock() async throws {
+        session.timeRate = .oneRenewalEveryTwoSeconds
         let original = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
-        try session.forceRenewalOfSubscription(productIdentifier: productID)
         try await eventually("Renewal creates another transaction") {
             self.session.allTransactions().contains { $0.identifier != UInt(original.id) }
         }
