@@ -29,6 +29,40 @@ final class PickupOfferReviewTests: XCTestCase {
     }
     private func location() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString) }
 
+    @MainActor func testRetryingSavedChargeAfterReopenPreservesThePickupRevision() async throws {
+        let url = location()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = try await placed(store: ComparisonStore(url: url))
+        func charge(id: UUID = UUID(), cents: Int64 = 700) -> SettlementEntry {
+            SettlementEntry(id: id, evidenceKey: "receipt-7", kind: .postedCharge,
+                            amount: Money(minorUnits: cents), occurredAt: now)
+        }
+        let entry = charge()
+        let saved = await model.settle(entry)
+        XCTAssertTrue(saved)
+        let revision = try XCTUnwrap(model.journey?.revision)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        for retry in [entry, charge()] {
+            let accepted = await reopened.settle(retry)
+            XCTAssertTrue(accepted)
+            XCTAssertEqual(reopened.journey?.revision, revision)
+        }
+        let conflict = await reopened.settle(charge(cents: 701))
+        XCTAssertFalse(conflict)
+        let reader = PickupModel(databaseURL: url)
+        await reader.load()
+        XCTAssertEqual(reader.journey?.revision, revision)
+        XCTAssertEqual(reader.journey?.settlement.entries, [entry])
+
+        let archived = try await reader.archiveSnapshot()
+        let record = try XCTUnwrap(archived.records.first)
+        try await reader.deleteArchived(id: record.id, expectedRevision: record.revision, operationID: UUID())
+        let staleRetry = await reopened.settle(entry)
+        XCTAssertFalse(staleRetry)
+        XCTAssertNil(reopened.journey)
+    }
+
     @MainActor func testReviewedUpdateSurvivesSQLiteRestartAndPreservesUnrelatedFacts() async throws {
         let url = location(); defer { try? FileManager.default.removeItem(at: url) }
         let store = try ComparisonStore(url: url), model = try await placed(store: store)

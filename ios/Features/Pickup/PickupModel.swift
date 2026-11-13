@@ -505,12 +505,16 @@ struct PickupPersistenceLocation {
             if pending.selectsPickup { selectedID = pending.value.id }
             self.pending = nil; hasPendingSave = false; error = nil; return true
         } catch ComparisonStoreError.staleRevision, ComparisonStoreError.erased {
-            self.pending = nil; hasPendingSave = false; ready = false
-            journeys = []; storeRevisions = [:]
-            await load()
-            self.error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+            self.pending = nil; hasPendingSave = false
+            await reloadAfterStaleRevision()
             return false
         } catch { self.error = pTr("Not saved. Retry this change before continuing; your last saved pickup is intact."); return false }
+    }
+    private func reloadAfterStaleRevision() async {
+        ready = false
+        journeys = []; storeRevisions = [:]
+        await load()
+        error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
     }
     func discardPending() { guard !saving else { return }; pending = nil; hasPendingSave = false; error = nil }
     func recordFeedback(_ feedback: PickupFeedback?, shopID: UUID, revision: Int64,
@@ -775,9 +779,25 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func settle(_ entry: SettlementEntry) async -> Bool {
-        await change { value in
+        guard ready, var value = journey, !saving, pending == nil else { return false }
+        do {
             guard value.pickup != nil else { throw PickupModelError.invalid }
-            try value.settlement.append(entry)
+            guard try value.settlement.append(entry) else {
+                // Another window or Records can change or erase the pickup after this model loads.
+                saving = true
+                defer { saving = false }
+                guard let store, let expected = storeRevisions[value.id],
+                      try await store.load(id: value.id)?.revision == expected else {
+                    await reloadAfterStaleRevision()
+                    return false
+                }
+                error = nil
+                return true
+            }
+            return await save(value)
+        } catch {
+            self.error = pTr("Check the amounts and units. Your saved pickup has not changed.")
+            return false
         }
     }
     static func validate(_ value: PickupJourney) throws {
