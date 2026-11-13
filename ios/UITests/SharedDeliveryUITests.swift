@@ -648,9 +648,15 @@ import XCTest
         tap(reviewReservation)
         tap(app.buttons["Release this reservation"])
         tap(app.buttons["Release amount set aside"])
+        // The delivery row remains in the accessibility tree behind the review
+        // sheet while the reservation is released and its navigation stack closes.
+        let matchSheet = app.navigationBars.matching(NSPredicate(format: "identifier IN %@",
+            ["Set food aside", "Tortillas", "Meal ingredient matches"])).firstMatch
+        XCTAssertTrue(matchSheet.waitForNonExistence(timeout: 8), "Releasing the reservation should close its review")
         tap(openMatches)
         tap(ingredient)
         tap(app.buttons["Remove ingredient match"])
+        XCTAssertTrue(matchSheet.waitForNonExistence(timeout: 8), "Removing the match should close its review")
         tap(openMatches)
         tap(ingredient)
         reveal(app.buttons["Match this ingredient"])
