@@ -1,5 +1,26 @@
 # Local CI validation
 
+## November 13 meal Undo scheduling and sanitizer feedback
+
+The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on
+Bitrise M2 slot 1 ahead of core UI04. It now uses M2 slot 2. External pull
+requests use GitHub slot 2 for the same selector. Replaying the two completed
+batches projects 3m33s and 1m30s earlier completion of the last check after
+allowing two minutes for an additional runner pickup. Compare the next hosted
+batch with those estimates. [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
+· [Core UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43472025183/job/132050046503)
+
+Three Thread Sanitizer reports identified state shared by async HouseholdClient
+tests and their mock HTTP callbacks. The sanitizer jobs now start with
+HouseholdClient. It previously started 81, 96 and 107 seconds after the first
+package build. For changes to these fixtures, run the affected tests locally,
+then run the complete package with the same sanitizer and reuse its build cache.
+
+```sh
+swift test --package-path ios/Packages/HouseholdClient \
+  --scratch-path .build/NativeThreadSanitizer/HouseholdClient --sanitize=thread
+```
+
 ## November 13 GitHub fixture startup
 
 Across four full runs before simulator boot overlapped artifact transfer, the six

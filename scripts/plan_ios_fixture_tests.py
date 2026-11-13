@@ -175,6 +175,8 @@ def matrix(inventory=None):
         # English skipped-dinner Undo was the last fixture after a 31-minute GitHub wait.
         # M2 lane 5 and its GitHub fallback both use slot 0.
         "SharedOperationUndoUITests-testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 5,
+        # The English meal Undo ran ahead of core UI04 on M2 slot 1 in three full runs.
+        "SharedCreatedMealUndoUITests-testCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 7,
         # In run 43408449245 this case waited 38 minutes for M2 slot 2.
         # GitHub slot 2 had already finished building the StoreKit products.
         "SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple": 2,

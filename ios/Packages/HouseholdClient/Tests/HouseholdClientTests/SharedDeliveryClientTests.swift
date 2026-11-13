@@ -1,4 +1,5 @@
 import Foundation
+import os
 import XCTest
 @testable import HouseholdClient
 
@@ -8,7 +9,8 @@ extension HouseholdClientTests {
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                        auth: actor, deviceVault: MemoryVault(), transport: transport())
         let ids = (0..<51).map { _ in UUID().uuidString.lowercased() }.sorted()
-        var changed = false, duplicate = false, orphanedMatch = false, changedCapability = false
+        enum PageScenario: Sendable { case valid, changedCapability, changedRevision, duplicate, orphanedMatch }
+        let scenario = OSAllocatedUnfairLock(initialState: PageScenario.valid)
         MockURLProtocol.handler = { request in
             if let reply = self.authResponse(request) { return reply }
             let url = try XCTUnwrap(request.url)
@@ -23,14 +25,15 @@ extension HouseholdClientTests {
             XCTAssertTrue(url.path.hasSuffix("/delivery-evidence"))
             let cursor = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first?.value
             if let cursor { XCTAssertEqual(cursor, ids[49]) }
-            let slice = cursor == nil ? Array(ids.prefix(50)) : [duplicate ? ids[0] : ids[50]]
+            let pageScenario = scenario.withLock { $0 }
+            let slice = cursor == nil ? Array(ids.prefix(50)) : [pageScenario == .duplicate ? ids[0] : ids[50]]
             let rows: [[String:Any]] = slice.map { ["sourceId":$0,"foodId":$0,"lineId":line,"segmentKey":$0,"foodName":"Beans",
-                "exclusionTags":[],"matches":orphanedMatch ? [["occurrenceId":line,"mealRevision":1,"ingredientId":line]] : [],"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()] }
+                "exclusionTags":[],"matches":pageScenario == .orphanedMatch ? [["occurrenceId":line,"mealRevision":1,"ingredientId":line]] : [],"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()] }
             var page: [String: Any] = ["shopId":id,"shopRevision":4,"placedRevision":3,"authorityEpoch":1,
-                "supplyRevision":cursor != nil && changed ? 52 : 51,"sources":rows,
+                "supplyRevision":cursor != nil && pageScenario == .changedRevision ? 52 : 51,"sources":rows,
                 "lines":cursor == nil ? [["lineId":line,"name":"Sealed beans"]] : [],
                 "nextCursor":cursor == nil ? ids[49] as Any : NSNull() as Any]
-            if changedCapability && cursor != nil { page["reservationsAvailable"] = true }
+            if pageScenario == .changedCapability && cursor != nil { page["reservationsAvailable"] = true }
             return try response(page)
         }
         _ = try await actor.verifyEmailCode(email:"adult@example.test",code:"123456")
@@ -39,17 +42,16 @@ extension HouseholdClientTests {
         XCTAssertEqual(record.sources.map { $0.id.uuidString.lowercased() }, ids)
         XCTAssertEqual(record.lines.first?.name, "Sealed beans")
         XCTAssertNil(record.nextCursor)
-        changedCapability = true
+        scenario.withLock { $0 = .changedCapability }
         do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Accepted a changed reservation capability across pages") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        changedCapability = false
-        changed = true
+        scenario.withLock { $0 = .changedRevision }
         do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Accepted different supply revisions") }
         catch { XCTAssertEqual(error as? ClientError, .service(status:409, code:"stale_supply", correlationID:nil, retryAfter:nil)) }
-        changed = false; duplicate = true
+        scenario.withLock { $0 = .duplicate }
         do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Counted one source twice") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        duplicate = false; orphanedMatch = true
+        scenario.withLock { $0 = .orphanedMatch }
         do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Accepted a match to an absent meal revision") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
     }

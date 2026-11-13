@@ -1,3 +1,4 @@
+import os
 import XCTest
 @testable import HouseholdClient
 
@@ -55,14 +56,15 @@ extension HouseholdClientTests {
         typealias F = TrackingWriteFixture
         let operation = try F.pending(), auth = try auth(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var commands = 0, posted: [Data] = []
+        let posted = OSAllocatedUnfairLock(initialState: [Data]())
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
             if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
             guard path.hasSuffix("/commands") else { throw ClientError.configuration }
-            commands += 1; posted.append(trackingRaceBody(request))
+            let body = trackingRaceBody(request)
+            posted.withLock { $0.append(body) }
             return (200, try F.bytes(["operationId": F.id(95), "kind": "shop.patch", "shopId": F.id(2), "shopRevision": 9, "authorityEpoch": 3, "disposition": "patched"]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
@@ -78,12 +80,13 @@ extension HouseholdClientTests {
         XCTAssertNotEqual(oldGeneration, newGeneration); XCTAssertEqual(oldContext, newContext)
         await held.release()
         do { _ = try await original.value; XCTFail("Old invocation survived outbox suspension") } catch { XCTAssertEqual(error as? ClientError, .cancelled) }
-        XCTAssertEqual(commands, point == .append ? 0 : 1)
+        XCTAssertEqual(posted.withLock { $0.count }, point == .append ? 0 : 1)
         var saved = try await store.operations(); XCTAssertEqual(saved, point == .append ? [operation] : [])
         // Explicit retry is a new invocation, retaining the same exact command.
         _ = try await service.sendSharedTracking(operation, outbox: held)
-        XCTAssertEqual(commands, point == .append ? 1 : 2)
-        XCTAssertTrue(posted.allSatisfy { $0 == operation.bytes })
+        let bodies = posted.withLock { $0 }
+        XCTAssertEqual(bodies.count, point == .append ? 1 : 2)
+        XCTAssertTrue(bodies.allSatisfy { $0 == operation.bytes })
         saved = try await store.operations(); XCTAssertTrue(saved.isEmpty)
     }
     func testTrackingWrite404ConfirmsAssignmentLossBeforeScopedPurgeAndPreservesMissingResource() async throws {
@@ -91,18 +94,29 @@ extension HouseholdClientTests {
         let operation = try F.pending(), sameShop = try F.pending(), otherShop = try F.pending(shopID: F.id(98)), legacy = try F.legacyPending()
         let auth = try auth(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var assigned = true, loseOnPost = false, commands = 0, bootstraps = 0
+        struct AssignmentState: Sendable {
+            var assigned = true
+            var loseOnPost = false
+            var commands = 0
+            var bootstraps = 0
+        }
+        let state = OSAllocatedUnfairLock(initialState: AssignmentState())
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
             if path.hasSuffix("/bootstrap") {
-                bootstraps += 1
+                let assigned = state.withLock { fixture in
+                    fixture.bootstraps += 1
+                    return fixture.assigned
+                }
                 return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": assigned ? "shopper" : "contributor", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": assigned ? ["shopper_inbox", "request_preview", "shopper_commands"] : ["own_requests"]]))
             }
             guard path.hasSuffix("/commands") else { throw ClientError.configuration }
-            commands += 1
-            if loseOnPost { assigned = false }
+            state.withLock { fixture in
+                fixture.commands += 1
+                if fixture.loseOnPost { fixture.assigned = false }
+            }
             return (404, try F.bytes(["error": ["code": "unavailable"]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
@@ -110,26 +124,33 @@ extension HouseholdClientTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let store = OperationOutbox(url: dir.appendingPathComponent("outbox.json"))
         for pending in [sameShop, otherShop, legacy] { try await store.append(pending) }
-        var beforeBootstrap = bootstraps
+        let beforeBootstrap = state.withLock { $0.bootstraps }
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Expected resource 404") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         var saved = try await store.operations()
-        XCTAssertEqual(saved, [sameShop, otherShop, legacy, operation]); XCTAssertEqual(bootstraps - beforeBootstrap, 2)
-        loseOnPost = true; beforeBootstrap = bootstraps
+        XCTAssertEqual(saved, [sameShop, otherShop, legacy, operation])
+        XCTAssertEqual(state.withLock { $0.bootstraps } - beforeBootstrap, 2)
+        let beforeLoss = state.withLock { fixture in
+            fixture.loseOnPost = true
+            return fixture.bootstraps
+        }
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Assignment loss accepted") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         saved = try await store.operations()
-        XCTAssertEqual(saved, [otherShop, legacy]); XCTAssertEqual(bootstraps - beforeBootstrap, 2); XCTAssertEqual(commands, 2)
+        let final = state.withLock { $0 }
+        XCTAssertEqual(saved, [otherShop, legacy])
+        XCTAssertEqual(final.bootstraps - beforeLoss, 2)
+        XCTAssertEqual(final.commands, 2)
     }
     func testTrackingWriteTerminalPreviewErasureRemovesExactRowButAmbiguousRefreshRetains() async throws {
         typealias F = TrackingWriteFixture
         let operation = try F.pending(), unrelated = try F.pending(), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var code = "refresh_required"
+        let code = OSAllocatedUnfairLock(initialState: "refresh_required")
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
             if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
-            return (409, try F.bytes(["error": ["code": code]]))
+            return (409, try F.bytes(["error": ["code": code.withLock { $0 }]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -137,7 +158,7 @@ extension HouseholdClientTests {
         let store = OperationOutbox(url: dir.appendingPathComponent("outbox.json")); try await store.append(unrelated)
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Expected refresh") } catch {}
         var saved = try await store.operations(); XCTAssertEqual(saved, [unrelated, operation])
-        code = "tracking_preview_expired"
+        code.withLock { $0 = "tracking_preview_expired" }
         do { _ = try await service.sendSharedTracking(operation, outbox: store); XCTFail("Expired/erased preview accepted") } catch {}
         saved = try await store.operations(); XCTAssertEqual(saved, [unrelated])
     }
@@ -172,13 +193,13 @@ extension HouseholdClientTests {
         typealias F = TrackingWriteFixture
         let operation = try F.pending(), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var assigned = true
+        let assigned = OSAllocatedUnfairLock(initialState: true)
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
-            if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": assigned ? "shopper" : "contributor", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
-            assigned = false
+            if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": assigned.withLock { $0 } ? "shopper" : "contributor", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
+            assigned.withLock { $0 = false }
             return (404, try F.bytes(["error": ["code": "unavailable"]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
@@ -188,7 +209,9 @@ extension HouseholdClientTests {
         let held = HeldTrackingOutbox(store: store, point: .cleanup, arrived: { arrived.fulfill() })
         let original = Task { try await service.sendSharedTracking(operation, outbox: held) }
         await fulfillment(of: [arrived], timeout: 2)
-        await service.clearScope(); assigned = true; _ = try await service.enroll(householdID: household)
+        await service.clearScope()
+        assigned.withLock { $0 = true }
+        _ = try await service.enroll(householdID: household)
         let newOtherShop = try F.pending(shopID: F.id(98)), newSameShop = try F.pending(), newIndependentLegacy = try F.legacyPending()
         try await store.append(newOtherShop); try await store.append(newSameShop); try await store.append(newIndependentLegacy)
         await held.release()
@@ -199,13 +222,13 @@ extension HouseholdClientTests {
         typealias F = TrackingWriteFixture
         let operation = try F.pending(), unrelated = try F.pending(), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var rechecking = false
+        let rechecking = OSAllocatedUnfairLock(initialState: false)
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
             if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
-            rechecking = true
+            rechecking.withLock { $0 = true }
             return (404, try F.bytes(["error": ["code": "unavailable"]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
@@ -214,9 +237,16 @@ extension HouseholdClientTests {
         let store = OperationOutbox(url: dir.appendingPathComponent("outbox.json")); try await store.append(unrelated)
         let held = HeldResponse(), arrived = expectation(description: "held fresh assignment proof")
         MockURLProtocol.intercept = { request in
-            if rechecking && request.request.url?.path.hasSuffix("/bootstrap") == true {
-                rechecking = false; held.set(request); arrived.fulfill(); return true
-            }; return false
+            guard request.request.url?.path.hasSuffix("/bootstrap") == true else { return false }
+            let shouldHold = rechecking.withLock { pending in
+                let wasPending = pending
+                pending = false
+                return wasPending
+            }
+            guard shouldHold else { return false }
+            held.set(request)
+            arrived.fulfill()
+            return true
         }
         let original = Task { try await service.sendSharedTracking(operation, outbox: store) }
         await fulfillment(of: [arrived], timeout: 2)
@@ -242,13 +272,13 @@ extension HouseholdClientTests {
         let operation = try F.pending(), oldPeer = try F.pending(), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let unrelated = try PendingOperation(envelope: .init(replayWindow: F.id(80), shopId: F.id(2), kind: "shop.freeze", base: .init(shopRevision: 8, authorityEpoch: 3), body: [:]), householdID: F.id(99), memberID: member, deviceID: "device")
-        var commands = 0
+        let commands = OSAllocatedUnfairLock(initialState: 0)
         MockURLProtocol.handler = { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
             if path.hasSuffix("/bootstrap") { return (200, try F.bytes(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper", "shopId": F.id(2), "enrolled": true, "queueConsent": false, "capabilities": ["shopper_inbox", "request_preview", "shopper_commands"]])) }
-            commands += 1
+            commands.withLock { $0 += 1 }
             return (status, try F.bytes(["error": ["code": status == 401 ? "session_needed" : "access_ended"]]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
@@ -276,7 +306,7 @@ extension HouseholdClientTests {
             do { _ = try await service.sharedDemandContext(shopID: UUID(uuidString: F.id(2))!); XCTFail("Server denial did not clear scope") } catch {}
             let saved = try await store.operations(); XCTAssertEqual(saved, [unrelated])
         }
-        XCTAssertEqual(commands, 1)
+        XCTAssertEqual(commands.withLock { $0 }, 1)
     }
     func testTrackingWriteCompareBeforeRemovalRetainsChangedBytesUnderSameKey() async throws {
         typealias F = TrackingWriteFixture
