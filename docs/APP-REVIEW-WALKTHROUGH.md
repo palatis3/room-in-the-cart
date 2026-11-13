@@ -39,7 +39,9 @@ Use a dedicated test device and fictional groceries. Install the previous distri
 
 Launch the candidate from the Home Screen. Open the comparison in Records and check the original values. Change the confirmed quantity at home, save, quit and reopen. Verify the new costs, both saved revisions and the original record identity. Record the device OS, both build numbers, the candidate commit and the results. When a release changes the database schema, include a store created with the previous schema.
 
-The pre-release simulator check exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
+On November 13, the Release build at `717185e1` passed an in-place update on the iOS 17.0 iPhone SE simulator. The saved comparison reopened with its original revision byte-for-byte intact. After the shopper edited the stock and relaunched, the same record contained both revisions and passed the database integrity check. The local results are in `.build/Upgrade717Nov13`.
+
+The pre-release simulator check also exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
 
 ## Connected review, after the real environment is configured
 
