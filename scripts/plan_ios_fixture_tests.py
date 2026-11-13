@@ -172,6 +172,9 @@ def matrix(inventory=None):
         "contributor-balanced-04": 5,
         "contributor-balanced-02": 6,
         "contributor-balanced-05": 7,
+        # English skipped-dinner Undo was the last fixture after a 31-minute GitHub wait.
+        # M2 lane 5 and its GitHub fallback both use slot 0.
+        "SharedOperationUndoUITests-testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple": 5,
         # Avoid the observed UI02 wait after the Bitrise work had finished.
         "SharedFallbackUITests": 7,
         # Move the quote retry off the M2 queue shared with contributor group 02.

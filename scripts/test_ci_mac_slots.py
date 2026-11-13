@@ -46,7 +46,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
-            ('github', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
+            ('bitrise', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
             ('bitrise-m4', 4), ('bitrise-m4', 0), ('bitrise', 2), ('bitrise', 2),
             ('bitrise-m4', 0), ('github', 1),
         ])
