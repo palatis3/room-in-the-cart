@@ -505,10 +505,30 @@ import DeviceSurfaces
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }
+    private func reminderRoute(for selected: SurfaceReminderTarget) throws -> SurfaceRouteRecord? {
+        guard let routes else { throw SurfaceError.unavailable }
+        return try routes.all().first {
+            $0.reminderID != nil && $0.target == selected.target && $0.sourceRevision == selected.revision &&
+                $0.route.personaID == access?.localActorID && $0.route.generation == routeGeneration(selected.target)
+        }
+    }
+
+    /// Populate the expiry picker without creating a route or registering a notification.
+    func initialReminderExpiry(_ selected: SurfaceReminderTarget) async throws -> Date {
+        guard let authorization = reminderAuthorization(selected), let reminderStore else { throw SurfaceError.stale }
+        if let cutoff = selected.cutoff { return cutoff }
+        if let id = try reminderRoute(for: selected)?.reminderID {
+            let saved = try await reminderStore.get(id)
+            guard reminderAuthorization(selected) == authorization else { throw SurfaceError.stale }
+            if let saved { return saved.intent.expiresAt }
+        }
+        return clock().addingTimeInterval(86_400)
+    }
+
     func reminderContext(_ selected: SurfaceReminderTarget, expiresAt: Date) async throws -> ReminderEditorContext {
         guard let authorization = reminderAuthorization(selected), let persona = access?.localActorID,
               let routes, let reminderStore else { throw SurfaceError.stale }
-        let previous = try routes.all().first { $0.target == selected.target && $0.reminderID != nil && $0.sourceRevision == selected.revision }
+        let previous = try reminderRoute(for: selected)
         let handle = previous?.route.handle ?? .random(), reminderID = previous?.reminderID ?? UUID()
         if previous == nil {
             let route = try PrivateRoute(handle: handle, personaID: persona, targetID: selected.id, generation: routeGeneration(selected.target), destination: .shoppingList, expiresAt: .distantFuture)

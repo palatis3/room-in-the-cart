@@ -12,7 +12,7 @@ import XCTest
         app.terminate()
     }
 
-    func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() {
+    func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() throws {
         launch(reset: true)
         tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: "ledgerImportText")
@@ -36,6 +36,12 @@ import XCTest
         assertText("Opening or reviewing this reminder does not schedule a notification.")
         XCTAssertFalse(element("reminder.schedule").exists)
         XCTAssertFalse(app.alerts.firstMatch.exists)
+        let expiryPicker = app.datePickers["reminder.expiry"]
+        let chosenExpiry = try chooseFutureDay(in: expiryPicker, navigationTitle: "Reminder")
+        let expiryDay = DateFormatter()
+        expiryDay.locale = Locale(identifier: "en_US")
+        expiryDay.dateStyle = .full
+        let savedDay = expiryDay.string(from: chosenExpiry)
         enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         for id in ["reminder.quietStart", "reminder.quietEnd"] {
@@ -51,6 +57,12 @@ import XCTest
         capture("S12-deferral-reminder-reviewed-unscheduled")
         tap(element("reminder.schedule"))
         assertElementContains("reminder.status", "Reminder not scheduled. Notifications are off")
+        tap(element("reminder.close"))
+        tap(app.buttons["Request a reminder for this deferral"])
+        reveal(expiryPicker)
+        XCTAssertFalse(element("reminder.openEditor").isEnabled)
+        enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
+        assertText(savedDay)
         tap(element("reminder.turnOff"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         tap(element("reminder.close"))
@@ -99,7 +111,7 @@ import XCTest
         fill("4.00", into: "pickup.offer.price")
         let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
         if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
-        let chosenCutoffDay = try chooseFutureOfferCutoff()
+        let chosenCutoffDay = try chooseFutureDay(in: app.datePickers["pickup.offer.cutoff"], navigationTitle: "New store offer")
         tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
         tap(app.buttons["Request an offer deadline reminder"])
         XCTAssertEqual(element("reminder.subject").label, "Large wrap pack")
@@ -125,8 +137,8 @@ import XCTest
         capture("S07-cancel-reminder-keeps-pending-store-offer")
     }
 
-    private func chooseFutureOfferCutoff() throws -> Date {
-        let picker = app.datePickers.matching(identifier: "pickup.offer.cutoff").firstMatch; reveal(picker)
+    private func chooseFutureDay(in picker: XCUIElement, navigationTitle: String) throws -> Date {
+        reveal(picker)
         // Compact native date controls expose the date and time as separate buttons.
         let dateButton = picker.buttons.firstMatch
         XCTAssertTrue(dateButton.exists, app.debugDescription)
@@ -165,12 +177,12 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed)
         XCTAssertEqual(days.count, 1)
         day.tap()
-        app.navigationBars["New store offer"].tap()
+        app.navigationBars[navigationTitle].tap()
         // Dismissing the calendar can restore the prior text field's keyboard
         // and scroll the compact picker out of the lazy Form hierarchy.
         reveal(picker)
         let evidence = XCTAttachment(string: "Target day: \(spoken.string(from: target)); target month: \(month.string(from: nextMonth))\nCompact date label: \(dateButton.label)\nCompact date value: \(String(describing: dateButton.value))\nPicker value: \(String(describing: picker.value))")
-        evidence.name = "Offer-future-cutoff-selection"; evidence.lifetime = .keepAlways; add(evidence)
+        evidence.name = "\(picker.identifier)-future-date-selection"; evidence.lifetime = .keepAlways; add(evidence)
         return target
     }
 
