@@ -113,8 +113,9 @@ extension XCUIApplication {
         XCTAssertTrue(field.waitForExistence(timeout: 8), file: file, line: line)
         field.tap()
         field.press(forDuration: 1.2)
-        let item = menuItems["Select All"]
-        let selectAll = item.exists ? item : buttons["Select All"]
+        let selectAll = descendants(matching: .any).matching(NSPredicate(
+            format: "label == %@ AND (elementType == %d OR elementType == %d)", "Select All",
+            XCUIElement.ElementType.menuItem.rawValue, XCUIElement.ElementType.button.rawValue)).firstMatch
         XCTAssertTrue(selectAll.waitForExistence(timeout: 5), file: file, line: line)
         selectAll.tap()
         field.typeText(title)
