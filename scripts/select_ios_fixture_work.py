@@ -15,9 +15,13 @@ def select_work(event, requested_shard, full_matrix):
     if requested_shard:
         if event != "workflow_dispatch":
             raise ValueError("Only an explicit manual dispatch may select a fixture group")
-        selected = [row for row in rows if row["shard"] == requested_shard]
-        if len(selected) != 1:
-            raise ValueError("Unknown or ambiguous fixture group; use the exact planner shard name")
+        names = [name.strip(" ") for name in requested_shard.split(",")]
+        requested = set(names)
+        if "" in requested or len(requested) != len(names):
+            raise ValueError("Specify each requested fixture group exactly once")
+        selected = [row for row in rows if row["shard"] in requested]
+        if len(selected) != len(requested) or {row["shard"] for row in selected} != requested:
+            raise ValueError("Unknown or ambiguous fixture group; use exact planner shard names")
     else:
         selected = rows
     if not selected:

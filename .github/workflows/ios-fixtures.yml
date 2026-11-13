@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       shard:
-        description: Exact fixture group for a focused diagnostic; leave blank for the full suite
+        description: Comma-separated fixture group names for a focused run (blank runs the full suite)
         type: string
         required: false
         default: ''

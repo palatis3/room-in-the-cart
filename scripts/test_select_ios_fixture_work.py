@@ -32,6 +32,16 @@ class FixtureWorkSelectionTests(unittest.TestCase):
                                      [row] if row["profile"] == profile else [])
         self.assertEqual(self.full, before)
 
+    def test_multiple_manual_groups_share_builds_and_preserve_planner_order(self):
+        rows = self.full["include"]
+        selected = [row for row in rows if row["profile"] == "contributor"][:2]
+        for group in (selected, selected + [next(row for row in rows if row["profile"] == "dinner")]):
+            request = ", ".join(row["shard"] for row in reversed(group))
+            work = select_work("workflow_dispatch", request, self.full)
+            self.assertEqual(work["matrix"]["include"], [row for row in rows if row in group])
+            self.assertTrue(work["build_contributor"])
+            self.assertEqual(work["build_dinner"], any(row["profile"] == "dinner" for row in group))
+
     def test_partition_preserves_every_original_row_and_slot_exactly_once(self):
         work = select_work("pull_request", "", self.full)
         parts = [row for profile in ("contributor", "dinner")
@@ -48,7 +58,10 @@ class FixtureWorkSelectionTests(unittest.TestCase):
                 select_work(event, shard, self.full)
 
     def test_invalid_or_ambiguous_selection_fails_before_building(self):
-        for shard in ("missing", "*", "../contributor-balanced-01", "contributor-balanced-01\nmatrix={}", None):
+        invalid = ("contributor-balanced-01,missing", "contributor-balanced-01,",
+                   "contributor-balanced-01,contributor-balanced-01", "missing", "*",
+                   "../contributor-balanced-01", "contributor-balanced-01\nmatrix={}", None)
+        for shard in invalid:
             with self.subTest(shard=shard), self.assertRaises(ValueError):
                 select_work("workflow_dispatch", shard, self.full)
         row = self.full["include"][0]

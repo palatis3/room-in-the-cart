@@ -1,5 +1,15 @@
 # Local CI validation
 
+## Rechecking several failed fixture groups
+
+For a manual iOS fixture run, enter the exact group names in the existing
+`shard` input, separated by commas. Each selected build profile compiles
+once and its groups test the same products on their usual runners. In the
+[November 13 fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43376088757),
+the English skipped-Dinner Undo and `contributor-balanced-04` both used the
+same contributor build, which took 3m53s. A combined diagnostic for those
+failures needs one such build. Pull requests still run the full suite.
+
 ## November 13 UI05 queue
 
 UI05 was ready at 04:54:43 UTC and started at 05:21:16 in the
