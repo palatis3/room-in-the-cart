@@ -93,10 +93,9 @@ import XCTest
         if nativeSwitch.value as? String == "0" {
             nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
         }
-        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            nativeSwitch.value as? String == "1" && control.value as? String == "1"
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed)
+        let enabled = app.switches.matching(identifier: label)
+            .matching(NSPredicate(format: "value == %@", "1")).firstMatch
+        XCTAssertTrue(enabled.waitForExistence(timeout: 5), label)
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
