@@ -192,18 +192,22 @@ import XCTest
         fill("1 1/2", into: "awayCarryover.reserved", useVisibleCenter: true)
         fill("2", into: "awayCarryover.servings", useVisibleCenter: true)
         if app.keyboards.firstMatch.exists { app.typeText(XCUIKeyboardKey.return.rawValue) }
-        enableSwitch("awayCarryover.checked")
+        let checked = app.buttons["awayCarryover.checked"]
+        tap(checked)
+        XCTAssertTrue(checked.isSelected)
         tap(element("awayCarryover.review"))
         let source = app.staticTexts["Physical source: Beans"]
         XCTAssertTrue(source.waitForExistence(timeout: 8))
         // Wait for the new review to settle, then scroll to its approval control.
         // A disabled button can briefly leave the lazy Form’s accessibility tree.
-        let approval = app.switches["awayCarryover.approve"]
+        let approval = app.buttons["awayCarryover.approve"]
         reveal(approval)
         let apply = app.buttons["awayCarryover.apply"]
         XCTAssertTrue(apply.waitForExistence(timeout: 5))
         XCTAssertFalse(apply.isEnabled)
-        enableSwitch("awayCarryover.approve")
+        XCTAssertFalse(approval.isSelected)
+        tap(approval)
+        XCTAssertTrue(approval.isSelected)
         tap(apply)
         let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "awayCarryover.saved.")).firstMatch
         reveal(saved)

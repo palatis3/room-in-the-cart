@@ -27,13 +27,13 @@ import XCTest
         fill("2", into: "awayCarryover.reserved")
         fill("1", into: "awayCarryover.servings")
         // The focused single-line field has the observed Return key; submit it
-        // before moving back to the physical-evidence switch above this field.
+        // before moving back to the physical-evidence confirmation above this field.
         if app.keyboards.firstMatch.exists {
             app.typeText(XCUIKeyboardKey.return.rawValue)
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
             XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
         }
-        enableSwitch("awayCarryover.checked")
+        confirm("awayCarryover.checked")
         tap(element("awayCarryover.review"))
         assertText("Reserved for carryover: 2")
         assertText("Protected lunch")
@@ -41,7 +41,7 @@ import XCTest
         capture("S25-physical-reservation-reviewed-before-save")
         tap(element("awayCarryover.cancel")); assertCounts(targets: 0)
         XCTAssertFalse(element("awayCarryover.retry").exists)
-        tap(element("awayCarryover.review")); enableSwitch("awayCarryover.approve")
+        tap(element("awayCarryover.review")); confirm("awayCarryover.approve")
         tap(element("awayCarryover.apply"))
         let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             self.element("fixture.away.targets").label == "Carryover targets: 1"
@@ -76,27 +76,12 @@ import XCTest
         reveal(target, requireContentFrame: requireContentFrame)
         XCTAssertTrue(target.isHittable, target.debugDescription); target.tap()
     }
-    private func enableSwitch(_ label: String) {
-        let control = app.switches[label]
-        reveal(control)
-        // The retained AX tree exposes the real UISwitch beneath the SwiftUI
-        // row, whose frame also contains the multiline label.
-        XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the reviewed row")
-        let nativeSwitch = control.switches.firstMatch
-        for _ in 0..<20 {
-            let area = scrollableArea(), frame = nativeSwitch.frame
-            if nativeSwitch.isHittable && area.insetBy(dx: 0, dy: 8).contains(frame) { break }
-            scrollContent(upward: frame.midY > area.maxY)
-        }
-        XCTAssertTrue(nativeSwitch.isHittable && scrollableArea().insetBy(dx: 0, dy: 8).contains(nativeSwitch.frame),
-                      "The native switch must be clear of the keyboard and toolbar")
-        if nativeSwitch.value as? String == "0" {
-            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
-        }
-        let enabled = app.switches.matching(identifier: label)
-            .matching(NSPredicate(format: "value == %@", "1")).firstMatch
-        XCTAssertTrue(enabled.waitForExistence(timeout: 5), label)
-        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    private func confirm(_ identifier: String) {
+        let button = app.buttons[identifier]
+        reveal(button)
+        XCTAssertFalse(button.isSelected)
+        button.tap()
+        XCTAssertTrue(button.isSelected, identifier)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields[id]; tap(field, requireContentFrame: true)

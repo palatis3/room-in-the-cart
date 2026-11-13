@@ -153,7 +153,7 @@ struct DinnerAwayCarryoverView: View {
                     if let detail = journey?.recoveryCurrentDetails.first(where: { $0.id == need.id }), !detail.exclusions.isEmpty {
                         Text("\(pTr("Keep these exclusions")): \(pExclusions(detail.exclusions))")
                     }
-                    Toggle(pTr("I physically checked this same food, its identity, exclusions, and remaining usable amount."), isOn: $physicallyChecked)
+                    confirmation(pTr("I physically checked this same food, its identity, exclusions, and remaining usable amount."), isOn: $physicallyChecked)
                         .accessibilityIdentifier("awayCarryover.checked")
                 }
             }
@@ -181,13 +181,24 @@ struct DinnerAwayCarryoverView: View {
             Text("\(pTr("Planned servings")): \(intent.plan.servings.description)")
             Text(pTr("The selected amount moves from the eligible original dinner need to one pinned physical-food reservation. It is not added twice. Protected lunches stay reserved on their original dates."))
             ForEach(journey?.recoveryCurrentAllocationNeeds.filter { $0.priority == .protected } ?? []) { need in Text("\(need.name) · \(pQuantity(need.amount))") }
-            Toggle(pTr("I approve this physical reservation and its dated carryover target."), isOn: $approved)
+            confirmation(pTr("I approve this physical reservation and its dated carryover target."), isOn: $approved)
                 .accessibilityIdentifier("awayCarryover.approve")
             Button(pTr("Save physical reservation and dated dinner")) { Task { if await model.apply() { completed = true } } }
                 .accessibilityIdentifier("awayCarryover.apply").frame(minHeight: 44).disabled(!approved || model.busy)
             Button(pTr("Cancel carryover review")) { model.cancelReview(); approved = false }
                 .accessibilityIdentifier("awayCarryover.cancel").frame(minHeight: 44)
         }
+    }
+    private func confirmation(_ title: String, isOn: Binding<Bool>) -> some View {
+        Button {
+            isOn.wrappedValue.toggle()
+        } label: {
+            Label(title, systemImage: isOn.wrappedValue ? "checkmark.square.fill" : "square")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn.wrappedValue ? .isSelected : [])
     }
     private func pendingSection(_ record: AwayCarryoverRecord) -> some View {
         Section(pTr("Carryover needs reconciliation")) {
