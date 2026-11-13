@@ -434,11 +434,13 @@ import UIKit
         let checkout = app.buttons["Review whole checkout"]
         XCTAssertTrue(checkout.waitForExistence(timeout: 8), "Applying the reviewed copy should open the pickup")
         tap(checkout)
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer quote", into: "Source of these prices", replacing: true)
-        fill("38", into: "Spending cap", replacing: true)
+        let done = app.buttons["Done"]
+        enterCheckoutTerms([("Store", "Family market"), ("Branch", "Main branch"),
+                            ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
+                            ("Spending cap", "38")], above: done)
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges")
         fill("30", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
