@@ -130,6 +130,19 @@ import HouseholdClient
         await store.setCompleteFailure(false); await model.retry()
         XCTAssertNil(model.pending); XCTAssertEqual(service.observationSends.count, 1)
     }
+    func testConfirmedReceiptCleanupAfterTransferKeepsPrivateObservationHidden() async throws {
+        let (model, service, store, _) = try await setup()
+        enterObservation(model); model.approved = true
+        await store.setCompleteFailure(true); await model.applyReviewed()
+        XCTAssertNotNil(model.pending); XCTAssertEqual(service.observationSends.count, 1)
+        await store.setCompleteFailure(false)
+        service.authorizationError = ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+        await model.retry()
+        XCTAssertNil(model.pending); XCTAssertNil(model.selectedObservation)
+        XCTAssertEqual(service.observationSends.count, 1)
+        let retained = await store.read()
+        XCTAssertEqual(retained.pending.count, 1); XCTAssertTrue(retained.observations.isEmpty)
+    }
     func testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts() async throws {
         let (model, service, store, box) = try await setup(); enterObservation(model); model.approved = true
         service.beforePrepare = {
@@ -212,6 +225,28 @@ import HouseholdClient
         XCTAssertNil(reopened.pending); XCTAssertNil(reopened.periodDraft); XCTAssertNil(reopened.selectedPeriod)
         XCTAssertTrue(reopened.hasUnresolvedWrite); XCTAssertFalse(reopened.canEdit); XCTAssertEqual(service.periodSends.count, 1)
         XCTAssertFalse(reopened.periods.isEmpty); XCTAssertFalse(reopened.ownedShops.isEmpty)
+    }
+    func testUnavailablePendingSourceKeepsReadAccessAndReopensExactRetryAfterAuthorityReturns() async throws {
+        let (model, service, store, box) = try await setup()
+        model.beginPeriod(); model.periodDraft?.title = "Private funding"; model.periodDraft?.budget = "100"
+        model.reviewPeriod(); model.approved = true; service.losePeriodResponse = true
+        await model.applyReviewed()
+        let original = try XCTUnwrap(model.pending)
+        service.authorizationError = ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+        let reopened = HistoryFeatureModel(service: service, store: store, runtime: { box.value })
+        await reopened.load()
+        XCTAssertTrue(reopened.authorized)
+        XCTAssertTrue(reopened.hasUnresolvedWrite); XCTAssertFalse(reopened.canEdit)
+        XCTAssertNil(reopened.pending); XCTAssertNil(reopened.periodDraft)
+        XCTAssertFalse(reopened.periods.isEmpty)
+        await reopened.retry()
+        XCTAssertEqual(service.periodSends.count, 1)
+        let retained = await store.read()
+        XCTAssertEqual(retained.pending, [original])
+        service.authorizationError = nil
+        await reopened.load()
+        XCTAssertEqual(reopened.pending, original)
+        XCTAssertEqual(service.periodSends.count, 1)
     }
     func testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite() async throws {
         let (model, service, store, _) = try await setup()

@@ -116,7 +116,14 @@ enum HistoryReviewedWrite: Equatable {
             periods = page.periods; periodCursor = page.nextCursor
             storeEpoch = epoch; references = saved.observations.filter { $0.matches(current) }
             refreshReferences(); observationDraft.shopID = ownedCurrentShop(current.currentShopID)
-            if let candidate { try await authorize(candidate) }
+            if let candidate {
+                do { try await authorize(candidate) }
+                catch ClientError.service(let status, let code, _, _) where status == 404 && code == "unavailable" {
+                    // The write may need another pickup scope. Keep its private fields in
+                    // the store while the freshly fetched read-only records stay available.
+                    return
+                }
+            }
             guard live(start) else { return }; pending = candidate
         } catch { if live(start) { await fail(error) } }
     }
@@ -298,6 +305,16 @@ enum HistoryReviewedWrite: Equatable {
                 case .period(let intent): _ = try await service.executeBudgetPeriod(intent)
                 }
                 guard live(start) else { return }; confirmedID = value.id
+            } else {
+                // A delayed local cleanup also reveals the saved result.
+                do { try await authorize(value) }
+                catch {
+                    guard live(start) else { return }
+                    pending = nil; periodDraft = nil; selectedObservation = nil
+                    await fail(error)
+                    return
+                }
+                guard live(start) else { return }
             }
             try await store.complete(value, expectedEpoch: epoch)
             guard live(start) else { return }

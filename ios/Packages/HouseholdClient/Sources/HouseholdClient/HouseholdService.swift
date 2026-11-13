@@ -994,12 +994,22 @@ public actor HouseholdService {
         }
         return result
     }
-    private func historySource(shopID: String) async throws {
-        guard HistoryValidation.ids([shopID]) else { throw ClientError.configuration }
-        struct Source: Decodable, Sendable { let shopId: String; let sourceVersion: HistorySourceVersion; let evidenceSource: String }
-        let source: Source = try await historyRead("shops/\(shopID)/financial-evidence")
-        guard HistoryValidation.sameID(source.shopId, shopID), source.evidenceSource == "shopper_reported" else { throw ClientError.invalidResponse }
-        try source.sourceVersion.validate()
+    private func requireWritableHistorySources(_ ids: [String]) async throws {
+        let start = generation
+        var remaining = Set(ids.map { $0.lowercased() })
+        var cursor: String?
+        var cursors = Set<String>()
+        while !remaining.isEmpty {
+            let page = try await historyOwnedShops(cursor: cursor)
+            guard generation == start else { throw ClientError.cancelled }
+            remaining.subtract(page.shops.map { $0.shopId.lowercased() })
+            if remaining.isEmpty { return }
+            guard let next = page.nextCursor else {
+                throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+            }
+            guard cursors.insert(next.lowercased()).inserted else { throw ClientError.invalidResponse }
+            cursor = next
+        }
     }
     private func matchesHistory(subject: String, household: String, member: String, device: String) throws {
         guard selectedGrantID == nil, self.subject == subject, householdID == household, memberID == member, enrollment?.deviceId == device else { throw ClientError.accessEnded }
@@ -1008,13 +1018,13 @@ public actor HouseholdService {
         try intent.validate()
         try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
         let start = generation
-        try await historySource(shopID: intent.observation.shopId)
+        try await requireWritableHistorySources([intent.observation.shopId])
         guard generation == start else { throw ClientError.cancelled }
         try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
     }
     public func preparePriceObservation(_ observation: HistoryPriceObservation) async throws -> PriceObservationIntent {
         try observation.validate()
-        let start = generation; try await historySource(shopID: observation.shopId)
+        let start = generation; try await requireWritableHistorySources([observation.shopId])
         guard generation == start else { throw ClientError.cancelled }
         guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
         return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, observation: observation)
@@ -1033,12 +1043,16 @@ public actor HouseholdService {
         let permitted = try await budgetHistory(shopIDs: intent.period.shopIds)
         guard generation == start else { throw ClientError.cancelled }
         guard permitted.shops.count == intent.period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+        var sources = intent.period.shopIds
         if intent.baseRevision > 0 {
             let current = try await budgetPeriod(periodID: intent.period.id)
             guard generation == start else { throw ClientError.cancelled }
             // A cached pending envelope must not restore details hidden by current source access.
-            guard case .complete = current else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+            guard case .complete(let saved) = current else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+            sources += saved.period.shopIds
         }
+        try await requireWritableHistorySources(sources)
+        guard generation == start else { throw ClientError.cancelled }
         try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
     }
     public func prepareBudgetPeriod(_ period: HistoryBudgetPeriod, baseRevision: Int) async throws -> BudgetPeriodIntent {
@@ -1047,14 +1061,18 @@ public actor HouseholdService {
         let permitted = try await budgetHistory(shopIDs: period.shopIds)
         guard generation == start else { throw ClientError.cancelled }
         guard permitted.shops.count == period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+        var sources = period.shopIds
         if baseRevision > 0 {
             let current = try await savedBudgetPeriod(periodID: period.id)
             guard generation == start else { throw ClientError.cancelled }
+            sources += current.period.shopIds
             guard current.revision == baseRevision else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
             for old in current.period.reservations where old.state != .reserved {
                 guard period.reservations.contains(old) else { throw ClientError.service(status: 409, code: "reservation_final", correlationID: nil, retryAfter: nil) }
             }
         }
+        try await requireWritableHistorySources(sources)
+        guard generation == start else { throw ClientError.cancelled }
         guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
         return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, baseRevision: baseRevision, period: period)
     }

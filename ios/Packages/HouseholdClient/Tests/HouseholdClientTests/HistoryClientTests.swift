@@ -48,6 +48,10 @@ extension HouseholdClientTests {
     private func historySourceBytes() throws -> Data {
         try JSONSerialization.data(withJSONObject: ["shopId": historyShop, "sourceVersion": ["shopRevision": 3, "authorityEpoch": 2, "financialRevision": 4], "evidenceSource": "shopper_reported", "entries": [], "nextCursor": NSNull()])
     }
+    private func historyOwnedBytes(_ ids: [String], next: String? = nil) throws -> Data {
+        let shops = ids.map { HistoryOwnedShop(shopId: $0, createdAt: historyDate, phase: "closed", revision: 1, authorityEpoch: 1) }
+        return try encoded(HistoryOwnedShopPage(shops: shops, nextCursor: next))
+    }
     func testHistoryWirePreservesExactTextNullsAndDistinctPackDimensions() throws {
         var observation = try historyObservation()
         let intent = try PriceObservationIntent(subject: "account", householdID: household, memberID: member, deviceID: "device", observation: observation)
@@ -146,7 +150,8 @@ extension HouseholdClientTests {
         let observation = try historyObservation(); var bodies: [Data] = []; var denied = false
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
-            if request.url!.path.hasSuffix("/financial-evidence") { return denied ? (404, Data(#"{"error":{"code":"unavailable"}}"#.utf8)) : (200, try self.historySourceBytes()) }
+            if request.url!.path.hasSuffix("/financial-evidence") { return (200, try self.historySourceBytes()) }
+            if request.url!.path.hasSuffix("/shops") { return (200, try self.historyOwnedBytes(denied ? [] : [self.historyShop])) }
             XCTAssertEqual(request.url!.path, "/v1/households/\(self.household)/price-observations")
             bodies.append(self.historyRequestBytes(request))
             if bodies.count == 1 { throw URLError(.networkConnectionLost) }
@@ -164,10 +169,11 @@ extension HouseholdClientTests {
     }
     func testHistoryPeriodRetryDoesNotRebaseAfterLostReceiptAndPaidScopeLossStopsSend() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
-        var bodies: [Data] = []; var revision = 1; var denied = false; var partial = false
+        var bodies: [Data] = []; var revision = 1; var denied = false; var partial = false; var ownsShop = true
         MockURLProtocol.handler = { request in
             if let response = try self.historyFixtureResponse(request) { return response }
             let path = request.url!.path
+            if path.hasSuffix("/shops") { return (200, try self.historyOwnedBytes(ownsShop ? [self.historyShop] : [])) }
             if path.hasSuffix("/budget-history") {
                 if denied { return (403, Data(#"{"error":{"code":"membership_inactive"}}"#.utf8)) }
                 return (200, try JSONSerialization.data(withJSONObject: ["permitted": self.historyObject(self.historySubtotal())]))
@@ -185,9 +191,55 @@ extension HouseholdClientTests {
         partial = true
         do { try await service.authorizeBudgetPeriod(intent); XCTFail("Partial current scope restored cached envelope") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         XCTAssertEqual(bodies.count, 2)
+        partial = false; ownsShop = false
+        do { try await service.authorizeBudgetPeriod(intent); XCTFail("A read grant exposed a pending write") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
+        do { _ = try await service.executeBudgetPeriod(intent); XCTFail("A read grant sent a pending write") } catch {}
+        XCTAssertEqual(bodies.count, 2)
+        ownsShop = true
         partial = false; denied = true
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("Paid lapse sent") } catch {}
         XCTAssertEqual(bodies.count, 2)
+    }
+    func testPeriodRetryChecksOwnedSourcesOnLaterPagesIncludingRemovedSources() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let earlier = (0..<50).map { _ in UUID().uuidString.lowercased() }
+        let cursor = try XCTUnwrap(earlier.last)
+        var ownsSavedSource = true
+        var lastPageReads = 0
+        MockURLProtocol.handler = { request in
+            if let response = try self.historyFixtureResponse(request) { return response }
+            let path = request.url!.path
+            if path.hasSuffix("/shops") {
+                let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
+                if query.contains(.init(name: "cursor", value: cursor)) {
+                    lastPageReads += 1
+                    return (200, try self.historyOwnedBytes(ownsSavedSource ? [self.historyShop] : []))
+                }
+                return (200, try self.historyOwnedBytes(earlier, next: cursor))
+            }
+            if path.hasSuffix("/budget-history") {
+                return (200, try JSONSerialization.data(withJSONObject: ["permitted": self.historyObject(self.historySubtotal(includesShop: false))]))
+            }
+            if path.hasSuffix("/record") { return (200, try encoded(HistorySavedBudgetPeriod(periodId: self.historyPeriod, revision: 1, period: self.historyPlan()))) }
+            XCTAssertEqual(request.httpMethod, "GET")
+            XCTAssertTrue(path.hasSuffix("/budget-periods/\(self.historyPeriod)"))
+            return (200, try encoded(self.historyComplete()))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household)
+        var replacement = try historyPlan()
+        replacement.shopIds = []
+        let intent = try await service.prepareBudgetPeriod(replacement, baseRevision: 1)
+        try await service.authorizeBudgetPeriod(intent)
+        XCTAssertEqual(lastPageReads, 2)
+        ownsSavedSource = false
+        do { try await service.authorizeBudgetPeriod(intent); XCTFail("Omitting a transferred source restored a private retry") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
+        do { _ = try await service.prepareBudgetPeriod(replacement, baseRevision: 1); XCTFail("Prepared a replacement after source transfer") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
+        XCTAssertEqual(lastPageReads, 4)
     }
     func testHistoryPagesRejectDuplicateIdentityAndInvalidCursorWithoutBroadeningQuery() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())

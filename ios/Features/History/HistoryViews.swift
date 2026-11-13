@@ -26,7 +26,7 @@ struct HistoryEntryView: View {
                     .font(.footnote)
             }
             if model.authorized {
-                if let chooseShop, !editingObservation, model.periodDraft == nil, model.reviewed == nil, !model.hasUnresolvedWrite {
+                if let chooseShop, !editingObservation, model.periodDraft == nil, model.reviewed == nil, model.pending == nil {
                     Button(HistoryCopy.text("Choose shared shop"), action: chooseShop).disabled(model.busy)
                 }
                 Picker(HistoryCopy.text("Records view"), selection: $section) {
