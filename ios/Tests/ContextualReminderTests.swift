@@ -116,6 +116,22 @@ import UserNotifications
         XCTAssertNil(f.surfaces.reminderAuthorization(target))
     }
 
+    func testQuietHourEditsKeepExactLocalMinutesAcrossMidnight() throws {
+        let saved = try QuietHours(startMinute: 22 * 60 + 45, endMinute: 7 * 60 + 15)
+        var draft = ReminderQuietHoursDraft(saved)
+        XCTAssertEqual(try draft.interval(), saved)
+        XCTAssertEqual(try ReminderQuietHoursDraft(nil).interval(), try QuietHours(startMinute: 22 * 60, endMinute: 7 * 60))
+
+        draft.end = draft.end.addingTimeInterval(86_400 + 60)
+        let edited = try draft.interval()
+        XCTAssertTrue(edited.contains(hour: 7, minute: 15))
+        XCTAssertFalse(edited.contains(hour: 7, minute: 16))
+        XCTAssertFalse(edited.contains(hour: 22, minute: 44))
+        XCTAssertTrue(edited.contains(hour: 22, minute: 45))
+        draft.start = draft.end
+        XCTAssertThrowsError(try draft.interval())
+    }
+
     func testExplicitSaveDeniedAndOffRemainSeparateFromPendingOfferAndDeferral() async throws {
         let f = try await fixture()
         let target = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.cutoff == nil })
@@ -140,6 +156,20 @@ import UserNotifications
         XCTAssertEqual(reopened.initialFireAt, intent.fireAt)
         XCTAssertNil(reopened.initialQuietHours)
         XCTAssertEqual(reopened.expectedVersion, denied.version)
+
+        // Reopen a saved interval that crosses midnight with non-hour boundaries.
+        let quiet = try QuietHours(startMinute: 22 * 60 + 45, endMinute: 7 * 60 + 15)
+        let tomorrow = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: schedulingNow))
+        let day = calendar.dateComponents([.year, .month, .day], from: tomorrow)
+        let noon = CivilReminderTime(year: try XCTUnwrap(day.year), month: try XCTUnwrap(day.month),
+            day: try XCTUnwrap(day.day), hour: 12, minute: 0, timeZoneID: "UTC", confirmedGMTOffset: 0)
+        let edit = try ReminderIntent(id: intent.id, personaID: intent.personaID, targetID: intent.targetID,
+            subject: intent.subject, sourceRevision: intent.sourceRevision, routeHandle: intent.routeHandle,
+            localTime: noon, expiresAt: intent.expiresAt, quietHours: quiet, language: .english, now: schedulingNow)
+        let updated = try await coordinator.save(edit, expectedVersion: denied.version, requestPermission: false)
+        let afterEdit = try await f.surfaces.reminderContext(target, expiresAt: context.expiresAt)
+        XCTAssertEqual(afterEdit.expectedVersion, updated.version)
+        XCTAssertEqual(try ReminderQuietHoursDraft(afterEdit.initialQuietHours).interval(), quiet)
         try await coordinator.cancel(intent.id)
         let cancelled = try await coordinator.current(intent.id)
         XCTAssertEqual(cancelled?.status, .cancelled)

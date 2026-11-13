@@ -38,6 +38,11 @@ import XCTest
         XCTAssertFalse(app.alerts.firstMatch.exists)
         enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
+        for id in ["reminder.quietStart", "reminder.quietEnd"] {
+            let picker = app.datePickers[id]
+            reveal(picker)
+            XCTAssertTrue(picker.isHittable)
+        }
         let quiet = element("reminder.quietHours"); reveal(quiet)
         if quiet.value as? String == "1" { quiet.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         tap(element("reminder.review"))
