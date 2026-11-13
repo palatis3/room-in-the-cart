@@ -67,6 +67,7 @@ struct DeviceSurfacesEntry: View {
 
 private struct SurfaceImportReview: View {
     @ObservedObject var composition: DeviceSurfacesComposition
+    @State private var pendingEdits: [UUID: SurfaceLineFields] = [:]
     var body: some View {
         Group {
             if let draft = composition.draft, composition.privateAuthorized {
@@ -78,7 +79,12 @@ private struct SurfaceImportReview: View {
                     Section(SurfaceCopy.text("Original wording")) { Text(draft.originalText).textSelection(.enabled) }
                     ForEach(draft.preview.lines) { row in
                         Section {
-                            SurfaceImportedLineEditor(row: row, locked: draft.phase == .committing) { name, amount, unit in composition.editDraftLine(row.id, name: name, amount: amount, unit: unit) }
+                            SurfaceImportedLineEditor(fields: fields(for: row), hasChanges: pendingEdits[row.id] != nil, locked: draft.phase == .committing) {
+                                guard let edits = pendingEdits[row.id] else { return }
+                                if composition.editDraftLine(row.id, name: edits.name, amount: edits.amount, unit: edits.unit) {
+                                    pendingEdits.removeValue(forKey: row.id)
+                                }
+                            }
                             Text(row.originalText).font(.footnote)
                             if let pack = row.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if row.quantity == nil { Text(SurfaceCopy.text("Quantity unresolved")) }
@@ -91,13 +97,17 @@ private struct SurfaceImportReview: View {
                         }
                     }
                     Section {
+                        if !pendingEdits.isEmpty {
+                            Text(SurfaceCopy.text("Apply your line edits before saving or adding this list."))
+                        }
                         Button(SurfaceCopy.text("Save review draft")) { composition.saveReviewDraft() }
-                            .disabled(draft.phase == .committing)
+                            .disabled(draft.phase == .committing || !pendingEdits.isEmpty)
                         Text(SurfaceCopy.text("Cancel discards unsaved review changes."))
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
-                            .disabled(draft.phase == .review ? !review.isComplete :
+                            .disabled(draft.phase == .review ? !review.isComplete || !pendingEdits.isEmpty :
                                 draft.preview.lines.isEmpty || draft.decisions.count != draft.preview.lines.count)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
+                            .disabled(!pendingEdits.isEmpty)
                         Text(SurfaceCopy.text("An interrupted import reopens the same reviewed operation. It never adds the list again automatically."))
                         if let message = composition.message { Text(message) }
                     }
@@ -106,6 +116,13 @@ private struct SurfaceImportReview: View {
         }.navigationTitle(SurfaceCopy.text("Review selected text"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { composition.cancelReview() }.disabled(composition.busy) } }
             .interactiveDismissDisabled(composition.busy)
+    }
+
+    private func fields(for row: StagedImportLine) -> Binding<SurfaceLineFields> {
+        let saved = SurfaceLineFields(row)
+        return Binding(get: { pendingEdits[row.id] ?? saved }, set: { updated in
+            pendingEdits[row.id] = updated == saved ? nil : updated
+        })
     }
 
     private func confirmedChoice(_ choice: ImportResolution, row: StagedImportLine) -> String {
@@ -189,25 +206,36 @@ struct DeviceSurfacesDestination: View {
     }
 }
 
-private struct SurfaceImportedLineEditor: View {
-    let row: StagedImportLine
-    let locked: Bool
-    let apply: (String, String, UnitOfMeasure) -> Void
-    @State private var name: String
-    @State private var amount: String
-    @State private var unit: UnitOfMeasure
-    init(row: StagedImportLine, locked: Bool, apply: @escaping (String, String, UnitOfMeasure) -> Void) {
-        self.row = row; self.locked = locked; self.apply = apply
-        _name = State(initialValue: row.name)
-        _amount = State(initialValue: row.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: row.quantity?.unit ?? .count)
+private struct SurfaceLineFields: Equatable {
+    var name: String
+    var amount: String
+    var unit: UnitOfMeasure
+
+    init(_ row: StagedImportLine) {
+        name = row.name
+        amount = row.quantity.map { ledgerAmountInput($0.amount) } ?? ""
+        unit = row.quantity?.unit ?? .count
     }
+}
+
+private struct SurfaceImportedLineEditor: View {
+    @Binding var fields: SurfaceLineFields
+    let hasChanges: Bool
+    let locked: Bool
+    let apply: () -> Void
+
     var body: some View {
         VStack(alignment: .leading) {
-            TextField(SurfaceCopy.text("Item name"), text: $name)
-            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $amount).keyboardType(.numbersAndPunctuation)
-            Picker(SurfaceCopy.text("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
-            Button(SurfaceCopy.text("Apply line edits")) { apply(name, amount, unit) }
+            TextField(SurfaceCopy.text("Item name"), text: $fields.name)
+            TextField(SurfaceCopy.text("Amount, unknown if blank"), text: $fields.amount).keyboardType(.numbersAndPunctuation)
+            Picker(SurfaceCopy.text("Unit"), selection: $fields.unit) {
+                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+            Button(action: apply) {
+                Text(SurfaceCopy.text("Apply line edits")).frame(minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            .disabled(!hasChanges)
         }.disabled(locked)
     }
 }

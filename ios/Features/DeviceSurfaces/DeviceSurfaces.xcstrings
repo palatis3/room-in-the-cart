@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Apply your line edits before saving or adding this list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply your line edits before saving or adding this list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplica los cambios a cada artículo antes de guardar o agregar esta lista."
+          }
+        }
+      }
+    },
     "Start a new review for this pickup?": {
       "localizations": {
         "en": {

@@ -289,10 +289,17 @@ import DeviceSurfaces
         catch SurfaceError.capacity { message = SurfaceCopy.text("Share a smaller selection, or finish another selected-text review and try again.") }
         catch { message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
     }
-    func saveDraft(_ updated: SurfaceImportDraft) {
-        guard let previous = draft, let bridge else { return }
-        do { try bridge.validateReview(updated, replacing: previous); draft = updated; message = nil }
-        catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
+    @discardableResult func saveDraft(_ updated: SurfaceImportDraft) -> Bool {
+        guard let previous = draft, let bridge else { return false }
+        do {
+            try bridge.validateReview(updated, replacing: previous)
+            draft = updated
+            message = nil
+            return true
+        } catch {
+            message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.")
+            return false
+        }
     }
     func saveReviewDraft() {
         guard !busy, let draft, let reviewBaseline, let bridge else { return }
@@ -312,8 +319,8 @@ import DeviceSurfaces
         next.decisions = LedgerImportReview(shop: shop, preview: next.preview, choices: next.decisions).choices
         saveDraft(next)
     }
-    func editDraftLine(_ id: UUID, name: String, amount: String, unit: UnitOfMeasure) {
-        guard var next = draft, next.phase == .review, let index = next.preview.lines.firstIndex(where: { $0.id == id }), let shop = shop(next.preview.shopID) else { return }
+    @discardableResult func editDraftLine(_ id: UUID, name: String, amount: String, unit: UnitOfMeasure) -> Bool {
+        guard var next = draft, next.phase == .review, let index = next.preview.lines.firstIndex(where: { $0.id == id }), let shop = shop(next.preview.shopID) else { return false }
         do {
             guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw SurfaceError.invalid }
             next.preview.lines[index].name = name
@@ -323,8 +330,11 @@ import DeviceSurfaces
             next.preview = try shop.refreshImportMatches(previous)
             next.decisions = LedgerImportReview.afterEdit(from: previous, to: next.preview, shop: shop,
                 choices: next.decisions, explicitSeparate: next.explicitSeparate ?? [])
-            saveDraft(next)
-        } catch { message = SurfaceCopy.text("Review the item name, amount and matching lines before continuing.") }
+            return saveDraft(next)
+        } catch {
+            message = SurfaceCopy.text("Review the item name, amount and matching lines before continuing.")
+            return false
+        }
     }
     func addReviewedList() async {
         guard !busy, let draft, let reviewBaseline, let bridge else { return }; busy = true; defer { busy = false }
