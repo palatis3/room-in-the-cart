@@ -137,10 +137,15 @@ class PlanIOSFixtureTests(unittest.TestCase):
 
     def test_delivery_shards_keep_their_own_named_proofs(self):
         shards = make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)["shards"]
-        counts = {name: len(shard["test_identifiers"]) for name, shard in shards.items()
-                  if shard.get("suite") == "SharedDeliveryUITests"}
-        self.assertEqual(counts, {"SharedDeliveryUITests-stock-and-purchase": 6,
-                                  "SharedDeliveryUITests-recovery-cook-and-closeout": 5})
+        delivery = {name: shard["test_identifiers"] for name, shard in shards.items()
+                    if shard.get("suite") == "SharedDeliveryUITests"}
+        self.assertEqual({name: len(cases) for name, cases in delivery.items()},
+                         {"SharedDeliveryUITests-stock-and-purchase": 4,
+                          "SharedDeliveryUITests-recovery-cook-and-closeout": 7})
+        recovery = delivery["SharedDeliveryUITests-recovery-cook-and-closeout"]
+        for method in ("testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+                       "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart"):
+            self.assertIn(f"{UI_TARGET}/SharedDeliveryUITests/{method}()", recovery)
 
     def test_delivery_partition_rejects_unassigned_or_stale_methods(self):
         suite = "SharedDeliveryUITests"

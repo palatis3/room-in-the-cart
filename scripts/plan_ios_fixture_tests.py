@@ -49,14 +49,14 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests", "SharedFo
 # Case groups and their measured basis are recorded in docs/CI-VALIDATION.md.
 DELIVERY_SHARDS = {
     "SharedDeliveryUITests-stock-and-purchase": (
-        "testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
-        "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
         "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
         "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
         "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
         "testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
     ),
     "SharedDeliveryUITests-recovery-cook-and-closeout": (
+        "testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+        "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
         "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
         "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
         "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
