@@ -112,6 +112,68 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         XCTAssertNil(try vault.read())
     }
+    func testHelperCurrentViewAndProposalStayWithinEnrolledShopRoleAndExpiry() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+            auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let editor = try XCTUnwrap(JSONSerialization.jsonObject(with: helperBootstrap()) as? [String: Any])
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: helperViewBytes()) as? [String: Any])
+        let stateLock = NSLock()
+        var bootstrap = editor
+        var view = original
+        var writes = 0
+        MockURLProtocol.handler = { request in
+            stateLock.lock(); defer { stateLock.unlock() }
+            if let result = self.authResponse(request) { return result }
+            if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
+            if request.url!.path.hasSuffix("/bootstrap") { return (200, try JSONSerialization.data(withJSONObject: bootstrap)) }
+            if request.url!.path.hasSuffix("/current") { return (200, try JSONSerialization.data(withJSONObject: view)) }
+            writes += 1
+            return (500, Data())
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+        let intent = try await service.prepareHelperProposal(grantID: lifecycleGrant, baseRevision: 2, correction: "Save two.")
+        for (field, invalidValue) in [("shopId", UUID().uuidString), ("expiresAt", "2000-01-01T00:00:00.001Z")] {
+            stateLock.withLock {
+                view = original
+                view[field] = invalidValue
+            }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.currentHelperView(grantID: lifecycleGrant)
+                XCTFail("Displayed instructions with invalid \(field)")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.executeHelperProposal(intent)
+                XCTFail("Retried suggestion with invalid \(field)")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        }
+        stateLock.withLock {
+            bootstrap["role"] = "helper"
+            bootstrap["capabilities"] = ["helper_view"]
+            view = original
+            view["mode"] = "read"
+            view["canPropose"] = false
+        }
+        _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+        let readOnly = try await service.currentHelperView(grantID: lifecycleGrant)
+        XCTAssertFalse(readOnly.canPropose)
+        for mode in ["read", "edit"] {
+            stateLock.withLock {
+                view["mode"] = mode
+                view["canPropose"] = true
+            }
+            _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
+            do {
+                _ = try await service.executeHelperProposal(intent)
+                XCTFail("Read-only helper retried an editor proposal")
+            } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        }
+        XCTAssertEqual(stateLock.withLock { writes }, 0)
+    }
+
     func testHelperProposalRetriesExactBytesAndStopsAfterRevocation() async throws {
         let auth = try auth(); var bodies: [Data] = []; var revoked = false
         var revision = 2, receiptRevision: Int?

@@ -14,6 +14,8 @@ public actor HouseholdService {
     private var memberID: String?
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
+    // A helper uses the grant header, never the ordinary shop-selection header.
+    private var helperAccess: (shopID: UUID, canPropose: Bool)?
     private(set) var generation = UUID()
     private var childAdoptionBinding: ChildInvitationBinding?
     public init(configuration: ServiceConfiguration, auth: AdultAuth, deviceVault: any RefreshTokenVault,
@@ -24,7 +26,7 @@ public actor HouseholdService {
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
         generation = UUID(); enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
-        selectedGrantID = grantID; selectedShopID = nil
+        selectedGrantID = grantID; selectedShopID = nil; helperAccess = nil
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
@@ -115,9 +117,12 @@ public actor HouseholdService {
             guard generation == start else { throw ClientError.cancelled }
         }
         if let selectedGrantID {
-            guard value.grantId == selectedGrantID, ["helper", "editor"].contains(value.role),
+            guard value.household.id == householdID, value.enrolled, value.grantId == selectedGrantID,
+                  let shopID = value.shopId.flatMap(UUID.init(uuidString:)),
+                  ["helper", "editor"].contains(value.role),
                   value.capabilities.allSatisfy({ ["helper_view", "helper_propose"].contains($0) }),
-                  value.capabilities.contains("helper_view") else { await clearScope(); throw ClientError.accessEnded }
+                  value.capabilities.contains("helper_view") else { _ = clearLocalScope(); throw ClientError.accessEnded }
+            helperAccess = (shopID, value.role == "editor" && value.capabilities.contains("helper_propose"))
         }
         if let selectedShopID {
             guard value.grantId == nil, value.shopId.flatMap(UUID.init(uuidString:)) == selectedShopID else { throw ClientError.accessEnded }
@@ -786,9 +791,17 @@ public actor HouseholdService {
     }
     public func currentHelperView(grantID: String) async throws -> HelperView {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == grantID else { throw ClientError.accessEnded }
+        let start = generation
         let value: HelperView = try await perform("v1/views/\(grantID)/current", method: "GET", absolutePath: true)
-        guard value.grantId == grantID, value.revision > 0, validHelperTimestamp(value.asOf),
-              validHelperTimestamp(value.expiresAt) else { throw ClientError.invalidResponse }
+        guard generation == start else { throw ClientError.cancelled }
+        guard let helperAccess, value.grantId == grantID, UUID(uuidString: value.shopId) == helperAccess.shopID,
+              let expiry = householdTimestamp(value.expiresAt), expiry > Date(),
+              ["read", "edit"].contains(value.mode), value.canPropose == (value.mode == "edit"),
+              !value.canPropose || helperAccess.canPropose else {
+            _ = clearLocalScope()
+            throw ClientError.accessEnded
+        }
+        guard value.revision > 0, validHelperTimestamp(value.asOf) else { throw ClientError.invalidResponse }
         return value
     }
     public func prepareHelperProposal(grantID: String, baseRevision: Int, correction: String) async throws -> HelperProposalIntent {
@@ -1162,7 +1175,7 @@ public actor HouseholdService {
     /// Synchronous within the actor so a server denial can prove which new
     /// cleared generation it created before any re-enrollment can interleave.
     private func clearLocalScope() -> UUID {
-        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
+        generation = UUID(); enrollment = nil; enrollmentSessionID = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; helperAccess = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
         return generation
     }
