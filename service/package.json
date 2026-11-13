@@ -17,7 +17,7 @@
     "test:guardian": "npm run build && node scripts/test-guardian.mjs"
   },
   "devDependencies": {
-    "@types/node": "22.14.0",
+    "@types/node": "26.6.6",
     "@types/pg": "8.15.5",
     "typescript": "5.7.3"
   },
