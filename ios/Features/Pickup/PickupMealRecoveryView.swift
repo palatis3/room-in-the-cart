@@ -261,6 +261,8 @@ private struct PickupMealRecoveryEditor: View {
                 if let minutes = template.leadTimeMinutes { Text(pTr("Required advance preparation (minutes)") + ": " + String(minutes)) }
             } else {
                 field("Dinner title", text: $draft.title, id: "title")
+                    .submitLabel(.next)
+                    .onSubmit { focused = "notes" }
                 field("Notes and preparation instructions", text: $draft.notes, id: "notes", multiline: true)
                 field("Recipe source URL (optional)", text: $draft.sourceURL, id: "source")
                 Text(recoveryText("This is a new manual dinner version. It does not edit the reusable recipe. Serving groups, protected portions and saved exclusions remain in force."))

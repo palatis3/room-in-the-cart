@@ -133,8 +133,15 @@ import XCTest
         reveal(replace)
         let mealID = String(replace.identifier.dropFirst("mealRecovery.target.".count))
         tap(replace)
-        fill("Wednesday bean bowls", into: "mealRecovery.title", useVisibleCenter: true)
-        fill("Heat the beans for dinner", into: "mealRecovery.notes", useVisibleCenter: true)
+        let title = app.textFields["mealRecovery.title"]
+        let notes = app.textFields["mealRecovery.notes"]
+        tapVisibleFormRow(title)
+        title.typeText("Wednesday bean bowls" + XCUIKeyboardKey.return.rawValue)
+        notes.typeText("Heat the beans for dinner")
+        XCTAssertEqual(notes.value as? String, "Heat the beans for dinner")
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.isHittable)
+        done.tap()
         let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
         reveal(name)
         if replaceDraftIngredient {
