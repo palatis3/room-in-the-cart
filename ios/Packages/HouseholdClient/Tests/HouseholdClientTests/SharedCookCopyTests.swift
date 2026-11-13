@@ -85,6 +85,7 @@ extension HouseholdClientTests {
              "version": version, "text": "Lunch", "language": "en", "createdAt": date]
         }
         let cursor = try XCTUnwrap(copies[19]["copyId"] as? String)
+        let stateLock = NSLock()
         var lastPage = copies[20]
         let first = copies[0]
         var send: [String: Any] = ["sendId": UUID().uuidString, "copyId": try XCTUnwrap(first["copyId"]), "recipient": "Ana", "sentAt": date]
@@ -95,6 +96,8 @@ extension HouseholdClientTests {
                                        auth: auth, deviceVault: MemoryVault(), transport: transport())
         func response(_ value: [String: Any]) throws -> (Int, Data) { (200, try JSONSerialization.data(withJSONObject: value)) }
         MockURLProtocol.handler = { request in
+            stateLock.lock()
+            defer { stateLock.unlock() }
             if let reply = self.authResponse(request) { return reply }
             let url = try XCTUnwrap(request.url)
             if url.path.hasSuffix("/devices") { return try response(["deviceId": "device", "deviceToken": "test"]) }
@@ -128,10 +131,13 @@ extension HouseholdClientTests {
         _ = try await service.enroll(householdID: household)
         let history = try await service.cookCopies(occurrence: occurrence, reviewed: page)
         XCTAssertEqual(history.map(\.version), Array((1...21).reversed()))
-        lastPage["copyId"] = first["copyId"]
+        stateLock.withLock { lastPage["copyId"] = first["copyId"] }
         do { _ = try await service.cookCopies(occurrence: occurrence, reviewed: page); XCTFail("Accepted a duplicate copy") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        lastPage = copies[20]; lastPage["occurrenceId"] = UUID().uuidString
+        stateLock.withLock {
+            lastPage = copies[20]
+            lastPage["occurrenceId"] = UUID().uuidString
+        }
         do { _ = try await service.cookCopies(occurrence: occurrence, reviewed: page); XCTFail("Accepted another meal") }
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
         func baseline() async throws -> SharedCookCopyBaseline? {
@@ -146,23 +152,34 @@ extension HouseholdClientTests {
         }
         let noFacts = try await correction(true)
         XCTAssertNil(noFacts.previousFacts)
-        var readCount = reads
+        var readCount = stateLock.withLock { reads }
         do { _ = try await correction(false); XCTFail("Compared an uncertain destination") } catch { XCTAssertEqual(error as? ClientError, .configuration) }
-        XCTAssertEqual(reads, readCount)
-        returnedRecipient = "A different cook"
+        XCTAssertEqual(stateLock.withLock { reads }, readCount)
+        stateLock.withLock { returnedRecipient = "A different cook" }
         do { _ = try await correction(true); XCTFail("Compared another recipient") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        allow = false; readCount = reads
+        readCount = stateLock.withLock {
+            allow = false
+            return reads
+        }
         do { _ = try await correction(true); XCTFail("Compared after scope loss") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(reads, readCount)
-        allow = true
-        send["recipient"] = "ana"
+        XCTAssertEqual(stateLock.withLock { reads }, readCount)
+        stateLock.withLock {
+            allow = true
+            send["recipient"] = "ana"
+        }
         do { _ = try await baseline(); XCTFail("Accepted another recipient") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        send["recipient"] = "Ana"; send["copyId"] = UUID().uuidString
+        stateLock.withLock {
+            send["recipient"] = "Ana"
+            send["copyId"] = UUID().uuidString
+        }
         do { _ = try await baseline(); XCTFail("Accepted mismatched copy and send") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        missingHead = true
+        stateLock.withLock { missingHead = true }
         do { _ = try await baseline(); XCTFail("Treated an omitted baseline as never sent") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        allow = false; let before = reads
+        let before = stateLock.withLock {
+            allow = false
+            return reads
+        }
         do { _ = try await baseline(); XCTFail("Read without capability") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(reads, before)
+        XCTAssertEqual(stateLock.withLock { reads }, before)
     }
 }
