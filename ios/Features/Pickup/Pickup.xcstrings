@@ -3246,6 +3246,57 @@
         }
       }
     },
+    "Replace your edited instruction?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace your edited instruction?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reemplazar las instrucciones que editaste?"
+          }
+        }
+      }
+    },
+    "Prepare in the new language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare in the new language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar en el nuevo idioma"
+          }
+        }
+      }
+    },
+    "Changing the recipient language prepares a new instruction from the pickup and replaces your unsaved wording.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing the recipient language prepares a new instruction from the pickup and replaces your unsaved wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al cambiar el idioma del destinatario, se preparan nuevas instrucciones a partir de la recogida y se reemplaza el texto que aún no has guardado."
+          }
+        }
+      }
+    },
     "Prepare complete dated instruction": {
       "extractionState": "manual",
       "localizations": {

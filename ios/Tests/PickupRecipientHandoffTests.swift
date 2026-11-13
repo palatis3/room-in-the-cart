@@ -49,6 +49,7 @@ final class PickupRecipientHandoffTests: XCTestCase {
         let saved = await model.change { $0.notes.append(note) }
         XCTAssertTrue(saved)
         let copy = try XCTUnwrap(model.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        XCTAssertNil(model.handoffCopy(channel: .cook, versionID: note.id, language: "es-US"))
         let retailerOpened = await model.recordHandoff(.shareOpened, snapshot: first)
         let cookOpened = await model.recordCookShare(.shareOpened, copy: copy)
         XCTAssertTrue(retailerOpened && cookOpened)

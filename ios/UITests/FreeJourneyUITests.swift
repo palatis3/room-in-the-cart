@@ -261,6 +261,18 @@ import XCTest
         reveal(reopenedInstruction, initiallyUpward: false)
         let saved = try XCTUnwrap(reopenedInstruction.value as? String)
         XCTAssertEqual(saved, copy)
+
+        let language = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Recipient language")).firstMatch
+        reveal(language, initiallyUpward: false)
+        language.tap()
+        tap(app.buttons["Español (EE. UU.)"])
+        reveal(reopenedInstruction)
+        let spanish = try XCTUnwrap(reopenedInstruction.value as? String)
+        XCTAssertTrue(spanish.hasPrefix("Instrucciones para cocinar"), spanish)
+        XCTAssertTrue(spanish.contains("Wednesday bean bowls"))
+        tap(app.buttons["Review this saved copy"])
+        reveal(reopenedInstruction, initiallyUpward: false)
+        XCTAssertEqual(reopenedInstruction.value as? String, copy)
     }
 
 #endif

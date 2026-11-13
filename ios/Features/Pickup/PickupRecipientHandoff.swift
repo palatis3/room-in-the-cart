@@ -127,7 +127,7 @@ extension PickupModel {
     func handoffCopy(channel: HandoffChannel, versionID: UUID, language: String) -> HandoffCopy? {
         guard let value = journey else { return nil }
         if channel == .cook {
-            return value.notes.first { $0.id == versionID }.map { .cook($0, shopID: value.id) }
+            return value.notes.first { $0.id == versionID && $0.language == language }.map { .cook($0, shopID: value.id) }
         }
         guard let snapshot = value.basket?.snapshots.first(where: { $0.id == versionID }) else { return nil }
         return .retailer(snapshot, language: language)

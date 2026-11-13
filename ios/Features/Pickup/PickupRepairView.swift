@@ -273,6 +273,7 @@ struct PickupCookView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var readback: PickupCookReadbackBinding?
     @State private var language = "en-US"
+    @State private var requestedLanguage: String?
     @State private var includeBudget = false
     @State private var text = ""
     @State private var prepared: CookHandoffReview?
@@ -287,11 +288,13 @@ struct PickupCookView: View {
         Form {
             PickupSaveStatus(model: model)
             CookLiveViewContextLink()
-            Picker(pTr("Recipient language"), selection: $language) {
+            Picker(pTr("Recipient language"), selection: Binding(get: { language }, set: selectLanguage)) {
                 Text(pTr("English (US)")).tag("en-US")
                 Text(pTr("Español (EE. UU.)")).tag("es-US")
             }
-            Toggle(pTr("Include private budget in this copy"), isOn: $includeBudget)
+            Toggle(pTr("Include private budget in this copy"), isOn: Binding(
+                get: { includeBudget }, set: { includeBudget = $0; readback = nil }
+            ))
             Button(pTr("Prepare complete dated instruction")) { prepare() }
             TextEditor(text: $text).frame(minHeight: 220).accessibilityLabel(pTr("Editable cook instruction"))
             if let readback {
@@ -305,7 +308,7 @@ struct PickupCookView: View {
                 Button(pTr("Share saved dated copy")) { Task {
                     guard let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language),
                           await model.recordCookShare(.shareOpened, copy: copy), access.unlocked,
-                          model.journey?.id == copy.shopID, self.noteID == copy.versionID else { return }
+                          model.journey?.id == copy.shopID, self.noteID == copy.versionID, language == copy.language else { return }
                     sharing = copy
                 } }
                 PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
@@ -322,6 +325,14 @@ struct PickupCookView: View {
                 }
             }
         }.navigationTitle(pTr("Tell the cook"))
+            .alert(pTr("Replace your edited instruction?"), isPresented: Binding(
+                get: { requestedLanguage != nil }, set: { if !$0 { requestedLanguage = nil } }
+            ), presenting: requestedLanguage) { next in
+                Button(pTr("Prepare in the new language")) { changeLanguage(to: next) }
+                Button(pTr("Cancel"), role: .cancel) {}
+            } message: { _ in
+                Text(pTr("Changing the recipient language prepares a new instruction from the pickup and replaces your unsaved wording."))
+            }
             .onAppear { includeBudget = false; readback = nil }
             .onDisappear { readback = nil }
             .onChange(of: text) { _, value in
@@ -329,9 +340,9 @@ struct PickupCookView: View {
                 if value != readback?.text { readback = nil }
                 if let noteID, model.journey?.notes.first(where: { $0.id == noteID })?.text != value { self.noteID = nil }
             }
-            .onChange(of: language) { _, _ in readback = nil }
-            .onChange(of: includeBudget) { _, _ in readback = nil }
-            .onChange(of: model.journey?.id) { _, _ in readback = nil; noteID = nil; prepared = nil; text = "" }
+            .onChange(of: model.journey?.id) { _, _ in
+                requestedLanguage = nil; readback = nil; noteID = nil; editingSavedID = nil; prepared = nil; text = ""
+            }
             .onChange(of: model.journey?.revision) { _, _ in readback = nil }
             .onReceive(model.cookLedgerRevisions) { _ in readback = nil }
             .onChange(of: readbackContext) { _, _ in readback = nil }
@@ -353,9 +364,41 @@ struct PickupCookView: View {
         return readback.isCurrent(journey: model.cookJourney, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at)
     }
+    private func selectLanguage(_ next: String) {
+        guard next != language else { return }
+        let savedText = model.journey?.notes.first { $0.id == noteID }?.text
+        if !text.isEmpty && text != savedText && (prepared == nil || text != preparedText) {
+            requestedLanguage = next
+        } else {
+            changeLanguage(to: next)
+        }
+    }
+
+    private func changeLanguage(to next: String) {
+        if text.isEmpty {
+            language = next
+            includeBudget = false
+            readback = nil
+            editingSavedID = nil
+            prepared = nil
+            noteID = nil
+            return
+        }
+        guard let journey = model.cookJourney, !model.saving, !model.hasPendingSave else {
+            model.error = pTr("The source changed. Prepare and review the current instruction.")
+            return
+        }
+        language = next
+        includeBudget = false
+        prepare(journey)
+    }
+
     private func prepare() {
         readback = nil
         guard let value = model.cookJourney, !model.saving, !model.hasPendingSave else { return }
+        prepare(value)
+    }
+    private func prepare(_ value: PickupJourney) {
         let at = Date(), timeZone = TimeZone.current
         text = PickupCookProjection.text(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, at: at, timeZone: timeZone)
