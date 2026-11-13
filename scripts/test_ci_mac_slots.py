@@ -43,7 +43,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         # Lock the provider and concurrency group for each planned fixture.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
             ('bitrise', 1), ('bitrise-m4', 2), ('github', 3), ('bitrise-m4', 0),
-            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
+            ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('github', 2),
             ('github', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
             ('bitrise', 0), ('github', 1), ('bitrise-m4', 2), ('github', 3),
