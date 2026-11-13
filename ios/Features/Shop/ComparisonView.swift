@@ -58,7 +58,7 @@ struct ComparisonView: View {
         }
     }
 
-    private func editComparison() { reviewing = false; model.savedAt = nil }
+    private func editComparison() { reviewing = false }
 
     /// Accessibility text sizes need a content row whose height can grow with the label.
     /// The navigation bar's compact toolbar host is retained only for standard text sizes.

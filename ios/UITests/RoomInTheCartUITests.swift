@@ -144,6 +144,10 @@ final class RoomInTheCartUITests: XCTestCase {
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
         XCTAssertEqual(savedYield.value as? String, "7 1/2")
+        compare()
+        revealFullyInComparison(element("comparisonSourceNote"))
+        XCTAssertFalse(app.buttons["saveComparison"].exists, "Reviewing the same values must keep the saved result")
+        assertSavedStatus("Saved on this iPhone")
     }
 
     func testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart() throws {
