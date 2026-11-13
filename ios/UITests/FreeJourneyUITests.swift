@@ -1760,11 +1760,25 @@ import XCTest
 
         let review = app.navigationBars["Capture a list"]
         let editor = app.textViews["capture.editor"]
-        for _ in 0..<2 {
+        UIPasteboard.general.setItems([["public.utf8-plain-text": Data("3 beans".utf8)]], options: [.localOnly: true])
+        for attempt in 0..<2 {
             tap(element("ledger.capture"))
             XCTAssertTrue(review.waitForExistence(timeout: 8))
             reveal(editor)
             XCTAssertEqual(editor.value as? String, "2 Wraps")
+            if attempt == 0 {
+                let paste = app.buttons["Paste selected text for review"]
+                reveal(paste)
+                XCTAssertTrue(paste.isEnabled)
+                // On iOS 17 the accessibility frame spans the row around the leading paste control.
+                paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
+                let accept = app.buttons["capture.useText"]
+                reveal(accept, initiallyUpward: false)
+                XCTAssertEqual(editor.value as? String, "2 Wraps")
+                accept.tap()
+                reveal(editor)
+                XCTAssertEqual(editor.value as? String, "3 beans")
+            }
             tap(review.buttons["Cancel"])
             XCTAssertTrue(review.waitForNonExistence(timeout: 8))
         }

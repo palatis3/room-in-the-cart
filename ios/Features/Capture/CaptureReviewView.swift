@@ -112,7 +112,11 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 }
             }
             Section(captureText("Optional capture")) {
-                PasteButton(payloadType: String.self) { model.stagePaste($0) }
+                PasteButton(payloadType: String.self) { values in
+                    Task { @MainActor in
+                        if authorize() && !loadingPhoto { model.stagePaste(values) }
+                    }
+                }
                     .accessibilityLabel(captureText("Paste selected text for review"))
                     .disabled(model.busy || loadingPhoto || model.closed)
                 PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {

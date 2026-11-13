@@ -39,7 +39,11 @@ import CoreDomain
                 TextEditor(text: $capture.text).frame(minHeight: 120).accessibilityLabel(captureText("Guest wording to review"))
                     .focused($focusedField, equals: .wording)
                     .disabled(capture.busy)
-                PasteButton(payloadType: String.self) { capture.stagePaste($0) }.disabled(capture.busy)
+                PasteButton(payloadType: String.self) { values in
+                    Task { @MainActor in
+                        if authorize() { capture.stagePaste(values) }
+                    }
+                }.disabled(capture.busy)
                 if capture.busy {
                     Button(captureText("Stop recording and review")) { capture.stopSpeech() }
                 } else {

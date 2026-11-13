@@ -158,7 +158,10 @@ import CoreDomain
                 Text(captureText("Choose one photo for review"))
             }.disabled(!canReview || !localPhotoConsent)
             PasteButton(payloadType: String.self) { values in
-                if model.paste(values) { resetDerived() }
+                Task { @MainActor in
+                    guard canReview else { return }
+                    if model.paste(values) { resetDerived() }
+                }
             }.disabled(!canReview)
                 .accessibilityLabel(captureText("Paste source text"))
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
