@@ -223,6 +223,42 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertTrue(shop.search("").isEmpty)
     }
 
+    func testDualPrintedMeasuresDescribeOneDemandAndKeepTheRetailerLabel() throws {
+        var shop = ShoppingLedger()
+        for source in ["2 × 15 oz (425 g) pinto beans", "2 15 oz (425 g) cans of pinto beans",
+                       "2 latas de 15 onzas / 425 g de pinto beans", "2x15oz/425g pinto beans"] {
+            let preview = try shop.stageImport(text: source)
+            let row = try XCTUnwrap(preview.lines.first)
+            XCTAssertEqual(row.name, "pinto beans", source)
+            XCTAssertEqual(row.originalPack?.count, 2, source)
+            XCTAssertEqual(row.quantity?.unit, .ounce, source)
+            XCTAssertEqual(row.quantity?.amount, try Rational(30), source)
+        }
+        let volume = try XCTUnwrap(shop.stageImport(text: "12 fl oz/355 ml juice").lines.first)
+        XCTAssertEqual(volume.name, "juice")
+        XCTAssertEqual(volume.quantity?.unit, .fluidOunce)
+        XCTAssertEqual(volume.quantity?.amount, try Rational(12))
+        let trailing = try XCTUnwrap(shop.stageImport(text: "2 cans of beans, 15 oz (425 g) each").lines.first)
+        XCTAssertEqual(trailing.name, "beans")
+        XCTAssertEqual(trailing.originalPack?.count, 2)
+        XCTAssertEqual(trailing.quantity?.amount, try Rational(30))
+        let label = "500 g (17.6 oz) brown rice"
+        try shop.commitImport(shop.stageImport(text: label))
+        let saved = try roundTrip(shop)
+        XCTAssertEqual(saved.lines.map(\.name), ["brown rice"])
+        XCTAssertEqual(saved.contributions.map(\.originalText), [label])
+        XCTAssertEqual(saved.contributions.first?.quantity?.amount, try Rational(500))
+        XCTAssertEqual(saved.contributions.first?.quantity?.unit, .gram)
+        for source in ["15 oz (85 g) beans", "15 oz / 425 ml beans"] {
+            let row = try XCTUnwrap(shop.stageImport(text: source).lines.first)
+            XCTAssertNil(row.quantity, source)
+            XCTAssertEqual(row.name, "beans", source)
+            XCTAssertNotNil(row.unresolvedReason, source)
+        }
+        let named = try XCTUnwrap(shop.stageImport(text: "500 g (new recipe) rice").lines.first)
+        XCTAssertEqual(named.name, "(new recipe) rice")
+    }
+
     func testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent() throws {
         var ledger = ShoppingLedger()
         let first = try ledger.stageImport(text: "12 wraps", source: .paste)

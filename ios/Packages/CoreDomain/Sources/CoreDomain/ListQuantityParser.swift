@@ -327,19 +327,79 @@ public enum ListQuantityParser {
             measured = nil
             if let amount, let extra { measured = try? amount.adding(extra) }
         }
+        if let alternate = takeAlternateMeasure(from: &tokens),
+           let amount = measured, !alternate.matches(amount, unit: unit) {
+            measured = nil
+        }
         // Preserve capitalized product names such as De Cecco.
         if let connector = tokens.first, connector == "de" || connector == "of" { tokens = tokens.dropFirst() }
         return (measured, unit)
     }
 
-    private static func takeUnitName(from tokens: inout ArraySlice<String>) -> UnitOfMeasure? {
-        if fluidOunces.contains(tokens.prefix(2).map(unitKey).joined(separator: " ")) {
-            tokens = tokens.dropFirst(2)
-            return .fluidOunce
+    private struct PrintedMeasure {
+        let amount: Rational
+        let unit: UnitOfMeasure
+        let decimalPlaces: Int
+
+        func matches(_ primary: Rational, unit primaryUnit: UnitOfMeasure) -> Bool {
+            guard primaryUnit.dimension == unit.dimension,
+                  let converted = try? Quantity(amount: primary, unit: primaryUnit, originalLiteral: "").converted(to: unit),
+                  let difference = try? max(converted, amount).subtracting(min(converted, amount)) else { return false }
+            if difference == .zero { return true }
+            let halfPrintedIncrement = "0." + String(repeating: "0", count: decimalPlaces) + "5"
+            guard let tolerance = try? Rational(decimal: halfPrintedIncrement) else { return false }
+            return difference <= tolerance
         }
-        guard let first = tokens.first, let unit = units[unitKey(first)] else { return nil }
-        tokens = tokens.dropFirst()
+    }
+
+    /// Only consume a complete second measurement. Parenthetical food names and slash-separated
+    /// varieties remain part of the name. Compare using the precision actually printed on the label.
+    private static func takeAlternateMeasure(from tokens: inout ArraySlice<String>) -> PrintedMeasure? {
+        guard let marker = tokens.first?.first, marker == "(" || marker == "/" else { return nil }
+        var parts = Array(tokens.prefix(5))
+        parts[0].removeFirst()
+        let offset = parts[0].isEmpty ? 1 : 0
+        if marker == "(" {
+            guard let close = parts.firstIndex(where: { $0.hasSuffix(")") }) else { return nil }
+            parts = Array(parts[...close])
+            parts[close].removeLast()
+        }
+        var measure = parts.dropFirst(offset)
+        guard let first = measure.first else { return nil }
+        let literal = (separatingUnit(first)?.amount ?? first).replacingOccurrences(of: ",", with: ".")
+        guard let amount = try? Rational(decimal: literal) else { return nil }
+        if let attached = separatingUnit(first) { measure[measure.startIndex] = attached.unit }
+        else { measure = measure.dropFirst() }
+        guard let unit = takeUnitName(from: &measure), marker != "(" || measure.isEmpty else { return nil }
+        tokens = tokens.dropFirst(parts.count - measure.count)
+        let precision = literal.split(separator: ".").dropFirst().first?.count ?? 0
+        return PrintedMeasure(amount: amount, unit: unit, decimalPlaces: precision)
+    }
+
+    private static func takeUnitName(from tokens: inout ArraySlice<String>) -> UnitOfMeasure? {
+        guard let first = tokens.first else { return nil }
+        // The last word of a printed unit may touch its alternate size ("fl oz/355 ml").
+        let pair = tokens.prefix(2)
+        if pair.count == 2, let last = pair.last {
+            let word = unitBeforeAlternate(last)
+            if fluidOunces.contains(unitKey(first) + " " + unitKey(String(word))) {
+                tokens = tokens.dropFirst(2)
+                if word.count < last.count { tokens.insert(String(last.dropFirst(word.count)), at: tokens.startIndex) }
+                return .fluidOunce
+            }
+        }
+        let word = unitBeforeAlternate(first)
+        guard let unit = units[unitKey(String(word))] else { return nil }
+        if word.count == first.count { tokens = tokens.dropFirst() }
+        else { tokens[tokens.startIndex] = String(first.dropFirst(word.count)) }
         return unit
+    }
+
+    private static func unitBeforeAlternate(_ token: String) -> Substring {
+        let prefix = token.prefix { $0 != "/" && $0 != "(" }
+        guard prefix.endIndex != token.endIndex else { return prefix }
+        let suffix = token[token.index(after: prefix.endIndex)...]
+        return suffix.isEmpty || suffix.first?.isNumber == true ? prefix : token[...]
     }
 
     /// In “one pound and a half ounce”, the second unit belongs to the fraction.
@@ -500,7 +560,7 @@ public enum ListQuantityParser {
     private static func separatingUnit(_ token: String) -> (amount: String, unit: String)? {
         guard let start = token.firstIndex(where: \.isLetter), start != token.startIndex else { return nil }
         let unit = String(token[start...])
-        let key = unitKey(unit)
+        let key = unitKey(String(unitBeforeAlternate(unit)))
         guard units[key] != nil || unresolvedMeasures.contains(key) else { return nil }
         var amount = token[..<start]
         if amount.last == "-" { amount = amount.dropLast() }
