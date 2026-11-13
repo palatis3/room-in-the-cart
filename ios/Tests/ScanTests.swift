@@ -227,6 +227,21 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let record = try model.reviewed(target: target, label: "Rice", barcode: nil)
         XCTAssertEqual(record.originalText, "rize"); XCTAssertEqual(model.source, .paste)
     }
+    func testRejectedPastePreservesCurrentReviewAndValidPasteClearsTheFailure() {
+        let model = ScanModel(text: "Receipt from Tuesday")
+        model.confirmed = true
+        XCTAssertFalse(model.paste([String(repeating: "x", count: 20_001)]))
+        XCTAssertEqual(model.failure, .tooLarge)
+        XCTAssertEqual(model.text, "Receipt from Tuesday")
+        XCTAssertTrue(model.confirmed)
+        XCTAssertEqual(model.source, .typed)
+
+        XCTAssertTrue(model.paste(["Rice", "Beans"]))
+        XCTAssertNil(model.failure)
+        XCTAssertEqual(model.originalText, "Rice\nBeans")
+        XCTAssertFalse(model.confirmed)
+        XCTAssertEqual(model.source, .paste)
+    }
     func testRevokingPhotoConsentRejectsLateResultAndKeepsTyping() async throws {
         let service = HeldScan(), model = ScanModel(text: "Keep typed", service: service)
         model.stage(try image())

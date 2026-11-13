@@ -157,7 +157,9 @@ import CoreDomain
             PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                 Text(captureText("Choose one photo for review"))
             }.disabled(!canReview || !localPhotoConsent)
-            PasteButton(payloadType: String.self) { model.paste($0); resetDerived() }.disabled(!canReview)
+            PasteButton(payloadType: String.self) { values in
+                if model.paste(values) { resetDerived() }
+            }.disabled(!canReview)
                 .accessibilityLabel(captureText("Paste source text"))
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
             Text(captureText("Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library."))
