@@ -162,6 +162,26 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         XCTAssertTrue(unstructured.servings.isEmpty); XCTAssertTrue(unstructured.ingredientText.isEmpty)
         XCTAssertTrue(unstructured.unclassifiedText.contains("Bake"))
     }
+    func testYieldSuggestionsPreserveMixedServingsAndInstructionText() throws {
+        let draft = try RecipeOCRParser.draft("Guiso\nRinde: 2 1/2 porciones\nIngredientes\n2 papas\nPreparación\nServings: 1")
+        XCTAssertEqual(draft.servings, "2 1/2")
+        XCTAssertEqual(draft.notes, "Servings: 1")
+        XCTAssertEqual(draft.ingredientText, "2 papas")
+        XCTAssertFalse(draft.confirmed)
+
+        let ambiguous = try RecipeOCRParser.draft("Soup\nServes 2 to 4\nIngredients\n1 carrot")
+        XCTAssertTrue(ambiguous.servings.isEmpty)
+        XCTAssertEqual(ambiguous.unclassifiedText, "Serves 2 to 4")
+
+        let named = try RecipeOCRParser.draft("Servings of Sunshine\nServes 4\nIngredients\n2 oranges")
+        XCTAssertEqual(named.title, "Servings of Sunshine")
+        XCTAssertEqual(named.servings, "4")
+
+        let alternatives = try RecipeOCRParser.draft("Soup\nServes 2\nYield: 4 servings\nIngredients\n1 carrot")
+        XCTAssertTrue(alternatives.servings.isEmpty)
+        XCTAssertEqual(alternatives.unclassifiedText, "Serves 2\nYield: 4 servings")
+    }
+
     func testReviewedRecipeKeepsOriginalSeparateAndDoesNotChooseAMeal() throws {
         let original = "Tacos\nServes 4\nIngredients\n2 packs of 6 wraps\nInstructions\nWarm wraps"
         var draft = try RecipeOCRParser.draft(original)

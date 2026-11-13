@@ -46,29 +46,46 @@ enum RecipeOCRParser {
         let lines = original.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         var value = RecipeCaptureDraft()
         var section = 0
-        var ingredients: [String] = [], instructions: [String] = [], unknown: [String] = []
+        var ingredients: [String] = [], instructions: [String] = []
+        var unclassified: [(text: String, yield: Bool)] = []
+        var yields: [(literal: String, amount: Rational)] = []
         for (index, line) in lines.enumerated() {
             let key = line.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ": "))
             if ["ingredients", "ingredientes"].contains(key) { section = 1; continue }
             if ["instructions", "directions", "method", "preparation", "preparación", "preparacion", "elaboración", "elaboracion", "instrucciones"].contains(key) { section = 2; continue }
-            if let servings = servings(line) { value.servings = servings; continue }
+            if section == 0, let match = yieldHeading.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+               let range = Range(match.range(at: 1), in: line) {
+                let literal = String(line[range])
+                if let count = try? CaptureNumber.parse(literal), count > .zero {
+                    yields.append((literal, count))
+                    unclassified.append((line, true))
+                    continue
+                }
+                if index != 0 {
+                    unclassified.append((line, true))
+                    continue
+                }
+            }
             if index == 0 { value.title = line; continue }
             if section == 1 { ingredients.append(line) }
             else if section == 2 { instructions.append(line) }
-            else { unknown.append(line) }
+            else { unclassified.append((line, false)) }
         }
         value.ingredientText = ingredients.joined(separator: "\n")
         value.notes = instructions.joined(separator: "\n")
-        value.unclassifiedText = unknown.joined(separator: "\n")
+        if let first = yields.first, yields.count == unclassified.filter(\.yield).count,
+           yields.allSatisfy({ $0.amount == first.amount }) {
+            value.servings = first.literal
+            unclassified.removeAll(where: \.yield)
+        }
+        value.unclassifiedText = unclassified.map(\.text).joined(separator: "\n")
         value.confirmed = false
         return value
     }
-    private static func servings(_ line: String) -> String? {
-        let expression = try! NSRegularExpression(pattern: #"^(?:serves|servings|yield|rinde|porciones|raciones)\s*:?\s*([0-9]+(?:/[0-9]+|\.[0-9]+)?)\s*$"#, options: .caseInsensitive)
-        guard let match = expression.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
-              let range = Range(match.range(at: 1), in: line), let count = try? CaptureNumber.parse(String(line[range])), count > .zero else { return nil }
-        return String(line[range])
-    }
+    private static let yieldHeading = try! NSRegularExpression(
+        pattern: #"^(?:serves|servings|yield|rinde|porciones|raciones)(?:\s*:\s*|\s+)(.+?)(?:\s+(?:servings?|porci[oó]n|porciones|raci[oó]n|raciones))?$"#,
+        options: .caseInsensitive
+    )
 }
 
 enum ReviewedScan {
