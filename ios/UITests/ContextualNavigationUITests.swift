@@ -528,6 +528,20 @@ import UIKit
         capture("S05-original-and-reviewed-replacement-checkout")
     }
 
+    private func enterCheckoutTerms(_ terms: [(String, String)], above done: XCUIElement) {
+        for (id, value) in terms {
+            let field = app.textFields[id]
+            revealContent(field, above: done)
+            field.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            app.typeText(value)
+            XCTAssertEqual(field.value as? String, value, id)
+        }
+    }
+
     private func enterWeighedPickup(knownTax: Bool) {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
@@ -543,17 +557,7 @@ import UIKit
                                             ("Eligible discount", "0"), ("Tax", knownTax ? "0" : nil),
                                             ("Deposits and other charges", "0")]
         // Move focus between checkout fields in Form order, then dismiss once.
-        for (id, value) in terms {
-            let field = app.textFields[id]
-            revealContent(field, above: done)
-            field.tap()
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
-                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
-            }
-            app.typeText(value)
-            XCTAssertEqual(field.value as? String, value, id)
-        }
+        enterCheckoutTerms(terms, above: done)
         for (id, value) in charges {
             let field = app.textFields[id]
             revealContent(field, above: done)
@@ -650,10 +654,13 @@ import UIKit
         assertText("Same commitments at both stores")
         capture("Checkout-direct-two-store-quotes")
         backOnce(from: "Two store trips", to: "Whole checkout")
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        let done = app.buttons["Done"]
+        enterCheckoutTerms([("Store", "Family market"), ("Branch", "Main branch"),
+                            ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")],
+                           above: done)
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
