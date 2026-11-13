@@ -997,7 +997,12 @@ import XCTest
         fill("Dinner plan", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("dinnerLibrary")); tap(element("ledgerNewTemplate"))
         fill("Pepper rice", into: "ledgerDinnerTitle"); fill("3", into: "ledgerDinnerServings")
-        fill("Peppers", into: "Ingredient name"); fill("1 1/2", into: "Amount, optional", requireDone: true)
+        // Enter adjacent ingredient fields before dismissing the keyboard.
+        let ingredient = editableElement("Ingredient name")
+        tapVisibleFormRow(ingredient)
+        ingredient.typeText("Peppers")
+        fill("1 1/2", into: "Amount, optional", requireDone: true, useVisibleCenter: true)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         tap(element("ledgerReviewDinner")); tap(element("ledgerSaveDinner")); tap(app.buttons["Done"])
         tap(element("ledgerChooseTemplate"))
         let need = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerPreviewNeed-'")).firstMatch
