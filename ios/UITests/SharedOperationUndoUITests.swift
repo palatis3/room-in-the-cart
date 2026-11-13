@@ -231,8 +231,11 @@ import XCTest
             } else {
                 right.press(forDuration: 0.1, thenDragTo: left)
             }
-            let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: control)
-            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed, id)
+            // Expanding the quantity fields can recreate the native switch.
+            // Observe the current form row by its stable identifier.
+            let changed = app.switches.matching(identifier: id)
+                .matching(NSPredicate(format: "value == %@", expected)).firstMatch
+            XCTAssertTrue(changed.waitForExistence(timeout: 5), id)
         }
         XCTAssertEqual(toggle.value as? String, expected, id)
     }

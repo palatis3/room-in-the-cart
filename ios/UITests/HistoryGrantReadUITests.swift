@@ -31,12 +31,11 @@ import XCTest
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
         XCTAssertFalse(app.staticTexts["Conditional maximum remaining"].exists)
         openRawPlan()
-        tap(app.buttons["Edit this period plan"])
-        tap(element("history.reviewPeriod"))
-        enable("I reviewed these exact fields and their source")
-        tap(element("history.applyReviewed")); atLeast("paid",3); counter("writes",0)
-        assertText("Your authorized saved raw records remain available")
-        capture("E09-free-paid-analysis-and-write-denied-without-mutation")
+        assertText("This raw record does not calculate a remaining balance")
+        XCTAssertFalse(app.buttons["Edit this period plan"].exists)
+        XCTAssertFalse(element("history.applyReviewed").exists)
+        counter("writes",0)
+        capture("E09-granted-raw-plan-has-no-write-action")
         pricesTab()
         let reference = app.textFields["Saved observation reference"]
         fill(foreign,field:reference)
@@ -136,11 +135,6 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ value: XCUIElement) { reveal(value); XCTAssertTrue(value.isHittable,value.debugDescription); value.tap() }
     private func fill(_ text: String, field: XCUIElement) { tap(field); app.typeText(text); let done = app.buttons.matching(identifier:"Done").firstMatch; if done.exists && done.isHittable { done.tap() } else { app.swipeDown() } }
-    private func enable(_ label: String) {
-        let toggle = app.switches[label]; reveal(toggle)
-        if toggle.value as? String == "0" { toggle.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
-        XCTAssertEqual(toggle.value as? String,"1")
-    }
     private func assertText(_ text: String) { let value = app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@",text)).firstMatch; reveal(value); XCTAssertTrue(value.isHittable,text) }
     private func counter(_ id: String, _ count: Int) {
         let label = id == "writes" ? "Writes":id == "paid" ? "Paid denied":id == "denied" ? "Denied":"Reads"
