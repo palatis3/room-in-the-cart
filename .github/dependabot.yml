@@ -9,6 +9,9 @@ updates:
       actions-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
+      actions-runner-majors:
+        patterns: ["actions/checkout", "actions/setup-node"]
+        update-types: [major]
 
   - package-ecosystem: npm
     directories: [/service, /web]

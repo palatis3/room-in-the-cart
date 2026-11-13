@@ -6,8 +6,10 @@ The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on
 Bitrise M2 slot 1 ahead of core UI04. It now uses M2 slot 2. External pull
 requests use GitHub slot 2 for the same selector. Replaying the two completed
 batches projects 3m33s and 1m30s earlier completion of the last check after
-allowing two minutes for an additional runner pickup. Compare the next hosted
-batch with those estimates. [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
+allowing two minutes for an additional runner pickup. In the first hosted batch with the change, UI04 ran from 19:37:32 to
+19:52:26 UTC while the Undo fixture ran from 19:42:09 to 19:48:37. All
+6m28s of the fixture overlapped UI04. End-to-end savings cannot be isolated
+from this one run. [UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271240/job/132109415364) · [Undo fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271120/job/132108132135) [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
 · [Core UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43472025183/job/132050046503)
 
 Three Thread Sanitizer reports identified state shared by async HouseholdClient
