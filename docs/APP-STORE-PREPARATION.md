@@ -41,6 +41,30 @@ Compare two grocery packs by how much usable food you need and what each choice 
 
 Compara dos presentaciones del mismo alimento según la cantidad que necesitas y cuánto te costaría cada opción. Al planear la compra, aparta porciones para el almuerzo y revisa cuánto queda para la cena. Si al recoger el pedido recibes menos de lo previsto, revisa qué falta y elige qué agregar a tu próxima lista de compras.
 
+## TestFlight draft for the first internal build
+
+Use these notes with the signed build once the two walkthroughs have passed on that build. The support contact for this draft is hello@roominthecart.com. Confirm that feedback reaches the support owner before inviting testers.
+
+### English (US)
+
+**Beta description.** Plan a grocery pickup around the food your family needs. Compare pack sizes and prices, save the result, and keep a shopping list on your iPhone.
+
+**What to test**
+
+1. In Shop, tap Compare packs. Enter “Demo wraps” and a need of 12. Compare a pack of 8 for $3.20 with a pack of 6 for $2.70. Each option needs two packs. Look for totals of $6.40 and $5.40. Save, quit the app, and reopen the app. Find the saved comparison in Records.
+2. Open Settings from a tab’s main screen, then Support. Review the support summary and choose Copy in the share sheet. The copied text should match the preview. Your groceries, prices, and pickup name should stay private.
+3. If something differs, send feedback through TestFlight. Include the language, the step you reached, and what appeared. Use fictional groceries in any screenshot.
+
+### Spanish for the US storefront
+
+**Descripción de la beta.** Planea tu compra según los alimentos que necesita tu familia. Compara tamaños de paquetes y precios, guarda el resultado y lleva la lista de compras en tu iPhone.
+
+**Qué probar**
+
+1. En Compras, toca Comparar paquetes. Escribe «Demo wraps» e indica que necesitas 12 unidades. Compara un paquete de 8 por $3.20 con uno de 6 por $2.70. En ambos casos necesitas dos paquetes. Los totales deberían ser $6.40 y $5.40. Guarda la comparación, cierra la app y vuelve a abrirla. Busca la comparación guardada en Historial.
+2. Abre Configuración desde la pantalla principal de una pestaña y entra en Soporte. Revisa el resumen de soporte. Abre la hoja para compartir y elige Copiar. El texto copiado debería coincidir con el resumen. Los alimentos, los precios y el nombre de tu compra deben seguir siendo privados.
+3. Si algo sale distinto, envía tus comentarios por TestFlight. Indica el idioma, el paso en el que estabas y qué apareció. Usa alimentos ficticios en las capturas de pantalla.
+
 ## Feature claim ledger
 
 The following are draft claim boundaries, not permission to publish them while required launch services are unavailable. The complete Foundation scope remains the intended release; deferred setup is not evidence that shared or paid features are working in the distributed build.
