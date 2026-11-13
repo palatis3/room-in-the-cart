@@ -51,24 +51,21 @@ import XCTest
             tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
             XCTAssertEqual(packs.value as? String, "3")
             let keep = app.buttons["sharedOrder.keepLine"]
-            if !keep.isHittable {
-                // At the largest text size, a swipe on the app starts in the keyboard toolbar.
-                let toolbar = app.buttons[done]
-                XCTAssertTrue(toolbar.isHittable)
-                let top = app.buttons[cancel].firstMatch.frame.maxY
-                let height = toolbar.frame.minY - top
-                XCTAssertGreaterThan(height, 0)
-                let origin = app.coordinate(withNormalizedOffset: .zero)
-                let x = packs.frame.midX - app.frame.minX, y = top - app.frame.minY
-                let lower = origin.withOffset(CGVector(dx: x, dy: y + height * 0.85))
-                let upper = origin.withOffset(CGVector(dx: x, dy: y + height * 0.4))
-                for _ in 0..<16 {
-                    if keep.isHittable { break }
-                    lower.press(forDuration: 0.05, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0.3)
-                }
-            }
-            XCTAssertTrue(keep.isHittable)
-            keep.tap()
+            let keyboard = app.keyboards.firstMatch
+            let doneButton = app.buttons[done]
+            // Synthesized typing can move the Done button while the keyboard slides back.
+            let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard doneButton.exists, keyboard.exists else { return false }
+                let button = doneButton.frame, pad = keyboard.frame
+                return doneButton.isHittable && !button.isEmpty && self.app.frame.intersects(pad)
+                    && button.maxY <= pad.minY + 1
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [aboveKeyboard], timeout: 8), .completed)
+            doneButton.tap()
+            XCTAssertTrue(keyboard.waitForNonExistence(timeout: 8))
+            XCTAssertEqual(packs.value as? String, "3")
+            tap(keep)
+            XCTAssertTrue(packs.waitForNonExistence(timeout: 8))
             let reference=app.textFields["sharedOrder.reference"]
             tap(reference); reference.typeText("Native market ABC-51")
             tap(app.buttons[done])
