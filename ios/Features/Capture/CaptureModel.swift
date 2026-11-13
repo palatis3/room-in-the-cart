@@ -58,8 +58,9 @@ import Combine
         generation += 1; let current = generation
         busy = true; failure = nil; candidate = nil
         task = Task { [weak self, speech] in
+            guard !Task.isCancelled, self?.generation == current, let locale = self?.localeIdentifier else { return }
             do {
-                let stream = try await speech.begin(localeIdentifier: self?.localeIdentifier ?? "en-US")
+                let stream = try await speech.begin(localeIdentifier: locale)
                 guard let self, self.generation == current, !self.closed else { speech.stop(); return }
                 self.listening = true
                 self.timeout = Task { [weak self] in
