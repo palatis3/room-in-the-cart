@@ -1077,12 +1077,22 @@ import XCTest
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
         tap(app.buttons["Preview a dated cook instruction"])
+        enableSwitch("Include private budget in this copy")
         tap(app.buttons["Prepare complete dated instruction"])
         tap(app.buttons["Save dated copy"])
+        let share = app.buttons["Share saved dated copy"]
+        reveal(share)
+        XCTAssertFalse(share.isEnabled)
+        let confirmCorrection = "Include the saved custom or private wording in this correction"
+        enableSwitch(confirmCorrection)
         tap(app.buttons["Review correction"])
         assertText("Complete current instruction")
         tap(app.buttons["Copy reviewed correction"])
         assertText("Copied. Mark the version sent only after sending it.")
+        let confirmation = app.switches[confirmCorrection]
+        reveal(confirmation, initiallyUpward: false)
+        XCTAssertEqual(confirmation.value as? String, "0")
+        XCTAssertFalse(app.buttons["Review correction"].isEnabled)
         fill("Ana", into: "handoffRecipient")
         tap(app.buttons["I sent this version to this recipient"])
         assertText("Acknowledgment unknown")

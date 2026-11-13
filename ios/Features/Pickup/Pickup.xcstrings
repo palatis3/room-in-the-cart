@@ -7360,6 +7360,23 @@
         }
       }
     },
+    "Include the saved private or edited wording in this share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include the saved private or edited wording in this share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir el texto privado o editado de la copia guardada al compartirla esta vez"
+          }
+        }
+      }
+    },
     "Include the saved custom or private wording in this correction": {
       "extractionState": "manual",
       "localizations": {

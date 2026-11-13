@@ -304,13 +304,16 @@ struct PickupCookView: View {
                 }
             }
             Button(pTr("Save dated copy")) { Task { await saveNote() } }.disabled(text.isEmpty)
-            if let noteID {
-                Button(pTr("Share saved dated copy")) { Task {
-                    guard let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language),
+            if let noteID, let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language) {
+                CookSavedCopyShareButton(copy: copy) {
+                    guard access.unlocked, scenePhase == .active, self.noteID == copy.versionID,
+                          language == copy.language, text == copy.fullText,
                           await model.recordCookShare(.shareOpened, copy: copy), access.unlocked,
-                          model.journey?.id == copy.shopID, self.noteID == copy.versionID, language == copy.language else { return }
+                          scenePhase == .active, model.journey?.id == copy.shopID, self.noteID == copy.versionID,
+                          language == copy.language, text == copy.fullText else { return }
                     sharing = copy
-                } }
+                }
+                .id(noteID)
                 PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
                     .id(noteID)
             }
@@ -440,5 +443,33 @@ struct PickupCookView: View {
             noteID = id; editingSavedID = id; prepared = nil; includeBudget = false; return true
         }
         return false
+    }
+}
+
+private struct CookSavedCopyShareButton: View {
+    let copy: HandoffCopy
+    let share: @MainActor () async -> Void
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var includePrivateWording = false
+    @State private var opening = false
+
+    var body: some View {
+        if copy.needsPrivateReview {
+            Toggle(pTr("Include the saved private or edited wording in this share"), isOn: $includePrivateWording)
+        }
+        Button(pTr("Share saved dated copy")) {
+            guard !opening, !copy.needsPrivateReview || includePrivateWording else { return }
+            includePrivateWording = false
+            opening = true
+            Task {
+                await share()
+                opening = false
+            }
+        }
+        .disabled(opening || (copy.needsPrivateReview && !includePrivateWording))
+        .onDisappear { includePrivateWording = false }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { includePrivateWording = false }
+        }
     }
 }

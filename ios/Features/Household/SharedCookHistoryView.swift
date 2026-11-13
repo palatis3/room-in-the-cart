@@ -335,6 +335,7 @@ private struct SharedCookSavedView: View {
                 switch result {
                 case .full:
                     guard wording.utf8.elementsEqual(fullWording.utf8) else { return }
+                    wordingConfirmed = false
                     sharing = Message(text: wording, assisted: false)
                 case .changes:
                     sharing = Message(text: result.text(current: copy.handoff(pieces: [])), assisted: true)

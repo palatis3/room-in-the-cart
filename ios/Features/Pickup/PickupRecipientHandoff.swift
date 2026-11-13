@@ -251,6 +251,7 @@ struct PickupRecipientSection: View {
                                         resetReview(); return
                                     }
                                     UIPasteboard.general.string = fresh.text(current: copy)
+                                    privateWordingConfirmed = false
                                     reviewRevision = nil; copied = true
                                 }
                             } else { Text(pTr("The source changed. Review this version again.")) }
@@ -260,9 +261,9 @@ struct PickupRecipientSection: View {
                 } else { Text(pTr("The source changed. Prepare and review the current instruction.")) }
             }
             .onChange(of: language) { _, _ in destinationConfirmed = false; resetReview() }
-            .onChange(of: recipient) { _, _ in destinationConfirmed = false; resetReview() }
+            .onChange(of: recipient) { _, _ in destinationConfirmed = false; privateWordingConfirmed = false; resetReview() }
             .onChange(of: destinationConfirmed) { _, _ in resetReview() }
-            .onChange(of: privateWordingConfirmed) { _, _ in resetReview() }
+            .onChange(of: privateWordingConfirmed) { _, _ in reviewRevision = nil }
             .onChange(of: scenePhase) { _, value in if value != .active { privateWordingConfirmed = false; resetReview() } }
             .onReceive(model.cookLedgerRevisions) { _ in if channel == .cook { resetReview() } }
         }
