@@ -260,9 +260,9 @@ final class RoomInTheCartUITests: XCTestCase {
         assertScope("Item-only comparison")
         screenshot("Dark-largest-type-result-scope")
         assertMoney("aTotal", amount: "6.00")
-        let total = element("aTotal")
-        XCTAssertGreaterThan(total.frame.height, 0)
-        XCTAssertLessThanOrEqual(total.frame.width, app.windows.firstMatch.frame.width)
+        let totalFrame = app.staticTexts["aTotal"].frame
+        XCTAssertGreaterThan(totalFrame.height, 0)
+        XCTAssertLessThanOrEqual(totalFrame.width, app.windows.firstMatch.frame.width)
         screenshot("Dark-largest-type-pack-A")
         assertMoney("bTotal", amount: "4.00")
         screenshot("Dark-largest-type-pack-B")
