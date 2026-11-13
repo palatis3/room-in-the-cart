@@ -48,7 +48,7 @@ struct DeviceSurfacesEntry: View {
         }.navigationTitle(SurfaceCopy.text("Device shortcuts"))
             .task {
                 await composition.sourceDidChange()
-                if selectedShop == nil { selectedShop = composition.shops.first?.id }
+                if selectedShop == nil, composition.privateAuthorized { selectedShop = ledger.shop?.id }
             }
             .sheet(item: $composition.draft) { _ in NavigationStack { SurfaceImportReview(composition: composition) } }
     }
@@ -61,6 +61,9 @@ private struct SurfaceImportReview: View {
             if let draft = composition.draft, composition.privateAuthorized {
                 let review = LedgerImportReview(shop: composition.shop(draft.preview.shopID), preview: draft.preview, choices: draft.decisions)
                 Form {
+                    if let shop = composition.shop(draft.preview.shopID) {
+                        LabeledContent(SurfaceCopy.text("Shopping list"), value: shop.title)
+                    }
                     Section(SurfaceCopy.text("Original wording")) { Text(draft.originalText).textSelection(.enabled) }
                     ForEach(draft.preview.lines) { row in
                         Section {
