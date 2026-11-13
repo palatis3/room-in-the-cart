@@ -1,4 +1,5 @@
 import XCTest
+import SQLite3
 import CoreDomain
 import LocalStore
 @testable import RoomInTheCart
@@ -48,26 +49,50 @@ final class PickupModelTests: XCTestCase {
         XCTAssertEqual(encoded, ["decision": "unchanged", "baseline": "list", "comparison": "same"])
         XCTAssertEqual(PickupDecision.allCases.count, 6)
         var revision = try XCTUnwrap(model.journey?.revision)
-        let early = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: true)
+        let workspace = try XCTUnwrap(model.sourceWorkspaceID)
+        let suite = "pickup-feedback-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let consent = LocalPickupFeedbackConsent(defaults: defaults)
+        consent.setEnabled(true, for: workspace)
+        let early = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: consent)
         XCTAssertFalse(early)
         _ = await model.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
         _ = await model.freeze()
         _ = await model.reportPlaced()
         _ = await model.change { $0.closedAt = Date() }
         revision = try XCTUnwrap(model.journey?.revision)
-        let declined = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: false)
-        let stale = await model.recordFeedback(feedback, shopID: id, revision: revision - 1, consent: true)
-        let wrongShop = await model.recordFeedback(feedback, shopID: UUID(), revision: revision, consent: true)
+        consent.setEnabled(false, for: workspace)
+        let declined = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: consent)
+        consent.setEnabled(true, for: workspace)
+        let stale = await model.recordFeedback(feedback, shopID: id, revision: revision - 1, consent: consent)
+        let wrongShop = await model.recordFeedback(feedback, shopID: UUID(), revision: revision, consent: consent)
         XCTAssertFalse(declined)
         XCTAssertFalse(stale)
         XCTAssertFalse(wrongShop)
         XCTAssertNil(model.journey?.feedback)
-        let saved = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: true)
+        var lock: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &lock), SQLITE_OK)
+        defer { sqlite3_close(lock) }
+        XCTAssertEqual(sqlite3_exec(lock, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+        let interrupted = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: consent)
+        XCTAssertFalse(interrupted)
+        XCTAssertTrue(model.hasPendingSave)
+        XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK)
+        consent.setEnabled(false, for: workspace)
+        consent.setEnabled(true, for: workspace)
+        let oldRetry = await model.retrySave()
+        XCTAssertFalse(oldRetry, "Re-enabling optional feedback must not submit an earlier unsaved answer")
+        XCTAssertFalse(model.hasPendingSave)
+        XCTAssertNil(model.journey?.feedback)
+        XCTAssertEqual(model.journey?.revision, revision)
+        let saved = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: consent)
         XCTAssertTrue(saved)
         let reopened = PickupModel(databaseURL: url)
         await reopened.load()
         XCTAssertEqual(reopened.journey?.feedback, feedback)
-        let removed = await reopened.recordFeedback(nil, shopID: id, revision: try XCTUnwrap(reopened.journey?.revision), consent: false)
+        consent.setEnabled(false, for: workspace)
+        let removed = await reopened.recordFeedback(nil, shopID: id, revision: try XCTUnwrap(reopened.journey?.revision), consent: consent)
         XCTAssertTrue(removed)
         XCTAssertNil(reopened.journey?.feedback)
     }

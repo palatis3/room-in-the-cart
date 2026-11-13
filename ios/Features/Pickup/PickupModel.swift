@@ -488,7 +488,12 @@ struct PickupPersistenceLocation {
     @discardableResult func retrySave() async -> Bool {
         guard !saving, let pending, let store else { return false }
         guard pending.authorize?() != false else {
-            error = recoveryText("Your access or selection changed. Discard this pending recovery and review it again.")
+            if pending.recoveryOperationID == nil {
+                discardPending()
+                error = pTr("Feedback was not saved. Check your pickup and feedback setting before trying again.")
+            } else {
+                error = recoveryText("Your access or selection changed. Discard this pending recovery and review it again.")
+            }
             return false
         }
         saving = true; defer { saving = false }
@@ -508,6 +513,19 @@ struct PickupPersistenceLocation {
         } catch { self.error = pTr("Not saved. Retry this change before continuing; your last saved pickup is intact."); return false }
     }
     func discardPending() { guard !saving else { return }; pending = nil; hasPendingSave = false; error = nil }
+    func recordFeedback(_ feedback: PickupFeedback?, shopID: UUID, revision: Int64,
+                        consent: LocalPickupFeedbackConsent) async -> Bool {
+        guard let workspaceID = sourceWorkspaceID, var current = journey else { return false }
+        let currentConsent = consent.authorization(for: workspaceID)
+        let authorized: @MainActor () -> Bool = { [weak self] in
+            guard let self, self.sourceWorkspaceID == workspaceID, let selected = self.journey,
+                  selected.id == shopID, selected.revision == revision, selected.eligibleForFeedback else { return false }
+            return feedback == nil || currentConsent()
+        }
+        current.feedback = feedback
+        return await save(current, selecting: false, authorize: authorized)
+    }
+
     @discardableResult func change(_ edit: (inout PickupJourney) throws -> Void) async -> Bool {
         guard var value = journey, !saving, pending == nil else { return false }
         do { try edit(&value); return await save(value) }

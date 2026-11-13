@@ -56,20 +56,13 @@ extension PickupJourney {
     var eligibleForFeedback: Bool { closedAt != nil && pickup != nil }
 }
 
-extension PickupModel {
-    func recordFeedback(_ feedback: PickupFeedback?, shopID: UUID, revision: Int64, consent: Bool) async -> Bool {
-        guard let current = journey, current.id == shopID, current.revision == revision,
-              current.eligibleForFeedback, consent || feedback == nil else { return false }
-        return await change { $0.feedback = feedback }
-    }
-}
-
 /// Versioned local-workspace preference, separate from pickup/archive payloads,
 /// billing and household service consent. Legacy unversioned booleans confer nothing.
 @MainActor final class LocalPickupFeedbackConsent: ObservableObject {
     static let shared = LocalPickupFeedbackConsent()
     static let noticeVersion = "local-pickup-feedback-2026-11-03.v1"
     @Published private var acceptedVersions: [String: String]
+    private var consentChanges: [UUID: UUID] = [:]
     private let defaults: UserDefaults
     private let storageKey: String
     init(defaults: UserDefaults = .standard, storageKey: String? = nil) {
@@ -86,12 +79,17 @@ extension PickupModel {
         guard let workspaceID else { return false }
         return acceptedVersions[workspaceID.uuidString.lowercased()] == Self.noticeVersion
     }
+    func authorization(for workspaceID: UUID) -> @MainActor () -> Bool {
+        let change = consentChanges[workspaceID]
+        return { self.enabled(for: workspaceID) && self.consentChanges[workspaceID] == change }
+    }
     func setEnabled(_ value: Bool, for workspaceID: UUID?) {
         guard let workspaceID else { return }
+        if enabled(for: workspaceID) != value { consentChanges[workspaceID] = UUID() }
         acceptedVersions[workspaceID.uuidString.lowercased()] = value ? Self.noticeVersion : nil
         defaults.set(acceptedVersions, forKey: storageKey)
     }
-    func resetForUITest() { acceptedVersions = [:]; defaults.removeObject(forKey: storageKey) }
+    func resetForUITest() { acceptedVersions = [:]; consentChanges = [:]; defaults.removeObject(forKey: storageKey) }
 }
 
 struct PickupFeedbackSection: View {
@@ -117,7 +115,7 @@ struct PickupFeedbackSection: View {
                             .font(.footnote)
                     }
                     Button(pTr("Remove this response"), role: .destructive) {
-                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent.enabled(for: model.sourceWorkspaceID)) }
+                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent) }
                     }
                 }
             } else if consent.enabled(for: model.sourceWorkspaceID) {
@@ -169,7 +167,7 @@ private struct PickupFeedbackEditor: View {
                 guard let decision, let baseline, let comparison else { return }
                 Task {
                     let answer = PickupFeedback(decision: decision, baseline: baseline, comparison: comparison)
-                    if await model.recordFeedback(answer, shopID: shopID, revision: revision, consent: consent.enabled(for: model.sourceWorkspaceID)) { dismiss() }
+                    if await model.recordFeedback(answer, shopID: shopID, revision: revision, consent: consent) { dismiss() }
                     else { failed = true }
                 }
             }.disabled(!current || !consent.enabled(for: model.sourceWorkspaceID) || decision == nil || baseline == nil || comparison == nil || model.saving)

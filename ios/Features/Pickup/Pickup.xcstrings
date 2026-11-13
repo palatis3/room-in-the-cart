@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Feedback was not saved. Check your pickup and feedback setting before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback was not saved. Check your pickup and feedback setting before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardó tu respuesta. Revisa la recogida y la opción de comentarios antes de volver a intentarlo."
+          }
+        }
+      }
+    },
     "This item was removed from the confirmed order. Review its saved history.": {
       "extractionState": "manual",
       "localizations": {
