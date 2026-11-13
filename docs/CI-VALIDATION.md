@@ -366,13 +366,20 @@ remain failed. CURRENT-HANDOFF records their evidence and scoped next actions.
 
 The shared StoreKit producer still builds once against the27.0 destination with
 SDK27.1 and the iOS17 deployment target; its inventory records SDK/toolchain identity.
-The next candidate runs English then Spanish in one consumer, restoring products
-and preparing the exact runtime once. Each locale retains a distinct result
-bundle, artifact, exact-configuration check and all15 selectors. Spanish remains
-eligible after an English native/export/verification failure; a required six-outcome
-gate rejects any incomplete or unsuccessful locale phase. Shared runner/device
-failure can still affect both locales. The outer job cap becomes90minutes in
-place of two45-minute jobs; each native step keeps35minutes and each case120seconds.
+English and Spanish share one consumer, build artifact and verified runtime.
+After English, the consumer shuts down its iPhone and creates a fresh iPhone 17
+for Spanish. It checks the actual device ID, runtime build, configuration and
+all 15 selectors separately for each language. Spanish still runs after an
+English test failure, and the final gate requires both languages to pass.
+The consumer deletes the Spanish device after collecting its evidence.
+
+In the [November 13 StoreKit run](https://github.com/palatis3/room-in-the-cart/actions/runs/43376088605/job/131727236334),
+English passed all 15 scenarios. The simulator's StoreKit service logged 438
+transaction-history request parsing errors in Spanish. Thirteen Spanish scenarios
+failed. Using the products from that run on iOS 26.2 build 23C54, a local rerun
+with separate devices passed all 15 scenarios in each language. The initiating
+cause of the malformed requests remains unconfirmed.
+
 The local sequential rehearsal passes strict15/15 in each configuration on26.2/23C54
 in `.build/StoreKitSharedSetupNov11/{en,es}`, with zero recorded runtime warnings,
 idle notices or restarts and matching source/product hashes at completion. Its

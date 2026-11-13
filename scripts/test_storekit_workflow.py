@@ -161,7 +161,9 @@ class StoreKitWorkflowTests(unittest.TestCase):
 
     def test_second_locale_is_eligible_after_first_native_export_or_verifier_failure(self):
         native = self.step('storekit', identifier='storekit-es-native')
-        expression = native['if']
+        setup = self.step('storekit', identifier='storekit-es-device')
+        self.assertEqual(native['if'], "${{ !cancelled() && steps.storekit-es-device.outcome == 'success' }}")
+        expression = setup['if']
         self.assertEqual(expression, "${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}")
         # Evaluate the actual small Actions predicate against prior step outcomes.
         # The explicit cancellation status function prevents implicit success().
@@ -184,11 +186,42 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertFalse(eligible(successful, cancelled=True))
         steps = self.jobs['storekit']['steps']
         positions = {step.get('id'): index for index, step in enumerate(steps)}
-        self.assertLess(positions['storekit-en-verify'], positions['storekit-es-native'])
+        self.assertLess(positions['storekit-en-verify'], positions['storekit-es-device'])
+        self.assertLess(positions['storekit-es-device'], positions['storekit-es-native'])
         for locale in ('en', 'es'):
             export = self.step('storekit', identifier=f'storekit-{locale}-results')
             self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-" + locale + "-native.outcome != 'skipped' }}")
             self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
+
+    def test_spanish_uses_new_device_on_selected_runtime_and_rejects_failed_creation(self):
+        step = self.step('storekit', identifier='storekit-es-device')
+        code = self.python_block(step)
+        english = '11111111-2222-4333-8444-555555555555'
+        spanish = '22222222-3333-4444-8555-666666666666'
+        runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-26-2'
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = root / 'environment'
+            def prepare():
+                self.execute(code, root, GITHUB_ENV=str(env), SIMULATOR_ID=english, CI_IPHONE_RUNTIME=runtime)
+            with patch('subprocess.run', return_value=subprocess.CompletedProcess([], 0)) as shutdown, \
+                    patch('subprocess.check_output', return_value=spanish) as create:
+                prepare()
+                shutdown.assert_called_once_with(['xcrun', 'simctl', 'shutdown', english], capture_output=True, text=True)
+                create.assert_called_once_with(['xcrun', 'simctl', 'create', 'RITC-StoreKit-es',
+                                                'com.apple.CoreSimulator.SimDeviceType.iPhone-17', runtime], text=True)
+                self.assertEqual(env.read_text(), f'SIMULATOR_ID={spanish}\n')
+                env.unlink()
+                create.return_value = english
+                with self.assertRaises(AssertionError):
+                    prepare()
+                self.assertFalse(env.exists())
+                shutdown.return_value = subprocess.CompletedProcess([], 1, stderr='shutdown failed')
+                create.reset_mock()
+                with self.assertRaises(SystemExit):
+                    prepare()
+                create.assert_not_called()
+                self.assertFalse(env.exists())
 
     def test_only_an_unstarted_storekit_plan_with_the_launch_service_crash_can_retry(self):
         reason = ('Failed to install or launch the test runner. (Underlying Error: '

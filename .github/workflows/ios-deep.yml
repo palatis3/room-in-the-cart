@@ -304,8 +304,6 @@ jobs:
           with Path(os.environ["GITHUB_ENV"]).open("a") as output:
               output.write(f"CI_IPHONE_RUNTIME={runtime}\nSTOREKIT_OS_VERSION={version}\nSTOREKIT_OS_BUILD={build}\nSIMULATOR_ID={simulator}\n")
           PYCODE
-      # Explicit eligibility preserves the second locale after native, export or
-      # verifier failure in the first. A shared runner/device is now intentional.
       - name: Run StoreKit en scenarios
         id: storekit-en-native
         if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
@@ -390,11 +388,34 @@ jobs:
             .build/StoreKitRuntime.log
             .build/storekit-product-inventory.json
           retention-days: 7
-      # Explicit eligibility preserves the second locale after native, export or
-      # verifier failure in the first. A shared runner/device is now intentional.
+      - name: Prepare a separate simulator for Spanish StoreKit
+        id: storekit-es-device
+        if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import os, subprocess
+          from pathlib import Path
+          from uuid import UUID
+          english = str(UUID(os.environ["SIMULATOR_ID"])).upper()
+          stopped = subprocess.run(["xcrun", "simctl", "shutdown", english], capture_output=True, text=True)
+          if stopped.returncode:
+              # The English launch may already have failed before booting.
+              if stopped.returncode != 149 or "Unable to shutdown device in current state: Shutdown" not in stopped.stderr.splitlines():
+                  raise SystemExit(stopped.stderr or stopped.returncode)
+          created = subprocess.check_output(["xcrun", "simctl", "create", "RITC-StoreKit-es",
+                                             "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+                                             os.environ["CI_IPHONE_RUNTIME"]], text=True)
+          spanish = str(UUID(created.strip())).upper()
+          assert spanish != english, "Spanish requires a fresh StoreKit device"
+          with Path(os.environ["GITHUB_ENV"]).open("a") as output:
+              output.write(f"SIMULATOR_ID={spanish}\n")
+          print(f"English device {english}; Spanish device {spanish}")
+          PYCODE
       - name: Run StoreKit es scenarios
         id: storekit-es-native
-        if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.storekit-es-device.outcome == 'success' }}
         timeout-minutes: 35
         env: &storekit-es-env
           STOREKIT_LOCALE: es
@@ -423,6 +444,9 @@ jobs:
             .build/StoreKitRuntime.log
             .build/storekit-product-inventory.json
           retention-days: 7
+      - name: Remove the Spanish StoreKit simulator
+        if: ${{ always() && steps.storekit-es-device.outcome == 'success' }}
+        run: xcrun simctl delete "$SIMULATOR_ID"
       - name: Require both complete StoreKit locale outcomes
         id: storekit-locales-gate
         if: always()
