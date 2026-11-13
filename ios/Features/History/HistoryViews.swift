@@ -15,6 +15,8 @@ struct HistoryEntryView: View {
     @State private var endDate = Date()
     @State private var selectedShop = ""
     @State private var clearingRetry = false
+    private enum PeriodAmount: Hashable { case budget, excludedReserve, reservation(String) }
+    @FocusState private var focusedAmount: PeriodAmount?
 
     var body: some View {
         Form {
@@ -59,8 +61,10 @@ struct HistoryEntryView: View {
                 }
             }
         }
+        .keyboardDoneAction(visible: focusedAmount != nil, title: tr("Done"), identifier: "history.amount.done") {
+            focusedAmount = nil
+        }
         .navigationTitle(HistoryCopy.text("Prices and period budgets"))
-        .accessibilityIdentifier("history.home")
         .task { await model.load() }
         .task {
             while !Task.isCancelled {
@@ -279,7 +283,9 @@ struct HistoryEntryView: View {
             DatePicker(HistoryCopy.text("Period ends"), selection: periodDate(\.endsAt)).environment(\.timeZone, planningTimeZone)
             TextField(HistoryCopy.text("Planning time zone"), text: periodField(\.timeZoneID)).textInputAutocapitalization(.never).autocorrectionDisabled()
             TextField(HistoryCopy.text("Shop budget after excluded reserve, USD"), text: periodField(\.budget)).keyboardType(.decimalPad)
+                .focused($focusedAmount, equals: .budget)
             TextField(HistoryCopy.text("Reserve already excluded, optional USD"), text: periodField(\.excludedReserve)).keyboardType(.decimalPad)
+                .focused($focusedAmount, equals: .excludedReserve)
             Text(HistoryCopy.text("The budget is already net of the excluded reserve. The reserve is explanatory and will not be subtracted twice."))
                 .font(.footnote)
             Text(HistoryCopy.text("This is a shop-plan envelope, not a posting-date statement. Later credits for assigned shops remain part of their entered evidence."))
@@ -315,6 +321,7 @@ struct HistoryEntryView: View {
                 } else {
                     TextField(HistoryCopy.text("Original plan or deferral wording"), text: reservationField(reservation.id, \.originalText), axis: .vertical)
                     TextField(HistoryCopy.text("Reserved amount in USD"), text: reservationField(reservation.id, \.amount)).keyboardType(.decimalPad)
+                        .focused($focusedAmount, equals: .reservation(reservation.id))
                     DatePicker(HistoryCopy.text("Planned date and time"), selection: reservationDate(reservation.id)).environment(\.timeZone, planningTimeZone)
                     Picker(HistoryCopy.text("Reservation state"), selection: reservationField(reservation.id, \.state)) {
                         Text(HistoryCopy.text("Reserved for a future shop")).tag("reserved")

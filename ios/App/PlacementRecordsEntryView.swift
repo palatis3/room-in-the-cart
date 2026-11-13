@@ -21,7 +21,7 @@ struct PlacementRecordsEntryView: View {
                         if let notice = household.placementEvidenceNotice { Text(notice) }
                     }
                     Text(PlacementCopy.text("Connect your household to report an external placement or review a pending report."))
-                    NavigationLink(PlacementCopy.text("Open household")) { HouseholdSettingsView(model: household) }
+                    NavigationLink(PlacementCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 }.navigationTitle(PlacementCopy.text("Shared placement reports"))
             }
         }

@@ -439,7 +439,7 @@ struct SettingsView: View {
                 }.frame(minHeight: 44)
             }
             Section(tr("Household")) {
-                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, fromPrivateSettings: true) }
+                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
             }
             if surfaces.privateAuthorized {

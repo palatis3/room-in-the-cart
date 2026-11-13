@@ -3,7 +3,7 @@ import HouseholdClient
 
 struct HouseholdSettingsView: View {
     @ObservedObject var model: HouseholdModel
-    var fromPrivateSettings = false
+    var continuesAfterWorkspaceLock = false
     @State private var visibleEntry: UUID?
     @Environment(\.scenePhase) private var scenePhase
     @State private var requestReview: RequestReviewPresentation?
@@ -18,6 +18,15 @@ struct HouseholdSettingsView: View {
             Section {
                 Text(ht("Your private work stays on this phone. Signing in does not upload it."))
                     .foregroundStyle(.secondary)
+            }
+            // Shop selection briefly clears the projection. Keep this destination
+            // mounted while it rechecks the new scope before showing records.
+            if !model.locked, model.identity != nil {
+                Section {
+                    NavigationLink(HistoryCopy.text("Prices and period budgets")) {
+                        HistoryRecordsEntryView(household: model)
+                    }.accessibilityIdentifier("household.priceBudgetHistory")
+                }
             }
             if !model.configured {
                 Section(ht("Household access")) {
@@ -43,7 +52,7 @@ struct HouseholdSettingsView: View {
                             let entry = visibleEntry
                             Task {
                                 await model.verifyCode {
-                                    fromPrivateSettings && entry != nil && entry == visibleEntry
+                                    continuesAfterWorkspaceLock && entry != nil && entry == visibleEntry
                                 }
                             }
                         }.disabled(model.code.isEmpty)
