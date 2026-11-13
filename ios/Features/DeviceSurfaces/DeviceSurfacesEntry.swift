@@ -4,16 +4,23 @@ import DeviceSurfaces
 
 struct DeviceSurfacesEntry: View {
     @ObservedObject var composition: DeviceSurfacesComposition
+    @EnvironmentObject private var ledger: LedgerModel
     @State private var selectedShop: UUID?
+    @State private var startingPickup = false
     var body: some View {
         Group {
             if composition.privateAuthorized {
                 List {
                     Section {
                         Text(SurfaceCopy.text("Selected text waits for your review. Nothing has been added to a shop."))
-                        Picker(SurfaceCopy.text("Shopping list"), selection: $selectedShop) {
-                            Text(SurfaceCopy.text("Choose a shopping list")).tag(Optional<UUID>.none)
-                            ForEach(composition.shops, id: \.id) { Text($0.title).tag(Optional($0.id)) }
+                        if composition.shops.isEmpty, !composition.entries.isEmpty {
+                            Button(ledgerText("Start pickup")) { startingPickup = true }
+                                .disabled(!ledger.ready || ledger.saving || ledger.hasPendingSave || ledger.hasPendingLedgerDeletion)
+                        } else {
+                            Picker(SurfaceCopy.text("Shopping list"), selection: $selectedShop) {
+                                Text(SurfaceCopy.text("Choose a shopping list")).tag(Optional<UUID>.none)
+                                ForEach(composition.shops, id: \.id) { Text($0.title).tag(Optional($0.id)) }
+                            }
                         }
                     }
                     if !composition.inboxAvailable { Text(SurfaceCopy.text("Selected text is unavailable on this installation.")) }
@@ -32,6 +39,11 @@ struct DeviceSurfacesEntry: View {
                     if let message = composition.message { Text(message) }
                     Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
                 }.disabled(composition.busy)
+                .sheet(isPresented: $startingPickup, onDismiss: {
+                    if composition.privateAuthorized, let shop = ledger.shop { selectedShop = shop.id }
+                }) {
+                    NavigationStack { LedgerNewShopView(model: ledger) }
+                }
             } else { SurfaceUnavailableView() }
         }.navigationTitle(SurfaceCopy.text("Device shortcuts"))
             .task {
