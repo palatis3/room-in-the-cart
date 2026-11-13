@@ -67,10 +67,22 @@ import XCTest
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        // These adjacent checkout fields share one keyboard session.
+        for (label, value) in [("Store", "Family market"), ("Branch", "Main branch"),
+                               ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")] {
+            let field = app.textFields[label]
+            tap(field)
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let old = field.value as? String, old != field.placeholderValue {
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges"); fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
         back(to: "Prepare retailer handoff"); tap(app.buttons["Prepare retailer handoff"])

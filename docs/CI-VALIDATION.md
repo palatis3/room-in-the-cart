@@ -28,6 +28,45 @@ correction passed both original English and Spanish journeys under
 `.build/FoodCalendar94dNov12/local`; include both changes in the next combined
 regression instead of launching a separate full repeat for startup alone.
 
+The combined `ccdad858` run exercised the overlap successfully. The first fixture
+consumer started boot at 03:11:45 UTC, finished download/restoration at 03:11:53
+and confirmed boot at 03:12:22: eight seconds of concurrent setup, not a measured
+eight-second reduction in the entire run. All 26 fixture groups passed. Retain
+the timings in `.build/FrozenCcdad858Nov12/first-consumer-boot.json`.
+
+## Latest bottleneck review — November 12
+
+The `ccdad858` batch took 56m45s. Its last job, UI05, spent about 600 seconds in
+animation-idle waits after repeated keyboard dismissals in the saved-offer
+reminder journey. The adjacent-field entry correction passed the original case
+locally in 112.417 seconds with no runtime warnings, animation-idle messages or
+runner restarts. It uses the ordinary Debug app, separately from household
+fixture products, and retains every field value, saved-decision and reminder
+assertion. The hosted gain is still unmeasured. UI05 finished 3m54s after UI09, so
+removing its ten-minute stall could save at most 3m54s for this particular batch
+with all other timings held constant; this is an estimate pending qualification.
+
+The web failure was a Chrome startup timeout before the first browser assertion.
+The targeted rerun passed in 46 seconds. GitHub assigned new job IDs to reused
+results, but preserved the original timestamps for all 17 other jobs. Compare
+timestamps when auditing reruns; new IDs alone do not establish repeated work.
+
+Four fixture restore steps took 127–289 seconds against a one-second median.
+Their cause is not established. Inspect existing restore/boot evidence before
+changing compression or runner assignments. Median result upload was three
+seconds, so another artifact redesign is not justified by this run. Timing
+evidence: `.build/FrozenCcdad858Nov12/efficiency-review/timing-receipt.json`.
+The restore steps now log elapsed time for the complete decode/extract pipeline
+and for selection placement (including manifest validation in fixture jobs).
+This uses the existing steps and will run with the next combined candidate.
+Twenty-six existing workflow checks, shell syntax and actionlint passed.
+
+The isolated M4 scroll qualification also lacked the required duration metric,
+despite successful native execution and verified 500-row persistence. Stop
+repeating the hardware hypothesis. Preserve its failed qualification and require
+new evidence before another performance experiment; do not weaken metric gates
+or replace approved baselines. Evidence: `.build/M4ScrollQualificationNov12/result`.
+
 ## Current development priority — November 12
 
 The user has asked to stop overengineering and prioritize completing the app.

@@ -250,8 +250,12 @@ jobs:
         run: |
           mkdir -p .build/DerivedData/Build
           set -o pipefail
+          restore_extract_started=$SECONDS
+          printf 'Restore archive extraction started\n'
           /usr/bin/compression_tool -decode -A lzfse -t 2 -i .build/download/iphone-fixture-products.tar.lzfse |
             tar -xf - -C .build/DerivedData/Build
+          printf 'Restore archive extraction completed in %s seconds\n' "$((SECONDS - restore_extract_started))"
+          restore_selection_started=$SECONDS
           mv .build/DerivedData/Build/test-plan .build/test-plan
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json, os
@@ -265,6 +269,7 @@ jobs:
               raise SystemExit("The fixture selector list is empty.")
           print(f"EXPECTED_TEST_COUNT={expected}")
           PY
+          printf 'Restore selection placement and manifest validation completed in %s seconds\n' "$((SECONDS - restore_selection_started))"
       - name: Boot the iPhone simulator
         timeout-minutes: 8
         if: ${{ !cancelled() }}
