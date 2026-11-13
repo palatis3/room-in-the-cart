@@ -4,6 +4,16 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 
+let browser;
+test.before(async () => {
+  browser = await chromium.launch({
+    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 30_000,
+    // Playwright normally disables the behavior this regression needs to observe.
+    ignoreDefaultArgs: ['--disable-back-forward-cache']
+  });
+});
+test.after(() => browser?.close());
+
 const ownA = 'OWN_ACTOR_A_HISTORY_7d91', ownB = 'OWN_ACTOR_B_HISTORY_f51e';
 const draftA = 'UNSENT_ACTOR_A_HISTORY_bf31';
 const forbidden = ['OTHER_AUTHOR_ONLY_3ab2', 'BUDGET_PRIVATE_814e', 'PRIVATE_NOTE_9c7d'];
@@ -73,12 +83,6 @@ test('history restoration conceals private content until fresh authority succeed
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(async () => { state.gate?.release.resolve(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
-  const browser = await chromium.launch({
-    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 15_000,
-    // Playwright normally disables the behavior this regression needs to observe.
-    ignoreDefaultArgs: ['--disable-back-forward-cache']
-  });
-  t.after(() => browser.close());
   t.diagnostic(`Chrome ${browser.version()}; synthetic loopback authority; API Cache-Control:no-store`);
   const origin = `http://127.0.0.1:${server.address().port}`;
 

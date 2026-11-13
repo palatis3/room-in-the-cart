@@ -291,11 +291,10 @@ class StoreKitWorkflowTests(unittest.TestCase):
         def fake_simctl(command, *, text):
             self.assertTrue(text)
             self.assertEqual(command[:2], ['xcrun', 'simctl'])
-            if command[2:] == ['list', 'runtimes', '-j']:
-                return json.dumps({'runtimes': reads.pop(0)})
-            if command[2:] == ['list', 'devices', 'available', '-j']:
-                all_runtimes = after_download if after_download is not None else runtimes
-                return json.dumps({'devices': {r['identifier']: [device] if existing_device else [] for r in all_runtimes}})
+            if command[2:] == ['list', '-j']:
+                installed = reads.pop(0)
+                return json.dumps({'runtimes': installed, 'devices': {
+                    r['identifier']: [device] if existing_device else [] for r in installed}})
             if command[2:3] == ['create']:
                 self.assertEqual(command[3:5], ['RITC-StoreKit-compatibility', device['deviceTypeIdentifier']])
                 self.assertEqual(command[5], 'com.apple.CoreSimulator.SimRuntime.iOS-26-2')
@@ -319,7 +318,8 @@ class StoreKitWorkflowTests(unittest.TestCase):
         for request, event, version, build in cases:
             with self.subTest(request=request, event=event):
                 runtime = self.runtime_fixture(version, build)
-                environment, _, download = self.prepare_runtime(request, event, [runtime])
+                environment, native, download = self.prepare_runtime(request, event, [runtime])
+                native.assert_called_once_with(['xcrun', 'simctl', 'list', '-j'], text=True)
                 self.assertEqual(environment['CI_IPHONE_RUNTIME'], runtime['identifier'])
                 self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
                 self.assertEqual(environment['STOREKIT_OS_BUILD'], build)

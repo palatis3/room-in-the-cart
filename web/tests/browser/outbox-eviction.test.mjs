@@ -3,6 +3,14 @@ import test from 'node:test';
 import { chromium } from 'playwright-core';
 import { preview } from 'vite';
 
+let browser;
+test.before(async () => {
+  browser = await chromium.launch({
+    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 30_000
+  });
+});
+test.after(() => browser?.close());
+
 const session = {
   authenticated: true, role: 'contributor',
   household: { id: 'test', label: 'Example household' }, memberId: 'test-member', shopId: 'test-shop',
@@ -57,10 +65,6 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
     }]
   });
   t.after(() => server.close());
-  const browser = await chromium.launch({
-    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 15_000
-  });
-  t.after(() => browser.close());
   t.diagnostic(`Chrome ${browser.version()}`);
   const page = await browser.newPage({ locale: 'en-US' });
   page.setDefaultTimeout(10_000);

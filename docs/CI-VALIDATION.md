@@ -1,5 +1,20 @@
 # Local CI validation
 
+## Browser and StoreKit startup — November 13
+
+On the [November 13 core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43356633331),
+Chrome reached its 15-second launch timeout before the first privacy assertion.
+The web job passed on rerun in 46 seconds. Each browser test file now starts
+Chrome in its suite setup with a 30-second startup limit. The privacy and outbox
+checks keep their existing interaction deadlines. All 14 checks passed locally
+with normal startup and with a 17-second delay injected before each Chrome launch.
+
+The [StoreKit job](https://github.com/palatis3/room-in-the-cart/actions/runs/43356633258/job/131662336061)
+spent 185 seconds selecting its compatibility environment, including an 8.39 GB
+runtime download. Read runtime and device metadata together and refresh that
+snapshot after a download. This saves one simulator command per job. The size of
+the hosted time saving is still unknown.
+
 ## Consumer boot overlaps artifact transfer — November 12
 
 In the `94d7aece` [core run](https://github.com/palatis3/room-in-the-cart/actions/runs/43347398002),

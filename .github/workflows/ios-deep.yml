@@ -278,19 +278,19 @@ jobs:
           def simctl(*args):
               # Hosted listing can exceed three minutes; the setup step owns this bound.
               return subprocess.check_output(["xcrun", "simctl", *args], text=True)
-          def installed():
-              return [r for r in json.loads(simctl("list", "runtimes", "-j"))["runtimes"]
-                      if r["identifier"] == runtime]
-          matches = installed()
+          def inventory():
+              snapshot = json.loads(simctl("list", "-j"))
+              return ([r for r in snapshot["runtimes"] if r["identifier"] == runtime],
+                      snapshot["devices"].get(runtime, []))
+          matches, devices = inventory()
           if not matches and not current:
               subprocess.run(["xcodebuild", "-downloadPlatform", "iOS", "-buildVersion", build,
                               "-architectureVariant", "arm64"], check=True, timeout=600)
-              matches = installed()
+              matches, devices = inventory()
           assert len(matches) == 1, "Required StoreKit runtime is missing or ambiguous; no fallback"
           actual = matches[0]
           assert actual.get("isAvailable") is True and actual["version"] == version and actual["buildversion"] == build, actual
           device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-17"
-          devices = json.loads(simctl("list", "devices", "available", "-j"))["devices"].get(runtime, [])
           devices = [d for d in devices if d.get("isAvailable") is True
                      and d["name"] == os.environ["CI_IPHONE_NAME"] and d["deviceTypeIdentifier"] == device_type]
           if devices:
