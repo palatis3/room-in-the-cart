@@ -237,7 +237,8 @@ import UIKit
             try await opened.store.close(); lifetime.finish(lease); await lifetime.drain()
             try FileManager.default.removeItem(at: folder)
         }, willRemoveRecovered: { lifetime.invalidate() })
-        await tools.deleteRecovered(.copy(saved.id))
+        await tools.refresh()
+        await tools.confirmDeletion(try XCTUnwrap(tools.reviewRecoveredDeletion(.copy(saved.id), title: "Recovered copy")))
         XCTAssertNil(tools.error); XCTAssertFalse(lease.authorize())
         await assertFails { try await lifetime.revalidate(lease, copy: saved, registry: registry) }
         await assertFails { _ = try await lifetime.begin(copy: saved, registry: registry, authorize: { true }) }
@@ -289,14 +290,15 @@ import UIKit
         }, cleanupRecoveredWorkspaces: {})
         let opening = Task { await tools.openRecovered(saved) }
         await fulfillment(of: [started], timeout: 2)
-        await tools.deleteRecovered(.copy(saved.id)); deletion.fulfill()
+        await tools.refresh()
+        await tools.confirmDeletion(try XCTUnwrap(tools.reviewRecoveredDeletion(.copy(saved.id), title: "Recovered copy"))); deletion.fulfill()
         let outcome = tools.actionOutcomeID
         XCTAssertNotNil(outcome); XCTAssertNil(tools.error)
         resume?.resume(); await opening.value
         XCTAssertEqual(tools.actionOutcomeID, outcome); XCTAssertNil(tools.error)
         let second = try await commit(try original(), registry: registry)
         let denied = RecordsToolsModel(registry: registry, snapshot: { .init() }, validateNativePayload: { _ in }, openRecovered: { _ in }, beginAuthorization: { nil })
-        await denied.deleteRecovered(.copy(second.id))
+        XCTAssertNil(denied.reviewRecoveredDeletion(.copy(second.id), title: "Recovered copy"))
         XCTAssertEqual(denied.error, .unavailable)
         let retained = try await registry.refreshList()
         XCTAssertEqual(retained.map(\.id), [second.id])

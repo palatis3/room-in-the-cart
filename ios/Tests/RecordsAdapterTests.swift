@@ -110,7 +110,8 @@ final class RecordsAdapterTests: XCTestCase {
         try ArchiveCodec.encode(owner).write(to: file)
         await model.importFile(file, recipes: false)
         XCTAssertEqual(model.review?.rows.first?.disposition, .identical)
-        await model.deleteRecovered(.copy(copyID))
+        await model.refresh()
+        await model.confirmDeletion(try XCTUnwrap(model.reviewRecoveredDeletion(.copy(copyID), title: "Recovered copy")))
         XCTAssertNil(model.review)
         await model.importFile(file, recipes: false)
         XCTAssertEqual(model.review?.rows.first?.disposition, .erased)
@@ -120,6 +121,62 @@ final class RecordsAdapterTests: XCTestCase {
         await model.importFile(file, recipes: false)
         XCTAssertEqual(model.review?.rows.first?.disposition, .identical)
         XCTAssertEqual(model.currentImportVersions[rowID]?.map(\.revision), [edited.revision])
+    }
+
+    @MainActor func testSourceDeletionRechecksDisplayedCopiesAndPresentingWorkspace() async throws {
+        let url = try temporaryDirectory().appendingPathComponent("registry.json")
+        let registry = try RecoveryRegistry(url: url)
+        let otherWriter = try RecoveryRegistry(url: url)
+        let first = try comparison()
+        let added = try comparison()
+        var elsewhere = try comparison()
+        elsewhere.origin = "separate-source"
+        func save(_ record: ArchiveRecord) async throws {
+            let file = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "file", revision: "export")
+            _ = try await otherWriter.apply(otherWriter.review(file))
+        }
+        try await save(first)
+        var workspace = UUID()
+        var deletedSources: [String] = []
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [elsewhere]) }, validateNativePayload: { _ in },
+            openRecovered: { _ in }, deleteSource: { record, authorize in
+                XCTAssertTrue(authorize())
+                deletedSources.append(record.id)
+            }, beginAuthorization: {
+                let original = workspace
+                return { original == workspace }
+            })
+        await model.refresh()
+        let deletion = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
+        XCTAssertEqual(deletion.copyCount, 1)
+        try await save(added)
+        await model.confirmDeletion(deletion)
+        XCTAssertEqual(model.error, .deletionSelectionChanged)
+        XCTAssertEqual(Set(model.recoveredRecords.map(\.record.id)), [first.id, added.id])
+
+        let secondReview = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
+        let sourceDeletion = try XCTUnwrap(model.reviewSourceDeletion(elsewhere))
+        workspace = UUID()
+        await model.confirmDeletion(secondReview)
+        XCTAssertEqual(model.error, .unavailable)
+        await model.confirmDeletion(sourceDeletion)
+        XCTAssertEqual(model.error, .unavailable)
+        XCTAssertTrue(deletedSources.isEmpty)
+        await model.refresh()
+        let confirmed = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
+        XCTAssertEqual(confirmed.copyCount, 2)
+        try await save(elsewhere)
+        await model.confirmDeletion(confirmed)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.recoveredRecords.map(\.record.id), [elsewhere.id])
+        await model.undoRecoveredDeletion()
+        XCTAssertEqual(Set(model.recoveredRecords.map(\.record.id)), [first.id, added.id, elsewhere.id])
+        await model.confirmDeletion(confirmed)
+        XCTAssertEqual(model.error, .deletionSelectionChanged)
+        XCTAssertEqual(Set(model.recoveredRecords.map(\.record.id)), [first.id, added.id, elsewhere.id])
+        await model.confirmDeletion(try XCTUnwrap(model.reviewSourceDeletion(elsewhere)))
+        XCTAssertNil(model.error)
+        XCTAssertEqual(deletedSources, [elsewhere.id])
     }
 
     @MainActor func testChangingRecoveryKeyRetiresTheFileEncryptedWithThePreviousKey() async throws {

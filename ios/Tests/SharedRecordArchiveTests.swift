@@ -259,7 +259,7 @@ final class SharedRecordArchiveTests: XCTestCase {
             validations += 1
             try RecordsNativeCodec.validate($0)
         }, openRecovered: { _ in XCTFail("Export must not open recovered work") },
-           deleteSource: { _ in XCTFail("Export must not delete or write the source") })
+           deleteSource: { _, _ in XCTFail("Export must not delete or write the source") })
         await model.refresh(); model.selectAll()
         XCTAssertNil(model.actionOutcomeID)
         // A failed helper action must also clear a previously prepared private file.

@@ -31,7 +31,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     typealias Snapshot = @MainActor () async throws -> RecordsSnapshotBatch
     typealias Validate = (ArchiveRecord) async throws -> Void
     typealias Open = (RecoveredRecord) async throws -> Void
-    typealias Delete = (ArchiveRecord) async throws -> Void
+    typealias Delete = (ArchiveRecord, @escaping Authorization) async throws -> Void
     typealias Authorization = @MainActor @Sendable () -> Bool
 
     @Published private(set) var sourceListing = RecordsSnapshotBatch()
@@ -486,27 +486,75 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         } catch { if recoveredOpenGeneration == generation { fail(error) } }
     }
     private func cancelRecoveredOpen() { recoveredOpenGeneration = UUID(); willRemoveRecovered() }
-    func deleteRecovered(_ scope: RecoveryDeleteScope) async {
+    struct DeletionReview: Identifiable {
+        fileprivate enum Target {
+            case source(ArchiveRecord), recovered(RecoveryDeletionReview)
+        }
+        let id = UUID()
+        let title: String
+        fileprivate let target: Target
+        fileprivate let authorize: Authorization
+        var copyCount: Int? {
+            if case let .recovered(review) = target { return review.count }
+            return nil
+        }
+    }
+    func reviewRecoveredDeletion(_ scope: RecoveryDeleteScope, title: String) -> DeletionReview? {
         do {
             let authorize = try authorization()
-            cancelRecoveredOpen()
-            let token = try await registry.delete(scope)
-            discardImportReview()
-            let outcome: String
-            if let cleanupRecovered {
-                deleteUndo = nil
-                await registry.discardUndo()
-                try await cleanupRecovered()
-                outcome = recordsText("The recovered copies and their separate workspaces were permanently deleted from this iPhone.")
-            } else {
-                deleteUndo = token
-                outcome = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
+            let copies = RecoveryDeletionReview(scope: scope, displayedCopies: recoveredRecords)
+            guard copies.count > 0 else { throw ArchiveError.unavailable }
+            return DeletionReview(title: title, target: .recovered(copies), authorize: authorize)
+        } catch { fail(error, reveal: true); return nil }
+    }
+    func reviewSourceDeletion(_ record: ArchiveRecord) -> DeletionReview? {
+        do {
+            let authorize = try authorization()
+            guard canDeleteSource(record), currentRecords.contains(where: { Self.selectionID($0) == Self.selectionID(record) }) else {
+                throw ArchiveError.deletionSelectionChanged
             }
+            return DeletionReview(title: recordsTitle(record), target: .source(record), authorize: authorize)
+        } catch { fail(error, reveal: true); return nil }
+    }
+    func confirmDeletion(_ review: DeletionReview) async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let authorize = review.authorize
+            try requireAuthorization(authorize)
+            let outcome: String
+            switch review.target {
+            case let .source(record):
+                guard let deleteSource, deletable(record) else { throw ArchiveError.unavailable }
+                try await deleteSource(record, authorize)
+                canUndoSourceDeletion = sourceUndo != nil
+                outcome = recordsText("The selected source was deleted from this iPhone.")
+            case let .recovered(copies):
+                cancelRecoveredOpen()
+                let token = try await registry.delete(copies)
+                if let cleanupRecovered {
+                    deleteUndo = nil
+                    await registry.discardUndo()
+                    try await cleanupRecovered()
+                    outcome = recordsText("The recovered copies and their separate workspaces were permanently deleted from this iPhone.")
+                } else {
+                    deleteUndo = token
+                    outcome = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
+                }
+            }
+            discardImportReview()
             try requireAuthorization(authorize)
             try await reloadListing(authorize: authorize)
             publishOutcome(outcome)
         }
-        catch { fail(error) }
+        catch ArchiveError.deletionSelectionChanged {
+            do {
+                try requireAuthorization(review.authorize)
+                try await reloadListing(authorize: review.authorize)
+                fail(ArchiveError.deletionSelectionChanged, reveal: true)
+            } catch { fail(error, reveal: true) }
+        } catch { fail(error) }
     }
     func undoRecoveredDeletion() async {
         guard let token = deleteUndo else { return }
@@ -520,19 +568,6 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             recoveredRecords = recovered
             publishOutcome(recordsText("Deletion undone."))
         } catch { fail(error) }
-    }
-    func deleteCurrentRecord(_ record: ArchiveRecord) async {
-        guard let deleteSource, deletable(record) else { fail(ArchiveError.unavailable); return }
-        do {
-            error = nil
-            try await deleteSource(record)
-            discardImportReview()
-            canUndoSourceDeletion = sourceUndo != nil
-            await refresh()
-            guard error == nil else { return }
-            publishOutcome(recordsText("The selected source was deleted from this iPhone."))
-        }
-        catch { fail(error) }
     }
     func undoCurrentDeletion() async {
         guard let sourceUndo, canUndoSourceDeletion else { return }
@@ -552,7 +587,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         importPresentation = nil
         recoveredOpenGeneration = UUID()
         dismissPreparedFile(); recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
-        review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
+        review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil; canUndoSourceDeletion = false
         sourceListing = RecordsSnapshotBatch(); recoveredRecords = []; backupStatuses = [:]; actionStatus = nil; actionOutcomeID = nil; error = nil
     }
     func dismissPreparedFile() {

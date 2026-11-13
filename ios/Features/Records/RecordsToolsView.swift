@@ -10,7 +10,7 @@ struct RecordsToolsView: View {
     @State private var acknowledgedPrivate = false
     @State private var savedKey = false
     @State private var acknowledgedMedia = false
-    @State private var deletion: Deletion?
+    @State private var deletion: RecordsToolsModel.DeletionReview?
     @AccessibilityFocusState private var actionResultFocused: Bool
     @AccessibilityFocusState private var importReviewFocused: Bool
     @State private var recoveryExpanded = false
@@ -18,12 +18,6 @@ struct RecordsToolsView: View {
     #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
     @Environment(\.recordsMediaUITestFiles) private var uiTestFiles
     #endif
-    private struct Deletion: Identifiable {
-        let id = UUID()
-        let title: String
-        let source: ArchiveRecord?
-        let recovered: RecoveryDeleteScope?
-    }
     var body: some View {
         ScrollViewReader { proxy in
         Form {
@@ -171,14 +165,13 @@ struct RecordsToolsView: View {
         .alert(deletion?.title ?? "", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), presenting: deletion) { deletion in
             Button(recordsText("Cancel"), role: .cancel) { self.deletion = nil }
             Button(recordsText("Delete from this iPhone"), role: .destructive) {
-                Task {
-                    if let record = deletion.source { await model.deleteCurrentRecord(record) }
-                    if let scope = deletion.recovered { await model.deleteRecovered(scope) }
-                }
+                Task { await model.confirmDeletion(deletion) }
                 self.deletion = nil
             }
-        } message: { _ in
-            Text(recordsText(model.recoveredDeletionAllowsUndo ? "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session." : "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain."))
+        } message: { deletion in
+            let count = deletion.copyCount.map { String(format: recordsText("Recovered copies selected for deletion: %lld."), Int64($0)) }
+            let detail = recordsText(model.recoveredDeletionAllowsUndo ? "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session." : "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain.")
+            Text(verbatim: [count, detail].compactMap { $0 }.joined(separator: "\n\n"))
         }
     }
     private var currentSources: some View {
@@ -202,7 +195,7 @@ struct RecordsToolsView: View {
                         recordDates(record)
                         if model.canDeleteSource(record) {
                             Button(recordsText("Delete this source"), role: .destructive) {
-                                deletion = Deletion(title: recordsTitle(record), source: record, recovered: nil)
+                                deletion = model.reviewSourceDeletion(record)
                             }.font(.footnote)
                         }
                     }
@@ -468,8 +461,8 @@ struct RecordsToolsView: View {
                 Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
             }
             ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
-            Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: recordsTitle(saved.record), source: nil, recovered: .copy(saved.id)) }
-            Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
+            Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = model.reviewRecoveredDeletion(.copy(saved.id), title: recordsTitle(saved.record)) }
+            Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = model.reviewRecoveredDeletion(.origin(saved.record.origin), title: saved.record.origin) }
         }
         .disclosureGroupStyle(LabeledFormDisclosureStyle(
             label: recordsText("Recovered copy") + ": " + (recordsTitle(saved.record)),
@@ -535,6 +528,7 @@ struct RecordsToolsView: View {
         case .conflict: return recordsText("This batch conflicts with an existing or deleted copy. Nothing was imported.")
         case .staleReview: return recordsText("Your local copies changed during review. Select the file again before importing.")
         case .exportSelectionChanged: return recordsText("Your selection changed. Review the selected records and source references, then prepare the file again.")
+        case .deletionSelectionChanged: return recordsText("The selected records changed. Review them again before deleting.")
         case .invalidRecipe: return recordsText("Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.")
         case .unavailable: return recordsText("The local operation could not finish. Your current records are still available. Try again.")
         }

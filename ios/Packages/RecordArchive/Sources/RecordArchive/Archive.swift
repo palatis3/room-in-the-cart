@@ -5,7 +5,7 @@ import CryptoKit
 public enum ArchiveError: Error, Equatable, Sendable {
     case tooLarge, malformed, unsupportedVersion, integrity, invalidIdentity, unsupportedProjection
     case locked, invalidKey, conflict, staleReview, unavailable, invalidRecipe, unsupportedRecord
-    case exportSelectionChanged
+    case exportSelectionChanged, deletionSelectionChanged
 }
 
 public enum ArchiveKind: String, Codable, Sendable { case personalRecovery, helperShop }

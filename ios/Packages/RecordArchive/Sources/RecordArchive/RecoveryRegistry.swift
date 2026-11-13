@@ -38,6 +38,38 @@ public struct RecoveryCommit: Sendable {
 }
 public enum RecoveryDeleteScope: Sendable, Equatable {
     case copy(String), copies([String]), origin(String), allRecovered
+
+    fileprivate func includes(_ copy: RecoveredRecord) -> Bool {
+        switch self {
+        case let .copy(id): return copy.id == id
+        case let .copies(ids): return ids.contains(copy.id)
+        case let .origin(origin): return copy.record.origin == origin
+        case .allRecovered: return true
+        }
+    }
+}
+
+public struct RecoveryDeletionReview: Sendable {
+    fileprivate let scope: RecoveryDeleteScope
+    private struct Version: Equatable, Sendable {
+        let digest: String
+        let lifetime: UUID?
+    }
+    private let versions: [String: Version]
+    public var count: Int { versions.count }
+
+    public init(scope: RecoveryDeleteScope, displayedCopies: [RecoveredRecord]) {
+        self.scope = scope
+        versions = Self.versions(of: displayedCopies.filter(scope.includes))
+    }
+
+    fileprivate func matches(_ copies: [RecoveredRecord]) -> Bool {
+        versions == Self.versions(of: copies)
+    }
+
+    private static func versions(of copies: [RecoveredRecord]) -> [String: Version] {
+        Dictionary(uniqueKeysWithValues: copies.map { ($0.id, Version(digest: $0.receipt.digest, lifetime: $0.backupLifetime)) })
+    }
 }
 public struct RecoveryUndoToken: Hashable, Sendable { public let id: UUID }
 
@@ -315,12 +347,17 @@ public actor RecoveryRegistry {
         return RecoveryCommit(records: result, insertedCopyIDs: inserted)
     }
     public func delete(_ scope: RecoveryDeleteScope) throws -> RecoveryUndoToken {
+        try delete(scope, review: nil)
+    }
+    public func delete(_ review: RecoveryDeletionReview) throws -> RecoveryUndoToken {
+        try delete(review.scope, review: review)
+    }
+    private func delete(_ scope: RecoveryDeleteScope, review: RecoveryDeletionReview?) throws -> RecoveryUndoToken {
         let lock = try acquireLock()
         defer { releaseLock(lock) }
         try refreshFromDisk()
-        let removed = manifest.records.filter { record in
-            switch scope { case let .copy(id): return record.id == id; case let .copies(ids): return ids.contains(record.id); case let .origin(origin): return record.record.origin == origin; case .allRecovered: return true }
-        }
+        let removed = manifest.records.filter(scope.includes)
+        if let review, !review.matches(removed) { throw ArchiveError.deletionSelectionChanged }
         guard !removed.isEmpty else { throw ArchiveError.unavailable }
         let ids = Set(removed.map(\.id))
         var next = manifest

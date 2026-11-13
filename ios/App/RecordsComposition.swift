@@ -419,8 +419,8 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }; try await self.validate(record)
             }, openRecovered: { [weak self] record in
                 guard let self else { throw ArchiveError.unavailable }; try await self.open(record)
-            }, deleteSource: { [weak self] record in
-                guard let self else { throw ArchiveError.unavailable }; try await self.delete(record)
+            }, deleteSource: { [weak self] record, authorize in
+                guard let self else { throw ArchiveError.unavailable }; try await self.delete(record, authorize: authorize)
             }, canDeleteSource: { [weak self] record in
                 guard let self else { return false }
                 return (record.kind == .comparison && record.origin == self.app.store.map { "comparisons/" + $0.workspaceID.uuidString }) || (record.kind == .pickup && record.origin == self.pickupOrigin)
@@ -716,13 +716,14 @@ private struct RecordsRecoveredDinnersView: View {
         }
         await tools?.refresh()
     }
-    private func delete(_ record: ArchiveRecord) async throws {
+    private func delete(_ record: ArchiveRecord, authorize: @escaping RecordsToolsModel.Authorization) async throws {
         if record.kind == .pickup {
             let snapshot = try await pickup.archiveSnapshot()
             guard record.origin == "pickups/" + snapshot.workspaceID.uuidString,
                   let saved = snapshot.records.first(where: { $0.id.uuidString == record.id }) else { throw ArchiveError.unavailable }
             let bytes = try RecordsNativeCodec.canonical(RecordsNativeCodec.pickup(saved.payload))
-            guard ArchiveCodec.digest(bytes) == record.revision else { throw ArchiveError.staleReview }
+            guard ArchiveCodec.digest(bytes) == record.revision else { throw ArchiveError.deletionSelectionChanged }
+            guard authorize() else { throw ArchiveError.unavailable }
             try await pickup.deleteArchived(id: saved.id, expectedRevision: saved.revision, operationID: UUID())
             try await synchronizeErasure()
             return
@@ -731,7 +732,8 @@ private struct RecordsRecoveredDinnersView: View {
               record.origin == "comparisons/" + store.workspaceID.uuidString,
               let id = UUID(uuidString: record.id), let saved = try await store.load(id: id) else { throw ArchiveError.unavailable }
         let bytes = try RecordsNativeCodec.canonical(RecordsNativeCodec.comparison(saved.payload))
-        guard ArchiveCodec.digest(bytes) == record.revision else { throw ArchiveError.staleReview }
+        guard ArchiveCodec.digest(bytes) == record.revision else { throw ArchiveError.deletionSelectionChanged }
+        guard authorize() else { throw ArchiveError.unavailable }
         _ = try await store.erase(id: id, expectedRevision: saved.revision, operationID: UUID(), at: Date())
         try await synchronizeErasure()
         await app.refresh()

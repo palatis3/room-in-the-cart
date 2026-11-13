@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Recovered copies selected for deletion: %lld.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered copies selected for deletion: %lld."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias recuperadas seleccionadas para eliminar: %lld."
+          }
+        }
+      }
+    },
+    "The selected records changed. Review them again before deleting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected records changed. Review them again before deleting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros seleccionados cambiaron. Revísalos antes de eliminarlos."
+          }
+        }
+      }
+    },
     "Check the recipe text. The optional source must be an http or https web address without a username or password.": {
       "extractionState": "manual",
       "localizations": {
