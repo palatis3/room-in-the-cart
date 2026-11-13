@@ -100,6 +100,17 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private struct ExportContext {
         let authorize: Authorization
         let backup: EncryptedBackupIntent?
+        let selectedRecords: Set<RecordsSelectionID>
+        let disclosedMedia: [RecordsMediaSelectionID: ArchiveMediaAttachment]
+        let recoveredCopyIDs: Set<String>
+
+        func stillAvailable(in listing: RecordsSnapshotBatch) -> Bool {
+            guard selectedRecords.isSubset(of: Set(listing.records.map(RecordsToolsModel.selectionID))),
+                  recoveredCopyIDs == listing.copyIDsSupplying(selectedRecords) else { return false }
+            guard !disclosedMedia.isEmpty else { return true }
+            return RecordsToolsModel.attachments(in: listing.records, selectedRecords: selectedRecords,
+                                                 selectedMedia: Set(disclosedMedia.keys)) == disclosedMedia
+        }
     }
     private var exportContext: ExportContext?
     private var activeFileSave: (id: UUID, completing: Bool)?
@@ -119,10 +130,22 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     nonisolated static func selectionID(_ record: ArchiveRecord) -> RecordsSelectionID {
         RecordsSelectionID(origin: record.origin, recordID: record.id, revision: record.revision)
     }
-    static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> RecordsMediaSelectionID {
+    nonisolated static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> RecordsMediaSelectionID {
         RecordsMediaSelectionID(record: selectionID(record), attachmentID: media.id)
     }
 
+    private nonisolated static func attachments(in records: [ArchiveRecord], selectedRecords: Set<RecordsSelectionID>,
+                                                selectedMedia: Set<RecordsMediaSelectionID>) -> [RecordsMediaSelectionID: ArchiveMediaAttachment] {
+        guard !selectedMedia.isEmpty else { return [:] }
+        var attachments: [RecordsMediaSelectionID: ArchiveMediaAttachment] = [:]
+        for record in records where selectedRecords.contains(selectionID(record)) {
+            for media in record.media ?? [] {
+                let id = mediaSelectionID(media, record: record)
+                if selectedMedia.contains(id) { attachments[id] = media }
+            }
+        }
+        return attachments
+    }
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
          openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
@@ -167,6 +190,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         // Only a batch carrying an older live read is invalidated by that denial.
         guard !containsRetiredHistory(batch.liveSharedRecordIDs) else { return }
         if generation == liveSharedGeneration || batch.liveSharedRecordIDs.isEmpty {
+            if let context = exportContext, !context.stillAvailable(in: batch) {
+                dismissPreparedFile()
+                actionStatus = nil
+            }
             if let backups {
                 backupStatuses = backups
             } else if sourceListing.recoveredCopyIDsByRecord != batch.recoveredCopyIDsByRecord {
@@ -184,13 +211,13 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         try requireAuthorization(authorize)
         publishListing(batch, startedIn: generation, backups: listing.backups)
         recoveredRecords = listing.recovered
+        selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
+        selectedMediaIDs.formIntersection(Set(currentRecords.flatMap { record in (record.media ?? []).map { Self.mediaSelectionID($0, record: record) } }))
     }
     func refresh() async {
         do {
             let authorize = try authorization()
             try await reloadListing(authorize: authorize)
-            selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
-            selectedMediaIDs.formIntersection(Set(currentRecords.flatMap { record in (record.media ?? []).map { Self.mediaSelectionID($0, record: record) } }))
         } catch { fail(error) }
     }
     func selectAll() { selectedIDs = Set(currentRecords.map(Self.selectionID)) }
@@ -208,18 +235,8 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             let selectedKey = recoveryKey
             // Photo references can change independently of the ledger revision.
             // Retain the disclosed attachment bytes until the fresh listing is checked.
-            func selectedAttachments(in records: [ArchiveRecord]) -> [RecordsMediaSelectionID: ArchiveMediaAttachment] {
-                guard choice == .encryptedRecovery else { return [:] }
-                var attachments: [RecordsMediaSelectionID: ArchiveMediaAttachment] = [:]
-                for record in records where requested.contains(Self.selectionID(record)) {
-                    for media in record.media ?? [] {
-                        let id = Self.mediaSelectionID(media, record: record)
-                        if mediaSelection.contains(id) { attachments[id] = media }
-                    }
-                }
-                return attachments
-            }
-            let disclosed = selectedAttachments(in: currentRecords)
+            let includedMedia = choice == .encryptedRecovery ? mediaSelection : []
+            let disclosed = Self.attachments(in: currentRecords, selectedRecords: requested, selectedMedia: includedMedia)
             let previouslyLive = requested.intersection(sourceListing.liveSharedRecordIDs)
             let batch = try await snapshot()
             try requireAuthorization(authorize)
@@ -228,7 +245,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
                   generation == liveSharedGeneration || (previouslyLive.isEmpty && !requestedLive) else { throw ArchiveError.staleReview }
             publishListing(batch, startedIn: generation)
             let available = Set(batch.records.map(Self.selectionID))
-            let refreshedMedia = selectedAttachments(in: batch.records)
+            let refreshedMedia = Self.attachments(in: batch.records, selectedRecords: requested, selectedMedia: includedMedia)
             guard requested == selectedIDs, requested.isSubset(of: available), disclosed == refreshedMedia else {
                 selectedIDs.formIntersection(available)
                 let changedMedia = Set(disclosed.keys).union(refreshedMedia.keys).filter { disclosed[$0] != refreshedMedia[$0] }
@@ -280,7 +297,9 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             preparedLiveIDs = liveIDs
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
             preparedName = name
-            exportContext = ExportContext(authorize: authorize, backup: backup)
+            let recoveredIDs = batch.copyIDsSupplying(requested)
+            exportContext = ExportContext(authorize: authorize, backup: backup, selectedRecords: requested,
+                                          disclosedMedia: disclosed, recoveredCopyIDs: recoveredIDs)
             preparedDocument = document
             actionStatus = ActionStatus(text: recordsText("Your file is ready to review and save."))
         } catch { fail(error, reveal: true) }
@@ -467,7 +486,14 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         do {
             let authorize = try authorization()
             cancelRecoveredOpen()
-            try await registry.undoImport(insertedCopyIDs: lastImportIDs); discardImportReview(); lastImportIDs = []; try await cleanupRecovered?()
+            let removed = lastImportIDs
+            try await registry.undoImport(insertedCopyIDs: removed)
+            if let context = exportContext, !context.recoveredCopyIDs.isDisjoint(with: removed) {
+                dismissPreparedFile()
+            }
+            discardImportReview()
+            lastImportIDs = []
+            try await cleanupRecovered?()
             try requireAuthorization(authorize)
             try await reloadListing(authorize: authorize)
             publishOutcome(recordsText("The imported batch was undone."))
@@ -527,12 +553,18 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             switch review.target {
             case let .source(record):
                 guard let deleteSource, deletable(record) else { throw ArchiveError.unavailable }
+                if exportContext?.selectedRecords.contains(where: { $0.source == Self.selectionID(record).source }) == true {
+                    dismissPreparedFile()
+                }
                 try await deleteSource(record, authorize)
                 canUndoSourceDeletion = sourceUndo != nil
                 outcome = recordsText("The selected source was deleted from this iPhone.")
             case let .recovered(copies):
                 cancelRecoveredOpen()
                 let token = try await registry.delete(copies)
+                if let context = exportContext, !context.recoveredCopyIDs.isDisjoint(with: copies.copyIDs) {
+                    dismissPreparedFile()
+                }
                 if let cleanupRecovered {
                     deleteUndo = nil
                     await registry.discardUndo()

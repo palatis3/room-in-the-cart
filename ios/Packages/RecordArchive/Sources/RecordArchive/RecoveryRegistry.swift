@@ -57,6 +57,7 @@ public struct RecoveryDeletionReview: Sendable {
     }
     private let versions: [String: Version]
     public var count: Int { versions.count }
+    public var copyIDs: Set<String> { Set(versions.keys) }
 
     public init(scope: RecoveryDeleteScope, displayedCopies: [RecoveredRecord]) {
         self.scope = scope

@@ -16,6 +16,9 @@ struct RecordsUnavailableRecord: Equatable, Identifiable {
     }
 }
 struct RecordsSnapshotBatch {
+    func copyIDsSupplying(_ selection: Set<RecordsSelectionID>) -> Set<String> {
+        Set(selection.flatMap { recoveredCopyIDsByRecord[$0] ?? [] })
+    }
     var backupCopyIDs: [ArchiveIdentity: Set<String>] {
         Dictionary(uniqueKeysWithValues: recoveredCopyIDsByRecord.map { ($0.key.personalArchiveIdentity, $0.value) })
     }

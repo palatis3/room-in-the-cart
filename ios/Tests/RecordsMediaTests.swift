@@ -77,6 +77,18 @@ import UIKit
         let result = try EncryptedArchive.open(data, key: tools.recoveryKey)
         XCTAssertEqual(Set(result.payload.records.map(\.revision)), Set(records.map(\.revision)))
         XCTAssertNil(result.mediaManifest)
+
+        records[0].media = first.media
+        await tools.refresh()
+        tools.selectedMediaIDs.insert(mediaID)
+        await tools.prepareExport(.encryptedRecovery)
+        let pendingSave = try XCTUnwrap(tools.beginFileSave())
+        records[0].media = nil
+        await tools.refresh()
+        XCTAssertNil(tools.preparedDocument)
+        XCTAssertNil(tools.status)
+        await tools.finishFileSave(pendingSave, result: .success(()))
+        XCTAssertNil(tools.status)
     }
 
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {

@@ -616,6 +616,76 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.error, .exportSelectionChanged)
         XCTAssertTrue(model.currentRecords.isEmpty)
     }
+    @MainActor func testDeletingPreparedSourcesWithdrawsExportAndIgnoresLateSave() async throws {
+        let source = try comparison()
+        let recovered = try comparison { $0.item = "Recovered groceries" }
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let envelope = try ArchiveCodec.make(records: [recovered], kind: .personalRecovery, origin: "file", revision: "copy")
+        let inserted = try await registry.apply(registry.review(envelope))
+        let copyID = try XCTUnwrap(inserted.insertedCopyIDs.first)
+        var live = [source]
+        let model = RecordsToolsModel(registry: registry, snapshot: {
+            var records = live
+            let copies = try await registry.refreshList().map { (id: $0.id, records: [$0.record]) }
+            let owners = RecordsSnapshotProjection.appendRecovered(copies, to: &records)
+            return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(records), recoveredCopyIDsByRecord: owners)
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in },
+           deleteSource: { record, _ in live.removeAll { $0.id == record.id } })
+
+        await model.refresh()
+        model.selectedIDs = [RecordsToolsModel.selectionID(recovered)]
+        await model.prepareExport(.ownerText)
+        let readable = try XCTUnwrap(model.preparedDocument?.data)
+        // Removing the other source leaves the reviewed private file usable.
+        await model.confirmDeletion(try XCTUnwrap(model.reviewSourceDeletion(source)))
+        XCTAssertEqual(model.preparedDocument?.data, readable)
+        model.generateRecoveryKey()
+        await model.prepareExport(.encryptedRecovery)
+        let picker = try XCTUnwrap(model.beginFileSave())
+        await model.confirmDeletion(try XCTUnwrap(model.reviewRecoveredDeletion(.copy(copyID), title: recovered.title)))
+        XCTAssertNil(model.preparedDocument)
+        let deletionOutcome = model.actionOutcomeID
+        await model.finishFileSave(picker, result: .success(()))
+        XCTAssertEqual(model.actionOutcomeID, deletionOutcome)
+        XCTAssertNil(model.beginFileSave())
+        XCTAssertTrue(model.selectedIDs.isEmpty)
+
+        // Deleting an original also withdraws readable bytes exposed through Share.
+        live = [source]
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        XCTAssertNotNil(model.preparedDocument)
+        await model.confirmDeletion(try XCTUnwrap(model.reviewSourceDeletion(source)))
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertNil(model.beginFileSave())
+    }
+    @MainActor func testHelperWithSameRevisionCannotKeepDeletedOwnerExportAvailable() async throws {
+        let url = try temporaryDirectory().appendingPathComponent("manifest.json")
+        let reader = try RecoveryRegistry(url: url), writer = try RecoveryRegistry(url: url)
+        let record = try comparison()
+        let owner = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "owner", revision: "file")
+        let helper = try ArchiveCodec.make(records: [record], kind: .helperShop, origin: "helper", revision: "file", shopID: record.id)
+        let stored = try await writer.apply(writer.review(owner))
+        let id = try XCTUnwrap(stored.insertedCopyIDs.first)
+        _ = try await writer.apply(writer.review(helper))
+        let model = RecordsToolsModel(registry: reader, snapshot: {
+            var records: [ArchiveRecord] = []
+            let copies = try await reader.refreshList().map { (id: $0.id, records: [$0.record]) }
+            let owners = RecordsSnapshotProjection.appendRecovered(copies, to: &records)
+            return RecordsSnapshotBatch(records: try RecordsSnapshotProjection.mergeForExport(records), recoveredCopyIDsByRecord: owners)
+        }, validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        await model.prepareExport(.ownerText)
+        XCTAssertNotNil(model.preparedDocument)
+        _ = try await writer.delete(.copy(id))
+        await model.refresh()
+        XCTAssertEqual(model.selectedCount, 1, "The independent helper projection still exists")
+        XCTAssertNil(try XCTUnwrap(model.currentRecords.first).nativePayload)
+        XCTAssertNil(model.preparedDocument)
+        XCTAssertNil(model.beginFileSave())
+    }
     @MainActor func testDamagedBackupReportsMalformedAndPreservesLiveAndRecoveredRecords() async throws {
         let directory = try temporaryDirectory()
         let manifest = directory.appendingPathComponent("manifest.json")
