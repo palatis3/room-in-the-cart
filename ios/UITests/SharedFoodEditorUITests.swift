@@ -27,12 +27,12 @@ import XCTest
         app.launch()
         waitForShop(spanish: spanish)
         counts(previews: 0, posts: 0, writes: 0, retries: 0)
-        let targetExpiry = element("fixture.foodEditor.targetExpiry").label
-        let originalExpiry = element("fixture.foodEditor.originalExpiry").label
-        tap(element("sharedShop.edit"))
+        let targetExpiry = app.staticTexts["fixture.foodEditor.targetExpiry"].label
+        let originalExpiry = app.staticTexts["fixture.foodEditor.originalExpiry"].label
+        tap(app.buttons["sharedShop.edit"])
         // The expired original must fail before a graph preview or command.
-        tap(element("sharedShop.reviewEditor"))
-        let notice = element("household.shop.notice")
+        tap(app.buttons["sharedShop.reviewEditor"])
+        let notice = app.staticTexts["household.shop.notice"]
         reveal(notice)
         XCTAssertTrue(notice.label.contains(spanish ? "vencimiento" : "future quote expiry"), notice.label)
         counts(previews: 0, posts: 0, writes: 0, retries: 0)
@@ -42,11 +42,11 @@ import XCTest
         capture("Food-editor-\(language)-fresh-quote-entered")
         openFoodReview(spanish: spanish)
         enterCoverage()
-        tap(element("sharedFood.preview"))
+        tap(app.buttons["sharedFood.preview"])
         assertReviewedFacts(spanish: spanish)
         capture("Food-editor-\(language)-review-before-cancel")
-        tap(element("sharedFood.cancel"))
-        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 8))
+        cancelFoodReview(spanish: spanish)
+        XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 8))
         assertField("sharedShop.line." + line + ".price", value: "4.25", initialSearchDirection: .towardStart)
         assertField("sharedShop.cost.Cap in USD, blank if unknown", value: "35.00")
         counts(previews: 1, posts: 0, writes: 0, retries: 0)
@@ -54,39 +54,39 @@ import XCTest
 
         openFoodReview(spanish: spanish)
         enterCoverage()
-        tap(element("sharedFood.preview"))
+        tap(app.buttons["sharedFood.preview"])
         assertReviewedFacts(spanish: spanish)
         setSwitch("sharedFood.acknowledged", on: true)
-        tap(element("sharedFood.apply"))
+        tap(app.buttons["sharedFood.apply"])
         // The fixed server commits once and deliberately loses this reply.
         // Dismissing the finished sheet must not cancel the durable pending action.
-        let pending = element("sharedFood.notice")
+        let pending = app.staticTexts["sharedFood.notice"]
         XCTAssertTrue(pending.waitForExistence(timeout: 12))
         reveal(pending)
         XCTAssertTrue(pending.label.contains(spanish ? "reintentar" : "retry"), pending.label)
-        tap(element("sharedFood.cancel"))
+        cancelFoodReview(spanish: spanish)
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        reveal(element("sharedShop.retry"))
+        reveal(app.buttons["sharedShop.retry"])
         capture("Food-editor-\(language)-lost-reply-durable-pending")
         app.terminate()
         app.launchEnvironment["RITC_FOOD_EDITOR_RESET"] = "0"
         app.launch()
         waitForShop(spanish: spanish)
-        reveal(element("sharedShop.retry"))
+        reveal(app.buttons["sharedShop.retry"])
         counts(previews: 2, posts: 1, writes: 1, retries: 0)
-        tap(element("sharedShop.retry"))
+        tap(app.buttons["sharedShop.retry"])
         counts(previews: 2, posts: 2, writes: 1, retries: 1)
-        XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["sharedShop.retry"].waitForNonExistence(timeout: 12))
         let confirmed = app.staticTexts[spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed"]
         reveal(confirmed)
         XCTAssertTrue(confirmed.isHittable)
         // Read the actual refreshed editor values, then inspect the preserved
         // sources through the original food destination after the exact retry.
-        tap(element("sharedShop.edit"))
+        tap(app.buttons["sharedShop.edit"])
         assertField("sharedShop.line." + line + ".price", value: "4.25")
         assertField("sharedShop.cost.Cap in USD, blank if unknown", value: "35.00")
         tap(app.buttons[spanish ? "Cancelar edición de la compra compartida" : "Cancel shared shop edit"])
-        tap(element("sharedShop.foodQuantities"))
+        tap(app.buttons["sharedShop.foodQuantities"])
         assertText("Twelve wraps — no salt")
         assertText("Extra wraps — amount unknown")
         counts(previews: 2, posts: 2, writes: 1, retries: 1)
@@ -98,22 +98,32 @@ import XCTest
         XCTAssertTrue(app.navigationBars[spanish ? "Compra compartida del hogar" : "Shared household shop"].waitForExistence(timeout: 25), app.debugDescription)
     }
     private func openFoodReview(spanish: Bool) {
-        tap(element("sharedShop.reviewEditor"))
+        tap(app.buttons["sharedShop.reviewEditor"])
         XCTAssertTrue(app.navigationBars[spanish ? "Cantidades y orígenes" : "Amounts and sources"].waitForExistence(timeout: 15), app.debugDescription)
         assertText("Twelve wraps — no salt")
         assertText("Extra wraps — amount unknown")
     }
+    private func cancelFoodReview(spanish: Bool) {
+        // iOS 17 renders this toolbar action with its visible localized name
+        // without retaining SwiftUI's supplied accessibility identifier.
+        let bar = app.navigationBars[spanish ? "Cantidades y orígenes" : "Amounts and sources"]
+        let cancel = bar.buttons[spanish ? "Cancelar" : "Cancel"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        XCTAssertTrue(cancel.isHittable)
+        XCTAssertTrue(app.frame.contains(cancel.frame))
+        cancel.tap()
+    }
     private func enterCoverage() {
         setSwitch("sharedFood.pack." + line + ".unknown", on: false)
         fill("8", id: "sharedFood.pack." + line + ".literal")
-        let done = element("sharedFood.done")
+        let done = app.buttons["sharedFood.done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         tap(done)
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         setSwitch("sharedFood.line." + line + ".acceptUnresolved", on: true)
     }
     private func assertReviewedFacts(spanish: Bool) {
-        let apply = element("sharedFood.apply")
+        let apply = app.buttons["sharedFood.apply"]
         reveal(apply); XCTAssertFalse(apply.isEnabled)
         assertText("Twelve wraps — no salt", initialSearchDirection: .towardStart)
         assertText("Extra wraps — amount unknown")
@@ -153,8 +163,11 @@ import XCTest
             // The compact calendar can overlap the navigation bar. Use the
             // visible margin beside the actual calendar instead of asking
             // XCTest to scroll an obscured navigation bar into view.
-            let calendar = app.datePickers.containing(.button, identifier: "DatePicker.NextMonth").firstMatch
-            XCTAssertTrue(calendar.exists)
+            // The selected date is present on both supported OS versions;
+            // the system's next-month accessibility identifier is not.
+            let calendars = app.datePickers.containing(.button, identifier: day.label)
+            XCTAssertEqual(calendars.count, 1)
+            let calendar = calendars.firstMatch
             let bounds = app.frame, calendarFrame = calendar.frame
             let point = CGPoint(x: bounds.maxX - 12, y: calendarFrame.midY)
             XCTAssertTrue(bounds.contains(point))
@@ -204,16 +217,16 @@ import XCTest
     }
     private func counts(previews: Int, posts: Int, writes: Int, retries: Int) {
         let value = "Previews: \(previews); POSTs: \(posts); Writes: \(writes); Exact retries: \(retries)"
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", value), object: element("fixture.foodEditor.counts"))
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", value), object: app.staticTexts["fixture.foodEditor.counts"])
         XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 12), .completed)
-        XCTAssertFalse(element("fixture.foodEditor.rejected").exists, app.debugDescription)
-        XCTAssertFalse(element("fixture.failure").exists, app.debugDescription)
+        XCTAssertFalse(app.staticTexts["fixture.foodEditor.rejected"].exists, app.debugDescription)
+        XCTAssertFalse(app.staticTexts["fixture.failure"].exists, app.debugDescription)
     }
-    private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private enum SearchDirection { case towardStart, towardEnd }
     private func tap(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         reveal(target, initialSearchDirection: initialSearchDirection)
-        XCTAssertTrue(target.isHittable)
+        XCTAssertTrue(target.isHittable,
+                      "Cannot tap \(target.identifier): frame \(target.frame), keyboard \(app.keyboards.firstMatch.frame), content \(scrollableArea())")
         target.tap()
     }
     private func assertText(_ text: String, initialSearchDirection: SearchDirection = .towardEnd) {
@@ -246,29 +259,45 @@ import XCTest
     private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd
         for attempt in 0..<30 {
-            let area = scrollableArea(), exists = target.exists
-            let frame = exists ? target.frame : .zero
-            if exists && target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
+            var area = scrollableArea()
+            let exists = target.exists
+            var frame = exists ? target.frame : .zero
+            if exists && target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+                // Keyboard presentation can change the viewport while XCTest
+                // resolves the field. Confirm both against the updated layout.
+                area = scrollableArea(); frame = target.frame
+                if target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
+            }
             // Toolbars lie outside the content viewport, but their complete
             // button frame still has to fit the app and be directly actionable.
-            if exists && target.isHittable && app.frame.contains(frame) && target.elementType == .button && (target.identifier == "sharedFood.cancel" || target.identifier == "sharedFood.done") { return }
+            if exists && target.isHittable && app.frame.contains(frame) && target.elementType == .button && target.identifier == "sharedFood.done" { return }
             let fallbackUpward = (attempt / 6) % 2 == 0 ? startsBySwipingUp : !startsBySwipingUp
             let upward = exists && !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
             let origin = app.coordinate(withNormalizedOffset: .zero), bounds = app.frame
             let high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
             origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-                .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? high : low) - bounds.minY)))
+                .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? high : low) - bounds.minY)),
+                       withVelocity: .slow, thenHoldForDuration: 0.3)
         }
         XCTFail("Missing fully visible control: " + target.debugDescription)
     }
     private func scrollableArea() -> CGRect {
         let snapshot = try? app.snapshot(), bounds = snapshot?.frame ?? app.frame
-        var bottom = bounds.maxY - 30, top = bounds.minY + 95, nodes = snapshot.map { [$0] } ?? []
+        // Use actual obstructions. A fixed bottom inset hides a fully visible
+        // final Form row on home-button iPhones, where it cannot scroll higher.
+        var bottom = bounds.maxY, top = bounds.minY + 95, nodes = snapshot.map { [$0] } ?? []
+        // A root snapshot can omit the keyboard's separate accessibility
+        // window. Query it directly before treating a field as unobscured.
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 12) }
         while let node = nodes.popLast() {
             if !node.frame.isEmpty && node.frame.intersects(bounds) {
                 if node.elementType == .navigationBar { top = max(top, node.frame.maxY + 8) }
                 if node.elementType == .keyboard { bottom = min(bottom, node.frame.minY - 12) }
                 if node.identifier == "sharedFood.done" { bottom = min(bottom, node.frame.minY - 8) }
+                if (node.elementType == .tabBar || node.elementType == .toolbar) && node.frame.minY > bounds.midY {
+                    bottom = min(bottom, node.frame.minY - 8)
+                }
             }
             nodes.append(contentsOf: node.children)
         }

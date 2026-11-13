@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import HouseholdClient
 
 struct HouseholdShopView: View {
@@ -208,7 +209,13 @@ private struct SharedShopEditor: View {
             DatePicker(ht("Quote recorded"), selection: $model.draft.observedAt)
             DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt).accessibilityIdentifier("sharedShop.quote.expires")
             Text(ht("Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."))
-            Button(ht("Review entered shared shop")) { Task { await model.reviewEditor() } }.accessibilityIdentifier("sharedShop.reviewEditor")
+            Button(ht("Review entered shared shop")) {
+                // Finish editing before the busy state disables the form. On
+                // iOS 17, disabling a focused field otherwise sends its editing
+                // callbacks during SwiftUI's view update.
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                Task { await model.reviewEditor() }
+            }.accessibilityIdentifier("sharedShop.reviewEditor")
             Button(ht("Cancel shared shop edit")) { model.cancelEditing() }
         }
     }
