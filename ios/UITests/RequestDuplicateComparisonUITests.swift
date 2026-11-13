@@ -144,8 +144,7 @@ import XCTest
     private func closeDecision() {
         tap(cancelButton)
         expectsDecisionSheet = false
-        let dismissed = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:cancelButton)
-        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed)
+        XCTAssertTrue(cancelButton.waitForNonExistence(timeout: 10), "Cancel must dismiss the request review")
     }
     // Cancellation is a Button. Keep disappearance checks scoped to that type
     // instead of searching every accessibility descendant after the sheet closes.
