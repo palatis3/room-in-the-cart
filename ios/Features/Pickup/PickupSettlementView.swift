@@ -14,6 +14,14 @@ struct PickupSettlementView: View {
     @State private var date = Date()
     @State private var entryID = UUID()
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
+    private var pendingCredits: [SettlementEntry] {
+        let entries = model.journey?.settlement.entries ?? []
+        let settled = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))
+        return entries.filter { entry in
+            entry.kind == .pendingCredit && entry.chargeEvidenceKey == charge &&
+                entry.creditID.map { !settled.contains($0) } == true
+        }
+    }
     private var openHolds: [SettlementEntry] {
         let entries = model.journey?.settlement.entries ?? []
         let released = Set(entries.compactMap(\.holdEvidenceKey))
@@ -68,12 +76,25 @@ struct PickupSettlementView: View {
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
                 if isCredit {
-                    TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .creditID)
                     Picker(pTr("Original posted charge"), selection: $charge) {
                         Text(pTr("Choose a charge")).tag("")
                         ForEach(model.journey?.settlement.entries.filter { [.postedCharge, .postedTopUp].contains($0.kind) } ?? []) { entry in Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey) }
                     }
+                    if [.postedCredit, .includedCredit].contains(kind), !pendingCredits.isEmpty {
+                        Picker(financialText("Credit being settled"), selection: Binding(
+                            get: { pendingCredits.contains { $0.creditID == creditID } ? creditID : "" },
+                            set: { creditID = $0 }
+                        )) {
+                            Text(financialText("A separate credit")).tag("")
+                            ForEach(pendingCredits) { pending in
+                                if let id = pending.creditID {
+                                    Text("\(id) · \(pending.evidenceKey) · \(pMoney(pending.amount))").tag(id)
+                                }
+                            }
+                        }
+                    }
+                    TextField(pTr("Credit identity (same for pending and posted)"), text: $creditID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .creditID)
                 }
                 DatePicker(pTr("Evidence date"), selection: $date)
                 Button(pTr("Save financial evidence")) { save() }
@@ -84,6 +105,14 @@ struct PickupSettlementView: View {
                     VStack(alignment: .leading) {
                         Text("\(pTr(entry.kind.rawValue)) · \(pMoney(entry.amount))")
                         Text(entry.evidenceKey).font(.caption)
+                        if let id = entry.creditID {
+                            LabeledContent(pTr("Credit ID"), value: id)
+                        }
+                        if let original = entry.chargeEvidenceKey {
+                            LabeledContent(pTr("Original posted charge"), value: original)
+                        } else if let hold = entry.holdEvidenceKey {
+                            LabeledContent(pTr("Original payment hold"), value: hold)
+                        }
                     }
                 }
             }
@@ -103,7 +132,14 @@ struct PickupSettlementView: View {
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
         .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
-        .onChange(of: kind) { _, _ in holdKey = "" }
+        .onChange(of: kind) { _, _ in
+            holdKey = ""
+            charge = ""
+            creditID = ""
+        }
+        .onChange(of: charge) { previous, _ in
+            if !previous.isEmpty { creditID = "" }
+        }
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
             .disabled(model.saving)
     }
@@ -119,6 +155,8 @@ struct PickupSettlementView: View {
                     amount = ""
                     evidence = ""
                     holdKey = ""
+                    charge = ""
+                    creditID = ""
                     field = nil
                 }
             }

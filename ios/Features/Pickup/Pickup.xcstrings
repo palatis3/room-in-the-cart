@@ -1547,6 +1547,22 @@
         }
       }
     },
+    "Credit ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit ID"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificador del crédito"
+          }
+        }
+      }
+    },
     "Credit identity (same for pending and posted)": {
       "extractionState": "manual",
       "localizations": {
