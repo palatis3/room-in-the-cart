@@ -20,7 +20,7 @@ import XCTest
         assertVisible("No matching name among the loaded requests yet. Other requests have not been checked.")
         XCTAssertFalse(app.staticTexts["2 boxes for the school snack drive"].exists)
         capture("S23-page-one-before-check-more")
-        tap(element("household.duplicates.loadMore"))
+        tap(app.buttons["household.duplicates.loadMore"])
         capture("S23-page-two-loaded-in-same-decision-sheet")
         assertComparisonValue("selection",request:"sam",value:"Deciding this request")
         assertComparisonValue("author",request:"sam",value:"Sam",contains:true)
@@ -107,7 +107,7 @@ import XCTest
         launch(language:"es",locale:"es_US",largeType:true)
         let sam = element("household.request.a4444444-4444-4444-8444-444444444441")
         openRequest(sam,step:"Spanish-Sam-page-one")
-        tap(element("household.duplicates.loadMore"))
+        tap(app.buttons["household.duplicates.loadMore"])
         capture("S23-Spanish-page-two-loaded-in-same-decision-sheet")
         let explanation = app.staticTexts["household.duplicates.separateOutcomes"]
         reveal(explanation, initiallyForward: false)
