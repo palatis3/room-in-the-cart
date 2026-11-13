@@ -37,8 +37,13 @@ class FixtureDependencyTests(unittest.TestCase):
         steps = workflow["jobs"]["contributor-tests"]["steps"]
         upload = next(step for step in steps if step.get("id") == "fixture_results_upload")
         retry = next(step for step in steps if step.get("name") == "Retry fixture result upload")
-        self.assertIn("matrix.shard != 'RecordsMediaUITests'", upload["if"])
-        self.assertEqual(retry["if"], "${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && "
+        exclusion = "matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'"
+        self.assertIn(exclusion, upload["if"])
+        private = next(step for step in steps if step.get("name") == "Retain privacy-safe Records verification")
+        self.assertIn("matrix.shard == 'SharedRecordsUITests'", private["if"])
+        self.assertEqual(set(private["with"]["path"].splitlines()),
+                         {".build/records-test-report.md", ".build/test-simulator-ownership.json", ".build/test-plan/"})
+        self.assertEqual(retry["if"], "${{ !cancelled() && " + exclusion + " && "
                                     "steps.fixture_results_upload.outcome == 'failure' }}")
         self.assertTrue(upload["continue-on-error"])
         self.assertFalse(retry.get("continue-on-error", False))

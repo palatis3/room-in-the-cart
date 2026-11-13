@@ -63,7 +63,13 @@ import XCTest
         tap(element("records.generateKey"))
         enable(app.switches.matching(identifier: "records.savedKey").firstMatch)
         tap(element("records.prepareRecovery"))
-        XCTAssertTrue(saveFile.waitForExistence(timeout: 12))
+        let saveDeadline = ProcessInfo.processInfo.systemUptime + 12
+        if !saveFile.exists {
+            // The prepared file follows the key controls in a lazily rendered Form.
+            scrollContent(upward: true, distanceFraction: 0.35)
+        }
+        let remaining = saveDeadline - ProcessInfo.processInfo.systemUptime
+        XCTAssertTrue(remaining > 0 && saveFile.waitForExistence(timeout: remaining))
         reveal(saveFile)
         capture("S20 \(language) encrypted personal file prepared through production model")
         tap(element("records.saveFile"))

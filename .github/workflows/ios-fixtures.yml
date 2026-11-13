@@ -282,23 +282,28 @@ jobs:
         timeout-minutes: 40
         shell: bash
         run: |
-          # Records remains a named standalone shard outside balanced groups.
-          if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
-            # The synthetic recovery key can appear in screenshots and UI trees.
+          # These tests generate a recovery key that can appear in XCTest logs and screenshots.
+          if [[ "$TEST_SHARD" == RecordsMediaUITests || "$TEST_SHARD" == SharedRecordsUITests ]]; then
             status=0
             private_log="$RUNNER_TEMP/records-fixture.log"
             GITHUB_STEP_SUMMARY= bash scripts/run_ios_test_shard.sh > "$private_log" 2>&1 || status=$?
-            report_status=0
-            python3 scripts/report_records_media_test.py .build "$status" \
-              > .build/records-test-report.md 2>> "$private_log" || report_status=$?
+            if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
+              report_status=0
+              python3 scripts/report_records_media_test.py .build "$status" \
+                > .build/records-test-report.md 2>> "$private_log" || report_status=$?
+              if (( status == 0 )); then
+                status=$report_status
+              fi
+            elif (( status == 0 )); then
+              echo 'Shared Records passed strict verification in English and Spanish.' > .build/records-test-report.md
+            else
+              echo 'Shared Records verification failed.' > .build/records-test-report.md
+            fi
             if [[ -s .build/records-test-report.md ]]; then
               tee -a "$GITHUB_STEP_SUMMARY" < .build/records-test-report.md
             fi
-            if (( status == 0 )); then
-              status=$report_status
-            fi
             if (( status != 0 )); then
-              echo '::error::Records media fixture failed. Raw output contains private fixture material.'
+              echo '::error::Records fixture failed. Raw output contains private fixture material.'
             fi
             exit "$status"
           fi
@@ -339,7 +344,7 @@ jobs:
       - name: Retain fixture results and timing
         id: fixture_results_upload
         continue-on-error: true
-        if: always() && matrix.shard != 'RecordsMediaUITests'
+        if: always() && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
@@ -356,7 +361,7 @@ jobs:
           if-no-files-found: ignore
       # Retry only the transfer while this runner still holds the XCTest result.
       - name: Retry fixture result upload
-        if: ${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && steps.fixture_results_upload.outcome == 'failure' }}
+        if: ${{ !cancelled() && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests' && steps.fixture_results_upload.outcome == 'failure' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}-retry
@@ -364,8 +369,8 @@ jobs:
           path: *fixture_result_paths
           retention-days: 7
           if-no-files-found: error
-      - name: Retain Records media result counts and timing
-        if: always() && matrix.shard == 'RecordsMediaUITests'
+      - name: Retain privacy-safe Records verification
+        if: always() && (matrix.shard == 'RecordsMediaUITests' || matrix.shard == 'SharedRecordsUITests')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
