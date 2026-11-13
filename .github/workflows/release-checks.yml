@@ -36,6 +36,19 @@ jobs:
               raise SystemExit("Reviewed release candidate differs from the dispatched or checked-out revision")
           print(f"Validated frozen release candidate {candidate}")
           PY
+      - name: Check production metadata before allocating native runners
+        working-directory: scripts
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          from app_configuration import compiled_metadata, load_configuration, require_release_metadata
+
+          try:
+              config = load_configuration(Path(".."), "Release")
+              require_release_metadata(compiled_metadata(config, "Release"))
+          except (OSError, ValueError) as error:
+              raise SystemExit(str(error))
+          PYTHON
       - name: Validate workflow syntax and expression references
         shell: bash
         run: |

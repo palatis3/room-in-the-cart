@@ -49,9 +49,32 @@ class ReleasePreflightTests(unittest.TestCase):
         steps = self.jobs["source-preflight"]["steps"]
         self.assertTrue(steps[0]["uses"].startswith("actions/checkout@"))
         self.assertEqual(steps[1], self.candidate_guard())
-        self.assertEqual(steps[2]["name"], "Validate workflow syntax and expression references")
+        self.assertEqual(steps[2]["name"], "Check production metadata before allocating native runners")
         self.assertEqual(self.candidate_guard()["env"], {"REVIEWED_CANDIDATE_SHA": "${{ inputs.candidate_sha }}"})
         self.assertNotIn("${{", self.candidate_guard()["run"])
+
+    def test_metadata_step_checks_the_release_file_and_ignores_staging_values(self):
+        step = self.jobs["source-preflight"]["steps"][2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scripts = root / step["working-directory"]
+            scripts.mkdir()
+            (scripts / "app_configuration.py").write_bytes((ROOT / "scripts/app_configuration.py").read_bytes())
+            config = root / "config"
+            config.mkdir()
+            values = {"householdSubscriptionProductID": "org.grocery.annual", "supportURL": "https://grocery.org/support",
+                      "privacyPolicyURL": "https://grocery.org/privacy", "termsOfUseURL": "https://grocery.org/terms"}
+            (config / "staging.json").write_text(json.dumps({**values, "environment": "staging"}))
+            for release in (None, {"supportURL": "http://grocery.org/support"}, values):
+                with self.subTest(release=release):
+                    if release is not None:
+                        (config / "release.json").write_text(json.dumps(release))
+                    run = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=scripts, capture_output=True, text=True)
+                    if release == values:
+                        self.assertEqual(run.returncode, 0, run.stderr)
+                    else:
+                        self.assertNotEqual(run.returncode, 0)
+                        self.assertIn("Release metadata is incomplete" if release is None else "supportURL", run.stderr)
 
     def test_candidate_guard_accepts_matching_dispatch_and_actual_checkout(self):
         result = self.run_candidate_guard(self.sha, self.sha)
