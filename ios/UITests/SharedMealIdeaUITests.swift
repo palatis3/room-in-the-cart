@@ -49,7 +49,7 @@ import XCTest
         enterValue("1/8", into: "Reserved quantity", replacing: true)
         enterValue("1", into: "Whole package quantity", replacing: true)
         enterValue("1", into: "Usable yield numerator", replacing: true)
-        enterValue("2", into: "Usable yield denominator", replacing: true)
+        fill("2", into: "Usable yield denominator", replacing: true)
         fill("Household measured cup and reviewed drained yield", into: "household-idea-evidence", replacing: true)
         XCTAssertEqual(app.textFields["household-idea-evidence"].value as? String, "Household measured cup and reviewed drained yield")
         tap(element("household-idea-save"))
@@ -152,7 +152,7 @@ import XCTest
         enterValue("250", into: "Household stock in this unit", replacing: true)
         enterValue("1", into: "Whole package quantity", replacing: true)
         enterValue("1", into: "Usable yield numerator", replacing: true)
-        enterValue("1", into: "Usable yield denominator", replacing: true)
+        fill("1", into: "Usable yield denominator", replacing: true)
         fill("Household measured beans and package", into: "household-idea-evidence", replacing: true)
         tap(element("household-idea-save")); waitCounter("ideas", "Fixture idea writes: 1")
         enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
@@ -338,8 +338,8 @@ import XCTest
             XCTAssertTrue(field.isHittable)
             field.tap()
         } else { tap(field) }
-        if replacing, let old = field.value as? String, old != field.placeholderValue {
-            if id == "household-idea-evidence", !old.isEmpty {
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            if id == "household-idea-evidence" {
                 // This multiline TextField initially places the caret at the
                 // start. Use the observed native edit menu to replace all text.
                 // Focusing can move the field behind the keyboard; reveal it
@@ -350,10 +350,10 @@ import XCTest
                 XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
                 XCTAssertTrue(selectAll.isHittable)
                 selectAll.tap()
-                app.typeText(XCUIKeyboardKey.delete.rawValue)
-            } else { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+                field.typeText(XCUIKeyboardKey.delete.rawValue)
+            } else { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         }
-        app.typeText(text)
+        field.typeText(text)
         XCTAssertEqual(field.value as? String, text, id)
         if id == "Shared household exclusions, one per line" {
             XCTAssertEqual(field.label, id)
@@ -400,8 +400,12 @@ import XCTest
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
         let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
-        let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
+        // The Form ends above its Done bar. A field behind the bar can still
+        // report hittable while a tap leaves the preceding input focused.
+        let done = app.buttons["household-idea-keyboard-done"]
+        let inputTop = keyboardTop < bounds.maxY && done.exists ? min(keyboardTop, done.frame.minY) : keyboardTop
+        let top = max(bounds.minY + 88, min(barBottom + 12, inputTop - 140))
+        let bottom = min(bounds.maxY - 100, inputTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
     private func scrollContent(upward: Bool, area observedArea: CGRect? = nil, distance: CGFloat? = nil) {
