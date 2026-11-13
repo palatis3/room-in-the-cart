@@ -140,7 +140,10 @@ function parseSession(value: unknown): Session | null {
   if (d.authenticated !== true || !['contributor', 'shopper', 'organizer', 'helper', 'editor'].includes(String(d.role))) return invalid();
   const household = record(d.household), replay = record(d.replayWindow);
   const grantId = d.grantId == null ? undefined : identity(d.grantId);
-  if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
+  const scoped = d.role === 'helper' || d.role === 'editor';
+  if (scoped !== Boolean(grantId) || (scoped && (d.enrolled !== true || d.shopId == null))) {
+    throw new ApiError('access_ended', 403);
+  }
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
     enrolled: boolean(d.enrolled), ...requestQueueState(d),
@@ -236,12 +239,14 @@ export class API {
         || (command.kind !== 'request.send' && request.requestId !== command.body.requestId)) return invalid();
   }
   async view(session: Session): Promise<CookView> {
-    if (!['helper', 'editor'].includes(session.role) || !session.grantId) throw new ApiError('access_ended', 403);
+    if (!['helper', 'editor'].includes(session.role) || !session.enrolled || !session.grantId || !session.shopId) throw new ApiError('access_ended', 403);
     const d = record(await this.call(`/v1/views/${segment(session.grantId)}/current`));
     if (!Array.isArray(d.items) || d.items.length > 500 || !['en', 'es'].includes(String(d.language)) || !['read', 'edit'].includes(String(d.mode)) || d.grantId !== session.grantId
-        || (session.shopId !== null && d.shopId !== session.shopId)) return invalid();
+        || d.shopId !== session.shopId) return invalid();
+    const expiresAt = timestamp(d.expiresAt);
+    if (Date.parse(expiresAt) <= Date.now()) throw new ApiError('access_ended', 403);
     return {grantId:identity(d.grantId), shopId:identity(d.shopId), shopLabel:text(d.shopLabel, 512), revision:integer(d.revision, 1),
-      asOf:timestamp(d.asOf), expiresAt:timestamp(d.expiresAt), canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
+      asOf:timestamp(d.asOf), expiresAt, canPropose:boolean(d.canPropose) && session.role === 'editor' && d.mode === 'edit',
       instructions:d.items.map(value => { const i = record(value), amount = optionalText(i.amount, 80), unit = optionalText(i.unit, 80);
         return {item:text(i.label, 240), amount:amount === null ? null : [amount, unit].filter(Boolean).join(' '), action:text(i.action, 500)}; })};
   }

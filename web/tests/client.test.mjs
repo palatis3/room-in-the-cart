@@ -571,9 +571,34 @@ test('failed helper loading never falls back to the contributor form',async()=>{
 });
 
 test('narrow session validation rejects malformed identity and expiry',async()=>{
- for(const body of [{...session(),role:'unknown'},{...session(),memberId:{}},{...session(),replayWindow:{id:'w',expiresAt:'not a date'}},{...session(),role:'helper'}]) {
+ for(const body of [{...session(),role:'unknown'},{...session(),memberId:{}},{...session(),replayWindow:{id:'w',expiresAt:'not a date'}}]) {
   const api=new API(async()=>new Response(JSON.stringify(body),{status:200}));
   await assert.rejects(api.session(),e=>e.code==='invalid_response');
+ }
+});
+
+test('an incomplete helper session clears previously displayed instructions on refresh', async t => {
+ const valid={...session(),role:'helper',grantId:'grant-a'};
+ const instructions={grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,language:'en',
+   asOf:'2026-01-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',mode:'read',canPropose:false,
+   items:[{label:'Private cook instructions',amount:null,unit:null,action:'Save two'}]};
+ for(const change of [{shopId:null},{enrolled:false},{grantId:null},{role:'contributor'}]){
+   let active=valid,reads=0;
+   const api=new API(async path=>{
+     if(path==='/v1/session')return Response.json(active);
+     if(path==='/v1/views/grant-a/current'){reads++;return Response.json(instructions);}
+     if(path==='/v1/views/grant-a/proposals')return Response.json({proposals:[],nextCursor:null});
+     if(path==='/v1/auth/session')return Response.json({available:false,authenticated:false,csrf:null});
+     throw Error('Unexpected request '+path);
+   });
+   const {dom,root,app}=await setup(api);
+   t.after(()=>dom.window.close());
+   assert.match(root.textContent,/Private cook instructions/);
+   active={...valid,...change};
+   await app.start();
+   assert.equal(reads,1,JSON.stringify(change));
+   assert.doesNotMatch(root.textContent,/Private cook instructions|Family A|Ask the shopper/);
+   assert.match(root.textContent,/Access has ended/);
  }
 });
 
@@ -597,8 +622,16 @@ test('helper projection verifies its grant and never retains adult fields',async
  const view={grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,mode:'edit',language:'en',budgetMinor:3800,items:[{label:'Wraps',amount:'six',unit:'wraps',action:'Use for dinner',privatePrice:100}]};
  const api=new API(async()=>new Response(JSON.stringify(view),{status:200}));
  const projection=await api.view(s);assert.equal(projection.canPropose,false);assert.equal('budgetMinor' in projection,false);assert.equal('privatePrice' in projection.instructions[0],false);
- view.grantId='another-grant';await assert.rejects(api.view(s),e=>e.code==='invalid_response');
+ for(const mismatch of [{grantId:'another-grant'}, {shopId:'another-shop'}]){
+   const mismatched=new API(async()=>Response.json({...view,...mismatch}));
+   await assert.rejects(mismatched.view(s),e=>e.code==='invalid_response');
+ }
+ view.expiresAt='2000-01-01T00:00:00Z';
+ await assert.rejects(api.view(s),e=>e.code==='access_ended');
  let calls=0;const isolated=new API(async()=>{calls++;throw Error('must not call');});
+ for(const incomplete of [{...s,enrolled:false},{...s,shopId:null}]){
+   await assert.rejects(isolated.view(incomplete),e=>e.code==='access_ended');
+ }
  await assert.rejects(isolated.command(s,command()),e=>e.status===403);assert.equal(calls,0);
 });
 
