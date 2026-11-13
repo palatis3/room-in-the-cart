@@ -6,18 +6,20 @@ extension XCTestCase {
                                           requireStableFrame: Bool = false,
                                           file: StaticString = #filePath, line: UInt = #line) -> XCUIElement? {
         let activityClose = app.navigationBars["UIActivityContentView"].buttons["header.closeButton"]
-        let fallbackClose = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+        let systemClose = app.buttons["header.closeButton"].firstMatch
+        let hostClose = app.otherElements["ActivityListView"].buttons["Close"].firstMatch
         var close: XCUIElement?
         func usableClose() -> Bool {
             // Resolve within the observed system activity header when available.
             // Keep the existing lookup for system versions with another hierarchy.
-            let candidate = activityClose.exists ? activityClose : fallbackClose
+            let candidate: XCUIElement
+            if activityClose.exists { candidate = activityClose }
+            else if systemClose.exists { candidate = systemClose }
+            else { candidate = hostClose }
             guard candidate.exists && candidate.isEnabled && candidate.isHittable else { return false }
             close = candidate
             return true
         }
-        let activityHost = app.otherElements["ActivityListView"].firstMatch
-        let remoteContent = activityHost.descendants(matching: .other)["ShareSheet.RemoteContainerView"].firstMatch
         func waitForShareState(_ description: String, timeout: TimeInterval, until ready: @escaping () -> Bool) -> Bool {
             let started = Date()
             let condition = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in ready() }, object: nil)
@@ -34,16 +36,10 @@ extension XCTestCase {
             XCTFail("\(description). \(app.debugDescription)", file: file, line: line)
             return false
         }
-        // The host and its remote controls share one minute. Fail early if the host never appears.
-        let readinessDeadline = ProcessInfo.processInfo.systemUptime + 60
-        guard waitForShareState("The system share sheet did not begin presenting", timeout: 15, until: {
-            remoteContent.exists || usableClose()
-        }) else { return nil }
-        // UIKit presents the remote container before the system activity service
-        // supplies its controls. Only a usable Close permits cancellation.
+        // A cold activity service can take most of the existing minute to publish
+        // its first accessibility tree. Wait directly for the control we will tap.
         var previous: (identifier: String, label: String, frame: CGRect)?
-        let remaining = max(0, readinessDeadline - ProcessInfo.processInfo.systemUptime)
-        guard waitForShareState("The presented system share sheet did not load its Close control", timeout: remaining, until: {
+        guard waitForShareState("The system share sheet did not load its Close control", timeout: 60, until: {
             guard usableClose(), let close else { previous = nil; return false }
             guard requireStableFrame else { return true }
             // The remote header can be hittable while its presentation is still moving.
