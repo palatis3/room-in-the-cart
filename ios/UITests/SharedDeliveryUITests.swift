@@ -146,6 +146,8 @@ import XCTest
             tap(app.buttons["delivery.cook.share"], file: file, line: line)
             guard let close = readySystemShareClose(in: app, requireStableFrame: true, file: file, line: line) else { return }
             close.tap()
+            XCTAssertTrue(close.waitForNonExistence(timeout: 15), "Closing the share sheet should return to the cook preview",
+                          file: file, line: line)
             reveal(preview, file: file, line: line)
             XCTAssertEqual(preview.label, copy, file: file, line: line)
         }

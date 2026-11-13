@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -6,7 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from report_records_media_test import METHOD, SELECTOR, SOURCE, SUITE, assertion_line, modern_location, legacy_location, combined_location, read_legacy_location
+from report_records_media_test import METHOD, SELECTOR, SOURCE, SUITE, SHARED_METHODS, SHARED_SUITE, assertion_line, modern_location, legacy_location, combined_location, read_legacy_location
 
 
 SCRIPT = Path(__file__).with_name("report_records_media_test.py")
@@ -49,14 +50,116 @@ class RecordsMediaReportTests(unittest.TestCase):
     def write_json(self, filename, data):
         (self.evidence / filename).write_text(json.dumps(data))
 
-    def execute(self, runner_status):
+    def execute(self, runner_status, *options, build_workspace=""):
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), str(self.evidence), str(runner_status)],
+            [sys.executable, str(SCRIPT), str(self.evidence), str(runner_status), *options],
+            env={**os.environ, "RECORDS_BUILD_WORKSPACE": build_workspace},
             capture_output=True, text=True,
         )
         self.assertNotIn(PRIVATE, result.stdout + result.stderr)
         self.assertEqual(result.stderr, "")
         return result
+
+    def write_shared(self, results=("Passed", "Passed"), *, source_path=None):
+        selectors = [f"RoomInTheCartUITests/{SHARED_SUITE}/{method}" for method in SHARED_METHODS]
+        plan = self.evidence / "test-plan" / f"{SHARED_SUITE}.txt"
+        plan.write_text("\n".join(selectors) + "\n")
+        self.write_json("test-summary.json", {
+            "result": "Passed" if results.count("Passed") == 2 else "Failed",
+            "totalTestCount": 2, "passedTests": results.count("Passed"), "failedTests": results.count("Failed"),
+            "skippedTests": results.count("Skipped"), "expectedFailures": results.count("Expected Failure"),
+            "testFailures": [{"failureText": PRIVATE}],
+        })
+        nodes = []
+        for i, (selector, result) in enumerate(zip(selectors, results)):
+            nodes.append({
+                "nodeType": "Test Case", "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/" + selector,
+                "result": result, "name": PRIVATE, "children": [{
+                    "nodeType": "Failure Message", "name": PRIVATE,
+                    "sourceLocation": {"filePath": source_path, "lineNumber": 31 + i},
+                }],
+            })
+        self.write_json("test-details.json", {"testNodes": list(reversed(nodes))})
+        self.write_json("test-runtime-warnings.json", {
+            "status": "passed", "examinedTestCount": 2, "runtimeWarningCount": 0, "warnings": [PRIVATE],
+        })
+        return selectors
+
+    def test_shared_records_both_methods_and_compiler_source_path(self):
+        relative = Path("ios/UITests/SharedRecordsUITests.swift")
+        build_root = self.evidence / PRIVATE
+        for results, runner_status, expected_status in [
+            (("Passed", "Passed"), 0, 0), (("Passed", "Passed"), 7, 1),
+            (("Passed", "Failed"), 0, 1), (("Failed", "Failed"), 1, 1),
+            (("Skipped", "Expected Failure"), 0, 1),
+        ]:
+            with self.subTest(results=results, runner_status=runner_status):
+                selectors = self.write_shared(results, source_path=str(build_root / relative))
+                result = self.execute(runner_status, SHARED_SUITE, build_workspace=str(build_root))
+                self.assertEqual(result.returncode, expected_status)
+                for i, (selector, outcome) in enumerate(zip(selectors, results)):
+                    self.assertIn(f"| `{selector}` | {outcome} |", result.stdout)
+                    location = f"Failure location for `{SHARED_METHODS[i]}` `{relative}:{31 + i}`"
+                    self.assertEqual(location in result.stdout, outcome == "Failed")
+
+    def test_foreign_build_root_cannot_supply_shared_source_line(self):
+        selector = self.write_shared(("Failed", "Passed"), source_path=f"/{PRIVATE}/ios/UITests/{SHARED_SUITE}.swift")[0]
+        result = self.execute(1, SHARED_SUITE, build_workspace=str(self.evidence))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(f"| `{selector}` | Failed |", result.stdout)
+        self.assertNotIn("Failure location", result.stdout)
+
+    def test_shared_legacy_locations_are_scoped_to_each_method(self):
+        source = SCRIPT.resolve().parents[1] / "ios" / "UITests" / f"{SHARED_SUITE}.swift"
+        issues = []
+        for index, method in enumerate(SHARED_METHODS):
+            number = str(30 + index)
+            issues.append({
+                "testCaseName": {"_value": f"{SHARED_SUITE}.{method}()"},
+                "documentLocationInCreatingWorkspace": {"url": {"_value":
+                    f"{source.as_uri()}#StartingLineNumber={number}&EndingLineNumber={number}"}},
+                "message": PRIVATE,
+            })
+        legacy = {"issues": {"testFailureSummaries": {"_values": issues}}}
+        for index, method in enumerate(SHARED_METHODS):
+            self.assertEqual(legacy_location(legacy, source, 100, f"{SHARED_SUITE}.{method}()"), ("valid", 31 + index))
+
+    def test_shared_warning_failures_preserve_results_and_fail_verification(self):
+        selectors = self.write_shared()
+        for warnings, text in [
+            ({"status": PRIVATE, "error": PRIVATE}, "Runtime warning verification unavailable."),
+            ({"status": "unexpected-warnings", "runtimeWarningCount": 3, "examinedTestCount": 2, "warnings": [PRIVATE]},
+             "Runtime warnings across both tests: 3."),
+        ]:
+            self.write_json("test-runtime-warnings.json", warnings)
+            result = self.execute(0, SHARED_SUITE)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(text, result.stdout)
+            for selector in selectors:
+                self.assertIn(f"| `{selector}` | Passed |", result.stdout)
+
+    def test_shared_inconsistent_evidence_fails_closed(self):
+        for problem in ("missing", "duplicate", "unknown", "counts", "plan"):
+            with self.subTest(problem=problem):
+                self.write_shared()
+                details = self.evidence / "test-details.json"
+                nodes = json.loads(details.read_text())["testNodes"]
+                if problem == "missing":
+                    nodes.pop()
+                elif problem == "duplicate":
+                    nodes[1] = nodes[0]
+                elif problem == "unknown":
+                    nodes[0]["nodeIdentifierURL"] = PRIVATE
+                elif problem == "counts":
+                    summary = self.evidence / "test-summary.json"
+                    self.write_json(summary.name, {**json.loads(summary.read_text()), "failedTests": 1})
+                elif problem == "plan":
+                    (self.evidence / "test-plan" / f"{SHARED_SUITE}.txt").write_text(PRIVATE)
+                self.write_json(details.name, {"testNodes": nodes})
+                result = self.execute(0, SHARED_SUITE)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "Shared Records verification failed. Structured evidence was unavailable or invalid.\n")
+        self.assertEqual(self.execute(0, PRIVATE).returncode, 1)
 
     def test_modern_location_strict_and_private(self):
         source = (SCRIPT.resolve().parents[1] / SOURCE).resolve()

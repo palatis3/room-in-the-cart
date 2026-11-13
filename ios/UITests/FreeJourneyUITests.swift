@@ -1271,7 +1271,12 @@ import XCTest
         tap(app.buttons["Mark handled by someone"])
         fill("Sam", into: "ledgerHandledBy")
         tap(app.buttons["Mark handled"])
-        returnToVisibleAnchor(element("ledgerHistory"))
+        // Saving dismisses the handling sheet asynchronously. Wait for the
+        // ingredient detail's own Back control before returning to the list.
+        let back = app.navigationBars["Inspect ingredient"].buttons.firstMatch
+        let backReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: back)
+        XCTAssertEqual(XCTWaiter.wait(for: [backReady], timeout: 10), .completed)
+        back.tap()
         tap(element("ledgerHistory"))
         assertText("Handled by Sam")
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reopen ")).firstMatch)

@@ -36,10 +36,10 @@ extension XCTestCase {
             XCTFail("\(description). \(app.debugDescription)", file: file, line: line)
             return false
         }
-        // A cold activity service can take most of the existing minute to publish
-        // its first accessibility tree. Wait directly for the control we will tap.
+        // The app can present the activity host promptly while a cold simulator
+        // takes over a minute to launch SharingUIService and populate its header.
         var previous: (identifier: String, label: String, frame: CGRect)?
-        guard waitForShareState("The system share sheet did not load its Close control", timeout: 60, until: {
+        guard waitForShareState("The system share sheet did not load its Close control", timeout: 90, until: {
             guard usableClose(), let close else { previous = nil; return false }
             guard requireStableFrame else { return true }
             // The remote header can be hittable while its presentation is still moving.

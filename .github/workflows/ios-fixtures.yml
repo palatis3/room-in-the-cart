@@ -73,6 +73,7 @@ jobs:
       FIXTURE_PROFILE: contributor
     outputs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
+      workspace: ${{ github.workspace }}
     steps: &fixture-build-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
@@ -216,6 +217,7 @@ jobs:
       matrix: ${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}
     env:
       TEST_PRODUCTS_ARTIFACT: ${{ needs.build-contributor.outputs.artifact }}
+      RECORDS_BUILD_WORKSPACE: ${{ needs.build-contributor.outputs.workspace }}
       FIXTURE_PROFILE: ${{ matrix.profile }}
       TEST_SHARD: ${{ matrix.shard }}
     steps: &fixture-test-steps
@@ -287,17 +289,11 @@ jobs:
             status=0
             private_log="$RUNNER_TEMP/records-fixture.log"
             GITHUB_STEP_SUMMARY= bash scripts/run_ios_test_shard.sh > "$private_log" 2>&1 || status=$?
-            if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
-              report_status=0
-              python3 scripts/report_records_media_test.py .build "$status" \
-                > .build/records-test-report.md 2>> "$private_log" || report_status=$?
-              if (( status == 0 )); then
-                status=$report_status
-              fi
-            elif (( status == 0 )); then
-              echo 'Shared Records passed strict verification in English and Spanish.' > .build/records-test-report.md
-            else
-              echo 'Shared Records verification failed.' > .build/records-test-report.md
+            report_status=0
+            python3 scripts/report_records_media_test.py .build "$status" "$TEST_SHARD" \
+              > .build/records-test-report.md 2>> "$private_log" || report_status=$?
+            if (( status == 0 )); then
+              status=$report_status
             fi
             if [[ -s .build/records-test-report.md ]]; then
               tee -a "$GITHUB_STEP_SUMMARY" < .build/records-test-report.md
