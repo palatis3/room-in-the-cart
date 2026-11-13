@@ -60,14 +60,14 @@ def main():
         # Route UI jobs independently while keeping the fallback for every row.
         m4_slots = {
             'ui-02': 4, 'ui-03': 0, 'ui-06': 1,
-            'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
+            'ui-07': 3, 'ui-08': 3, 'ui-09': 5, 'ui-10': 2,
         }
         # The full UI01 group finished last on two combined builds. Its shorter
         # manual Dinner diagnostic retains its original GitHub runner.
         if scope == 'full':
             m4_slots['ui-01'] = 0
-        # UI07 uses its original GitHub slot 2. On three full runs that slot
-        # cleared before UI07 could follow UI10 on the shared M4 runner.
+        # M4 slot 3 finished at least 16 minutes before UI07 on three full runs.
+        # External PRs still use the GitHub slot assigned by the core plan.
         consumers = []
         for planned in selected['include']:
             shard = planned['shard']

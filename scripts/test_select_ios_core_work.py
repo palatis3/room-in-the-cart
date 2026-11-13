@@ -120,7 +120,7 @@ class SelectCoreWorkTests(unittest.TestCase):
                 ('ui-01', 'bitrise-m4', 1, 0), ('ui-02', 'bitrise-m4', 2, 4),
                 ('ui-03', 'bitrise-m4', 3, 0), ('ui-04', 'bitrise', 1, None),
                 ('ui-05', 'bitrise', 0, None), ('ui-06', 'bitrise-m4', 1, 1),
-                ('ui-07', 'github', 2, None), ('ui-08', 'bitrise-m4', 3, 3),
+                ('ui-07', 'bitrise-m4', 2, 3), ('ui-08', 'bitrise-m4', 3, 3),
                 ('ui-09', 'bitrise-m4', 3, 5), ('ui-10', 'bitrise-m4', 0, 2),
             ])
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
