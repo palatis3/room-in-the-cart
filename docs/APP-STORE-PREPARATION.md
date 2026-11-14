@@ -26,8 +26,8 @@ The [review draft](APP-STORE-LISTING-DRAFT.json) preserves the supplied English 
 
 | Localization | Name characters | Subtitle characters | Keyword bytes | Promotional characters | Description characters |
 |---|---:|---:|---:|---:|---:|
-| English (US) | 30 | 28 | 95 | 134 | 1334 |
-| Spanish (Mexico) | 25 | 26 | 91 | 146 | 1534 |
+| English (US) | 30 | 28 | 95 | 134 | 1446 |
+| Spanish (Mexico) | 25 | 26 | 91 | 146 | 1652 |
 
 Both drafts fit the current field limits. Review the Spanish wording and confirm that the submitted build supports every shared and paid claim. Support and privacy URLs still need verified publication, and the operator must supply the submission contact and copyright. [Version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information)
 
@@ -88,6 +88,8 @@ Apple's currently retrieved [screenshot specifications](https://developer.apple.
 The November 4 Release simulator run captured both pack results and the saved Records entry in English and US Spanish. The six 1206×2622 opaque JPEGs retain the original composition from iPhone 17. The app's US-Spanish captures are grouped under Spanish (Mexico) for the US storefront. The manifest records the exact build, entered quantities and prices, source captures and output hashes. [English candidates](app-store/screenshots/en-US) · [Spanish candidates](app-store/screenshots/es-MX) · [Capture manifest](app-store/screenshots/manifest.json)
 
 Four additional iPhone 17 candidates show the same dated dinner and separate school-lunch reservation in List and Grid, in both languages. The meal-week manifest records the Release executable, the saved data read after relaunch, the simulator bundle cleanup and the source and output hashes. The final signed build and human language review remain open. [Meal-week capture manifest](app-store/screenshots/meal-week-manifest.json)
+
+For the first US listing test, lead with the whole-pickup preview (frame 2 below). Both descriptions now follow the same cereal request from the family member who sends it to the shopper who prices and defers it. The bilingual browser walkthrough verified that the contributor could reload the decision and still see it in their own request history. The existing native shopper captures show the $40.69 preview against a $38 cap. [English shopper screen](app-store/screenshots/en-US/07-whole-pickup-preview.jpg) · [Spanish shopper screen](app-store/screenshots/es-MX/07-whole-pickup-preview.jpg)
 
 All six planned scenes now have English and US Spanish captures from the ordinary iPhone app with fictional data. Compare these with the signed release build before submission. The optional Household scene still needs a real storefront offer.
 
