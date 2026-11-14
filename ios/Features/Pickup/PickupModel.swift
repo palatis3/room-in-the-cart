@@ -866,7 +866,7 @@ struct PickupPersistenceLocation {
         guard ready, var value = journey, !saving, pending == nil else { return false }
         do {
             guard value.pickup != nil else { throw PickupModelError.invalid }
-            guard try value.settlement.append(entry) else {
+            guard try value.settlement.appendReviewed(entry) else {
                 // Another window or Records can change or erase the pickup after this model loads.
                 saving = true
                 defer { saving = false }
@@ -883,6 +883,9 @@ struct PickupPersistenceLocation {
                 return false
             }
             return await save(value)
+        } catch PickupError.replayConflict {
+            error = pTr("This evidence ID matches an existing record. Review the saved entry and its date before trying again.")
+            return false
         } catch {
             self.error = pTr("Check the amounts and units. Your saved pickup has not changed.")
             return false

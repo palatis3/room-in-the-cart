@@ -415,6 +415,26 @@ public struct SettlementLedger: Codable, Equatable, Sendable {
         }
     }
 
+    /// Match typed or pasted identifiers to historical evidence without rewriting stored records.
+    /// Charge and hold links come from a picker and already identify an exact saved entry.
+    @discardableResult
+    public mutating func appendReviewed(_ entry: SettlementEntry) throws -> Bool {
+        func reviewedKey(_ input: String, existing: Set<String>) throws -> String {
+            let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { throw PickupError.invalidEvidence }
+            if existing.contains(input) { return input }
+            let matches = existing.filter { $0.trimmingCharacters(in: .whitespacesAndNewlines) == trimmed }
+            guard matches.count <= 1 else { throw PickupError.replayConflict }
+            return matches.first ?? trimmed
+        }
+
+        let key = try reviewedKey(entry.evidenceKey, existing: Set(entries.map(\.evidenceKey)))
+        let credit = try entry.creditID.map { try reviewedKey($0, existing: Set(entries.compactMap(\.creditID))) }
+        return try append(SettlementEntry(id: entry.id, evidenceKey: key, kind: entry.kind, amount: entry.amount,
+                                          occurredAt: entry.occurredAt, creditID: credit,
+                                          chargeEvidenceKey: entry.chargeEvidenceKey, holdEvidenceKey: entry.holdEvidenceKey))
+    }
+
     @discardableResult
     public mutating func append(_ entry: SettlementEntry) throws -> Bool {
         if let old = entries.first(where: { $0.id == entry.id }) {

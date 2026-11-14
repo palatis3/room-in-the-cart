@@ -215,6 +215,32 @@ final class PickupTests: XCTestCase {
         XCTAssertThrowsError(try ledger.append(entry("credit", .postedCredit, 10, credit: "refund", charge: "unknown-charge")))
     }
 
+    func testReviewedReceiptAndCreditIdentifiersSurvivePasteAndLegacySpacing() throws {
+        var saved = SettlementLedger()
+        try saved.append(entry(" receipt-1 ", .postedCharge, 500))
+        try saved.append(entry("pending", .pendingCredit, 100, credit: " refund ", charge: " receipt-1 "))
+        var ledger = try JSONDecoder().decode(SettlementLedger.self, from: JSONEncoder().encode(saved))
+
+        XCTAssertFalse(try ledger.appendReviewed(entry("receipt-1", .postedCharge, 500)))
+        XCTAssertThrowsError(try ledger.appendReviewed(entry("receipt-1", .postedCharge, 501)))
+        XCTAssertTrue(try ledger.appendReviewed(entry(" posted ", .postedCredit, 100, credit: "refund", charge: " receipt-1 ")))
+        XCTAssertEqual(ledger.entries.last?.evidenceKey, "posted")
+        XCTAssertEqual(ledger.entries.last?.creditID, " refund ")
+        XCTAssertEqual(try ledger.summary().pendingCredits, .zero)
+        XCTAssertEqual(try ledger.summary().paidSoFar.minorUnits, 400)
+        XCTAssertThrowsError(try ledger.appendReviewed(entry("posted-again", .postedCredit, 100, credit: "refund ", charge: " receipt-1 ")))
+        XCTAssertThrowsError(try ledger.appendReviewed(entry("credit-2", .pendingCredit, 50, credit: "   ", charge: " receipt-1 ")))
+        XCTAssertTrue(try ledger.appendReviewed(entry(" receipt 2 ", .postedCharge, 500)))
+        XCTAssertFalse(try ledger.appendReviewed(entry("receipt 2", .postedCharge, 500)))
+        XCTAssertEqual(try ledger.summary().paidSoFar.minorUnits, 900)
+        XCTAssertEqual(Array(ledger.entries.prefix(2)), saved.entries)
+
+        var ambiguous = saved
+        try ambiguous.append(entry("receipt-1 ", .postedCharge, 700))
+        XCTAssertThrowsError(try ambiguous.appendReviewed(entry("receipt-1", .postedCharge, 500)))
+        XCTAssertEqual(try ambiguous.summary().paidSoFar.minorUnits, 1200)
+    }
+
     func testPaymentHoldAndItsReleaseNeverEnterPaidCash() throws {
         var ledger = SettlementLedger()
         try ledger.append(entry("hold", .paymentHold, 8600))

@@ -4844,6 +4844,23 @@
         }
       }
     },
+    "This evidence ID matches an existing record. Review the saved entry and its date before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This evidence ID matches an existing record. Review the saved entry and its date before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este identificador coincide con un registro existente. Revisa el registro guardado y su fecha antes de volver a intentarlo."
+          }
+        }
+      }
+    },
     "Unique receipt or transaction evidence ID": {
       "extractionState": "manual",
       "localizations": {
