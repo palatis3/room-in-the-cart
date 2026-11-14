@@ -14,6 +14,30 @@ import CoreDomain
         return shop
     }
 
+    func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        await model.open()
+        let started = await model.startShop(title: "Saturday")
+        XCTAssertTrue(started)
+        let first = try XCTUnwrap(model.shop?.id)
+        model.search = "beans"
+        await model.selectShop(first)
+        let edited = await model.editShop(key: "add-beans", shopID: first) {
+            _ = try $0.addManualLine(name: "beans", quantity: nil)
+        }
+        XCTAssertTrue(edited)
+        XCTAssertEqual(model.search, "beans")
+        let next = await model.startShop(title: "Sunday")
+        XCTAssertTrue(next)
+        XCTAssertEqual(model.search, "")
+        model.search = "tomatoes"
+        await model.selectShop(first)
+        XCTAssertEqual(model.search, "")
+        XCTAssertEqual(model.shop?.search(model.search).map(\.name), ["beans"])
+    }
+
     func testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch() throws {
         var a = try populated("Market A")
         let b = try populated("Market A"), other = try populated("Market B")

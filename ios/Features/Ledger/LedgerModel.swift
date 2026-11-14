@@ -82,7 +82,13 @@ private enum LedgerDeletionJournal {
 /// UI drafts remain in their sheets. A candidate becomes visible only after the
 /// store commits it; the receipt's exact bytes and operation ID survive retries.
 @MainActor final class LedgerModel: ObservableObject {
-    @Published private(set) var workspace = LedgerWorkspace()
+    @Published private(set) var workspace = LedgerWorkspace() {
+        didSet {
+            if workspace.selectedShopID != oldValue.selectedShopID && !search.isEmpty {
+                search = ""
+            }
+        }
+    }
     @Published private(set) var savedAt: Date?
     @Published private(set) var saving = false
     @Published private(set) var opening = false
