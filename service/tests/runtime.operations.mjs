@@ -104,6 +104,58 @@ test('deployed runtime role gate rejects application, administrator and combined
  }
  await assert.rejects(()=>app.query('SELECT * FROM ritc.operations_health()'),error=>error.code==='42501');
 });
+test('only validated scheduled runs signal the independent monitor, without household data', async (t) => {
+ const healthyPing = 'https://monitor.fixture.invalid/healthy/secret';
+ const failedPing = 'https://monitor.fixture.invalid/problem/secret';
+ const env = {...environment, OPERATIONS_HEARTBEAT_URL: healthyPing, OPERATIONS_HEARTBEAT_FAILURE_URL: failedPing};
+ const seen = [];
+ const requests = [];
+ const previousFetch = globalThis.fetch;
+ let monitorStatus = 204;
+ t.mock.method(globalThis, 'fetch', async (input, init) => {
+  if (![healthyPing, failedPing].includes(String(input))) return previousFetch(input, init);
+  seen.push(String(input));
+  requests.push(init);
+  return new Response(null, {status: monitorStatus});
+ });
+ const warn = t.mock.method(console, 'warn', () => {});
+ const scheduled = {headers: {Authorization: 'Bearer ' + secret, 'User-Agent': 'vercel-cron/1.0'}};
+ const server = await start(env);
+ assert.equal((await call(server, '/internal/maintenance', {headers: {'User-Agent': 'vercel-cron/1.0'}})).status, 401);
+ assert.equal((await call(server)).status, 200);
+ assert.deepEqual(seen, []);
+ const healthy = await call(server, '/internal/maintenance', scheduled);
+ assert.equal(healthy.status, 200);
+ assert.equal(healthy.value.attentionRequired, false);
+ assert.deepEqual(seen, [healthyPing]);
+ assert.equal(warn.mock.calls.length, 0);
+
+ monitorStatus = 503;
+ assert.equal((await call(server, '/internal/maintenance', scheduled)).status, 200);
+ assert.deepEqual(JSON.parse(warn.mock.calls.at(-1).arguments[0]), {event: 'operations_heartbeat_unconfirmed'});
+ monitorStatus = 204;
+
+ const brokenWorker = await start({...env, WORKER_DATABASE_URL: env.DATABASE_URL});
+ assert.equal((await call(brokenWorker, '/internal/maintenance', scheduled)).status, 503);
+ const pending = await fixture({expired: true, accessExpired: true});
+ const attention = await call(server, '/internal/maintenance', scheduled);
+ assert.equal(attention.status, 200);
+ assert.equal(attention.value.attentionRequired, true);
+ assert.deepEqual(seen, [healthyPing, healthyPing, failedPing, failedPing]);
+ const duplicate = await start({...env, WORKER_DATABASE_URL: env.DATABASE_URL, OPERATIONS_HEARTBEAT_FAILURE_URL: healthyPing});
+ assert.equal((await call(duplicate, '/internal/maintenance', scheduled)).status, 503);
+ assert.equal(seen.length, 4);
+ assert.deepEqual(JSON.parse(warn.mock.calls.at(-1).arguments[0]), {event: 'operations_heartbeat_unconfirmed'});
+ for (const init of requests) {
+  assert.equal(init.method, 'POST');
+  assert.equal(init.body, undefined);
+  assert.equal(init.headers, undefined);
+  assert.equal(init.redirect, 'error');
+  assert.ok(init.signal instanceof AbortSignal);
+ }
+ await admin.query('DELETE FROM ritc.browser_auth WHERE token_hash=$1', [pending.hash]);
+});
+
 test('disabled email deployment with public provider metadata still runs housekeeping without an encryption key',async(t)=>{
  const info=t.mock.method(console,'info',()=>{});
  const {BFF_TOKEN_ENCRYPTION_KEY,...publicEnvironment}=environment;
