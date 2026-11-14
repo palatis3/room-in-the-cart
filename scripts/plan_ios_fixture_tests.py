@@ -158,7 +158,7 @@ def shard_members(profile, inventory):
     return groups
 
 
-def matrix(inventory=None):
+def matrix(inventory=None, *, github_mac_only=False):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
     rows = [{"profile": profile, "shard": shard}
             for profile in PROFILES for shard in shard_members(profile, inventory)]
@@ -199,12 +199,21 @@ def matrix(inventory=None):
         "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": 4,
         "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 5,
     }
+    # On the GitHub-only fallback, slot 2 also runs billing and UI07.
+    # Use the capacity observed on slots 3 and 4 in run 43596663919.
+    outage_slots = {
+        "contributor-balanced-05": 4,
+        "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 3,
+        "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 3,
+        "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 4,
+    }
     for index, row in enumerate(rows):
         lane = lane_overrides.get(row["shard"], index % 8)
         row.update(provider="github" if lane < 5 else "bitrise",
                    macos_slot=lane if lane < 5 else lane - 5)
-        # Keep the original GitHub slot for untrusted/noncanonical events.
-        if row["shard"] in m4_slots:
+        if github_mac_only:
+            row.update(provider="github", macos_slot=outage_slots.get(row["shard"], row["macos_slot"]))
+        elif row["shard"] in m4_slots:
             row.update(provider="bitrise-m4", m4_slot=m4_slots[row["shard"]])
     return {"include": rows}
 

@@ -49,6 +49,7 @@ jobs:
       - name: Validate fixture coverage and balanced contributor groups
         id: plan
         env:
+          RITC_GITHUB_MAC_ONLY: ${{ vars.RITC_GITHUB_MAC_ONLY }}
           REQUESTED_FIXTURE_SHARD: ${{ github.event_name == 'workflow_dispatch' && inputs.shard || '' }}
         run: |
           python3 scripts/test_ui_automation_contract.py
