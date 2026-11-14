@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import HouseholdClient
 
 struct HouseholdSettingsView: View {
@@ -143,10 +144,10 @@ struct HouseholdSettingsView: View {
                                 Toggle(ht("Ask for next shop"), isOn: $model.forNextShop)
                             }
                             Button(ht("Review request before sending")) {
-                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: false) }
+                                openRequestReview(capture: false)
                             }.disabled(!canSend).accessibilityIdentifier("household.request.review")
                             Button(ht("Capture and review a request")) {
-                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: true) }
+                                openRequestReview(capture: true)
                             }.disabled(model.contributorRequestScope == nil).accessibilityIdentifier("household.request.capture")
                             delivery
                         }
@@ -207,6 +208,11 @@ struct HouseholdSettingsView: View {
             NavigationStack { ContributorRequestCaptureView(household: model, scope: selected.scope, capture: selected.capture) }
         }
         .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
+    }
+    private func openRequestReview(capture: Bool) {
+        // Finish the draft field's editing callbacks before presenting its review.
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: capture) }
     }
     private var canSend: Bool {
         guard !model.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }

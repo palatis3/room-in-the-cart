@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import HouseholdClient
 
 private struct GuardianChildCoordinatorKey: EnvironmentKey {
@@ -183,6 +184,7 @@ struct GuardianChildRequestsView: View {
                         Toggle(ht("Ask for next shop"), isOn: $household.forNextShop)
                     }
                     Button(ht("Review request before sending")) {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         if let scope = household.contributorRequestScope {
                             let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
                             review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))

@@ -50,11 +50,8 @@ import SwiftUI
                             }
                         } }.disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
                         if let failure { Text(failure).accessibilityIdentifier("household.request.reviewError") }
-                        if sending {
-                            Text(ht("Waiting for the household to confirm receipt"))
-                        } else {
-                            Text(ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
-                        }
+                        Text(sending ? ht("Waiting for the household to confirm receipt")
+                                     : ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
                     }
                 }.navigationTitle(ht("Review your request"))
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(sending) } }
