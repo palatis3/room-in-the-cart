@@ -58,6 +58,15 @@ The on-disk recovered record, receipt and payload matched the pre-update
 values. See `.build/RecipeUpdate8f79Nov14/updated-strict.log` and
 `registry-verified.txt` in the same directory.
 
+On iOS 17.0 and 26.2, the reviewed request stayed open while a fictional service
+held its receipt. The sheet showed the waiting status, blocked Cancel and resisted
+a downward drag. Each run recorded one request. The child pickup journey also
+cancelled a withdrawal, checked the original request, then explicitly withdrew it.
+Both cases passed on each simulator with zero runtime warnings. On iOS 17,
+finishing text entry before opening review resolved a warning from disabling an
+active text field. See `.build/ContributorSendReceiptNov14/alert-17/ui-strict.log`
+and `.build/ContributorSendReceiptNov14/alert-26/ui-strict.log`.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,

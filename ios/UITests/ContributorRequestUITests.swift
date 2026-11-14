@@ -76,10 +76,10 @@ import XCTest
 
         let withdraw = app.buttons["household.withdrawRequest"]
         tap(withdraw)
-        let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d", "Withdraw this request?", XCUIElement.ElementType.staticText.rawValue)).firstMatch
+        let dialog = app.alerts["Withdraw this request?"]
         XCTAssertTrue(dialog.staticTexts["Withdraw this request?"].waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(dialog.staticTexts["Tortillas"].exists)
-        app.buttons["Cancel"].tap()
+        dialog.buttons["Cancel"].tap()
         XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
 
         tap(withdraw)

@@ -283,9 +283,9 @@ struct ContributorWithdrawalButton: View {
             .accessibilityIdentifier("household.withdrawRequest")
             .buttonStyle(.borderless)
             .disabled(model.busy)
-            .confirmationDialog(ht("Withdraw this request?"), isPresented: Binding(
+            .alert(ht("Withdraw this request?"), isPresented: Binding(
                 get: { reviewed != nil }, set: { if !$0 { reviewed = nil } }
-            ), titleVisibility: .visible, presenting: reviewed) { original in
+            ), presenting: reviewed) { original in
                 Button(ht("Withdraw request"), role: .destructive) {
                     Task { await model.withdraw(original) }
                 }
