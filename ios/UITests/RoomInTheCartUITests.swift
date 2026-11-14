@@ -291,7 +291,7 @@ final class RoomInTheCartUITests: XCTestCase {
         captureComparisonFrames("Largest-text-Edit")
         screenshot("Largest-text-Edit-fully-visible")
         edit.tap()
-        let name = app.textFields["itemName"]
+        let name = comparisonInput("itemName")
         reveal(name)
         XCTAssertEqual(name.value as? String, "Accessible edit wraps")
         compare()
