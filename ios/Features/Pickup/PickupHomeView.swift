@@ -654,6 +654,7 @@ struct PickupHandoffView: View {
     @State private var selectedLanguage: String?
     @State private var sharing: RetailerShare?
     @State private var retailerURL = ""
+    @State private var retailerOpenError: String?
 
     private struct RetailerShare: Identifiable {
         let snapshot: HandoffSnapshot
@@ -690,6 +691,13 @@ struct PickupHandoffView: View {
             PickupActivitySheet(text: share.text) { completed, destination in
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: share.snapshot, destination: destination) }
             }
+        }
+        .alert(pTr("Retailer handoff"), isPresented: Binding(
+            get: { retailerOpenError != nil }, set: { if !$0 { retailerOpenError = nil } }
+        )) {
+            Button(pTr("Done"), role: .cancel) {}
+        } message: {
+            Text(retailerOpenError ?? "")
         }
     }
 
@@ -730,11 +738,11 @@ struct PickupHandoffView: View {
             Button(pTr("Open retailer website")) { Task {
                 guard access.unlocked, model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                 guard let url = Self.retailerWebsite(retailerURL) else {
-                    model.error = pTr("Enter a valid https retailer address.")
+                    retailerOpenError = pTr("Enter a valid https retailer address.")
                     return
                 }
                 if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, snapshot: snapshot, destination: url.host) }
-                else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
+                else { retailerOpenError = pTr("Could not open the retailer. Placement remains unconfirmed.") }
             } }.disabled(!model.hasCurrentBasketStockBasis)
             Button(pTr("Still checking out")) { dismiss() }
             Button(pTr("I placed this order")) { Task {

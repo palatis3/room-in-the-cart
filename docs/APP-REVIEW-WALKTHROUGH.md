@@ -53,6 +53,8 @@ The iOS 17.0 iPhone SE simulator also updated an existing Release installation t
 
 The pre-release simulator check also exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
 
+On iOS 17, installing the `6d112f80` Release simulator build over the previous app preserved all nine stored revisions of a frozen pickup byte for byte. In Spanish, Luis’s earlier acknowledgment remained visible. Recording a send to Ana left her acknowledgment unknown, kept the original food restrictions and created zero order placements. See `.build/RetailerUpgrade6d11Nov14/verification.txt`. The signed distribution update remains open.
+
 ## Connected review, after the real environment is configured
 
 Run these steps with the submitted build and the isolated review household. The current repository's disabled email-provider or child-consent states are intentional availability states, not working substitutes for the following setup.
