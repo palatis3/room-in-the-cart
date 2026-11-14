@@ -57,6 +57,15 @@ public actor HouseholdService {
               bootstrap.grantId == selectedGrantID else { throw ClientError.accessEnded }
         return enrollment.deviceId
     }
+    /// The overview can show the household's sole open shop without putting a shop header on requests.
+    public func pendingOwnRequest(in operations: [PendingOperation], bootstrap: HouseholdBootstrap) -> PendingOperation? {
+        guard let householdID, bootstrap.household.id == householdID, bootstrap.memberId == memberID,
+              selectedGrantID == nil, bootstrap.capabilities.contains("own_requests") else { return nil }
+        return operations.first { operation in
+            operation.householdID == householdID && operation.memberID == bootstrap.memberId &&
+                operation.targetsShop(selectedShopID?.uuidString)
+        }
+    }
     public func matches(_ operation: PendingOperation, memberID: String) -> Bool {
         operation.householdID == householdID && operation.memberID == memberID && operation.deviceID == enrollment?.deviceId
     }

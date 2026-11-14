@@ -202,7 +202,9 @@ struct DeviceReminderPersona: Equatable {
             try await clearExpiredQueuedRequests(value)
             let old = try await outbox.operations()
             guard start == generation else { return }
-            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && (guardianChildOnly || $0.targetsShop(value.shopId)) }) {
+            let restoredRequest = await service.pendingOwnRequest(in: old, bootstrap: value)
+            guard start == generation else { return }
+            if let operation = restoredRequest {
                 pending = operation
                 let matches = await service.matches(operation, memberID: value.memberId)
                 guard start == generation else { return }
@@ -307,13 +309,26 @@ struct DeviceReminderPersona: Equatable {
     }
     private func refreshRequestPickups(_ service: HouseholdService, start: UUID) async throws {
         guard requiresRequestPickupChoice else { clearRequestPickups(); return }
-        let page = try await service.requestPickups()
+        var page = try await service.requestPickups()
         guard start == generation else { throw ClientError.cancelled }
-        if let id = selectedRequestPickupID, !page.shops.contains(where: { $0.shopId == id }) {
-            selectedRequestPickupID = nil
-            contributorEnrollmentRevision = UUID()
+        var pickups = page.shops
+        if let selected = selectedRequestPickupID {
+            var seen = Set(pickups.map(\.id))
+            while !seen.contains(selected), let cursor = page.nextCursor {
+                page = try await service.requestPickups(cursor: cursor)
+                guard start == generation else { throw ClientError.cancelled }
+                for pickup in page.shops {
+                    guard seen.insert(pickup.id).inserted else { throw ClientError.invalidResponse }
+                    pickups.append(pickup)
+                }
+            }
+            if !seen.contains(selected) {
+                selectedRequestPickupID = nil
+                contributorEnrollmentRevision = UUID()
+            }
         }
-        requestPickups = page.shops; nextRequestPickupCursor = page.nextCursor
+        requestPickups = pickups
+        nextRequestPickupCursor = page.nextCursor
     }
     func loadMoreRequestPickups() async {
         guard requiresRequestPickupChoice, let cursor = nextRequestPickupCursor, let service, !busy, !locked else { return }

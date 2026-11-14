@@ -114,6 +114,32 @@ import DeviceSurfaces
         model.lock()
         XCTAssertTrue(model.requestPickups.isEmpty)
     }
+    func testRefreshingPreservesAnOpenPickupSelectedOnALaterPage() async throws {
+        let fixture = ContributorCaptureFixture(), queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let first = UUID(), chosen = UUID(), last = UUID()
+        fixture.childPickups = [first, chosen, last]
+        fixture.childPickupPageSize = 1
+        let model = try await model(fixture, queue: queue, child: true)
+        await model.loadMoreRequestPickups()
+        model.selectRequestPickup(chosen)
+        model.item = "Rice"
+        let reviewed = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+
+        await model.refresh()
+        XCTAssertEqual(model.selectedRequestPickupID, chosen)
+        XCTAssertEqual(model.contributorRequestScope, reviewed.scope)
+        XCTAssertEqual(model.nextRequestPickupCursor, chosen)
+        XCTAssertEqual(model.requestPickups.map(\.id), [first, chosen])
+        XCTAssertTrue(model.requestRequiresNextShop)
+
+        fixture.childPickups = [first, last]
+        await model.refresh()
+        XCTAssertNil(model.selectedRequestPickupID)
+        XCTAssertEqual(model.item, "Rice")
+        await model.sendRequest(reviewed: reviewed, approved: true)
+        XCTAssertTrue(fixture.commands.isEmpty)
+    }
     func testChildKeepsUnsentWordingWhenOnlyOnePickupRemains() async throws {
         let fixture = ContributorCaptureFixture(), queue = location()
         defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
@@ -153,6 +179,38 @@ import DeviceSurfaces
         await restored.retry()
         guard case .received = restored.delivery else { return XCTFail("Missing original receipt") }
         XCTAssertEqual(fixture.commands, [sent, sent])
+        XCTAssertEqual(fixture.rows.count, 1)
+    }
+    func testAdultRecoversOriginalReceiptAfterTheDefaultPickupChanges() async throws {
+        let fixture = ContributorCaptureFixture(), queue = location(), vault = ContributorCaptureVault()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        fixture.offersQueuePermission = true
+        fixture.queueGrant = UUID()
+        let original = try await model(fixture, queue: queue, deviceVault: vault)
+        original.item = "Rice"
+        fixture.loseReply = true
+        await original.sendRequest()
+        let first = try XCTUnwrap(fixture.commands.first)
+        let former = fixture.shop
+        fixture.shop = UUID().uuidString.lowercased()
+
+        let otherPickup = try XCTUnwrap(UUID(uuidString: fixture.shop))
+        let service = try XCTUnwrap(original.service)
+        _ = try await service.selectShop(otherPickup)
+        let scoped = try await model(fixture, queue: queue, deviceVault: vault)
+        guard case .localDraft = scoped.delivery else { return XCTFail("An explicitly selected shop must only recover its own retry") }
+        await scoped.retry()
+        XCTAssertEqual(fixture.commands, [first])
+
+        let scopedService = try XCTUnwrap(scoped.service)
+        _ = try await scopedService.selectShop(nil)
+        let restored = try await model(fixture, queue: queue, deviceVault: vault)
+        XCTAssertEqual(restored.projection?.shopId, fixture.shop)
+        guard case .waiting = restored.delivery else { return XCTFail("The original receipt must be recoverable from the overview") }
+        await restored.retry()
+        guard case .received(let receipt) = restored.delivery else { return XCTFail("Missing the original receipt") }
+        XCTAssertEqual(receipt.request.shopId, former)
+        XCTAssertEqual(fixture.commands, [first, first])
         XCTAssertEqual(fixture.rows.count, 1)
     }
     func testOversizedMultipleAndWrongDestinationStopWithoutTruncation() async throws {
@@ -715,8 +773,10 @@ import DeviceSurfaces
 
 private final class ContributorCaptureFixture: @unchecked Sendable {
     enum WindowFailure { case offline, revoked }
-    let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
+    let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased()
+    var shop = UUID().uuidString.lowercased()
     let windowID = UUID().uuidString.lowercased()
+    var childPickupPageSize = 50
     var childPickups: [UUID]?
     let childSessionID = UUID().uuidString, childDeviceID = UUID().uuidString
     let childDeviceToken = Data(repeating: 1, count: 32).base64EncodedString().replacingOccurrences(of: "=", with: "")
@@ -773,7 +833,11 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             let shops: [[String: Any]] = childPickups.enumerated().map { index, id in
                 ["shopId":id.uuidString.lowercased(), "createdAt":"2026-11-03T00:00:00.000Z", "nextShopOnly":index == 1]
             }
-            return try response(["shops":shops,"nextCursor":NSNull()])
+            let cursor = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "cursor" }?.value
+            let start = cursor.flatMap { UUID(uuidString: $0) }.flatMap { childPickups.firstIndex(of: $0) }.map { $0 + 1 } ?? 0
+            let end = min(start + childPickupPageSize, shops.count)
+            return try response(["shops": Array(shops[start..<end]),
+                                 "nextCursor": end < shops.count ? childPickups[end - 1].uuidString.lowercased() as Any : NSNull()])
         }
         if path.hasSuffix("/requests/mine") {
             if failRequestRead { throw URLError(.notConnectedToInternet) }

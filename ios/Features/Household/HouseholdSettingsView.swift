@@ -150,6 +150,12 @@ struct HouseholdSettingsView: View {
                             }.disabled(model.contributorRequestScope == nil).accessibilityIdentifier("household.request.capture")
                             delivery
                         }
+                    } else if projection.capabilities.contains("own_requests") {
+                        switch model.delivery {
+                        case .waiting, .needsReview, .received:
+                            Section(ht("My requests")) { delivery }
+                        default: EmptyView()
+                        }
                     }
                 } else {
                     Section(ht("Choose household")) {

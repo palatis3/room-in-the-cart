@@ -59,6 +59,7 @@ import XCTest
         let secondPickup = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "22222222")).firstMatch
         XCTAssertTrue(secondPickup.waitForExistence(timeout: 8), app.debugDescription)
         secondPickup.tap()
+        tap(app.buttons["guardian.childRequestsRefresh"])
         tap(review)
         XCTAssertTrue(app.navigationBars["Review your request"].waitForExistence(timeout: 10))
         let reviewedPickup = element("guardian.childReviewedPickup")
