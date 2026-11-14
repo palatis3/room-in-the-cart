@@ -449,11 +449,19 @@ export class WebApp {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;
     if(id==='item')input.required=true;input.addEventListener('input',()=>{update(input.value);if(id==='item'||id==='amount')this.retryCommand=null;});form.append(label,input);
   }
+  private usesProtectedPickup(session:Session):boolean {
+    if(this.draft.editing || !session.nextShopOnly || !session.shopId)return false;
+    const source=this.draft.followup && this.requests.find(row=>row.requestId===this.draft.followup);
+    return !this.draft.followup || (!!source && source.shopId===session.shopId);
+  }
   private renderContributor(main:HTMLElement):void {
+    const protectedPickup=this.usesProtectedPickup(this.session!);
+    const routeForReview=this.retryCommand?.kind==='request.send'?this.retryCommand.body.route:
+      protectedPickup?'next':this.draft.route;
     main.append(this.el('h1',this.t('Ask the shopper')));
     const form=this.el('form');form.className='card';
     if(this.review) {
-      form.append(this.el('h2',this.t('Review before sending')),this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(this.draft.route==='next'?'Next shop':'This pickup')));
+      form.append(this.el('h2',this.t('Review before sending')),this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(routeForReview==='next'?'Next shop':'This pickup')));
       const back=this.button('Back to edit',()=>{this.review=false;this.render();});back.disabled=this.busy||this.uncertainSend;form.append(back);
       const submit=this.button(this.draft.editing?'Save changes':'Send request',()=>{},true);submit.type='submit';form.append(submit);
       form.addEventListener('submit',e=>{e.preventDefault();void this.run(()=>this.send());});
@@ -461,11 +469,11 @@ export class WebApp {
       this.field(form,'Item','item',this.draft.item,v=>{this.draft.item=v;},true);
       form.append(this.el('p',this.t('Keep the food name and any restrictions as written.')));
       this.field(form,'Amount or pack count (optional)','amount',this.draft.amount,v=>{this.draft.amount=v;});
-      const label=this.el('label',this.t('Intended trip'));label.htmlFor='route';const route=this.el('select');route.id='route';route.disabled=this.draft.editing!==null;
-      for(const [v,k] of [['current','This pickup'],['next','Next shop']]){const option=this.el('option',this.t(k!));option.value=v!;option.selected=v===this.draft.route;route.append(option);}
+      const label=this.el('label',this.t('Intended trip'));label.htmlFor='route';const route=this.el('select');route.id='route';route.disabled=this.draft.editing!==null||protectedPickup;
+      for(const [v,k] of [['current','This pickup'],['next','Next shop']]){const option=this.el('option',this.t(k!));option.value=v!;option.selected=v===routeForReview;route.append(option);}
       route.addEventListener('change',()=>{this.draft.route=route.value as 'current'|'next';this.retryCommand=null;});form.append(label,route);
       const review=this.button('Review request',()=>{},true);review.type='submit';form.append(review);
-      form.addEventListener('submit',e=>{e.preventDefault();if(!this.draft.item.trim())return;this.review=true;this.render();});
+      form.addEventListener('submit',e=>{e.preventDefault();if(!this.draft.item.trim())return;if(protectedPickup)this.draft.route='next';this.review=true;this.render();});
     }
     if(this.session!.enrolled&&this.session!.canSetRequestQueue) {
       const enabled=this.session!.queueConsent;
@@ -531,6 +539,11 @@ export class WebApp {
       s=cached;
       offlineError=error;
     }
+    if(!this.retryCommand && this.draft.route==='current' && this.usesProtectedPickup(s)){
+      this.draft.route='next';
+      this.notice='This pickup closed to new requests. Review the next-shop destination before sending.';
+      return;
+    }
     if(!this.retryCommand)this.retryCommand=this.draft.editing?
       this.makeCommand('request.edit',{requestId:this.draft.editing.requestId,originalItem:this.draft.item,ownQuantity:this.draft.amount||null},this.draft.editing.revision,this.draft.editing.shopId):
       this.makeCommand('request.send',{clientRequestId:crypto.randomUUID(),originalItem:this.draft.item,ownQuantity:this.draft.amount||null,authoredAt:new Date().toISOString(),route:this.draft.route,...(this.draft.followup?{followupTo:this.draft.followup}:{})},undefined,this.requests.find(r=>r.requestId===this.draft.followup)?.shopId??s.shopId??'');
@@ -544,7 +557,8 @@ export class WebApp {
       this.showQueued(p);
       return;
     }
-    try{await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
+    let received:OwnRequest;
+    try{received=await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
@@ -557,10 +571,10 @@ export class WebApp {
       throw error;
     }
     this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
-    await this.finishReceived(p,persisted);
+    await this.finishReceived(p,persisted,received);
   }
-  private async finishReceived(p:Pending,persisted:boolean):Promise<void> {
-    this.notice='Received by the shopper.';
+  private async finishReceived(p:Pending,persisted:boolean,received?:OwnRequest):Promise<void> {
+    this.notice=p.command.kind==='request.send' && received?.route==='next'?'Received for the next shop.':'Received by the shopper.';
     if(persisted) {
       try {
         await this.outbox.remove(p.id);
@@ -583,11 +597,12 @@ export class WebApp {
     const fresh=await this.api.session();
     if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
     if(scopeFor(fresh)!==p.scope||!fresh.queueConsent)throw new ApiError('queue_permission_ended',409);
+    let received:OwnRequest|undefined;
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-      await this.api.command(fresh,p.command,fresh.requestQueueGrant);
+      received=await this.api.command(fresh,p.command,fresh.requestQueueGrant);
     }
-    this.session=fresh;await this.finishReceived(p,true);
+    this.session=fresh;await this.finishReceived(p,true,received);
   }
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;

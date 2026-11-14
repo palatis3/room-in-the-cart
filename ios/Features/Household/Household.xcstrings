@@ -5222,6 +5222,22 @@
         }
       }
     },
+    "Received for the next shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received for the next shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud recibida para la próxima compra."
+          }
+        }
+      }
+    },
     "Received by the household. Local retry cleanup needs another attempt.": {
       "localizations": {
         "en": {

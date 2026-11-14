@@ -299,6 +299,11 @@ struct DeviceReminderPersona: Equatable {
         return .connected(subject: reviewed.subject, householdID: reviewed.householdID, memberID: reviewed.memberID,
                           localeIdentifier: localeIdentifier)
     }
+    var requestRequiresNextShop: Bool {
+        guard editing == nil, let projection, projection.nextShopOnly == true,
+              let shopID = projection.shopId else { return false }
+        return followingUp == nil || followingUp?.shopId == shopID
+    }
     private func currentContributorRequestScope() -> ContributorRequestScope? {
         guard let identity, let projection, let contributorDeviceID, projection.enrolled,
               projection.capabilities.contains("own_requests"), !locked,
@@ -307,7 +312,7 @@ struct DeviceReminderPersona: Equatable {
             householdID: projection.household.id, memberID: projection.memberId, deviceID: contributorDeviceID, role: projection.role,
             grantID: projection.grantId, selectedShopID: projection.shopId, targetShopID: shop,
             capabilities: projection.capabilities.sorted(), editing: editing, followingUp: followingUp,
-            item: item, quantity: quantity, nextShop: forNextShop)
+            item: item, quantity: quantity, nextShop: requestRequiresNextShop || forNextShop)
     }
     private func rememberContributorReplayWindow(_ window: ReplayWindow) {
         let parser = ISO8601DateFormatter()

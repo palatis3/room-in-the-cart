@@ -45,6 +45,26 @@ import DeviceSurfaces
         XCTAssertEqual(Set(envelope.body.keys), ["originalItem", "ownQuantity", "clientRequestId", "authoredAt", "route"])
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testPickupFreezePreservesTextAndRequiresReviewOfTheNextShop() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
+        model.item = "Tortillas"
+        let original = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        XCTAssertFalse(original.scope.nextShop)
+        fixture.nextShopOnly = true
+        await model.refresh()
+        XCTAssertTrue(model.requestRequiresNextShop)
+        await model.sendRequest(reviewed: original, approved: true)
+        XCTAssertTrue(fixture.commands.isEmpty)
+        XCTAssertEqual(model.item, "Tortillas")
+        let current = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        XCTAssertTrue(current.scope.nextShop)
+        await model.sendRequest(reviewed: current, approved: true)
+        XCTAssertEqual(fixture.commands.count, 1)
+        XCTAssertEqual(model.requests.first?.route, "next")
+        guard case .received(let receipt) = model.delivery else { return XCTFail("Missing receipt") }
+        XCTAssertEqual(receipt.contributorDeliveryLabel, ht("Received for the next shop."))
+    }
     func testOversizedMultipleAndWrongDestinationStopWithoutTruncation() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
@@ -536,6 +556,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
     var receiptGrants: [String: UUID] = [:]
+    var nextShopOnly = false
     var loseReply = false, privateReads = 0
     var replayStarted: XCTestExpectation?, replayGate: DispatchSemaphore?
     func respond(_ request: URLRequest) throws -> (Int, Data) {
@@ -558,7 +579,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 revokedBootstrapChecks += 1
                 return try response(["error": ["code": "access_ended"]], 403)
             }
-            var value: [String: Any] = ["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]
+            var value: [String: Any] = ["nextShopOnly":nextShopOnly,"household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]
             if offersQueuePermission { value["canSetRequestQueue"] = true; value["capabilities"] = ["own_requests", "request_queue_permission"] }
             if let queueGrant {
                 value["requestQueueGrant"] = queueGrant.uuidString

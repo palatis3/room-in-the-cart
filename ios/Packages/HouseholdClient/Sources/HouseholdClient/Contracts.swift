@@ -10,6 +10,7 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public let enrolled: Bool
     public let selectionRequired: Bool?
     public let canSelectShop: Bool?
+    public private(set) var nextShopOnly: Bool? = nil
     public private(set) var canSetRequestQueue: Bool? = nil
     public private(set) var requestQueueGrant: UUID? = nil
     public private(set) var requestQueueUntil: String? = nil

@@ -557,10 +557,23 @@ test('new private tables enforce tenant isolation and provider checker cannot le
   assert.equal(security.rows[0].public_execute,false);assert.equal(security.rows[0].prosecdef,true);assert.deepEqual(security.rows[0].proconfig,['search_path=pg_catalog']);
 });
 
+test('contributors see the next-shop destination after freeze and placement without checkout details',async()=>{
+  const f=await fixture();
+  const read=async()=>{const row=await f.http('Alex','GET','/bootstrap');assert.equal(row.status,200);return row.data;};
+  assert.equal((await read()).nextShopOnly,false);
+  assert.equal((await f.command('Mia','shop.freeze',{})).status,200);
+  const frozen=await read();
+  assert.equal(frozen.nextShopOnly,true);assert.equal(frozen.phase,undefined);assert.equal(frozen.quote,undefined);
+  const sent=await f.send('Alex',{route:'current'});
+  assert.equal(sent.request.route,'next');
+  assert.equal((await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1})).status,200);
+  assert.equal((await read()).nextShopOnly,true);
+});
+
 test('a browser switches between cook and contributor invitations for the same household',async()=>{
   const {f,person,actor,grantId}=await helperFixture();
   const cook=await f.http(actor,'POST','/v1/session',{householdId:f.h,grantId});
-  assert.equal(cook.status,200);
+  assert.equal(cook.status,200);assert.equal(cook.data.nextShopOnly,undefined);
   let cookie=cook.headers.get('set-cookie').split(';')[0],csrf=cook.data.csrf;
   async function browser(path,body){
     return fetch(origin+path,{method:body?'POST':'GET',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid','X-CSRF-Token':csrf,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});

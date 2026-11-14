@@ -167,7 +167,11 @@ struct GuardianChildRequestsView: View {
                     if household.editing != nil || household.followingUp != nil { Button(ht("Cancel edit")) { household.cancelEdit() } }
                     TextField(ht("Item"), text: $household.item).accessibilityIdentifier("guardian.childRequestItem")
                     TextField(ht("Quantity, optional"), text: $household.quantity)
-                    if household.editing == nil { Toggle(ht("Ask for next shop"), isOn: $household.forNextShop) }
+                    if household.requestRequiresNextShop {
+                        Text(ht("Request for next shop"))
+                    } else if household.editing == nil {
+                        Toggle(ht("Ask for next shop"), isOn: $household.forNextShop)
+                    }
                     Button(ht("Review request before sending")) {
                         if let scope = household.contributorRequestScope { review = .init(scope: scope) }
                     }.disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -179,7 +183,7 @@ struct GuardianChildRequestsView: View {
                     case .needsReview:
                         Text(ht("Review needed. Check received requests before creating a new request."))
                         Button(ht("I checked received requests; clear this retry")) { Task { await household.discardPendingAfterReview() } }
-                    case .received: Text(ht("Received by the household"))
+                    case .received(let receipt): Text(receipt.contributorDeliveryLabel)
                     case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
                     case .localDraft: Text(ht("Draft on screen. Send to ask the household."))
                     }

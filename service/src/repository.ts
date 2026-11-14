@@ -151,8 +151,8 @@ export class HouseholdRepository {
   }
   async bootstrap(ctx:Context) {
     const house=(await ctx.db.query('SELECT label FROM ritc.household WHERE household_id=$1',[ctx.householdId])).rows[0];
-    const candidates = (await ctx.db.query<{shop_id:string;shopper_id:string;placed_revision:number|null;budget_access:boolean}>(`
-      SELECT s.shop_id,s.shopper_id,s.placed_revision,
+    const candidates = (await ctx.db.query<{shop_id:string;shopper_id:string;phase:string;placed_revision:number|null;budget_access:boolean}>(`
+      SELECT s.shop_id,s.shopper_id,s.phase,s.placed_revision,
         ($5::boolean AND EXISTS(SELECT 1 FROM ritc.shop_budget_grant g
           WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id AND g.member_id=$3
           AND g.enabled AND g.authority_epoch=s.authority_epoch)) AS budget_access
@@ -186,6 +186,7 @@ export class HouseholdRepository {
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!ctx.ownRequestsOnly&&!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
+      ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }

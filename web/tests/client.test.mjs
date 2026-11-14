@@ -33,6 +33,24 @@ test('only a generation and its live expiry authorize storage in a decoded sessi
  await assert.rejects(parse({...base,capabilities:[],requestQueueGrant:grant,requestQueueUntil:until}));
 });
 
+test('a protected pickup shows the next shop before sending and keeps the draft when the destination changes',async()=>{
+ for(const initial of [true,false]){
+  let nextOnly=initial;const sends=[];
+  const api=fakeAPI({session:async()=>({...session(),nextShopOnly:nextOnly}),command:async(_,cmd)=>{sends.push(cmd);return {...own(),route:'next'};}});
+  const {root,dom}=await setup(api);
+  if(initial){assert.equal(root.querySelector('#route').value,'next');assert.ok(root.querySelector('#route').disabled);}
+  type(dom,'item','Tortillas');submit(root,dom);nextOnly=true;
+  if(!initial){
+   submit(root,dom);await waitForIdle(root);
+   assert.equal(sends.length,0);assert.match(root.querySelector('form').textContent,/Next shop/);
+   assert.match(root.querySelector('form').textContent,/Tortillas/);
+  }
+  submit(root,dom);await waitForIdle(root);
+  assert.equal(sends.length,1);assert.equal(sends[0].body.route,'next');
+  assert.match(root.textContent,/Received for the next shop/);dom.window.close();
+ }
+});
+
 test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment', async()=>{
  const current=session(),grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
  const base={household:current.household,memberId:current.memberId,capabilities:['request_queue_permission'],queueConsent:false};

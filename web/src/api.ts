@@ -5,7 +5,7 @@ export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; nextShopOnly?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
@@ -147,6 +147,7 @@ function parseSession(value: unknown): Session | null {
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
     enrolled: boolean(d.enrolled), ...requestQueueState(d),
+    ...(d.nextShopOnly===undefined?{}:{nextShopOnly:boolean(d.nextShopOnly)}),
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
     ...(grantId ? { grantId } : {}) };
 }
@@ -229,7 +230,7 @@ export class API {
     } while (cursor);
     return rows;
   }
-  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<void> {
+  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<OwnRequest> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     validateOwnCommand(command);
     const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant ? {'X-Request-Queue-Grant':requestQueueGrant} : {}));
@@ -237,6 +238,7 @@ export class API {
     const request = ownRequest(receipt.request);
     if (receipt.kind !== command.kind || request.shopId !== command.shopId
         || (command.kind !== 'request.send' && request.requestId !== command.body.requestId)) return invalid();
+    return request;
   }
   async view(session: Session): Promise<CookView> {
     if (!['helper', 'editor'].includes(session.role) || !session.enrolled || !session.grantId || !session.shopId) throw new ApiError('access_ended', 403);
