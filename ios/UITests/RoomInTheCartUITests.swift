@@ -5,7 +5,6 @@ import XCTest
 @MainActor
 final class RoomInTheCartUITests: XCTestCase {
     private var app: XCUIApplication!
-    private var doneIdentifier = "Done"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -199,7 +198,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(source); source.typeText("120.0")
         let target = app.textFields["conversion.target"]
         tap(target); target.typeText("1")
-        dismissComparisonKeyboard(app.buttons["conversion.done"])
+        dismissComparisonKeyboard("conversion.done")
         tap(app.buttons["conversion.confirm"])
         compare()
         assertMoney("aTotal", amount: "5.00")
@@ -536,7 +535,6 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
-        doneIdentifier = language == "es" ? "Listo" : "Done"
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
@@ -656,35 +654,46 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
-    private func dismissComparisonKeyboard(_ done: XCUIElement) {
-        let keyboard = app.keyboards.firstMatch
-        // Synthesized typing can temporarily move Done onto the next keyboard's Backspace key.
+    private func dismissComparisonKeyboard(_ identifier: String) {
+        // Sample the focused button and keyboard together. Separate live queries can
+        // cross a keyboard transition or spend the entire wait resolving one element.
         let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard keyboard.exists, done.exists else { return false }
-            let pad = keyboard.frame, bar = done.frame
-            return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+            guard let root = try? self.app.snapshot() else { return false }
+            var nodes = [root]
+            var keyboard: CGRect?
+            var button: CGRect?
+            while let node = nodes.popLast() {
+                nodes.append(contentsOf: node.children)
+                guard !node.frame.isEmpty, root.frame.intersects(node.frame) else { continue }
+                if node.elementType == .keyboard { keyboard = node.frame }
+                if node.elementType == .button, node.identifier == identifier { button = node.frame }
+            }
+            guard let keyboard, let button else { return false }
+            return button.maxY <= keyboard.minY + 1
         }, object: nil)
-        guard XCTWaiter.wait(for: [visible], timeout: 5) == .completed else {
-            XCTFail("Done must be above the visible comparison keyboard")
+        guard XCTWaiter.wait(for: [visible], timeout: 10) == .completed else {
+            XCTFail("Expected \(identifier) above the visible comparison keyboard")
             return
         }
-        done.tap()
+        app.buttons[identifier].tap()
     }
 
     private func type(_ fields: [(id: String, text: String)]) {
-        let done = app.buttons[doneIdentifier]
-        for (index, entry) in fields.enumerated() {
+        var previousDone: String?
+        for entry in fields {
             let (id, text) = entry
             let field = comparisonInput(id)
             // A partially exposed row can be hittable underneath the keyboard accessory.
-            if index > 0, done.exists,
-               !field.exists || !field.isHittable || field.frame.midY >= done.frame.minY {
-                dismissComparisonKeyboard(done)
+            if let previousDone {
+                let done = app.buttons[previousDone]
+                if done.exists && (!field.exists || !field.isHittable || field.frame.midY >= done.frame.minY) {
+                    dismissComparisonKeyboard(previousDone)
+                }
             }
             focusComparisonInput(field)
             let fieldDone = app.buttons["comparison.done." + id]
             if !fieldDone.exists && !fieldDone.waitForExistence(timeout: 3) {
-                if done.exists { dismissComparisonKeyboard(done) }
+                if let previousDone, app.buttons[previousDone].exists { dismissComparisonKeyboard(previousDone) }
                 focusComparisonInput(field)
                 guard fieldDone.exists || fieldDone.waitForExistence(timeout: 3) else {
                     XCTFail("The comparison field must own keyboard focus before typing: " + id)
@@ -699,8 +708,9 @@ final class RoomInTheCartUITests: XCTestCase {
                 // At accessibility sizes the focused row can scroll out of the snapshot.
                 app.typeText(text)
             }
+            previousDone = "comparison.done." + id
         }
-        dismissComparisonKeyboard(done)
+        if let previousDone { dismissComparisonKeyboard(previousDone) }
         for (id, text) in fields {
             let field = comparisonInput(id)
             // UIKit exposes the value of an offscreen row while it is still in the hierarchy.
