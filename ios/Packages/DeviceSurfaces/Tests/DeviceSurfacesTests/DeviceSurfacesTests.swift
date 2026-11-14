@@ -1,5 +1,6 @@
 import XCTest
 import CryptoKit
+import os
 import UniformTypeIdentifiers
 @testable import DeviceSurfaces
 
@@ -280,12 +281,43 @@ final class DeviceSurfacesTests: XCTestCase {
         let calls = await fake.requestCalls; XCTAssertEqual(calls, 0)
         await fake.setPermission(.denied)
         let denied = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(denied.status, .denied)
-        await fake.setPermission(.authorized); await fake.setFailure(true)
+        await fake.setPermission(.authorized); await fake.setRegistrationError(.unavailable)
         let failed = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(failed.status, .retryNeeded)
-        await fake.setFailure(false); try await coordinator.reconcileAll()
+        await fake.setRegistrationError(nil); try await coordinator.reconcileAll()
         let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
         let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
     }
+    func testPermissionGrantedAfterReminderTimeExpiresWithoutRegistering() async throws {
+        let value = try intent()
+        let store = try ReminderStore(url: file())
+        let scheduler = FakeScheduler()
+        let clock = OSAllocatedUnfairLock(initialState: value.fireAt.addingTimeInterval(-1))
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { clock.withLock { $0 } })
+        await scheduler.onPermissionRequest {
+            clock.withLock { $0 = value.fireAt }
+            return true
+        }
+
+        let saved = try await coordinator.save(value, expectedVersion: nil, requestPermission: true)
+        XCTAssertEqual(saved.status, .expired)
+        let requests = await scheduler.requestCalls
+        let pending = await scheduler.pending
+        XCTAssertEqual(requests, 1)
+        XCTAssertTrue(pending.isEmpty)
+    }
+
+    func testNotificationRegistrationReportingExpiredDoesNotOfferRetry() async throws {
+        let value = try intent(), date = now
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler()
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized)
+        await scheduler.setRegistrationError(.expired)
+        let saved = try await coordinator.save(value, expectedVersion: nil, requestPermission: false)
+        XCTAssertEqual(saved.status, .expired)
+        let pending = await scheduler.pending
+        XCTAssertTrue(pending.isEmpty)
+    }
+
     func testTurnOffFromAnOlderEditorCannotCancelTheReplacementOrRemoveItsNotification() async throws {
         let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
         let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
@@ -320,7 +352,7 @@ final class DeviceSurfacesTests: XCTestCase {
             let saved = try await coordinator.save(original, expectedVersion: nil, requestPermission: false)
             if wasDelivered { await scheduler.deliver(identifier) }
             let replacement = try editedReminder(original)
-            await scheduler.setFailure(true)
+            await scheduler.setRegistrationError(.unavailable)
             let failed = try await coordinator.save(replacement, expectedVersion: saved.version, requestPermission: false)
             XCTAssertEqual(failed.status, .retryNeeded)
             let oldPending = await scheduler.pending[identifier], oldDelivered = await scheduler.delivered[identifier]
@@ -328,15 +360,15 @@ final class DeviceSurfacesTests: XCTestCase {
             XCTAssertNil(oldDelivered, "A delivered notice at the previous time must be withdrawn")
             // Older versions could leave the previous OS request beside retryNeeded.
             let reopened = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
-            await scheduler.setFailure(false)
+            await scheduler.setRegistrationError(nil)
             try await scheduler.add(ReminderNotification(original))
             if wasDelivered { await scheduler.deliver(identifier) }
-            await scheduler.setFailure(true)
+            await scheduler.setRegistrationError(.unavailable)
             try await reopened.reconcileAll()
             let legacyPending = await scheduler.pending[identifier], legacyDelivered = await scheduler.delivered[identifier]
             XCTAssertNil(legacyPending)
             XCTAssertNil(legacyDelivered)
-            await scheduler.setFailure(false)
+            await scheduler.setRegistrationError(nil)
             try await reopened.reconcileAll()
             let retried = try await reopened.current(original.id)
             let pending = await scheduler.pending[identifier], delivered = await scheduler.delivered[identifier]
@@ -535,20 +567,26 @@ actor FakeScheduler: NotificationScheduling {
     var pending: [String: ReminderNotification] = [:]
     var delivered: [String: ReminderNotification] = [:]
     var requestCalls = 0
-    var failure = false
+    var registrationError: SurfaceError?
     var shouldBlock = false
     var entered = false
     var waiter: CheckedContinuation<Void, Never>?
     func permission() -> NotificationPermission { authorization }
-    func requestPermission() -> Bool { requestCalls += 1; return authorization == .authorized }
+    private var permissionResponse: (@Sendable () -> Bool)?
+    func onPermissionRequest(_ response: @escaping @Sendable () -> Bool) { permissionResponse = response }
+    func requestPermission() -> Bool {
+        requestCalls += 1
+        if let permissionResponse { authorization = permissionResponse() ? .authorized : .denied }
+        return authorization == .authorized
+    }
     func setPermission(_ value: NotificationPermission) { authorization = value }
-    func setFailure(_ value: Bool) { failure = value }
+    func setRegistrationError(_ error: SurfaceError?) { registrationError = error }
     func blockNextAdd() { shouldBlock = true }
     func waitUntilAddEntered() async { while !entered { await Task.yield() } }
     func releaseAdd() { waiter?.resume(); waiter = nil }
     func add(_ notification: ReminderNotification) async throws {
         if shouldBlock { shouldBlock = false; entered = true; await withCheckedContinuation { waiter = $0 } }
-        if failure { throw SurfaceError.unavailable }
+        if let registrationError { throw registrationError }
         pending[notification.identifier] = notification
     }
     func deliver(_ id: String) { delivered[id] = pending.removeValue(forKey: id) }
