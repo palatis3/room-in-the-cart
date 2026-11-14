@@ -202,16 +202,17 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
     private func load(_ item: PhotosPickerItem?) {
         photoTask?.cancel()
-        guard let item, !model.closed else { return }
+        guard let item, !model.closed else { loadingPhoto = false; return }
         loadingPhoto = true
         photoTask = Task { @MainActor in
             defer { if photo == item { loadingPhoto = false } }
             do {
-                guard let data = try await item.loadTransferable(type: Data.self) else { throw CaptureFailure.imageUnavailable }
-                guard !Task.isCancelled, photo == item, !model.closed else { return }
-                model.stageImage(data)
+                guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw CaptureFailure.imageUnavailable }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.stageImage(try selected.data)
             } catch {
-                if !Task.isCancelled, !model.closed { model.photoLoadFailed() }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.photoLoadFailed(error as? ScanFailure == .tooLarge ? .inputTooLarge : .imageUnavailable)
             }
         }
     }

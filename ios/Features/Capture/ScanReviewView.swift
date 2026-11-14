@@ -326,7 +326,7 @@ import CoreDomain
             do {
                 guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
                 guard localPhotoConsent, !Task.isCancelled, photo == item, authorize(), !model.closed else { return }
-                model.stage(selected.data)
+                model.stage(try selected.data)
             } catch { if !Task.isCancelled, !model.closed { model.inputFailed(error as? ScanFailure ?? .invalidImage) } }
         }
     }

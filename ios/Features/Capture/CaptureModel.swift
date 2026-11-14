@@ -88,7 +88,7 @@ import Combine
         speech.stop(); task?.cancel(); task = nil
         busy = false; listening = false
     }
-    func photoLoadFailed() { guard !closed else { return }; failure = .imageUnavailable }
+    func photoLoadFailed(_ reason: CaptureFailure) { guard !closed else { return }; failure = reason }
     func acceptCandidate() {
         guard !closed, !busy, let candidate else { return }
         do {
