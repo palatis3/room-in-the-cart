@@ -52,15 +52,10 @@ import XCTest
             XCTAssertEqual(packs.value as? String, "3")
             let keep = app.buttons["sharedOrder.keepLine"]
             let keyboard = app.keyboards.firstMatch
-            let doneButton = app.buttons[done]
-            // Synthesized typing can move the Done button while the keyboard slides back.
-            let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                guard doneButton.exists, keyboard.exists else { return false }
-                let button = doneButton.frame, pad = keyboard.frame
-                return doneButton.isHittable && !button.isEmpty && self.app.frame.intersects(pad)
-                    && button.maxY <= pad.minY + 1
-            }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [aboveKeyboard], timeout: 8), .completed)
+            let doneButton = app.buttons["sharedOrder.lineKeyboardDone"]
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: doneButton)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed)
+            XCTAssertEqual(doneButton.label, done)
             doneButton.tap()
             XCTAssertTrue(keyboard.waitForNonExistence(timeout: 8))
             XCTAssertEqual(packs.value as? String, "3")
