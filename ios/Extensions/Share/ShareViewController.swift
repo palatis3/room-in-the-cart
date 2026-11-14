@@ -63,10 +63,11 @@ final class ShareViewController: UIViewController {
     }
     func save() {
         guard !saving, !loading, !original.isEmpty else { return }
-        let reviewEdit = edited == original ? nil : edited
+        // Canonically equivalent spellings can fall on opposite sides of the UTF-8 limit.
+        let reviewEdit = edited.utf8.elementsEqual(original.utf8) ? nil : edited
         guard SelectedTextInbox.fitsEnvelope(original: original, edited: reviewEdit) else { saveError = sizeMessage; return }
         do {
-            try StagedListImport.validateSourceText(edited, maximumLines: SelectedTextInbox.maximumLines)
+            try StagedListImport.validateSourceText(reviewEdit ?? original, maximumLines: SelectedTextInbox.maximumLines)
         } catch ImportTextLimit.originalLineBytes(let item) {
             let format = SurfaceCopy.text("Shorten item %lld to %lld UTF-8 bytes or less.")
             saveError = String(format: format, locale: Locale.current, Int64(item), Int64(StagedListImport.maximumOriginalLineBytes))
