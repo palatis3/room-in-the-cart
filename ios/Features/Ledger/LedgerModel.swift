@@ -131,7 +131,7 @@ private enum LedgerDeletionJournal {
     }
 
     nonisolated static func validatePayload(_ payload: Data) throws -> LedgerWorkspace {
-        guard payload.count <= 4 * 1_024 * 1_024 else { throw LedgerModelError.unsupportedDocument }
+        guard payload.count <= LedgerStore.maximumPayloadBytes else { throw LedgerModelError.unsupportedDocument }
         let document = try JSONDecoder().decode(LedgerDocument.self, from: payload)
         guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
         // LedgerWorkspace.init(from:) validates all decoded domain evidence.
@@ -211,6 +211,10 @@ private enum LedgerDeletionJournal {
             saving = true
             defer { saving = false }
             let payload = try await Self.encodeForSave(candidate)
+            guard payload.count <= LedgerStore.maximumPayloadBytes else {
+                error = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
+                return false
+            }
             let change = PendingSave(key: key, workspace: candidate, payload: payload, base: revision,
                                      operationID: UUID(), savedAt: clock())
             pending = change

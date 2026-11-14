@@ -86,6 +86,41 @@ import LocalStore
         XCTAssertTrue(model.workspace.mealTemplates.isEmpty)
     }
 
+    func testOversizedSavePreservesCommittedPickupAndAllowsSmallerEdit() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let started = await model.startShop(title: "Original pickup")
+        XCTAssertTrue(started)
+        let original = try model.exportPayload()
+        let revision = model.revision
+
+        // Quotation marks fit the note limit but take two bytes each in JSON.
+        let notes = String(repeating: "\"", count: 8192)
+        let dinners = (1...260).map { MealTemplate(title: "Dinner \($0)", notes: notes) }
+        var candidate = model.workspace
+        candidate.mealTemplates = dinners
+        try candidate.validate()
+        XCTAssertGreaterThan(try payload(candidate).count, LedgerStore.maximumPayloadBytes)
+
+        let oversized = await model.change(key: "dinners") { $0.mealTemplates = dinners }
+        XCTAssertFalse(oversized)
+        XCTAssertFalse(model.hasPendingSave)
+        XCTAssertEqual(model.error, ledgerText("This change is too large to save. Reduce the amount of data and try again."))
+        XCTAssertEqual(model.revision, revision)
+        XCTAssertEqual(try model.exportPayload(), original)
+
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertEqual(try reopened.exportPayload(), original)
+        let smaller = await model.change(key: "dinners") { $0.mealTemplates = [dinners[0]] }
+        XCTAssertTrue(smaller)
+        XCTAssertEqual(model.workspace.mealTemplates, [dinners[0]])
+        XCTAssertEqual(model.revision, revision + 1)
+    }
+
     func testCommittedCandidateMatchesDurableBytesAndReopenedWorkspace() async throws {
         let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("ledger.sqlite")
