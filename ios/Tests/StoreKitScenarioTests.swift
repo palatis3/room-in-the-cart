@@ -249,7 +249,7 @@ import StoreKitTest
         defer { model.stop() }
         do {
             try await eventually("A real Ask to Buy request reaches pending approval", timeout: askToBuyResponseTimeout) {
-                purchase.finished && model.purchaseReport == .pending
+                model.purchaseReport == .pending
                     && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
             }
         } catch {
@@ -274,10 +274,9 @@ import StoreKitTest
             throw error
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
-        // Follow the documented pending-result then approval sequence. The test
-        // session can expose its pending request before the purchase call returns.
+        // StoreKit has reported pending. The model may still be checking unfinished
+        // transactions when the parent responds to the request.
         XCTAssertEqual(model.notice, .pending)
-        XCTAssertFalse(model.isBusy)
         assertFree(model)
         XCTAssertEqual(session.allTransactions().count, 1, "The fresh approval fixture contains only its pending request")
         // Bounded structural diagnostics only. No transaction identity, token,
@@ -370,6 +369,7 @@ import StoreKitTest
             guard approved.count == 1, let transaction = approved.first else { return false }
             return model.deliveryOutcomes[transaction.transactionID] == .failed(.notConfigured)
         }
+        XCTAssertFalse(model.isBusy)
         XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)),
                       "The exact verified transaction's service-delivery failure remains visible")
         try await eventually("Approved transaction appears in current entitlements") {
