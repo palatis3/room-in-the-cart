@@ -336,8 +336,10 @@ import XCTest
         XCTAssertTrue(failure.label.contains("permission was not granted"), failure.label)
         XCTAssertFalse(element("capture.stopSpeech").exists)
         XCTAssertFalse(element("capture.useText").exists)
-        reveal(editor)
+        tap(element("capture.typeItem"))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         XCTAssertEqual(editor.value as? String, "2 Wraps")
+        tap(element("capture.sourceDone"))
         capture("B09-microphone-refusal-preserves-typed-draft")
 
         enableSwitch("I checked the wording, amounts, units and exclusions.")
@@ -348,8 +350,11 @@ import XCTest
         reveal(amount)
         XCTAssertEqual(amount.value as? String, "2")
         fill("3", into: "Total amount, unknown if blank", replacing: true)
-        if app.keyboards.firstMatch.exists { scrollContent(upward: false) }
-        enableSwitch("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns.")
+        let reviewed = app.switches["I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."]
+        revealScrollableContent(reviewed, entireRow: true)
+        let nativeSwitch = reviewed.switches.firstMatch
+        (nativeSwitch.exists ? nativeSwitch : reviewed).tap()
+        XCTAssertEqual(reviewed.value as? String, "1")
         tap(element("capture.continue"))
         XCTAssertTrue(captureSheet.waitForNonExistence(timeout: 10))
         tap(element("ledgerCommitImport"))
@@ -360,6 +365,36 @@ import XCTest
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
 
+    func testCameraRefusalReturnsToTypedDraft() throws {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        openShoppingList()
+        tap(app.buttons["Inspect Wraps"])
+        tap(element("ledger.scanReferences"))
+        tap(app.buttons["Scan a code and match it manually"])
+        fill("Wraps", into: "scan.sourceEditor", requireDone: true)
+        let consent = app.switches["scan.localConsent"]
+        revealScrollableContent(consent, initiallyUpward: false, entireRow: true)
+        enableSwitch("scan.localConsent")
+        tap(element("scan.camera"))
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let prompt = springboard.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'camera'")).firstMatch
+        XCTAssertTrue(prompt.waitForExistence(timeout: 8))
+        let deny = prompt.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+        XCTAssertTrue(deny.exists && deny.isHittable)
+        deny.tap()
+        let failure = app.staticTexts["Camera permission was not granted. Type, paste or choose a photo instead."]
+        XCTAssertTrue(failure.waitForExistence(timeout: 8))
+        tap(element("scan.typeItem"))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps")
+        app.typeText(" pack")
+        XCTAssertEqual(app.textViews["scan.sourceEditor"].value as? String, "Wraps pack")
+    }
 #endif
 
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {

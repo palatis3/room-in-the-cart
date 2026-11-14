@@ -227,6 +227,7 @@ struct StructuredCaptureField: Hashable {
                         .focused(fieldFocus, equals: focus(.destination))
                 }
                 Button(captureText("Use the displayed destination")) { line.destination = destination; line.confirmed = false }
+                    .buttonStyle(.borderless)
                 labeledField(captureText("Exclusions")) {
                     TextField(captureText("Exclusions, one per line"), text: field(\.exclusions), axis: .vertical)
                         .accessibilityLabel(captureText("Exclusions, one per line"))

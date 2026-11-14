@@ -44,6 +44,10 @@ import CoreDomain
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
     }
     var body: some View {
+        ScrollViewReader { scroll in scanForm(scroll) }
+    }
+
+    private func scanForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingIngredients {
                 StructuredCaptureReviewView(lines: $ingredients, corrections: corrections, correctionScope: correctionScope,
@@ -55,6 +59,17 @@ import CoreDomain
                 recipeFields
             } else {
                 captureControls
+                if let failure = model.failure {
+                    Section {
+                        Text(failureText(failure))
+                        if failure == .permissionDenied || failure == .unavailable {
+                            Button(captureText("Type item")) {
+                                scroll.scrollTo("scan.sourceEditor", anchor: .center)
+                                focusedField = .sourceText
+                            }.accessibilityIdentifier("scan.typeItem")
+                        }
+                    }
+                }
                 if let candidate = model.candidate {
                     Section(captureText("Captured source — review before using")) {
                         sourceImage(candidate.originalImageData)
@@ -67,6 +82,7 @@ import CoreDomain
                 }
                 Section(captureText("Editable source text")) {
                     TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
+                        .id("scan.sourceEditor")
                         .accessibilityIdentifier("scan.sourceEditor")
                         .focused($focusedField, equals: .sourceText)
                         .disabled(model.busy || loadingPhoto)
@@ -90,7 +106,9 @@ import CoreDomain
                 }
             }
             if let error { Section { Text(error).accessibilityIdentifier("scan.error") } }
-            if let failure = model.failure { Section { Text(failureText(failure)) } }
+            if (reviewingIngredients || recipe != nil), let failure = model.failure {
+                Section { Text(failureText(failure)) }
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focusedField != nil || structuredFieldFocus != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
