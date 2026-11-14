@@ -4,7 +4,7 @@ This checklist orders the remaining work; it does not replace Foundation 2.1's
 52 requirements, 27 screen contracts or B11 acceptance. The authoritative scope
 is [the build contract](product/foundation-gen2.1/08-build.md) and the requirement
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
-is one checkpoint, not release authorization. Updated November 13, 2026.
+is one checkpoint, not release authorization. Updated November 14, 2026.
 
 On November 12, the `099d6bf6` native Records adapters and real local service
 exported the shopper’s current shop and history. The named planner received 404
@@ -15,6 +15,16 @@ erasure check blocked reimport after reopening. Retiring history through the
 service left the current record readable. The local run used real email codes
 and a billing fixture for the planner seat. The deployed lifecycle and signed
 iPhone walkthrough remain open. See `.build/RealRecords099Nov12/qualification.json`.
+
+At `239d979e`, the Release app on an iOS 27 simulator exported an encrypted
+comparison and recovered one copy from Files. Deleting the source removed both
+records. Importing the same file again showed a conflict, and neither record
+returned after relaunch. On an iPhone SE simulator running iOS 17, the English
+and Spanish deletion warnings could be read through the final line at maximum
+Dynamic Type in dark appearance. Both actions were reachable, and cancelling
+preserved the comparison. The local results are in
+`.build/ErasedBackupNov13/qualification.json` and
+`.build/AccessibleRecordsDeletionNov14/qualification.json`.
 
 ## Candidate identity and evidence
 
