@@ -50,6 +50,14 @@ review left exactly one pending entry with its original two lines. See
 `.build/SelectedTextDescriptorNov14/selection-strict.log` and `inbox-check.json`
 in the same directory.
 
+On iOS 17.0, the Spanish Release app at `60d28bbc` saved a recipe from
+Files. After installing the `8f793e1f` Release build over it, the editor
+reported one saved duplicate, one new recipe and one skipped row in a mixed
+file. Saving, undoing that import and relaunching preserved the earlier recipe.
+The on-disk recovered record, receipt and payload matched the pre-update
+values. See `.build/RecipeUpdate8f79Nov14/updated-strict.log` and
+`registry-verified.txt` in the same directory.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,
