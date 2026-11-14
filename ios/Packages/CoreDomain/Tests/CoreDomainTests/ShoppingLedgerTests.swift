@@ -259,6 +259,27 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(named.name, "(new recipe) rice")
     }
 
+    func testFractionalAlternatePackLabelsKeepOneReviewedQuantity() throws {
+        var shop = ShoppingLedger()
+        let sources = [
+            "2 × 8 oz (1/2 lb) cheddar",
+            "2 × 24 oz / 1 1/2 lb mozzarella",
+            "2 × 8 onzas (½ libra) queso",
+            "2 × 1 cup (8 1/2 fl oz) broth",
+            "2 × 8 oz (1/4 lb) ricotta",
+            "2 × 8 oz (1/2 lb aged) gouda"
+        ]
+        let preview = try shop.stageImport(text: sources.joined(separator: "\n"))
+        XCTAssertEqual(preview.lines.map(\.name), ["cheddar", "mozzarella", "queso", "broth", "ricotta", "(1/2 lb aged) gouda"])
+        XCTAssertEqual(preview.lines.map { $0.originalPack?.count }, Array(repeating: 2, count: sources.count))
+        XCTAssertEqual(preview.lines.map { $0.quantity?.amount }, [try Rational(16), try Rational(48), try Rational(16), nil, nil, try Rational(16)])
+        XCTAssertEqual(preview.lines.map { $0.unresolvedReason != nil }, [false, false, false, true, true, false])
+        try shop.commitImport(preview)
+        let saved = try roundTrip(shop)
+        XCTAssertEqual(saved.contributions.map(\.originalText), sources)
+        XCTAssertEqual(saved.contributions.map(\.quantity), preview.lines.map(\.quantity))
+    }
+
     func testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent() throws {
         var ledger = ShoppingLedger()
         let first = try ledger.stageImport(text: "12 wraps", source: .paste)

@@ -339,13 +339,14 @@ public enum ListQuantityParser {
     private struct PrintedMeasure {
         let amount: Rational
         let unit: UnitOfMeasure
-        let decimalPlaces: Int
+        let decimalPlaces: Int?
 
         func matches(_ primary: Rational, unit primaryUnit: UnitOfMeasure) -> Bool {
             guard primaryUnit.dimension == unit.dimension,
                   let converted = try? Quantity(amount: primary, unit: primaryUnit, originalLiteral: "").converted(to: unit),
                   let difference = try? max(converted, amount).subtracting(min(converted, amount)) else { return false }
             if difference == .zero { return true }
+            guard let decimalPlaces else { return false }
             let halfPrintedIncrement = "0." + String(repeating: "0", count: decimalPlaces) + "5"
             guard let tolerance = try? Rational(decimal: halfPrintedIncrement) else { return false }
             return difference <= tolerance
@@ -356,7 +357,8 @@ public enum ListQuantityParser {
     /// varieties remain part of the name. Compare using the precision actually printed on the label.
     private static func takeAlternateMeasure(from tokens: inout ArraySlice<String>) -> PrintedMeasure? {
         guard let marker = tokens.first?.first, marker == "(" || marker == "/" else { return nil }
-        var parts = Array(tokens.prefix(5))
+        // Marker, whole number, fraction, two-word unit and closing parenthesis.
+        var parts = Array(tokens.prefix(6))
         parts[0].removeFirst()
         let offset = parts[0].isEmpty ? 1 : 0
         if marker == "(" {
@@ -365,14 +367,32 @@ public enum ListQuantityParser {
             parts[close].removeLast()
         }
         var measure = parts.dropFirst(offset)
+        if measure.last == "" { measure = measure.dropLast() }
         guard let first = measure.first else { return nil }
-        let literal = (separatingUnit(first)?.amount ?? first).replacingOccurrences(of: ",", with: ".")
-        guard let amount = try? Rational(decimal: literal) else { return nil }
-        if let attached = separatingUnit(first) { measure[measure.startIndex] = attached.unit }
-        else { measure = measure.dropFirst() }
-        guard let unit = takeUnitName(from: &measure), marker != "(" || measure.isEmpty else { return nil }
+        // Keep the complete printed number so a fraction is checked exactly.
+        // Rounded decimal labels use the last decimal place as their increment.
+        let firstMeasure = separatingUnit(first)
+        var literal = firstMeasure?.amount ?? first
+        if let attached = firstMeasure {
+            measure[measure.startIndex] = attached.unit
+        } else {
+            measure = measure.dropFirst()
+            if let next = measure.first {
+                let attached = separatingUnit(next)
+                let fraction = attached?.amount ?? next
+                if isFractionToken(fraction) {
+                    literal += " " + fraction
+                    if let attached { measure[measure.startIndex] = attached.unit }
+                    else { measure = measure.dropFirst() }
+                }
+            }
+        }
+        literal = literal.replacingOccurrences(of: ",", with: ".")
+        guard let amount = try? numericAmount(literal), let unit = takeUnitName(from: &measure),
+              marker != "(" || measure.isEmpty else { return nil }
         tokens = tokens.dropFirst(parts.count - measure.count)
-        let precision = literal.split(separator: ".").dropFirst().first?.count ?? 0
+        let isDecimal = literal.utf8.allSatisfy { (48...57).contains($0) || $0 == 46 }
+        let precision = isDecimal ? (literal.split(separator: ".").dropFirst().first?.count ?? 0) : nil
         return PrintedMeasure(amount: amount, unit: unit, decimalPlaces: precision)
     }
 
