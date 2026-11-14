@@ -664,6 +664,13 @@ struct PickupHandoffView: View {
         selectedLanguage ?? (locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
     }
 
+    static func retailerWebsite(_ input: String) -> URL? {
+        let address = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: address), url.scheme?.lowercased() == "https",
+              let host = url.host, !host.isEmpty else { return nil }
+        return url
+    }
+
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -722,7 +729,10 @@ struct PickupHandoffView: View {
             TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
             Button(pTr("Open retailer website")) { Task {
                 guard access.unlocked, model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
-                guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
+                guard let url = Self.retailerWebsite(retailerURL) else {
+                    model.error = pTr("Enter a valid https retailer address.")
+                    return
+                }
                 if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, snapshot: snapshot, destination: url.host) }
                 else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
             } }.disabled(!model.hasCurrentBasketStockBasis)
