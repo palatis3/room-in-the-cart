@@ -65,7 +65,7 @@ test('history snapshots omit child pairing and a restored page rechecks withdraw
   f.dom.window.dispatchEvent(new f.dom.window.PageTransitionEvent('pageshow',{persisted:true}));
   await tick();await ready(f.root);
   assert.match(f.root.textContent,/setup ended|no current child admission/);
-  assert.equal(f.root.querySelector('#pairing-code, a[href="/requests"]'),null);
+  assert.equal(f.root.querySelector('#pairing-code, a[href^="/requests"]'),null);
   assert.equal(f.fixture.counts.claimPosts,1);
 });
 
@@ -172,16 +172,19 @@ test('configured covered flow uses guardian-approved auth, server pairing confir
   const f=await setup(t);await paired(f);
   assert.equal(f.fixture.counts.starts,1);assert.equal(f.fixture.counts.verifies,1);assert.equal(f.fixture.counts.claims,1);assert.equal(f.fixture.counts.finishPosts,0);assert.doesNotMatch(f.root.textContent,/Finish child setup/);
   f.fixture.control('approve');await click(f.root,'Check current status');await click(f.root,'Finish child setup');
-  assert.match(f.root.textContent,/own-request access is ready/);assert.equal(f.root.querySelector('a[href="/requests"]').textContent,'Open your requests');assert.equal(f.root.querySelector('#pairing-code'),null);
+  assert.match(f.root.textContent,/own-request access is ready/);assert.equal(f.root.querySelector('a[href^="/requests"]').textContent,'Open your requests');assert.equal(f.root.querySelector('#pairing-code'),null);
+  const language=f.root.querySelector('#language');
+  language.value='es';language.dispatchEvent(new f.dom.window.Event('change'));
+  assert.equal(f.root.querySelector('a[href^="/requests"]').getAttribute('href'),'/requests?lang=es');
   assert.equal(f.fixture.counts.finishes,1);assert.equal(f.fixture.counts.forbidden,0);
   assert.doesNotMatch(f.root.textContent,/child@example|deviceSecret|deviceToken|123456/);
   const posts=f.fixture.requests.filter(row=>row.method==='POST').map(row=>row.path);assert.deepEqual(posts,['/v1/child-invitations/auth/start','/v1/auth/email/verify','/v1/child-invitations/claim','/v1/child-invitations/finish']);
-  const recovered=new ChildInvitationPage(f.root,f.api);await recovered.start();assert.ok(f.root.querySelector('a[href="/requests"]'));assert.equal(f.fixture.counts.finishPosts,1);
+  const recovered=new ChildInvitationPage(f.root,f.api);await recovered.start();assert.ok(f.root.querySelector('a[href^="/requests"]'));assert.equal(f.fixture.counts.finishPosts,1);
 });
 
 test('generic authenticated account cannot display covered OTP, claim or own-request access',async t=>{
   const f=await setup(t);f.fixture.control('generic');await f.page.start();
-  assert.match(f.root.textContent,/no current child admission/);assert.equal(f.root.querySelector('form'),null);assert.equal(f.root.querySelector('a[href="/requests"]'),null);assert.equal(f.fixture.counts.starts,0);assert.equal(f.fixture.counts.claimPosts,0);
+  assert.match(f.root.textContent,/no current child admission/);assert.equal(f.root.querySelector('form'),null);assert.equal(f.root.querySelector('a[href^="/requests"]'),null);assert.equal(f.fixture.counts.starts,0);assert.equal(f.fixture.counts.claimPosts,0);
 });
 
 test('interrupted child sign-out hides pairing after reload and retries using current identity',async t=>{
@@ -232,14 +235,14 @@ test('lost claim response retries the original pairing and key, then shows confi
 
 test('lost finish response with no cookie retries exact original finish and device secret',async t=>{
   const f=await setup(t);await approved(f);f.fixture.control('lose-finish');await click(f.root,'Finish child setup');
-  assert.match(f.root.textContent,/setup response is unconfirmed/);assert.equal(f.root.querySelector('a[href="/requests"]'),null);await click(f.root,'Retry original setup');assert.ok(f.root.querySelector('a[href="/requests"]'));
+  assert.match(f.root.textContent,/setup response is unconfirmed/);assert.equal(f.root.querySelector('a[href^="/requests"]'),null);await click(f.root,'Retry original setup');assert.ok(f.root.querySelector('a[href^="/requests"]'));
   assert.equal(f.fixture.counts.finishPosts,2);assert.equal(f.fixture.counts.finishes,1);assert.equal(f.fixture.counts.exactFinishRetries,1);
   const rows=f.fixture.requests.filter(row=>row.path==='/v1/child-invitations/finish');assert.deepEqual(rows[0].body,rows[1].body);
 });
 
 test('lost finish body with installed cookie recovers access without another finish POST',async t=>{
   const f=await setup(t);await approved(f);f.fixture.control('lose-finish-cookie');await click(f.root,'Finish child setup');
-  assert.match(f.root.textContent,/setup response is unconfirmed/);await click(f.root,'Check current status');assert.ok(f.root.querySelector('a[href="/requests"]'));assert.equal(f.fixture.counts.finishPosts,1);
+  assert.match(f.root.textContent,/setup response is unconfirmed/);await click(f.root,'Check current status');assert.ok(f.root.querySelector('a[href^="/requests"]'));assert.equal(f.fixture.counts.finishPosts,1);
 });
 
 for(const status of ['awaiting_guardian','approved'])test(`${status} cold reload shows missing original pairing and never creates replacement intent`,async t=>{
@@ -251,7 +254,7 @@ for(const status of ['awaiting_guardian','approved'])test(`${status} cold reload
 
 test('active cold reload without a scoped cookie does not infer credentials or finish again',async t=>{
   const f=await setup(t);await approved(f);f.fixture.control('lose-finish');await click(f.root,'Finish child setup');
-  const recovered=new ChildInvitationPage(f.root,f.api);await recovered.start();assert.match(f.root.textContent,/access on this browser could not be confirmed/);assert.equal(f.root.querySelector('a[href="/requests"]'),null);assert.equal(f.root.querySelector('form'),null);assert.doesNotMatch(f.root.textContent,/Retry original setup/);assert.equal(f.fixture.counts.finishPosts,1);
+  const recovered=new ChildInvitationPage(f.root,f.api);await recovered.start();assert.match(f.root.textContent,/access on this browser could not be confirmed/);assert.equal(f.root.querySelector('a[href^="/requests"]'),null);assert.equal(f.root.querySelector('form'),null);assert.doesNotMatch(f.root.textContent,/Retry original setup/);assert.equal(f.fixture.counts.finishPosts,1);
 });
 
 test('accepted finish with malformed 200 and no cookie deterministically blocks cold-reload access without a second POST',async t=>{
@@ -259,7 +262,7 @@ test('accepted finish with malformed 200 and no cookie deterministically blocks 
   assert.match(f.root.textContent,/setup response is unconfirmed/);assert.equal(f.fixture.counts.finishPosts,1);assert.equal(f.fixture.counts.finishes,1);assert.equal(await f.api.scopedSession(),null);
   assert.equal(f.root.textContent.split('The setup response is unconfirmed. Check current status or retry the original setup from this page.').length-1,1,'Unconfirmed setup message appears once');
   const recovered=new ChildInvitationPage(f.root,f.api);await recovered.start();
-  assert.match(f.root.textContent,/Setup is active, but access on this browser could not be confirmed/);assert.equal(f.root.querySelector('a[href="/requests"]'),null);assert.equal(f.root.querySelector('form'),null);assert.doesNotMatch(f.root.textContent,/Retry original setup/);
+  assert.match(f.root.textContent,/Setup is active, but access on this browser could not be confirmed/);assert.equal(f.root.querySelector('a[href^="/requests"]'),null);assert.equal(f.root.querySelector('form'),null);assert.doesNotMatch(f.root.textContent,/Retry original setup/);
   assert.equal(f.root.textContent.split('Setup is active, but access on this browser could not be confirmed. Continue on the original page to retry its original setup, or ask your guardian to review a new setup.').length-1,1,'Missing browser access message appears once');
   assert.equal(f.fixture.counts.finishPosts,1);assert.equal(f.fixture.counts.finishes,1);assert.equal(f.fixture.counts.exactFinishRetries,0);
 });
@@ -269,7 +272,7 @@ test('withdrawal and a changed session purge pairing and block finish',async t=>
 });
 
 test('a mismatched scoped household cannot expose the own-request handoff',async t=>{
-  const f=await setup(t);await approved(f);f.fixture.control('wrong-scope');await click(f.root,'Finish child setup');assert.equal(f.root.querySelector('a[href="/requests"]'),null);assert.equal(f.root.querySelector('#pairing-code'),null);assert.match(f.root.textContent,/setup ended or the account changed/);
+  const f=await setup(t);await approved(f);f.fixture.control('wrong-scope');await click(f.root,'Finish child setup');assert.equal(f.root.querySelector('a[href^="/requests"]'),null);assert.equal(f.root.querySelector('#pairing-code'),null);assert.match(f.root.textContent,/setup ended or the account changed/);
 });
 
 test('availability and child session parsers reject invented authority and narrow unexpected fields',async()=>{
