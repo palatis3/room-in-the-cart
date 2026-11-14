@@ -180,6 +180,19 @@ class AppConfigurationTests(unittest.TestCase):
             (root / "config/release.json").write_text(json.dumps(config))
             info = compiled_metadata(load_configuration(root, "Release"), "Release")
             require_release_metadata(info)
+            for identifier in ("A.1_-", "X" * 100):
+                with self.subTest(identifier=identifier):
+                    (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))
+                    compiled = compiled_metadata(load_configuration(root, "Release"), "Release")
+                    self.assertEqual(compiled["HouseholdSubscriptionProductID"], identifier)
+                    require_release_metadata(compiled)
+            for identifier in ("annual/household", "X" * 101, "annual\x01"):
+                with self.subTest(identifier=identifier):
+                    (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))
+                    with self.assertRaisesRegex(ValueError, "householdSubscriptionProductID"):
+                        load_configuration(root, "Release")
+                    with self.assertRaisesRegex(ValueError, "HouseholdSubscriptionProductID"):
+                        require_release_metadata(dict(info, HouseholdSubscriptionProductID=identifier))
             info["SupportURL"] = ""
             with self.assertRaisesRegex(ValueError, "SupportURL"):
                 require_release_metadata(info)
