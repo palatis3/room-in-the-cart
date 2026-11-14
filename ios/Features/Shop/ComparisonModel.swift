@@ -161,9 +161,10 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 
 @MainActor final class ComparisonModel: ObservableObject {
     @Published var draft: ComparisonDraft {
-        didSet { if draft != oldValue { result = nil; savedAt = nil } }
+        didSet { if draft != oldValue { comparison = nil; savedAt = nil } }
     }
-    @Published var result: CoreDomain.ComparisonResult?
+    @Published private(set) var comparison: (inputs: ComparisonRequest, result: CoreDomain.ComparisonResult)?
+    var result: CoreDomain.ComparisonResult? { comparison?.result }
     @Published var error: String?
     @Published var savedAt: Date?
     @Published var saving = false
@@ -208,8 +209,6 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         return Money(minorUnits: scaled / value.denominator, currency: .usd)
     }
 
-    var confirmedStock: Quantity? { try? Self.quantity(draft.stock, draft.unit) }
-
     func request() throws -> ComparisonRequest {
         func confirmedBasis(_ conversion: ComparisonConversion?, sourceUnit: UnitOfMeasure) throws -> UnitBasis? {
             guard let conversion else { return nil }
@@ -230,10 +229,12 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     }
 
     func compare() {
-        result = nil
+        comparison = nil
         error = nil
-        do { result = try PackComparison.evaluate(request()) }
-        catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
+        do {
+            let inputs = try request()
+            comparison = (inputs, try PackComparison.evaluate(inputs))
+        } catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
     }
 
     func save(in store: ComparisonStore?) async {

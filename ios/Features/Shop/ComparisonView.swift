@@ -20,8 +20,8 @@ struct ComparisonView: View {
 
     var body: some View {
         Group {
-            if reviewing, let result = model.result {
-                results(result)
+            if reviewing, let comparison = model.comparison {
+                results(comparison.result, inputs: comparison.inputs)
             } else {
                 editor
             }
@@ -140,10 +140,10 @@ struct ComparisonView: View {
         }
     }
 
-    private func results(_ result: CoreDomain.ComparisonResult) -> some View {
+    private func results(_ result: CoreDomain.ComparisonResult, inputs: ComparisonRequest) -> some View {
         GeometryReader { viewport in
             VStack(spacing: 0) {
-                resultList(result)
+                resultList(result, inputs: inputs)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipped()
                 // Reserve a real layout boundary above the floating tab bar.
@@ -157,7 +157,7 @@ struct ComparisonView: View {
         }
     }
 
-    private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
+    private func resultList(_ result: CoreDomain.ComparisonResult, inputs: ComparisonRequest) -> some View {
         List {
             if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
             Section {
@@ -166,10 +166,10 @@ struct ComparisonView: View {
                 Text(tr("Item-only comparison")).font(.headline)
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
                     .foregroundStyle(Theme.secondary)
-                if let need = try? ComparisonModel.quantity(model.draft.needed, model.draft.unit) {
+                if let need = inputs.needed {
                     ComparisonMetric(message("Total need: %@ %@", need.originalLiteral, need.unit.comparisonLabel(for: need.amount)))
                 }
-                let stock = model.confirmedStock
+                let stock = inputs.confirmedAtHome
                 let stockText = stock.map { pQuantity($0.originalLiteral, unit: $0.unit, singular: $0.amount == .one, language: nil) }
                 ComparisonMetric(ledgerFormat("Confirmed at home for this need: %@", stockText ?? recordsText("Not entered")),
                                  id: "comparisonConfirmedStock")
@@ -177,15 +177,17 @@ struct ComparisonView: View {
                     ComparisonMetric(message("Needed after confirmed stock: %@", remainingQuantity(remaining)),
                                      id: "comparisonNeedAfterStock")
                 }
-                if let protected = try? ComparisonModel.quantity(model.draft.protected, model.draft.unit) {
+                if let protected = inputs.protectedAmount {
                     ComparisonMetric(message("Protected within that total: %@ %@", protected.originalLiteral, protected.unit.comparisonLabel(for: protected.amount)))
                 }
                 if let summary = result.purchaseSummary {
                     ComparisonMetric(summary, style: .headline, id: "comparisonPurchaseSummary")
                 }
             }
-            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
-            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
+            resultSection(result.offerA, offer: inputs.offerA, fallbackName: tr("Pack A"),
+                          conversion: model.draft.aConversion, preferred: result.preferredOfferID == "a")
+            resultSection(result.offerB, offer: inputs.offerB, fallbackName: tr("Pack B"),
+                          conversion: model.draft.bConversion, preferred: result.preferredOfferID == "b")
             Section {
                 ComparisonMetric(tr("Source: prices and usable amounts you entered. Estimates for this item only."), id: "comparisonSourceNote")
                 if let date = model.savedAt {
@@ -226,9 +228,10 @@ struct ComparisonView: View {
         return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
     }
 
-    private func resultSection(_ result: OfferResult, name: String, conversion: ComparisonConversion?, preferred: Bool) -> some View {
+    private func resultSection(_ result: OfferResult, offer: PackOffer, fallbackName: String,
+                               conversion: ComparisonConversion?, preferred: Bool) -> some View {
         Section {
-            ComparisonMetric(name, style: .headline, id: result.offerID + "Header", heading: true)
+            ComparisonMetric(offer.label.isEmpty ? fallbackName : offer.label, style: .headline, id: result.offerID + "Header", heading: true)
             if let cost = result.totalCost {
                 Text(moneyText(cost)).font(.largeTitle.bold()).monospacedDigit()
                     .fixedSize(horizontal: false, vertical: true)
@@ -236,6 +239,11 @@ struct ComparisonView: View {
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
             if preferred { ComparisonMetric(tr("Lower cost to buy enough for this item"), style: .headline) }
+            let amount = offer.usableQuantity.map { "\($0.originalLiteral) \($0.unit.comparisonLabel(for: $0.amount))" }
+            ComparisonMetric(tr("Usable amount in one pack") + ": " + (amount ?? recordsText("Not entered")),
+                             id: result.offerID + "PackQuantity")
+            ComparisonMetric(tr("Price for one pack (USD)") + ": " + (offer.price.map(moneyText) ?? recordsText("Not entered")),
+                             id: result.offerID + "PackPrice")
             if let conversion {
                 ComparisonMetric(conversion.readableText(), id: result.offerID + "ConversionBasis")
             }

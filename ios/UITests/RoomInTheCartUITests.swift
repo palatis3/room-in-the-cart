@@ -125,6 +125,8 @@ final class RoomInTheCartUITests: XCTestCase {
         assertContains("Confirmed at home for this need: Not entered")
         XCTAssertFalse(app.staticTexts["comparisonNeedAfterStock"].exists)
         screenshot("English-item-scope")
+        assertContains("Usable amount in one pack: 7 1/2 items")
+        assertContains("Price for one pack (USD): $3.00")
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
         screenshot("English-known-item-only-result")
@@ -155,6 +157,7 @@ final class RoomInTheCartUITests: XCTestCase {
         enterComparison(item: "Unknown yield wraps", firstQuantity: nil)
         compare()
         assertScope("Item-only comparison")
+        assertContains("Usable amount in one pack: Not entered")
         // iOS 17 gives both the decorative Label image and its text this identifier.
         // Inspect the readable warning, not the non-interactive image.
         let unknown = app.staticTexts.matching(identifier: "aIssue_usableQuantityUnknown").firstMatch
