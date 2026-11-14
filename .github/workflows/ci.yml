@@ -47,7 +47,8 @@ jobs:
         working-directory: ${{ matrix.package }}
       - name: Check contributor outbox and history privacy in Chrome
         if: matrix.package == 'web'
-        timeout-minutes: 2
+        # Two serial browser test files each have a 120-second watchdog.
+        timeout-minutes: 5
         env:
           DEBUG: pw:browser
         run: npm run test:browser
