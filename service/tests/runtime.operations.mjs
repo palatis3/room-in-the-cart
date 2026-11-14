@@ -59,6 +59,30 @@ after(async()=>{
  await Promise.all([admin.end(),app.end()]);
 });
 
+async function cli(args,env){
+ return new Promise((resolve,reject)=>{
+  const child=spawn(process.execPath,['dist/operations-cli.js',...args],{
+   cwd:new URL('../',import.meta.url),env:{...process.env,...env}
+  });
+  let output='';
+  child.stdout.on('data',part=>{output+=part;});
+  child.stderr.on('data',part=>{output+=part;});
+  child.on('error',reject);
+  child.on('close',code=>resolve({code,output}));
+ });
+}
+
+test('monitoring check reads healthy worker state without running a maintenance batch',async()=>{
+ const result=await cli(['status','--check'],environment);
+ assert.equal(result.code,0);
+ const report=JSON.parse(result.output);
+ assert.equal(report.mode,'status');
+ assert.equal(report.attentionRequired,false);
+ assert.equal(report.auth,null);
+ assert.equal(report.privacy,null);
+ assert.equal(report.guardian,null);
+});
+
 test('actual HTTP adapter denies unauthorized requests before parsing or connecting worker credentials',async()=>{
  const server=await start({CRON_SECRET:secret,WORKER_DATABASE_URL:'invalid PRIVATE connection'});
  assert.equal((await call(server,'/internal/maintenance',{headers:{}})).status,401);
@@ -80,9 +104,11 @@ test('deployed runtime role gate rejects application, administrator and combined
  }
  await assert.rejects(()=>app.query('SELECT * FROM ritc.operations_health()'),error=>error.code==='42501');
 });
-test('disabled email deployment with public provider metadata still runs housekeeping without an encryption key',async()=>{
+test('disabled email deployment with public provider metadata still runs housekeeping without an encryption key',async(t)=>{
+ const info=t.mock.method(console,'info',()=>{});
  const {BFF_TOKEN_ENCRYPTION_KEY,...publicEnvironment}=environment;
  const result=await call(await start({...publicEnvironment,EMAIL_OTP_ENABLED:'false'}));
+ assert.deepEqual(info.mock.calls.map(call=>JSON.parse(call.arguments[0])),[result.value]);
  assert.equal(result.status,200);assert.equal(result.value.logoutProviderConfigured,false);assert.equal(result.value.privacyJobProcessingEnabled,false);
 });
 test('worker startup applies actual PostgreSQL statement and lock limits without table access',async()=>{
@@ -94,10 +120,12 @@ test('worker startup applies actual PostgreSQL statement and lock limits without
   await assert.rejects(()=>runtime.pool.query('SELECT * FROM auth.sessions'),error=>error.code==='42501');
  }finally{await runtime.pool.end();}
 });
-test('real HTTP/Postgres expiry and provider outage retry keep credentials until confirmed logout',async()=>{
+test('real HTTP/Postgres expiry and provider outage retry keep credentials until confirmed logout',async(t)=>{
+ const warning=t.mock.method(console,'warn',()=>{});
  const server=await start(),f=await fixture({expired:true});outage=true;
  const first=await call(server);assert.equal(first.status,200);assert.equal(first.value.auth.expiredQueued,1);assert.equal(first.value.auth.logoutRetryScheduled,1);
  assert.equal(first.value.health.authRetryPending,1);assert.equal(first.value.attentionRequired,true);
+ assert.deepEqual(warning.mock.calls.map(call=>JSON.parse(call.arguments[0])),[first.value]);
  let record=await row(f.hash);assert.equal(record.logout_last_error,'provider_unavailable');assert.equal(record.logout_attempts,1);assert.ok(record.secret_cipher);
  assert.equal((await call(server)).value.auth.logoutRetryScheduled,0);
  await admin.query("UPDATE ritc.browser_auth SET logout_next_at=clock_timestamp()-interval '1 second' WHERE token_hash=$1",[f.hash]);outage=false;
@@ -133,8 +161,17 @@ test('aggregate deadline leaves an interrupted provider outcome leased rather th
  }finally{await runtime.pool.end();}
 });
 test('runnable operator CLI status emits aggregate evidence, and bad credentials fail without connection text',async()=>{
- async function cli(args,env){return new Promise((resolve,reject)=>{const child=spawn(process.execPath,['dist/operations-cli.js',...args],{cwd:new URL('../',import.meta.url),env:{...process.env,...env}});let output='';child.stdout.on('data',part=>{output+=part;});child.stderr.on('data',part=>{output+=part;});child.on('error',reject);child.on('exit',code=>resolve({code,output}));});}
  const status=await cli(['status'],environment);assert.equal(status.code,0);const value=JSON.parse(status.output.trim());assert.equal(value.mode,'status');assert.equal(value.auth,null);assert.equal(value.privacyJobProcessingEnabled,false);assert.equal(value.health.privacyPending,1);
+ const check=await cli(['status','--check'],environment);
+ assert.equal(check.code,3);
+ const report=JSON.parse(check.output);
+ assert.equal(report.attentionRequired,true);
+ assert.deepEqual(report.health,value.health);
+ assert.equal(report.auth,null);
+ assert.equal(report.privacy,null);
+ assert.equal(report.guardian,null);
+ assert.equal((await cli(['run','--check'],environment)).code,2);
+ assert.equal((await cli(['status','--check','extra'],environment)).code,2);
  const run=await cli(['run'],environment);assert.equal(run.code,0);assert.equal(JSON.parse(run.output.trim()).mode,'run');
  const failure=await cli(['run'],{WORKER_DATABASE_URL:'PRIVATE invalid connection'});assert.equal(failure.code,1);assert.equal(failure.output.includes('PRIVATE'),false);
  assert.equal((await cli([],environment)).code,2);
