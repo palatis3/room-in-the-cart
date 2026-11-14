@@ -1018,6 +1018,36 @@ import Combine
         XCTAssertTrue(store.finished.isEmpty)
     }
 
+    func testRemovedSeatDropsRosterRejectsDelayedResponsesAndAcceptsLaterReassignment() throws {
+        let adult = MembershipSeat(userID: "adult-two", displayName: "Sam", isAdult: true)
+        let member = MembershipContext(purchaserID: adult.userID, purchaserName: adult.displayName,
+            householdID: context.householdID, householdName: context.householdName, appAccountToken: nil)
+        func privateFree(at date: Date) -> MembershipSnapshot {
+            .init(householdID: member.householdID, purchaserID: member.purchaserID, revision: 0, status: .free,
+                expiresAt: nil, graceExpiresAt: nil, verifiedAt: date, validUntil: date, seats: [])
+        }
+        let paid = snapshot(revision: 4, seats: [adult])
+        let removed = privateFree(at: now.addingTimeInterval(-5))
+        var state = MembershipState()
+        try state.accept(paid, context: member, now: now)
+        try state.accept(removed, context: member, now: now)
+        XCTAssertEqual(state.snapshot, removed)
+        XCTAssertFalse(state.hasPaidAccess(context: member, now: now))
+        try state.accept(paid, context: member, now: now)
+        // Even a previously unseen revision can have been read before the removal.
+        try state.accept(snapshot(revision: 5, seats: [adult]), context: member, now: now)
+        XCTAssertEqual(state.snapshot, removed)
+        XCTAssertTrue(state.freeRecordsAndExportAvailable)
+
+        let reassigned = MembershipSnapshot(householdID: paid.householdID, purchaserID: paid.purchaserID,
+            revision: 6, status: .active, expiresAt: paid.expiresAt, graceExpiresAt: nil,
+            verifiedAt: now, validUntil: paid.validUntil, seats: [adult])
+        try state.accept(reassigned, context: member, now: now)
+        try state.accept(removed, context: member, now: now)
+        XCTAssertEqual(state.snapshot, reassigned)
+        XCTAssertTrue(state.hasPaidAccess(context: member, now: now))
+    }
+
     func testUnseatedAdultNeverGetsPaidAccessFromSharedSnapshot() async {
         let second = MembershipContext(purchaserID: "unseated-adult", purchaserName: "Sam", householdID: context.householdID,
             householdName: "Home", appAccountToken: nil)
