@@ -75,7 +75,14 @@ import HouseholdClient
             let auth = AdultAuth(configuration: try .init(projectURL: URL(string: "https://contributor-identity.invalid")!, publishableKey: "sb_publishable_fixture_only"), vault: ContributorRequestUIFixtureVault(), transport: transport)
             let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://contributor-household.invalid")!), auth: auth, deviceVault: ContributorRequestUIFixtureVault(), transport: transport)
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/ContributorRequest-" + UUID().uuidString, isDirectory: true)
-            let model = HouseholdModel(auth: auth, service: service, outboxURL: directory.appendingPathComponent("outbox.json"), deletionVault: ContributorRequestUIFixtureVault(), exitVault: ContributorRequestUIFixtureVault())
+            let model = HouseholdModel(auth: auth, service: service, outboxURL: directory.appendingPathComponent("outbox.json"), deletionVault: ContributorRequestUIFixtureVault(), exitVault: ContributorRequestUIFixtureVault(), guardianChildOnly: server.childPickups)
+            if server.childPickups {
+                _ = try await auth.verifyEmailCode(email: "child@example.invalid", code: "123456")
+                let access = try await auth.childInvitationAccess()
+                try await model.adoptGuardianChildEnrollment(receipt: server.childReceipt(), expectedAccess: access)
+                household = model
+                return
+            }
             model.email = "sam@example.invalid"; model.code = "123456"; await model.verifyCode()
             if server.helperReadback, let lifecycle = model.lifecycle {
                 lifecycle.keepLocalPrivate = true
@@ -100,7 +107,10 @@ struct ContributorRequestUIFixtureRoot: View {
             Text("Fixture request POSTs: \(fixture.requestPosts)").accessibilityIdentifier("fixture.requestPosts")
             Text("Fixture saved requests: \(fixture.persistedRequests)").accessibilityIdentifier("fixture.requestRows")
             if let household = fixture.household {
-                NavigationStack { HouseholdSettingsView(model: household) }
+                NavigationStack {
+                    if household.guardianChildOnly { GuardianChildRequestsView(household: household) }
+                    else { HouseholdSettingsView(model: household) }
+                }
             } else if fixture.setupFailure { Text("Fixture setup failed").accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated contributor fixture") }
         }.task { await fixture.start() }
@@ -114,6 +124,15 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
     let grant = UUID().uuidString.lowercased()
+    let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
+    private let nextOnlyPickup = "22222222-2222-4222-8222-222222222222"
+    private let childSession = UUID().uuidString.lowercased()
+
+    func childReceipt() throws -> ChildEnrollmentReceipt {
+        let receipt = ["householdId": household, "memberId": member, "role": "contributor",
+                       "deviceId": UUID().uuidString.lowercased(), "deviceToken": try GuardianSecret.generate()]
+        return try JSONDecoder().decode(ChildEnrollmentReceipt.self, from: JSONSerialization.data(withJSONObject: receipt))
+    }
     private var helperReads = 0
     private var rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:], posts = 0
     var changed: ((Int, Int) -> Void)?
@@ -126,6 +145,28 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         }
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         func response(_ value: Any, _ status: Int = 200) throws -> (Int, Data) { (status, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
+        if childPickups {
+            if path == "/auth/v1/verify" {
+                let claims = ["iss": "https://contributor-identity.invalid/auth/v1", "sub": "fixture-sam", "session_id": childSession]
+                let encoded = try JSONSerialization.data(withJSONObject: claims).base64EncodedString()
+                    .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+                return try response(["access_token": "fixture." + encoded + ".fixture", "refresh_token": "fixture-refresh",
+                                     "expires_in": 3600, "user": ["id": "fixture-sam", "email_confirmed_at": "date"]])
+            }
+            if path.hasSuffix("/bootstrap") {
+                return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,
+                    "role": "contributor", "enrolled": true, "queueConsent": false, "canSelectShop": false,
+                    "selectionRequired": true, "capabilities": ["own_requests"]])
+            }
+            if path.hasSuffix("/requests/pickups") {
+                let cursor = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "cursor" }?.value
+                guard cursor == nil || cursor == shop else { throw URLError(.badURL) }
+                let first = cursor == nil
+                let pickup: [String: Any] = ["shopId": first ? shop : nextOnlyPickup,
+                                             "createdAt": "2026-11-14T12:00:00Z", "nextShopOnly": !first]
+                return try response(["shops": [pickup], "nextCursor": first ? shop as Any : NSNull()])
+            }
+        }
         if path == "/auth/v1/verify" { return try response(["access_token":"fixture-sam","refresh_token":"fixture-refresh","expires_in":3600,"user":["id":"fixture-sam","email_confirmed_at":"date"]]) }
         if path == "/auth/v1/user" { return try response(["id":"fixture-sam","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try response(["workspaces": helperReadback ? [] : [["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
@@ -160,10 +201,13 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path.hasSuffix("/replay-windows") { return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands") {
             guard json["kind"] as? String == "request.send", let key = json["clientKey"] as? String,
-                  let body = json["body"] as? [String: Any] else { throw URLError(.unsupportedURL) }
+                  let targetShop = json["shopId"] as? String, let body = json["body"] as? [String: Any] else { throw URLError(.unsupportedURL) }
+            if childPickups, (targetShop != nextOnlyPickup || body["route"] as? String != "next") {
+                throw URLError(.badServerResponse)
+            }
             posts += 1
             if let receipt = receipts[key] { changed?(posts, rows.count); return try response(receipt) }
-            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":shop,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
+            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":targetShop,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
             rows.append(row); let receipt: [String: Any] = ["operationId":UUID().uuidString,"kind":"request.send","request":row]; receipts[key] = receipt
             changed?(posts, rows.count); return try response(receipt)
         }

@@ -23,6 +23,7 @@ public actor HouseholdService {
         self.configuration = configuration; self.auth = auth; self.deviceVault = deviceVault; self.transport = transport
     }
     public func enroll(householdID: String, grantID: String? = nil) async throws -> HouseholdBootstrap {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
         generation = UUID(); enrollment = nil; enrollmentSessionID = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
@@ -32,9 +33,9 @@ public actor HouseholdService {
         guard generation == start else { throw ClientError.cancelled }
         enrollmentSessionID = access.providerSessionID
         // A restored session must present its saved device to the server, including after revocation.
-        if let saved = try deviceVault.read(), let bytes = saved.data(using: .utf8),
-           let record = try? JSONDecoder().decode(StoredEnrollment.self, from: bytes),
-           record.householdID == householdID, record.subject == access.identity.subject, record.matchesSession(access) {
+        let record = try deviceVault.read().flatMap { try? JSONDecoder().decode(StoredEnrollment.self, from: Data($0.utf8)) }
+        guard record?.childBinding == nil, record?.childMemberID == nil else { throw ClientError.accessEnded }
+        if let record, record.householdID == householdID, record.subject == access.identity.subject, record.matchesSession(access) {
             enrollmentSessionID = access.providerSessionID ?? record.sessionID
             enrollment = record.device; self.householdID = householdID; subject = access.identity.subject
             selectedGrantID = grantID ?? record.grantID
@@ -61,7 +62,7 @@ public actor HouseholdService {
     }
     private func accountRequest(subject: String, path: String, body: Data? = nil) async throws -> URLRequest {
         let start = generation
-        guard selectedGrantID == nil else { throw ClientError.accessEnded }
+        guard selectedGrantID == nil, childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let access = try await auth.access()
         guard generation == start, access.identity.subject == subject else { throw ClientError.accessEnded }
         return request(base: configuration.baseURL, path: path, method: body == nil ? "GET" : "POST",
@@ -90,12 +91,14 @@ public actor HouseholdService {
         guard receipt.householdId == intent.householdID, receipt.left, !receipt.accountDeleted else { throw ClientError.invalidResponse }
     }
     public func deletionStatus(_ receipt: DeletionReceipt) async throws -> DeletionStatus {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         var req = request(base: configuration.baseURL, path: "v1/privacy/jobs/\(receipt.id.uuidString.lowercased())", method: "GET")
         req.setValue(receipt.statusToken, forHTTPHeaderField: "X-Deletion-Token")
         let status: DeletionStatus = try await transport.json(req)
         return try status.checked(for: receipt)
     }
     public func workspaces() async throws -> WorkspaceList {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
@@ -149,6 +152,13 @@ public actor HouseholdService {
         guard page.requests.allSatisfy({ $0.linkedLineId == nil }) else { throw ClientError.invalidResponse }
         return page
     }
+    public func requestPickups(cursor: UUID? = nil) async throws -> RequestPickupPage {
+        guard childAdoptionBinding != nil, selectedGrantID == nil, selectedShopID == nil else { throw ClientError.accessEnded }
+        let query = cursor.map { [URLQueryItem(name: "cursor", value: $0.uuidString.lowercased())] } ?? []
+        let page: RequestPickupPage = try await perform("requests/pickups", method: "GET", query: query)
+        if let cursor, page.shops.contains(where: { $0.id == cursor }) { throw ClientError.invalidResponse }
+        return page
+    }
     @discardableResult func authorizeShopper(shopID: String, capability: String? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
         let projection = try await bootstrap(trackingLease: trackingLease)
@@ -169,7 +179,7 @@ public actor HouseholdService {
         return page
     }
     public func selectShop(_ id: UUID?) async throws -> HouseholdBootstrap {
-        guard selectedGrantID == nil, enrollment != nil else { throw ClientError.accessEnded }
+        guard selectedGrantID == nil, childAdoptionBinding == nil, enrollment != nil else { throw ClientError.accessEnded }
         generation = UUID()
         selectedShopID = id
         return try await bootstrap()
@@ -702,6 +712,7 @@ public actor HouseholdService {
     }
     /// For other native service adapters; returning a token never grants a role.
     public func currentDeviceToken(householdID: String, memberID: String) async throws -> String {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let start = generation
         guard selectedGrantID == nil, self.householdID == householdID, self.memberID == memberID, let enrollment else { throw ClientError.accessEnded }
         let access = try await auth.access()
@@ -734,6 +745,7 @@ public actor HouseholdService {
         return try await perform("commands", method: "POST", body: operation.bytes, requestQueueGrant: operation.requestQueueGrant)
     }
     public func executeMembership(_ intent: MembershipIntent) async throws -> MembershipReceipt {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
@@ -1185,9 +1197,23 @@ public actor HouseholdService {
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
            path != "v1/views/\(selectedGrantID)/current", path != "v1/views/\(selectedGrantID)/proposals" { throw ClientError.accessEnded }
+        if childAdoptionBinding != nil {
+            guard !absolutePath, selectedGrantID == nil, selectedShopID == nil, reportingShopID == nil, requestQueueGrant == nil else {
+                throw ClientError.accessEnded
+            }
+            switch (method, path) {
+            case ("GET", "bootstrap"), ("GET", "requests/mine"), ("GET", "requests/pickups"), ("POST", "replay-windows"):
+                break
+            case ("POST", "commands"):
+                guard let body, let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: body),
+                      ["request.send", "request.edit", "request.withdraw"].contains(envelope.kind) else { throw ClientError.accessEnded }
+            default: throw ClientError.accessEnded
+            }
+        }
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
         guard access.identity.subject == subject else { await clearScope(); throw ClientError.accessEnded }
+        if let child = childAdoptionBinding, access.providerSessionID != child.sessionID { throw ClientError.accessEnded }
         var req = request(base: configuration.baseURL, path: "v1/households/\(householdID)/\(path)",
                           method: method, token: access.accessToken, body: body)
         if absolutePath { req.url = configuration.baseURL.appendingPathComponent(path) }
@@ -1204,6 +1230,11 @@ public actor HouseholdService {
         do {
             let result: T = try await transport.json(req, maximumResponseBytes: maximumResponseBytes)
             guard generation == start else { throw ClientError.cancelled }
+            if let child = childAdoptionBinding {
+                let current = try await auth.childInvitationAccess()
+                guard generation == start else { throw ClientError.cancelled }
+                guard current.binding == child else { throw ClientError.accessEnded }
+            }
             return result
         } catch {
             guard generation == start else { throw ClientError.cancelled }

@@ -28,6 +28,9 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var lifecycle: HouseholdLifecycleModel?
     @Published private(set) var requests: [OwnRequest] = []
     @Published private(set) var nextRequestCursor: String?
+    @Published private(set) var requestPickups: [RequestPickup] = []
+    @Published private(set) var selectedRequestPickupID: UUID?
+    @Published private(set) var nextRequestPickupCursor: UUID?
     @Published private(set) var delivery: DeliveryState = .localDraft
     @Published private(set) var busy = false
     @Published private(set) var locked = false
@@ -183,6 +186,7 @@ struct DeviceReminderPersona: Equatable {
         contributorEnrollmentRevision = UUID()
         contributorReplayWindow = nil
         try validateGuardianChildProjection(value)
+        clearRequestPickups()
         guard let service else { throw ClientError.configuration }
             projection = value
             contributorDeviceID = try? await service.requestReviewDeviceID(bootstrap: value)
@@ -197,7 +201,7 @@ struct DeviceReminderPersona: Equatable {
             try await clearExpiredQueuedRequests(value)
             let old = try await outbox.operations()
             guard start == generation else { return }
-            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && $0.targetsShop(value.shopId) }) {
+            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && (guardianChildOnly || $0.targetsShop(value.shopId)) }) {
                 pending = operation
                 let matches = await service.matches(operation, memberID: value.memberId)
                 guard start == generation else { return }
@@ -208,6 +212,8 @@ struct DeviceReminderPersona: Equatable {
                 }
                 notice = ht("An earlier request needs review. Check received requests before sending it again.")
             }
+            try await refreshRequestPickups(service, start: start)
+            guard start == generation else { return }
             configureShopperInbox(value); configureSharedShop(value)
             lifecycle?.setScope(value)
     }
@@ -233,7 +239,7 @@ struct DeviceReminderPersona: Equatable {
         }
     }
     func selectShop(_ id: UUID?) async {
-        guard let service, let scope = projection, scope.canSelectShop == true || scope.selectionRequired == true,
+        guard !guardianChildOnly, let service, let scope = projection, scope.canSelectShop == true || scope.selectionRequired == true,
               scope.grantId == nil, !busy, !locked else { return }
         onScopeChange?()
         clearProjection()
@@ -255,18 +261,30 @@ struct DeviceReminderPersona: Equatable {
             let fresh = try await service.bootstrap()
             guard start == generation, let prior = projection else { return }
             try validateGuardianChildProjection(fresh)
-            let scopeChanged = prior.household.id != fresh.household.id || prior.memberId != fresh.memberId ||
-                prior.role != fresh.role || prior.shopId != fresh.shopId || prior.grantId != fresh.grantId ||
-                Set(prior.capabilities) != Set(fresh.capabilities)
-            if scopeChanged {
+            let actorChanged = prior.household.id != fresh.household.id || prior.memberId != fresh.memberId ||
+                prior.role != fresh.role || prior.grantId != fresh.grantId || Set(prior.capabilities) != Set(fresh.capabilities)
+            let destinationChanged = prior.shopId != fresh.shopId
+            if actorChanged || destinationChanged {
                 contributorReplayWindow = nil
                 onScopeChange?()
-                cancelEdit()
+                if guardianChildOnly && !actorChanged && editing == nil && followingUp == nil {
+                    // Keep the same child's unsent wording, but require a new destination review.
+                    contributorEnrollmentRevision = UUID()
+                    forNextShop = false
+                } else {
+                    cancelEdit()
+                }
                 requests = []
                 nextRequestCursor = nil
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
+            do { try await refreshRequestPickups(service, start: start) }
+            catch {
+                if start == generation { clearRequestPickups() }
+                throw error
+            }
+            guard start == generation else { return }
             try await clearExpiredQueuedRequests(fresh, permissionChanged: prior.requestQueueGrant != fresh.requestQueueGrant)
             guard start == generation else { return }
             configureShopperInbox(fresh); configureSharedShop(fresh); lifecycle?.setScope(fresh)
@@ -278,6 +296,40 @@ struct DeviceReminderPersona: Equatable {
                 try await prefetchContributorReplayWindow(service, start: start)
             } else { requests = []; nextRequestCursor = nil }
         } catch { await show(error, start: start) }
+    }
+    var requiresRequestPickupChoice: Bool {
+        guardianChildOnly && projection?.selectionRequired == true
+    }
+    private func clearRequestPickups() {
+        requestPickups = []; nextRequestPickupCursor = nil; selectedRequestPickupID = nil
+    }
+    private func refreshRequestPickups(_ service: HouseholdService, start: UUID) async throws {
+        guard requiresRequestPickupChoice else { clearRequestPickups(); return }
+        let page = try await service.requestPickups()
+        guard start == generation else { throw ClientError.cancelled }
+        if let id = selectedRequestPickupID, !page.shops.contains(where: { $0.shopId == id }) {
+            selectedRequestPickupID = nil
+            contributorEnrollmentRevision = UUID()
+        }
+        requestPickups = page.shops; nextRequestPickupCursor = page.nextCursor
+    }
+    func loadMoreRequestPickups() async {
+        guard requiresRequestPickupChoice, let cursor = nextRequestPickupCursor, let service, !busy, !locked else { return }
+        busy = true; defer { busy = false }; let start = generation
+        do {
+            let page = try await service.requestPickups(cursor: cursor)
+            guard start == generation else { return }
+            let existing = Set(requestPickups.map(\.shopId))
+            requestPickups.append(contentsOf: page.shops.filter { !existing.contains($0.shopId) })
+            nextRequestPickupCursor = page.nextCursor
+        } catch { await show(error, start: start) }
+    }
+    func selectRequestPickup(_ id: UUID) {
+        guard requiresRequestPickupChoice, !busy, !locked, pending == nil, editing == nil, followingUp == nil,
+              selectedRequestPickupID != id, requestPickups.contains(where: { $0.shopId == id }) else { return }
+        selectedRequestPickupID = id
+        contributorEnrollmentRevision = UUID()
+        forNextShop = false
     }
     func loadMoreRequests() async {
         guard let service, let cursor = nextRequestCursor, projection != nil, !busy, !locked else { return }
@@ -300,17 +352,22 @@ struct DeviceReminderPersona: Equatable {
                           localeIdentifier: localeIdentifier)
     }
     var requestRequiresNextShop: Bool {
-        guard editing == nil, let projection, projection.nextShopOnly == true,
-              let shopID = projection.shopId else { return false }
-        return followingUp == nil || followingUp?.shopId == shopID
+        guard editing == nil, let projection else { return false }
+        if requiresRequestPickupChoice {
+            let id = followingUp.flatMap { UUID(uuidString: $0.shopId) } ?? selectedRequestPickupID
+            return requestPickups.first(where: { $0.shopId == id })?.nextShopOnly == true
+        }
+        return projection.nextShopOnly == true && projection.shopId != nil &&
+            (followingUp == nil || followingUp?.shopId == projection.shopId)
     }
     private func currentContributorRequestScope() -> ContributorRequestScope? {
+        let destination = requiresRequestPickupChoice ? selectedRequestPickupID?.uuidString.lowercased() : projection?.shopId
         guard let identity, let projection, let contributorDeviceID, projection.enrolled,
               projection.capabilities.contains("own_requests"), !locked,
-              let shop = editing?.shopId ?? followingUp?.shopId ?? projection.shopId else { return nil }
+              let shop = editing?.shopId ?? followingUp?.shopId ?? destination else { return nil }
         return ContributorRequestScope(generation: generation, enrollmentRevision: contributorEnrollmentRevision, subject: identity.subject,
             householdID: projection.household.id, memberID: projection.memberId, deviceID: contributorDeviceID, role: projection.role,
-            grantID: projection.grantId, selectedShopID: projection.shopId, targetShopID: shop,
+            grantID: projection.grantId, selectedShopID: destination, targetShopID: shop,
             capabilities: projection.capabilities.sorted(), editing: editing, followingUp: followingUp,
             item: item, quantity: quantity, nextShop: requestRequiresNextShop || forNextShop)
     }
@@ -478,6 +535,10 @@ struct DeviceReminderPersona: Equatable {
                     if start == generation { notice = ht("Could not clear the local retry. Try again.") }
                 }
                 return
+            }
+            if case .service(_, "pickup_closed", _, _) = error as? ClientError, requiresRequestPickupChoice {
+                clearRequestPickups()
+                contributorEnrollmentRevision = UUID()
             }
             if let failure = error as? ClientError {
                 if let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
@@ -662,6 +723,7 @@ struct DeviceReminderPersona: Equatable {
         }
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
+        clearRequestPickups()
         projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil
         contributorReplayWindow = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
@@ -670,7 +732,7 @@ struct DeviceReminderPersona: Equatable {
         guard guardianChildOnly else { return }
         guard value.enrolled, value.role == "contributor", value.grantId == nil,
               value.capabilities == ["own_requests"], value.canSelectShop != true,
-              value.selectionRequired != true else { throw ClientError.accessEnded }
+              (value.selectionRequired != true || value.shopId == nil) else { throw ClientError.accessEnded }
     }
     /// Dedicated child composition only: this adopts the exact server-issued credential without calling generic enrollment.
     func adoptGuardianChildEnrollment(receipt: ChildEnrollmentReceipt, expectedAccess: ChildInvitationAccess) async throws {

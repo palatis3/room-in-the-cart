@@ -6,14 +6,24 @@ import DeviceSurfaces
 
 @MainActor final class ContributorRequestCaptureTests: XCTestCase {
     private func model(_ fixture: ContributorCaptureFixture, queue: URL, deviceVault: ContributorCaptureVault = .init(),
-                       captureCorrections: CaptureCorrectionStore = .shared) async throws -> HouseholdModel {
+                       captureCorrections: CaptureCorrectionStore = .shared, child: Bool = false) async throws -> HouseholdModel {
         ContributorCaptureProtocol.handler = fixture.respond
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ContributorCaptureProtocol.self]
         let transport = HTTPTransport(session: URLSession(configuration: config))
         let auth = AdultAuth(configuration: try .init(projectURL: URL(string: "https://identity.test")!, publishableKey: "sb_publishable_test"), vault: ContributorCaptureVault(), transport: transport)
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://household.test")!), auth: auth, deviceVault: deviceVault, transport: transport)
         let model = HouseholdModel(auth: auth, service: service, outboxURL: queue, deletionVault: ContributorCaptureVault(),
-                                   exitVault: ContributorCaptureVault(), captureCorrections: captureCorrections)
+                                   exitVault: ContributorCaptureVault(), guardianChildOnly: child, captureCorrections: captureCorrections)
+        if child {
+            _ = try await auth.verifyEmailCode(email: "sam@example.test", code: "123456")
+            let access = try await auth.childInvitationAccess()
+            let receipt = try JSONDecoder().decode(ChildEnrollmentReceipt.self, from: JSONSerialization.data(withJSONObject: [
+                "householdId": fixture.household, "memberId": fixture.member, "role": "contributor",
+                "deviceId": fixture.childDeviceID, "deviceToken": fixture.childDeviceToken
+            ]))
+            try await model.adoptGuardianChildEnrollment(receipt: receipt, expectedAccess: access)
+            return model
+        }
         model.email = "sam@example.test"; model.code = "123456"; await model.verifyCode()
         model.keepLocalPrivate = true; await model.join(try XCTUnwrap(model.workspaces.first))
         return model
@@ -64,6 +74,86 @@ import DeviceSurfaces
         XCTAssertEqual(model.requests.first?.route, "next")
         guard case .received(let receipt) = model.delivery else { return XCTFail("Missing receipt") }
         XCTAssertEqual(receipt.contributorDeliveryLabel, ht("Received for the next shop."))
+    }
+    func testChildChoosesAnOwnRequestPickupWithoutSelectingTheHouseholdShop() async throws {
+        let fixture = ContributorCaptureFixture(), queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let first = try XCTUnwrap(UUID(uuidString: fixture.shop)), second = UUID()
+        fixture.childPickups = [first, second]
+        let model = try await model(fixture, queue: queue, child: true)
+        XCTAssertTrue(model.requiresRequestPickupChoice)
+        XCTAssertNil(model.projection?.shopId)
+        XCTAssertNil(model.contributorRequestScope)
+        await model.selectShop(second)
+        model.selectRequestPickup(UUID())
+        XCTAssertNil(model.selectedRequestPickupID)
+        model.item = "Rice"
+        model.selectRequestPickup(first)
+        let stale = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        model.selectRequestPickup(second)
+        model.selectRequestPickup(first)
+        await model.sendRequest(reviewed: stale, approved: true)
+        XCTAssertTrue(fixture.commands.isEmpty)
+        model.selectRequestPickup(second)
+        XCTAssertTrue(model.requestRequiresNextShop)
+        let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        await model.sendRequest(reviewed: review, approved: true)
+        let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: XCTUnwrap(fixture.commands.first))
+        XCTAssertEqual(envelope.shopId, second.uuidString.lowercased())
+        XCTAssertEqual(envelope.body["route"], .string("next"))
+        XCTAssertNil(model.projection?.shopId)
+        XCTAssertNil(model.shopperInbox)
+        XCTAssertNil(model.sharedShop)
+        XCTAssertEqual(fixture.privateReads, 0)
+        fixture.childPickups = [first, UUID()]
+        await model.refresh()
+        XCTAssertNil(model.selectedRequestPickupID)
+        XCTAssertNil(model.contributorRequestScope)
+        model.edit(try XCTUnwrap(model.requests.first))
+        XCTAssertEqual(model.contributorRequestScope?.targetShopID, second.uuidString.lowercased())
+        model.lock()
+        XCTAssertTrue(model.requestPickups.isEmpty)
+    }
+    func testChildKeepsUnsentWordingWhenOnlyOnePickupRemains() async throws {
+        let fixture = ContributorCaptureFixture(), queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let remaining = UUID(), closed = UUID()
+        fixture.childPickups = [remaining, closed]
+        let model = try await model(fixture, queue: queue, child: true)
+        model.selectRequestPickup(closed)
+        model.item = "Black beans"
+        model.quantity = "2 cans"
+        let former = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        fixture.childPickups = [remaining]
+        await model.refresh()
+        XCTAssertEqual(model.item, "Black beans")
+        XCTAssertEqual(model.quantity, "2 cans")
+        await model.sendRequest(reviewed: former, approved: true)
+        XCTAssertTrue(fixture.commands.isEmpty)
+        let reviewed = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        XCTAssertEqual(reviewed.scope.targetShopID, remaining.uuidString.lowercased())
+        await model.sendRequest(reviewed: reviewed, approved: true)
+        XCTAssertEqual(fixture.commands.count, 1)
+    }
+    func testChildRecoversAnExactReceiptAfterItsChosenPickupDisappears() async throws {
+        let fixture = ContributorCaptureFixture(), queue = location(), vault = ContributorCaptureVault()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let chosen = UUID()
+        fixture.childPickups = [chosen, UUID()]
+        let original = try await model(fixture, queue: queue, deviceVault: vault, child: true)
+        original.selectRequestPickup(chosen)
+        original.item = "Beans"
+        fixture.loseReply = true
+        await original.sendRequest()
+        let sent = try XCTUnwrap(fixture.commands.first)
+        fixture.childPickups = [UUID(), UUID()]
+        let restored = try await model(fixture, queue: queue, deviceVault: vault, child: true)
+        XCTAssertNil(restored.selectedRequestPickupID)
+        guard case .waiting = restored.delivery else { return XCTFail("Missing original retry") }
+        await restored.retry()
+        guard case .received = restored.delivery else { return XCTFail("Missing original receipt") }
+        XCTAssertEqual(fixture.commands, [sent, sent])
+        XCTAssertEqual(fixture.rows.count, 1)
     }
     func testOversizedMultipleAndWrongDestinationStopWithoutTruncation() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
@@ -550,6 +640,9 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     enum WindowFailure { case offline, revoked }
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let windowID = UUID().uuidString.lowercased()
+    var childPickups: [UUID]?
+    let childSessionID = UUID().uuidString, childDeviceID = UUID().uuidString
+    let childDeviceToken = Data(repeating: 1, count: 32).base64EncodedString().replacingOccurrences(of: "=", with: "")
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
     var offersQueuePermission = false, queueGrant: UUID?, queueExpiry: String?
     var dropBeforeCommit = false, attemptedGrants: [UUID?] = []
@@ -567,7 +660,11 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
         }
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         func response(_ value: Any, _ status: Int = 200) throws -> (Int, Data) { (status, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
-        if path == "/auth/v1/verify" { return try response(["access_token":"sam","refresh_token":"refresh","expires_in":3600,"user":["id":"sam","email_confirmed_at":"date"]]) }
+        if path == "/auth/v1/verify" {
+            let claims = try JSONSerialization.data(withJSONObject: ["iss":"https://identity.test/auth/v1","sub":"sam","session_id":childSessionID])
+            let payload = claims.base64EncodedString().replacingOccurrences(of: "=", with: "").replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            return try response(["access_token":childPickups == nil ? "sam" : "fixture." + payload + ".sig","refresh_token":"refresh","expires_in":3600,"user":["id":"sam","email_confirmed_at":"date"]])
+        }
         if path == "/auth/v1/user" { return try response(["id":"sam","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try response(["workspaces":[["householdId":household,"label":"Home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"sam-device","deviceToken":"sam-device-token"],201) }
@@ -580,12 +677,25 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 return try response(["error": ["code": "access_ended"]], 403)
             }
             var value: [String: Any] = ["nextShopOnly":nextShopOnly,"household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]
+            if let childPickups {
+                value["selectionRequired"] = childPickups.count > 1
+                value["canSelectShop"] = false
+                value["shopId"] = childPickups.count == 1 ? childPickups[0].uuidString.lowercased() as Any : NSNull()
+                value.removeValue(forKey: "nextShopOnly")
+            }
             if offersQueuePermission { value["canSetRequestQueue"] = true; value["capabilities"] = ["own_requests", "request_queue_permission"] }
             if let queueGrant {
                 value["requestQueueGrant"] = queueGrant.uuidString
                 value["requestQueueUntil"] = queueExpiry ?? windowExpiry
             }
             return try response(value)
+        }
+        if path.hasSuffix("/requests/pickups"), let childPickups {
+            XCTAssertNil(request.value(forHTTPHeaderField: "X-Shop-ID"))
+            let shops: [[String: Any]] = childPickups.enumerated().map { index, id in
+                ["shopId":id.uuidString.lowercased(), "createdAt":"2026-11-03T00:00:00.000Z", "nextShopOnly":index == 1]
+            }
+            return try response(["shops":shops,"nextCursor":NSNull()])
         }
         if path.hasSuffix("/requests/mine") {
             if enrollmentRevoked {
@@ -621,7 +731,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             }
             XCTAssertEqual(json["kind"] as? String, "request.send")
             let body = json["body"] as! [String: Any]
-            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":shop,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
+            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":json["shopId"]!,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
             rows.append(row); let receipt: [String: Any] = ["operationId":UUID().uuidString,"kind":"request.send","request":row]; receipts[key] = receipt
             if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }
             return try response(receipt)

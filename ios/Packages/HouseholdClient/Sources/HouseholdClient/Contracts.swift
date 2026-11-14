@@ -38,6 +38,50 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public private(set) var linkedLineId: UUID? = nil
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
+/// Contributor destinations deliberately omit shopper identity, basket contents and financial details.
+public struct RequestPickup: Decodable, Equatable, Identifiable, Sendable {
+    public let shopId: UUID
+    public let createdAt: String
+    public let nextShopOnly: Bool
+    public var id: UUID { shopId }
+
+    public init(shopId: UUID, createdAt: String, nextShopOnly: Bool) {
+        self.shopId = shopId
+        self.createdAt = createdAt
+        self.nextShopOnly = nextShopOnly
+    }
+
+    private enum CodingKeys: String, CodingKey { case shopId, createdAt, nextShopOnly }
+    public init(from decoder: Decoder) throws {
+        try demandExactKeys(decoder, ["shopId", "createdAt", "nextShopOnly"])
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        shopId = try values.decode(UUID.self, forKey: .shopId)
+        createdAt = try values.decode(String.self, forKey: .createdAt)
+        nextShopOnly = try values.decode(Bool.self, forKey: .nextShopOnly)
+        guard GuardianValidation.date(createdAt) else { throw ClientError.invalidResponse }
+    }
+}
+
+public struct RequestPickupPage: Decodable, Equatable, Sendable {
+    public let shops: [RequestPickup]
+    public let nextCursor: UUID?
+
+    public init(shops: [RequestPickup], nextCursor: UUID?) {
+        self.shops = shops
+        self.nextCursor = nextCursor
+    }
+
+    private enum CodingKeys: String, CodingKey { case shops, nextCursor }
+    public init(from decoder: Decoder) throws {
+        try demandExactKeys(decoder, ["shops", "nextCursor"])
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        shops = try values.decode([RequestPickup].self, forKey: .shops)
+        nextCursor = try values.decodeIfPresent(UUID.self, forKey: .nextCursor)
+        guard shops.count <= 50, Set(shops.map(\.id)).count == shops.count,
+              nextCursor == nil || nextCursor == shops.last?.id else { throw ClientError.invalidResponse }
+    }
+}
+
 public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String
     public init(id: String, expiresAt: String) { self.id = id; self.expiresAt = expiresAt }
 }

@@ -407,6 +407,111 @@ extension HouseholdClientTests {
         XCTAssertEqual(paths, ["/v1/households/\(household)/bootstrap", "/v1/households/\(household)/bootstrap"])
     }
 
+    func testGuardianChildRequestPickupsPageUsesOnlyOwnScopeAndStopsAtSessionChange() async throws {
+        let childAuth = try auth(), vault = MemoryVault(), receipt = try guardianChildReceipt()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                       auth: childAuth, deviceVault: vault, transport: transport())
+        let first = UUID(), second = UUID(), timestamp = "2026-11-14T14:00:00.000Z"
+        let base = "/v1/households/\(household)/"
+        var session = UUID().uuidString.lowercased(), paths: [String] = []
+        let began = expectation(description: "request pickups in flight"), held = HeldResponse()
+        MockURLProtocol.handler = { request in
+            if let response = try self.guardianChildAuthResponse(request, token: self.guardianChildJWT(sessionID: session)) { return response }
+            paths.append(request.url!.path)
+            XCTAssertEqual(request.httpMethod, "GET")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), receipt.deviceToken)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Household-ID"), self.household)
+            XCTAssertNil(request.value(forHTTPHeaderField: "X-View-Grant-ID"))
+            XCTAssertNil(request.value(forHTTPHeaderField: "X-Shop-ID"))
+            if request.url!.path == base + "bootstrap" { return (200, try self.guardianChildBootstrap(changes: ["selectionRequired": true])) }
+            XCTAssertEqual(request.url!.path, base + "requests/pickups")
+            let later = request.url!.query != nil
+            if later { XCTAssertEqual(request.url!.query, "cursor=" + first.uuidString.lowercased()) }
+            let page: [String: Any] = ["shops": [["shopId": (later ? second : first).uuidString,
+                                                   "createdAt": timestamp, "nextShopOnly": later]],
+                                       "nextCursor": later ? NSNull() as Any : first.uuidString as Any]
+            return (200, try JSONSerialization.data(withJSONObject: page))
+        }
+        _ = try await childAuth.verifyEmailCode(email: "child@example.invalid", code: "123456")
+        let access = try await childAuth.childInvitationAccess()
+        _ = try await service.adoptChildEnrollment(receipt: receipt, expectedAccess: access)
+        let firstPage = try await service.requestPickups()
+        XCTAssertEqual(firstPage, .init(shops: [.init(shopId: first, createdAt: timestamp, nextShopOnly: false)], nextCursor: first))
+        let secondPage = try await service.requestPickups(cursor: firstPage.nextCursor)
+        XCTAssertEqual(secondPage, .init(shops: [.init(shopId: second, createdAt: timestamp, nextShopOnly: true)], nextCursor: nil))
+        do { _ = try await service.selectableShops(closedAndOwned: false, cursor: nil); XCTFail("Child listed adult shops") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        do { _ = try await service.selectShop(first); XCTFail("Child selected an adult shop") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        do { _ = try await service.guardianConsents(); XCTFail("Child accessed guardian consents") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        do { _ = try await service.enroll(householdID: household); XCTFail("Adult enrollment replaced child binding") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        XCTAssertEqual(paths, [base + "bootstrap", base + "requests/pickups", base + "requests/pickups"])
+        MockURLProtocol.intercept = { instance in
+            guard instance.request.url?.path == base + "requests/pickups" else { return false }
+            held.set(instance); began.fulfill(); return true
+        }
+        let task = Task { try await service.requestPickups() }
+        await fulfillment(of: [began], timeout: 3)
+        session = UUID().uuidString.lowercased()
+        _ = try await childAuth.verifyEmailCode(email: "child@example.invalid", code: "654321")
+        held.finish(status: 200, data: Data(#"{"shops":[],"nextCursor":null}"#.utf8))
+        do { _ = try await task.value; XCTFail("Pickup page crossed child sessions") }
+        catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+    }
+
+    func testGuardianChildCanRevokeOwnDeviceAndSignOutAfterReadingRequestPickups() async throws {
+        let childAuth = try auth(), session = UUID().uuidString.lowercased(), receipt = try guardianChildReceipt()
+        let vault = MemoryVault()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                       auth: childAuth, deviceVault: vault, transport: transport())
+        let token = try guardianChildJWT(sessionID: session)
+        let base = "/v1/households/\(household)/"
+        var paths: [String] = []
+        MockURLProtocol.handler = { request in
+            if let response = try self.guardianChildAuthResponse(request, token: token) { return response }
+            let path = try XCTUnwrap(request.url).path
+            paths.append(path)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer " + token)
+            if path == "/auth/v1/logout" {
+                XCTAssertEqual(request.httpMethod, "POST"); XCTAssertEqual(request.url?.query, "scope=local")
+                return (200, Data())
+            }
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), receipt.deviceToken)
+            if path == base + "bootstrap" { return (200, try self.guardianChildBootstrap()) }
+            if path == base + "requests/pickups" { return (200, Data(#"{"shops":[],"nextCursor":null}"#.utf8)) }
+            XCTAssertEqual(path, base + "devices/current"); XCTAssertEqual(request.httpMethod, "DELETE")
+            return (204, Data())
+        }
+        _ = try await childAuth.verifyEmailCode(email: "child@example.invalid", code: "123456")
+        let access = try await childAuth.childInvitationAccess()
+        _ = try await service.adoptChildEnrollment(receipt: receipt, expectedAccess: access)
+        _ = try await service.requestPickups()
+        try await service.revokeCurrentDevice()
+        try await childAuth.signOut()
+        XCTAssertNil(try vault.read())
+        XCTAssertEqual(paths, [base + "bootstrap", base + "requests/pickups", base + "devices/current", "/auth/v1/logout"])
+    }
+
+    func testRequestPickupPageRejectsUnexpectedFieldsAndMalformedPagination() throws {
+        let shop = UUID().uuidString
+        let row: [String: Any] = ["shopId": shop, "createdAt": "2026-11-14T14:00:00Z", "nextShopOnly": false]
+        let malformed: [[String: Any]] = [
+            ["shops": [row]],
+            ["shops": [], "nextCursor": shop],
+            ["shops": [row], "nextCursor": UUID().uuidString],
+            ["shops": [row, row], "nextCursor": NSNull()],
+            ["shops": [row], "nextCursor": NSNull(), "shopper": "private"],
+            ["shops": [row.merging(["phase": "draft"]) { $1 }], "nextCursor": NSNull()],
+            ["shops": [row.merging(["createdAt": "yesterday"]) { $1 }], "nextCursor": NSNull()],
+            ["shops": [row.merging(["nextShopOnly": "false"]) { $1 }], "nextCursor": NSNull()]
+        ]
+        for value in malformed {
+            XCTAssertThrowsError(try JSONDecoder().decode(RequestPickupPage.self, from: JSONSerialization.data(withJSONObject: value)))
+        }
+    }
+
     func testGuardianChildCredentialAdoptionRejectsWrongSessionBootstrapAndUnrelatedVaultWithoutWriting() async throws {
         let childAuth = try auth(); let sessionID = UUID().uuidString.lowercased(); let receipt = try guardianChildReceipt()
         var bootstrapChanges: [String: Any] = [:]; var bootstrapCalls = 0
