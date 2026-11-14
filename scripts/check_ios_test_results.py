@@ -25,22 +25,21 @@ XCTEST_ANIMATION_IDLE = re.compile(
 )
 XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
     r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
-    r"(?P<process>[A-Za-z]+)(?P<record>Test Case .+)"
+    r"(?P<header>[A-Za-z0-9:\[]+)(?P<record>Test Case .+)"
 )
-XCTEST_SPLIT_PROCESS_SUFFIX = re.compile(
-    r"(?P<process>[A-Za-z]+)\[[0-9]+:[0-9]+\] \[[A-Za-z][A-Za-z0-9_.-]*\] .*"
+XCTEST_APP_LOG = re.compile(
+    r"RoomInTheCart\[[0-9]+:[0-9]+\] \[[A-Za-z][A-Za-z0-9_.-]*\] .*"
 )
 
 
 def recover_interleaved_case(line, following_line):
-    """Recover the observed stdout/stderr split inside the app's process name."""
+    """Recover a complete XCTest record interleaved into the app's process header."""
     prefix = XCTEST_SPLIT_PROCESS_PREFIX.fullmatch(line)
     if prefix is None:
         return line
-    suffix = XCTEST_SPLIT_PROCESS_SUFFIX.fullmatch(following_line)
     # Require the adjacent fragments to reconstruct the known process header.
     # Never search a logging message's payload for quoted XCTest records.
-    if (suffix is not None and prefix["process"] + suffix["process"] == "RoomInTheCart"
+    if (XCTEST_APP_LOG.fullmatch(prefix["header"] + following_line)
             and XCTEST_CASE_LINE.fullmatch(prefix["record"])):
         return prefix["record"]
     return line
