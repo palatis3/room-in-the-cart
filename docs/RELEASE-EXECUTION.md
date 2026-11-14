@@ -41,6 +41,15 @@ text in a fixed banner. The updated editor uses a scrollable system alert at
 accessibility sizes. See `.build/ManualRecipeSECorrectionNov14/read-to-end-strict.log`
 and the rendered `before-error.png`, `after-error.png` and `end-error.png` there.
 
+The Share extension now checks the type and size of the file it actually opens.
+A regression test reproduced a replaced file returning another file’s contents
+through a symbolic link. After the fix all 39 DeviceSurfaces tests passed.
+On iOS 17.0, the system share sheet opened both a UTF-8 file provider and a
+plain-text file URL in the Release extension. Cancel followed by Save for
+review left exactly one pending entry with its original two lines. See
+`.build/SelectedTextDescriptorNov14/selection-strict.log` and `inbox-check.json`
+in the same directory.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,

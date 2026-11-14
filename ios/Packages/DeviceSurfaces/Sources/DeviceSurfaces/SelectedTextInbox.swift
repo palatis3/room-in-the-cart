@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Darwin
 import UniformTypeIdentifiers
 
 public enum InboxDisposition: String, Codable, Sendable { case pending, consumed, discarded, expired }
@@ -164,16 +165,23 @@ extension SelectedTextInbox {
         }
     }
 
-    private static func readPlainText(at url: URL, type: UTType) throws -> String {
-        let attributes = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
-        guard attributes.isRegularFile == true, attributes.isSymbolicLink != true,
-              let size = attributes.fileSize, size > 0 else { throw SurfaceError.invalid }
-        guard size <= maximumEntryBytes else { throw SurfaceError.capacity }
-        let file = try FileHandle(forReadingFrom: url)
+    static func readPlainText(at url: URL, type: UTType) throws -> String {
+        guard url.isFileURL else { throw SurfaceError.invalid }
+        // Provider URLs can carry stale resource values. Check the opened file itself.
+        let descriptor = url.withUnsafeFileSystemRepresentation { path -> Int32 in
+            guard let path else { return -1 }
+            return Darwin.open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
+        }
+        guard descriptor >= 0 else { throw SurfaceError.unavailable }
+        let file = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? file.close() }
+        var info = stat()
+        guard fstat(descriptor, &info) == 0 else { throw SurfaceError.unavailable }
+        guard info.st_mode & S_IFMT == S_IFREG, info.st_size > 0 else { throw SurfaceError.invalid }
+        guard info.st_size <= maximumEntryBytes else { throw SurfaceError.capacity }
         let bytes = try file.read(upToCount: maximumEntryBytes + 1) ?? Data()
         guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
-        guard bytes.count == size else { throw SurfaceError.invalid }
+        guard bytes.count == info.st_size else { throw SurfaceError.invalid }
 
         let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
         let text: String?

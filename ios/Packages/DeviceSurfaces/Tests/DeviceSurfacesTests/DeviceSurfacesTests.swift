@@ -35,6 +35,18 @@ final class DeviceSurfacesTests: XCTestCase {
             SelectedTextInbox.loadPlainText(from: provider) { result.resume(returning: $0) }
         }
     }
+    func testSharedTextFileReplacedByLinkCannotExposeAnotherFile() throws {
+        let selected = try file("shopping.txt")
+        let other = selected.deletingLastPathComponent().appendingPathComponent("private.txt")
+        try Data("beans".utf8).write(to: selected)
+        try Data("other".utf8).write(to: other)
+        let cached = try selected.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        XCTAssertEqual(cached.isRegularFile, true)
+        let manager = FileManager.default
+        try manager.removeItem(at: selected)
+        try manager.createSymbolicLink(at: selected, withDestinationURL: other)
+        XCTAssertThrowsError(try SelectedTextInbox.readPlainText(at: selected, type: .plainText))
+    }
     func testSharedPlainTextFilesPreserveOriginalWordingAndLineBreaks() async throws {
         let text = "2 tortillas\r\nFrijoles negros 🍚"
         let utf8 = Data(text.utf8)
