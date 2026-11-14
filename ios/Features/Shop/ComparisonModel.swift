@@ -234,6 +234,12 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         do {
             let inputs = try request()
             comparison = (inputs, try PackComparison.evaluate(inputs))
+        } catch DomainError.invalidInput("itemNameTooLong") {
+            error = tr("Shorten the item name, then compare again.")
+        } catch DomainError.invalidInput("offerANameTooLong") {
+            error = tr("Shorten the name for Pack A, then compare again.")
+        } catch DomainError.invalidInput("offerBNameTooLong") {
+            error = tr("Shorten the name for Pack B, then compare again.")
         } catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
     }
 

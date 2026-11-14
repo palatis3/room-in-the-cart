@@ -401,6 +401,54 @@
         }
       }
     },
+    "Shorten the item name, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the item name, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del artículo y vuelve a comparar."
+          }
+        }
+      }
+    },
+    "Shorten the name for Pack A, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the name for Pack A, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del paquete A y vuelve a comparar."
+          }
+        }
+      }
+    },
+    "Shorten the name for Pack B, then compare again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the name for Pack B, then compare again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el nombre del paquete B y vuelve a comparar."
+          }
+        }
+      }
+    },
     "This saved comparison changed. Reopen it to review the latest prices before saving your edits.": {
       "localizations": {
         "en": {

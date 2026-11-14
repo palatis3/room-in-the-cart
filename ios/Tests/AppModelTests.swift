@@ -408,6 +408,29 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testOversizedComparisonNamesIdentifyTheFieldAndKeepOriginalInput() {
+        let limit = String(repeating: "é", count: 256)
+        let oversized = limit + "a"
+        let names: [(WritableKeyPath<ComparisonDraft, String>, String)] = [
+            (\.item, tr("Shorten the item name, then compare again.")),
+            (\.aLabel, tr("Shorten the name for Pack A, then compare again.")),
+            (\.bLabel, tr("Shorten the name for Pack B, then compare again."))
+        ]
+        for (field, feedback) in names {
+            let model = ComparisonModel(draft: makeDraft(unknownSecondYield: false))
+            model.draft[keyPath: field] = oversized
+            model.compare()
+            XCTAssertNil(model.result)
+            XCTAssertEqual(model.error, feedback)
+            XCTAssertEqual(model.draft[keyPath: field], oversized)
+            model.draft[keyPath: field] = limit
+            model.compare()
+            XCTAssertNil(model.error)
+            XCTAssertNotNil(model.result)
+        }
+    }
+
+    @MainActor
     func testInvalidEditClearsPreviousAnswer() {
         let model = ComparisonModel(draft: makeDraft(unknownSecondYield: false))
         model.compare()
