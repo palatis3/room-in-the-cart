@@ -86,6 +86,40 @@ test('a pickup closing during review keeps the draft and requires explicit revie
  }
 });
 
+test('a second pickup opening during review preserves the draft and asks for a destination', async () => {
+  for (const action of ['send', 'refresh']) {
+    let active = {...session(), shopId: 'first', selectionRequired: false};
+    const pickups = ['first', 'second'].map(shopId => ({shopId, nextShopOnly: false, createdAt: '2026-11-10T12:00:00Z'}));
+    const sent = [];
+    const {root, dom} = await setup(fakeAPI({
+      session: async () => active,
+      requestPickups: async () => pickups,
+      command: async (_, cmd) => { sent.push(cmd); return {...own(), shopId: cmd.shopId}; }
+    }));
+    type(dom, 'item', 'Corn tortillas');
+    type(dom, 'amount', 'one pack');
+    submit(root, dom);
+    active = {...active, shopId: null, selectionRequired: true};
+    if (action === 'send') submit(root, dom);
+    else click(root, 'Refresh');
+    await waitForIdle(root);
+    assert.equal(sent.length, 0);
+    const picker = root.querySelector('#request-pickup');
+    assert.ok(picker, 'same contributor should see the open pickups');
+    assert.equal(picker.value, '');
+    picker.value = 'second';
+    picker.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(root.querySelector('#item').value, 'Corn tortillas');
+    assert.equal(root.querySelector('#amount').value, 'one pack');
+    submit(root, dom);
+    assert.match(root.querySelector('form').textContent, /second/);
+    submit(root, dom);
+    await waitForIdle(root);
+    assert.deepEqual(sent.map(command => command.shopId), ['second']);
+    dom.window.close();
+  }
+});
+
 test('refresh after a reviewed pickup disappears offers the remaining choices', async()=>{
  let shops=['first','second','third'];
  const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),

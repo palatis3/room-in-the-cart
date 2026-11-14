@@ -147,10 +147,11 @@ export class WebApp {
     }
   }
   private pickupSelectionChanged(fresh:Session):boolean {
-    const prior=this.session;
-    return !!prior?.selectionRequired && !fresh.selectionRequired && isContributorSession(fresh) &&
-      this.reviewedScope===reviewScope(prior) && reviewScope({...fresh,shopId:prior.shopId})===this.reviewedScope &&
-      !this.retryCommand && !this.draft.editing && !this.draft.followup;
+    const prior = this.session;
+    if (!prior || !isContributorSession(fresh) || this.retryCommand || this.draft.editing || this.draft.followup) return false;
+    const choicesChanged = Boolean(prior.selectionRequired) !== Boolean(fresh.selectionRequired);
+    return choicesChanged && this.reviewedScope === reviewScope(prior) &&
+      reviewScope({...fresh, shopId: prior.shopId}) === this.reviewedScope;
   }
   private async load(verifiedSession?:Session):Promise<void> {
     if(this.signOutPending)return;
