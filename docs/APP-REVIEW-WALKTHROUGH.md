@@ -35,6 +35,8 @@ Use a fresh isolated test installation. Do not erase a person's existing workspa
 
 On November 13 the ordinary Release simulator build passed the pack comparison in step 1 on iOS 27.0 in English and US Spanish. Both languages showed $6.40 and $5.40 after relaunch, and clearing the first usable quantity left that offer unresolved. The support-summary portion of step 7 passed on iOS 17.0 in both languages with an existing saved pickup. The system Copy action produced exactly the nine previewed lines, and the stored comparison retained its original revision and contents. The runs used the application sources in PR revision `b7b0a0a0`. Repeat the checks on the signed build. Local results are in `.build/AppReviewDemoD955Nov13` and `.build/ReleaseSupportB7B0Nov13`.
 
+The November 14 Release build at `ab33d6cd` also passed step 1 on an iPhone SE (2nd generation) simulator running iOS 17.0 in both languages. After clearing pack A’s usable amount, the tester saved again and reopened Records. Each installation kept one “Demo wraps” comparison with two revisions. The original stored 16 items for $6.40 and 12 for $5.40. The correction kept pack B at $5.40 and left pack A’s count and cost unresolved. Both simulator results and the independent database checks are in `.build/ReviewWrapsAb33Nov14`.
+
 ## Verify an update on an existing installation
 
 Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
