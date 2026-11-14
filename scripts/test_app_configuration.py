@@ -172,6 +172,16 @@ class AppConfigurationTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         load_configuration(root, "Release")
 
+    def test_local_storekit_fixture_can_be_selected_in_debug_configuration(self):
+        fixture = Path(__file__).resolve().parents[1] / "ios/Features/Membership/HouseholdLocalTesting.storekit"
+        product = json.loads(fixture.read_text())["subscriptionGroups"][0]["subscriptions"][0]["productID"]
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            (root / "config/staging.json").write_text(json.dumps({"householdSubscriptionProductID": product}))
+            info = compiled_metadata(load_configuration(root, "Debug"), "Debug")
+            self.assertEqual(info["HouseholdSubscriptionProductID"], "local.testing.household.annual")
+
     def test_explicit_release_file_and_metadata_gate(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -186,7 +196,7 @@ class AppConfigurationTests(unittest.TestCase):
                     compiled = compiled_metadata(load_configuration(root, "Release"), "Release")
                     self.assertEqual(compiled["HouseholdSubscriptionProductID"], identifier)
                     require_release_metadata(compiled)
-            for identifier in ("annual/household", "X" * 101, "annual\x01"):
+            for identifier in ("local.testing.household.annual", "annual/household", "X" * 101, "annual\x01"):
                 with self.subTest(identifier=identifier):
                     (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))
                     with self.assertRaisesRegex(ValueError, "householdSubscriptionProductID"):
