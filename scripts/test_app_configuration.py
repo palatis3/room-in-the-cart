@@ -268,6 +268,10 @@ class BuiltAppVerificationTests(unittest.TestCase):
             (bundle / "Info.plist").write_bytes(plistlib.dumps({
                 **common, **metadata, "CFBundleExecutable": bundle.stem,
             }))
+        for folder in ("Widget", "Share"):
+            extension = app / "PlugIns" / f"RoomInTheCart{folder}.appex"
+            shutil.copyfile(self.root / "ios/Extensions" / folder / "PrivacyInfo.xcprivacy",
+                            extension / "PrivacyInfo.xcprivacy")
         (app / "Assets.car").write_bytes(b"fixture asset catalog")
         shutil.copyfile(self.root / "ios/Resources/PrivacyInfo.xcprivacy", app / "PrivacyInfo.xcprivacy")
         for language in ("en", "es"):
@@ -293,6 +297,19 @@ class BuiltAppVerificationTests(unittest.TestCase):
         debug = self.make_app("Debug", "dev.roominthecart.app.debug", "roominthecart-debug", "iPhoneSimulator")
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
+
+    def test_checks_each_extension_privacy_manifest(self):
+        for extension in (self.widget, self.share):
+            with self.subTest(bundle=extension.name):
+                manifest = extension / "PrivacyInfo.xcprivacy"
+                original = manifest.read_bytes()
+                manifest.unlink()
+                with self.assertRaisesRegex(ValueError, f"Missing privacy manifest in {extension.name}"):
+                    verify_built_app(self.app, "Release")
+                shutil.copyfile(self.app / manifest.name, manifest)
+                with self.assertRaisesRegex(ValueError, "differs from the reviewed source"):
+                    verify_built_app(self.app, "Release")
+                manifest.write_bytes(original)
 
     def test_rejects_loose_shopper_and_local_purchase_fixtures_in_distributed_bundles(self):
         staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")

@@ -46,6 +46,15 @@ def verify_iphone_bundle(bundle, executable_name):
     return info
 
 
+def verify_privacy_manifest(bundle, source_folder):
+    path = bundle / "PrivacyInfo.xcprivacy"
+    require(path.is_file(), f"Missing privacy manifest in {bundle.name}")
+    privacy = read_plist(path)
+    require(privacy == read_plist(source_folder / path.name),
+            f"Compiled privacy manifest differs from the reviewed source in {bundle.name}")
+    require(privacy.get("NSPrivacyTracking") is False, f"Unexpected tracking declaration in {bundle.name}")
+
+
 def verify_built_app(app, configuration, *, require_production_metadata=False):
     suffix = ENVIRONMENT_SUFFIXES[configuration]
     bundle_id = "dev.roominthecart.app" + suffix
@@ -79,12 +88,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
     icon = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconName")
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")
-    privacy_file = app / "PrivacyInfo.xcprivacy"
-    require(privacy_file.is_file(), "Missing privacy manifest")
-    privacy = read_plist(privacy_file)
-    expected_privacy = read_plist(ROOT / "ios/Resources/PrivacyInfo.xcprivacy")
-    require(privacy == expected_privacy, "Compiled privacy manifest differs from the reviewed source")
-    require(privacy.get("NSPrivacyTracking") is False, "Unexpected tracking declaration")
+    verify_privacy_manifest(app, ROOT / "ios/Resources")
     permission_keys = ["NSFaceIDUsageDescription"]
     if (ROOT / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
         permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]
@@ -113,6 +117,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
         extension = app / "PlugIns" / (name + ".appex")
         require(extension.is_dir(), f"Missing embedded {folder} extension")
         extension_info = verify_iphone_bundle(extension, name)
+        verify_privacy_manifest(extension, ROOT / "ios/Extensions" / folder)
         require(extension_info.get("CFBundleSupportedPlatforms") == info["CFBundleSupportedPlatforms"],
                 f"{folder} extension and app platform mismatch")
         require(nonempty_string(extension_info.get("CFBundleDisplayName")), f"Missing {folder} extension display name")
