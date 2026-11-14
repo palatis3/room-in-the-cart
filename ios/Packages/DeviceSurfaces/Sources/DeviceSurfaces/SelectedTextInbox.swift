@@ -132,6 +132,22 @@ public actor SelectedTextInbox {
 }
 
 extension SelectedTextInbox {
+    public static func loadSelectedText(from item: NSExtensionItem,
+                                        completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
+        if let text = item.attributedContentText?.string,
+           text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil {
+            guard fitsEnvelope(original: text) else { completion(.failure(.capacity)); return }
+            guard !text.contains("\0") else { completion(.failure(.invalid)); return }
+            completion(.success(text))
+            return
+        }
+        let providers = (item.attachments ?? []).filter {
+            $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+        }
+        guard providers.count == 1 else { completion(.failure(.unsupported)); return }
+        loadPlainText(from: providers[0], completion: completion)
+    }
+
     /// Consume the system's temporary copy inside the provider callback.
     public static func loadPlainText(from provider: NSItemProvider,
                                      completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
@@ -169,7 +185,7 @@ extension SelectedTextInbox {
             let payload = bytes.starts(with: [0xEF, 0xBB, 0xBF]) ? bytes.dropFirst(3) : bytes[...]
             text = String(data: payload, encoding: .utf8)
         }
-        guard let text, !text.isEmpty, !text.contains("\0") else { throw SurfaceError.invalid }
+        guard let text, text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil, !text.contains("\0") else { throw SurfaceError.invalid }
         guard fitsEnvelope(original: text) else { throw SurfaceError.capacity }
         return text
     }

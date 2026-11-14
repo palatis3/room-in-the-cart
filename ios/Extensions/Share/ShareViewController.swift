@@ -1,6 +1,5 @@
 import UIKit
 import SwiftUI
-import UniformTypeIdentifiers
 import DeviceSurfaces
 
 final class ShareViewController: UIViewController {
@@ -21,11 +20,8 @@ final class ShareViewController: UIViewController {
     }
     private func loadSelectedText() {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem], items.count == 1 else { model.reject(); return }
-        if let text = items[0].attributedContentText?.string, !text.isEmpty { model.accept(text); return }
-        let providers = (items[0].attachments ?? []).filter { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }
-        guard providers.count == 1 else { model.reject(); return }
         let expected = generation
-        SelectedTextInbox.loadPlainText(from: providers[0]) { [weak self] result in
+        SelectedTextInbox.loadSelectedText(from: items[0]) { [weak self] result in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == expected else { return }
                 switch result {
@@ -48,8 +44,6 @@ final class ShareViewController: UIViewController {
     var onSaved: (() -> Void)?
     private let session = SelectedTextSession()
     func accept(_ text: String) {
-        guard SelectedTextInbox.fitsEnvelope(original: text) else { rejectSize(); return }
-        guard !text.contains("\0") else { reject(); return }
         original = text; edited = text; loading = false
     }
     func rejectSize() {

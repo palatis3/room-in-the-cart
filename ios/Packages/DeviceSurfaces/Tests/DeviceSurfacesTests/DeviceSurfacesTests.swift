@@ -52,13 +52,34 @@ final class DeviceSurfacesTests: XCTestCase {
         }
         XCTAssertEqual(try stringResult.get(), text)
     }
+    func testBlankShareMessageUsesOnlyAnUnambiguousTextAttachment() async throws {
+        let item = NSExtensionItem()
+        let list = "  Café\r\n2 limones 🍋  "
+        let provider = NSItemProvider(object: list as NSString)
+        func load() async -> Result<String, SurfaceError> {
+            await withCheckedContinuation { continuation in
+                SelectedTextInbox.loadSelectedText(from: item) { continuation.resume(returning: $0) }
+            }
+        }
+
+        item.attributedContentText = NSAttributedString(string: " \r\n\t")
+        item.attachments = [provider]
+        let attachment = await load()
+        XCTAssertEqual(try attachment.get(), list)
+        item.attachments = [provider, NSItemProvider(object: "unrelated" as NSString)]
+        let ambiguous = await load()
+        XCTAssertEqual(ambiguous, .failure(.unsupported))
+        item.attributedContentText = NSAttributedString(string: " explicit selection ")
+        let selection = await load()
+        XCTAssertEqual(try selection.get(), " explicit selection ")
+    }
     func testSharedPlainTextFilesRejectOversizedInvalidAndUnrelatedRepresentations() async throws {
         let exact = Data(repeating: 65, count: SelectedTextInbox.maximumEntryBytes)
         let valid = try await loadTextFile(exact)
         XCTAssertEqual(try valid.get().utf8.count, exact.count)
         let oversized = try await loadTextFile(exact + Data([65]))
         XCTAssertEqual(oversized, .failure(.capacity))
-        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data()] {
+        for bytes in [Data([0xFF]), Data([0x61, 0x00, 0x62]), Data([0xFF, 0xFE, 65, 0, 65]), Data(" \t\r\n".utf8), Data()] {
             let invalid = try await loadTextFile(bytes)
             XCTAssertEqual(invalid, .failure(.invalid))
         }
