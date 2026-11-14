@@ -33,6 +33,14 @@ when another recipe in the same file had an oversized ingredient. The saved batc
 reopened successfully. The XCTest result and selector check are in
 `.build/RecordsMinimum3dc2Nov14/`.
 
+On the iPhone SE simulator running iOS 17.0, someone entering a recipe at the
+largest accessibility text size could read the Spanish source-address error
+through its last word, dismiss it with Listo, correct the address, save, and
+reopen the recipe with the corrected address. The first attempt showed clipped
+text in a fixed banner. The updated editor uses a scrollable system alert at
+accessibility sizes. See `.build/ManualRecipeSECorrectionNov14/read-to-end-strict.log`
+and the rendered `before-error.png`, `after-error.png` and `end-error.png` there.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,

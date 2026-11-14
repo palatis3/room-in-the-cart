@@ -616,6 +616,7 @@ private struct RecordsImportFilePicker: View {
 
 private struct ManualRecipeEntryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let submit: (ImportedRecipe) async -> String?
     @State private var submitting = false
     @State private var submissionError: String?
@@ -657,7 +658,7 @@ private struct ManualRecipeEntryView: View {
                         submissionError = await submit(recipe)
                         submitting = false
                         if submissionError == nil { dismiss() }
-                        else {
+                        else if !dynamicTypeSize.isAccessibilitySize {
                             await Task.yield()
                             errorFocused = true
                         }
@@ -667,7 +668,7 @@ private struct ManualRecipeEntryView: View {
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done")) { editing = nil }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if let submissionError {
+                if let submissionError, !dynamicTypeSize.isAccessibilitySize {
                     Text(submissionError)
                         .foregroundStyle(.red)
                         .padding()
@@ -676,6 +677,14 @@ private struct ManualRecipeEntryView: View {
                         .accessibilityFocused($errorFocused)
                         .accessibilityIdentifier("records.manualRecipeError")
                 }
+            }
+            .alert(recordsText("Review recipe"), isPresented: Binding(
+                get: { dynamicTypeSize.isAccessibilitySize && submissionError != nil },
+                set: { if !$0 { submissionError = nil } }
+            )) {
+                Button(ledgerText("Done"), role: .cancel) {}
+            } message: {
+                Text(submissionError ?? "")
             }
             .navigationTitle(recordsText("Save a recipe"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Cancel")) { dismiss() }.disabled(submitting) } }
