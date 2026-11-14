@@ -84,7 +84,7 @@ struct StructuredCaptureField: Hashable {
             let line = captureDraftBinding(placeholder, in: $lines)
             Section {
                 CaptureStructuredRow(line: line, corrections: corrections, fieldFocus: fieldFocus, destination: destination, source: source,
-                    authorizeSpelling: { liveSpellingScope != nil && !spellingWorking }) { original, replacement in
+                    authorizeSpelling: { liveSpellingScope != nil && !spellingWorking && !corrections.failed }) { original, replacement in
                     changeSpellings { await corrections.remember(original: original, replacement: replacement) }
                 }
             }
@@ -95,10 +95,10 @@ struct StructuredCaptureField: Hashable {
                     guard liveSpellingScope == scope, !spellingWorking else { return }
                     if value { changeSpellings { await corrections.setEnabled(true) } }
                     else { requestedDisableScope = scope; confirmDisable = true }
-                })).disabled(spellingWorking).accessibilityIdentifier("capture.spelling.enabled")
+                })).disabled(spellingWorking || corrections.failed).accessibilityIdentifier("capture.spelling.enabled")
                 Text(captureText("Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change."))
                     .font(.footnote)
-                if corrections.snapshot.enabled {
+                if corrections.snapshot.enabled && !corrections.failed {
                     ForEach(corrections.snapshot.entries) { entry in
                         HStack {
                             Text(entry.original + " → " + entry.replacement)
@@ -117,6 +117,10 @@ struct StructuredCaptureField: Hashable {
                     case .list: captureText("Spelling memory is unavailable. Your reviewed list is still usable.")
                     }
                     Text(message)
+                    Button(captureText("Turn off and delete these spellings"), role: .destructive) {
+                        requestedDisableScope = scope
+                        confirmDisable = true
+                    }.disabled(spellingWorking).accessibilityIdentifier("capture.spelling.deleteUnreadable")
                 }
             }
             .alert(captureText("Turn off spelling memory?"), isPresented: $confirmDisable) {

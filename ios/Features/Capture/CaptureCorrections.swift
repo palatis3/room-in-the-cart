@@ -258,7 +258,7 @@ actor CaptureCorrectionStore {
     }
     func invalidate() { generation = UUID(); scope = nil; snapshot = .init(); previousRegions = []; failed = false }
     func suggestion(for original: String) -> CaptureCorrection? {
-        guard scope != nil, snapshot.enabled else { return nil }
+        guard scope != nil, !failed, snapshot.enabled else { return nil }
         return snapshot.entries.first { CaptureCorrectionStore.key($0.original) == CaptureCorrectionStore.key(original) }
     }
     func setEnabled(_ enabled: Bool) async { await change { try await self.store.setEnabled(enabled, scope: $0) } }

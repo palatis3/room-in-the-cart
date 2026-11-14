@@ -18,6 +18,7 @@ import SwiftUI
     @State private var boundContext: Context?
     @State private var working = false
     @State private var confirmDisable = false
+    @State private var requestedDisableContext: Context?
     @State private var outcome: CorrectionSettingsOutcome?
     @State private var outcomeRevision = 0
     @AccessibilityFocusState private var outcomeFocused: Bool
@@ -93,7 +94,7 @@ import SwiftUI
                         if !corrections.failed && (context?.scope.isPreviousRegion != true || corrections.snapshot.enabled) {
                             Toggle(captureText("Remember product spellings on this device"), isOn: Binding(get: { corrections.snapshot.enabled }, set: { value in
                                 if value { perform(.enable) }
-                                else { confirmDisable = true }
+                                else { requestDisable() }
                             })).disabled(working).accessibilityIdentifier("corrections.enabled")
                         }
                         Text(captureText("Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change."))
@@ -118,6 +119,9 @@ import SwiftUI
                         Section {
                             Text(captureText("Spelling settings could not be updated. Reload them before trying again."))
                             Button(captureText("Reload spelling memory")) { reload() }.disabled(working)
+                            Button(captureText("Turn off and delete these spellings"), role: .destructive) {
+                                requestDisable()
+                            }.disabled(working).accessibilityIdentifier("corrections.deleteUnreadable")
                         }
                     }
                 } else if context != nil {
@@ -140,6 +144,7 @@ import SwiftUI
                 .confirmationDialog(captureText("Turn off spelling memory?"), isPresented: $confirmDisable, titleVisibility: .visible) {
                     Button(captureText("Turn off and delete these spellings"), role: .destructive) {
                         confirmDisable = false
+                        guard let requestedDisableContext, requestedDisableContext == context else { return }
                         perform(.disable)
                     }
                     Button(captureText("Cancel")) { confirmDisable = false }
@@ -157,6 +162,12 @@ import SwiftUI
         let label = region.localeIdentifier == "und" ? String(index + 1)
             : language.localizedString(forIdentifier: region.localeIdentifier) ?? region.localeIdentifier
         return captureText("Earlier region") + " · " + label
+    }
+
+    private func requestDisable() {
+        guard authorized, !working, let context else { return }
+        requestedDisableContext = context
+        confirmDisable = true
     }
 
     private func perform(_ action: CorrectionSettingsAction) {
