@@ -32,6 +32,8 @@ import XCTest
         tap(app.buttons["Use editable household idea template"])
         enterValue("Fractional chickpea supper", into: "Meal name", replacing: true)
         fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
+        XCTAssertEqual(app.textFields["Meal name"].value as? String, "Fractional chickpea supper",
+                       "Leaving the title field must preserve the household’s wording")
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
         // The retained ingredient is above the removed row's scroll position.
