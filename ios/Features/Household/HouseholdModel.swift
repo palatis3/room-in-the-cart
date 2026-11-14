@@ -618,7 +618,24 @@ struct DeviceReminderPersona: Equatable {
               let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
         return envelope.kind == "request.edit"
     }
-    func reviewRejectedCorrection() async {
+    struct DraftReplacement: Equatable {
+        let operationID: String
+        let generation: UUID
+        let item: String
+        let quantity: String
+        let forNextShop: Bool
+        let editingID: String?
+        let followupID: String?
+    }
+    var correctionReplacingDraft: DraftReplacement? {
+        guard canReviewRejectedCorrection, let pending,
+              !item.isEmpty || !quantity.isEmpty || forNextShop || editing != nil || followingUp != nil else { return nil }
+        if let submittedDraft, submittedDraft == currentContributorRequestScope() { return nil }
+        return DraftReplacement(operationID: pending.id, generation: generation, item: item, quantity: quantity,
+                                forNextShop: forNextShop, editingID: editing?.id, followupID: followingUp?.id)
+    }
+    func reviewRejectedCorrection(replacing replacement: DraftReplacement? = nil) async {
+        guard correctionReplacingDraft == replacement else { return }
         guard canReviewRejectedCorrection, !busy, !locked, let service, let pending,
               let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes),
               case .string(let requestID) = envelope.body["requestId"],
@@ -644,10 +661,12 @@ struct DeviceReminderPersona: Equatable {
                 page = try await service.ownRequests(cursor: cursor)
             }
             guard start == generation else { return }
-            guard let current = page.requests.first(where: { $0.requestId == requestID && $0.shopId == envelope.shopId }) else {
+            guard let current = page.requests.first(where: { $0.requestId == requestID && $0.shopId == envelope.shopId }),
+                  current.status != "withdrawn" else {
                 notice = ht("This request is no longer available for correction.")
                 return
             }
+            guard self.pending?.id == pending.id, correctionReplacingDraft == replacement else { return }
             try await outbox.remove(pending.id)
             guard start == generation else { return }
             self.pending = nil; delivery = .localDraft; attempts = 0

@@ -604,6 +604,50 @@ import DeviceSurfaces
         XCTAssertEqual(fixture.commands.count, 3)
     }
 
+    func testRecoveringRejectedCorrectionProtectsNewerTyping() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let model = try await model(fixture, queue: queue)
+        model.item = "Cereal"
+        await model.sendRequest()
+        let original = try XCTUnwrap(model.requests.first)
+        model.edit(original)
+        model.quantity = "2 boxes"
+        fixture.rows[0]["revision"] = 2
+        fixture.rows[0]["status"] = "deferred"
+        fixture.rows[0]["ownActionAllowed"] = false
+        await model.sendRequest()
+
+        model.item = "Rice"
+        model.quantity = "3 bags"
+        await model.reviewRejectedCorrection()
+        XCTAssertEqual(model.item, "Rice")
+        XCTAssertEqual(model.quantity, "3 bags")
+        XCTAssertTrue(model.canReviewRejectedCorrection)
+        XCTAssertEqual(fixture.commands.count, 2)
+
+        let earlier = try XCTUnwrap(model.correctionReplacingDraft)
+        model.quantity = "4 bags"
+        await model.reviewRejectedCorrection(replacing: earlier)
+        XCTAssertEqual(model.quantity, "4 bags")
+        XCTAssertTrue(model.canReviewRejectedCorrection)
+
+        let replacement = try XCTUnwrap(model.correctionReplacingDraft)
+        fixture.failRequestRead = true
+        await model.reviewRejectedCorrection(replacing: replacement)
+        XCTAssertEqual(model.quantity, "4 bags")
+        XCTAssertTrue(model.canReviewRejectedCorrection)
+
+        fixture.failRequestRead = false
+        await model.reviewRejectedCorrection(replacing: replacement)
+        XCTAssertEqual(model.item, "Cereal")
+        XCTAssertEqual(model.quantity, "2 boxes")
+        XCTAssertEqual(model.followingUp?.requestId, original.requestId)
+        XCTAssertNil(model.correctionReplacingDraft)
+        XCTAssertEqual(fixture.commands.count, 2)
+    }
+
     func testOnlineEditWithDroppedPostClearsOnExpiryEvenWhenGrantIDIsUnchanged() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), grant = UUID()

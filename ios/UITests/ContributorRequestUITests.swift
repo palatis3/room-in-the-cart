@@ -132,6 +132,42 @@ import XCTest
         capture("Spanish-large-text-original-at-top")
     }
 
+    func testCancellingCorrectionReplacementPreservesDraftUntilConfirmed() {
+        app.launchArguments = ["--ui-testing", "--rejected-correction-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        waitForHousehold(timeout: 20)
+        let item = app.textFields["Item"]
+        let amount = app.textFields["Quantity, optional"]
+        let review = app.buttons["Review my correction"]
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        XCTAssertEqual(amount.value as? String, "3 bags")
+        tap(review)
+        let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d",
+            "Replace your current draft with the saved correction?", XCUIElement.ElementType.staticText.rawValue)).firstMatch
+        XCTAssertTrue(dialog.buttons["Replace draft"].waitForExistence(timeout: 5))
+        let cancel = app.buttons["Cancel"]
+        if cancel.isHittable {
+            cancel.tap()
+        } else {
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.exists)
+            dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        }
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        XCTAssertEqual(amount.value as? String, "3 bags")
+
+        tap(review)
+        dialog.buttons["Replace draft"].tap()
+        XCTAssertTrue(review.waitForNonExistence(timeout: 10))
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Cereal")
+        XCTAssertEqual(amount.value as? String, "2 boxes")
+        XCTAssertEqual(element("fixture.requestPosts").label, "Fixture request POSTs: 2")
+        XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 1")
+    }
+
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

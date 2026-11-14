@@ -221,7 +221,7 @@ struct HouseholdSettingsView: View {
         case .needsReview:
             Text(ht("Review needed. Check received requests before creating a new request."))
             if model.canReviewRejectedCorrection {
-                Button(ht("Review my correction")) { Task { await model.reviewRejectedCorrection() } }
+                ContributorCorrectionButton(model: model)
             }
             Button(ht("I checked received requests; clear this retry")) { Task { await model.discardPendingAfterReview() } }
         case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle")
@@ -240,6 +240,30 @@ struct HouseholdSettingsView: View {
         case "withdrawn": return ht("Withdrawn")
         default: return ht("Check current status")
         }
+    }
+}
+
+struct ContributorCorrectionButton: View {
+    @ObservedObject var model: HouseholdModel
+    @State private var replacement: HouseholdModel.DraftReplacement?
+
+    var body: some View {
+        Button(ht("Review my correction")) {
+            if let draft = model.correctionReplacingDraft {
+                replacement = draft
+            } else {
+                Task { await model.reviewRejectedCorrection() }
+            }
+        }
+        .confirmationDialog(ht("Replace your current draft with the saved correction?"), isPresented: Binding(
+            get: { replacement != nil }, set: { if !$0 { replacement = nil } }
+        ), titleVisibility: .visible, presenting: replacement) { draft in
+            Button(ht("Replace draft"), role: .destructive) {
+                Task { await model.reviewRejectedCorrection(replacing: draft) }
+            }
+            Button(ht("Cancel"), role: .cancel) {}
+        }
+        .onChange(of: model.correctionReplacingDraft) { _, _ in replacement = nil }
     }
 }
 

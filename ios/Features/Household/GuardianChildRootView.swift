@@ -196,7 +196,7 @@ struct GuardianChildRequestsView: View {
                     case .needsReview:
                         Text(ht("Review needed. Check received requests before creating a new request."))
                         if household.canReviewRejectedCorrection {
-                            Button(ht("Review my correction")) { Task { await household.reviewRejectedCorrection() } }
+                            ContributorCorrectionButton(model: household)
                         }
                         Button(ht("I checked received requests; clear this retry")) { Task { await household.discardPendingAfterReview() } }
                     case .received(let receipt): Text(receipt.contributorDeliveryLabel)

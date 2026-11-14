@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Replace your current draft with the saved correction?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace your current draft with the saved correction?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reemplazar tu borrador actual por la corrección guardada?"
+          }
+        }
+      }
+    },
+    "Replace draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar borrador"
+          }
+        }
+      }
+    },
     "Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.": {
       "localizations": {
         "en": {

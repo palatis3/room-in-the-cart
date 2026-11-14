@@ -96,6 +96,17 @@ import HouseholdClient
             guard let workspace = model.workspaces.first else { setupFailure = true; return }
             model.keepLocalPrivate = true; await model.join(workspace)
             guard model.contributorRequestScope != nil else { setupFailure = true; return }
+            if server.rejectedCorrection {
+                model.item = "Cereal"
+                await model.sendRequest()
+                guard let cereal = model.requests.first else { setupFailure = true; return }
+                model.edit(cereal)
+                model.quantity = "2 boxes"
+                await model.sendRequest()
+                guard model.canReviewRejectedCorrection else { setupFailure = true; return }
+                model.item = "Rice"
+                model.quantity = "3 bags"
+            }
             household = model
         } catch { setupFailure = true }
     }
@@ -122,6 +133,7 @@ private final class ContributorRequestUIFixtureVault: RefreshTokenVault, @unchec
 }
 private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
+    let rejectedCorrection = ProcessInfo.processInfo.arguments.contains("--rejected-correction-fixture")
     let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
     let grant = UUID().uuidString.lowercased()
     let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
@@ -200,6 +212,16 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
         if path.hasSuffix("/replay-windows") { return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands") {
+            if rejectedCorrection, json["kind"] as? String == "request.edit",
+               let body = json["body"] as? [String: Any], let id = body["requestId"] as? String,
+               let index = rows.firstIndex(where: { $0["requestId"] as? String == id }) {
+                rows[index]["status"] = "deferred"
+                rows[index]["revision"] = 2
+                rows[index]["ownActionAllowed"] = false
+                posts += 1
+                changed?(posts, rows.count)
+                return try response(["error": ["code": "followup_required"]], 409)
+            }
             if json["kind"] as? String == "request.withdraw" {
                 guard let key = json["clientKey"] as? String else { throw URLError(.badURL) }
                 if let receipt = receipts[key] { return try response(receipt) }
