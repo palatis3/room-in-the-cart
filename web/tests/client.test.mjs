@@ -753,6 +753,50 @@ test('uncertain memory retry cannot cross identities or silently make another op
  assert.equal(sent.length,1);assert.doesNotMatch(root.textContent,/Private original|No-salt frijoles/);
 });
 
+for (const change of ['expiry', 'refresh', 'turn off']) {
+  test(`an online request keeps its receipt key after offline permission changes via ${change}`, async t => {
+    const disabled = {...session(), canSetRequestQueue:true};
+    const expires = Date.now() + 60000;
+    let active = {...disabled, queueConsent:true, requestQueueGrant:'first-grant', requestQueueUntil:new Date(expires).toISOString()};
+    const attempts = [];
+    const receipts = new Map();
+    const outbox = new Outbox(new IDBFactory());
+    t.mock.method(outbox, 'put', async () => { throw new Error('Storage quota exceeded'); });
+    const {dom, root, app} = await setup(fakeAPI({
+      session: async () => active,
+      setRequestQueue: async (_session, enabled) => { assert.equal(enabled, false); active = disabled; },
+      command: async (_session, cmd, grant) => {
+        assert.equal(grant, undefined);
+        attempts.push(structuredClone(cmd));
+        if (!receipts.has(cmd.clientKey)) receipts.set(cmd.clientKey, {...own(), requestId:cmd.body.clientRequestId});
+        if (attempts.length === 1) throw new ApiError('network', 0);
+        return receipts.get(cmd.clientKey);
+      }
+    }), 'en', outbox);
+    t.after(() => dom.window.close());
+    type(dom, 'item', 'Corn tortillas');
+    submit(root, dom); submit(root, dom); await waitForIdle(root);
+    assert.match(root.textContent, /Receipt is unconfirmed/);
+    if (change === 'turn off') {
+      click(root, 'Turn off and clear pending requests');
+      await waitForIdle(root);
+    } else {
+      active = disabled;
+      if (change === 'expiry') {
+        t.mock.method(Date, 'now', () => expires + 1);
+        app.checkExpiry();
+      } else {
+        await app.start();
+      }
+    }
+    submit(root, dom); await waitForIdle(root);
+    assert.equal(attempts.length, 2);
+    assert.deepEqual(attempts[1], attempts[0]);
+    assert.equal(receipts.size, 1);
+    assert.match(root.textContent, /Received by the shopper/);
+  });
+}
+
 test('the device switch restores only its exact grant and removes earlier pending text after rotation',async()=>{
  let current={...session(),canSetRequestQueue:true};
  const outbox=new Outbox(new IDBFactory()), sends=[];

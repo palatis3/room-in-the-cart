@@ -48,6 +48,7 @@ export class WebApp {
   private adultAttestation = false;
   private inviteAlias = '';
   private redemption:InviteRedemption|null = null;
+  // A live draft keeps its online receipt identity across changes to offline storage permission.
   private retryCommand:Command|null = null;
   private uncertainSend = false;
   private proposalIntent:ProposalIntent|null = null;
@@ -140,7 +141,7 @@ export class WebApp {
       const expiredScope=scopeFor(this.session);
       const {requestQueueGrant, requestQueueUntil, ...current} = this.session;
       this.session = {...current, queueConsent:false};
-      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      this.pending=[];this.confirmedOperations.clear();
       this.notice='Offline permission expired. Check Your requests before sending again.';
       void this.outbox.clearScope(expiredScope).catch(()=>{this.queueState='unavailable';this.render();});
       this.render();
@@ -208,7 +209,7 @@ export class WebApp {
       this.render();
     }
     if (previous?.requestQueueGrant && previous.requestQueueGrant !== fresh?.requestQueueGrant) {
-      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      this.pending=[];this.confirmedOperations.clear();
       await this.outbox.clearScope(scopeFor(previous)).catch(()=>{this.queueState='unavailable';});
     }
     if(!fresh){
@@ -576,7 +577,7 @@ export class WebApp {
         const fresh=await this.reauthenticate();
         await this.api.setRequestQueue(fresh,!enabled);
         if(enabled){
-          this.pending=[];this.retryCommand=null;this.uncertainSend=false;this.consent=false;
+          this.pending=[];this.confirmedOperations.clear();this.consent=false;
           const {requestQueueGrant,requestQueueUntil,...current}=fresh;
           this.session={...current,queueConsent:false};
           try { await this.outbox.clearScope(scopeFor(fresh)); }
