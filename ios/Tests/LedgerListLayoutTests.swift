@@ -80,8 +80,10 @@ import CoreDomain
         var shop = try populated("Corner Market")
         try shop.handle(lineID: shop.lines[1].id, by: "Private helper")
         for i in 1...35 { _ = try shop.addManualLine(name: "Package number \(i)", quantity: nil) }
+        let literal = "<Flour> & \"Rice\""
+        _ = try shop.addManualLine(name: literal, quantity: nil)
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
-        let renderer = LetterPageRenderer(text: listing.printText())
+        let renderer = LetterPageRenderer(formatter: listing.printFormatter())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
             let count = renderer.numberOfPages
             renderer.prepare(forDrawingPages:NSRange(location:0,length:count))
@@ -89,6 +91,7 @@ import CoreDomain
         }
         let pdf = try XCTUnwrap(PDFDocument(data:data))
         XCTAssertGreaterThan(pdf.pageCount,1)
+        var numberedItems: [String] = []
         for index in 0..<pdf.pageCount {
             let page = try XCTUnwrap(pdf.page(at: index))
             let lines = page.selection(for: page.bounds(for: .mediaBox))?.selectionsByLine() ?? []
@@ -97,12 +100,15 @@ import CoreDomain
             let footer = try XCTUnwrap(footers.first).bounds(for: page)
             XCTAssertLessThan(footer.maxY, 70)
             let body = lines.filter { $0.string != "Room in the Cart" }
+            numberedItems += body.compactMap(\.string).filter { $0.hasPrefix("Package number ") }
+            if let last = body.last?.string {
+                XCTAssertFalse(last.hasPrefix("Package number "), "Each item and its quantity must print on the same page")
+            }
             XCTAssertFalse(body.isEmpty, "A footer must not create a blank page")
             XCTAssertTrue(body.allSatisfy { $0.bounds(for: page).minY > footer.maxY })
         }
         let text = try XCTUnwrap(pdf.string)
-        for wanted in ["Corner Market","Apples","Soap","Package number 35"] { XCTAssertTrue(text.contains(wanted),wanted) }
-        let numberedItems = text.components(separatedBy: .newlines).filter { $0.hasPrefix("Package number ") }
+        for wanted in ["Corner Market","Apples","Soap","Package number 35",literal] { XCTAssertTrue(text.contains(wanted),wanted) }
         XCTAssertEqual(numberedItems, (1...35).map { "Package number \($0)" })
         for hidden in ["Private note","Private helper","Milk"] { XCTAssertFalse(text.contains(hidden),hidden) }
     }
