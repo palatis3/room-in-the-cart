@@ -18,7 +18,7 @@ import SwiftUI
     // reason. They neither describe a later purchase call nor prove delivery.
     @Published private(set) var callbackRejections: [MembershipFailure] = []
     let configuration: MembershipConfiguration
-    let context: MembershipContext?
+    @Published private(set) var context: MembershipContext?
     @Published private(set) var eligibleAdults: [MembershipSeat]
     private let service: any MembershipEntitlementService
     private let storefront: any MembershipStorefront
@@ -160,11 +160,11 @@ import SwiftUI
         }
     }
     var canPurchase: Bool {
-        !isStopped && configuration.isReady && context?.appAccountToken != nil && offer != nil && !isBusy && canStartNewPurchase
+        !isStopped && configuration.isReady && offer != nil && !isBusy && canStartNewPurchase
     }
 
     private var canStartNewPurchase: Bool {
-        !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
+        context?.appAccountToken != nil && !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
             && !deliveryOutcomes.values.contains(.failed(.deliveryPending))
     }
 
@@ -284,6 +284,25 @@ import SwiftUI
             return
         }
         guard canStartNewPurchase else { return }
+        // Another adult may have become the purchaser since this screen opened.
+        do {
+            let currentToken = try await service.purchaseContext(householdID: context.householdID)
+            guard session == generation, canStartNewPurchase else { return }
+            guard currentToken == appAccountToken else { throw MembershipFailure.accountMismatch }
+        } catch {
+            guard session == generation else { return }
+            let issue = error as? MembershipFailure ?? .unavailable
+            if issue == .notPurchaser || issue == .accountMismatch {
+                var readOnly = context
+                readOnly.appAccountToken = nil
+                self.context = readOnly
+                updatesTask?.cancel()
+                updatesTask = nil
+            }
+            // Nothing was submitted to Apple. The shopper can retry a network failure.
+            _ = reject(issue == .deliveryPending ? .unavailable : issue)
+            return
+        }
         // Only a new actual StoreKit purchase call resets its report. Observer
         // updates, restores and unrelated rejections cannot resolve this request.
         purchaseRejection = nil

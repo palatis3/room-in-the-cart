@@ -731,7 +731,7 @@ import StoreKitTest
             privacyURL: URL(string: "https://example.invalid/privacy"), termsURL: URL(string: "https://example.invalid/terms")),
             context: MembershipContext(purchaserID: "local-test-adult", purchaserName: "Local test adult",
                 householdID: "local-test-household", householdName: "Local test household", appAccountToken: accountToken),
-            service: UnavailableMembershipService(), storefront: storefront)
+            service: LocalPurchaseContext(accountToken: accountToken), storefront: storefront)
     }
 
     private func assertFree(_ model: MembershipModel, file: StaticString = #filePath, line: UInt = #line) {
@@ -761,4 +761,15 @@ import StoreKitTest
         throw ScenarioFailure.timeout
     }
     private enum ScenarioFailure: Error { case unexpectedPurchase, timeout }
+}
+
+
+// StoreKit supplies real local transactions while the household delivery service is unavailable.
+@MainActor private struct LocalPurchaseContext: MembershipEntitlementService {
+    let accountToken: UUID
+    func purchaseContext(householdID: String) async throws -> UUID { accountToken }
+    func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
+    func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
+    func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }
+    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
 }

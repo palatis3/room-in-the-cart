@@ -7,7 +7,7 @@ struct MembershipContext: Equatable, Sendable {
     let householdID: String
     let householdName: String
     /// Nil for an authenticated non-purchaser reading a shared named seat.
-    let appAccountToken: UUID?
+    var appAccountToken: UUID?
 }
 
 struct MembershipSeat: Codable, Equatable, Identifiable, Sendable {
@@ -67,6 +67,7 @@ enum MembershipFailure: Error, Equatable {
 /// Implementations must verify with Apple on the server and commit before returning durable=true.
 /// The service must authenticate the caller and recheck household membership and seat authority.
 @MainActor protocol MembershipEntitlementService {
+    func purchaseContext(householdID: String) async throws -> UUID
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat]
@@ -74,6 +75,7 @@ enum MembershipFailure: Error, Equatable {
 }
 
 struct UnavailableMembershipService: MembershipEntitlementService {
+    func purchaseContext(householdID: String) async throws -> UUID { throw MembershipFailure.notConfigured }
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }

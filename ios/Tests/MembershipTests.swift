@@ -965,6 +965,53 @@ import Combine
         XCTAssertEqual(model.statusMessages, [.otherNotice(.failed(.unavailable))])
     }
 
+    func testChangedPurchaserCannotOpenApplePaymentSheetFromAnOlderOffer() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        XCTAssertTrue(model.canPurchase)
+        service.purchaseContextError = .notPurchaser
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.notPurchaser))
+        XCTAssertNil(model.purchaseReport)
+        XCTAssertFalse(model.canPurchase)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(service.submissions, 0)
+        XCTAssertNil(model.context?.appAccountToken)
+        await model.restore()
+        XCTAssertEqual(store.syncCount, 0)
+        XCTAssertEqual(store.purchaseCount, 0)
+    }
+
+    func testPurchaseAccountCheckCanRetryAfterAServiceInterruption() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        service.purchaseContextError = .deliveryPending
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.unavailable))
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertTrue(model.canPurchase)
+        service.purchaseContextError = nil
+        await model.purchase()
+        XCTAssertEqual(store.purchaseCount, 1)
+    }
+
+    func testReplacedAccountTokenCannotReachStoreKit() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        service.purchaseToken = UUID()
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.accountMismatch))
+        XCTAssertNil(model.purchaseReport)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(service.submissions, 0)
+    }
+
     func testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice() async {
         let service = FakeMembershipService(snapshot: snapshot())
         let model = makeModel(service, FakeMembershipStorefront())
@@ -1467,6 +1514,12 @@ import Combine
         if let error { throw error }; return snapshot
     }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { snapshot.seats }
+    var purchaseContextError: MembershipFailure?
+    var purchaseToken = UUID(uuidString: "33333333-3333-4333-8333-333333333333")!
+    func purchaseContext(householdID: String) async throws -> UUID {
+        if let purchaseContextError { throw purchaseContextError }
+        return purchaseToken
+    }
     var requestedSeatRevisions: [Int] = []
     var seatUpdateResponse: MembershipSnapshot?
     func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot {
