@@ -230,6 +230,17 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
+    // Older versions allowed a later quote to overwrite the active store and cap while frozen.
+    mutating func restoreCheckoutTerms(from snapshot: HandoffSnapshot) {
+        guard let frozen = frozenQuotes[snapshot.id] else { return }
+        if let savedCap = frozenCaps?[snapshot.id.uuidString] {
+            cap = savedCap
+        } else if quote != frozen || context != frozen.context {
+            cap = nil
+        }
+        context = frozen.context
+    }
+
     func unfilledOffers(at instant: Date) -> [PickupOffer] {
         guard closedAt == nil else { return [] }
         let observed = Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
@@ -389,8 +400,12 @@ struct PickupPersistenceLocation {
         return LedgerPackStockReview.basketBasisIsCurrent(value, pickupWorkspaceID: sourceWorkspaceID)
     }
     var result: CheckoutResult? {
-        guard hasCurrentBasketStockBasis, let value = journey, let quote = value.quote,
-              value.basket?.amendments.isEmpty != false, value.quotedRevisionID == value.basket?.current.id else { return nil }
+        guard hasCurrentBasketStockBasis, let value = journey, let basket = value.basket,
+              basket.amendments.isEmpty else { return nil }
+        if basket.phase == .frozen, let snapshot = frozenSnapshot, let frozen = value.frozenQuotes[snapshot.id] {
+            return try? CheckoutEngine.evaluate(frozen, cap: value.frozenCaps?[snapshot.id.uuidString])
+        }
+        guard let quote = value.quote, value.quotedRevisionID == basket.current.id else { return nil }
         return try? CheckoutEngine.evaluate(quote, cap: value.cap)
     }
     var allocation: StockAllocationResult? {
@@ -652,6 +667,7 @@ struct PickupPersistenceLocation {
                   basket.current.id == snapshot.revision.id, !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
             let revision = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: basket.current.lines.map { .upsert($0) })
             try basket.apply(revision, at: clock())
+            value.restoreCheckoutTerms(from: snapshot)
             value.basket = basket; value.quote = nil; value.quotedRevisionID = nil
         }
     }
@@ -706,14 +722,8 @@ struct PickupPersistenceLocation {
         return await change { value in
             guard var basket = value.basket, basket.id == snapshot.basketID,
                   basket.current.id == snapshot.revision.id, basket.placements.isEmpty else { throw PickupModelError.invalid }
+            value.restoreCheckoutTerms(from: snapshot)
             if let frozenQuote = value.frozenQuotes[snapshot.id] {
-                // Older versions allowed checkout terms to change after this handoff was frozen.
-                if let frozenCap = value.frozenCaps?[snapshot.id.uuidString] {
-                    value.cap = frozenCap
-                } else if value.quote != frozenQuote || value.context != frozenQuote.context {
-                    value.cap = nil
-                }
-                value.context = frozenQuote.context
                 value.quote = frozenQuote
                 value.quotedRevisionID = snapshot.revision.id
             }

@@ -25,12 +25,9 @@ final class PickupCheckoutDraftTests: XCTestCase {
         return value
     }
 
-    @MainActor func testFrozenCheckoutRejectsStalePricingAndPlacesAgainstTheReviewedBranch() async throws {
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: file) }
-        let model = PickupModel(databaseURL: file)
-        let original = try journey(.inclusiveTotal(.exact(money(300))))
-        let quote = try XCTUnwrap(original.quote)
+    @MainActor private func legacyFrozenCheckout(in model: PickupModel) async throws
+        -> (quote: CheckoutQuote, cap: CheckoutCap, snapshot: HandoffSnapshot) {
+        let quote = CheckoutQuote(scope: .wholeCheckout, context: context(), pricing: .inclusiveTotal(.exact(money(300))))
         let started = await model.start(from: [line()], shopID: shopID, context: quote.context)
         let cap = CheckoutCap(scope: .wholeCheckout, commitmentsID: shopID, amount: money(500))
         let saved = await model.setQuote(quote, cap: cap)
@@ -55,6 +52,14 @@ final class PickupCheckoutDraftTests: XCTestCase {
             $0.cap = nil
         }
         XCTAssertTrue(legacy)
+        return (quote, cap, snapshot)
+    }
+
+    @MainActor func testFrozenCheckoutRejectsStalePricingAndPlacesAgainstTheReviewedBranch() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let model = PickupModel(databaseURL: file)
+        let (quote, cap, snapshot) = try await legacyFrozenCheckout(in: model)
         let placed = await model.reportPlaced(reviewing: snapshot)
         XCTAssertTrue(placed)
         let restarted = PickupModel(databaseURL: file)
@@ -64,6 +69,30 @@ final class PickupCheckoutDraftTests: XCTestCase {
         XCTAssertEqual(restarted.journey?.cap, cap)
         XCTAssertEqual(restarted.journey?.pickup?.orderLines.map(\.branchID), [quote.context.branchID])
         XCTAssertEqual(restarted.journey?.basket?.placements.map(\.snapshotID), [snapshot.id])
+    }
+
+    @MainActor func testFrozenBudgetAndReopenedDraftUseTheReviewedCheckoutAfterRelaunch() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let (quote, cap, snapshot) = try await legacyFrozenCheckout(in: PickupModel(databaseURL: file))
+        let model = PickupModel(databaseURL: file)
+        await model.load()
+        let expected = try CheckoutEngine.evaluate(quote, cap: cap)
+        XCTAssertEqual(model.result, expected)
+        let cookCopy = PickupCookProjection.text(journey: try XCTUnwrap(model.journey), allocation: nil, result: model.result,
+                                                language: "en-US", includeBudget: true, at: now)
+        XCTAssertTrue(cookCopy.contains(PickupCookProjection.budgetText(expected, language: "en-US")))
+        let didReopen = await model.reopenDraft(reviewing: snapshot)
+        XCTAssertTrue(didReopen)
+        let persisted = PickupModel(databaseURL: file)
+        await persisted.load()
+        let draft = PickupCheckoutDraft(journey: try XCTUnwrap(persisted.journey))
+        XCTAssertEqual(draft.branch, quote.context.branchID)
+        XCTAssertEqual(draft.originalCap, cap)
+        XCTAssertFalse(draft.hasSavedPricing)
+        XCTAssertNil(persisted.result)
+        XCTAssertEqual(persisted.journey?.basket?.snapshots, [snapshot])
+        XCTAssertTrue(persisted.journey?.basket?.placements.isEmpty == true)
     }
 
     func testInclusiveHydrationKeepsQuoteAndCapScopesAndCommitmentsIndependent() throws {
