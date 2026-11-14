@@ -145,6 +145,38 @@
         }
       }
     },
+    "The share inbox is full. In Room in the Cart, open Shop, then Device shortcuts. Review or discard saved text to make room.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The share inbox is full. In Room in the Cart, open Shop, then Device shortcuts. Review or discard saved text to make room."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bandeja de texto compartido está llena. En Room in the Cart, abre Compras y luego Accesos del dispositivo. Revisa o descarta el texto guardado para liberar espacio."
+          }
+        }
+      }
+    },
+    "This device has reached its limit for shared lists. Open your shopping list in Room in the Cart and paste the text there.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device has reached its limit for shared lists. Open your shopping list in Room in the Cart and paste the text there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo alcanzó el límite de listas compartidas. Abre tu lista de compras en Room in the Cart y pega el texto allí."
+          }
+        }
+      }
+    },
     "Could not save for review. Try again or cancel; your shopping list is unchanged.": {
       "localizations": {
         "en": {

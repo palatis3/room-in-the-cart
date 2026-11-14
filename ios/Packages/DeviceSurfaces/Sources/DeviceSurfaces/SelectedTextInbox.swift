@@ -21,7 +21,7 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
 /// Only selected text and bounded deduplication receipts belong in this database.
 /// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
 public actor SelectedTextInbox {
-    public enum ReviewLimit: Error { case tooManyItems }
+    public enum ReviewLimit: Error { case tooManyItems, receiptLimitReached }
     public static let maximumEntryBytes = 65_536
     public static let maximumLines = 500
     public static let maximumPending = 20
@@ -51,7 +51,8 @@ public actor SelectedTextInbox {
             let counts = try database.rows("SELECT COUNT(*), COALESCE(SUM(CASE WHEN disposition='pending' THEN 1 ELSE 0 END),0), COALESCE(SUM(bytes),0) FROM inbox")[0]
             guard let all = Int(counts[0] ?? ""), let pending = Int(counts[1] ?? ""), let bytes = Int(counts[2] ?? "") else { throw SurfaceError.corrupt }
             let size = originalText.utf8.count + (editedText?.utf8.count ?? 0)
-            guard all < Self.maximumReceipts, pending < Self.maximumPending, bytes <= Self.maximumTotalBytes - size else { throw SurfaceError.capacity }
+            guard all < Self.maximumReceipts else { throw ReviewLimit.receiptLimitReached }
+            guard pending < Self.maximumPending, bytes <= Self.maximumTotalBytes - size else { throw SurfaceError.capacity }
             try database.execute("INSERT INTO inbox VALUES(?,?,?,?,?,?,?,?)", [.text(operationID.uuidString), .text(digest), .text(originalText), editedText.map(DBValue.text) ?? .null, .integer(Int64(size)), .double(now.timeIntervalSince1970), .double(now.addingTimeInterval(Self.lifetime).timeIntervalSince1970), .text(InboxDisposition.pending.rawValue)])
             guard let saved = try receipt(operationID) else { throw SurfaceError.corrupt }; return saved
         }

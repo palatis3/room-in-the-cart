@@ -135,8 +135,36 @@ final class DeviceSurfacesTests: XCTestCase {
             do { _ = try await inbox.stage(operationID: UUID(), originalText: bad, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .invalid) }
         }
         for _ in 0..<20 { _ = try await inbox.stage(operationID: UUID(), originalText: "item", now: now) }
-        do { _ = try await inbox.stage(operationID: UUID(), originalText: "extra", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
-        let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.count, 20)
+        let session = SelectedTextSession()
+        do { _ = try await session.save(original: "extra", edited: nil, now: now, inbox: inbox); XCTFail() }
+        catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
+        let rows = try await inbox.pending(now: now)
+        XCTAssertEqual(rows.count, 20)
+        let removed = try XCTUnwrap(rows.first)
+        _ = try await inbox.discard(operationID: removed.id, digest: removed.receipt.digest, now: now)
+        let receipt = try await session.save(original: "extra", edited: nil, now: now, inbox: inbox)
+        let saved = try await inbox.pending(now: now)
+        XCTAssertEqual(Set(saved.map(\.id)), Set(rows.dropFirst().map(\.id)).union([receipt.operationID]))
+        XCTAssertEqual(saved.first { $0.id == receipt.operationID }?.originalText, "extra")
+    }
+    func testDiscardingTheLastAllowedReceiptDoesNotMakeRoomForAnotherReceipt() async throws {
+        let url = try file()
+        let inbox = try SelectedTextInbox(url: url)
+        let db = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: "")
+        // Prior terminal receipts retain no source text. Leave one slot for a real share.
+        try db.execute("""
+            WITH RECURSIVE ids(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM ids WHERE n < ?)
+            INSERT INTO inbox SELECT printf('00000000-0000-0000-0000-%012d', n),
+            hex(zeroblob(32)), NULL, NULL, 0, 0, 1, 'discarded' FROM ids
+            """, [.integer(Int64(SelectedTextInbox.maximumReceipts - 1))])
+        let last = try await inbox.stage(operationID: UUID(), originalText: "milk", now: now)
+        _ = try await inbox.discard(operationID: last.operationID, digest: last.digest, now: now)
+        do {
+            _ = try await inbox.stage(operationID: UUID(), originalText: "eggs", now: now)
+            XCTFail("Discarding removes the text but preserves the replay receipt")
+        } catch SelectedTextInbox.ReviewLimit.receiptLimitReached {}
+        let replay = try await inbox.stage(operationID: last.operationID, originalText: "milk", now: now)
+        XCTAssertEqual(replay.disposition, .discarded)
     }
     func testSelectedTextRejectsNewOversizedReviewButResolvesAnExactLegacyReceipt() async throws {
         let url = try file()

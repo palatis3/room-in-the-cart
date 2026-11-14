@@ -70,6 +70,10 @@ final class ShareViewController: UIViewController {
                 onSaved?()
             } catch SelectedTextInbox.ReviewLimit.tooManyItems {
                 self.rejectSize()
+            } catch SelectedTextInbox.ReviewLimit.receiptLimitReached {
+                self.error = SurfaceCopy.text("This device has reached its limit for shared lists. Open your shopping list in Room in the Cart and paste the text there.")
+            } catch SurfaceError.capacity {
+                self.error = SurfaceCopy.text("The share inbox is full. In Room in the Cart, open Shop, then Device shortcuts. Review or discard saved text to make room.")
             } catch { self.error = SurfaceCopy.text("Could not save for review. Try again or cancel; your shopping list is unchanged.") }
         }
     }
