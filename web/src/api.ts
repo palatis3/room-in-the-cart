@@ -284,10 +284,13 @@ export function consumeInvitation(location: Location, history: History): string 
   const url = new URL(location.href);
   const hash = new URLSearchParams(url.hash.slice(1));
   const token = hash.get('token') ?? url.searchParams.get('token');
-  if (token !== null) {
+  const manual = /^\/(invite|view)\/?$/.test(url.pathname) && url.searchParams.get('enterCode') === '1';
+  if (token !== null || manual) {
+    url.searchParams.delete('enterCode');
     url.hash = '';
     url.searchParams.delete('token');
     history.replaceState(null, '', url.pathname + url.search);
   }
-  return token;
+  // An empty invitation opens manual entry, including for an already enrolled browser.
+  return token ?? (manual ? '' : null);
 }

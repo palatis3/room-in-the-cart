@@ -333,6 +333,38 @@ struct HouseholdGuardianView: View {
     }
 }
 
+enum BrowserInvitationRoute: String, CaseIterable {
+    case contributor = "invite"
+    case cook = "view"
+    case child = "child-invite"
+
+    func shareText(serviceURL: URL, code: String) -> String? {
+        guard var address = URLComponents(url: serviceURL, resolvingAgainstBaseURL: false),
+              address.scheme == "https", address.host?.isEmpty == false,
+              address.user == nil, address.password == nil,
+              address.percentEncodedQuery == nil, address.percentEncodedFragment == nil,
+              ["", "/"].contains(address.percentEncodedPath), !code.isEmpty else { return nil }
+        address.path = "/" + rawValue
+        if self != .child { address.queryItems = [URLQueryItem(name: "enterCode", value: "1")] }
+        guard let page = address.url else { return nil }
+        return [ht("Open this page on the invited device:"), page.absoluteString,
+                "", ht("Invitation code"), code].joined(separator: "\n")
+    }
+}
+
+struct BrowserInvitationShare: View {
+    let route: BrowserInvitationRoute
+    let serviceURL: URL
+    let code: String
+    var body: some View {
+        if let text = route.shareText(serviceURL: serviceURL, code: code) {
+            ShareLink(item: text) {
+                Label(ht("Share browser invitation"), systemImage: "square.and.arrow.up")
+            }.accessibilityIdentifier("household.shareBrowserInvitation")
+        }
+    }
+}
+
 private struct IssuedInvitationSection: View {
     @ObservedObject var model: HouseholdLifecycleModel
     let helperOnly: Bool
@@ -341,6 +373,7 @@ private struct IssuedInvitationSection: View {
             Section(ht("Invitation ready")) {
                 LabeledContent(ht("Access expires"), value: householdTime(issued.expiresAt))
                 Text(issued.token).font(.caption.monospaced()).textSelection(.enabled).privacySensitive()
+                BrowserInvitationShare(route: helperOnly ? .cook : .contributor, serviceURL: model.serviceURL, code: issued.token)
                 ShareLink(item: issued.token) { Label(ht("Share invitation code"), systemImage: "square.and.arrow.up") }
                 Text(ht("This code is shown after creation. Share it only with the intended adult recipient."))
                 Button(ht("Revoke this invitation"), role: .destructive) { Task { await model.revoke(issued.grantId == nil ? .invite : .view, targetID: issued.grantId ?? issued.inviteId) } }

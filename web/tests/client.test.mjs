@@ -79,6 +79,21 @@ test('invitation secrets leave URL before a request and never enter storage',()=
  assert.equal(dom.window.localStorage.length,0);
 });
 
+test('shared code-entry links prompt enrolled adults before joining or changing views',async t=>{
+ for(const path of ['/invite','/view/']){
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example'+path+'?enterCode=1&lang=es'});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app');
+  const token=consumeInvitation(dom.window.location,dom.window.history);
+  assert.equal(dom.window.location.search,'?lang=es');
+  const api=fakeAPI({redeem:async()=>assert.fail('Opening the link cannot join a household')});
+  await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+  assert.ok(root.querySelector('#invitation'));assert.ok(root.querySelector('#adult-attestation'));
+  assert.equal(root.querySelector('#item'),null);
+  assert.doesNotMatch(root.textContent,/Family A/);
+ }
+});
+
 test('companion links accept the trailing slashes served by the host',async(t)=>{
  for(const path of ['/requests/','/invite/','/view/']){
   const dom=new JSDOM('<div id="app"></div>',{url:`https://food.example${path}`});

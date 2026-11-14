@@ -12,6 +12,7 @@ Use Node 22.23.5 and `npm ci`, then `npm run dev` in `web/`. The development ser
 
 - `/` and `/requests`: authenticated contributor's own requests, editable pending entries, received outcomes and follow-ups.
 - `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it exists only in memory during explicit redemption. Authentication and consent are enforced by the server. No local alias can enroll someone.
+- iPhone browser shares give the recipient a public entry address and a separate code. Adult and cook addresses use `enterCode=1` to open manual entry even when the browser already has a household session. Opening the address never redeems the code. Child shares use `/child-invite`.
 - `/view#token=…`: same secret exchange; a helper session opens its single granted shop and dated instructions. Editor grants may submit a correction for shopper review; they cannot apply a basket change.
 
 The SPA serves these routes through the same static entry point. Production hosting must rewrite non-API routes to `index.html`, reverse-proxy `/v1` to the service, and use HTTPS. Set `Referrer-Policy: no-referrer`, `Cache-Control: no-store` on authenticated/API responses, `X-Content-Type-Options: nosniff`, and a production CSP limiting resources and connections to self (`default-src 'self'; connect-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'`). There is no service worker, analytics or cross-site asset dependency.
