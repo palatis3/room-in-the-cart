@@ -1,0 +1,40 @@
+version: 2.1
+
+# During the Bitrise outage, push the candidate to codex/circleci-fallback
+# to request this independent check. Stop updating that branch after recovery.
+jobs:
+  swift-packages:
+    macos:
+      xcode: "27.1.0"
+    resource_class: m4pro.medium
+    steps:
+      - checkout
+      - run:
+          name: Verify the candidate and Xcode
+          command: |
+            test "$(git rev-parse HEAD)" = "$CIRCLE_SHA1"
+            test "$(uname -m)" = arm64
+            xcodebuild -version
+            test "$(xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
+      - run:
+          name: Run the Swift package tests with coverage
+          command: |
+            set -euo pipefail
+            mkdir -p .build/package-results
+            for manifest in ios/Packages/*/Package.swift; do
+              package=$(dirname "$manifest")
+              name=$(basename "$package")
+              swift test --package-path "$package" --enable-code-coverage 2>&1 | tee ".build/package-results/$name.log"
+              swift test --package-path "$package" list --skip-build > ".build/package-results/$name.inventory.txt"
+            done
+            python3 scripts/check_swift_package_results.py --results .build/package-results
+      - store_artifacts:
+          path: .build/package-results
+          destination: package-results
+
+workflows:
+  bitrise-fallback:
+    when:
+      equal: [codex/circleci-fallback, << pipeline.git.branch >>]
+    jobs:
+      - swift-packages
