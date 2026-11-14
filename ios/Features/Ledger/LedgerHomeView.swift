@@ -176,8 +176,19 @@ struct LedgerHomeView: View {
 
     private var searchField: some View {
         let title = ledgerText("Search active items")
-        return TextField(title, text: $model.search, prompt: dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : nil)
-            .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
+        return HStack {
+            TextField(title, text: $model.search, prompt: dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : nil)
+                .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
+            if !model.search.isEmpty {
+                Button { model.search = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .frame(minWidth: 44, minHeight: 44)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(ledgerText("Clear search"))
+                .accessibilityIdentifier("ledgerClearSearch")
+            }
+        }
     }
 
     private var importButton: some View {

@@ -78,18 +78,13 @@ final class ReleasePerformanceUITests: XCTestCase {
         let emptyState = app.staticTexts[noSearchResults]
         func replaceQuery(_ old: String, with new: String, showing result: XCUIElement,
                           file: StaticString = #filePath, line: UInt = #line) {
-            tap(field)
             if !old.isEmpty {
                 XCTAssertEqual(field.value as? String, old, "Replace the complete preceding query")
-                // A middle tap can place the caret inside a long query. Use
-                // the native edit menu instead of assuming an end position.
-                field.press(forDuration: 1.2)
-                let item = app.menuItems["Select All"]
-                let selectAll = item.exists ? item : app.buttons["Select All"]
-                XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
-                selectAll.tap()
-                field.typeText(XCUIKeyboardKey.delete.rawValue)
+                let clear = app.buttons["ledgerClearSearch"]
+                XCTAssertTrue(clear.isHittable)
+                clear.tap()
             }
+            tap(field)
             let cleared = field.value as? String
             XCTAssertTrue(cleared == "" || (cleared != nil && cleared == field.placeholderValue),
                           "Search must be completely cleared before replacement")
