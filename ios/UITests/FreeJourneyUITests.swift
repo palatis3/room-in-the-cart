@@ -686,8 +686,25 @@ import XCTest
                       "Done must leave the checkout unobscured and remove its input bar")
         XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper")
         enableSwitch("Retailer total already includes all charges")
-        fill("3.00", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        let total = app.textFields["Inclusive total"]
+        fill("3.00", into: "Inclusive total", requireDone: true, control: total)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
+        XCTAssertEqual(try total.snapshot().value as? String, "3.00")
+        func tapCheckoutAction(_ button: XCUIElement) throws {
+            reveal(button)
+            let snapshot = try button.snapshot()
+            let bounds = app.frame
+            let frame = snapshot.frame
+            let center = CGPoint(x: frame.midX, y: frame.midY)
+            XCTAssertTrue(snapshot.isEnabled && button.isHittable)
+            guard scrollableArea().contains(center) else {
+                tapVisibleFormRow(button, marker: "CHECKOUT_REVIEW_TAP")
+                return
+            }
+            // Tap the verified screen position so XCTest need not resolve the form button again across the sheet transition.
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: center.x - bounds.minX, dy: center.y - bounds.minY)).tap()
+        }
+        try tapCheckoutAction(saveCheckout)
         let checkoutReview = app.navigationBars["Review checkout changes"]
         XCTAssertTrue(checkoutReview.waitForExistence(timeout: 5))
         assertText("Proposed checkout quote")
@@ -696,9 +713,7 @@ import XCTest
         assertText("Retailer preview reviewed by shopper")
         assertText("$3.00")
         let saveReviewed = app.buttons["Save reviewed checkout"]
-        reveal(saveReviewed)
-        XCTAssertTrue(saveReviewed.isEnabled, "The reviewed replacement must be eligible to save")
-        saveReviewed.tap()
+        try tapCheckoutAction(saveReviewed)
         XCTAssertTrue(checkoutReview.waitForNonExistence(timeout: 8))
         assertText("Saved checkout result")
         assertText("3.00")
