@@ -609,23 +609,26 @@ import XCTest
                 // Ingredient labels repeat across lazy rows. Keep the concrete
                 // identity and native type from entry for the post-Done readback.
                 let ingredient = ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name)
-                let readback: XCUIElement
-                if ingredient {
-                    let identifier = field.identifier
-                    XCTAssertTrue(identifier.hasPrefix("ingredient."), "Retain the concrete ingredient field")
-                    readback = app.textFields.matching(identifier: identifier).firstMatch
-                } else { readback = field }
+                let identity = ingredient ? field.identifier : name
+                if ingredient { XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field") }
                 field.typeText(value)
                 let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
                 XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(name)")
                 done.tap()
-                // Hosted app resolution and snapshot acquisition exceeded five
-                // seconds even after UIKit had dismissed the keyboard.
-                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
-                // Input and keyboard dismissal have finished. Read the field once
-                // so a slow snapshot cannot exhaust a separate predicate timer.
-                XCTAssertEqual(try readback.snapshot().value as? String, value,
-                               "Exact entered value must survive Done for \(name)")
+                // Resolve the field and keyboard in the same application snapshot.
+                // A separate field query can stall when the pack form moves after dismissal.
+                let ready = app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10) { screen in
+                    var pending = [screen]
+                    while let node = pending.popLast() {
+                        let matchesPrompt = !ingredient && (node.label == identity || node.placeholderValue == identity)
+                        if node.elementType == .textField, node.identifier == identity || matchesPrompt {
+                            return node.value as? String == value
+                        }
+                        pending.append(contentsOf: node.children)
+                    }
+                    return false
+                }
+                XCTAssertTrue(ready, "Done must dismiss the keyboard and preserve the exact value '\(value)' for \(name)")
             }
         }
 
