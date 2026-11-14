@@ -63,6 +63,9 @@ struct HouseholdPeopleView: View {
                     ForEach(model.members) { member in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(member.alias).font(.headline)
+                            if member.role == "organizer", member.state == "active" {
+                                Text(mtr("Household organizer"))
+                            }
                             Text(member.state == "active" ? ht("Active access") : ht("Access revoked"))
                             if member.memberId != model.scope?.memberId, member.state == "active" {
                                 Button(ht("Remove household access"), role: .destructive) { selectedMember = member }

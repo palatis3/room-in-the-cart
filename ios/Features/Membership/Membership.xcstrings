@@ -239,6 +239,40 @@
         }
       }
     },
+    "Household and pickup roles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household and pickup roles"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roles del hogar y de la recogida"
+          }
+        }
+      }
+    },
+    "Household organizer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household organizer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizador del hogar"
+          }
+        }
+      }
+    },
     "Household subscription": {
       "extractionState": "manual",
       "localizations": {

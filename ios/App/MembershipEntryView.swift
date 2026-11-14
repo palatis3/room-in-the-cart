@@ -15,7 +15,7 @@ struct MembershipEntryView: View {
                     Text(tr("A membership belongs to an authenticated household. Your Free records and manual tools remain available."))
                     NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 }.padding(20)
-            } else if let model = membership.model { MembershipView(model: model) }
+            } else if let model = membership.model { MembershipView(model: model, household: household) }
             else if membership.failure {
                 VStack(spacing: 20) {
                     Text(tr("Membership could not be verified. Your Free work is still available."))
@@ -29,7 +29,9 @@ struct MembershipEntryView: View {
 
 extension HouseholdModel: MembershipSessionSource {
     var membershipSession: MembershipSession? {
-        guard !locked, let identity, let projection, projection.enrolled, let serviceURL else { return nil }
+        guard !guardianChildOnly, !locked, let identity, let projection, projection.enrolled,
+              projection.grantId == nil, ["organizer", "shopper", "contributor"].contains(projection.role),
+              let serviceURL else { return nil }
         return MembershipSession(subjectID: identity.subject, memberID: projection.memberId,
             accountName: identity.email ?? projection.memberId, householdID: projection.household.id,
             householdName: projection.household.label, serviceURL: serviceURL)

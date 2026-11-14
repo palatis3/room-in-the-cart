@@ -67,6 +67,7 @@ struct HouseholdShopSelector: View {
 struct SharedShopAssignmentView: View {
     @ObservedObject var household: HouseholdModel
     @ObservedObject var model: HouseholdShopModel
+    var allowsTransfer = true
     @Environment(\.dismiss) private var dismiss
     @State private var assignment: ShopperAssignment?
     @State private var failed = false
@@ -80,8 +81,9 @@ struct SharedShopAssignmentView: View {
             if let assignment, shopID == assignment.shopId {
                 if let current = assignment.adults.first(where: { $0.id == assignment.shopperId }) {
                     LabeledContent(ht("Current shopper"), value: current.label)
+                        .accessibilityIdentifier("household.currentShopper")
                 }
-                if assignment.phase != "closed" {
+                if allowsTransfer, assignment.phase != "closed" {
                     Section(ht("Choose the next shopper")) {
                         ForEach(assignment.adults.filter { $0.id != assignment.shopperId }) { adult in
                             Button(adult.label) { model.reviewTransfer(assignment, to: adult.id); if model.review?.transfer != nil { dismiss() } }
@@ -92,7 +94,7 @@ struct SharedShopAssignmentView: View {
             }
             if failed { Text(ht("The shopper assignment could not be loaded.")) }
             Button(ht("Refresh shopper assignment")) { Task { await load() } }
-        }.task(id: shopID) { await load() }.navigationTitle(ht("Change assigned shopper"))
+        }.task(id: shopID) { await load() }.navigationTitle(allowsTransfer ? ht("Change assigned shopper") : ht("Current shopper"))
     }
     @MainActor private func load() async {
         assignment = nil; failed = false

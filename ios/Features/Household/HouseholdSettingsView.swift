@@ -65,7 +65,7 @@ struct HouseholdSettingsView: View {
                 if let projection = model.projection {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
-                        if model.membershipSession != nil, projection.role == "contributor", projection.grantId == nil {
+                        if model.membershipSession != nil {
                             NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
                                 .accessibilityIdentifier("household.membership")
                         }

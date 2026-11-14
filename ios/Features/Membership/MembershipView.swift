@@ -5,6 +5,7 @@ func mtr(_ key: String) -> String { String(localized: String.LocalizationValue(k
 
 struct MembershipView: View {
     @ObservedObject var model: MembershipModel
+    @ObservedObject var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingManage = false
 
@@ -41,6 +42,28 @@ struct MembershipView: View {
                 }
             } else {
                 Section { Text(mtr("An adult account and a selected household are needed before subscribing. You can continue using Free.")) }
+            }
+            if let session = household.membershipSession, let scope = household.projection,
+               session.memberID == model.context?.purchaserID, session.householdID == model.context?.householdID {
+                if scope.capabilities.contains("household_admin") || scope.role == "shopper" {
+                    Section(mtr("Household and pickup roles")) {
+                        if scope.capabilities.contains("household_admin") {
+                            LabeledContent(mtr("Household organizer"), value: session.accountName)
+                            if let lifecycle = household.lifecycle, lifecycle.canAdminister {
+                                NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) }
+                            }
+                        }
+                        if scope.role == "shopper", scope.shopId != nil {
+                            LabeledContent(ht("Current shopper"), value: session.accountName)
+                                .accessibilityIdentifier("household.currentShopper")
+                        } else if let shop = household.sharedShop, shop.scope == scope, scope.shopId != nil {
+                            NavigationLink(ht("Current shopper")) { SharedShopAssignmentView(household: household, model: shop, allowsTransfer: false) }
+                                .accessibilityIdentifier("membership.shopperAssignment")
+                        } else if scope.canSelectShop == true {
+                            NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: household) }
+                        }
+                    }
+                }
             }
             Section(mtr("Household subscription")) {
                 if let offer = model.offer {
