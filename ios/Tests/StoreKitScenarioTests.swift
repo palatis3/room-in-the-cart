@@ -210,6 +210,16 @@ import StoreKitTest
         try await eventually("The observed transaction remains unfinished") {
             await storefront.unfinishedTransactions().contains { self.id($0) == String(purchased.id) }
         }
+        // Exercise the recovery branch with a real transaction. Only the
+        // update's failure classification is supplied by this fixture.
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidCertificateChain))
+        guard case .verified(let checked) = recovered else {
+            return XCTFail("An independent StoreKit read must verify the same active purchase")
+        }
+        XCTAssertEqual(checked.transactionID, String(purchased.id))
+        XCTAssertEqual(checked.appAccountToken, accountToken)
+        let badSignature = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidSignature))
+        XCTAssertNil(badSignature)
     }
 
     func testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock() async throws {
@@ -344,7 +354,8 @@ import StoreKitTest
         observe("before-approval")
         try session.approveAskToBuyTransaction(identifier: request.identifier)
         observe("after-approval")
-        try await eventually("Approval completes the purchase flow and attempts durable delivery") {
+        // The hosted first current-entitlements read alone has taken 11 seconds.
+        try await eventually("Approval completes the purchase flow and attempts durable delivery", timeout: askToBuyResponseTimeout) {
             guard purchase.finished else { observe("purchase-open"); return false }
             // Read the identity from StoreKit 2 itself; do not assume that an
             // SKTestTransaction.identifier equals a StoreKit.Transaction.id.
@@ -581,6 +592,8 @@ import StoreKitTest
                     && self.session.allTransactions().contains { String($0.identifier) == transaction.transactionID }
             }
         }
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(original, .invalidCertificateChain))
+        XCTAssertNil(recovered, "A verified renewal cannot stand in for a different transaction on the same account and SKU")
         await model.refresh()
         assertFree(model)
     }
@@ -606,6 +619,8 @@ import StoreKitTest
         defer { model.stop() }
         let current = await storefront.currentTransactions()
         XCTAssertTrue(current.isEmpty)
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidCertificateChain))
+        XCTAssertNil(recovered, "A revoked purchase cannot be recovered from its rejected update")
         await model.refresh()
         assertFree(model)
     }

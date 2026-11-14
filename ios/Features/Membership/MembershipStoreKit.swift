@@ -89,13 +89,36 @@ enum MembershipPurchaseOutcome: Sendable {
         return AsyncStream { continuation in
             let task = Task { @MainActor [weak self] in
                 for await result in StoreKit.Transaction.updates {
-                    guard !Task.isCancelled else { break }
-                    if let value = self?.convert(result) { continuation.yield(value) }
+                    guard !Task.isCancelled, let self else { break }
+                    guard let value = self.convert(result) else { continue }
+                    continuation.yield(value)
+                    if case .unverified = value,
+                       let recovered = await self.verifiedCurrentTransaction(after: result) {
+                        continuation.yield(recovered)
+                    }
                 }
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    func verifiedCurrentTransaction(after update: VerificationResult<StoreKit.Transaction>) async -> MembershipPurchaseOutcome? {
+        guard case .unverified(let rejected, .invalidCertificateChain) = update,
+              rejected.productID == productID else { return nil }
+        // The rejected update only identifies what to look up. Submit a signed
+        // transaction only if StoreKit separately verifies that exact purchase.
+        for await result in StoreKit.Transaction.currentEntitlements {
+            guard !Task.isCancelled else { break }
+            if case .verified(let current) = result,
+               current.id == rejected.id, current.productID == productID,
+               current.environment == rejected.environment, current.appAccountToken == rejected.appAccountToken,
+               current.revocationDate == nil, !current.isUpgraded,
+               let expiry = current.expirationDate, expiry > Date() {
+                return convert(result)
+            }
+        }
+        return nil
     }
 
     func finish(transactionID: String) async {
