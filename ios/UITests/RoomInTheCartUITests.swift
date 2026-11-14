@@ -46,7 +46,7 @@ final class RoomInTheCartUITests: XCTestCase {
         enterComparison(item: title, firstQuantity: "8", cap: "30")
         compare()
         saveAndAssertDurableStatus()
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         tap(app.buttons["Recovery, exports and saved records"])
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 5))
 
@@ -100,7 +100,7 @@ final class RoomInTheCartUITests: XCTestCase {
         compare()
         assertContains("No packs needed for this item.")
         saveAndAssertDurableStatus()
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         tap(app.buttons["Recovery, exports and saved records"])
         tap(app.buttons["Delete this source"])
         tap(app.buttons["Delete from this iPhone"])
@@ -108,7 +108,7 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Confirmed-fictional-source-deletion")
         app.terminate()
         launch(reset: false)
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         assertContains("Your comparisons live here")
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "savedComparison").count, 0)
     }
@@ -469,7 +469,7 @@ final class RoomInTheCartUITests: XCTestCase {
         let scroll = app.scrollViews["shopContentScroll"]
         let target = element("urgentRepairShortcut")
         let rows = ["Window: \(app.windows.firstMatch.frame)", "Shop scroll: \(scroll.frame)",
-                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible Shop: \(shopViewport)",
                     target.exists ? "Repair shortcut: \(target.frame); hittable=\(target.isHittable); \(target.label)" : "Repair shortcut: absent"]
         let attachment = XCTAttachment(string: rows.joined(separator: "\n"))
@@ -517,7 +517,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func captureComparisonFrames(_ name: String) {
         var rows = ["Window: \(app.windows.firstMatch.frame)", "List: \(element("comparisonResultsScroll").frame)",
-                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible results: \(comparisonViewport)"]
         for id in ["editComparison", "aHeader", "bHeader", "comparisonSourceNote", "saveComparison", "savedStatus", "comparisonSavedDetails"] {
             let target = element(id)
@@ -546,7 +546,19 @@ final class RoomInTheCartUITests: XCTestCase {
                                     "-UIUserInterfaceStyle", "Dark"]
         }
         app.launch()
-        XCTAssertTrue(app.tabBars.buttons[language == "es" ? "Compras" : "Shop"].waitForExistence(timeout: 15))
+        XCTAssertTrue(tabButton(language == "es" ? "Compras" : "Shop", symbol: "cart").waitForExistence(timeout: 15))
+    }
+
+    private func tabButton(_ label: String, symbol: String) -> XCUIElement {
+        let tab = app.tabBars.buttons[label]
+        if tab.exists { return tab }
+        // iPhone Duo exposes native side tabs as labeled symbol buttons.
+        return app.buttons.matching(NSPredicate(format: "label == %@ AND identifier == %@", label, symbol)).firstMatch
+    }
+
+    private var tabFrameDescription: String {
+        let bar = app.tabBars.firstMatch
+        return bar.exists ? String(describing: bar.frame) : "No bottom tab bar"
     }
 
     private func openEmptyComparison() {
@@ -621,7 +633,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func reopenSavedRecord(recordsLabel: String, item: String) {
-        tap(app.tabBars.buttons[recordsLabel])
+        tap(tabButton(recordsLabel, symbol: "clock.arrow.circlepath"))
         // Persistence checks intentionally reopen from the records list. A
         // restored comparison remains open until the person uses native Back.
         for _ in 0..<4 {

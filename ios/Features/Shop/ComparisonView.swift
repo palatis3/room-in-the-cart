@@ -4,7 +4,6 @@ import LocalStore
 
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var model: ComparisonModel
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
@@ -31,39 +30,13 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
-            if reviewing && !dynamicTypeSize.isAccessibilitySize {
-                if #available(iOS 26.0, *) {
-                    editToolbar.sharedBackgroundVisibility(.hidden)
-                } else {
-                    editToolbar
-                }
-            }
-        }
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
-    private var editToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(action: editComparison) {
-                Text(tr("Edit")).font(.body.weight(.semibold))
-                    .fixedSize(horizontal: true, vertical: false)
-                    .foregroundStyle(Theme.ink).padding(.horizontal, 16)
-                    .frame(minHeight: 44).background(Theme.surface, in: Capsule())
-                    .overlay(Capsule().stroke(Color("control_edge"), lineWidth: 1.5))
-            }.buttonStyle(.plain).accessibilityIdentifier("editComparison")
-                .tint(Theme.ink)
-        }
-    }
-
-    private func editComparison() { reviewing = false }
-
-    /// Accessibility text sizes need a content row whose height can grow with the label.
-    /// The navigation bar's compact toolbar host is retained only for standard text sizes.
-    private var accessibleEditRow: some View {
-        Button(action: editComparison) {
+    private var editRow: some View {
+        Button { reviewing = false } label: {
             Text(tr("Edit")).font(.headline)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -159,7 +132,7 @@ struct ComparisonView: View {
 
     private func resultList(_ result: CoreDomain.ComparisonResult, inputs: ComparisonRequest) -> some View {
         List {
-            if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
+            editRow
             Section {
                 Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
                     .accessibilityAddTraits(.isHeader).accessibilityFocused($resultFocused, equals: .summary)
