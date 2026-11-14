@@ -140,7 +140,12 @@ struct GuardianChildRequestsView: View {
             Section { Text(GuardianCopy.text("Only your own requests and their status appear here. The shopper decides what goes into the basket.")) }
             if household.locked || household.projection == nil {
                 Section { Text(GuardianCopy.text("Your child access is being checked. Adult work remains locked.")) }
-            } else {
+            } else if let scope = household.projection {
+                Section {
+                    Text(verbatim: scope.household.label)
+                        .font(.headline)
+                        .accessibilityIdentifier("guardian.childHousehold")
+                }
                 Section(GuardianCopy.text("My requests")) {
                     Button(GuardianCopy.text("Refresh my requests")) { Task { await household.refresh() } }
                         .accessibilityIdentifier("guardian.childRequestsRefresh")

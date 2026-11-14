@@ -45,6 +45,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         XCTAssertTrue(app.navigationBars["My requests"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.staticTexts["guardian.childHousehold"].label, "Fixture home")
         fill("Tortillas", into: "guardian.childRequestItem")
         let review = app.buttons["guardian.childRequestReview"]
         if app.keyboards.firstMatch.exists {
