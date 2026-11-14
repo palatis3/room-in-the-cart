@@ -35,7 +35,11 @@ struct PickupReadableRecord {
     }
     private func field(_ key: String, _ value: String) -> String { pickupLabel(key) + ": " + value }
     private func line(_ value: BasketLine) -> String {
-        [value.name, quantity(value.quantity), price(value.expectedCost)].joined(separator: " · ")
+        var facts = [value.name, quantity(value.quantity), price(value.expectedCost)]
+        if let exclusions = value.itemExclusions {
+            facts.append(field("Keep these exclusions", exclusions.joined(separator: ", ")))
+        }
+        return facts.joined(separator: " · ")
     }
     private func scope(_ value: CheckoutScope) -> String {
         switch value {

@@ -970,7 +970,7 @@ struct PickupPersistenceLocation {
         let accepted = previous.deferred.filter { ids.contains($0.id) && $0.status == "review" }
         do {
             let newID = nextDraftID(for: previous.id)
-            let lines = accepted.map { BasketLine(id: UUID(), name: $0.line.name, quantity: $0.line.quantity, expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))) }
+            let lines = accepted.map { BasketLine(id: UUID(), name: $0.line.name, quantity: $0.line.quantity, expectedCost: .unknown(reason: pTr("Recheck the price for this shop")), itemExclusions: $0.line.itemExclusions ?? []) }
             var next = PickupJourney(id: newID, savedAt: clock())
             next.originShopID = previous.id
             next.nextShopReview = review
@@ -978,7 +978,7 @@ struct PickupPersistenceLocation {
             next.deferred = previous.deferred.filter { !ids.contains($0.id) && $0.status == "review" }.map { need in
                 DeferredPickupNeed(id: need.id, sourceShopID: need.sourceShopID,
                                    line: BasketLine(id: need.line.id, name: need.line.name, quantity: need.line.quantity,
-                                                    expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))),
+                                                    expectedCost: .unknown(reason: pTr("Recheck the price for this shop")), itemExclusions: need.line.itemExclusions ?? []),
                                    status: closing[need.id]?.rawValue ?? "review")
             }
             let remaining = try previous.nextShopMealNeeds(closing: closing, at: clock())

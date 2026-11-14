@@ -45,7 +45,10 @@ struct HandoffCopy: Equatable, Identifiable {
 
     static func retailer(_ snapshot: HandoffSnapshot, language: String) -> Self {
         let pieces = snapshot.revision.lines.map { line in
-            let text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            var text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            if let exclusions = line.itemExclusions {
+                text += " · " + pCook("Keep these exclusions", language: language) + ": " + exclusions.joined(separator: ", ")
+            }
             let unresolved: String?
             switch line.expectedCost {
             case .exact: unresolved = nil

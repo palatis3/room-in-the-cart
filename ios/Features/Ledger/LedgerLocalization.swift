@@ -26,16 +26,8 @@ func ledgerQuantity(_ quantity: Quantity?) -> String {
 }
 
 extension ShoppingLedger {
-    /// Shopping restrictions stay in source order and keep the shopper's wording.
     var listExclusions: [UUID: String] {
-        var seen: [UUID: Set<String>] = [:]
-        var values: [UUID: [String]] = [:]
-        for source in contributions where source.removedAt == nil {
-            for exclusion in source.exclusions where seen[source.lineID, default: []].insert(exclusion).inserted {
-                values[source.lineID, default: []].append(exclusion)
-            }
-        }
-        return values.mapValues { ledgerFormat("Exclusions: %@", $0.joined(separator: ", ")) }
+        itemExclusions.mapValues { ledgerFormat("Exclusions: %@", $0.joined(separator: ", ")) }
     }
 }
 

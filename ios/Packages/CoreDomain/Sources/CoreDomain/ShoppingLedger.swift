@@ -476,6 +476,18 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         lines = []; contributions = []; allocations = []; mealOccurrences = []; importBatches = []
     }
 
+    /// Shopping restrictions stay in source order and keep the shopper's wording.
+    public var itemExclusions: [UUID: [String]] {
+        var seen: [UUID: Set<String>] = [:]
+        var values: [UUID: [String]] = [:]
+        for source in contributions where source.removedAt == nil {
+            for exclusion in source.exclusions where seen[source.lineID, default: []].insert(exclusion).inserted {
+                values[source.lineID, default: []].append(exclusion)
+            }
+        }
+        return values
+    }
+
     public func contributions(forLineID lineID: UUID) -> [LedgerContribution] {
         contributions.filter { $0.lineID == lineID && $0.removedAt == nil }
     }

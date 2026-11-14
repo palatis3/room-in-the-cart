@@ -270,8 +270,11 @@ public struct BasketLine: Codable, Equatable, Sendable, Identifiable {
     public let name: String
     public let quantity: Quantity
     public let expectedCost: CostEvidence
-    public init(id: UUID, name: String, quantity: Quantity, expectedCost: CostEvidence) {
+    // Earlier saved revisions omit this field. Keep their encoded shape on re-export.
+    public let itemExclusions: [String]?
+    public init(id: UUID, name: String, quantity: Quantity, expectedCost: CostEvidence, itemExclusions: [String] = []) {
         self.id = id; self.name = name; self.quantity = quantity; self.expectedCost = expectedCost
+        self.itemExclusions = itemExclusions.isEmpty ? nil : itemExclusions
     }
 }
 public enum BasketChange: Codable, Equatable, Sendable {

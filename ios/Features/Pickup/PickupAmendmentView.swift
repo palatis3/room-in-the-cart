@@ -232,7 +232,7 @@ private struct AmendmentLineEditor: View {
             } else {
                 cost = .unknown(reason: pTr("Retailer line total not confirmed"))
             }
-            save(BasketLine(id: selection.id, name: old?.name ?? trimmed, quantity: quantity, expectedCost: cost))
+            save(BasketLine(id: selection.id, name: old?.name ?? trimmed, quantity: quantity, expectedCost: cost, itemExclusions: old?.itemExclusions ?? []))
         } catch { invalid = true }
     }
 }
