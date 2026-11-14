@@ -1,8 +1,14 @@
 # Room in the Cart — current handoff
 
-Updated November 13, 2026. Active goal: finish the complete Foundation 2.1 first release: 52 requirements, 27 screen contracts and B11. Not complete or paused. Read [APP-BASELINE](product/APP-BASELINE.md), [Foundation](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md) and [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Scoped passing components do not establish one qualified release candidate.
+Updated November 14, 2026. Active goal: finish the complete Foundation 2.1 first release: 52 requirements, 27 screen contracts and B11. Not complete or paused. Read [APP-BASELINE](product/APP-BASELINE.md), [Foundation](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md) and [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Scoped passing components do not establish one qualified release candidate.
 
 ## Current checkpoint
+
+[PR #7](https://github.com/palatis3/room-in-the-cart/pull/7) is open on `60d28bbc`. On `b432acff`, all three CircleCI simulator groups passed their 17 assigned UI tests. The build restored 181 MiB of compiler cache. The GitHub gate verifier accepted all three published CircleCI statuses on that commit. GitHub runs the model tests and the other seven UI groups. [CircleCI results](https://app.circleci.com/workflow/4507bf8f-54aa-4bfd-926e-cf47994087b5) · [Paired GitHub run](https://github.com/palatis3/room-in-the-cart/actions/runs/43592706416)
+
+The unsigned iPhone Release archive at `f9e72e35` passed bundle validation with its Share and Widget extensions. On the development branch, the retailer cutoff retains its original time zone when a shopper changes the reminder zone. A reminder that expires during notification authorization now shows as expired. The latter fix at `dbc81276` passed all 38 DeviceSurfaces package tests and 13 iPhone simulator integration tests. See `.build/ReleaseF9e72Nov14`, `.build/RetailerReminderZoneNov14` and `.build/PermissionDeadlineNov14`.
+
+The cook-copy and fractional dinner-idea journeys that failed in the PR #7 fixture run passed locally at `bb40153a` on the iPhone 17 simulator running iOS 27. The cook journey confirmed the recipient, shared the correction and reopened its send record (96.06 seconds). The dinner journey checked the unpriced chickpea line by UUID and completed shopper approval (284.56 seconds). Its first local replay also exposed an offscreen title assertion after keyboard dismissal. See `.build/HostedFixture60d2Nov14` for the hosted failures and local results. [Hosted fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/43588743727)
 
 [PR #1](https://github.com/palatis3/room-in-the-cart/pull/1) merged November 13. All 60 checks passed on `af876b3f` in 50m04s. The merge commit `a5d9c773` has the same file tree. Earlier batch results below describe the fixes leading to this checkpoint. Physical-device, provider, performance and signed release acceptance are tracked in [Release execution](RELEASE-EXECUTION.md#execution-order).
 
