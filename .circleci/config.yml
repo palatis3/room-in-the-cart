@@ -71,7 +71,7 @@ jobs:
     parameters:
       nodes:
         type: integer
-        default: 15
+        default: 3
       scope:
         type: enum
         enum: [full, smoke]
@@ -93,16 +93,12 @@ jobs:
           path: .build/circle-evidence
           destination: xcresults
 
-workflows:
-  bitrise-fallback:
-    when:
-      equal: [codex/circleci-fallback, << pipeline.git.branch >>]
+# Share one allocation across the opt-in branches, including overlapping pushes.
+job-groups:
+  package-only:
     jobs:
       - swift-packages
-
-  simulator-canary:
-    when:
-      equal: [codex/circleci-canary, << pipeline.git.branch >>]
+  smoke:
     jobs:
       - ios-core-build:
           name: ios-core-canary-build
@@ -111,13 +107,32 @@ workflows:
           nodes: 1
           scope: smoke
           requires: [ios-core-canary-build]
-
-  bitrise-fallback-core:
-    when:
-      equal: [codex/circleci-performance, << pipeline.git.branch >>]
+  assisted:
     jobs:
       - swift-packages:
           name: ios-core-packages
       - ios-core-build
       - ios-core-tests:
-          requires: [ios-core-build]
+          requires: [ios-core-build, ios-core-packages]
+
+workflows:
+  bitrise-fallback:
+    when:
+      equal: [codex/circleci-fallback, << pipeline.git.branch >>]
+    jobs:
+      - package-only:
+          serial-group: ritc-circle-macs
+
+  simulator-canary:
+    when:
+      equal: [codex/circleci-canary, << pipeline.git.branch >>]
+    jobs:
+      - smoke:
+          serial-group: ritc-circle-macs
+
+  bitrise-fallback-core:
+    when:
+      equal: [codex/circleci-performance, << pipeline.git.branch >>]
+    jobs:
+      - assisted:
+          serial-group: ritc-circle-macs

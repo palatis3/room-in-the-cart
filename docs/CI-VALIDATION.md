@@ -277,6 +277,23 @@ release requirements and known failures remain visible.
 
 On the 24 GB development Mac, let a failing PR journey take the next free simulator slot. During the November 12 run, several simultaneous simulator sessions coincided with memory pressure warnings, 17 GB of swap use and a current-runtime calibration that spent minutes in XCTest startup. When that happens, run the optional calibration after a repair finishes. Backend checks and hosted jobs can continue.
 
+### CircleCI during a Bitrise outage
+
+Push the candidate to `codex/circleci-canary` for one simulator build and one UI
+group. Push to `codex/circleci-performance` for the five Swift packages, one
+simulator build, and up to three M4 Pro Medium test workers. These workers run
+UI groups 01 through 03 from the ordinary ten-group plan. The assisted GitHub
+run handles the models and groups 04 through 10. Each worker verifies every
+assigned test against its results.
+The existing `codex/circleci-fallback` branch requests only the Swift packages.
+
+The producer restores Xcode's compilation cache for the pinned Xcode/runtime
+and saves updated compiler outputs. Within a workflow, all workers download
+the test products and selection from that workflow's build. Each worker checks
+the source revision, Xcode build, and simulator runtime before running tests.
+Ordinary branch pushes do not request these CircleCI Mac jobs. Once Bitrise
+recovers, stop pushing candidates to the CircleCI branches.
+
 ### GitHub and Bitrise capacity
 
 If Bitrise is unavailable, set the repository Actions variable

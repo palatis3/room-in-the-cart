@@ -1,20 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-case "${1:-full}:$CIRCLE_NODE_TOTAL" in
-    full:15)
-        if ! [[ "$CIRCLE_NODE_INDEX" =~ ^([0-9]|1[0-4])$ ]]; then
-            echo "Invalid parallel node: $CIRCLE_NODE_INDEX" >&2
-            exit 2
-        fi
-        if [[ "$CIRCLE_NODE_INDEX" = 0 ]]; then
-            TEST_SHARD=models
-        else
-            printf -v TEST_SHARD 'ui-%02d' "$CIRCLE_NODE_INDEX"
-        fi
-        ;;
-    smoke:1) test "$CIRCLE_NODE_INDEX" = 0; TEST_SHARD=ui-14 ;;
-    *) echo 'Expected 15 full nodes or one explicitly selected smoke node.' >&2; exit 2 ;;
+case "${1:-full}:$CIRCLE_NODE_TOTAL:$CIRCLE_NODE_INDEX" in
+    full:3:0|smoke:1:0) TEST_SHARD=ui-01 ;;
+    full:3:1) TEST_SHARD=ui-02 ;;
+    full:3:2) TEST_SHARD=ui-03 ;;
+    *) echo 'Expected three CircleCI UI nodes or one explicitly selected smoke node.' >&2; exit 2 ;;
 esac
 export TEST_SHARD
 evidence=.build/circle-evidence
@@ -43,7 +34,7 @@ boot_pid=$!
 mv .build/DerivedData/Build/test-plan .build/test-plan
 jq -e --arg revision "$CIRCLE_SHA1" '.revision == $revision' .build/test-plan/producer.json > /dev/null
 EXPECTED_TEST_COUNT=$(jq -er --arg shard "$TEST_SHARD" \
-    '.include | select(length == 15) | map(select(.shard == $shard)) | select(length == 1)
+    '.include | select(length == 11) | map(select(.shard == $shard)) | select(length == 1)
      | .[0].expected_count | select(type == "number" and . > 0)' .build/test-plan/manifest.json)
 export EXPECTED_TEST_COUNT
 cp ".build/test-plan/$TEST_SHARD.txt" "$evidence/"

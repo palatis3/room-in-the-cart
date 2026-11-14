@@ -17,10 +17,6 @@ wait "$boot_pid"
 python3 scripts/check_built_app.py \
     .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
 python3 scripts/discover_ios_tests.py --simulator "$simulator"
-# The default GitHub plan has ten UI shards. Repartition the same live
-# inventory for the fourteen CircleCI UI nodes plus the one model node.
-python3 scripts/plan_ios_tests.py --enumeration .build/test-plan/test-enumeration.json \
-    --output-dir .build/test-plan --ui-shards 14
 cp .build/circle-evidence/environment.json .build/test-plan/producer.json
 jq '.include' .build/test-plan/manifest.json
 bash scripts/package_ios_simulator_tests.sh "$PWD/.build/circle-ios/products.tar.lzfse"
