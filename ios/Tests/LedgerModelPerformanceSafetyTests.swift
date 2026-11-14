@@ -1,4 +1,5 @@
 import XCTest
+import SQLite3
 import CoreDomain
 import LocalStore
 @testable import RoomInTheCart
@@ -95,7 +96,28 @@ import LocalStore
         let line = CaptureImportLine(originalText: "two packs rice", name: "rice", packCount: 2,
             amountPerPack: Quantity(amount: try Rational(3, 2), unit: .kilogram, originalLiteral: "1.5 kg"), purpose: "dinner")
         let preview = try XCTUnwrap(model.shop).stageCaptureImport(id: UUID(), originalText: line.originalText, source: .voice, lines: [line])
-        let imported = await model.editShop(key: "capture", shopID: shopID) { try $0.commitImport(preview) }
+        // Queue an edit from the UI actor before the first save suspends for encoding.
+        // Hold the SQLite writer until the competing task runs, independent of scheduling.
+        var connection: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &connection), SQLITE_OK)
+        let lock = try XCTUnwrap(connection)
+        defer { sqlite3_close(lock) }
+        XCTAssertEqual(sqlite3_exec(lock, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+        var competingEdit: Task<Bool, Never>?
+        let initialRevision = model.revision
+        let imported = await model.editShop(key: "capture", shopID: shopID) { shop in
+            try shop.commitImport(preview)
+            competingEdit = Task { @MainActor in
+                defer { XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK) }
+                XCTAssertTrue(model.saving)
+                XCTAssertEqual(model.revision, initialRevision)
+                return await model.startShop(title: "Overlapping pickup")
+            }
+        }
+        let competing = try XCTUnwrap(competingEdit)
+        let accepted = await competing.value
+        XCTAssertFalse(accepted)
+        XCTAssertEqual(model.revision, initialRevision + 1)
         XCTAssertTrue(imported); XCTAssertFalse(model.hasPendingSave)
         let committed = model.workspace
         let exported = try model.exportPayload()

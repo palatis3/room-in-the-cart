@@ -206,13 +206,16 @@ private enum LedgerDeletionJournal {
             try edit(&candidate)
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.sortedKeys]
-            let payload = try encoder.encode(LedgerDocument(formatVersion: 1, workspace: candidate))
-            pending = PendingSave(key: key, workspace: candidate, payload: payload, base: revision,
-                                  operationID: UUID(), savedAt: clock())
+            guard let store else { return false }
+            // Reserve this revision while the immutable snapshot is encoded off the UI thread.
+            saving = true
+            defer { saving = false }
+            let payload = try await Self.encodeForSave(candidate)
+            let change = PendingSave(key: key, workspace: candidate, payload: payload, base: revision,
+                                     operationID: UUID(), savedAt: clock())
+            pending = change
             hasPendingSave = true
-            return await retrySave()
+            return await commit(change, to: store)
         } catch LedgerModelError.mealScopeChanged {
             error = ledgerText("The pickup or workspace changed. Reopen the dinner for the pickup you want.")
             return false
@@ -278,6 +281,16 @@ private enum LedgerDeletionJournal {
         guard !saving, !hasPendingLedgerDeletion, let pending, let store else { return false }
         saving = true
         defer { saving = false }
+        return await commit(pending, to: store)
+    }
+
+    @concurrent private static func encodeForSave(_ workspace: LedgerWorkspace) async throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return try encoder.encode(LedgerDocument(formatVersion: 1, workspace: workspace))
+    }
+
+    private func commit(_ pending: PendingSave, to store: LedgerStore) async -> Bool {
         do {
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
