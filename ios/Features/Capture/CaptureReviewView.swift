@@ -205,7 +205,13 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         guard let item, !model.closed else { loadingPhoto = false; return }
         loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
                 guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw CaptureFailure.imageUnavailable }
                 guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }

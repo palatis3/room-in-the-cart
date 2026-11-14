@@ -322,7 +322,13 @@ import CoreDomain
     private func loadPhoto(_ item: PhotosPickerItem?) {
         photoTask?.cancel(); guard localPhotoConsent, let item, !model.closed else { return }; loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
                 guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
                 guard localPhotoConsent, !Task.isCancelled, photo == item, authorize(), !model.closed else { return }
