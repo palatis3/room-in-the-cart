@@ -12,7 +12,7 @@ on:
         options: [full, dinner]
         default: full
       ios_provider:
-        description: Run ordinary core tests on CircleCI for the full circleci-performance branch dispatch
+        description: CircleCI runs Swift packages and UI groups 01–03 on a full codex/circleci-performance dispatch
         type: choice
         options: [github, circleci]
         default: github
@@ -140,7 +140,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Select the ordinary iOS test provider
+      - name: Select the Swift package and UI shard providers
         id: route
         env:
           IOS_PROVIDER: ${{ inputs.ios_provider || 'github' }}
@@ -759,7 +759,7 @@ jobs:
     env:
       JOB_RESULTS: ${{ toJSON(needs) }}
     steps:
-      - name: Require every build and test job to succeed
+      - name: Verify GitHub build and test results for the selected providers
         run: |
           python3 - <<'PY'
           import json, os
