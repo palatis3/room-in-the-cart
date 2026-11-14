@@ -1,5 +1,5 @@
 name: Build and test
-run-name: Build and test · ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic (all models + 2 original UI journeys)' || 'full suite' }}
+run-name: Build and test · ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic (all models + 2 original UI journeys)' || inputs.ios_provider == 'circleci' && 'CircleCI-assisted full suite' || 'full suite' }}
 on:
   push:
     branches: [main]
@@ -11,6 +11,11 @@ on:
         type: choice
         options: [full, dinner]
         default: full
+      ios_provider:
+        description: Run ordinary core tests on CircleCI for the full circleci-performance branch dispatch
+        type: choice
+        options: [github, circleci]
+        default: github
   workflow_call:
     inputs:
       require_release_metadata:
@@ -20,7 +25,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: core-ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'dinner-diagnostic' || 'full' }}
+  group: core-ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'dinner-diagnostic' || inputs.ios_provider == 'circleci' && 'circleci-full' || 'full' }}
   cancel-in-progress: true
 jobs:
   typescript:
@@ -129,10 +134,42 @@ jobs:
           OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
           TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_operations
   source-checks:
+    outputs:
+      ios_provider: ${{ steps.route.outputs.provider }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Select the ordinary iOS test provider
+        id: route
+        env:
+          IOS_PROVIDER: ${{ inputs.ios_provider || 'github' }}
+          IOS_SCOPE: ${{ inputs.ios_scope }}
+          PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          CIRCLECI_CORE_SHA: ${{ vars.RITC_CIRCLECI_CORE_SHA }}
+          RELEASE_METADATA: ${{ inputs.require_release_metadata }}
+        run: |
+          case "$IOS_PROVIDER" in
+            github)
+              # The PR checkout and CircleCI must both build the synthetic merge SHA.
+              if [[ "$GITHUB_EVENT_NAME" == pull_request && "$GITHUB_REPOSITORY" == palatis3/room-in-the-cart &&
+                    "$PR_REPO" == "$GITHUB_REPOSITORY" && "$CIRCLECI_CORE_SHA" =~ ^[0-9a-f]{40}$ &&
+                    "$CIRCLECI_CORE_SHA" == "$GITHUB_SHA" && "$RELEASE_METADATA" != true ]]; then
+                IOS_PROVIDER=circleci
+              fi
+              ;;
+            circleci)
+              [[ "$GITHUB_EVENT_NAME" == workflow_dispatch &&
+                 "$GITHUB_REPOSITORY" == palatis3/room-in-the-cart &&
+                 "$GITHUB_REF" == refs/heads/codex/circleci-performance &&
+                 "$IOS_SCOPE" == full && "$RELEASE_METADATA" != true ]] || {
+                echo 'CircleCI requires a full manual dispatch on codex/circleci-performance.' >&2
+                exit 1
+              }
+              ;;
+            *) exit 1 ;;
+          esac
+          echo "provider=$IOS_PROVIDER" >> "$GITHUB_OUTPUT"
       - name: Validate workflow syntax and expression references
         shell: bash
         run: |
@@ -174,6 +211,7 @@ jobs:
         run: '"$FOUNDATION_PYTHON" -B verify.py'
   swift-packages:
     needs: source-checks
+    if: needs.source-checks.outputs.ios_provider == 'github'
     concurrency:
       group: ritc-macos-slot-0
       queue: max
@@ -536,6 +574,7 @@ jobs:
         id: plan
         shell: bash
         env:
+          IOS_PROVIDER: ${{ needs.source-checks.outputs.ios_provider }}
           REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
         run: |
           python3 scripts/discover_ios_tests.py --simulator "$SIMULATOR_ID"
@@ -709,11 +748,14 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ci-gate:
-    name: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic gate' || 'CI gate' }}
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic gate' || inputs.ios_provider == 'circleci' && 'CircleCI-assisted CI gate' || 'CI gate' }}
     needs: [typescript, service-postgres, source-checks, swift-packages, ios-release, ios-swift-codeql, ios-build, ios-tests]
     if: always()
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 95
+    permissions:
+      contents: read
+      statuses: read
     env:
       JOB_RESULTS: ${{ toJSON(needs) }}
     steps:
@@ -722,11 +764,25 @@ jobs:
           python3 - <<'PY'
           import json, os
           jobs = json.loads(os.environ["JOB_RESULTS"])
-          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          provider = jobs["source-checks"]["outputs"]["ios_provider"]
+          if provider not in ("github", "circleci"):
+              raise SystemExit(f"Unrecognized iOS test provider: {provider}")
+          failures = {name: job["result"] for name, job in jobs.items()
+                      if job["result"] != ("skipped" if provider == "circleci" and name == "swift-packages" else "success")}
           model_result = jobs.get("ios-build", {}).get("outputs", {}).get("model_result")
           if model_result != "success":
               failures["ios-models"] = model_result or "missing"
           if failures:
               raise SystemExit(f"Required jobs did not pass: {failures}")
-          print("Every required build and test job passed.")
+          print(f"GitHub job results verified for the {provider} route.")
           PY
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: needs.source-checks.outputs.ios_provider == 'circleci'
+        with:
+          persist-credentials: false
+      - name: Require complete CircleCI core results on this commit
+        if: needs.source-checks.outputs.ios_provider == 'circleci'
+        timeout-minutes: 90
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_circleci_core_gate.py

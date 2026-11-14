@@ -284,7 +284,11 @@ group. Push to `codex/circleci-performance` for the five Swift packages, one
 simulator build, and up to three M4 Pro Medium test workers. These workers run
 UI groups 01 through 03 from the ordinary ten-group plan. The assisted GitHub
 run handles the models and groups 04 through 10. Each worker verifies every
-assigned test against its results.
+assigned test against its results. To start the paired GitHub workflow on the
+performance branch, run `gh workflow run ci.yml --ref codex/circleci-performance -f ios_scope=full -f ios_provider=circleci`.
+For a same-repository pull request, select the exact synthetic merge SHA in
+the `RITC_CIRCLECI_CORE_SHA` repository variable and run CircleCI on that same
+SHA. The default route handles every group on GitHub when the SHA differs.
 The existing `codex/circleci-fallback` branch requests only the Swift packages.
 
 The producer restores Xcode's compilation cache for the pinned Xcode/runtime
