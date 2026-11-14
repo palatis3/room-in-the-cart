@@ -181,19 +181,7 @@ import XCTest
         XCTAssertEqual(value.switches.count, 1, "Expected one native switch inside the Records row")
         let nativeSwitch = value.switches.firstMatch
         reveal(nativeSwitch, requiresFullFrame: true)
-        if nativeSwitch.value as? String == "0" {
-            // A tap on the visible off thumb can leave the Records switch off.
-            // Move the thumb across the native track in one gesture.
-            XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable)
-            let off = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
-            let on = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
-            off.press(forDuration: 0.1, thenDragTo: on)
-        }
-        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            nativeSwitch.value as? String == "1" && value.value as? String == "1"
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 12), .completed)
-        XCTAssertEqual(value.value as? String, "1")
+        enableVisibleRecordsSwitch(nativeSwitch, in: value)
     }
     private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true, requiresFullFrame: Bool = false) {
         // Choose file can take four full drags from the save confirmation. XCTest
@@ -231,5 +219,23 @@ import XCTest
         let image = XCTAttachment(screenshot: app.screenshot()); image.name = name; image.lifetime = .keepAlways; add(image)
         let tree = XCTAttachment(string: app.debugDescription); tree.name = name + " accessibility"; tree.lifetime = .keepAlways; add(tree)
     }
+}
+
+/// Records rows expose both a SwiftUI accessibility value and their native switch.
+@MainActor func enableVisibleRecordsSwitch(_ nativeSwitch: XCUIElement, in value: XCUIElement,
+                                         file: StaticString = #filePath, line: UInt = #line) {
+    if nativeSwitch.value as? String == "0" {
+        // A tap on the visible off thumb can leave the Records switch off.
+        // Move the thumb across the native track in one gesture.
+        XCTAssertTrue(nativeSwitch.isEnabled && nativeSwitch.isHittable, file: file, line: line)
+        let off = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+        let on = nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+        off.press(forDuration: 0.1, thenDragTo: on)
+    }
+    let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        nativeSwitch.value as? String == "1" && value.value as? String == "1"
+    }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 12), .completed, file: file, line: line)
+    XCTAssertEqual(value.value as? String, "1", file: file, line: line)
 }
 #endif
