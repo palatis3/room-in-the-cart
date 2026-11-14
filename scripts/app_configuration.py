@@ -193,6 +193,8 @@ def require_release_metadata(info):
     missing = [key for key in RELEASE_METADATA if not info.get(key)]
     if missing:
         raise ValueError("Release metadata is incomplete: " + ", ".join(missing))
+    if info.get("RITCEmailOTPEnabled") != "YES":
+        raise ValueError("Production email sign-in is disabled. Verify code delivery, then set emailOTPEnabled to true in release.json.")
     product_id = info["HouseholdSubscriptionProductID"]
     if not isinstance(product_id, str) or not PRODUCT_ID.fullmatch(product_id) or product_id == LOCAL_STOREKIT_PRODUCT_ID:
         raise ValueError("Release metadata has an invalid HouseholdSubscriptionProductID")

@@ -72,7 +72,10 @@ class ReleasePreflightTests(unittest.TestCase):
             }))
             for release, error in ((None, "Release metadata is incomplete"),
                                    ({"supportURL": "http://grocery.org/support"}, "supportURL"),
-                                   (store_fields, "HouseholdServiceURL"), ({**store_fields, **backend}, None)):
+                                   (store_fields, "HouseholdServiceURL"),
+                                   ({**store_fields, **backend}, "emailOTPEnabled"),
+                                   ({**store_fields, **backend, "emailOTPEnabled": False}, "emailOTPEnabled"),
+                                   ({**store_fields, **backend, "emailOTPEnabled": True}, None)):
                 with self.subTest(error=error):
                     if release is not None:
                         (config / "release.json").write_text(json.dumps(release))
