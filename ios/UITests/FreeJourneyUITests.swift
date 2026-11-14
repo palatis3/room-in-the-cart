@@ -884,13 +884,24 @@ import XCTest
             if done.exists && done.isHittable {
                 // Synthesized typing briefly hides the keyboard. Its Return key can
                 // occupy the former position of Done as the keyboard slides back.
-                let keyboard = app.keyboards.firstMatch
                 let aboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                    guard keyboard.exists, done.exists else { return false }
-                    let pad = keyboard.frame, bar = done.frame
-                    return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+                    // Read both frames during the same keyboard animation frame.
+                    guard let screen = try? self.app.snapshot() else { return false }
+                    var elements = screen.children
+                    var pad = CGRect.null
+                    var bar = CGRect.null
+                    while let element = elements.popLast() {
+                        if element.elementType == .keyboard { pad = element.frame }
+                        else if element.elementType == .button, element.identifier == "Done" { bar = element.frame }
+                        if !pad.isEmpty && !bar.isEmpty { break }
+                        elements.append(contentsOf: element.children)
+                    }
+                    return !pad.isEmpty && screen.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
                 }, object: nil)
-                XCTAssertEqual(XCTWaiter.wait(for: [aboveKeyboard], timeout: 5), .completed)
+                guard XCTWaiter.wait(for: [aboveKeyboard], timeout: 5) == .completed else {
+                    XCTFail("The dinner editor’s Done button did not settle above the visible keyboard.")
+                    return
+                }
                 done.tap()
             }
             assertField(name, value)
