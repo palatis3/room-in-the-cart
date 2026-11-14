@@ -88,6 +88,60 @@ import CoreDomain
         XCTAssertEqual(try RecordsNativeCodec.canonical(saved), bytes)
     }
 
+    func testFrozenShopperRecordKeepsItsReviewedCapAfterRepricingAndRestart() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let model = PickupModel(databaseURL: file)
+        let shop = UUID()
+        let line = try BasketLine(id: UUID(), name: "beans", quantity: count(2), expectedCost: .exact(Money(minorUnits: 300)))
+        let context = CheckoutContext(storeID: "Market", branchID: "Main", mode: .pickup, slot: "Tuesday",
+            commitmentsID: shop, observedAt: start, source: "Retailer preview")
+        let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(Money(minorUnits: 300))))
+        let originalCap = CheckoutCap(scope: .wholeCheckout, commitmentsID: shop, amount: Money(minorUnits: 500))
+        let changedCap = CheckoutCap(scope: .wholeCheckout, commitmentsID: shop, amount: Money(minorUnits: 200))
+        let started = await model.start(from: [line], shopID: shop, context: context)
+        let quoted = await model.setQuote(quote, cap: originalCap)
+        let didFreeze = await model.freeze()
+        XCTAssertTrue(started && quoted && didFreeze)
+        let original = try XCTUnwrap(model.frozenSnapshot)
+        let reopened = await model.reopenDraft(reviewing: original)
+        let requoted = await model.setQuote(quote, cap: changedCap)
+        let refrozen = await model.freeze()
+        XCTAssertTrue(reopened && requoted && refrozen)
+        let restored = PickupModel(databaseURL: file)
+        await restored.load()
+        let saved = try XCTUnwrap(restored.journey)
+        let record = try PickupReadableRecord.text(RecordsNativeCodec.pickup(RecordsNativeCodec.canonical(saved)),
+                                                   locale: Locale(identifier: "en_US"))
+        let freezes = record.components(separatedBy: "\n\n").filter { $0.contains("Frozen · placement unconfirmed") }
+        XCTAssertEqual(freezes.count, 2)
+        let first = try XCTUnwrap(freezes.first)
+        let second = try XCTUnwrap(freezes.last)
+        XCTAssertTrue(first.contains("Spending cap: $5.00"))
+        XCTAssertTrue(first.contains("Within this scope’s cap · room remaining: $2.00"))
+        XCTAssertTrue(second.contains("Spending cap: $2.00"))
+        XCTAssertTrue(second.contains("Over this scope’s cap by: $1.00"))
+        XCTAssertFalse(record.contains("No spending cap recorded"))
+        XCTAssertFalse(HandoffCopy.retailer(original, language: "es-US").fullText.contains("$"))
+
+        var legacy = saved
+        legacy.frozenCaps = nil
+        let oldBytes = try RecordsNativeCodec.canonical(legacy)
+        let oldFields = try XCTUnwrap(JSONSerialization.jsonObject(with: oldBytes) as? [String: Any])
+        XCTAssertNil(oldFields["frozenCaps"])
+        let reopenedLegacy = try RecordsNativeCodec.pickup(oldBytes)
+        XCTAssertEqual(try RecordsNativeCodec.canonical(reopenedLegacy), oldBytes)
+        let legacyRecord = try PickupReadableRecord.text(reopenedLegacy, locale: Locale(identifier: "en_US"))
+        for entry in legacyRecord.components(separatedBy: "\n\n").filter({ $0.contains("Frozen · placement unconfirmed") }) {
+            XCTAssertTrue(entry.contains("No spending cap recorded with this frozen copy"))
+            XCTAssertFalse(entry.contains("Spending cap:"))
+        }
+
+        var malformed = saved
+        malformed.frozenCaps = [UUID().uuidString: originalCap]
+        XCTAssertThrowsError(try RecordsNativeCodec.pickup(RecordsNativeCodec.canonical(malformed)))
+    }
+
     func testDraftAndSavedOnlyNoteDoNotImplyPlacementPaymentOrSend() throws {
         let shop = UUID(), revision = UUID()
         let salt = try BasketLine(id: UUID(), name: "sal", quantity: count(1), expectedCost: .unknown(reason: "ask at checkout"))

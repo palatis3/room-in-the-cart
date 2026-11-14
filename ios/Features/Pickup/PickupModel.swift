@@ -193,6 +193,8 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var basketPriceTerms: PickupPricingTerms?
     var earlierQuotes: [EarlierCheckoutQuote] = []
     var frozenQuotes: [UUID: CheckoutQuote] = [:]
+    // A missing entry also covers older snapshots whose cap was never recorded.
+    var frozenCaps: [String: CheckoutCap]?
     var pickup: PickupLedger?
     var needs: [AllocationNeed] = []
     var plannedNeeds: [AllocationNeed] = []
@@ -242,7 +244,7 @@ extension PickupJourney {
 
     private enum CodingKeys: String, CodingKey {
         case recipientSends, mealSource, mealRecovery, earlierQuotes, basketPriceTerms
-        case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
+        case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, frozenCaps, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -257,6 +259,7 @@ extension PickupJourney {
         basketPriceTerms = try container.decodeIfPresent(PickupPricingTerms.self, forKey: .basketPriceTerms)
         earlierQuotes = try container.decodeIfPresent([EarlierCheckoutQuote].self, forKey: .earlierQuotes) ?? []
         if let decoded = try container.decodeIfPresent([UUID: CheckoutQuote].self, forKey: .frozenQuotes) { frozenQuotes = decoded }
+        frozenCaps = try container.decodeIfPresent([String: CheckoutCap].self, forKey: .frozenCaps)
         pickup = try container.decodeIfPresent(PickupLedger.self, forKey: .pickup)
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .needs) { needs = decoded }
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .plannedNeeds) { plannedNeeds = decoded }
@@ -632,7 +635,12 @@ struct PickupPersistenceLocation {
             guard var basket = value.basket, !basket.current.lines.isEmpty, let quote = value.quote, value.quotedRevisionID == basket.current.id else { throw PickupModelError.missing }
             if basket.snapshots.contains(where: { $0.revision.id == basket.current.id }) { return }
             let snapshot = try basket.freeze(snapshotID: UUID(), expectedRevision: basket.current.id, at: clock())
-            value.frozenQuotes[snapshot.id] = quote; value.basket = basket
+            value.frozenQuotes[snapshot.id] = quote
+            if let cap = value.cap {
+                if value.frozenCaps == nil { value.frozenCaps = [:] }
+                value.frozenCaps?[snapshot.id.uuidString] = cap
+            }
+            value.basket = basket
         }
     }
     @discardableResult func reopenDraft(reviewing reviewed: HandoffSnapshot? = nil) async -> Bool {
@@ -912,6 +920,14 @@ struct PickupPersistenceLocation {
             guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }
         }
         let basketRevisionIDs = Set(value.basket?.revisions.map(\.id) ?? [])
+        if let caps = value.frozenCaps {
+            let snapshots = Set(value.basket?.snapshots.map(\.id) ?? [])
+            for (key, cap) in caps {
+                guard let id = UUID(uuidString: key), id.uuidString == key, snapshots.contains(id),
+                      let quote = value.frozenQuotes[id] else { throw PickupModelError.invalid }
+                _ = try CheckoutEngine.evaluate(quote, cap: cap)
+            }
+        }
         var previousRevision: Int64 = -1
         for earlier in value.earlierQuotes {
             guard earlier.id > previousRevision, earlier.id < value.revision, basketRevisionIDs.contains(earlier.basketRevisionID)

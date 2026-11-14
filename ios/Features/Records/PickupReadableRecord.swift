@@ -140,7 +140,9 @@ struct PickupReadableRecord {
                 var rows = [field("Revision", String(snapshot.revision.number))]
                 if let frozen = j.frozenQuotes[snapshot.id] {
                     rows.append(field("Checkout evidence recorded at", date(frozen.context.observedAt)))
-                    if frozen != j.quote { rows += try quote(frozen, cap: nil) }
+                    if let cap = j.frozenCaps?[snapshot.id.uuidString] {
+                        rows += try quote(frozen, cap: cap)
+                    } else if frozen != j.quote { rows += try quote(frozen, cap: nil) }
                     else { rows.append(pickupLabel("No spending cap recorded with this frozen copy")) }
                 }
                 event(snapshot.createdAt, pickupLabel("Frozen · placement unconfirmed"), rows)
