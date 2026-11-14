@@ -375,7 +375,9 @@ public struct LedgerImportBatch: Codable, Equatable, Sendable, Identifiable {
     public let contributionIDs: [UUID]
     public let createdAt: Date
     public var undoneAt: Date?
-    public var originalText: String { preview.originalText }
+    /// The exact selection before an edit in the share extension, when available.
+    public let originalSelection: String?
+    public var originalText: String { originalSelection ?? preview.originalText }
     public var source: ImportSource { preview.source }
 }
 
@@ -728,9 +730,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     @discardableResult
     public mutating func commitImport(_ preview: StagedListImport, decisions: [UUID: ImportResolution] = [:],
-                                       at: Date = Date()) throws -> UUID {
+                                       originalSelection: String? = nil, at: Date = Date()) throws -> UUID {
         if let receipt = importBatches.first(where: { $0.id == preview.id }) {
-            guard receipt.preview == preview, receipt.decisions == decisions else { throw LedgerError.invalid("importReplay") }
+            guard receipt.preview == preview, receipt.decisions == decisions, receipt.originalSelection == originalSelection else { throw LedgerError.invalid("importReplay") }
             guard receipt.undoneAt == nil else { throw LedgerError.alreadyUndone }
             return receipt.id
         }
@@ -773,7 +775,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 contributionIDs.append(entry.id)
             }
             next.importBatches.append(LedgerImportBatch(id: preview.id, preview: preview, decisions: decisions,
-                contributionIDs: contributionIDs, createdAt: at, undoneAt: nil))
+                contributionIDs: contributionIDs, createdAt: at, undoneAt: nil, originalSelection: originalSelection))
             return preview.id
         }
     }
@@ -1069,6 +1071,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
         for batch in importBatches {
             try validatePreview(batch.preview); try ledgerDate(batch.createdAt); try ledgerDate(batch.undoneAt)
+            if let original = batch.originalSelection {
+                guard batch.source == .selectedText else { throw LedgerError.invalid("importSource") }
+                try ledgerText(original, nonempty: true, maximum: StagedListImport.maximumTextBytes)
+            }
             let previewIDs = Set(batch.preview.lines.map(\.id))
             guard batch.id == batch.preview.id, batch.preview.shopID == id,
                   batch.preview.baseRevision < revision,

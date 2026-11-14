@@ -194,7 +194,7 @@ import CoreDomain
         XCTAssertTrue(imported)
         let savedWorkspace = f.ledger.workspace, savedRevision = f.ledger.revision
         let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
-        _ = try await inbox.stage(operationID: UUID(), originalText: "2 wraps\n3 pears", now: now)
+        _ = try await inbox.stage(operationID: UUID(), originalText: "2 wraps\n2 pears", editedText: "2 wraps\n3 pears", now: now)
         let pending = try await inbox.pending(now: now)
         let entry = try XCTUnwrap(pending.first)
         await f.composition.review(entry, shopID: shopID)
@@ -250,6 +250,13 @@ import CoreDomain
         XCTAssertEqual(f.ledger.shop?.lines.count, 2)
         XCTAssertEqual(f.ledger.shop?.importBatches.count, 2)
         XCTAssertEqual(f.ledger.revision, savedRevision + 1)
+        let saved = try XCTUnwrap(f.ledger.shop?.importBatches.last)
+        XCTAssertEqual(saved.originalText, "2 wraps\n2 pears")
+        XCTAssertEqual(saved.preview.lines.last?.originalText, "3 pears")
+        struct Document: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+        let readable = try LedgerReadableRecord.text(RecordsNativeCodec.canonical(Document(workspace: f.ledger.workspace)))
+        XCTAssertTrue(readable.contains("2 wraps\n2 pears"))
+        XCTAssertTrue(readable.contains("3 pears"))
     }
 
     func testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection() async throws {

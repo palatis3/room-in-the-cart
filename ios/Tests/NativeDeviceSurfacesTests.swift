@@ -225,7 +225,7 @@ import DeviceSurfaces
     func reload() async throws {}
     func commit(_ draft: SurfaceImportDraft) async throws {
         if failureBeforeCommit { throw SurfaceError.unavailable }
-        try value.commitImport(draft.preview, decisions: draft.decisions)
+        try value.commitImport(draft.preview, decisions: draft.decisions, originalSelection: draft.editedText == nil ? nil : draft.originalText)
         if changeGenerationOnCommit { generation = UUID() }
         if failureAfterCommit { throw SurfaceError.unavailable }
     }
@@ -247,7 +247,7 @@ import DeviceSurfaces
         let persona = UUID(), generation = UUID()
         let scope = SurfaceImportScope(personaID: persona, workspaceID: try XCTUnwrap(model.sourceWorkspaceID))
         let inbox = try SelectedTextInbox(url: dir.appendingPathComponent("shared/inbox.sqlite"))
-        _ = try await inbox.stage(operationID: UUID(), originalText: "12 wraps\n2 apples", now: date)
+        _ = try await inbox.stage(operationID: UUID(), originalText: "12 wraps\n2 apples", editedText: "12 wraps\n3 apples", now: date)
         let entry = try await inbox.pending(now: date)[0]
         let journal = try SurfaceImportJournal(directory: dir.appendingPathComponent("reviews"))
         let port = LedgerSelectedTextPort(ledger: model, scope: { scope }, generation: { generation })
@@ -259,6 +259,8 @@ import DeviceSurfaces
         try await port.commit(draft)
         let restarted = LedgerModel(databaseURL: ledgerURL, clock: { date }); await restarted.open()
         XCTAssertEqual(restarted.shop?.importBatches.count, 1)
+        XCTAssertEqual(restarted.shop?.importBatches.first?.originalText, "12 wraps\n2 apples")
+        XCTAssertEqual(restarted.shop?.importBatches.first?.preview.originalText, "12 wraps\n3 apples")
         let restoredPort = LedgerSelectedTextPort(ledger: restarted, scope: { scope }, generation: { generation })
         let restoredJournal = try SurfaceImportJournal(directory: dir.appendingPathComponent("reviews"))
         let restored = SurfaceImportBridge(inbox: inbox, journal: restoredJournal, port: restoredPort, clock: { date })
