@@ -535,7 +535,13 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func auditAccessibility() throws {
         try app.performAccessibilityAudit { issue in
-            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(issue.element?.debugDescription ?? "No element supplied")")
+            let element = issue.element
+            if let element {
+                print("Accessibility audit: \(issue.detailedDescription), id=\(element.identifier), label=\(element.label), frame=\(element.frame)")
+            } else {
+                print("Accessibility audit: \(issue.detailedDescription), no element supplied")
+            }
+            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(element?.debugDescription ?? "No element supplied")")
             details.name = "Accessibility issue details"
             details.lifetime = .keepAlways
             self.add(details)

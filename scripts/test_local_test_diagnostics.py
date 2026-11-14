@@ -42,7 +42,7 @@ class LocalDiagnosticsTests(unittest.TestCase):
                 path.write_text('#!/bin/bash\n' + body + '\n')
                 path.chmod(0o755)
             env = {key: value for key, value in os.environ.items()
-                   if key not in ('CI', 'GITHUB_ACTIONS', 'LOCAL_TEST_DIAGNOSTICS')}
+                   if key not in ('CI', 'GITHUB_ACTIONS', 'CIRCLECI', 'LOCAL_TEST_DIAGNOSTICS')}
             env.update(PATH=str(binaries) + os.pathsep + env['PATH'], TRACE=str(root / 'trace'),
                        SIMULATOR_ID='owned-test-device', TEST_SHARD='sample', EXPECTED_TEST_COUNT='1')
             env.update(overrides)
@@ -68,6 +68,14 @@ class LocalDiagnosticsTests(unittest.TestCase):
         status, args = self.run_shard(CI='true', GITHUB_ACTIONS='true')
         self.assertEqual(status, 0)
         self.assertEqual(args[args.index('-collect-test-diagnostics') + 1], 'on-failure')
+
+    def test_circleci_retains_failed_result_without_waiting_for_sysdiagnose(self):
+        status, args = self.run_shard(CI='true', CIRCLECI='true', NATIVE_EXIT='65')
+        self.assertNotEqual(status, 0)
+        self.assertEqual(args[args.index('-collect-test-diagnostics') + 1], 'never')
+        self.assertEqual(args[args.index('-resultBundlePath') + 1], '.build/Tests.xcresult')
+        self.assertEqual(args.count('test-without-building'), 1)
+        self.assertIn('scripts/check_ios_test_results.py', args)
 
     def test_ci_cannot_disable_diagnostics_and_invalid_values_fail_before_native_work(self):
         for values in ({'CI': 'true'}, {'GITHUB_ACTIONS': 'true'}, {'CI': 'false'}):
