@@ -1,14 +1,14 @@
 # Required-reason API audit
 
-The November 4 Release archive review found a direct `_lstat` import in the app executable. The earlier source inventory preceded the recovered-capture code. The app manifest now declares both UserDefaults `CA92.1` and File Timestamp `C617.1`.
+The November 14 review covered the unsigned arm64 archive at `edaabe10`. Candidate `18df849f` changed only a UI test after that archive. A scan of the app and both extensions found direct imports for `lstat` and `NSUserDefaults` in the app. Its compiled manifest declares File Timestamp `C617.1` and UserDefaults `CA92.1`. The Share and Widget binaries had no matches in the reviewed imports or Objective-C method names. All four permission prompts in both compiled languages matched the source catalog. The source locations, binary hashes and compiled declarations are in `.build/Privacy18dfNov14/inventory.json` on the release Mac.
 
 The November 3 [source inventory](/Users/palatis/Documents/Codex/2026-11-03/task/review/tracker/required-reason-source-inventory.json) records 160 source and package manifest files, including 112 shipping source files. It includes source hashes and separates Tests and UITests from shipping code. The subsequent review traced the imported API to its shipping call sites and checked the app and both embedded extensions.
 
 | Category | Actual source and scope | Declaration assessment |
 |---|---|---|
-| UserDefaults | [RoomInTheCartApp.swift](../ios/App/RoomInTheCartApp.swift) has two appearance `@AppStorage` properties. [WorkspaceAccess.swift](../ios/App/WorkspaceAccess.swift) reads/writes the app's own protection/access state using standard defaults. No shipping suite-name or App Group defaults access found | Existing `NSPrivacyAccessedAPICategoryUserDefaults` / `CA92.1` matches the inspected app-only use |
+| UserDefaults | [RoomInTheCartApp.swift](../ios/App/RoomInTheCartApp.swift) has two appearance `@AppStorage` properties. [WorkspaceAccess.swift](../ios/App/WorkspaceAccess.swift) reads/writes the app's own protection/access state using standard defaults. The pickup feedback consent store also uses standard app defaults, and app reset clears its key | Existing `NSPrivacyAccessedAPICategoryUserDefaults` / `CA92.1` matches the inspected app-only use |
 | File timestamps | [RecordsRecoveryCapture.swift](../ios/Features/Records/RecordsRecoveryCapture.swift) calls `lstat` to check that recovered directories and files have the expected type. [RecordsComposition.swift](../ios/App/RecordsComposition.swift) supplies paths under the app's Application Support `RoomInTheCart/Records/Recoveries` directory. The checks cover the local recovery folder, its manifest, SQLite stores and their sidecars. | `NSPrivacyAccessedAPICategoryFileTimestamp` / `C617.1` covers metadata for files inside the app container. Only the file type is inspected. |
-| System boot time | Nine `systemUptime` references occur only in [LargeListPerformanceTests.swift](../ios/Tests/LargeListPerformanceTests.swift). No shipping source hit | No shipping declaration added for a test-only fixture |
+| System boot time | The app and feature sources contain four `systemUptime` references. Two belong to the simulator signpost-control build, and two belong to debug contributor fixtures. The ordinary Release archive excludes those code paths | No shipping declaration added for a test-only fixture |
 | Disk space | No listed capacity/POSIX disk-space API source hit | No reason inferred |
 | Active keyboards | No `activeInputModes` source hit | No reason inferred |
 
