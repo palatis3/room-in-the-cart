@@ -34,9 +34,11 @@ import SwiftUI
                     }
                     Section {
                         Toggle(ht("I reviewed the original wording, item, quantity, packs, exclusions and destination."), isOn: $approved)
+                            .disabled(sending)
                             .accessibilityIdentifier("household.request.approve")
                         Button(ht("Send reviewed request")) { Task {
                             guard authorized, approved else { return }
+                            failure = nil
                             sending = true
                             await household.sendRequest(reviewed: review, approved: true)
                             sending = false
@@ -48,10 +50,14 @@ import SwiftUI
                             }
                         } }.disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
                         if let failure { Text(failure).accessibilityIdentifier("household.request.reviewError") }
-                        Text(ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
+                        if sending {
+                            Text(ht("Waiting for the household to confirm receipt"))
+                        } else {
+                            Text(ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
+                        }
                     }
                 }.navigationTitle(ht("Review your request"))
-                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(sending) } }
             } else if capture {
                 let captureLanguage = CaptureCorrectionScope.appLanguage()
                 CaptureReviewView(initialText: scope.quantity.isEmpty ? scope.item : scope.quantity + " " + scope.item,
@@ -68,6 +74,7 @@ import SwiftUI
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
             }
         }
+        .interactiveDismissDisabled(sending)
         .task {
             if !capture { do { review = try ContributorRequestReview.typed(scope: scope) } catch { failure = message(error) } }
             while !Task.isCancelled {
