@@ -507,6 +507,22 @@ final class DeviceSurfacesTests: XCTestCase {
         XCTAssertThrowsError(try SelectedTextInbox(url: url))
         XCTAssertEqual(try Data(contentsOf: url), before)
     }
+    func testWidgetReadRejectsReplacedProjectionAndAcceptsNextPublication() throws {
+        let directory = try file().deletingLastPathComponent()
+        let file = try WidgetProjectionFile(directory: directory)
+        let expected = try WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList)
+        try file.publishAfterCommit(expected)
+        XCTAssertEqual(try file.read(), expected)
+
+        let other = directory.appendingPathComponent("other.json")
+        try FileManager.default.moveItem(at: file.url, to: other)
+        try FileManager.default.createSymbolicLink(at: file.url, withDestinationURL: other)
+        XCTAssertThrowsError(try file.read())
+        try file.clear(now: now)
+        XCTAssertNil(try file.read().routeHandle)
+        XCTAssertEqual(try WidgetProjection.decode(Data(contentsOf: other)), expected)
+    }
+
     func testWidgetFileRejectsCorruptionAndClearContainsOnlyGenericRoute() throws {
         let projectionFile = try WidgetProjectionFile(directory: file().deletingLastPathComponent())
         try projectionFile.publishAfterCommit(WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList))
