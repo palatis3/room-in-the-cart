@@ -1462,7 +1462,7 @@ import Combine
         source.membershipSession = session(subject: "new-subject-with-old-projection")
         source.events.send(.identity)
         await settle { coordinator.model == nil && stores[0].activeObservers == 0 }
-        coordinator.foreground(); coordinator.retry()
+        coordinator.foreground(); await coordinator.retry()
         await Task.yield()
         XCTAssertEqual(stores.count, 1)
         source.events.send(.projection)
@@ -1504,10 +1504,18 @@ import Combine
         source.credentialError = .signInRequired
         coordinator.foreground()
         await settle { coordinator.model == nil && coordinator.failure && store.activeObservers == 0 }
-        coordinator.foreground(); coordinator.retry()
+        coordinator.foreground(); await coordinator.retry()
         await Task.yield()
         XCTAssertNil(coordinator.model)
         XCTAssertEqual(store.observerStarts, 1)
+        XCTAssertEqual(source.authorizationRefreshes, 1)
+        source.credentialError = nil
+        source.onAuthorizationRefresh = { [weak source] in source?.events.send(.projection) }
+        await coordinator.retry()
+        await settle { coordinator.model?.hasPaidAccess == true && !coordinator.isLoading }
+        XCTAssertEqual(source.authorizationRefreshes, 2)
+        XCTAssertEqual(store.observerStarts, 2)
+        coordinator.stop()
     }
 
     func testMissingDeploymentConfigurationKeepsPurchaseDisabled() async {
@@ -1708,6 +1716,12 @@ private final class MembershipURLProtocol: URLProtocol {
     let events = PassthroughSubject<MembershipSessionEvent, Never>()
     var membershipSessionChanges: AnyPublisher<MembershipSessionEvent, Never> { events.eraseToAnyPublisher() }
     var onScopeChange: (() -> Void)?
+    var authorizationRefreshes = 0
+    var onAuthorizationRefresh: (() -> Void)?
+    func refreshMembershipAuthorization() async {
+        authorizationRefreshes += 1
+        onAuthorizationRefresh?()
+    }
     var credentialReads = 0
     var credentialError: MembershipFailure?
     init(session: MembershipSession) { membershipSession = session }
