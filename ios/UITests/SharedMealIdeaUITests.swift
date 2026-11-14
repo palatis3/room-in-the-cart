@@ -388,25 +388,25 @@ import XCTest
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         enterValue(text, into: id, replacing: replacing)
         if app.keyboards.firstMatch.exists {
-            let done = app.buttons["household-idea-keyboard-done"]
+            let doneID = "household-idea-keyboard-done"
+            let done = app.buttons[doneID]
             XCTAssertTrue(done.waitForExistence(timeout: 5))
             tap(done)
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID),
+                          "The keyboard and Done button must disappear after editing " + id)
         }
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
             let exists = target.exists
-            let hittable = exists && target.isHittable
             // Most controls are already actionable. Do not query every keyboard
             // and navigation bar unless a viewport check or scroll is needed.
-            if hittable && !fullyVisible { return }
+            if !fullyVisible && exists && target.isHittable { return }
             let area = scrollableArea()
             let frame = exists ? target.frame : .zero
             // A partly visible multiline switch can be hittable while its
             // trailing control is still behind the software keyboard.
-            if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
+            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY && target.isHittable { return }
             let upward: Bool
             if exists && !frame.isEmpty {
                 upward = frame.midY > area.midY
@@ -429,7 +429,8 @@ import XCTest
         // The Form ends above its Done bar. A field behind the bar can still
         // report hittable while a tap leaves the preceding input focused.
         let done = app.buttons["household-idea-keyboard-done"]
-        let inputTop = keyboardTop < bounds.maxY && done.exists ? min(keyboardTop, done.frame.minY) : keyboardTop
+        let doneFrame = done.exists ? done.frame : .zero
+        let inputTop = doneFrame.intersects(bounds) && !doneFrame.isEmpty ? min(keyboardTop, doneFrame.minY) : keyboardTop
         let top = max(bounds.minY + 88, min(barBottom + 12, inputTop - 140))
         let bottom = min(bounds.maxY - 100, inputTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
