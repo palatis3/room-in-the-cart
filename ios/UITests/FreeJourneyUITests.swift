@@ -1142,10 +1142,7 @@ import XCTest
     func testFreeCookCorrectionAndExplicitRecipientAcknowledgment() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Beans", into: "Food that is short")
-        fill("Soup", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("1", into: "Usable amount available now")
+        enterNeed(food: "Beans", meal: "Soup", required: "4", available: "1")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
         tap(app.buttons["Preview a dated cook instruction"])
