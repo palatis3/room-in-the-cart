@@ -88,6 +88,10 @@
 			"path" = "RoomInTheCartWidget.appex";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
+		"035E94F04724BDF5E7F86650" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = "02D58DFC661959CB01702B39";
+		};
 		"03A4F2750CCE9FC159DF9063" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -4073,7 +4077,7 @@
 			"buildRules" = ();
 			"dependencies" = ();
 			"name" = "RoomInTheCartShare";
-			"packageProductDependencies" = ("91CD674DC8BB66644C3F1E63",);
+			"packageProductDependencies" = ("91CD674DC8BB66644C3F1E63", "02D58DFC661959CB01702B39",);
 			"productName" = "RoomInTheCartShare";
 			"productReference" = "B8A53FC7B8E6851401B06A56";
 			"productType" = "com.apple.product-type.app-extension";
@@ -4838,7 +4842,7 @@
 		"F4D3D22E87DC309FB81F1AF6" = {
 			"isa" = "PBXFrameworksBuildPhase";
 			"buildActionMask" = "2147483647";
-			"files" = ("8F19B68A4A78AC66D0608C17",);
+			"files" = ("8F19B68A4A78AC66D0608C17", "035E94F04724BDF5E7F86650",);
 			"runOnlyForDeploymentPostprocessing" = "0";
 		};
 		"F50992883B89F703A3FBD05F" = {

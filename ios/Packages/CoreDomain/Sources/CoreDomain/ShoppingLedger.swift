@@ -335,9 +335,15 @@ public struct StagedListImport: Codable, Equatable, Sendable, Identifiable {
     public static let maximumLines = 1_000
     public static let maximumOriginalLineBytes = 8_192
 
+    /// Validate shared text while the sender can still edit it in the share sheet.
+    public static func validateSourceText(_ text: String, maximumLines: Int) throws {
+        _ = try sourceLines(text, maximum: maximumLines)
+    }
+
     /// Count nonblank ledger rows before assigning identities or expanding duplicate candidates.
     /// The original slices keep whitespace and spelling, including combining marks.
     fileprivate static func sourceLines(_ text: String, maximum: Int) throws -> [Substring] {
+        guard maximum > 0, maximum <= maximumLines else { throw LedgerError.invalid("importSize") }
         guard text.utf8.count <= maximumTextBytes else { throw ImportTextLimit.totalBytes }
         var rows: [Substring] = []
         let scalars = text.unicodeScalars
@@ -639,7 +645,6 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// deliberately not equivalent to replaying an already committed preview.
     public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID(),
                             maximumLines: Int = StagedListImport.maximumLines) throws -> StagedListImport {
-        guard maximumLines > 0, maximumLines <= StagedListImport.maximumLines else { throw LedgerError.invalid("importSize") }
         let originals = try StagedListImport.sourceLines(text, maximum: maximumLines)
         var staged: [StagedImportLine] = []
         var candidatesByName = importCandidatesByName()

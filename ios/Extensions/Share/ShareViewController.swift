@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 import DeviceSurfaces
+import CoreDomain
 
 final class ShareViewController: UIViewController {
     private let model = ShareComposerModel()
@@ -64,6 +65,16 @@ final class ShareViewController: UIViewController {
         guard !saving, !loading, !original.isEmpty else { return }
         let reviewEdit = edited == original ? nil : edited
         guard SelectedTextInbox.fitsEnvelope(original: original, edited: reviewEdit) else { saveError = sizeMessage; return }
+        do {
+            try StagedListImport.validateSourceText(edited, maximumLines: SelectedTextInbox.maximumLines)
+        } catch ImportTextLimit.originalLineBytes(let item) {
+            let format = SurfaceCopy.text("Shorten item %lld to %lld UTF-8 bytes or less.")
+            saveError = String(format: format, locale: Locale.current, Int64(item), Int64(StagedListImport.maximumOriginalLineBytes))
+            return
+        } catch {
+            saveError = sizeMessage
+            return
+        }
         saving = true; error = nil
         Task {
             defer { saving = false }

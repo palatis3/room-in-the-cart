@@ -172,7 +172,8 @@ def outputs():
             continue
         if "DeviceSurfaces" not in package_names or not (directory / "Info.plist").exists():
             raise ValueError(f"{name} needs DeviceSurfaces and its explicit Info.plist")
-        targets.append(target(key, name, sources, "com.apple.product-type.app-extension", "dev.roominthecart.app." + key, packages=("DeviceSurfaces",), extension_folder=directory))
+        extension_packages = ("DeviceSurfaces", "CoreDomain") if key == "share" else ("DeviceSurfaces",)
+        targets.append(target(key, name, sources, "com.apple.product-type.app-extension", "dev.roominthecart.app." + key, packages=extension_packages, extension_folder=directory))
         proxy = obj(key + ":embedProxy", "PBXContainerItemProxy", containerPortal=ident("project"), proxyType="1", remoteGlobalIDString=ident("target:" + key), remoteInfo=name)
         extension_dependencies.append(obj(key + ":embedDependency", "PBXTargetDependency", target=ident("target:" + key), targetProxy=proxy))
         extension_embeds.append(obj(key + ":embedFile", "PBXBuildFile", fileRef=ident(key + ":output"), settings={"ATTRIBUTES": ["RemoveHeadersOnCopy"]}))

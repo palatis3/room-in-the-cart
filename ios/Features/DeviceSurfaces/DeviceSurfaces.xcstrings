@@ -785,6 +785,22 @@
         }
       }
     },
+    "Shorten item %lld to %lld UTF-8 bytes or less.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten item %lld to %lld UTF-8 bytes or less."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el artículo %lld a un máximo de %lld bytes UTF-8."
+          }
+        }
+      }
+    },
     "That reminder time has passed. Review the current item.": {
       "localizations": {
         "en": {
