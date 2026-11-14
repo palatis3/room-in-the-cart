@@ -1054,6 +1054,52 @@ import Combine
         XCTAssertTrue(store.finished.isEmpty)
     }
 
+    func testSeatConflictLoadsCurrentRosterWithoutReplayingRemoval() async {
+        let second = MembershipSeat(userID: "adult-two", displayName: "Sam", isAdult: true)
+        let service = FakeMembershipService(snapshot: snapshot())
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.refresh()
+        service.snapshot = snapshot(revision: 2, seats: [second])
+        let reads = store.unfinishedReads
+
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(model.state.snapshot?.revision, 2)
+        XCTAssertEqual(model.state.snapshot?.seats, [second])
+        XCTAssertEqual(model.eligibleAdults, [second])
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
+        XCTAssertEqual(store.unfinishedReads, reads)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertTrue(model.canManageSeats)
+        XCTAssertEqual(model.notice, .failed(.refreshRequired))
+
+        // A menu tap captured before the roster changed cannot use its newer revision.
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
+        service.seatUpdateResponse = snapshot(revision: 3, seats: [])
+        await model.replaceSeat(userID: nil, replacingUserID: second.userID, reviewedRevision: 2)
+        XCTAssertEqual(service.requestedSeatRevisions, [1, 2])
+        XCTAssertEqual(model.state.snapshot?.seats, [])
+        XCTAssertNil(model.notice)
+    }
+
+    func testSeatConflictFollowedByAccessLossClearsRosterAndStopsChanges() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        let model = makeModel(service, FakeMembershipStorefront())
+        await model.refresh()
+        service.snapshot = snapshot(revision: 2)
+        service.error = .signInRequired
+
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertNil(model.state.snapshot)
+        XCTAssertTrue(model.eligibleAdults.isEmpty)
+        XCTAssertFalse(model.canManageSeats)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.notice, .failed(.signInRequired))
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
+    }
+
     func testSessionRejectionImmediatelyClearsPaidProjection() async {
         let service = FakeMembershipService(snapshot: snapshot())
         let model = makeModel(service, FakeMembershipStorefront())
@@ -1391,7 +1437,14 @@ import Combine
         if let error { throw error }; return snapshot
     }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { snapshot.seats }
-    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot { snapshot }
+    var requestedSeatRevisions: [Int] = []
+    var seatUpdateResponse: MembershipSnapshot?
+    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot {
+        requestedSeatRevisions.append(revision)
+        guard revision == snapshot.revision else { throw MembershipFailure.refreshRequired }
+        if let seatUpdateResponse { snapshot = seatUpdateResponse }
+        return snapshot
+    }
 }
 
 @MainActor private final class FakeMembershipStorefront: MembershipStorefront {

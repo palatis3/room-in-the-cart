@@ -66,7 +66,8 @@ struct MembershipView: View {
                     Text(membershipStatusMessageText(message)).accessibilityIdentifier(message.id)
                 }
             }
-            if let seats = model.state.snapshot?.seats {
+            if let snapshot = model.state.snapshot {
+                let seats = snapshot.seats
                 Section(mtr("Named adult seats")) {
                     ForEach(seats) { seat in
                         VStack(alignment: .leading, spacing: 8) {
@@ -74,11 +75,11 @@ struct MembershipView: View {
                             if model.canManageSeats {
                                 Menu(mtr("Manage seat")) {
                                     Button(mtr("Revoke seat"), role: .destructive) {
-                                        Task { await model.replaceSeat(userID: nil, replacingUserID: seat.userID) }
+                                        Task { await model.replaceSeat(userID: nil, replacingUserID: seat.userID, reviewedRevision: snapshot.revision) }
                                     }
                                     ForEach(model.eligibleAdults.filter { candidate in !seats.contains(where: { $0.userID == candidate.userID }) }) { adult in
                                         Button(String(format: mtr("Transfer to %@"), adult.displayName)) {
-                                            Task { await model.replaceSeat(userID: adult.userID, replacingUserID: seat.userID) }
+                                            Task { await model.replaceSeat(userID: adult.userID, replacingUserID: seat.userID, reviewedRevision: snapshot.revision) }
                                         }
                                     }
                                 }.disabled(model.isBusy)
@@ -88,7 +89,7 @@ struct MembershipView: View {
                     if model.canManageSeats && seats.count < 2 {
                         ForEach(model.eligibleAdults.filter { candidate in !seats.contains(where: { $0.userID == candidate.userID }) }) { adult in
                             Button(String(format: mtr("Assign seat to %@"), adult.displayName)) {
-                                Task { await model.replaceSeat(userID: adult.userID, replacingUserID: nil) }
+                                Task { await model.replaceSeat(userID: adult.userID, replacingUserID: nil, reviewedRevision: snapshot.revision) }
                             }.disabled(model.isBusy)
                         }
                     }
@@ -167,7 +168,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
         case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
         case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
         case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
-        case .refreshRequired: return mtr("Membership changed. Refresh its status and review the seat change again.")
+        case .refreshRequired: return mtr("Membership changed. Review the current seats before making another change.")
         case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
         }
     }

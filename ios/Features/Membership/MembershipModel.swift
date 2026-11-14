@@ -241,14 +241,8 @@ import SwiftUI
             }
         }
         do {
-            let snapshot = try await service.fetch(context: context)
+            try await refreshSeatRoster(context: context, session: session)
             guard session == generation else { return }
-            try state.accept(snapshot, context: context, now: clock())
-            if canManageSeats {
-                let adults = try await service.seatCandidates(context: context)
-                guard session == generation else { return }
-                eligibleAdults = adults.filter { $0.isAdult }
-            } else { eligibleAdults = [] }
             // A successful Free projection does not erase a rejected restore or undelivered transaction.
             if let deliveryFailure { state.fail(deliveryFailure); notice = .failed(deliveryFailure) }
         } catch {
@@ -257,6 +251,17 @@ import SwiftUI
             state.fail(issue)
             if issue == .signInRequired || issue == .membershipInactive { eligibleAdults = [] }
         }
+    }
+
+    private func refreshSeatRoster(context: MembershipContext, session: Int) async throws {
+        let snapshot = try await service.fetch(context: context)
+        guard session == generation else { return }
+        try state.accept(snapshot, context: context, now: clock())
+        if canManageSeats {
+            let adults = try await service.seatCandidates(context: context)
+            guard session == generation else { return }
+            eligibleAdults = adults.filter { $0.isAdult }
+        } else { eligibleAdults = [] }
     }
 
     func purchase() async {
@@ -335,8 +340,12 @@ import SwiftUI
     }
 
     /// Named seats are service mutations. They never grant the current-shop role or budget scope.
-    func replaceSeat(userID: String?, replacingUserID: String?) async {
+    func replaceSeat(userID: String?, replacingUserID: String?, reviewedRevision: Int) async {
         guard !isBusy, canManageSeats, let context, let snapshot = state.snapshot else { return }
+        guard reviewedRevision == snapshot.revision else {
+            _ = reject(.refreshRequired)
+            return
+        }
         isBusy = true
         let session = generation
         defer { isBusy = false }
@@ -345,6 +354,19 @@ import SwiftUI
                 context: context, revision: snapshot.revision)
             guard session == generation else { return }
             try state.accept(updated, context: context, now: clock())
+            if notice == .failed(.refreshRequired) { notice = nil }
+        } catch MembershipFailure.refreshRequired {
+            guard session == generation else { return }
+            // Refresh what the purchaser can review. A conflict never retries the seat mutation.
+            eligibleAdults = []
+            do {
+                try await refreshSeatRoster(context: context, session: session)
+                guard session == generation else { return }
+                _ = reject(.refreshRequired)
+            } catch {
+                guard session == generation else { return }
+                _ = reject(failure(error))
+            }
         } catch {
             guard session == generation else { return }
             _ = reject(failure(error))

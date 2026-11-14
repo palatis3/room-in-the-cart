@@ -850,18 +850,18 @@
         }
       }
     },
-    "Membership changed. Refresh its status and review the seat change again.": {
+    "Membership changed. Review the current seats before making another change.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Membership changed. Refresh its status and review the seat change again."
+            "value": "Membership changed. Review the current seats before making another change."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía cambió. Actualiza su estado y vuelve a revisar el cambio de plaza."
+            "value": "La membresía cambió. Revisa las plazas actuales antes de hacer otro cambio."
           }
         }
       }
