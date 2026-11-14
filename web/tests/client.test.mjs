@@ -238,6 +238,67 @@ test('offline unconsented send is not saved and retry preserves operation key',a
  submit(root,dom);await waitForIdle(root);assert.equal(sent.length,2);assert.equal(sent[0].clientKey,sent[1].clientKey);assert.doesNotMatch(root.textContent,/Received by the shopper/);
 });
 
+test('a pickup choice change keeps an unconfirmed request bound to its reviewed pickup', async t => {
+  for (const queued of [false, true]) {
+    for (const refresh of [false, true]) {
+      const first = 'original', other = 'new-shop';
+      const pickups = [first, other].map(shopId => ({shopId, nextShopOnly: false, createdAt: '2026-11-10T12:00:00Z'}));
+      let active = {...session(), shopId: null, selectionRequired: true, queueConsent: queued};
+      const attempts = [];
+      const {root, dom} = await setup(fakeAPI({
+        session: async () => active,
+        requestPickups: async () => pickups,
+        command: async (_, cmd) => {
+          attempts.push(structuredClone(cmd));
+          if (attempts.length === 1) throw new ApiError('network', 0);
+          return {...own(), shopId: cmd.shopId};
+        }
+      }));
+      t.after(() => dom.window.close());
+      const picker = root.querySelector('#request-pickup');
+      picker.value = first;
+      picker.dispatchEvent(new dom.window.Event('change'));
+      if (queued) root.querySelector('input[type=checkbox]').click();
+      type(dom, 'item', 'Cereal');
+      submit(root, dom); submit(root, dom); await waitForIdle(root);
+      assert.equal(attempts.length, 1);
+      active = {...active, selectionRequired: false, shopId: other};
+      if (refresh) { click(root, 'Refresh'); await waitForIdle(root); }
+      if (queued) click(root, 'Retry');
+      else {
+        if (refresh) assert.match(root.querySelector('form').textContent, /original/);
+        submit(root, dom);
+      }
+      await waitForIdle(root);
+      assert.deepEqual(attempts.map(c => c.shopId), [first, first]);
+      assert.deepEqual(attempts[1], attempts[0]);
+      assert.match(root.textContent, /Received by the shopper/);
+    }
+  }
+});
+
+test('changed pickup choices never carry an unconfirmed request to a different contributor', async t => {
+  for (const queued of [false, true]) {
+    let active = {...session(), queueConsent: queued};
+    let attempts = 0;
+    const {root,dom} = await setup(fakeAPI({
+      session: async () => active,
+      command: async () => { attempts++; throw new ApiError('network', 0); }
+    }));
+    t.after(() => dom.window.close());
+    if (queued) root.querySelector('input[type=checkbox]').click();
+    type(dom, 'item', 'Private shopping request');
+    submit(root, dom); submit(root, dom); await waitForIdle(root);
+    active = {...active, memberId:'another-member', selectionRequired:true, shopId:null};
+    if (queued) click(root, 'Retry');
+    else submit(root, dom);
+    await waitForIdle(root);
+    assert.equal(attempts, 1);
+    assert.doesNotMatch(root.textContent, /Private shopping request/);
+    assert.match(root.textContent, /Access has ended/);
+  }
+});
+
 test('explicitly consented disconnected request is durably queued, never labeled received',async()=>{
  const s={...session(),queueConsent:true};const {app,root,dom}=await setup(fakeAPI({session:async()=>s,command:async()=>{throw new ApiError('network',0);}}));
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));

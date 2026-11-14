@@ -148,7 +148,7 @@ export class WebApp {
   }
   private pickupSelectionChanged(fresh:Session):boolean {
     const prior = this.session;
-    if (!prior || !isContributorSession(fresh) || this.retryCommand || this.draft.editing || this.draft.followup) return false;
+    if (!prior || !isContributorSession(fresh) || !fresh.enrolled) return false;
     const choicesChanged = Boolean(prior.selectionRequired) !== Boolean(fresh.selectionRequired);
     return choicesChanged && this.reviewedScope === reviewScope(prior) &&
       reviewScope({...fresh, shopId: prior.shopId}) === this.reviewedScope;
@@ -170,8 +170,10 @@ export class WebApp {
     }
     if(fresh && this.pickupSelectionChanged(fresh)) {
       this.chosenPickupId=null;
-      this.review=false;
-      this.notice='Available pickups changed. Review the destination before sending.';
+      if (!this.retryCommand && !this.draft.editing && !this.draft.followup) {
+        this.review=false;
+        if(this.draft.item || this.draft.amount)this.notice='Available pickups changed. Review the destination before sending.';
+      }
     } else if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
       this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
@@ -259,11 +261,15 @@ export class WebApp {
     const fresh=await this.api.session();
     if(this.signOutPending)throw new ApiError('access_ended',403);
     if(!fresh)throw new ApiError('session_needed',401);
-    if(reviewPickupChanges && this.pickupSelectionChanged(fresh))return fresh;
-    if(!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope)throw new ApiError('access_ended',403);
+    const choicesChanged = this.pickupSelectionChanged(fresh);
+    if (reviewPickupChanges && choicesChanged && !command) return fresh;
+    if (reviewScope(fresh)!==this.reviewedScope && !(choicesChanged && command)) throw new ApiError('access_ended',403);
     if(grantId ? fresh.role!=='editor'||fresh.grantId!==grantId : !isContributorSession(fresh))throw new ApiError('access_ended',403);
     if(command&&(fresh.replayWindow.id!==command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()))throw new ApiError('stale_replay_window',409);
-    this.session=fresh;return fresh;
+    // A retry owns its original destination. Let load reconcile any other draft
+    // against the new selection after the server has checked that exact command.
+    if (!choicesChanged) this.session=fresh;
+    return fresh;
   }
   private hideWhileSigningOut():void {
     this.logoutPending=true;this.clearPrivate();
@@ -480,6 +486,7 @@ export class WebApp {
     if(id==='item')input.required=true;input.addEventListener('input',()=>{update(input.value);if(id==='item'||id==='amount')this.retryCommand=null;});form.append(label,input);
   }
   private requestTarget(session:Session):string|null {
+    if(this.retryCommand)return this.retryCommand.shopId;
     if(this.draft.editing)return this.draft.editing.shopId;
     if(this.draft.followup)return this.requests.find(row=>row.requestId===this.draft.followup)?.shopId??null;
     return session.shopId??this.chosenPickupId;
@@ -590,7 +597,7 @@ export class WebApp {
       s=cached;
       offlineError=error;
     }
-    if(!offlineError && this.pickupSelectionChanged(s)){
+    if(!offlineError && !this.retryCommand && this.pickupSelectionChanged(s)){
       await this.load(s);
       return;
     }
@@ -657,14 +664,17 @@ export class WebApp {
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
-    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
+    if(this.signOutPending||!fresh||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
+    const choicesChanged = this.pickupSelectionChanged(fresh);
+    if(reviewScope(fresh)!==this.reviewedScope && !choicesChanged)throw new ApiError('access_ended',403);
     if(scopeFor(fresh)!==p.scope||!fresh.queueConsent)throw new ApiError('queue_permission_ended',409);
     let received:OwnRequest|undefined;
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
       received=await this.api.command(fresh,p.command,fresh.requestQueueGrant);
     }
-    this.session=fresh;await this.finishReceived(p,true,received);
+    if(!choicesChanged)this.session=fresh;
+    await this.finishReceived(p,true,received);
   }
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;
