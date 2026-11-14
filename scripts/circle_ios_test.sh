@@ -2,7 +2,8 @@
 set -euo pipefail
 
 case "${1:-full}:$CIRCLE_NODE_TOTAL:$CIRCLE_NODE_INDEX" in
-    full:3:0|smoke:1:0) TEST_SHARD=ui-01 ;;
+    full:3:0) TEST_SHARD=ui-01 ;;
+    smoke:1:0) TEST_SHARD=ui-02 ;;
     full:3:1) TEST_SHARD=ui-02 ;;
     full:3:2) TEST_SHARD=ui-03 ;;
     *) echo 'Expected three CircleCI UI nodes or one explicitly selected smoke node.' >&2; exit 2 ;;

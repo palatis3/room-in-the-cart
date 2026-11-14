@@ -125,7 +125,7 @@ workflows:
 
   simulator-canary:
     when:
-      equal: [codex/circleci-canary, << pipeline.git.branch >>]
+      equal: [codex/circle-shop-accessibility-20261114, << pipeline.git.branch >>]
     jobs:
       - smoke:
           serial-group: ritc-circle-macs
