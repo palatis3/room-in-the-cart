@@ -24,6 +24,13 @@ export interface Member { member_id:string; kind:'adult'|'child'; organizer:bool
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string }
 export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean;demand_revision?:number|null;demand_review_required?:boolean }
 interface RequestRow { carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
+// Earlier servers accept exactly 43 base64url characters. Include the scope
+// prefix in the hashed credential so removing it cannot bypass that boundary.
+const contributorCookiePrefix='own_';
+function scopedCookieParts(cookie:string) {
+  const match=/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.((?:own_)?[A-Za-z0-9_-]{43})$/.exec(cookie);
+  return match ? {householdId:match[1]!,token:match[2]!} : null;
+}
 const editable=(r:RequestRow)=>!r.carried_forward && (r.status==='pending'||r.status==='clarified');
 export function ownRequest(r:RequestRow):OwnRequest {
   return {requestId:r.request_id,shopId:r.shop_id,revision:r.revision,originalItem:r.original_item,ownQuantity:r.own_quantity,
@@ -659,7 +666,7 @@ export class HouseholdRepository {
         ...(viewGrantId?{viewGrantId}:{}),...(selectedShopId?{selectedShopId}:{})
       },async ctx=>{
         const bootstrap=await this.bootstrap(ctx);
-        const token=randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
+        const token=(ownRequestsOnly?contributorCookiePrefix:'')+randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
         const expiresAt=new Date(Math.min(identity.expiresAt.getTime(),ctx.now.getTime()+15*60_000));
         const previous=pairedDeviceToken||previousSession?(await ctx.db.query('SELECT token_hash FROM ritc.web_session WHERE household_id=$1 AND device_id=$2 AND revoked_at IS NULL ORDER BY expires_at DESC,token_hash LIMIT 1',[householdId,ctx.deviceId])).rows[0]:undefined;
         if(previous){
@@ -671,8 +678,9 @@ export class HouseholdRepository {
     });
   }
   async webIdentity(cookie:string,freshIdentity?:VerifiedIdentity) {
-    const [householdId,token]=cookie.split('.');
-    if(!householdId||!token||!/^[0-9a-f-]{36}$/.test(householdId)||!/^[A-Za-z0-9_-]{43}$/.test(token))throw accessEnded();
+    const parts=scopedCookieParts(cookie);
+    if(!parts)throw accessEnded();
+    const {householdId,token}=parts;
     return this.transaction(householdId,async(db,now)=>{
       const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.shop_id,s.browser_bound,s.own_requests_only,m.issuer,m.subject,d.session_id FROM ritc.web_session s
         JOIN ritc.member m USING(household_id,member_id) JOIN ritc.device d USING(household_id,member_id,device_id)
@@ -687,8 +695,9 @@ export class HouseholdRepository {
     });
   }
   async revokeWebCookie(cookie:string){
-    const [householdId,token]=cookie.split('.');
-    if(!householdId||!token||!/^[0-9a-f-]{36}$/.test(householdId)||!/^[A-Za-z0-9_-]{43}$/.test(token))return;
+    const parts=scopedCookieParts(cookie);
+    if(!parts)return;
+    const {householdId,token}=parts;
     return this.transaction(householdId,async(db,now)=>{
       const session=(await db.query('SELECT device_id FROM ritc.web_session WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token)])).rows[0];
       if(!session)return;

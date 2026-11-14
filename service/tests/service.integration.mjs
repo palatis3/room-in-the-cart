@@ -597,6 +597,10 @@ test('a browser switches between cook and contributor invitations for the same h
   const active=await activate(contributed);
   assert.equal(await deviceCount(),before,'switching roles reuses the current device');
   assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:oldCookCookie}})).status,403,'the replaced cook cookie is unusable');
+  const limitedCredential=cookie.split('.')[1];
+  assert.match(limitedCredential,/^own_[A-Za-z0-9_-]{43}$/,'older servers must reject this credential outright');
+  const strippedCookie=cookie.replace('.own_','.');
+  assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:strippedCookie}})).status,403);
   assert.equal(active.role,'contributor');assert.equal(active.grantId,undefined);
   assert.deepEqual(active.capabilities.sort(),['own_requests','request_queue_permission']);
   assert.equal((await (await browser('/v1/session')).json()).role,'contributor');
