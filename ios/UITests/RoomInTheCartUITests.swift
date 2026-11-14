@@ -141,7 +141,13 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
         XCTAssertFalse(element("saveComparison").exists)
         screenshot("English-reopened-same-result")
-        tap(app.buttons["editComparison"])
+        let edit = app.buttons["editComparison"]
+        let results = element("comparisonResultsScroll")
+        // Edit is the first results row. Reveal it fully below the navigation bar.
+        for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
+        revealFullyInComparison(edit)
+        edit.tap()
+        XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the saved comparison's input form")
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
         XCTAssertEqual(savedYield.value as? String, "7 1/2")
