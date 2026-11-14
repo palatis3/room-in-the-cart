@@ -736,6 +736,24 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNotNil(model.error)
         XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before)
     }
+    func testPickedFileReadsRegularDocumentsAndRejectsASymbolicLink() async throws {
+        let directory = try temporaryDirectory()
+        let document = directory.appendingPathComponent("recipe.json")
+        let content = Data(#"{"@type":"Recipe","name":"Arroz"}"#.utf8)
+        try content.write(to: document)
+        let selected = try await RecordsFileDocument.readPickedBytes(at: document)
+        XCTAssertEqual(selected, content)
+
+        let link = directory.appendingPathComponent("other.json")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: document)
+        do {
+            _ = try await RecordsFileDocument.readPickedBytes(at: link)
+            XCTFail("An indirect document must not supply another file’s contents")
+        } catch {
+            XCTAssertEqual(error as? ArchiveError, .unavailable)
+        }
+    }
+
     @MainActor func testFileImportRechecksAccessBeforeValidatingExternalContents() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))

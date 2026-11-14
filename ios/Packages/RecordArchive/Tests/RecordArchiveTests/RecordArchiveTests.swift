@@ -1,4 +1,5 @@
 import XCTest
+import Darwin
 @testable import RecordArchive
 
 final class RecordArchiveTests: XCTestCase {
@@ -279,6 +280,29 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(current.payload.records.first?.title, "Fixture dinner")
         XCTAssertThrowsError(try ArchiveCodec.decode(Data(contentsOf: directory.appendingPathComponent("archive-v0-unsupported.json")))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
     }
+    func testRecoveryReadOpensOnlyTheSelectedRegularFile() throws {
+        let source = try temporaryURL()
+        let contents = Data("private backup".utf8)
+        try contents.write(to: source)
+        XCTAssertEqual(try RecoveryRegistry.boundedRead(source, maximum: contents.count), contents)
+
+        let link = source.appendingPathExtension("link")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: source)
+        let pipe = source.appendingPathExtension("fifo")
+        XCTAssertEqual(mkfifo(pipe.path, S_IRUSR | S_IWUSR), 0)
+        // Keep the fixture open so a regression also terminates deterministically.
+        let endpoint = Darwin.open(pipe.path, O_RDWR | O_NONBLOCK)
+        guard endpoint >= 0 else { return XCTFail("Could not open the test pipe") }
+        defer { Darwin.close(endpoint) }
+        let sample: [UInt8] = [1, 2]
+        XCTAssertEqual(Darwin.write(endpoint, sample, sample.count), sample.count)
+        for url in [link, pipe, source.deletingLastPathComponent()] {
+            XCTAssertThrowsError(try RecoveryRegistry.boundedRead(url, maximum: 1)) {
+                XCTAssertEqual($0 as? ArchiveError, .unavailable)
+            }
+        }
+    }
+
     func testDepthAndFileReadAreBounded() throws {
         let excessive = Data((String(repeating: "[", count: 49) + "0" + String(repeating: "]", count: 49)).utf8)
         XCTAssertThrowsError(try ArchiveCodec.preflight(excessive)) { XCTAssertEqual($0 as? ArchiveError, .tooLarge) }
