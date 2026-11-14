@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al eliminar este registro, también se eliminan sus copias recuperadas en este iPhone. Los archivos que ya exportaste se conservan."
+          }
+        }
+      }
+    },
     "Recovered copies selected for deletion: %lld.": {
       "extractionState": "manual",
       "localizations": {
@@ -14,6 +31,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copias recuperadas seleccionadas para eliminar: %lld."
+          }
+        }
+      }
+    },
+    "The original records and exported files are unaffected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original records and exported files are unaffected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros originales y los archivos exportados se conservan."
           }
         }
       }
@@ -1156,23 +1190,6 @@
         }
       }
     },
-    "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solo se eliminan la fuente local indicada o las copias recuperadas. Los demás registros y copias compartidas permanecen. Puedes deshacer la eliminación de copias recuperadas durante esta sesión."
-          }
-        }
-      }
-    },
     "Open recovered dinners": {
       "extractionState": "manual",
       "localizations": {
@@ -2142,23 +2159,6 @@
         }
       }
     },
-    "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La fuente local indicada o las copias recuperadas y sus espacios separados se eliminarán permanentemente. No se puede deshacer. Los demás registros y archivos compartidos permanecen."
-          }
-        }
-      }
-    },
     "The recipe file does not supply a saved date.": {
       "extractionState": "manual",
       "localizations": {
@@ -2244,6 +2244,23 @@
         }
       }
     },
+    "Their separate workspaces will also be deleted. The original records and exported files are unaffected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their separate workspaces will also be deleted. The original records and exported files are unaffected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También se eliminarán los espacios de trabajo de esas copias. Los registros originales y los archivos exportados se conservan."
+          }
+        }
+      }
+    },
     "These recipes are already saved.": {
       "extractionState": "manual",
       "localizations": {
@@ -2274,6 +2291,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este lote entra en conflicto con una copia existente o eliminada. No se importó nada."
+          }
+        }
+      }
+    },
+    "This cannot be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This cannot be undone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción no se puede deshacer."
           }
         }
       }
@@ -2580,6 +2614,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trabajando en este iPhone…"
+          }
+        }
+      }
+    },
+    "You can undo this deletion during this app session.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can undo this deletion during this app session."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes deshacer esta eliminación durante esta sesión de la app."
           }
         }
       }

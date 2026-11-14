@@ -169,9 +169,7 @@ struct RecordsToolsView: View {
                 self.deletion = nil
             }
         } message: { deletion in
-            let count = deletion.copyCount.map { String(format: recordsText("Recovered copies selected for deletion: %lld."), Int64($0)) }
-            let detail = recordsText(model.recoveredDeletionAllowsUndo ? "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session." : "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain.")
-            Text(verbatim: [count, detail].compactMap { $0 }.joined(separator: "\n\n"))
+            Text(verbatim: model.deletionMessage(for: deletion))
         }
     }
     private var currentSources: some View {
