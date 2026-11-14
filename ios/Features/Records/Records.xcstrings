@@ -2363,6 +2363,23 @@
         }
       }
     },
+    "This recipe is too long to save. Shorten long ingredient lines or remove some recipe text, then try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recipe is too long to save. Shorten long ingredient lines or remove some recipe text, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta receta es demasiado larga para guardarla. Acorta las líneas de ingredientes largas o quita parte del texto de la receta y vuelve a intentarlo."
+          }
+        }
+      }
+    },
     "This file exceeds the supported size or complexity. Your records are unchanged.": {
       "extractionState": "manual",
       "localizations": {

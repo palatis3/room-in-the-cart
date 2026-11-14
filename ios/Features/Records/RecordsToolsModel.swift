@@ -402,19 +402,14 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         } catch { fail(error, reveal: true) }
     }
-    func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async -> Bool {
-        guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { return false }
-        busy = true; error = nil; review = nil; recipeReport = nil
+    func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async throws {
+        guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { throw ArchiveError.unavailable }
+        busy = true; error = nil; discardImportReview()
         defer { busy = false }
-        do {
-            let authorize = presentation.authorize
-            let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
-            try await stage(ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: recipe.id), authorize: authorize)
-            return true
-        } catch {
-            fail(error)
-            return false
-        }
+        let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery,
+                                             origin: record.origin, revision: record.revision)
+        try await stage(envelope, authorize: presentation.authorize)
     }
     private var reviewAuthorization: Authorization?
     private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {

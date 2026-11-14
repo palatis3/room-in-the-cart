@@ -50,8 +50,10 @@ final class RecordsAdapterTests: XCTestCase {
         tools.invalidateForSourceErasure()
         XCTAssertNil(tools.importPresentation)
         let next = try XCTUnwrap(tools.beginImport(.recipeFile))
-        let staleStaged = await tools.stageManualRecipe(ImportedRecipe(title: "Earlier handwritten recipe"), from: oldManual)
-        XCTAssertFalse(staleStaged)
+        do {
+            try await tools.stageManualRecipe(ImportedRecipe(title: "Earlier handwritten recipe"), from: oldManual)
+            XCTFail("The previous editor must lose access")
+        } catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
         await tools.finishFileImport(.failure(ArchiveError.malformed), from: first)
         tools.dismissImport(oldManual)
         XCTAssertEqual(tools.importPresentation?.id, next.id)
@@ -64,9 +66,29 @@ final class RecordsAdapterTests: XCTestCase {
         tools.cancelReview()
 
         let manual = try XCTUnwrap(tools.beginImport(.manualRecipe))
-        let staged = await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
-        XCTAssertTrue(staged)
+        try await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
         XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Current handwritten recipe"])
+        let saved = try await registry.refreshList()
+        XCTAssertTrue(saved.isEmpty)
+    }
+
+    @MainActor func testManualRecipeSizeErrorStaysInEditorAndCorrectedDraftCanBeReviewed() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { RecordsSnapshotBatch() },
+                                     validateNativePayload: { _ in }, openRecovered: { _ in })
+        let editor = try XCTUnwrap(model.beginImport(.manualRecipe))
+        var draft = ImportedRecipe(title: "Arroz", ingredients: [String(repeating: "a", count: 8193)])
+        do {
+            try await model.stageManualRecipe(draft, from: editor)
+            XCTFail("An oversized ingredient must be corrected before review")
+        } catch { XCTAssertEqual(error as? ArchiveError, .tooLarge) }
+        XCTAssertNil(model.error, "A draft error must not appear on the underlying Records screen.")
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.importPresentation?.id, editor.id)
+        draft.ingredients = ["½ taza de arroz"]
+        try await model.stageManualRecipe(draft, from: editor)
+        XCTAssertEqual(model.review?.rows.first?.record.helperLines.first?.label, draft.ingredients.first)
         let saved = try await registry.refreshList()
         XCTAssertTrue(saved.isEmpty)
     }
