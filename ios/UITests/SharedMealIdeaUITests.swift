@@ -452,7 +452,7 @@ import XCTest
         XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
     private func assertText(_ text: String, searchTowardEndFirst: Bool = true) {
-        let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))
+        let matches = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text))
         if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
         reveal(matches.firstMatch, searchTowardEndFirst: searchTowardEndFirst)
         XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
