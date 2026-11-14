@@ -206,6 +206,51 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testEditingWhileComparisonSaveIsPendingKeepsNewInputAndFeedback() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("local.sqlite")
+        let store = try ComparisonStore(url: url)
+        var writer: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &writer), SQLITE_OK)
+        defer { sqlite3_close(writer) }
+        XCTAssertEqual(sqlite3_exec(writer, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+
+        let original = makeDraft(unknownSecondYield: false)
+        let started = expectation(description: "Captured the reviewed draft for persistence")
+        var firstSave = true
+        let model = ComparisonModel(draft: original, clock: {
+            if firstSave { firstSave = false; started.fulfill() }
+            return Date()
+        })
+        let save = Task { await model.save(in: store) }
+        await fulfillment(of: [started], timeout: 3)
+        XCTAssertTrue(model.saving)
+        model.draft.aPrice = "4."
+        model.compare()
+        let feedback = try XCTUnwrap(model.error)
+        XCTAssertEqual(sqlite3_exec(writer, "COMMIT", nil, nil, nil), SQLITE_OK)
+        await save.value
+
+        XCTAssertEqual(model.draft.aPrice, "4.")
+        XCTAssertEqual(model.error, feedback)
+        XCTAssertNil(model.savedAt)
+        let firstRecord = try await store.load(id: original.id)
+        let saved = try XCTUnwrap(firstRecord)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: saved.payload).draft, original)
+
+        model.draft.aPrice = "4.95"
+        model.compare()
+        await model.save(in: store)
+        XCTAssertNil(model.error)
+        XCTAssertNotNil(model.savedAt)
+        let secondRecord = try await store.load(id: original.id)
+        let updated = try XCTUnwrap(secondRecord)
+        XCTAssertEqual(updated.revision, saved.revision + 1)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: updated.payload).draft, model.draft)
+    }
+
+    @MainActor
     func testEditingTwoCopiesOfAComparisonPreservesTheNewerSavedPrice() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

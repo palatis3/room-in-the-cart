@@ -54,7 +54,7 @@ struct ComparisonView: View {
                     .frame(minHeight: 44).background(Theme.surface, in: Capsule())
                     .overlay(Capsule().stroke(Color("control_edge"), lineWidth: 1.5))
             }.buttonStyle(.plain).accessibilityIdentifier("editComparison")
-                .disabled(model.saving).tint(Theme.ink)
+                .tint(Theme.ink)
         }
     }
 
@@ -68,7 +68,7 @@ struct ComparisonView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         }.buttonStyle(.plain).foregroundStyle(Theme.ink)
-            .accessibilityIdentifier("editComparison").disabled(model.saving)
+            .accessibilityIdentifier("editComparison")
     }
 
     private var editor: some View {
@@ -201,7 +201,9 @@ struct ComparisonView: View {
                         Task {
                             await model.save(in: app.store)
                             await app.refresh()
-                            resultFocused = model.savedAt != nil ? .saved : .error
+                            guard reviewing else { return }
+                            if model.savedAt != nil { resultFocused = .saved }
+                            else if model.error != nil { resultFocused = .error }
                         }
                     }
                 }

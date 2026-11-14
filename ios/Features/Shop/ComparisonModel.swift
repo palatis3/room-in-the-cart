@@ -254,8 +254,10 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
             let saved = try await store.save(id: savedDraft.id, title: savedDraft.item, payload: payload, savedAt: clock(),
                                              requiring: [savedDraft.id: savedRevision])
             savedRevision = saved.revision
-            if draft == savedDraft { savedAt = saved.savedAt }
-            error = nil
+            if draft == savedDraft {
+                savedAt = saved.savedAt
+                error = nil
+            }
         } catch ComparisonStoreError.staleRevision {
             error = tr("This saved comparison changed. Reopen it to review the latest prices before saving your edits.")
         } catch { Diagnostics.record(.localSaveFailed); self.error = tr("Could not save on this iPhone. Your entries are still here. Try again.") }
