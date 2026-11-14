@@ -148,9 +148,9 @@ import XCTest
     }
     private func openAdult() { app.launch(); openComparison() }
     private func openComparison() {
-        let link = element("sharedShop.storeQuotes")
-        if !link.waitForExistence(timeout:8) { reveal(link) }
-        tap(link)
+        let link = app.buttons["sharedShop.storeQuotes"]
+        reveal(link, fullyVisible: true)
+        link.tap()
         let ready = app.descendants(matching:.any).matching(NSPredicate(format:"identifier IN %@",["sharedQuotes.scope","sharedQuotes.retry"])).firstMatch
         XCTAssertTrue(ready.waitForExistence(timeout:15))
     }
