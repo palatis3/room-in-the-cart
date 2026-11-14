@@ -79,6 +79,7 @@ struct PickupOfferEditorView: View {
     @State private var reviewed: PickupOffer?
     @State private var approved = false
     @State private var formError: String?
+    @FocusState private var zoneFocused: Bool
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -118,6 +119,7 @@ struct PickupOfferEditorView: View {
             }
             if let formError { Text(formError).foregroundStyle(.red).accessibilityIdentifier("pickup.offer.error") }
         }
+        .keyboardDoneAction(visible: zoneFocused, title: pTr("Done"), identifier: "pickup.offer.zoneDone") { zoneFocused = false }
         .navigationTitle(pTr(original == nil ? "New store offer" : "Review or edit saved offer"))
         .toolbar {
             if original != nil, scopeMatches, reviewed == nil {
@@ -195,6 +197,8 @@ struct PickupOfferEditorView: View {
                 .environment(\.timeZone, TimeZone(identifier: draft.zone) ?? .current)
                 .accessibilityIdentifier("pickup.offer.cutoff")
             TextField(pTr("Time zone"), text: $draft.zone)
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                .focused($zoneFocused).submitLabel(.done).onSubmit { zoneFocused = false }
             TextField(pTr("Fallback if short"), text: $draft.fallback)
             TextField(pTr("Household preference (not retailer acceptance)"), text: $draft.preference).accessibilityIdentifier("pickup.offer.preference")
             TextField(pTr("Retailer response (leave blank if pending)"), text: $draft.response).accessibilityIdentifier("pickup.offer.response")

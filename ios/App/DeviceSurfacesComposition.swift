@@ -567,7 +567,8 @@ import DeviceSurfaces
         let quietHours = saved == nil ? try QuietHours(startMinute: 22 * 60, endMinute: 7 * 60) : saved?.intent.quietHours
         return ReminderEditorContext(reminderID: reminderID, personaID: persona, targetID: selected.id, subject: selected.cutoff == nil ? .deferral : .offer, sourceRevision: selected.revision,
             routeHandle: handle, expiresAt: selected.cutoff ?? expiresAt, cutoff: selected.cutoff, initialFireAt: saved?.intent.fireAt ?? clock().addingTimeInterval(3600),
-            timeZoneID: saved?.intent.localTime.timeZoneID ?? selected.timeZoneID, initialQuietHours: quietHours, expectedVersion: saved?.version)
+            timeZoneID: saved?.intent.localTime.timeZoneID ?? selected.timeZoneID, initialQuietHours: quietHours, expectedVersion: saved?.version,
+            cutoffTimeZoneID: selected.timeZoneID)
     }
     func reminderAuthorization(_ selected: SurfaceReminderTarget) -> UUID? { privateAuthorized && reminderTargets.contains(selected) ? nonce : nil }
     func authorizeReminderSave(_ selected: SurfaceReminderTarget, reviewedGeneration: UUID) -> ReminderCoordinator.SaveAuthorization? {

@@ -8,15 +8,25 @@ public struct ReminderEditorContext: Sendable {
     public let routeHandle: RouteHandle
     public let expiresAt: Date
     public let cutoff: Date?
+    public let cutoffTimeZoneID: String
     public let initialFireAt: Date
     public let timeZoneID: String
     public let initialQuietHours: QuietHours?
     public let expectedVersion: Int64?
-    public init(reminderID: UUID = UUID(), personaID: UUID, targetID: UUID, subject: ReminderSubject, sourceRevision: Int64, routeHandle: RouteHandle, expiresAt: Date, cutoff: Date?, initialFireAt: Date, timeZoneID: String, initialQuietHours: QuietHours?, expectedVersion: Int64?) {
+    public init(reminderID: UUID = UUID(), personaID: UUID, targetID: UUID, subject: ReminderSubject, sourceRevision: Int64, routeHandle: RouteHandle, expiresAt: Date, cutoff: Date?, initialFireAt: Date, timeZoneID: String, initialQuietHours: QuietHours?, expectedVersion: Int64?, cutoffTimeZoneID: String? = nil) {
         self.reminderID = reminderID; self.personaID = personaID; self.targetID = targetID; self.subject = subject; self.sourceRevision = sourceRevision
         self.routeHandle = routeHandle; self.expiresAt = expiresAt; self.cutoff = cutoff; self.initialFireAt = initialFireAt; self.timeZoneID = timeZoneID; self.expectedVersion = expectedVersion
+        self.cutoffTimeZoneID = cutoffTimeZoneID ?? timeZoneID
         self.initialQuietHours = initialQuietHours
     }
+}
+
+/// Keep the retailer's deadline in its saved zone even when the reminder is set in another zone.
+func reminderCutoffText(_ cutoff: Date, timeZoneID: String, locale: Locale) -> String {
+    var style = Date.FormatStyle(date: .complete, time: .shortened, locale: locale)
+    guard let zone = TimeZone(identifier: timeZoneID) else { return SurfaceCopy.text("Review the date, time and time zone before continuing.") }
+    style.timeZone = zone
+    return "\(cutoff.formatted(style)) · \(timeZoneID)"
 }
 
 /// DatePicker needs a date. These values represent recurring wall-clock times,
@@ -102,7 +112,10 @@ struct ReminderQuietHoursDraft: Equatable {
                         .accessibilityIdentifier("reminder.quietEnd")
                 }
                 LabeledContent(SurfaceCopy.text("Expires"), value: display(context.expiresAt))
-                if let cutoff = context.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: display(cutoff)) }
+                if let cutoff = context.cutoff {
+                    LabeledContent(SurfaceCopy.text("Offer cutoff"),
+                                   value: reminderCutoffText(cutoff, timeZoneID: context.cutoffTimeZoneID, locale: locale))
+                }
                 Button(SurfaceCopy.text("Review reminder")) { prepare() }.frame(minHeight: 44).accessibilityIdentifier("reminder.review")
             }
             if let reviewed {

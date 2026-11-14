@@ -116,6 +116,10 @@ import XCTest
         fill("4.00", into: app.textFields["pickup.offer.price"])
         let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
         if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        let retailerZone = "Pacific/Honolulu"
+        let offerZoneField = app.textFields["Time zone"]
+        fill(retailerZone, into: offerZoneField, replacing: true, doneIdentifier: "pickup.offer.zoneDone")
+        XCTAssertEqual(offerZoneField.value as? String, retailerZone)
         let chosenCutoffDay = try chooseFutureDay(in: app.datePickers["pickup.offer.cutoff"], navigationTitle: "New store offer")
         tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
         tap(app.buttons["Request an offer deadline reminder"])
@@ -129,11 +133,18 @@ import XCTest
         // This is the saved offer's cutoff in the actual reminder context,
         // not merely the date that happened to be visible in the popover.
         reveal(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", date.string(from: chosenCutoffDay))).firstMatch)
+        let retailerCutoff = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " · " + retailerZone)).firstMatch
+        XCTAssertTrue(retailerCutoff.waitForExistence(timeout: 5), "Reminder setup must identify the retailer’s time zone.")
+        let cutoffLabel = retailerCutoff.label
         XCTAssertGreaterThan(chosenCutoffDay, Date())
         tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         XCTAssertTrue(element("reminder.time").exists)
         XCTAssertFalse(app.alerts.firstMatch.exists)
+        let reminderZoneField = app.textFields["Time zone"]
+        fill("Europe/London", into: reminderZoneField, replacing: true, doneIdentifier: "reminder.keyboardDone")
+        XCTAssertEqual(reminderZoneField.value as? String, "Europe/London")
+        assertText(cutoffLabel)
         capture("S07-offer-deadline-reminder-unscheduled")
         tap(element("reminder.close"))
         XCTAssertTrue(app.navigationBars["Review store offer"].waitForExistence(timeout: 8))
@@ -216,10 +227,22 @@ import XCTest
         reveal(control)
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into field: XCUIElement, replacing: Bool = false) {
+    private func fill(_ text: String, into field: XCUIElement, replacing: Bool = false, doneIdentifier: String? = nil) {
         tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
+        if let doneIdentifier {
+            let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+            if tip.exists {
+                app.buttons["Continue"].tap()
+                XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
+            }
+            let done = app.buttons[doneIdentifier]
+            XCTAssertTrue(done.waitForExistence(timeout: 5))
+            done.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneIdentifier))
+            return
+        }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
