@@ -56,7 +56,9 @@ export class WebApp {
   private withdrawn:OwnRequest|null = null;
   private withdrawalCommand:Command|null = null;
   constructor(private readonly root:HTMLElement, private readonly api = new API(), private readonly outbox = new Outbox(), private invitation:string|null = null) {
-    this.language=languageFor(root.ownerDocument.defaultView?.navigator.language ?? 'en');
+    const browser = root.ownerDocument.defaultView;
+    const selected = new URLSearchParams(browser?.location.search).get('lang');
+    this.language = selected === 'en' || selected === 'es' ? selected : languageFor(browser?.navigator.language ?? 'en');
   }
   private t(key:string):string { return translate(key,this.language); }
   private el<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string):HTMLElementTagNameMap[K] {
@@ -329,7 +331,18 @@ export class WebApp {
     const header=this.el('header');header.append(this.el('p','Room in the Cart'));
     const lang=this.el('select');lang.id='language';lang.setAttribute('aria-label',this.t('Language'));
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
-    lang.addEventListener('change',()=>{this.language=lang.value as Language;this.render();});header.append(lang);this.root.append(header);
+    lang.addEventListener('change', () => {
+      this.language = lang.value === 'es' ? 'es' : 'en';
+      const browser = this.root.ownerDocument.defaultView;
+      if (browser) {
+        const url = new URL(browser.location.href);
+        url.searchParams.set('lang', this.language);
+        browser.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      }
+      this.render();
+      this.root.querySelector<HTMLSelectElement>('#language')?.focus();
+    });
+    header.append(lang);this.root.append(header);
     const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
     // A mobile browser can retain this hidden page as its cold-start preview.
     if(this.historyAway)return;

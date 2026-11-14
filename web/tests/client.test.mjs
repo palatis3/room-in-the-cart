@@ -50,6 +50,28 @@ test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment'
  await assert.rejects(change(false,active));
 });
 
+test('Requests honors the public page language and keeps later selections on reload', async () => {
+  for (const [query, expected] of [['?lang=es', 'es'], ['?lang=en', 'en'], ['?lang=other', 'en'], ['', 'en']]) {
+    const dom = new JSDOM('<div id="app"></div>', {url: 'https://food.example/requests' + query});
+    Object.defineProperty(dom.window.navigator, 'language', {value: 'en-US'});
+    const root = dom.window.document.getElementById('app');
+    const api = {session: async () => session(), ownRequests: async () => []};
+    const start = () => new WebApp(root, api, new Outbox(new IDBFactory())).start();
+    await start();
+    const select = root.querySelector('#language');
+    assert.equal(select.value, expected);
+    const next = expected === 'es' ? 'en' : 'es';
+    select.value = next;
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.location.search, '?lang=' + next);
+    assert.equal(dom.window.document.activeElement.id, 'language');
+    await start();
+    assert.equal(dom.window.document.documentElement.lang, next);
+    assert.equal(root.querySelector('#language').value, next);
+    dom.window.close();
+  }
+});
+
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
  assert.equal(consumeInvitation(dom.window.location,dom.window.history),'fragment-secret');
