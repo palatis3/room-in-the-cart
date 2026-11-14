@@ -31,6 +31,12 @@ struct RecipientSend: Codable, Equatable {
     }
 }
 
+extension BasketPackage {
+    func localizedDescription(language: String) -> String {
+        "\(count) × " + pQuantity(amountPerPack, unit: unit, language: language)
+    }
+}
+
 struct HandoffCopy: Equatable, Identifiable {
     let shopID: UUID
     let channel: HandoffChannel
@@ -46,6 +52,9 @@ struct HandoffCopy: Equatable, Identifiable {
     static func retailer(_ snapshot: HandoffSnapshot, language: String) -> Self {
         let pieces = snapshot.revision.lines.map { line in
             var text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            if let packages = line.packages {
+                text += " · " + packages.map { $0.localizedDescription(language: language) }.joined(separator: " + ")
+            }
             if let exclusions = line.itemExclusions {
                 text += " · " + pCook("Keep these exclusions", language: language) + ": " + exclusions.joined(separator: ", ")
             }

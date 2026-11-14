@@ -488,6 +488,37 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return values
     }
 
+    /// A duplicate import describes the same purchase. Separate additive sources each describe their own packs.
+    public var itemPackages: [UUID: [BasketPackage]] {
+        let supplies = contributions.filter { $0.removedAt == nil && $0.source.canSupplyExistingQuantity }
+        let roots = duplicateRoots(for: supplies)
+        var byRoot: [UUID: BasketPackage] = [:]
+        var conflicts = Set<UUID>()
+        for source in supplies {
+            let count = source.originalPack?.count ?? source.capture?.packCount
+            let size = source.originalPack?.amountPerPack ?? source.capture?.amountPerPack
+            guard let count, let size else { continue }
+            let root = roots[source.id] ?? source.id
+            guard count > 0, size.amount > .zero, let quantity = source.quantity,
+                  let converted = try? size.converted(to: quantity.unit),
+                  let total = try? converted.multiplied(by: Rational(Int64(count))), total == quantity.amount else {
+                conflicts.insert(root)
+                continue
+            }
+            let pack = BasketPackage(count: Int64(count), amountPerPack: size.amount, unit: size.unit)
+            if let previous = byRoot[root], previous != pack { conflicts.insert(root) }
+            byRoot[root] = pack
+        }
+        var result: [UUID: [BasketPackage]] = [:]
+        for source in supplies {
+            let root = roots[source.id] ?? source.id
+            if let pack = byRoot.removeValue(forKey: root), !conflicts.contains(root) {
+                result[source.lineID, default: []].append(pack)
+            }
+        }
+        return result
+    }
+
     public func contributions(forLineID lineID: UUID) -> [LedgerContribution] {
         contributions.filter { $0.lineID == lineID && $0.removedAt == nil }
     }

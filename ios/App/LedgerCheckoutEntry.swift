@@ -57,19 +57,25 @@ enum LedgerCheckoutAdapter {
         let priorPackLineIDs = Set(previous?.ledgerPackSelections.map(\.lineID) ?? [])
         let reviewedPackLineIDs = Set(packSelections.filter { $0.shopID == shop.id }.map(\.lineID)).union(priorPackLineIDs)
         let itemExclusions = shop.itemExclusions
+        let itemPackages = shop.itemPackages
         let lines = try activeLines.compactMap { line -> BasketLine? in
             if selectedPacks[line.id]?.isNoPurchase == true { return nil }
             guard let quantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
             let exclusions = itemExclusions[line.id] ?? []
             if let selection = selectedPacks[line.id], let purchased = selection.purchasedQuantity, let price = selection.selectedResult.totalCost {
-                return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price), itemExclusions: exclusions)
+                let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
+                guard let count = selection.selectedResult.packsToBuy, let size = offer.usableQuantity else { throw LedgerPackError.invalidEvidence }
+                let packs = [BasketPackage(count: count, amountPerPack: size.amount, unit: size.unit)]
+                return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price),
+                                  itemExclusions: exclusions, packages: packs)
             }
+            let packs = itemPackages[line.id] ?? []
             let old = previous?.basket?.current.lines.first {
-                $0.id == line.id && $0.name == line.name && $0.quantity == quantity && ($0.itemExclusions ?? []) == exclusions
+                $0.id == line.id && $0.name == line.name && $0.quantity == quantity && ($0.itemExclusions ?? []) == exclusions && ($0.packages ?? []) == packs
             }
             return BasketLine(id: line.id, name: line.name, quantity: quantity,
                               expectedCost: sameBasis && !priorPackLineIDs.contains(line.id) ? old?.expectedCost ?? .unknown(reason: pTr("Recheck the price for this shop")) : .unknown(reason: pTr("Recheck the price for this shop")),
-                              itemExclusions: exclusions)
+                              itemExclusions: exclusions, packages: packs)
         }
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
         for line in activeLines {

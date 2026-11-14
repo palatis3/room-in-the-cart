@@ -36,6 +36,7 @@ struct PickupReadableRecord {
     private func field(_ key: String, _ value: String) -> String { pickupLabel(key) + ": " + value }
     private func line(_ value: BasketLine) -> String {
         var facts = [value.name, quantity(value.quantity), price(value.expectedCost)]
+        if let packages = value.packages { facts.append(packages.map { $0.localizedDescription(language: language) }.joined(separator: " + ")) }
         if let exclusions = value.itemExclusions {
             facts.append(field("Keep these exclusions", exclusions.joined(separator: ", ")))
         }

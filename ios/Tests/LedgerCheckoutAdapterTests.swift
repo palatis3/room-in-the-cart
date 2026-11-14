@@ -29,9 +29,43 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
             let quantity = try XCTUnwrap(review.lines.first?.quantity)
             XCTAssertTrue(text.contains("beans — " + pQuantity(quantity, language: language)))
             XCTAssertTrue(text.contains(pCook("Keep these exclusions", language: language) + ": added salt, sésamo"))
+            XCTAssertTrue(text.contains("2 × " + pQuantity(try Rational(15), unit: .ounce, language: language)), text)
             XCTAssertEqual(text.components(separatedBy: "added salt").count, 2)
             for hidden in ["Private", "Replacement", "Pantry"] { XCTAssertFalse(text.contains(hidden)) }
         }
+    }
+
+    func testFrozenPackagingCountsAdditionalImportsOnceAndRequiresConsistentDuplicateLabels() throws {
+        var shop = ShoppingLedger(title: "Pickup", basis: basis())
+        let first = try shop.stageImport(text: "2 × 15 oz beans")
+        try shop.commitImport(first)
+        let line = try XCTUnwrap(shop.lines.first?.id)
+        func importBeans(_ text: String, as decision: ImportResolution) throws {
+            let batch = try shop.stageImport(text: text)
+            try shop.commitImport(batch, decisions: [try XCTUnwrap(batch.lines.first?.id): decision])
+        }
+        func packs() throws -> [BasketPackage] {
+            let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+            return try XCTUnwrap(review.lines.first).packages ?? []
+        }
+        let pair = BasketPackage(count: 2, amountPerPack: try Rational(15), unit: .ounce)
+        try importBeans("2 × 15 oz beans", as: .mergeDuplicate(line))
+        XCTAssertEqual(try packs(), [pair])
+        let alias = try XCTUnwrap(shop.contributions.last)
+        let original = try XCTUnwrap(alias.quantity)
+        try shop.updateContribution(contributionID: alias.id,
+                                    quantity: Quantity(amount: try Rational(33), unit: .ounce, originalLiteral: "33 oz"), notes: "")
+        XCTAssertTrue(try packs().isEmpty)
+        try shop.updateContribution(contributionID: alias.id, quantity: original, notes: "")
+        try importBeans("1 × 8 oz beans", as: .addToLine(line))
+        let small = BasketPackage(count: 1, amountPerPack: try Rational(8), unit: .ounce)
+        XCTAssertEqual(try packs(), [pair, small])
+        try importBeans("3 × 10 oz beans", as: .mergeDuplicate(line))
+        XCTAssertEqual(try packs(), [small])
+        let additive = try XCTUnwrap(shop.contributions.first { $0.originalPack?.amountPerPack?.amount == small.amountPerPack })
+        try shop.updateContribution(contributionID: additive.id,
+                                    quantity: Quantity(amount: try Rational(9), unit: .ounce, originalLiteral: "9 oz"), notes: "")
+        XCTAssertTrue(try packs().isEmpty)
     }
 
     func testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch() throws {
@@ -110,6 +144,8 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         let quoted = await pickup.setQuote(.init(scope: .wholeCheckout, context: reviewed.context, pricing: .inclusiveTotal(.exact(.init(minorUnits: 480)))), cap: nil)
         XCTAssertTrue(quoted)
         let frozen = await pickup.freeze(); XCTAssertTrue(frozen)
+        let snapshot = try XCTUnwrap(pickup.frozenSnapshot)
+        XCTAssertTrue(HandoffCopy.retailer(snapshot, language: "en-US").fullText.contains("2 × 8 units"))
         let placed = await pickup.reportPlaced(); XCTAssertTrue(placed)
         let reported = try XCTUnwrap(pickup.journey)
         XCTAssertTrue(model.previewGuests(occurrenceID: occurrence, servings: [family.id: try Rational(5)]))
