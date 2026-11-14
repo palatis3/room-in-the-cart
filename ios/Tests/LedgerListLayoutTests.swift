@@ -82,6 +82,15 @@ import CoreDomain
         for i in 1...35 { _ = try shop.addManualLine(name: "Package number \(i)", quantity: nil) }
         let literal = "<Flour> & \"Rice\""
         _ = try shop.addManualLine(name: literal, quantity: nil)
+        var imported = try shop.stageImport(text: "2 15 oz (425 g) cans of beans, no salt added")
+        // Keep the shopper's edited total distinct from the package facts on the original label.
+        imported.lines[0].quantity = Quantity(amount: try Rational(45), unit: .ounce, originalLiteral: "45")
+        try shop.commitImport(imported)
+        let captured = CaptureImportLine(originalText: "Private transcription", name: "rolled oats", packCount: 3,
+            amountPerPack: Quantity(amount: try Rational(12), unit: .ounce, originalLiteral: "12 oz"), purpose: "Private breakfast")
+        let uncertain = CaptureImportLine(originalText: "Maybe eight bags", name: "lentils", packCount: 8,
+            amountPerPack: captured.amountPerPack, unresolvedFields: [.packCount])
+        try shop.commitImport(shop.stageCaptureImport(id: UUID(), originalText: "Voice draft", source: .voice, lines: [captured, uncertain]))
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
         let renderer = LetterPageRenderer(formatter: listing.printFormatter())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
@@ -109,8 +118,15 @@ import CoreDomain
         }
         let text = try XCTUnwrap(pdf.string)
         for wanted in ["Corner Market","Apples","Soap","Package number 35",literal] { XCTAssertTrue(text.contains(wanted),wanted) }
+        let ounce = UnitOfMeasure.ounce.displayName
+        XCTAssertTrue(text.contains("beans, no salt added"))
+        XCTAssertTrue(text.contains("45 " + ounce))
+        XCTAssertTrue(text.contains(ledgerFormat("Original package label (%lld × %@)", Int64(2), "15 " + ounce)))
+        XCTAssertTrue(text.contains(captureText("Packs") + ": 3"))
+        XCTAssertTrue(text.contains(captureText("Usable amount per pack") + ": 12 " + ounce))
+        XCTAssertFalse(text.contains(captureText("Packs") + ": 8"))
         XCTAssertEqual(numberedItems, (1...35).map { "Package number \($0)" })
-        for hidden in ["Private note","Private helper","Milk"] { XCTAssertFalse(text.contains(hidden),hidden) }
+        for hidden in ["Private note","Private helper","Milk","Private transcription","Private breakfast","Maybe eight bags"] { XCTAssertFalse(text.contains(hidden),hidden) }
     }
 }
 

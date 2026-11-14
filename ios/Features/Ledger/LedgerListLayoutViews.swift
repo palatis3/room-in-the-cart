@@ -123,8 +123,42 @@ struct LargePrintList: View {
     @Environment(\.dismiss) private var dismiss
     let shop: ShoppingLedger
     let layout: LedgerListLayout
+    private let packageLabels: [UUID: [String]]
     @State private var printError = false
-    init(shop: ShoppingLedger, layout: LedgerListLayout) { self.shop = shop; self.layout = layout }
+
+    init(shop: ShoppingLedger, layout: LedgerListLayout) {
+        self.shop = shop
+        self.layout = layout
+        var labels: [UUID: [String]] = [:]
+        var seen: [UUID: Set<String>] = [:]
+        for source in shop.contributions where source.removedAt == nil {
+            let label: String
+            if let pack = source.originalPack {
+                let size = ledgerQuantity(pack.amountPerPack)
+                if let count = pack.count {
+                    label = ledgerFormat("Original package label (%lld × %@)", Int64(count), size)
+                } else {
+                    label = ledgerFormat("Amount per pack on the original label: %@", size)
+                }
+            } else if let capture = source.capture {
+                var facts: [String] = []
+                if let count = capture.packCount, !capture.unresolvedFields.contains(.packCount) {
+                    facts.append(captureText("Packs") + ": " + String(count))
+                }
+                if let size = capture.amountPerPack, !capture.unresolvedFields.contains(.amountPerPack) {
+                    facts.append(captureText("Usable amount per pack") + ": " + ledgerQuantity(size))
+                }
+                guard !facts.isEmpty else { continue }
+                label = facts.joined(separator: " · ")
+            } else {
+                continue
+            }
+            if seen[source.lineID, default: []].insert(label).inserted {
+                labels[source.lineID, default: []].append(label)
+            }
+        }
+        packageLabels = labels
+    }
     var body: some View {
         let groups = layout.groups(shop: shop)
         List {
@@ -141,6 +175,9 @@ struct LargePrintList: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.title2.bold())
                             Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.title3)
+                            ForEach(packageLabels[line.id] ?? [], id: \.self) { label in
+                                Text(verbatim: label).font(.title3)
+                            }
                         }
                     }
                 } header: { if let heading = heading(group) { Text(heading) } }
@@ -177,7 +214,9 @@ struct LargePrintList: View {
             if let heading = heading(group) { html += "<h2>\(escaped(heading))</h2>" }
             for line in group.lines {
                 let amount = ledgerQuantity(try? shop.quantity(forLineID: line.id))
-                html += "<div class='item'><strong>\(escaped(line.name))</strong><br>\(escaped(amount))</div>"
+                html += "<div class='item'><strong>\(escaped(line.name))</strong><br>\(escaped(amount))"
+                for label in packageLabels[line.id] ?? [] { html += "<br>" + escaped(label) }
+                html += "</div>"
             }
         }
         return UIMarkupTextPrintFormatter(markupText: html + "</body></html>")

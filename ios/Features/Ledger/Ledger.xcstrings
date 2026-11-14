@@ -2257,6 +2257,22 @@
         }
       }
     },
+    "Original package label (%lld × %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original package label (%lld × %@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta original del paquete (%lld × %@)"
+          }
+        }
+      }
+    },
     "Original wording": {
       "localizations": {
         "en": {
