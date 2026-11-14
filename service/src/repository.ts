@@ -197,11 +197,16 @@ export class HouseholdRepository {
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
-  async shops(ctx:Context,scope:'active'|'owned'|'history-owned',after:string|null){
-    if(ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
-    const values:unknown[]=[ctx.householdId,ctx.member.member_id];
+  async shops(ctx:Context,scope:'active'|'owned'|'history-owned'|'requests',after:string|null){
+    if(ctx.viewGrantId)throw unavailable();
+    if(scope==='requests'){
+      if(!ctx.member.can_contribute || (await this.bootstrap(ctx)).grantId)throw unavailable();
+    }else if(ctx.ownRequestsOnly||ctx.member.kind!=='adult')throw unavailable();
+    const values:unknown[]=[ctx.householdId,scope==='requests'?ctx.selectedShopId??null:ctx.member.member_id];
     let visible='s.shopper_id=$2';
-    if(scope==='active'){
+    if(scope==='requests'){
+      visible="s.phase<>'closed' AND ($2::uuid IS NULL OR s.shop_id=$2)";
+    }else if(scope==='active'){
       visible=`s.phase<>'closed' AND (s.shopper_id=$2 OR $3::boolean OR EXISTS(
         SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id
         AND g.member_id=$2 AND g.enabled AND g.authority_epoch=s.authority_epoch))`;
@@ -221,6 +226,9 @@ export class HouseholdRepository {
     }
     const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch
       ${source}${boundary} ORDER BY s.created_at DESC,s.shop_id DESC LIMIT 51`,values)).rows;
+    if(scope==='requests')return{shops:rows.slice(0,50).map(s=>({
+      shopId:s.shop_id,createdAt:s.created_at.toISOString(),nextShopOnly:s.phase!=='draft'
+    })),nextCursor:rows.length>50?rows[49].shop_id:null};
     return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
   private get carryNotice() {return this.options.allowChildNetwork?this.options.noticeVersion:null;}
@@ -446,6 +454,7 @@ export class HouseholdRepository {
     if(c.kind==='request.send') {
       const b=bodySchemas['request.send'].parse(c.body);id=randomUUID();
       if(b.followupTo)await this.request(ctx,b.followupTo,shop.shop_id,true);
+      else if(shop.phase==='closed')throw new ServiceError(409,'pickup_closed','Choose an open pickup for this request.');
       if(Date.parse(b.authoredAt)>ctx.now.getTime()+24*60*60_000)throw invalid();
       const dup=await ctx.db.query('SELECT 1 FROM ritc.request WHERE household_id=$1 AND author_id=$2 AND client_request_id=$3',[ctx.householdId,ctx.member.member_id,b.clientRequestId]);
       if(dup.rowCount)throw new ServiceError(409,'request_id_reused','Refresh your request list before submitting a new request.');

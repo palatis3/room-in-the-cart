@@ -570,6 +570,81 @@ test('contributors see the next-shop destination after freeze and placement with
   assert.equal((await read()).nextShopOnly,true);
 });
 
+test('request pickup choices expose only destination facts to a scoped organizer and an authorized child',async()=>{
+  const {f,actor,grantId}=await helperFixture();
+  const draft=await nextDraft(f);
+  assert.equal((await f.command('Mia','shop.freeze',{})).status,200);
+  const session=await f.http('Mia','POST','/v1/session',{householdId:f.h,scope:'own_requests'});
+  assert.equal(session.status,200);
+  assert.equal(session.data.role,'contributor');
+  const headers={Cookie:session.headers.get('set-cookie').split(';')[0]};
+  const base=origin+'/v1/households/'+f.h;
+  const list=await fetch(base+'/requests/pickups',{headers});
+  assert.equal(list.status,200);
+  const page=await list.json();
+  assert.deepEqual(Object.keys(page).sort(),['nextCursor','shops']);
+  assert.equal(page.nextCursor,null);
+  assert.deepEqual(page.shops.map(row=>row.shopId),[draft,f.shopId]);
+  for(const row of page.shops){
+    assert.deepEqual(Object.keys(row).sort(),['createdAt','nextShopOnly','shopId']);
+    assert.equal(new Date(row.createdAt).toISOString(),row.createdAt);
+    assert.equal(row.nextShopOnly,row.shopId===f.shopId);
+  }
+  const afterDraft=await fetch(base+'/requests/pickups?cursor='+draft,{headers});
+  assert.equal(afterDraft.status,200);
+  assert.deepEqual(await afterDraft.json(),{shops:[page.shops[1]],nextCursor:null});
+  assert.equal((await fetch(base+'/shops?scope=owned',{headers})).status,404);
+  const child=await f.http('Sam','GET','/requests/pickups');
+  assert.equal(child.status,200);
+  assert.deepEqual(child.data,page);
+  assert.equal((await f.http('Sam','GET','/shops')).status,404);
+  assert.equal((await f.http(actor,'GET','/requests/pickups')).status,404);
+  assert.equal((await f.http(actor,'GET','/requests/pickups',undefined,{'X-View-Grant-ID':grantId})).status,404);
+
+  const selected=page.shops[0].shopId;
+  const envelope={...f.envelope('Mia','request.send',{clientRequestId:randomUUID(),originalItem:'Scoped rice',
+    ownQuantity:null,authoredAt:new Date().toISOString(),route:'current'},{shopRevision:0,authorityEpoch:0}),
+    replayWindow:session.data.replayWindow.id,shopId:selected};
+  const sent=await fetch(base+'/commands',{method:'POST',headers:{...headers,Origin:'https://web.fixture.invalid',
+    'X-CSRF-Token':session.data.csrf,'Content-Type':'application/json'},body:JSON.stringify(envelope)});
+  assert.equal(sent.status,200);
+  const {request}=await sent.json();
+  assert.equal(request.shopId,selected);
+  assert.equal(request.route,'current');
+  const inbox=(shopId)=>f.http('Mia','GET','/shops/'+shopId+'/inbox',undefined,{'X-Shop-ID':shopId});
+  assert.deepEqual((await inbox(selected)).data.requests.map(row=>row.requestId),[request.requestId]);
+  assert.deepEqual((await inbox(f.shopId)).data.requests,[]);
+  const next=await f.send('Sam',{route:'current'});
+  assert.equal(next.request.shopId,f.shopId);
+  assert.equal(next.request.route,'next');
+});
+
+test('closing a pickup hides its destination, preserves an exact send receipt and rejects a fresh request',async()=>{
+  const f=await fixture();
+  const draft=await nextDraft(f);
+  const first=await f.send('Sam');
+  const closed=await f.http('Mia','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),
+    sourceVersion:{shopRevision:1,authorityEpoch:1,financialRevision:0},allEvidenceEntered:false,closeShop:true});
+  assert.equal(closed.status,200);
+  assert.equal(closed.data.appShopClosed,true);
+  const list=await f.http('Sam','GET','/requests/pickups');
+  assert.equal(list.status,200);
+  assert.deepEqual(list.data.shops.map(row=>row.shopId),[draft]);
+  assert.equal((await f.http('Sam','GET','/requests/pickups?cursor='+f.shopId)).status,404);
+
+  const {envelope,...receipt}=first;
+  const replay=await f.http('Sam','POST','/commands',envelope);
+  assert.equal(replay.status,200);
+  assert.deepEqual(replay.data,receipt);
+  const fresh={...envelope,clientKey:randomUUID(),body:{...envelope.body,clientRequestId:randomUUID()}};
+  const refused=await f.http('Sam','POST','/commands',fresh);
+  assert.equal(refused.status,409);
+  assert.equal(refused.data.error.code,'pickup_closed');
+  const mine=await f.http('Sam','GET','/requests/mine');
+  assert.equal(mine.status,200);
+  assert.deepEqual(mine.data.requests.map(row=>row.requestId),[first.request.requestId]);
+});
+
 test('a browser switches between cook and contributor invitations for the same household',async()=>{
   const {f,person,actor,grantId}=await helperFixture();
   const cook=await f.http(actor,'POST','/v1/session',{householdId:f.h,grantId});

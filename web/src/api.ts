@@ -5,8 +5,9 @@ export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; nextShopOnly?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; nextShopOnly?:boolean; selectionRequired?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
+export interface RequestPickup {shopId:string;createdAt:string;nextShopOnly:boolean}
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
   householdId: string; memberId: string; role: 'contributor' | 'helper' | 'editor'; grantId?: string;
@@ -147,6 +148,7 @@ function parseSession(value: unknown): Session | null {
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
     enrolled: boolean(d.enrolled), ...requestQueueState(d),
+    ...(d.selectionRequired===undefined?{}:{selectionRequired:boolean(d.selectionRequired)}),
     ...(d.nextShopOnly===undefined?{}:{nextShopOnly:boolean(d.nextShopOnly)}),
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
     ...(grantId ? { grantId } : {}) };
@@ -211,6 +213,24 @@ export class API {
     const state=requestQueueState(result);
     if (!state.canSetRequestQueue || identity(record(result.household).id)!==session.household.id ||
         identity(result.memberId)!==session.memberId || (enabled ? !state.queueConsent : !!state.requestQueueGrant)) invalid();
+  }
+  async requestPickups(session:Session):Promise<RequestPickup[]> {
+    if(!isContributorSession(session))throw new ApiError('access_ended',403);
+    const pickups:RequestPickup[]=[],seen=new Set<string>(),cursors=new Set<string>();
+    let cursor:string|null=null;
+    do {
+      const page=record(await this.call('/v1/households/'+segment(session.household.id)+'/requests/pickups'+(cursor?'?cursor='+segment(cursor):'')));
+      if(!Array.isArray(page.shops)||page.shops.length>50)return invalid();
+      for(const value of page.shops){
+        const row=record(value),shopId=identity(row.shopId);
+        if(seen.has(shopId))return invalid();
+        seen.add(shopId);
+        pickups.push({shopId,createdAt:timestamp(row.createdAt),nextShopOnly:boolean(row.nextShopOnly)});
+      }
+      cursor=page.nextCursor===null?null:identity(page.nextCursor);
+      if(cursor){if(cursors.has(cursor)||cursors.size>=20)return invalid();cursors.add(cursor);}
+    }while(cursor);
+    return pickups;
   }
   async requests(session: Session): Promise<OwnRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);

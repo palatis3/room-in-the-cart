@@ -1,4 +1,4 @@
-import { API, ApiError, isContributorSession, type BrowserAuthState,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal } from './api.js';
+import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
@@ -24,6 +24,8 @@ export class WebApp {
   private reviewedScope:string|null = null;
   private logoutPending = false;
   private requests:OwnRequest[] = [];
+  private pickups:RequestPickup[]=[];
+  private chosenPickupId:string|null=null;
   private view:CookView|null = null;
   private pending:Pending[] = [];
   private queueState:'ready'|'unavailable'|'missing' = 'ready';
@@ -106,7 +108,7 @@ export class WebApp {
   }
   private clearPrivate():void {
     this.clearInvitationDraft();this.browserAuth=null;
-    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
+    this.session=null;this.reviewedScope=null;this.pickups=[];this.chosenPickupId=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
@@ -144,6 +146,12 @@ export class WebApp {
       this.notice='Access has ended. Ask your household for a new invitation.';this.render();
     }
   }
+  private pickupSelectionChanged(fresh:Session):boolean {
+    const prior=this.session;
+    return !!prior?.selectionRequired && !fresh.selectionRequired && isContributorSession(fresh) &&
+      this.reviewedScope===reviewScope(prior) && reviewScope({...fresh,shopId:prior.shopId})===this.reviewedScope &&
+      !this.retryCommand && !this.draft.editing && !this.draft.followup;
+  }
   private async load(verifiedSession?:Session):Promise<void> {
     if(this.signOutPending)return;
     const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
@@ -159,7 +167,11 @@ export class WebApp {
         throw new ApiError('grant_context_changed', 409);
       }
     }
-    if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
+    if(fresh && this.pickupSelectionChanged(fresh)) {
+      this.chosenPickupId=null;
+      this.review=false;
+      this.notice='Available pickups changed. Review the destination before sending.';
+    } else if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
       this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
@@ -212,7 +224,16 @@ export class WebApp {
         this.notice=proposal?proposalNotices[proposal.status]:'Received suggestions checked.';
         this.failurePurpose=null;
       }
-    } else {this.view=null;this.requests=await this.api.requests(fresh);}
+    } else {
+      this.view=null;
+      this.requests=await this.api.requests(fresh);
+      this.pickups=fresh.selectionRequired ? await this.api.requestPickups(fresh) : this.pickups.filter(p=>p.shopId===fresh.shopId);
+      if(this.chosenPickupId && !this.pickups.some(p=>p.shopId===this.chosenPickupId) && !this.retryCommand){
+        this.chosenPickupId=null;
+        this.review=false;
+        this.notice='Choose an open pickup to continue.';
+      }
+    }
     this.queueState='ready';
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
       try {
@@ -233,10 +254,11 @@ export class WebApp {
       this.notice='';this.failurePurpose=null;
     }
   }
-  private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
+  private async reauthenticate(command?:Command, grantId?:string, reviewPickupChanges=false):Promise<Session> {
     const fresh=await this.api.session();
     if(this.signOutPending)throw new ApiError('access_ended',403);
     if(!fresh)throw new ApiError('session_needed',401);
+    if(reviewPickupChanges && this.pickupSelectionChanged(fresh))return fresh;
     if(!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope)throw new ApiError('access_ended',403);
     if(grantId ? fresh.role!=='editor'||fresh.grantId!==grantId : !isContributorSession(fresh))throw new ApiError('access_ended',403);
     if(command&&(fresh.replayWindow.id!==command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()))throw new ApiError('stale_replay_window',409);
@@ -319,6 +341,13 @@ export class WebApp {
       this.codeRequested=false;this.loginCode='';
       this.render();
       await this.recoverBrowserIdentity(historyGeneration);
+    }
+    else if(e.code==='pickup_closed'){
+      this.retryCommand=null;this.uncertainSend=false;this.review=false;this.chosenPickupId=null;
+      this.notice='Choose an open pickup to continue.';
+      if(rejectedPendingID)await this.outbox.remove(rejectedPendingID).catch(()=>{});
+      try {await this.load();} catch(failure) {await this.fail(failure,'load');}
+      return;
     }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
@@ -449,10 +478,18 @@ export class WebApp {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;
     if(id==='item')input.required=true;input.addEventListener('input',()=>{update(input.value);if(id==='item'||id==='amount')this.retryCommand=null;});form.append(label,input);
   }
+  private requestTarget(session:Session):string|null {
+    if(this.draft.editing)return this.draft.editing.shopId;
+    if(this.draft.followup)return this.requests.find(row=>row.requestId===this.draft.followup)?.shopId??null;
+    return session.shopId??this.chosenPickupId;
+  }
   private usesProtectedPickup(session:Session):boolean {
-    if(this.draft.editing || !session.nextShopOnly || !session.shopId)return false;
-    const source=this.draft.followup && this.requests.find(row=>row.requestId===this.draft.followup);
-    return !this.draft.followup || (!!source && source.shopId===session.shopId);
+    if(this.draft.editing)return false;
+    const target=this.requestTarget(session);
+    return target===session.shopId ? session.nextShopOnly===true : this.pickups.find(p=>p.shopId===target)?.nextShopOnly===true;
+  }
+  private pickupLabel(pickup:RequestPickup):string {
+    return this.date(pickup.createdAt)+' · '+pickup.shopId.slice(0,8);
   }
   private renderContributor(main:HTMLElement):void {
     const protectedPickup=this.usesProtectedPickup(this.session!);
@@ -460,7 +497,20 @@ export class WebApp {
       protectedPickup?'next':this.draft.route;
     main.append(this.el('h1',this.t('Ask the shopper')));
     const form=this.el('form');form.className='card';
+    const session=this.session!;
+    const target=this.requestTarget(session);
+    if(session.selectionRequired && !this.draft.editing && !this.draft.followup && !this.review){
+      const label=this.el('label',this.t('Pickup for this request'));label.htmlFor='request-pickup';
+      const picker=this.el('select');picker.id='request-pickup';picker.disabled=this.busy||this.uncertainSend;
+      const placeholder=this.el('option',this.t('Choose a pickup'));placeholder.value='';picker.append(placeholder);
+      for(const pickup of this.pickups){const option=this.el('option',this.pickupLabel(pickup));option.value=pickup.shopId;picker.append(option);}
+      picker.value=this.chosenPickupId??'';
+      picker.addEventListener('change',()=>{this.chosenPickupId=picker.value||null;this.draft.route='current';this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#request-pickup')?.focus();});
+      main.append(label,picker);
+    }
     if(this.review) {
+      const pickup=this.pickups.find(p=>p.shopId===target);
+      if(target)form.append(this.el('p',this.t('Pickup for this request')+' · '+(pickup?this.pickupLabel(pickup):target.slice(0,8))));
       form.append(this.el('h2',this.t('Review before sending')),this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(routeForReview==='next'?'Next shop':'This pickup')));
       const back=this.button('Back to edit',()=>{this.review=false;this.render();});back.disabled=this.busy||this.uncertainSend;form.append(back);
       const submit=this.button(this.draft.editing?'Save changes':'Send request',()=>{},true);submit.type='submit';form.append(submit);
@@ -493,8 +543,8 @@ export class WebApp {
       const label=this.el('label');label.className='checkbox';const cb=this.el('input');cb.type='checkbox';cb.checked=this.consent;cb.addEventListener('change',()=>{this.consent=cb.checked;});label.append(cb,this.el('span',this.t('Save pending requests on this browser')));form.append(label,this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
     }
     if(this.draft.item) form.append(this.button('Copy your text',()=>void this.run(async()=>{await navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);this.notice='Copied';})));
-    if(this.session!.shopId)main.append(form);
-    else main.append(this.el('p',this.t('No pickup is accepting requests. Ask the shopper to start a pickup.')));
+    if(target || this.retryCommand)main.append(form);
+    else if(!session.selectionRequired)main.append(this.el('p',this.t('No pickup is accepting requests. Ask the shopper to start a pickup.')));
     if(this.pending.length) {
       const section=this.el('section');section.append(this.el('h2',this.t('Pending requests')));
       for(const p of this.pending) {const card=this.el('article');card.className='card';card.append(this.el('p',String(p.command.body.originalItem??'')),this.el('p',this.t(this.confirmedOperations.has(p.id)?'Received; local cleanup pending':'Waiting to send from this browser')));
@@ -528,7 +578,7 @@ export class WebApp {
     let s:Session;
     let offlineError:ApiError|null=null;
     try {
-      s=await this.reauthenticate(this.retryCommand??undefined);
+      s=await this.reauthenticate(this.retryCommand??undefined,undefined,true);
     } catch(error) {
       const cached=this.session;
       if(!(error instanceof ApiError)||error.status!==0||!cached||!isContributorSession(cached)||
@@ -539,6 +589,17 @@ export class WebApp {
       s=cached;
       offlineError=error;
     }
+    if(!offlineError && this.pickupSelectionChanged(s)){
+      await this.load(s);
+      return;
+    }
+    if(!offlineError && !this.retryCommand && !this.draft.editing && !this.draft.followup && s.selectionRequired){
+      this.pickups=await this.api.requestPickups(s);
+      if(!this.pickups.some(p=>p.shopId===this.chosenPickupId)){
+        this.chosenPickupId=null;this.review=false;
+        this.notice='Choose an open pickup to continue.';return;
+      }
+    }
     if(!this.retryCommand && this.draft.route==='current' && this.usesProtectedPickup(s)){
       this.draft.route='next';
       this.notice='This pickup closed to new requests. Review the next-shop destination before sending.';
@@ -546,7 +607,7 @@ export class WebApp {
     }
     if(!this.retryCommand)this.retryCommand=this.draft.editing?
       this.makeCommand('request.edit',{requestId:this.draft.editing.requestId,originalItem:this.draft.item,ownQuantity:this.draft.amount||null},this.draft.editing.revision,this.draft.editing.shopId):
-      this.makeCommand('request.send',{clientRequestId:crypto.randomUUID(),originalItem:this.draft.item,ownQuantity:this.draft.amount||null,authoredAt:new Date().toISOString(),route:this.draft.route,...(this.draft.followup?{followupTo:this.draft.followup}:{})},undefined,this.requests.find(r=>r.requestId===this.draft.followup)?.shopId??s.shopId??'');
+      this.makeCommand('request.send',{clientRequestId:crypto.randomUUID(),originalItem:this.draft.item,ownQuantity:this.draft.amount||null,authoredAt:new Date().toISOString(),route:this.draft.route,...(this.draft.followup?{followupTo:this.draft.followup}:{})},undefined,this.requestTarget(s)??'');
     const command=this.retryCommand;
     const p:Pending={id:command.clientKey,scope:scopeFor(s),command,createdAt:new Date().toISOString()};
     let persisted=false;

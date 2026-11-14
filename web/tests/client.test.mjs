@@ -51,6 +51,53 @@ test('a protected pickup shows the next shop before sending and keeps the draft 
  }
 });
 
+test('a contributor chooses the intended pickup when two are open and reviews the dated destination',async()=>{
+ const choices=[{shopId:'first',createdAt:'2026-11-10T12:00:00Z',nextShopOnly:false},{shopId:'second',createdAt:'2026-11-12T16:00:00Z',nextShopOnly:true}];
+ const sent=[];const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>choices,command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId,route:cmd.body.route};}}));
+ assert.doesNotMatch(root.textContent,/No pickup is accepting/);
+ const picker=root.querySelector('#request-pickup');assert.ok(picker);assert.equal(picker.value,'');
+ picker.value='second';picker.dispatchEvent(new dom.window.Event('change',{bubbles:true}));
+ type(dom,'item','Tortillas');assert.equal(root.querySelector('#route').value,'next');
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/November 12/);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(sent.length,1);assert.equal(sent[0].shopId,'second');assert.equal(sent[0].body.route,'next');dom.window.close();
+});
+
+test('a pickup closing during review keeps the draft and requires explicit review of the remaining destination', async()=>{
+ for(const action of ['send','refresh']){
+  let active={...session(),shopId:null,selectionRequired:true};
+  const sent=[];
+  const pickups=['first','second'].map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}));
+  const {root,dom}=await setup(fakeAPI({session:async()=>active,requestPickups:async()=>pickups,
+   command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId};}}));
+  const picker=root.querySelector('#request-pickup');
+  picker.value='second';picker.dispatchEvent(new dom.window.Event('change'));
+  type(dom,'item','Brown rice');submit(root,dom);
+  active={...active,shopId:'first',selectionRequired:false};
+  if(action==='send')submit(root,dom);else click(root,'Refresh');
+  await waitForIdle(root);
+  assert.equal(sent.length,0);
+  assert.equal(root.querySelector('#item').value,'Brown rice');
+  assert.match(root.textContent,/Available pickups changed/);
+  submit(root,dom);assert.match(root.querySelector('form').textContent,/first/);
+  submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(sent.map(c=>c.shopId),['first']);dom.window.close();
+ }
+});
+
+test('refresh after a reviewed pickup disappears offers the remaining choices', async()=>{
+ let shops=['first','second','third'];
+ const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>shops.map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}))}));
+ const choose=value=>{const picker=root.querySelector('#request-pickup');picker.value=value;picker.dispatchEvent(new dom.window.Event('change'));};
+ choose('first');type(dom,'item','Carrots');submit(root,dom);
+ shops=['second','third'];click(root,'Refresh');await waitForIdle(root);
+ assert.equal(root.querySelector('#request-pickup').value,'');
+ assert.equal(root.querySelector('form'),null);choose('third');
+ assert.equal(root.querySelector('#item').value,'Carrots');dom.window.close();
+});
+
 test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment', async()=>{
  const current=session(),grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
  const base={household:current.household,memberId:current.memberId,capabilities:['request_queue_permission'],queueConsent:false};

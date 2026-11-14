@@ -149,8 +149,16 @@ test('browser covered child OTP installs scoped HttpOnly session and omits crede
  const signed=await call(null,'/v1/auth/email/verify','POST',{code:'123456'},headers);ok(signed);const nextCookie=signed.headers.getSetCookie().find(value=>value.startsWith('__Host-ritc_auth=')).split(';')[0];csrf=signed.data.csrf;const signedHeaders={Origin:webOrigin,Cookie:nextCookie,'x-csrf-token':csrf};
  const admission=ok(await call(null,'/v1/child-invitations/session','GET',undefined,{Cookie:nextCookie}));assert.equal(admission.admitted,true);assert.equal(admission.scope,'own_requests');assert.equal(admission.inviteId,invitation.inviteId);assert.equal(admission.status,'admitted');
  const claimInput={clientKey:randomUUID(),token:invitation.token,pairingCode:'QWER2345'},claim=ok(await call(null,'/v1/child-invitations/claim','POST',claimInput,signedHeaders));const latest=await read(f,setup.enrollmentId);ok(await call(f.adult,f.base+'/guardian/enrollments/'+setup.enrollmentId+'/confirm-child','POST',{clientKey:randomUUID(),baseRevision:latest.revision,claimId:claim.claimId,pairingCode:claimInput.pairingCode}));
- const finish={clientKey:randomUUID(),householdId:f.house.householdId,claimId:claim.claimId,pairingCode:claimInput.pairingCode,deviceSecret:randomBytes(32).toString('base64url')};const result=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(result);assert.equal(result.data.deviceToken,undefined);assert.ok(!JSON.stringify(result.data).includes(finish.deviceSecret));const scope=result.headers.get('set-cookie');assert.ok(scope.includes('HttpOnly'));const scopeCookie=scope.split(';')[0];
+ const finish={clientKey:randomUUID(),householdId:f.house.householdId,claimId:claim.claimId,pairingCode:claimInput.pairingCode,deviceSecret:randomBytes(32).toString('base64url')};
+ const result=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(result);
+ assert.deepEqual(Object.keys(result.data).sort(),['deviceId','householdId','memberId','role']);
+ assert.ok(!JSON.stringify(result.data).includes(finish.deviceSecret));
+ const scope=result.headers.get('set-cookie');assert.ok(scope.includes('HttpOnly'));const scopeCookie=scope.split(';')[0];
+ const [cookieHousehold,sessionToken]=scopeCookie.slice('ritc_session='.length).split('.');
+ assert.equal(cookieHousehold,f.house.householdId);assert.match(sessionToken,/^[A-Za-z0-9_-]{43}$/);assert.notEqual(sessionToken,finish.deviceSecret);
  const session=ok(await call(null,'/v1/session','GET',undefined,{Cookie:nextCookie+'; '+scopeCookie}));assert.equal(session.authenticated,true);assert.equal(session.memberId,result.data.memberId);assert.deepEqual(session.capabilities,['own_requests']);
+ // A stored receipt cannot redirect the scoped cookie or extend the browser response.
+ await admin.query("UPDATE ritc.guardian_intent SET response=response||jsonb_build_object('householdId',$3::uuid,'internalDetail','fixture') WHERE household_id=$1 AND client_key=$2 AND kind='finish'",[f.house.householdId,finish.clientKey,randomUUID()]);
  const retry=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(retry);assert.deepEqual(retry.data,result.data);assert.ok(retry.headers.get('set-cookie').includes('HttpOnly'));assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.web_session WHERE household_id=$1 AND device_id=$2',[f.house.householdId,result.data.deviceId])).rows[0].n,1);
 });
 test('non-organizer cannot create child membership and organizer role loss blocks pending finalization',async()=>{

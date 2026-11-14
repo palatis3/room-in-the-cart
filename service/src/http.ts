@@ -165,7 +165,7 @@ export function createHTTPServer(options:HTTPOptions) {
       if(session?.auth.ownRequestsOnly){
         const base='/v1/households/'+session.householdId;
         const allowed=url.pathname==='/v1/session'||(method==='POST'&&url.pathname==='/v1/invites/redeem')
-          ||(method==='GET'&&url.pathname===base+'/requests/mine')||(method==='POST'&&url.pathname===base+'/commands')
+          ||(method==='GET'&&(url.pathname===base+'/requests/mine'||url.pathname===base+'/requests/pickups'))||(method==='POST'&&url.pathname===base+'/commands')
           ||(method==='PUT'&&url.pathname===base+'/devices/current/request-queue');
         if(!allowed)throw unavailable();
       }
@@ -204,7 +204,17 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(url.pathname==='/v1/child-invitations/native-auth/admit'&&method==='POST'){send(200,await guardian.nativeSigninAdmit(auth.identity,childNativeAdmitSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/claim'&&method==='POST'){send(200,await guardian.claim(auth.identity,childClaimSchema.parse(await body(req,4096))));return;}
-      if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){const result=await guardian.finish(auth.identity,childFinishSchema.parse(await body(req,4096)));if(browserIdentity){const scoped=await repository.startWebSession(result.householdId,auth.identity,{browserBound:true,pairedDeviceToken:result.deviceToken});res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);const {deviceToken:_,...receipt}=result;send(200,receipt);return;}send(200,result);return;}
+      if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){
+        const input=childFinishSchema.parse(await body(req,4096));
+        const receipt=await guardian.finish(auth.identity,input);
+        if(browserIdentity){
+          const householdId=input.householdId.toLowerCase();
+          const scoped=await repository.startWebSession(householdId,auth.identity,{browserBound:true,pairedDeviceToken:input.deviceSecret});
+          res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);
+          send(200,{householdId,memberId:receipt.memberId,role:receipt.role,deviceId:receipt.deviceId});return;
+        }
+        send(200,receipt);return;
+      }
       const childClaim=/^\/v1\/child-invitations\/claims\/([^/]+)$/.exec(url.pathname);
       if(childClaim&&method==='GET'){send(200,await guardian.claimStatus(auth.identity,uuid.parse(url.searchParams.get('householdId')),uuid.parse(childClaim[1])));return;}
       const ownProposal=/^\/v1\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(url.pathname);
@@ -296,6 +306,11 @@ export function createHTTPServer(options:HTTPOptions) {
          if(financial[2]==='financial-evidence'&&method==='POST')return history.append(ctx,shopId,financialAppendSchema.parse(payload));
          if(financial[2]==='financial-reviews'&&method==='POST')return history.review(ctx,shopId,financialReviewSchema.parse(payload));
          if(financial[2]==='history-retire'&&method==='POST')return history.retire(ctx,shopId,historyRetireSchema.parse(payload));
+        }
+        if(path==='/requests/pickups'&&method==='GET'){
+          const cursor=url.searchParams.get('cursor');
+          if(cursor)uuid.parse(cursor);
+          return repository.shops(ctx,'requests',cursor);
         }
         if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned','history-owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
         const replacement=/^\/views\/([^/]+)\/replacements$/.exec(path);
