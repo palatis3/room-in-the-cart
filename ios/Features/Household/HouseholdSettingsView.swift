@@ -65,6 +65,10 @@ struct HouseholdSettingsView: View {
                 if let projection = model.projection {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
+                        if model.membershipSession != nil {
+                            NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
+                                .accessibilityIdentifier("household.membership")
+                        }
                         Text(ht("Access is checked by the household service."))
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
@@ -133,7 +137,11 @@ struct HouseholdSettingsView: View {
                             if model.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
                             TextField(ht("Item"), text: $model.item)
                             TextField(ht("Quantity, optional"), text: $model.quantity)
-                            if model.editing == nil { Toggle(ht("Ask for next shop"), isOn: $model.forNextShop) }
+                            if model.requestRequiresNextShop {
+                                Text(ht("Request for next shop"))
+                            } else if model.editing == nil {
+                                Toggle(ht("Ask for next shop"), isOn: $model.forNextShop)
+                            }
                             Button(ht("Review request before sending")) {
                                 if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: false) }
                             }.disabled(!canSend).accessibilityIdentifier("household.request.review")
@@ -207,7 +215,7 @@ struct HouseholdSettingsView: View {
         case .needsReview:
             Text(ht("Review needed. Check received requests before creating a new request."))
             Button(ht("I checked received requests; clear this retry")) { Task { await model.discardPendingAfterReview() } }
-        case .received: Label(ht("Received by the household"), systemImage: "checkmark.circle")
+        case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle")
         case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
         }
     }

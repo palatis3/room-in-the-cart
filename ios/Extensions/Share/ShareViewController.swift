@@ -1,7 +1,7 @@
 import UIKit
 import SwiftUI
-import UniformTypeIdentifiers
 import DeviceSurfaces
+import CoreDomain
 
 final class ShareViewController: UIViewController {
     private let model = ShareComposerModel()
@@ -21,11 +21,8 @@ final class ShareViewController: UIViewController {
     }
     private func loadSelectedText() {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem], items.count == 1 else { model.reject(); return }
-        if let text = items[0].attributedContentText?.string, !text.isEmpty { model.accept(text); return }
-        let providers = (items[0].attachments ?? []).filter { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }
-        guard providers.count == 1 else { model.reject(); return }
         let expected = generation
-        SelectedTextInbox.loadPlainText(from: providers[0]) { [weak self] result in
+        SelectedTextInbox.loadSelectedText(from: items[0]) { [weak self] result in
             Task { @MainActor [weak self] in
                 guard let self, self.generation == expected else { return }
                 switch result {
@@ -44,17 +41,19 @@ final class ShareViewController: UIViewController {
     @Published var loading = true
     @Published var saving = false
     @Published var error: String?
+    @Published var saveError: String?
     var onCancel: (() -> Void)?
     var onSaved: (() -> Void)?
     private let session = SelectedTextSession()
     func accept(_ text: String) {
-        guard SelectedTextInbox.fitsEnvelope(original: text) else { rejectSize(); return }
-        guard !text.contains("\0") else { reject(); return }
         original = text; edited = text; loading = false
+    }
+    private var sizeMessage: String {
+        SurfaceCopy.text("Share up to 500 lines and 64 KiB of plain text, including edits. Choose a smaller selection or shorten the edit.")
     }
     func rejectSize() {
         loading = false
-        error = SurfaceCopy.text("Share up to 500 lines and 64 KiB of plain text, including edits. Choose a smaller selection or shorten the edit.")
+        error = sizeMessage
     }
     func reject() { loading = false; error = SurfaceCopy.text("Select a shorter plain-text list and try again.") }
     func cancel() {
@@ -64,8 +63,19 @@ final class ShareViewController: UIViewController {
     }
     func save() {
         guard !saving, !loading, !original.isEmpty else { return }
-        let reviewEdit = edited == original ? nil : edited
-        guard SelectedTextInbox.fitsEnvelope(original: original, edited: reviewEdit) else { rejectSize(); return }
+        // Canonically equivalent spellings can fall on opposite sides of the UTF-8 limit.
+        let reviewEdit = edited.utf8.elementsEqual(original.utf8) ? nil : edited
+        guard SelectedTextInbox.fitsEnvelope(original: original, edited: reviewEdit) else { saveError = sizeMessage; return }
+        do {
+            try StagedListImport.validateSourceText(reviewEdit ?? original, maximumLines: SelectedTextInbox.maximumLines)
+        } catch ImportTextLimit.originalLineBytes(let item) {
+            let format = SurfaceCopy.text("Shorten item %lld to %lld UTF-8 bytes or less.")
+            saveError = String(format: format, locale: Locale.current, Int64(item), Int64(StagedListImport.maximumOriginalLineBytes))
+            return
+        } catch {
+            saveError = sizeMessage
+            return
+        }
         saving = true; error = nil
         Task {
             defer { saving = false }
@@ -75,8 +85,12 @@ final class ShareViewController: UIViewController {
                 guard result.disposition == .pending else { throw SurfaceError.stale }
                 onSaved?()
             } catch SelectedTextInbox.ReviewLimit.tooManyItems {
-                self.rejectSize()
-            } catch { self.error = SurfaceCopy.text("Could not save for review. Try again or cancel; your shopping list is unchanged.") }
+                self.saveError = sizeMessage
+            } catch SelectedTextInbox.ReviewLimit.receiptLimitReached {
+                self.saveError = SurfaceCopy.text("This device has reached its limit for shared lists. Open your shopping list in Room in the Cart and paste the text there.")
+            } catch SurfaceError.capacity {
+                self.saveError = SurfaceCopy.text("The share inbox is full. In Room in the Cart, open Shop, then Device shortcuts. Review or discard saved text to make room.")
+            } catch { self.saveError = SurfaceCopy.text("Could not save for review. Try again or cancel; your shopping list is unchanged.") }
         }
     }
 }
@@ -95,7 +109,14 @@ private struct ShareComposerView: View {
                         .disabled(model.saving || !model.edited.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
                 }
                 if let error = model.error { Text(error).accessibilityAddTraits(.updatesFrequently) }
-            }.disabled(model.saving).navigationTitle(SurfaceCopy.text("Selected text"))
+            }.disabled(model.saving)
+                .alert(SurfaceCopy.text("Could not save selected text"), isPresented: Binding(
+                    get: { model.saveError != nil },
+                    set: { if !$0 { model.saveError = nil } }
+                ), presenting: model.saveError) { _ in
+                    Button(SurfaceCopy.text("OK")) { model.saveError = nil }
+                } message: { Text($0) }
+                .navigationTitle(SurfaceCopy.text("Selected text"))
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { model.cancel() }.disabled(model.saving) } }
                 .interactiveDismissDisabled(model.saving)
         }

@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Type item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribir artículo"
+          }
+        }
+      }
+    },
     "This deletes only the saved spellings for this earlier region.": {
       "extractionState": "manual",
       "localizations": {
@@ -2933,6 +2950,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa el título, las porciones y los ingredientes. Aceptar este borrador no elige una cena ni añade productos a la lista."
+          }
+        }
+      }
+    },
+    "Reviewed wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto revisado"
           }
         }
       }

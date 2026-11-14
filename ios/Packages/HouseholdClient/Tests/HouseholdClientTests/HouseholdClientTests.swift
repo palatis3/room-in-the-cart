@@ -2,14 +2,27 @@ import XCTest
 @testable import HouseholdClient
 
 final class MockURLProtocol: URLProtocol, @unchecked Sendable {
-    static var handler: ((URLRequest) throws -> (Int, Data))?
-    static var intercept: ((MockURLProtocol) -> Bool)?
+    typealias Handler = (URLRequest) throws -> (Int, Data)
+    typealias Interceptor = (MockURLProtocol) -> Bool
+    private static let callbackLock = NSLock()
+    private static var callbacks: (handler: Handler?, intercept: Interceptor?) = (nil, nil)
+
+    static var handler: Handler? {
+        get { callbackLock.withLock { callbacks.handler } }
+        set { callbackLock.withLock { callbacks.handler = newValue } }
+    }
+
+    static var intercept: Interceptor? {
+        get { callbackLock.withLock { callbacks.intercept } }
+        set { callbackLock.withLock { callbacks.intercept = newValue } }
+    }
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
-        if Self.intercept?(self) == true { return }
+        let callbacks = Self.callbackLock.withLock { Self.callbacks }
+        if callbacks.intercept?(self) == true { return }
         do {
-            guard let handler = Self.handler else { throw URLError(.notConnectedToInternet) }
+            guard let handler = callbacks.handler else { throw URLError(.notConnectedToInternet) }
             let (status, data) = try handler(request)
             finish(status: status, data: data)
         } catch { client?.urlProtocol(self, didFailWithError: error) }

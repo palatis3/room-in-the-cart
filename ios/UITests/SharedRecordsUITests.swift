@@ -196,14 +196,21 @@ import XCTest
         XCTAssertEqual(value.value as? String, "1")
     }
     private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true, requiresFullFrame: Bool = false) {
-        let deadline = ProcessInfo.processInfo.systemUptime + 20
-        for attempt in 0..<32 {
+        // Choose file can take four full drags from the save confirmation. XCTest
+        // can spend several seconds resolving each gesture on a busy simulator.
+        let gesturesPerDirection = 16
+        for attempt in 0...(2 * gesturesPerDirection) {
             let viewport = touchableArea()
-            if value.exists && (!requiresHitTarget || value.isHittable),
-               requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(value.frame) : viewport.contains(CGPoint(x: value.frame.midX, y: value.frame.midY)) { return }
-            if ProcessInfo.processInfo.systemUptime >= deadline { break }
-            let contentUp = value.exists && !value.frame.isEmpty ? value.frame.midY > viewport.midY : attempt < 16 ? !upward : upward
-            scrollContent(upward: contentUp)
+            let frame = value.exists ? value.frame : .zero
+            if !frame.isEmpty {
+                let visible = requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(frame)
+                    : viewport.contains(CGPoint(x: frame.midX, y: frame.midY))
+                if visible && (!requiresHitTarget || value.isHittable) { return }
+            }
+            guard attempt < 2 * gesturesPerDirection else { break }
+            let contentUp = frame.isEmpty ? (attempt < gesturesPerDirection ? !upward : upward)
+                : frame.midY > viewport.midY
+            scrollContent(upward: contentUp, viewport: viewport)
         }
         XCTFail("Could not reveal scoped Records element within bounded search: " + value.debugDescription)
     }
@@ -213,8 +220,8 @@ import XCTest
         let keyboard = app.keyboards.firstMatch, bottom = keyboard.exists ? keyboard.frame.minY : bounds.maxY
         return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top - 8))
     }
-    private func scrollContent(upward: Bool, distanceFraction: CGFloat = 0.6) {
-        let drag = touchableArea().insetBy(dx: 24, dy: 16), bounds = app.frame
+    private func scrollContent(upward: Bool, distanceFraction: CGFloat = 0.6, viewport: CGRect? = nil) {
+        let drag = (viewport ?? touchableArea()).insetBy(dx: 24, dy: 16), bounds = app.frame
         let distance = drag.height * distanceFraction / 2, high = drag.midY - distance, low = drag.midY + distance
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: drag.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY)).press(forDuration: 0.05,

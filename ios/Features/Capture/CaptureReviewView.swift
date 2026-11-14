@@ -47,7 +47,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
 
     var body: some View {
         ScrollViewReader { scroll in
-            captureForm
+            captureForm(scroll)
                 .task(id: reviewingFields) {
                     guard reviewingFields else { return }
                     await Task.yield()
@@ -66,7 +66,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
     }
 
-    private var captureForm: some View {
+    private func captureForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
@@ -101,6 +101,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 TextEditor(text: $model.text).frame(minHeight: 180)
                     .focused($sourceTextFocused)
                     .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
+                    .id("capture.editor")
                     .accessibilityIdentifier("capture.editor")
                     .accessibilityFocused($reviewFocused)
                     .disabled(model.busy || loadingPhoto || model.closed)
@@ -139,7 +140,16 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                     .font(.footnote)
             }
             if let failure = model.failure {
-                Section { Text(failureText(failure)).accessibilityIdentifier("capture.error") }
+                Section {
+                    Text(failureText(failure)).accessibilityIdentifier("capture.error")
+                    if failure == .permissionDenied || failure == .onDeviceUnavailable || failure == .audioUnavailable || failure == .notConfigured {
+                        Button(captureText("Type item")) {
+                            scroll.scrollTo("capture.editor", anchor: .center)
+                            sourceTextFocused = true
+                            reviewFocused = true
+                        }.accessibilityIdentifier("capture.typeItem")
+                    }
+                }
             }
             Section {
                 Toggle(captureText("I checked the wording, amounts, units and exclusions."), isOn: $model.confirmed)
@@ -192,16 +202,23 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
     private func load(_ item: PhotosPickerItem?) {
         photoTask?.cancel()
-        guard let item, !model.closed else { return }
+        guard let item, !model.closed else { loadingPhoto = false; return }
         loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
-                guard let data = try await item.loadTransferable(type: Data.self) else { throw CaptureFailure.imageUnavailable }
-                guard !Task.isCancelled, photo == item, !model.closed else { return }
-                model.stageImage(data)
+                guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw CaptureFailure.imageUnavailable }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.stageImage(try selected.data)
             } catch {
-                if !Task.isCancelled, !model.closed { model.photoLoadFailed() }
+                guard !Task.isCancelled, photo == item, !model.closed, authorize() else { return }
+                model.photoLoadFailed(error as? ScanFailure == .tooLarge ? .inputTooLarge : .imageUnavailable)
             }
         }
     }

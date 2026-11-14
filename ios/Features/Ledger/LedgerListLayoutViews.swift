@@ -123,8 +123,44 @@ struct LargePrintList: View {
     @Environment(\.dismiss) private var dismiss
     let shop: ShoppingLedger
     let layout: LedgerListLayout
+    private let itemDetails: [UUID: [String]]
     @State private var printError = false
-    init(shop: ShoppingLedger, layout: LedgerListLayout) { self.shop = shop; self.layout = layout }
+
+    init(shop: ShoppingLedger, layout: LedgerListLayout) {
+        self.shop = shop
+        self.layout = layout
+        var details: [UUID: [String]] = [:]
+        var seen: [UUID: Set<String>] = [:]
+        for source in shop.contributions where source.removedAt == nil {
+            if let label = Self.packageLabel(for: source), seen[source.lineID, default: []].insert(label).inserted {
+                details[source.lineID, default: []].append(label)
+            }
+        }
+        for (lineID, exclusions) in shop.listExclusions {
+            details[lineID, default: []].append(exclusions)
+        }
+        itemDetails = details
+    }
+
+    private static func packageLabel(for source: LedgerContribution) -> String? {
+        if let pack = source.originalPack {
+            let size = ledgerQuantity(pack.amountPerPack)
+            if let count = pack.count {
+                return ledgerFormat("Original package label (%lld × %@)", Int64(count), size)
+            }
+            return ledgerFormat("Amount per pack on the original label: %@", size)
+        }
+        guard let capture = source.capture else { return nil }
+        var facts: [String] = []
+        if let count = capture.packCount, !capture.unresolvedFields.contains(.packCount) {
+            facts.append(captureText("Packs") + ": " + String(count))
+        }
+        if let size = capture.amountPerPack, !capture.unresolvedFields.contains(.amountPerPack) {
+            facts.append(captureText("Usable amount per pack") + ": " + ledgerQuantity(size))
+        }
+        return facts.isEmpty ? nil : facts.joined(separator: " · ")
+    }
+
     var body: some View {
         let groups = layout.groups(shop: shop)
         List {
@@ -141,6 +177,9 @@ struct LargePrintList: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.title2.bold())
                             Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.title3)
+                            ForEach(itemDetails[line.id] ?? [], id: \.self) { label in
+                                Text(verbatim: label).font(.title3)
+                            }
                         }
                     }
                 } header: { if let heading = heading(group) { Text(heading) } }
@@ -153,22 +192,36 @@ struct LargePrintList: View {
         if !group.aisle.isEmpty { return group.aisle }
         return layout.layout(for: shop).mode == .aisle ? ledgerText("No aisle assigned") : nil
     }
-    func printText() -> NSAttributedString {
-        let text = NSMutableAttributedString(string: "")
-        func append(_ string: String, size: CGFloat, bold: Bool = false) {
-            let font = bold ? UIFont.boldSystemFont(ofSize:size) : UIFont.systemFont(ofSize:size)
-            text.append(NSAttributedString(string:string+"\n",attributes:[.font:font,.foregroundColor:UIColor.black]))
+    func printFormatter() -> UIPrintFormatter {
+        // All shopper-entered text is literal, including product names that look like markup.
+        func escaped(_ text: String) -> String {
+            text.replacingOccurrences(of: "&", with: "&amp;")
+                .replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;")
         }
-        append(shop.title,size:28,bold:true)
-        if !shop.basis.branch.isEmpty { append(shop.basis.branch,size:22) }
+        var html = """
+        <!doctype html><html><head><meta charset="utf-8"><style>
+        body { font: 20pt -apple-system; color: black; margin: 0 }
+        h1 { font-size: 28pt; margin: 0 }
+        h2 { font-size: 24pt; margin: 16pt 0 0; page-break-after: avoid }
+        header p { font-size: 22pt; margin: 0 }
+        .item { page-break-inside: avoid; padding-top: 14pt }
+        strong { font-size: 22pt }
+        h1, h2, p, strong { white-space: pre-wrap; overflow-wrap: anywhere }
+        </style></head><body><header><h1>\(escaped(shop.title))</h1>
+        """
+        if !shop.basis.branch.isEmpty { html += "<p>\(escaped(shop.basis.branch))</p>" }
+        html += "</header>"
         for group in layout.groups(shop: shop) {
-            if let heading = heading(group) { append("\n"+heading,size:24,bold:true) }
+            if let heading = heading(group) { html += "<h2>\(escaped(heading))</h2>" }
             for line in group.lines {
-                append("\n"+line.name,size:22,bold:true)
-                append(ledgerQuantity(try? shop.quantity(forLineID:line.id)),size:20)
+                let amount = ledgerQuantity(try? shop.quantity(forLineID: line.id))
+                html += "<div class='item'><strong>\(escaped(line.name))</strong><br>\(escaped(amount))"
+                for label in itemDetails[line.id] ?? [] { html += "<br>" + escaped(label) }
+                html += "</div>"
             }
         }
-        return text
+        return UIMarkupTextPrintFormatter(markupText: html + "</body></html>")
     }
     private func printList(_ groups: [LedgerListLayout.Group]) {
         guard groups.contains(where: { !$0.lines.isEmpty }), UIPrintInteractionController.isPrintingAvailable else {
@@ -178,12 +231,32 @@ struct LargePrintList: View {
         let controller = UIPrintInteractionController.shared
         let info = UIPrintInfo(dictionary:nil); info.jobName = shop.title; info.outputType = .grayscale
         controller.printInfo = info
-        let formatter = UISimpleTextPrintFormatter(attributedText: printText())
-        formatter.perPageContentInsets = UIEdgeInsets(top:32,left:32,bottom:32,right:32)
-        controller.printFormatter = formatter
+        controller.printPageRenderer = PickupPrintPageRenderer(formatter: printFormatter())
         let presented = controller.present(animated: true) { _, _, error in
             if error != nil { printError = true }
         }
         if !presented { printError = true }
+    }
+}
+
+class PickupPrintPageRenderer: UIPrintPageRenderer {
+    convenience init(text: NSAttributedString) {
+        self.init(formatter: UISimpleTextPrintFormatter(attributedText: text))
+    }
+
+    init(formatter: UIPrintFormatter) {
+        super.init()
+        footerHeight = 30
+        formatter.perPageContentInsets = UIEdgeInsets(top: 32, left: 32, bottom: 32, right: 32)
+        addPrintFormatter(formatter, startingAtPageAt: 0)
+    }
+
+    override func drawFooterForPage(at pageIndex: Int, in footerRect: CGRect) {
+        let name = NSAttributedString(string: "Room in the Cart", attributes: [
+            .font: UIFont.systemFont(ofSize: 16),
+            .foregroundColor: UIColor.black
+        ])
+        let size = name.size()
+        name.draw(at: CGPoint(x: footerRect.midX - size.width / 2, y: footerRect.midY - size.height / 2))
     }
 }

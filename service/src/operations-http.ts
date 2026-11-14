@@ -28,7 +28,10 @@ export function createOperationsHandler(environment:NodeJS.ProcessEnv=process.en
   try{
    runtime??=createOperationsRuntime(environment);
    const result=await runtime.run('run',signal);
-   console.info(JSON.stringify(result));respond(response,200,result);
+   const event=JSON.stringify(result);
+   if(result.attentionRequired)console.warn(event);
+   else console.info(event);
+   respond(response,200,result);
   }catch{
    const error=signal.aborted?'operations_deadline':'operations_unavailable';
    console.error(JSON.stringify({event:'operations_failed',error}));respond(response,503,{error});

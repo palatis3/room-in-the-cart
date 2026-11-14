@@ -1889,6 +1889,22 @@
         }
       }
     },
+    "Idea draft saved. You can edit it again in Dinner ideas.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea draft saved. You can edit it again in Dinner ideas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador guardado. Puedes volver a editarlo en Ideas para cenar."
+          }
+        }
+      }
+    },
     "Dinner scenarios": {
       "localizations": {
         "en": {

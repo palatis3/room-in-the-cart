@@ -1,3 +1,5 @@
+import UniformTypeIdentifiers
+import ImageIO
 import XCTest
 import CoreDomain
 import LocalStore
@@ -22,7 +24,7 @@ import UIKit
         let bytes = try RecordsNativeCodec.canonical(LedgerDocument(workspace: workspace))
         let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: workspaceID, containerID: shop.id,
             objectID: shop.lines[0].id, revision: Int64(shop.revision), kind: .packageReference),
-            originalText: "Private package wording", reviewedLabel: "Rice reference", imageJPEG: nil,
+            originalText: "Private package wording", reviewedText: "Corrected private wording", reviewedLabel: "Rice reference", imageJPEG: nil,
             barcode: CapturedBarcode(symbology: "manual", value: "12345"), receiptLines: [], capturedAt: Date(timeIntervalSince1970: 100))
         let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + workspaceID.uuidString,
             revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title, savedAtMilliseconds: 100_000,
@@ -259,16 +261,32 @@ import UIKit
         let before = try Data(contentsOf: registryURL)
         var object = try JSONSerialization.jsonObject(with: record.media![0].data) as! [String: Any]
         var sourceObject = object["source"] as! [String: Any]
-        sourceObject["imageJPEG"] = Data("invalid image".utf8).base64EncodedString(); object["source"] = sourceObject
-        record.media = [.init(id: photoSource.id.uuidString, kind: .packageReference,
-            data: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]))]
+        let tagged = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(tagged, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(rendered.cgImage), [
+            kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 12.3, kCGImagePropertyGPSLatitudeRef: "N",
+                                            kCGImagePropertyGPSLongitude: 45.6, kCGImagePropertyGPSLongitudeRef: "E"]
+        ] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let taggedSource = try XCTUnwrap(CGImageSourceCreateWithData(tagged, nil))
+        let properties = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(taggedSource, 0, nil) as? [CFString: Any])
+        XCTAssertNotNil(properties[kCGImagePropertyGPSDictionary])
         var (unrelated, _) = try package(); unrelated.media = nil
-        let corrupt = try ArchiveCodec.make(records: [record, unrelated], kind: .personalRecovery, origin: "file", revision: "corrupt")
-        let file = root.appendingPathComponent("corrupt.json"); try ArchiveCodec.encode(corrupt).write(to: file)
-        let importer = model(base, registry: registry)
-        await importer.importFile(file, recipes: false)
-        XCTAssertNil(importer.review); XCTAssertEqual(importer.error, .integrity)
-        XCTAssertEqual(try Data(contentsOf: registryURL), before)
+        for (reason, data) in [("invalid", Data("invalid image".utf8)), ("truncated", Data(jpeg.dropLast(2))),
+                               ("location", tagged as Data)] {
+            sourceObject["imageJPEG"] = data.base64EncodedString()
+            object["source"] = sourceObject
+            record.media = [.init(id: photoSource.id.uuidString, kind: .packageReference,
+                data: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]))]
+            let archive = try ArchiveCodec.make(records: [record, unrelated], kind: .personalRecovery, origin: "file", revision: reason)
+            let file = root.appendingPathComponent(reason + ".json")
+            try ArchiveCodec.encode(archive).write(to: file)
+            let importer = model(base, registry: registry)
+            await importer.importFile(file, recipes: false)
+            XCTAssertNil(importer.review, reason)
+            XCTAssertEqual(importer.error, .integrity, reason)
+            XCTAssertEqual(try Data(contentsOf: registryURL), before, reason)
+        }
     }
     func testRecoveredEditProjectionFiltersMediaForRemovedTargetsNewShopsAndMealLibrary() async throws {
         let (original, _) = try package(), root = try location()

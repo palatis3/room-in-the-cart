@@ -9,6 +9,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
 
 struct LedgerHomeView: View {
     @ObservedObject var model: LedgerModel
+    var onShopSelected: ((UUID) -> Void)? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
     @State private var showingShopPicker = false
@@ -39,6 +40,7 @@ struct LedgerHomeView: View {
                             .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
                         factsSummary(shop)
                     }
+                    let exclusions = shop.listExclusions
                     let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
                     if groups.allSatisfy({ $0.lines.isEmpty }) {
                         Section(ledgerText("Shopping list")) {
@@ -49,7 +51,7 @@ struct LedgerHomeView: View {
                         ForEach(groups) { group in
                             Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
                                 ForEach(group.lines) { line in
-                                    row(line, shop: shop).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
+                                    row(line, shop: shop, exclusions: exclusions[line.id]).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
                                 }
                             }
                         }
@@ -98,7 +100,7 @@ struct LedgerHomeView: View {
         .sheet(item: $sheet) { destination in
             NavigationStack {
                 switch destination {
-                case .newShop: LedgerNewShopView(model: model)
+                case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
                 case let .renameShop(id, title):
                     LedgerNewShopView(model: model, shopID: id, title: title)
                 case .entry:
@@ -145,7 +147,7 @@ struct LedgerHomeView: View {
         .accessibilityIdentifier("ledgerShopPicker")
         .confirmationDialog(shop.title, isPresented: $showingShopPicker, titleVisibility: .visible) {
             ForEach(model.workspace.shops, id: \.id) { item in
-                Button(item.title) { Task { await model.selectShop(item.id) } }
+                Button(item.title) { Task { await model.selectShop(item.id, onSelected: onShopSelected) } }
             }
             Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }
                 .accessibilityIdentifier("ledgerRenameShop")
@@ -206,8 +208,10 @@ struct LedgerHomeView: View {
             .disabled(model.saving || model.hasPendingSave)
     }
 
-    private func row(_ line: ShoppingLine, shop: ShoppingLedger) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+    private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?) -> some View {
+        let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
+        let details = [quantity, exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        return HStack(alignment: .top, spacing: 10) {
             Button {
                 Task {
                     _ = await model.editShop(key: "check-\(line.id)", shopID: shop.id) { try $0.setChecked(lineID: line.id, checked: true) }
@@ -223,11 +227,13 @@ struct LedgerHomeView: View {
             } label: {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(line.name).font(.headline)
-                    Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).foregroundStyle(Theme.secondary)
+                    Text(quantity).foregroundStyle(Theme.secondary)
+                    if let exclusions { Text(verbatim: exclusions) }
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle).font(.footnote).foregroundStyle(Theme.secondary) }
                 }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
             }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                .accessibilityValue(Text(verbatim: details))
                 .accessibilityIdentifier("ledgerInspect-\(line.id)")
         }
     }
@@ -270,10 +276,12 @@ struct LedgerNewShopView: View {
     @Environment(\.dismiss) private var dismiss
     private let originalID: UUID?
     private let originalTitle: String
+    private let onShopSelected: ((UUID) -> Void)?
     @State private var title: String
 
-    init(model: LedgerModel, shopID: UUID? = nil, title: String = "") {
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", onShopSelected: ((UUID) -> Void)? = nil) {
         self.model = model
+        self.onShopSelected = onShopSelected
         originalID = shopID
         originalTitle = title
         _title = State(initialValue: title)
@@ -302,7 +310,7 @@ struct LedgerNewShopView: View {
                 guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
                 shop.title = name
             }) { dismiss() }
-        } else if await model.startShop(title: name) { dismiss() }
+        } else if await model.startShop(title: name, onSelected: onShopSelected) { dismiss() }
     }
 }
 

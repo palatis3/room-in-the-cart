@@ -41,6 +41,39 @@ import XCTest
         }
     }
 
+    func testGuardianChildChoosesPickupAndReviewsNextShopRequest() {
+        app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["My requests"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.staticTexts["guardian.childHousehold"].label, "Fixture home")
+        fill("Tortillas", into: "guardian.childRequestItem")
+        let review = app.buttons["guardian.childRequestReview"]
+        if app.keyboards.firstMatch.exists {
+            app.textFields["guardian.childRequestItem"].typeText("\n")
+        }
+        XCTAssertTrue(review.exists)
+        XCTAssertFalse(review.isEnabled)
+
+        tap(app.buttons["guardian.childRequestMorePickups"])
+        tap(app.buttons["guardian.childRequestPickup"])
+        let secondPickup = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "22222222")).firstMatch
+        XCTAssertTrue(secondPickup.waitForExistence(timeout: 8), app.debugDescription)
+        secondPickup.tap()
+        tap(review)
+        XCTAssertTrue(app.navigationBars["Review your request"].waitForExistence(timeout: 10))
+        let reviewedPickup = element("guardian.childReviewedPickup")
+        let destination = reviewedPickup.label + (reviewedPickup.value as? String ?? "")
+        XCTAssertTrue(destination.contains("22222222"), destination)
+        XCTAssertTrue(destination.contains("2026"), destination)
+        let route = element("household.request.reviewDestination")
+        XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Request for next shop"))
+        enableSwitch("I reviewed the original wording, item, quantity, packs, exclusions and destination.")
+        tap(app.buttons["household.request.sendReviewed"])
+        let saved = app.staticTexts["fixture.requestRows"]
+        let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture saved requests: 1"), object: saved)
+        XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 12), .completed, app.debugDescription)
+    }
+
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
         app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
         app.launch()

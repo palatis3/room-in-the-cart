@@ -93,8 +93,9 @@ class SelectCoreWorkTests(unittest.TestCase):
         self.assertLess(step['run'].index('scripts/discover_ios_tests.py'), step['run'].index('scripts/select_ios_core_work.py'))
         for expression in (workflow['run-name'], workflow['concurrency']['group'], workflow['jobs']['ci-gate']['name']):
             self.assertIn("github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner'", expression)
-        self.assertIn("'dinner-diagnostic' || 'full'", workflow['concurrency']['group'])
-        self.assertIn("'Dinner diagnostic gate' || 'CI gate'", workflow['jobs']['ci-gate']['name'])
+        self.assertIn("'dinner-diagnostic'", workflow['concurrency']['group'])
+        self.assertIn("'Dinner diagnostic gate'", workflow['jobs']['ci-gate']['name'])
+        self.assertTrue(workflow['jobs']['ci-gate']['name'].endswith("|| 'CI gate' }}"))
 
     def test_full_cli_keeps_compiled_plan_and_only_reassigns_reviewed_consumers(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -124,6 +125,17 @@ class SelectCoreWorkTests(unittest.TestCase):
                 ('ui-09', 'bitrise-m4', 3, 5), ('ui-10', 'bitrise-m4', 0, 2),
             ])
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
+            result = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
+                                     '--plan-dir', str(plan_dir), '--github-output', str(output)],
+                                    env={**os.environ, 'GITHUB_EVENT_NAME': 'pull_request',
+                                         'REQUESTED_IOS_SCOPE': 'full', 'IOS_PROVIDER': 'circleci'},
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
+            self.assertEqual(json.loads(outputs['matrix'])['include'],
+                             [row for row in consumers if row['shard'] not in ('ui-01', 'ui-02', 'ui-03')])
+            self.assertEqual(outputs['model_count'], str(len(MODELS)))
+            self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_producer_model_failure_cannot_pass_the_required_gate(self):
         jobs = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]['jobs']
@@ -139,6 +151,7 @@ class SelectCoreWorkTests(unittest.TestCase):
         gate = jobs['ci-gate']
         code = gate['steps'][0]['run'].split("<<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
         results = {name: {'result': 'success'} for name in gate['needs']}
+        results['source-checks']['outputs'] = {'ios_provider': 'github'}
         results['ios-build']['outputs'] = {'model_result': 'success'}
         def execute(value):
             return subprocess.run([sys.executable, '-c', code], capture_output=True, text=True,

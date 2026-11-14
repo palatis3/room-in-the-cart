@@ -7,6 +7,37 @@ import XCTest
     override func setUpWithError() throws { continueAfterFailure = false }
     override func tearDownWithError() throws { app.terminate() }
 
+    func testInListPickupCreationAndSwitchRestoreTheChosenList() {
+        launch(reset: true)
+        tap(app.buttons["openPickupList"])
+        let picker = app.buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let firstName = picker.label
+        let secondName = "Second pickup"
+        let search = app.textFields["ledgerSearch"]
+        tap(search)
+        search.typeText("rice")
+        XCTAssertEqual(search.value as? String, "rice")
+        tap(picker)
+        tap(app.buttons["Start another pickup"])
+        let name = element("ledgerShopName")
+        tap(name)
+        name.typeText(secondName)
+        tap(app.buttons["ledgerCreateShop"])
+        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, secondName)
+        XCTAssertTrue(search.exists && search.value as? String == search.placeholderValue)
+        app.terminate(); launch(reset: false)
+        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        tap(picker)
+        tap(app.buttons[firstName])
+        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, firstName)
+        app.terminate(); launch(reset: false)
+        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, firstName)
+    }
+
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
         tap(element("openPickupList"))
@@ -53,6 +84,18 @@ import XCTest
         XCTAssertFalse(element("itemName").exists, "Transient unsaved forms do not become restored records")
         capture("Selected Dinners tab restored")
     }
+    func testColdCaptureShortcutOpensEntryForTheCurrentPickup() throws {
+        launch(reset: true)
+        tap(app.buttons["openPickupList"])
+        XCTAssertTrue(app.buttons["ledgerShopPicker"].waitForExistence(timeout: 8))
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        let shortcut = try XCTUnwrap(URL(string: "roominthecart-debug://surface/capture"))
+        app.open(shortcut)
+        XCTAssertTrue(app.textViews["ledgerImportText"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.buttons["ledgerCommitImport"].exists)
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
@@ -86,7 +129,8 @@ import XCTest
 extension XCUIApplication {
     /// UIKit may retain a dismissed keyboard below the viewport. Measure one
     /// snapshot instead of waiting for that offscreen accessibility node to vanish.
-    func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5) -> Bool {
+    func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5,
+                                  checking screenIsReady: @escaping (any XCUIElementSnapshot) -> Bool = { _ in true }) -> Bool {
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             guard let root = try? self.snapshot(), !root.frame.isEmpty else { return false }
             var nodes = [root]
@@ -96,7 +140,7 @@ extension XCUIApplication {
                 if node.elementType == .keyboard { return false }
                 if node.elementType == .button && node.identifier == doneIdentifier { return false }
             }
-            return true
+            return screenIsReady(root)
         }, object: nil)
         return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
     }

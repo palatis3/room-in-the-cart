@@ -85,21 +85,25 @@ import XCTest
         XCTAssertGreaterThanOrEqual(value.frame.minY,viewport().minY-4)
         XCTAssertLessThanOrEqual(value.frame.minY,viewport().minY+40)
     }
-    private func reveal(_ value: XCUIElement, hitTarget: Bool = true) {
+    private func reveal(_ value: XCUIElement, hitTarget: Bool = true, searchTowardStart: Bool = false) {
         for attempt in 0..<32 {
             if visible(value,hitTarget:hitTarget) { return }
             let area = viewport()
             let upward: Bool
             if value.exists, !value.frame.isEmpty { upward = value.frame.midY > area.midY }
-            else { upward = attempt < 22 }
+            else { upward = searchTowardStart ? attempt >= 22 : attempt < 22 }
             scrollContent(upward:upward)
         }
         capture("Could not reveal " + value.identifier)
         XCTAssertTrue(visible(value,hitTarget:hitTarget),value.debugDescription)
     }
-    private func tap(_ id: String) { let value=element(id); reveal(value); value.tap() }
-    private func toggle(_ id: String) {
-        let value=element(id); reveal(value)
+    private func tap(_ id: String, searchTowardStart: Bool = false) {
+        let value = element(id)
+        reveal(value, searchTowardStart: searchTowardStart)
+        value.tap()
+    }
+    private func toggle(_ id: String, searchTowardStart: Bool = false) {
+        let value=element(id); reveal(value, searchTowardStart: searchTowardStart)
         if value.value as? String != "1" { value.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
     }
     private func type(_ id: String,_ value:String) { let field=element(id); reveal(field); field.tap(); field.typeText(value); if app.keyboards.buttons["Return"].exists { app.keyboards.buttons["Return"].tap() } }
@@ -252,23 +256,29 @@ import XCTest
     func testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation() {
         launch()
         reveal(element("guardian.create")); XCTAssertFalse(element("guardian.create").isEnabled)
-        toggle("guardian.reviewedNotice"); type("guardian.childLocation","US"); toggle("guardian.declaration")
+        toggle("guardian.reviewedNotice", searchTowardStart: true); type("guardian.childLocation","US"); toggle("guardian.declaration")
         tap("guardian.create"); state("Adulthood verification needed")
         XCTAssertFalse(element("guardian.grant").exists)
         tap("guardian.verify"); state("Waiting for verified adulthood result")
         XCTAssertFalse(element("guardian.grant").exists)
-        tap("guardian.fixture.providerVerified"); state("Adulthood verified; permission still needed")
+        tap("guardian.fixture.providerVerified", searchTowardStart: true); state("Adulthood verified; permission still needed")
         reveal(element("guardian.grant")); XCTAssertFalse(element("guardian.grant").isEnabled)
-        toggle("guardian.reviewedNotice"); type("guardian.childAlias","Sam")
+        toggle("guardian.reviewedNotice", searchTowardStart: true); type("guardian.childAlias","Sam")
         type("guardian.childSignInEmail","fictional-child@example.invalid"); toggle("guardian.grantReviewed")
         tap("guardian.grant"); state("Permission recorded; child invitation needed")
         capture("Guardian separate permission recorded")
         tap("guardian.invite"); XCTAssertTrue(element("guardian.invitationToken").waitForExistence(timeout:10))
+        tap("household.shareBrowserInvitation")
+        guard let closeShare = readySystemShareClose(in: app) else {
+            XCTFail("Expected the system share sheet for the browser invitation"); return
+        }
+        closeShare.tap()
+        XCTAssertTrue(element("guardian.invitationToken").waitForExistence(timeout: 10))
         let clearRetry=app.buttons["Check status, then clear local retry"]; reveal(clearRetry); clearRetry.tap()
         XCTAssertTrue(element("guardian.clearRetryCancel").waitForExistence(timeout:5)); element("guardian.clearRetryCancel").tap()
         XCTAssertTrue(element("guardian.invitationToken").exists)
         let continueSharing=app.buttons["I finished sharing; continue to pairing"]; reveal(continueSharing); continueSharing.tap()
-        tap("guardian.fixture.childClaimed"); state("Child device is waiting for your confirmation")
+        tap("guardian.fixture.childClaimed", searchTowardStart: true); state("Child device is waiting for your confirmation")
         reveal(element("guardian.confirmChild")); XCTAssertFalse(element("guardian.confirmChild").isEnabled)
         type("guardian.pairingCode","ABCD2345"); tap("guardian.confirmChild")
         state("Child device confirmed; finish on that device")

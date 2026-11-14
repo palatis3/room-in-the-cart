@@ -2,6 +2,24 @@ import XCTest
 @testable import CoreDomain
 
 final class StagedImportIdentityTests: XCTestCase {
+    func testEditedSelectionSurvivesReloadAndRequiresSameSourceOnReplay() throws {
+        var shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: "3 pears", source: .selectedText)
+        let original = "2 pears"
+        try shop.commitImport(preview, originalSelection: original)
+        var reopened = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        try reopened.validate()
+        XCTAssertEqual(reopened.importBatches.first?.originalText, original)
+        XCTAssertEqual(reopened.importBatches.first?.preview.originalText, "3 pears")
+        XCTAssertEqual(try reopened.commitImport(preview, originalSelection: original), preview.id)
+        XCTAssertThrowsError(try reopened.commitImport(preview, originalSelection: "4 pears"))
+        XCTAssertThrowsError(try reopened.commitImport(preview))
+        XCTAssertEqual(reopened, shop)
+        let typed = try reopened.stageImport(text: "beans")
+        XCTAssertThrowsError(try reopened.commitImport(typed, originalSelection: original))
+        XCTAssertEqual(reopened, shop)
+    }
+
     func testStagingRejectsTooManyDuplicateRowsBeforeReview() {
         let shop = ShoppingLedger()
         let source = Array(repeating: "2 wraps", count: 1_001).joined(separator: "\n")

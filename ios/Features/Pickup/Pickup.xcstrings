@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Print dated list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print dated list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imprimir lista con fecha"
+          }
+        }
+      }
+    },
+    "Print saved cook instruction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print saved cook instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imprimir la instrucción guardada para cocinar"
+          }
+        }
+      }
+    },
+    "Include the saved private or edited wording in this printout?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include the saved private or edited wording in this printout?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Incluir el texto privado o editado que guardaste en esta impresión?"
+          }
+        }
+      }
+    },
+    "Print this private copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print this private copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imprimir esta copia privada"
+          }
+        }
+      }
+    },
     "Feedback was not saved. Check your pickup and feedback setting before trying again.": {
       "localizations": {
         "en": {
@@ -1848,6 +1916,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descuento aplicable"
+          }
+        }
+      }
+    },
+    "Evidence not saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence not saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardó el comprobante"
           }
         }
       }
@@ -4772,6 +4857,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deshacer aplazamiento y revisar precios"
+          }
+        }
+      }
+    },
+    "This evidence ID matches an existing record. Review the saved entry and its date before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This evidence ID matches an existing record. Review the saved entry and its date before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este identificador coincide con un registro existente. Revisa el registro guardado y su fecha antes de volver a intentarlo."
           }
         }
       }

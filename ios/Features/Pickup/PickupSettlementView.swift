@@ -13,6 +13,7 @@ struct PickupSettlementView: View {
     @FocusState private var field: Field?
     @State private var date = Date()
     @State private var entryID = UUID()
+    @State private var saveError: String?
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
     private var pendingCredits: [SettlementEntry] {
         let entries = model.journey?.settlement.entries ?? []
@@ -138,6 +139,13 @@ struct PickupSettlementView: View {
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
         .keyboardDoneAction(visible: field != nil, title: pTr("Done"), identifier: "pickup.settlement.doneTyping") { field = nil }
+        .alert(pTr("Evidence not saved"), isPresented: Binding(
+            get: { saveError != nil }, set: { if !$0 { saveError = nil } }
+        )) {
+            Button(pTr("Done"), role: .cancel) {}
+        } message: {
+            Text(saveError ?? "")
+        }
         .onChange(of: kind) { _, _ in
             holdKey = ""
             charge = ""
@@ -164,9 +172,13 @@ struct PickupSettlementView: View {
                     charge = ""
                     creditID = ""
                     field = nil
+                } else {
+                    saveError = model.error
                 }
             }
-        } catch { model.error = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.") }
+        } catch {
+            saveError = pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.")
+        }
     }
 }
 

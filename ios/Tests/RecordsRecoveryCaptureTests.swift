@@ -238,7 +238,9 @@ import UIKit
             try FileManager.default.removeItem(at: folder)
         }, willRemoveRecovered: { lifetime.invalidate() })
         await tools.refresh()
-        await tools.confirmDeletion(try XCTUnwrap(tools.reviewRecoveredDeletion(.copy(saved.id), title: "Recovered copy")))
+        let review = try XCTUnwrap(tools.reviewRecoveredDeletion(.copy(saved.id), title: "Recovered copy"))
+        XCTAssertEqual(tools.deletionMessage(for: review), "Recovered copies selected for deletion: 1.\n\nTheir separate workspaces will also be deleted. The original records and exported files are unaffected. This cannot be undone.")
+        await tools.confirmDeletion(review)
         XCTAssertNil(tools.error); XCTAssertFalse(lease.authorize())
         await assertFails { try await lifetime.revalidate(lease, copy: saved, registry: registry) }
         await assertFails { _ = try await lifetime.begin(copy: saved, registry: registry, authorize: { true }) }

@@ -32,6 +32,22 @@ class MacSlotMetadataTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_macos_slots(invalid, ('shard',))
 
+    def test_outage_spreads_fixture_work_across_the_five_github_slots(self):
+        normal = fixture_matrix()['include']
+        outage = fixture_matrix(github_mac_only=True)['include']
+        self.assertEqual([(r['profile'], r['shard']) for r in normal],
+                         [(r['profile'], r['shard']) for r in outage])
+        self.assertEqual({r['provider'] for r in outage}, {'github'})
+        self.assertEqual({r['macos_slot'] for r in outage}, set(range(5)))
+        changes = {b['shard']: (a['macos_slot'], b['macos_slot'])
+                   for a, b in zip(normal, outage) if a['macos_slot'] != b['macos_slot']}
+        self.assertEqual(changes, {
+            'contributor-balanced-05': (2, 4),
+            'SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave': (2, 3),
+            'SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable': (2, 3),
+            'SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption': (0, 4),
+        })
+
     def test_all_three_planners_keep_complete_cases_and_emit_valid_slots(self):
         methods = [f'{UI_TARGET}/JourneyTests/test{i:02d}()' for i in range(10)]
         plan = make_plan(enumeration([MODEL, *methods]), DURATIONS, 10)

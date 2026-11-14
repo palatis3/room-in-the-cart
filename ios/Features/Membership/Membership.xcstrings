@@ -239,6 +239,40 @@
         }
       }
     },
+    "Household and pickup roles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household and pickup roles"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roles del hogar y de la recogida"
+          }
+        }
+      }
+    },
+    "Household organizer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household organizer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizador del hogar"
+          }
+        }
+      }
+    },
     "Household subscription": {
       "extractionState": "manual",
       "localizations": {
@@ -489,6 +523,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las compras no están disponibles en esta versión."
+          }
+        }
+      }
+    },
+    "Restore finished. This account currently has Free access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore finished. This account currently has Free access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La restauración finalizó. Esta cuenta tiene acceso gratuito por el momento."
           }
         }
       }
@@ -850,18 +901,18 @@
         }
       }
     },
-    "Membership changed. Refresh its status and review the seat change again.": {
+    "Membership changed. Review the current seats before making another change.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Membership changed. Refresh its status and review the seat change again."
+            "value": "Membership changed. Review the current seats before making another change."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía cambió. Actualiza su estado y vuelve a revisar el cambio de plaza."
+            "value": "La membresía cambió. Revisa las plazas actuales antes de hacer otro cambio."
           }
         }
       }
@@ -883,19 +934,19 @@
         }
       }
     },
-    "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.": {
+    "Only the adult who purchased this household’s membership can manage its subscription and assign seats.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats."
+            "value": "Only the adult who purchased this household’s membership can manage its subscription and assign seats."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu plaza usa la membresía de este hogar. Solo quien la compró puede suscribirse o cambiar las plazas."
+            "value": "Solo la persona adulta que compró la membresía de este hogar puede gestionar la suscripción y asignar plazas."
           }
         }
       }

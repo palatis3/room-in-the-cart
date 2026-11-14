@@ -38,6 +38,7 @@ export class OfficialAppleBillingGateway implements AppleBillingGateway {
     if (!config.bundleID || !config.productID || !config.keyID || !uuid.test(config.issuerID) || !config.signingKey || !config.rootCertificates.length
       || !['Production', 'Sandbox'].includes(config.environment)
       || (config.environment === 'Production' && (!Number.isSafeInteger(config.appAppleID) || config.appAppleID! <= 0))) throw new Error('Incomplete Apple billing configuration');
+    if (config.productID === 'local.testing.household.annual') throw new Error('Apple billing product ID must not use the local StoreKit fixture');
     for (const root of config.rootCertificates) {
       const cert = new X509Certificate(root);
       if (!cert.ca || !cert.verify(cert.publicKey)) throw new Error('Apple roots must be trusted self-signed CA certificates from Apple PKI');

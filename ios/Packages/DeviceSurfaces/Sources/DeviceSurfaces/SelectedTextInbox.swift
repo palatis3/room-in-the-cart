@@ -21,7 +21,7 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
 /// Only selected text and bounded deduplication receipts belong in this database.
 /// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
 public actor SelectedTextInbox {
-    public enum ReviewLimit: Error { case tooManyItems }
+    public enum ReviewLimit: Error { case tooManyItems, receiptLimitReached }
     public static let maximumEntryBytes = 65_536
     public static let maximumLines = 500
     public static let maximumPending = 20
@@ -51,7 +51,8 @@ public actor SelectedTextInbox {
             let counts = try database.rows("SELECT COUNT(*), COALESCE(SUM(CASE WHEN disposition='pending' THEN 1 ELSE 0 END),0), COALESCE(SUM(bytes),0) FROM inbox")[0]
             guard let all = Int(counts[0] ?? ""), let pending = Int(counts[1] ?? ""), let bytes = Int(counts[2] ?? "") else { throw SurfaceError.corrupt }
             let size = originalText.utf8.count + (editedText?.utf8.count ?? 0)
-            guard all < Self.maximumReceipts, pending < Self.maximumPending, bytes <= Self.maximumTotalBytes - size else { throw SurfaceError.capacity }
+            guard all < Self.maximumReceipts else { throw ReviewLimit.receiptLimitReached }
+            guard pending < Self.maximumPending, bytes <= Self.maximumTotalBytes - size else { throw SurfaceError.capacity }
             try database.execute("INSERT INTO inbox VALUES(?,?,?,?,?,?,?,?)", [.text(operationID.uuidString), .text(digest), .text(originalText), editedText.map(DBValue.text) ?? .null, .integer(Int64(size)), .double(now.timeIntervalSince1970), .double(now.addingTimeInterval(Self.lifetime).timeIntervalSince1970), .text(InboxDisposition.pending.rawValue)])
             guard let saved = try receipt(operationID) else { throw SurfaceError.corrupt }; return saved
         }
@@ -132,6 +133,22 @@ public actor SelectedTextInbox {
 }
 
 extension SelectedTextInbox {
+    public static func loadSelectedText(from item: NSExtensionItem,
+                                        completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
+        if let text = item.attributedContentText?.string,
+           text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil {
+            guard fitsEnvelope(original: text) else { completion(.failure(.capacity)); return }
+            guard !text.contains("\0") else { completion(.failure(.invalid)); return }
+            completion(.success(text))
+            return
+        }
+        let providers = (item.attachments ?? []).filter {
+            $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+        }
+        guard providers.count == 1 else { completion(.failure(.unsupported)); return }
+        loadPlainText(from: providers[0], completion: completion)
+    }
+
     /// Consume the system's temporary copy inside the provider callback.
     public static func loadPlainText(from provider: NSItemProvider,
                                      completion: @escaping @Sendable (Result<String, SurfaceError>) -> Void) {
@@ -147,17 +164,8 @@ extension SelectedTextInbox {
         }
     }
 
-    private static func readPlainText(at url: URL, type: UTType) throws -> String {
-        let attributes = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
-        guard attributes.isRegularFile == true, attributes.isSymbolicLink != true,
-              let size = attributes.fileSize, size > 0 else { throw SurfaceError.invalid }
-        guard size <= maximumEntryBytes else { throw SurfaceError.capacity }
-        let file = try FileHandle(forReadingFrom: url)
-        defer { try? file.close() }
-        let bytes = try file.read(upToCount: maximumEntryBytes + 1) ?? Data()
-        guard bytes.count <= maximumEntryBytes else { throw SurfaceError.capacity }
-        guard bytes.count == size else { throw SurfaceError.invalid }
-
+    static func readPlainText(at url: URL, type: UTType) throws -> String {
+        let bytes = try readRegularFile(at: url, maximumBytes: maximumEntryBytes)
         let hasUTF16Mark = bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF])
         let text: String?
         if hasUTF16Mark || type == .utf16ExternalPlainText || type == .utf16PlainText {
@@ -169,7 +177,7 @@ extension SelectedTextInbox {
             let payload = bytes.starts(with: [0xEF, 0xBB, 0xBF]) ? bytes.dropFirst(3) : bytes[...]
             text = String(data: payload, encoding: .utf8)
         }
-        guard let text, !text.isEmpty, !text.contains("\0") else { throw SurfaceError.invalid }
+        guard let text, text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil, !text.contains("\0") else { throw SurfaceError.invalid }
         guard fitsEnvelope(original: text) else { throw SurfaceError.capacity }
         return text
     }

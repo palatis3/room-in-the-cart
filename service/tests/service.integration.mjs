@@ -3,7 +3,7 @@ import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import {randomUUID,randomBytes} from 'node:crypto';
-import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
+import {generateKeyPair,exportJWK,createLocalJWKSet,decodeJwt,SignJWT} from 'jose';
 import {migrate} from '../scripts/migrate.mjs';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
@@ -250,7 +250,10 @@ test('real JWT auth denies missing, forged, expired, wrong issuer and wrong audi
     const token=await new SignJWT({session_id:randomUUID()}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(claims.iss).setAudience(claims.aud).setSubject(f.actors.Mia.subject).setIssuedAt().setExpirationTime(claims.exp).sign(privateKey);
     assert.equal((await f.http({token},'GET','/bootstrap')).status,401);
   }
-  assert.equal((await f.http({token:f.actors.Mia.token.slice(0,-2)+'zz'},'GET','/bootstrap')).status,401);
+  const {privateKey: untrustedKey} = await generateKeyPair('ES256');
+  const forgedToken = await new SignJWT(decodeJwt(f.actors.Mia.token))
+    .setProtectedHeader({alg:'ES256', kid:jwk.kid}).sign(untrustedKey);
+  assert.equal((await f.http({...f.actors.Mia, token:forgedToken},'GET','/bootstrap')).status,401);
 });
 test('whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once',async()=>{
   const f=await fixture(),sent=await f.send(),p=await f.preview(sent.request);assert.equal(p.status,200);
@@ -552,6 +555,153 @@ test('new private tables enforce tenant isolation and provider checker cannot le
   }finally{client.release();}
   const security=await admin.query("SELECT p.prosecdef,p.proconfig,has_function_privilege('public',p.oid,'EXECUTE') AS public_execute FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='ritc' AND p.proname='provider_session_live'");
   assert.equal(security.rows[0].public_execute,false);assert.equal(security.rows[0].prosecdef,true);assert.deepEqual(security.rows[0].proconfig,['search_path=pg_catalog']);
+});
+
+test('contributors see the next-shop destination after freeze and placement without checkout details',async()=>{
+  const f=await fixture();
+  const read=async()=>{const row=await f.http('Alex','GET','/bootstrap');assert.equal(row.status,200);return row.data;};
+  assert.equal((await read()).nextShopOnly,false);
+  assert.equal((await f.command('Mia','shop.freeze',{})).status,200);
+  const frozen=await read();
+  assert.equal(frozen.nextShopOnly,true);assert.equal(frozen.phase,undefined);assert.equal(frozen.quote,undefined);
+  const sent=await f.send('Alex',{route:'current'});
+  assert.equal(sent.request.route,'next');
+  assert.equal((await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1})).status,200);
+  assert.equal((await read()).nextShopOnly,true);
+});
+
+test('request pickup choices expose only destination facts to a scoped organizer and an authorized child',async()=>{
+  const {f,actor,grantId}=await helperFixture();
+  const draft=await nextDraft(f);
+  assert.equal((await f.command('Mia','shop.freeze',{})).status,200);
+  const session=await f.http('Mia','POST','/v1/session',{householdId:f.h,scope:'own_requests'});
+  assert.equal(session.status,200);
+  assert.equal(session.data.role,'contributor');
+  const headers={Cookie:session.headers.get('set-cookie').split(';')[0]};
+  const base=origin+'/v1/households/'+f.h;
+  const list=await fetch(base+'/requests/pickups',{headers});
+  assert.equal(list.status,200);
+  const page=await list.json();
+  assert.deepEqual(Object.keys(page).sort(),['nextCursor','shops']);
+  assert.equal(page.nextCursor,null);
+  assert.deepEqual(page.shops.map(row=>row.shopId),[draft,f.shopId]);
+  for(const row of page.shops){
+    assert.deepEqual(Object.keys(row).sort(),['createdAt','nextShopOnly','shopId']);
+    assert.equal(new Date(row.createdAt).toISOString(),row.createdAt);
+    assert.equal(row.nextShopOnly,row.shopId===f.shopId);
+  }
+  const afterDraft=await fetch(base+'/requests/pickups?cursor='+draft,{headers});
+  assert.equal(afterDraft.status,200);
+  assert.deepEqual(await afterDraft.json(),{shops:[page.shops[1]],nextCursor:null});
+  assert.equal((await fetch(base+'/shops?scope=owned',{headers})).status,404);
+  const child=await f.http('Sam','GET','/requests/pickups');
+  assert.equal(child.status,200);
+  assert.deepEqual(child.data,page);
+  assert.equal((await f.http('Sam','GET','/shops')).status,404);
+  assert.equal((await f.http(actor,'GET','/requests/pickups')).status,404);
+  assert.equal((await f.http(actor,'GET','/requests/pickups',undefined,{'X-View-Grant-ID':grantId})).status,404);
+
+  const selected=page.shops[0].shopId;
+  const envelope={...f.envelope('Mia','request.send',{clientRequestId:randomUUID(),originalItem:'Scoped rice',
+    ownQuantity:null,authoredAt:new Date().toISOString(),route:'current'},{shopRevision:0,authorityEpoch:0}),
+    replayWindow:session.data.replayWindow.id,shopId:selected};
+  const sent=await fetch(base+'/commands',{method:'POST',headers:{...headers,Origin:'https://web.fixture.invalid',
+    'X-CSRF-Token':session.data.csrf,'Content-Type':'application/json'},body:JSON.stringify(envelope)});
+  assert.equal(sent.status,200);
+  const {request}=await sent.json();
+  assert.equal(request.shopId,selected);
+  assert.equal(request.route,'current');
+  const inbox=(shopId)=>f.http('Mia','GET','/shops/'+shopId+'/inbox',undefined,{'X-Shop-ID':shopId});
+  assert.deepEqual((await inbox(selected)).data.requests.map(row=>row.requestId),[request.requestId]);
+  assert.deepEqual((await inbox(f.shopId)).data.requests,[]);
+  const next=await f.send('Sam',{route:'current'});
+  assert.equal(next.request.shopId,f.shopId);
+  assert.equal(next.request.route,'next');
+});
+
+test('closing a pickup hides its destination, preserves an exact send receipt and rejects a fresh request',async()=>{
+  const f=await fixture();
+  const draft=await nextDraft(f);
+  const first=await f.send('Sam');
+  const closed=await f.http('Mia','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),
+    sourceVersion:{shopRevision:1,authorityEpoch:1,financialRevision:0},allEvidenceEntered:false,closeShop:true});
+  assert.equal(closed.status,200);
+  assert.equal(closed.data.appShopClosed,true);
+  const list=await f.http('Sam','GET','/requests/pickups');
+  assert.equal(list.status,200);
+  assert.deepEqual(list.data.shops.map(row=>row.shopId),[draft]);
+  assert.equal((await f.http('Sam','GET','/requests/pickups?cursor='+f.shopId)).status,404);
+
+  const {envelope,...receipt}=first;
+  const replay=await f.http('Sam','POST','/commands',envelope);
+  assert.equal(replay.status,200);
+  assert.deepEqual(replay.data,receipt);
+  const fresh={...envelope,clientKey:randomUUID(),body:{...envelope.body,clientRequestId:randomUUID()}};
+  const refused=await f.http('Sam','POST','/commands',fresh);
+  assert.equal(refused.status,409);
+  assert.equal(refused.data.error.code,'pickup_closed');
+  const mine=await f.http('Sam','GET','/requests/mine');
+  assert.equal(mine.status,200);
+  assert.deepEqual(mine.data.requests.map(row=>row.requestId),[first.request.requestId]);
+});
+
+test('a browser switches between cook and contributor invitations for the same household',async()=>{
+  const {f,person,actor,grantId}=await helperFixture();
+  const cook=await f.http(actor,'POST','/v1/session',{householdId:f.h,grantId});
+  assert.equal(cook.status,200);assert.equal(cook.data.nextShopOnly,undefined);
+  let cookie=cook.headers.get('set-cookie').split(';')[0],csrf=cook.data.csrf;
+  async function browser(path,body){
+    return fetch(origin+path,{method:body?'POST':'GET',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid','X-CSRF-Token':csrf,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  }
+  async function activate(input){
+    const response=await browser('/v1/session',input);
+    assert.equal(response.status,200);
+    cookie=response.headers.get('set-cookie').split(';')[0];
+    const state=await response.json();csrf=state.csrf;return state;
+  }
+  const contributed={householdId:f.h,scope:'own_requests'};
+  const deviceCount=async()=>(await admin.query('SELECT count(*)::int AS count FROM ritc.device WHERE household_id=$1 AND member_id=$2',[f.h,cook.data.memberId])).rows[0].count;
+  const before=await deviceCount(),oldCookCookie=cookie;
+  assert.equal((await f.http(actor,'POST','/v1/session',contributed)).status,403);
+  assert.equal(await deviceCount(),before,'denied first-time activation rolls back enrollment');
+  assert.equal((await browser('/v1/session',contributed)).status,403,'a cook alone cannot acquire contributor access');
+  const issued=await f.http('Mia','POST','/invites',{kind:'adult_contributor',expiresInHours:24});
+  assert.equal(issued.status,200);
+  const joined=await browser('/v1/invites/redeem',{token:issued.data.token,intent:'join',adultAttestation:true});
+  assert.equal(joined.status,200);assert.equal((await joined.json()).role,'contributor');
+  const active=await activate(contributed);
+  assert.equal(await deviceCount(),before,'switching roles reuses the current device');
+  assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:oldCookCookie}})).status,403,'the replaced cook cookie is unusable');
+  const limitedCredential=cookie.split('.')[1];
+  assert.match(limitedCredential,/^own_[A-Za-z0-9_-]{43}$/,'older servers must reject this credential outright');
+  const strippedCookie=cookie.replace('.own_','.');
+  assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:strippedCookie}})).status,403);
+  assert.equal(active.role,'contributor');assert.equal(active.grantId,undefined);
+  assert.deepEqual(active.capabilities.sort(),['own_requests','request_queue_permission']);
+  assert.equal((await (await browser('/v1/session')).json()).role,'contributor');
+  assert.equal((await browser('/v1/views/'+grantId+'/current')).status,404);
+  const base='/v1/households/'+f.h;
+  await f.send('Alex',{originalItem:'Another person’s groceries'});
+  const command={v:1,replayWindow:active.replayWindow.id,clientKey:randomUUID(),kind:'request.send',shopId:f.shopId,base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:randomUUID(),originalItem:'My rice',ownQuantity:null,authoredAt:new Date().toISOString(),route:'current'}};
+  assert.equal((await browser(base+'/commands',command)).status,200);
+  const mine=await browser(base+'/requests/mine');assert.equal(mine.status,200);
+  assert.deepEqual((await mine.json()).requests.map(row=>row.originalItem),['My rice']);
+  assert.equal((await browser(base+'/shops/'+f.shopId+'/inbox')).status,404);
+  assert.equal((await activate({householdId:f.h})).role,'contributor','refresh keeps the chosen scope');
+  assert.equal((await browser('/v1/session',{...contributed,grantId})).status,422);
+  const other=await activate({householdId:person.h});
+  assert.equal(other.role,'contributor','a cookie stays scoped in the household where this person is the shopper and organizer');
+  assert.deepEqual(other.capabilities.sort(),['own_requests','request_queue_permission']);
+  const privileged=person.envelope('Mia','shop.create',{quote:person.quote,lines:[person.line]},{shopRevision:0,authorityEpoch:0});
+  privileged.replayWindow=other.replayWindow.id;
+  assert.equal((await browser('/v1/households/'+person.h+'/commands',privileged)).status,404);
+  assert.equal((await activate({householdId:f.h,grantId})).grantId,grantId);
+  assert.equal((await browser('/v1/views/'+grantId+'/current')).status,200);
+  assert.equal((await browser(base+'/requests/mine')).status,404);
+  const renewed=await activate(contributed);
+  await admin.query('UPDATE ritc.member SET can_contribute=false WHERE household_id=$1 AND member_id=$2',[f.h,renewed.memberId]);
+  assert.equal((await browser(base+'/requests/mine')).status,403);
+  assert.equal((await browser('/v1/session')).status,403);
 });
 
 test('browser helper session stays bound to its selected grant and cannot fall back after revocation',async()=>{

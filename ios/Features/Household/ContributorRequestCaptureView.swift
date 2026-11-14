@@ -5,6 +5,7 @@ import SwiftUI
     @ObservedObject var household: HouseholdModel
     let scope: ContributorRequestScope
     let capture: Bool
+    var pickupLabel: String? = nil
     @State private var review: ContributorRequestReview?
     @State private var approved = false
     @State private var failure: String?
@@ -21,7 +22,12 @@ import SwiftUI
                     Section(ht("Request the household will receive")) {
                         LabeledContent(ht("Item"), value: review.item)
                         LabeledContent(ht("Quantity"), value: review.quantity.isEmpty ? ht("Unknown amount") : review.quantity)
+                        if let pickupLabel {
+                            LabeledContent(GuardianCopy.text("Pickup for this request"), value: pickupLabel)
+                                .accessibilityIdentifier("guardian.childReviewedPickup")
+                        }
                         LabeledContent(ht("Destination"), value: scope.destination)
+                            .accessibilityIdentifier("household.request.reviewDestination")
                         if scope.editing != nil { Text(ht("This edits only your selected request.")) }
                         if scope.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
                         Text(ht("Only the shopper can change the basket. Sending a request does not buy an item or confirm its price."))

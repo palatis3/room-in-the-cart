@@ -50,8 +50,10 @@ final class RecordsAdapterTests: XCTestCase {
         tools.invalidateForSourceErasure()
         XCTAssertNil(tools.importPresentation)
         let next = try XCTUnwrap(tools.beginImport(.recipeFile))
-        let staleStaged = await tools.stageManualRecipe(ImportedRecipe(title: "Earlier handwritten recipe"), from: oldManual)
-        XCTAssertFalse(staleStaged)
+        do {
+            try await tools.stageManualRecipe(ImportedRecipe(title: "Earlier handwritten recipe"), from: oldManual)
+            XCTFail("The previous editor must lose access")
+        } catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
         await tools.finishFileImport(.failure(ArchiveError.malformed), from: first)
         tools.dismissImport(oldManual)
         XCTAssertEqual(tools.importPresentation?.id, next.id)
@@ -64,9 +66,29 @@ final class RecordsAdapterTests: XCTestCase {
         tools.cancelReview()
 
         let manual = try XCTUnwrap(tools.beginImport(.manualRecipe))
-        let staged = await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
-        XCTAssertTrue(staged)
+        try await tools.stageManualRecipe(ImportedRecipe(title: "Current handwritten recipe"), from: manual)
         XCTAssertEqual(tools.review?.rows.map(\.record.title), ["Current handwritten recipe"])
+        let saved = try await registry.refreshList()
+        XCTAssertTrue(saved.isEmpty)
+    }
+
+    @MainActor func testManualRecipeSizeErrorStaysInEditorAndCorrectedDraftCanBeReviewed() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { RecordsSnapshotBatch() },
+                                     validateNativePayload: { _ in }, openRecovered: { _ in })
+        let editor = try XCTUnwrap(model.beginImport(.manualRecipe))
+        var draft = ImportedRecipe(title: "Arroz", ingredients: [String(repeating: "a", count: 8193)])
+        do {
+            try await model.stageManualRecipe(draft, from: editor)
+            XCTFail("An oversized ingredient must be corrected before review")
+        } catch { XCTAssertEqual(error as? ArchiveError, .tooLarge) }
+        XCTAssertNil(model.error, "A draft error must not appear on the underlying Records screen.")
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.importPresentation?.id, editor.id)
+        draft.ingredients = ["½ taza de arroz"]
+        try await model.stageManualRecipe(draft, from: editor)
+        XCTAssertEqual(model.review?.rows.first?.record.helperLines.first?.label, draft.ingredients.first)
         let saved = try await registry.refreshList()
         XCTAssertTrue(saved.isEmpty)
     }
@@ -148,7 +170,7 @@ final class RecordsAdapterTests: XCTestCase {
             })
         await model.refresh()
         let deletion = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
-        XCTAssertEqual(deletion.copyCount, 1)
+        XCTAssertEqual(model.deletionMessage(for: deletion), "Recovered copies selected for deletion: 1.\n\nThe original records and exported files are unaffected. You can undo this deletion during this app session.")
         try await save(added)
         await model.confirmDeletion(deletion)
         XCTAssertEqual(model.error, .deletionSelectionChanged)
@@ -164,7 +186,7 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(deletedSources.isEmpty)
         await model.refresh()
         let confirmed = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
-        XCTAssertEqual(confirmed.copyCount, 2)
+        XCTAssertTrue(model.deletionMessage(for: confirmed).hasPrefix("Recovered copies selected for deletion: 2."))
         try await save(elsewhere)
         await model.confirmDeletion(confirmed)
         XCTAssertNil(model.error)
@@ -174,7 +196,9 @@ final class RecordsAdapterTests: XCTestCase {
         await model.confirmDeletion(confirmed)
         XCTAssertEqual(model.error, .deletionSelectionChanged)
         XCTAssertEqual(Set(model.recoveredRecords.map(\.record.id)), [first.id, added.id, elsewhere.id])
-        await model.confirmDeletion(try XCTUnwrap(model.reviewSourceDeletion(elsewhere)))
+        let sourceReview = try XCTUnwrap(model.reviewSourceDeletion(elsewhere))
+        XCTAssertEqual(model.deletionMessage(for: sourceReview), "Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected. This cannot be undone.")
+        await model.confirmDeletion(sourceReview)
         XCTAssertNil(model.error)
         XCTAssertEqual(deletedSources, [elsewhere.id])
     }
@@ -734,6 +758,24 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNotNil(model.error)
         XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before)
     }
+    func testPickedFileReadsRegularDocumentsAndRejectsASymbolicLink() async throws {
+        let directory = try temporaryDirectory()
+        let document = directory.appendingPathComponent("recipe.json")
+        let content = Data(#"{"@type":"Recipe","name":"Arroz"}"#.utf8)
+        try content.write(to: document)
+        let selected = try await RecordsFileDocument.readPickedBytes(at: document)
+        XCTAssertEqual(selected, content)
+
+        let link = directory.appendingPathComponent("other.json")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: document)
+        do {
+            _ = try await RecordsFileDocument.readPickedBytes(at: link)
+            XCTFail("An indirect document must not supply another file’s contents")
+        } catch {
+            XCTAssertEqual(error as? ArchiveError, .unavailable)
+        }
+    }
+
     @MainActor func testFileImportRechecksAccessBeforeValidatingExternalContents() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
@@ -800,6 +842,39 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.status, recordsText("This file contains no records to recover."))
         XCTAssertTrue(model.reopenedCopyIDs.isEmpty)
         XCTAssertEqual(try Data(contentsOf: registryURL), before)
+    }
+
+    @MainActor func testOversizedIngredientSkipsOnlyItsRecipeAndTheReviewedBatchReopens() async throws {
+        let directory = try temporaryDirectory()
+        let manifest = directory.appendingPathComponent("manifest.json")
+        let registry = try RecoveryRegistry(url: manifest)
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let ingredient = String(repeating: "ñ", count: 4096)
+        let recipes = [
+            ["@type": "Recipe", "name": "Arroz", "recipeIngredient": [ingredient]],
+            ["@type": "Recipe", "name": "Oversized", "recipeIngredient": [ingredient + "x"]]
+        ]
+        let selected = directory.appendingPathComponent("recipes.json")
+        try JSONSerialization.data(withJSONObject: recipes).write(to: selected)
+        await model.importFile(selected, recipes: true)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.recipeReport?.skippedRows, 1)
+        XCTAssertEqual(model.review?.rows.map(\.record.title), ["Arroz"])
+        let beforeApproval = try await registry.refreshList()
+        XCTAssertTrue(beforeApproval.isEmpty)
+
+        await model.applyReviewedImport()
+        let reopened = try RecoveryRegistry(url: manifest)
+        let records = try await reopened.refreshList()
+        XCTAssertEqual(records.count, 1)
+        let saved = try XCTUnwrap(records.first?.record)
+        let original = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(saved.nativePayload))
+        XCTAssertEqual(original.ingredients, [ingredient])
+        XCTAssertEqual(saved.helperLines.map(\.label), [ingredient])
+        await model.undoImport()
+        let afterUndo = try await reopened.refreshList()
+        XCTAssertTrue(afterUndo.isEmpty)
     }
 
     @MainActor func testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome() async throws {

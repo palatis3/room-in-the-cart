@@ -5,9 +5,12 @@ import { preview } from 'vite';
 
 let browser;
 test.before(async () => {
+  const started = performance.now();
+  console.info('[outbox-eviction] Starting Chrome');
   browser = await chromium.launch({
-    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 30_000
+    channel: 'chrome', executablePath: process.env.CHROME_BIN, timeout: 60_000
   });
+  console.info(`[outbox-eviction] Chrome ${browser.version()} ready after ${Math.round(performance.now() - started)}ms`);
 });
 test.after(() => browser?.close());
 

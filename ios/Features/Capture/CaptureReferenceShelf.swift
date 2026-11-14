@@ -48,7 +48,7 @@ import SwiftUI
                         Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
                             .accessibilityLabel(captureText("Saved reduced-size source reference"))
                     }
-                    Text(entry.originalText).textSelection(.enabled)
+                    SourceReferenceWording(source: entry)
                     if let barcode = entry.barcode {
                         Text(captureText("Manually matched code") + ": " + barcode.value).textSelection(.enabled)
                     }
@@ -112,5 +112,24 @@ import SwiftUI
             let values = try await CaptureMediaStore.shared.list(target: target, authorize: authorize)
             guard attempt == generation, authorize() else { return }; entries = values; failed = false
         } catch { if attempt == generation, authorize() { entries = []; failed = true } }
+    }
+}
+
+struct SourceReferenceWording: View {
+    let source: SourceMediaRecord
+    var originalIdentifier: String? = nil
+
+    var body: some View {
+        if let reviewed = source.reviewedText {
+            Text(captureText("Reviewed wording")).font(.headline)
+            Text(reviewed.isEmpty ? recordsText("Not entered") : reviewed).textSelection(.enabled)
+            Text(ledgerText("Original wording")).font(.headline)
+        }
+        let original = Text(source.originalText).textSelection(.enabled)
+        if let originalIdentifier {
+            original.accessibilityIdentifier(originalIdentifier)
+        } else {
+            original
+        }
     }
 }

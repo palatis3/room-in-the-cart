@@ -9,7 +9,8 @@ enum ScanImageNormalizer {
         guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
               CGImageSourceGetCount(source) == 1, let type = CGImageSourceGetType(source),
               [UTType.jpeg.identifier, UTType.png.identifier, UTType.heic.identifier, UTType.heif.identifier].contains(type as String),
-              let dimensions = properties(source), dimensions.0 > 0, dimensions.1 > 0,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let dimensions = dimensions(properties), dimensions.0 > 0, dimensions.1 > 0,
               dimensions.0 <= 30_000_000 / dimensions.1 else { throw ScanFailure.invalidImage }
         for side in [2500, 1800, 1200] {
             guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
@@ -24,14 +25,17 @@ enum ScanImageNormalizer {
         throw ScanFailure.tooLarge
     }
     static func validateReference(_ data: Data) throws {
-        guard !data.isEmpty, data.count <= ScanLimits.maximumReferenceBytes,
+        // ImageIO can report a truncated JPEG as complete after reading its header.
+        // Our encoder always terminates each standalone reference with the JPEG EOI marker.
+        guard data.count <= ScanLimits.maximumReferenceBytes, data.suffix(2).elementsEqual([0xff, 0xd9]),
               let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
               CGImageSourceGetCount(source) == 1, CGImageSourceGetType(source) as String? == UTType.jpeg.identifier,
-              let size = properties(source), size.0 > 0, size.1 > 0, size.0 <= 2500, size.1 <= 2500 else { throw ScanFailure.invalidImage }
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              properties[kCGImagePropertyGPSDictionary] == nil,
+              let size = dimensions(properties), size.0 > 0, size.1 > 0, size.0 <= 2500, size.1 <= 2500 else { throw ScanFailure.invalidImage }
     }
-    private static func properties(_ source: CGImageSource) -> (Int, Int)? {
-        guard let values = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let width = values[kCGImagePropertyPixelWidth] as? Int, let height = values[kCGImagePropertyPixelHeight] as? Int else { return nil }
+    private static func dimensions(_ values: [CFString: Any]) -> (Int, Int)? {
+        guard let width = values[kCGImagePropertyPixelWidth] as? Int, let height = values[kCGImagePropertyPixelHeight] as? Int else { return nil }
         return (width, height)
     }
 }

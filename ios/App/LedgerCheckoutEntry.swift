@@ -56,15 +56,26 @@ enum LedgerCheckoutAdapter {
         }
         let priorPackLineIDs = Set(previous?.ledgerPackSelections.map(\.lineID) ?? [])
         let reviewedPackLineIDs = Set(packSelections.filter { $0.shopID == shop.id }.map(\.lineID)).union(priorPackLineIDs)
+        let itemExclusions = shop.itemExclusions
+        let itemPackages = shop.itemPackages
         let lines = try activeLines.compactMap { line -> BasketLine? in
             if selectedPacks[line.id]?.isNoPurchase == true { return nil }
             guard let quantity = try shop.quantity(forLineID: line.id) else { throw LedgerCheckoutError.missingQuantity }
+            let exclusions = itemExclusions[line.id] ?? []
             if let selection = selectedPacks[line.id], let purchased = selection.purchasedQuantity, let price = selection.selectedResult.totalCost {
-                return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price))
+                let offer = selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA : selection.request.offerB
+                guard let count = selection.selectedResult.packsToBuy, let size = offer.usableQuantity else { throw LedgerPackError.invalidEvidence }
+                let packs = [BasketPackage(count: count, amountPerPack: size.amount, unit: size.unit)]
+                return BasketLine(id: line.id, name: line.name, quantity: purchased, expectedCost: .exact(price),
+                                  itemExclusions: exclusions, packages: packs)
             }
-            let old = previous?.basket?.current.lines.first { $0.id == line.id && $0.name == line.name && $0.quantity == quantity }
+            let packs = itemPackages[line.id] ?? []
+            let old = previous?.basket?.current.lines.first {
+                $0.id == line.id && $0.name == line.name && $0.quantity == quantity && ($0.itemExclusions ?? []) == exclusions && ($0.packages ?? []) == packs
+            }
             return BasketLine(id: line.id, name: line.name, quantity: quantity,
-                              expectedCost: sameBasis && !priorPackLineIDs.contains(line.id) ? old?.expectedCost ?? .unknown(reason: pTr("Recheck the price for this shop")) : .unknown(reason: pTr("Recheck the price for this shop")))
+                              expectedCost: sameBasis && !priorPackLineIDs.contains(line.id) ? old?.expectedCost ?? .unknown(reason: pTr("Recheck the price for this shop")) : .unknown(reason: pTr("Recheck the price for this shop")),
+                              itemExclusions: exclusions, packages: packs)
         }
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
         for line in activeLines {
@@ -210,7 +221,7 @@ enum LedgerCheckoutAdapter {
         return await ledger.change(key: "open-next-shop-\(journey.id.uuidString)") { workspace in
             if !workspace.shops.contains(where: { $0.id == journey.id }) {
                 var shop = ShoppingLedger(id: journey.id, title: pTr("Next shop"))
-                for line in basket.current.lines { try shop.addManualLine(name: line.name, quantity: line.quantity) }
+                for line in basket.current.lines { try shop.addManualLine(name: line.name, quantity: line.quantity, exclusions: line.itemExclusions ?? []) }
                 workspace.shops.append(shop)
             }
             workspace.selectedShopID = journey.id
@@ -250,10 +261,12 @@ struct LedgerCheckoutEntry: View {
                         Button(pTr("Review store, slot and budget")) { editingFacts = true }
                     }
                     Section(pTr("Shopping list")) {
+                        let restrictions = shop.listExclusions
                         ForEach(shop.lines.filter { !$0.isTrashed && !$0.isHandled }) { line in
                             NavigationLink { LedgerIngredientView(model: ledger, shopID: shop.id, lineID: line.id) } label: {
                                 VStack(alignment: .leading) {
                                     Text(line.name)
+                                    if let exclusion = restrictions[line.id] { Text(verbatim: exclusion) }
                                     Text((try? shop.quantity(forLineID: line.id)).map { pQuantity($0) } ?? pTr("Quantity unresolved"))
                                 }
                             }

@@ -15,17 +15,17 @@ import XCTest
     func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() throws {
         launch(reset: true)
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: app.textViews["ledgerImportText"])
         tap(app.buttons["ledgerReviewImport"]); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview", into: "Source of these prices", replacing: true)
-        fill("4.00", into: "coffee"); fill("3.00", into: "wraps")
-        for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: label) }
+        fill("Family market", into: app.textFields["Store"], replacing: true)
+        fill("Main branch", into: app.textFields["Branch"], replacing: true)
+        fill("Tuesday 5 PM", into: app.textFields["Pickup or delivery slot"], replacing: true)
+        fill("Retailer preview", into: app.textFields["Source of these prices"], replacing: true)
+        fill("4.00", into: app.textFields["coffee"]); fill("3.00", into: app.textFields["wraps"])
+        for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: app.textFields[label]) }
         tap(app.buttons["Save and evaluate checkout"])
         enableSwitch("coffee"); enableSwitch("Include in deferral preview")
         tap(app.buttons["Preview deferrals together"]); tap(app.buttons["Apply reviewed deferral"])
@@ -79,7 +79,7 @@ import XCTest
     func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() throws {
         launch(reset: true)
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: app.textViews["ledgerImportText"])
         tap(app.buttons["ledgerReviewImport"]); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
@@ -100,17 +100,26 @@ import XCTest
         XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
         done.tap()
         XCTAssertTrue(done.waitForNonExistence(timeout: 5))
-        enableSwitch("Retailer total already includes all charges"); fill("3.00", into: "Inclusive total")
+        enableSwitch("Retailer total already includes all charges")
+        let total = app.textFields["Inclusive total"]
+        fill("3.00", into: total)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+        XCTAssertEqual(try total.snapshot().value as? String, "3.00")
         tap(app.buttons["Save and evaluate checkout"])
+        assertText("Saved checkout result")
         back(to: "Prepare retailer handoff"); tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"]); tap(app.buttons["I placed this order"])
         back(to: "Review a store offer"); tap(app.buttons["Review a store offer"])
         tap(element("pickup.offer.new")); choose("Original line", value: "wraps")
-        fill("Large wrap pack", into: "pickup.offer.replacement")
-        fill("2", into: "pickup.offer.required"); fill("0", into: "pickup.offer.remaining")
-        fill("4.00", into: "pickup.offer.price")
+        fill("Large wrap pack", into: app.textFields["pickup.offer.replacement"])
+        fill("2", into: app.textFields["pickup.offer.required"]); fill("0", into: app.textFields["pickup.offer.remaining"])
+        fill("4.00", into: app.textFields["pickup.offer.price"])
         let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
         if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        let retailerZone = "Pacific/Honolulu"
+        let offerZoneField = app.textFields["Time zone"]
+        fill(retailerZone, into: offerZoneField, replacing: true, doneIdentifier: "pickup.offer.zoneDone")
+        XCTAssertEqual(offerZoneField.value as? String, retailerZone)
         let chosenCutoffDay = try chooseFutureDay(in: app.datePickers["pickup.offer.cutoff"], navigationTitle: "New store offer")
         tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
         tap(app.buttons["Request an offer deadline reminder"])
@@ -124,11 +133,18 @@ import XCTest
         // This is the saved offer's cutoff in the actual reminder context,
         // not merely the date that happened to be visible in the popover.
         reveal(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", date.string(from: chosenCutoffDay))).firstMatch)
+        let retailerCutoff = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " · " + retailerZone)).firstMatch
+        XCTAssertTrue(retailerCutoff.waitForExistence(timeout: 5), "Reminder setup must identify the retailer’s time zone.")
+        let cutoffLabel = retailerCutoff.label
         XCTAssertGreaterThan(chosenCutoffDay, Date())
         tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         XCTAssertTrue(element("reminder.time").exists)
         XCTAssertFalse(app.alerts.firstMatch.exists)
+        let reminderZoneField = app.textFields["Time zone"]
+        fill("Europe/London", into: reminderZoneField, replacing: true, doneIdentifier: "reminder.keyboardDone")
+        XCTAssertEqual(reminderZoneField.value as? String, "Europe/London")
+        assertText(cutoffLabel)
         capture("S07-offer-deadline-reminder-unscheduled")
         tap(element("reminder.close"))
         XCTAssertTrue(app.navigationBars["Review store offer"].waitForExistence(timeout: 8))
@@ -211,10 +227,22 @@ import XCTest
         reveal(control)
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+    private func fill(_ text: String, into field: XCUIElement, replacing: Bool = false, doneIdentifier: String? = nil) {
+        tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
+        if let doneIdentifier {
+            let tip = app.staticTexts["Speed up your typing by sliding your finger across the letters to compose a word."]
+            if tip.exists {
+                app.buttons["Continue"].tap()
+                XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
+            }
+            let done = app.buttons[doneIdentifier]
+            XCTAssertTrue(done.waitForExistence(timeout: 5))
+            done.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneIdentifier))
+            return
+        }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }

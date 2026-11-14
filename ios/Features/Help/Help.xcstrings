@@ -1191,6 +1191,57 @@
         }
       }
     },
+    "Couldn’t open an email app. Copy the address to use in another app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open an email app. Copy the address to use in another app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir una app de correo. Copia la dirección para usarla en otra app."
+          }
+        }
+      }
+    },
+    "Copy email address": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy email address"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar dirección de correo"
+          }
+        }
+      }
+    },
+    "Email address copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email address copied"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección de correo copiada"
+          }
+        }
+      }
+    },
     "Email support": {
       "extractionState": "manual",
       "localizations": {

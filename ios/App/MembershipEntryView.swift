@@ -6,6 +6,7 @@ import HouseholdClient
 struct MembershipEntryView: View {
     @ObservedObject var household: HouseholdModel
     @EnvironmentObject private var membership: MembershipCoordinator
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Group {
@@ -15,11 +16,14 @@ struct MembershipEntryView: View {
                     Text(tr("A membership belongs to an authenticated household. Your Free records and manual tools remain available."))
                     NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
                 }.padding(20)
-            } else if let model = membership.model { MembershipView(model: model) }
+            } else if let model = membership.model { MembershipView(model: model, household: household) }
             else if membership.failure {
                 VStack(spacing: 20) {
                     Text(tr("Membership could not be verified. Your Free work is still available."))
-                    Button(tr("Try again")) { membership.retry() }.frame(minHeight: 44)
+                    Button(tr("Try again")) { Task { await membership.retry() } }
+                        .frame(minHeight: 44).disabled(household.busy)
+                    Button(mtr("Continue with Free")) { dismiss() }
+                        .frame(minHeight: 44).accessibilityIdentifier("membership.free")
                 }.padding(20)
             } else { ProgressView() }
         }.workingSurface().navigationTitle(tr("Household membership"))
@@ -29,11 +33,15 @@ struct MembershipEntryView: View {
 
 extension HouseholdModel: MembershipSessionSource {
     var membershipSession: MembershipSession? {
-        guard !locked, let identity, let projection, projection.enrolled, let serviceURL else { return nil }
+        guard !guardianChildOnly, !locked, let identity, let projection, projection.enrolled,
+              projection.grantId == nil, ["organizer", "shopper", "contributor"].contains(projection.role),
+              let serviceURL else { return nil }
         return MembershipSession(subjectID: identity.subject, memberID: projection.memberId,
             accountName: identity.email ?? projection.memberId, householdID: projection.household.id,
             householdName: projection.household.label, serviceURL: serviceURL)
     }
+
+    func refreshMembershipAuthorization() async { await refresh() }
 
     func membershipAccessToken() async throws -> String {
         try await membershipCredential { try await adultAccessToken() }

@@ -5,6 +5,7 @@ func mtr(_ key: String) -> String { String(localized: String.LocalizationValue(k
 
 struct MembershipView: View {
     @ObservedObject var model: MembershipModel
+    @ObservedObject var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingManage = false
 
@@ -34,13 +35,35 @@ struct MembershipView: View {
                     LabeledContent(mtr("Account"), value: context.purchaserName)
                     LabeledContent(mtr("Household"), value: context.householdName)
                     if context.appAccountToken == nil {
-                        Text(mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")).font(.footnote)
+                        Text(mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")).font(.footnote)
                     } else {
                         Text(mtr("This purchase is linked to this account and household. Restoring does not transfer it to another household.")).font(.footnote)
                     }
                 }
             } else {
                 Section { Text(mtr("An adult account and a selected household are needed before subscribing. You can continue using Free.")) }
+            }
+            if let session = household.membershipSession, let scope = household.projection,
+               session.memberID == model.context?.purchaserID, session.householdID == model.context?.householdID {
+                if scope.capabilities.contains("household_admin") || scope.role == "shopper" {
+                    Section(mtr("Household and pickup roles")) {
+                        if scope.capabilities.contains("household_admin") {
+                            LabeledContent(mtr("Household organizer"), value: session.accountName)
+                            if let lifecycle = household.lifecycle, lifecycle.canAdminister {
+                                NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) }
+                            }
+                        }
+                        if scope.role == "shopper", scope.shopId != nil {
+                            LabeledContent(ht("Current shopper"), value: session.accountName)
+                                .accessibilityIdentifier("household.currentShopper")
+                        } else if let shop = household.sharedShop, shop.scope == scope, scope.shopId != nil {
+                            NavigationLink(ht("Current shopper")) { SharedShopAssignmentView(household: household, model: shop, allowsTransfer: false) }
+                                .accessibilityIdentifier("membership.shopperAssignment")
+                        } else if scope.canSelectShop == true {
+                            NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: household) }
+                        }
+                    }
+                }
             }
             Section(mtr("Household subscription")) {
                 if let offer = model.offer {
@@ -66,7 +89,8 @@ struct MembershipView: View {
                     Text(membershipStatusMessageText(message)).accessibilityIdentifier(message.id)
                 }
             }
-            if let seats = model.state.snapshot?.seats {
+            if let snapshot = model.state.snapshot {
+                let seats = snapshot.seats
                 Section(mtr("Named adult seats")) {
                     ForEach(seats) { seat in
                         VStack(alignment: .leading, spacing: 8) {
@@ -74,11 +98,11 @@ struct MembershipView: View {
                             if model.canManageSeats {
                                 Menu(mtr("Manage seat")) {
                                     Button(mtr("Revoke seat"), role: .destructive) {
-                                        Task { await model.replaceSeat(userID: nil, replacingUserID: seat.userID) }
+                                        Task { await model.replaceSeat(userID: nil, replacingUserID: seat.userID, reviewedRevision: snapshot.revision) }
                                     }
                                     ForEach(model.eligibleAdults.filter { candidate in !seats.contains(where: { $0.userID == candidate.userID }) }) { adult in
                                         Button(String(format: mtr("Transfer to %@"), adult.displayName)) {
-                                            Task { await model.replaceSeat(userID: adult.userID, replacingUserID: seat.userID) }
+                                            Task { await model.replaceSeat(userID: adult.userID, replacingUserID: seat.userID, reviewedRevision: snapshot.revision) }
                                         }
                                     }
                                 }.disabled(model.isBusy)
@@ -88,7 +112,7 @@ struct MembershipView: View {
                     if model.canManageSeats && seats.count < 2 {
                         ForEach(model.eligibleAdults.filter { candidate in !seats.contains(where: { $0.userID == candidate.userID }) }) { adult in
                             Button(String(format: mtr("Assign seat to %@"), adult.displayName)) {
-                                Task { await model.replaceSeat(userID: adult.userID, replacingUserID: nil) }
+                                Task { await model.replaceSeat(userID: adult.userID, replacingUserID: nil, reviewedRevision: snapshot.revision) }
                             }.disabled(model.isBusy)
                         }
                     }
@@ -157,6 +181,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
     case .pending: return mtr("Apple reported a pending purchase status. Use Restore Purchases to check current membership access.")
     case .cancelled: return mtr("Apple reported a canceled purchase. Current membership access is shown above.")
     case .restored: return mtr("Your verified Household membership was restored.")
+    case .restoredFree: return mtr("Restore finished. This account currently has Free access.")
     case .delivered: return mtr("An App Store transaction was saved by your household service. Current membership access is shown above.")
     case .failed(let failure):
         switch failure {
@@ -166,8 +191,8 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
         case .notConfigured: return mtr("Purchases are not available in this build.")
         case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
         case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
-        case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
-        case .refreshRequired: return mtr("Membership changed. Refresh its status and review the seat change again.")
+        case .notPurchaser: return mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")
+        case .refreshRequired: return mtr("Membership changed. Review the current seats before making another change.")
         case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
         }
     }

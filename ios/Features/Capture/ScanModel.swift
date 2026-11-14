@@ -58,7 +58,7 @@ import Combine
         guard !closed, !delivered, !busy, candidate == nil, confirmed else { throw ScanFailure.needsReview }
         try ScanLimits.text(text)
         let record = SourceMediaRecord(id: id, target: target, originalText: originalText,
-            reviewedLabel: label, imageJPEG: accepted?.referenceJPEG, barcode: barcode,
+            reviewedText: text != originalText ? text : nil, reviewedLabel: label, imageJPEG: accepted?.referenceJPEG, barcode: barcode,
             receiptLines: receiptLines, capturedAt: capturedAt)
         try record.validate()
         delivered = true

@@ -17,6 +17,7 @@ enum MembershipSessionEvent: Equatable { case projection, identity, lock }
     var membershipSession: MembershipSession? { get }
     var membershipSessionChanges: AnyPublisher<MembershipSessionEvent, Never> { get }
     var onScopeChange: (() -> Void)? { get set }
+    func refreshMembershipAuthorization() async
     func membershipAccessToken() async throws -> String
     func membershipDeviceToken() async throws -> String
 }
@@ -91,8 +92,14 @@ enum MembershipSessionEvent: Equatable { case projection, identity, lock }
         }
     }
 
-    func retry() {
-        guard !awaitingProjection, let source, let session = source.membershipSession else { return }
+    func retry() async {
+        guard let source, let session = source.membershipSession else { return }
+        if awaitingProjection {
+            // A rejected credential requires a new server-verified household projection.
+            // Its publisher will reactivate membership only if this adult still has access.
+            if failure { await source.refreshMembershipAuthorization() }
+            return
+        }
         if model != nil { foreground() }
         else { activate(session, from: source) }
     }

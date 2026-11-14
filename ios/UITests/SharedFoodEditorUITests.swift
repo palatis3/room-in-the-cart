@@ -5,6 +5,7 @@ import XCTest
 /// interaction/outbox evidence; real-service conservation is qualified separately.
 @MainActor final class SharedFoodEditorUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var keyboardMayBeVisible = false
     private let line = "66666666-6666-4666-8666-666666666666"
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -100,6 +101,7 @@ import XCTest
     private func openFoodReview(spanish: Bool) {
         tap(app.buttons["sharedShop.reviewEditor"])
         XCTAssertTrue(app.navigationBars[spanish ? "Cantidades y orígenes" : "Amounts and sources"].waitForExistence(timeout: 15), app.debugDescription)
+        if keyboardMayBeVisible { waitForKeyboardDismissal() }
         assertText("Twelve wraps — no salt")
         assertText("Extra wraps — amount unknown")
     }
@@ -119,7 +121,7 @@ import XCTest
         let done = app.buttons["sharedFood.done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         tap(done)
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        waitForKeyboardDismissal()
         setSwitch("sharedFood.line." + line + ".acceptUnresolved", on: true)
     }
     private func assertReviewedFacts(spanish: Bool) {
@@ -243,18 +245,38 @@ import XCTest
         let field = app.textFields[id]
         tap(field, initialSearchDirection: initialSearchDirection)
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        keyboardMayBeVisible = true
         if let old = field.value as? String, old != field.placeholderValue, !old.isEmpty {
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
         }
         field.typeText(value); XCTAssertEqual(field.value as? String, value)
     }
+    private func waitForKeyboardDismissal() {
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        keyboardMayBeVisible = false
+    }
     private func setSwitch(_ id: String, on: Bool) {
         let toggle = app.switches[id]; reveal(toggle)
-        if toggle.value as? String != (on ? "1" : "0") {
-            // SwiftUI includes the label in this frame; operate the trailing switch.
-            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        let expected = on ? "1" : "0"
+        if toggle.value as? String != expected {
+            XCTAssertEqual(toggle.switches.count, 1, id)
+            let control = toggle.switches.firstMatch
+            XCTAssertTrue(control.isEnabled && control.isHittable, id)
+            XCTAssertEqual(control.value as? String, on ? "0" : "1", id)
+            let left = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+            if on {
+                left.tap()
+            } else {
+                // Move the on-position thumb directly inside the native control.
+                control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+                    .press(forDuration: 0.1, thenDragTo: left)
+            }
+            // Expanding the quantity fields can replace the row.
+            let changed = app.switches.matching(identifier: id)
+                .matching(NSPredicate(format: "value == %@", expected)).firstMatch
+            XCTAssertTrue(changed.waitForExistence(timeout: 5), id)
         }
-        XCTAssertEqual(toggle.value as? String, on ? "1" : "0", id)
+        XCTAssertEqual(toggle.value as? String, expected, id)
     }
     private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd
@@ -262,7 +284,8 @@ import XCTest
             var area = scrollableArea()
             let exists = target.exists
             var frame = exists ? target.frame : .zero
-            if exists && target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY && target.isHittable {
+                if !keyboardMayBeVisible { return }
                 // Keyboard presentation can change the viewport while XCTest
                 // resolves the field. Confirm both against the updated layout.
                 area = scrollableArea(); frame = target.frame
@@ -270,7 +293,7 @@ import XCTest
             }
             // Toolbars lie outside the content viewport, but their complete
             // button frame still has to fit the app and be directly actionable.
-            if exists && target.isHittable && app.frame.contains(frame) && target.elementType == .button && target.identifier == "sharedFood.done" { return }
+            if keyboardMayBeVisible && !frame.isEmpty && target.elementType == .button && target.identifier == "sharedFood.done" && app.frame.contains(frame) && target.isHittable { return }
             let fallbackUpward = (attempt / 6) % 2 == 0 ? startsBySwipingUp : !startsBySwipingUp
             let upward = exists && !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
             let origin = app.coordinate(withNormalizedOffset: .zero), bounds = app.frame
@@ -287,9 +310,11 @@ import XCTest
         // final Form row on home-button iPhones, where it cannot scroll higher.
         var bottom = bounds.maxY, top = bounds.minY + 95, nodes = snapshot.map { [$0] } ?? []
         // A root snapshot can omit the keyboard's separate accessibility
-        // window. Query it directly before treating a field as unobscured.
-        let keyboard = app.keyboards.firstMatch
-        if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 12) }
+        // window. Check that window from text entry until dismissal is observed.
+        if keyboardMayBeVisible {
+            let keyboard = app.keyboards.firstMatch
+            if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 12) }
+        }
         while let node = nodes.popLast() {
             if !node.frame.isEmpty && node.frame.intersects(bounds) {
                 if node.elementType == .navigationBar { top = max(top, node.frame.maxY + 8) }

@@ -54,6 +54,7 @@ public struct SurfaceURLCodec: Sendable {
 /// Safe even when stale, rendered on a locked device, or read by another group process.
 /// No food names, financial values, counts, member identities, or arbitrary display text.
 public struct WidgetProjection: Codable, Equatable, Sendable {
+    static let maximumBytes = 4096
     public let version: Int
     public let generation: UUID
     public let writtenAt: Date
@@ -64,7 +65,7 @@ public struct WidgetProjection: Codable, Equatable, Sendable {
         version = 1; self.generation = generation; self.writtenAt = writtenAt; self.routeHandle = routeHandle; self.destination = destination
     }
     public static func decode(_ data: Data) throws -> WidgetProjection {
-        guard data.count <= 4096, let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+        guard data.count <= maximumBytes, let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               Set(object.keys).isSubset(of: ["version", "generation", "writtenAt", "routeHandle", "destination"]) else { throw SurfaceError.corrupt }
         let result = try JSONDecoder().decode(Self.self, from: data)
         guard result.version == 1, validDate(result.writtenAt) else { throw SurfaceError.unsupported }

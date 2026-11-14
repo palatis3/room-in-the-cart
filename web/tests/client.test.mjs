@@ -33,6 +33,71 @@ test('only a generation and its live expiry authorize storage in a decoded sessi
  await assert.rejects(parse({...base,capabilities:[],requestQueueGrant:grant,requestQueueUntil:until}));
 });
 
+test('a protected pickup shows the next shop before sending and keeps the draft when the destination changes',async()=>{
+ for(const initial of [true,false]){
+  let nextOnly=initial;const sends=[];
+  const api=fakeAPI({session:async()=>({...session(),nextShopOnly:nextOnly}),command:async(_,cmd)=>{sends.push(cmd);return {...own(),route:'next'};}});
+  const {root,dom}=await setup(api);
+  if(initial){assert.equal(root.querySelector('#route').value,'next');assert.ok(root.querySelector('#route').disabled);}
+  type(dom,'item','Tortillas');submit(root,dom);nextOnly=true;
+  if(!initial){
+   submit(root,dom);await waitForIdle(root);
+   assert.equal(sends.length,0);assert.match(root.querySelector('form').textContent,/Next shop/);
+   assert.match(root.querySelector('form').textContent,/Tortillas/);
+  }
+  submit(root,dom);await waitForIdle(root);
+  assert.equal(sends.length,1);assert.equal(sends[0].body.route,'next');
+  assert.match(root.textContent,/Received for the next shop/);dom.window.close();
+ }
+});
+
+test('a contributor chooses the intended pickup when two are open and reviews the dated destination',async()=>{
+ const choices=[{shopId:'first',createdAt:'2026-11-10T12:00:00Z',nextShopOnly:false},{shopId:'second',createdAt:'2026-11-12T16:00:00Z',nextShopOnly:true}];
+ const sent=[];const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>choices,command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId,route:cmd.body.route};}}));
+ assert.doesNotMatch(root.textContent,/No pickup is accepting/);
+ const picker=root.querySelector('#request-pickup');assert.ok(picker);assert.equal(picker.value,'');
+ picker.value='second';picker.dispatchEvent(new dom.window.Event('change',{bubbles:true}));
+ type(dom,'item','Tortillas');assert.equal(root.querySelector('#route').value,'next');
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/November 12/);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(sent.length,1);assert.equal(sent[0].shopId,'second');assert.equal(sent[0].body.route,'next');dom.window.close();
+});
+
+test('a pickup closing during review keeps the draft and requires explicit review of the remaining destination', async()=>{
+ for(const action of ['send','refresh']){
+  let active={...session(),shopId:null,selectionRequired:true};
+  const sent=[];
+  const pickups=['first','second'].map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}));
+  const {root,dom}=await setup(fakeAPI({session:async()=>active,requestPickups:async()=>pickups,
+   command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId};}}));
+  const picker=root.querySelector('#request-pickup');
+  picker.value='second';picker.dispatchEvent(new dom.window.Event('change'));
+  type(dom,'item','Brown rice');submit(root,dom);
+  active={...active,shopId:'first',selectionRequired:false};
+  if(action==='send')submit(root,dom);else click(root,'Refresh');
+  await waitForIdle(root);
+  assert.equal(sent.length,0);
+  assert.equal(root.querySelector('#item').value,'Brown rice');
+  assert.match(root.textContent,/Available pickups changed/);
+  submit(root,dom);assert.match(root.querySelector('form').textContent,/first/);
+  submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(sent.map(c=>c.shopId),['first']);dom.window.close();
+ }
+});
+
+test('refresh after a reviewed pickup disappears offers the remaining choices', async()=>{
+ let shops=['first','second','third'];
+ const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>shops.map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}))}));
+ const choose=value=>{const picker=root.querySelector('#request-pickup');picker.value=value;picker.dispatchEvent(new dom.window.Event('change'));};
+ choose('first');type(dom,'item','Carrots');submit(root,dom);
+ shops=['second','third'];click(root,'Refresh');await waitForIdle(root);
+ assert.equal(root.querySelector('#request-pickup').value,'');
+ assert.equal(root.querySelector('form'),null);choose('third');
+ assert.equal(root.querySelector('#item').value,'Carrots');dom.window.close();
+});
+
 test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment', async()=>{
  const current=session(),grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
  const base={household:current.household,memberId:current.memberId,capabilities:['request_queue_permission'],queueConsent:false};
@@ -50,11 +115,48 @@ test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment'
  await assert.rejects(change(false,active));
 });
 
+test('Requests honors the public page language and keeps later selections on reload', async () => {
+  for (const [query, expected] of [['?lang=es', 'es'], ['?lang=en', 'en'], ['?lang=other', 'en'], ['', 'en']]) {
+    const dom = new JSDOM('<div id="app"></div>', {url: 'https://food.example/requests' + query});
+    Object.defineProperty(dom.window.navigator, 'language', {value: 'en-US'});
+    const root = dom.window.document.getElementById('app');
+    const api = {session: async () => session(), ownRequests: async () => []};
+    const start = () => new WebApp(root, api, new Outbox(new IDBFactory())).start();
+    await start();
+    const select = root.querySelector('#language');
+    assert.equal(select.value, expected);
+    const next = expected === 'es' ? 'en' : 'es';
+    select.value = next;
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.location.search, '?lang=' + next);
+    assert.equal(dom.window.document.activeElement.id, 'language');
+    await start();
+    assert.equal(dom.window.document.documentElement.lang, next);
+    assert.equal(root.querySelector('#language').value, next);
+    dom.window.close();
+  }
+});
+
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
  assert.equal(consumeInvitation(dom.window.location,dom.window.history),'fragment-secret');
  assert.equal(dom.window.location.href,'https://food.example/invite');
  assert.equal(dom.window.localStorage.length,0);
+});
+
+test('shared code-entry links prompt enrolled adults before joining or changing views',async t=>{
+ for(const path of ['/invite','/view/']){
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example'+path+'?enterCode=1&lang=es'});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app');
+  const token=consumeInvitation(dom.window.location,dom.window.history);
+  assert.equal(dom.window.location.search,'?lang=es');
+  const api=fakeAPI({redeem:async()=>assert.fail('Opening the link cannot join a household')});
+  await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+  assert.ok(root.querySelector('#invitation'));assert.ok(root.querySelector('#adult-attestation'));
+  assert.equal(root.querySelector('#item'),null);
+  assert.doesNotMatch(root.textContent,/Family A/);
+ }
 });
 
 test('companion links accept the trailing slashes served by the host',async(t)=>{
@@ -678,8 +780,10 @@ test('invitation requires explicit adult review and validates the redemption rec
 
 test('session activation requires an authenticated response for the redeemed household',async()=>{
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify(session()),{status:200});});
- await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a'});
+ await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a',scope:'own_requests'});
  await assert.rejects(api.activateSession('household-b','csrf-test'),e=>e.code==='invalid_response');
+ const broader=new API(async()=>Response.json({...session(),role:'shopper'}));
+ await assert.rejects(broader.activateSession('household-a','csrf-test'),e=>e.code==='invalid_response');
 });
 
 test('joined invitation retries session activation without redeeming a single-use token twice',async()=>{
@@ -719,6 +823,28 @@ test('redeeming a helper link never opens a different most-recent grant',async()
  const app=new WebApp(root,fakeAPI({session:async()=>current,redeem:async()=>({householdId:'household-a',memberId:'member-a',role:'helper',grantId:'requested-grant'}),activateSession:async()=>{current={...session(),role:'helper',grantId:'wrong-grant'};},view:async()=>({grantId:'wrong-grant',shopId:'shop-a',shopLabel:'Different shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Different private ingredient',amount:'one',action:'Do not display'}]})}),new Outbox(new IDBFactory()),'secret');
  await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
  submit(root,dom);await waitForIdle(root);assert.doesNotMatch(root.textContent,/Different shop|Different private ingredient/);assert.match(root.textContent,/information changed/);
+});
+
+test('an enrolled adult accepting a cook invitation never reads another grant after activation',async t=>{
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/view?enterCode=1'});
+ t.after(()=>dom.window.close());
+ const root=dom.window.document.getElementById('app');
+ let current=session(),reads=0,redeems=0,activations=0;
+ const api=fakeAPI({
+  session:async()=>current,
+  redeem:async()=>{redeems++;return{householdId:'second',memberId:'member-b',role:'helper',grantId:'requested'};},
+  activateSession:async(_,csrf)=>{assert.equal(csrf,current.csrf);activations++;current={...session(),household:{id:'second',label:'Second household'},memberId:'member-b',role:'helper',grantId:activations===1?'other':'requested',csrf:'rotated-'+activations};},
+  view:async active=>{reads++;return{grantId:active.grantId,shopId:active.shopId,shopLabel:active.grantId,revision:1,asOf:'2026-11-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[]};}
+ });
+ const token=consumeInvitation(dom.window.location,dom.window.history);
+ await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+ type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));assert.match(root.textContent,/information changed/);
+ click(root,'Refresh');await waitForIdle(root);assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(redeems,1);assert.equal(activations,2);assert.equal(reads,1);
+ assert.equal(root.querySelector('#adult-attestation'),null);assert.match(root.textContent,/requested/);
 });
 
 test('helper session activation sends and verifies the selected grant',async()=>{

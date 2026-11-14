@@ -4592,6 +4592,22 @@
         }
       }
     },
+    "Open this page on the invited device:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this page on the invited device:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre esta página en el dispositivo de la persona invitada:"
+          }
+        }
+      }
+    },
     "Only consents covered by your verified guardian relationships appear here.": {
       "localizations": {
         "en": {
@@ -5202,6 +5218,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recibido por el hogar"
+          }
+        }
+      }
+    },
+    "Received for the next shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received for the next shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud recibida para la próxima compra."
           }
         }
       }
@@ -6370,6 +6402,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compartir instrucciones para esta compra"
+          }
+        }
+      }
+    },
+    "Share browser invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share browser invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir invitación para el navegador"
           }
         }
       }

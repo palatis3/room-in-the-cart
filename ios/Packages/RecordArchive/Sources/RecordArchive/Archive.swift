@@ -98,6 +98,7 @@ public struct ArchiveReceipt: Codable, Equatable, Sendable {
 
 public enum ArchiveCodec {
     static let supportedMinorVersions = 0...2
+    static let maximumHelperFieldBytes = 8192
     public static let maximumFileBytes = 8 * 1_048_576
     public static let maximumRecords = 500
     public static let maximumNativeBytes = 4 * 1_048_576
@@ -209,7 +210,7 @@ public enum ArchiveCodec {
             }
             if value.documentKind == .helperShop, record.nativePayload != nil || record.media != nil { throw ArchiveError.unsupportedProjection }
             for line in record.helperLines {
-                guard [line.label, line.originalAmount, line.originalUnit, line.originalLanguage ?? "", line.purpose ?? "", line.action ?? "", line.foodStatus ?? ""].allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }) else { throw ArchiveError.tooLarge }
+                guard [line.label, line.originalAmount, line.originalUnit, line.originalLanguage ?? "", line.purpose ?? "", line.action ?? "", line.foodStatus ?? ""].allSatisfy({ $0.utf8.count <= maximumHelperFieldBytes && !$0.contains("\0") }) else { throw ArchiveError.tooLarge }
             }
         }
         if let manifest = value.mediaManifest, manifest.formatMajor != 1 { throw ArchiveError.unsupportedVersion }

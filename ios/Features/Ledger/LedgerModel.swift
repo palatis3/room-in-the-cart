@@ -82,7 +82,13 @@ private enum LedgerDeletionJournal {
 /// UI drafts remain in their sheets. A candidate becomes visible only after the
 /// store commits it; the receipt's exact bytes and operation ID survive retries.
 @MainActor final class LedgerModel: ObservableObject {
-    @Published private(set) var workspace = LedgerWorkspace()
+    @Published private(set) var workspace = LedgerWorkspace() {
+        didSet {
+            if workspace.selectedShopID != oldValue.selectedShopID && !search.isEmpty {
+                search = ""
+            }
+        }
+    }
     @Published private(set) var savedAt: Date?
     @Published private(set) var saving = false
     @Published private(set) var opening = false
@@ -102,6 +108,7 @@ private enum LedgerDeletionJournal {
     var pendingLedgerDeletionReview: WholeLedgerDeletionReview? { pendingLedgerDeletion?.review }
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
+        let onShopSelected: ((UUID) -> Void)?
         let key: String
         let workspace: LedgerWorkspace
         let payload: Data
@@ -131,7 +138,7 @@ private enum LedgerDeletionJournal {
     }
 
     nonisolated static func validatePayload(_ payload: Data) throws -> LedgerWorkspace {
-        guard payload.count <= 4 * 1_024 * 1_024 else { throw LedgerModelError.unsupportedDocument }
+        guard payload.count <= LedgerStore.maximumPayloadBytes else { throw LedgerModelError.unsupportedDocument }
         let document = try JSONDecoder().decode(LedgerDocument.self, from: payload)
         guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
         // LedgerWorkspace.init(from:) validates all decoded domain evidence.
@@ -196,6 +203,10 @@ private enum LedgerDeletionJournal {
 
     @discardableResult
     func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, edit)
+    }
+
+    private func change(key: String, onShopSelected: ((UUID) -> Void)?, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         guard !saving, ready, !hasPendingLedgerDeletion else { return false }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
@@ -206,13 +217,20 @@ private enum LedgerDeletionJournal {
             try edit(&candidate)
             try candidate.validate()
             guard candidate != workspace else { error = nil; return true }
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.sortedKeys]
-            let payload = try encoder.encode(LedgerDocument(formatVersion: 1, workspace: candidate))
-            pending = PendingSave(key: key, workspace: candidate, payload: payload, base: revision,
-                                  operationID: UUID(), savedAt: clock())
+            guard let store else { return false }
+            // Reserve this revision while the immutable snapshot is encoded off the UI thread.
+            saving = true
+            defer { saving = false }
+            let payload = try await Self.encodeForSave(candidate)
+            guard payload.count <= LedgerStore.maximumPayloadBytes else {
+                error = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
+                return false
+            }
+            let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
+                                     operationID: UUID(), savedAt: clock())
+            pending = change
             hasPendingSave = true
-            return await retrySave()
+            return await commit(change, to: store)
         } catch LedgerModelError.mealScopeChanged {
             error = ledgerText("The pickup or workspace changed. Reopen the dinner for the pickup you want.")
             return false
@@ -278,6 +296,16 @@ private enum LedgerDeletionJournal {
         guard !saving, !hasPendingLedgerDeletion, let pending, let store else { return false }
         saving = true
         defer { saving = false }
+        return await commit(pending, to: store)
+    }
+
+    @concurrent private static func encodeForSave(_ workspace: LedgerWorkspace) async throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return try encoder.encode(LedgerDocument(formatVersion: 1, workspace: workspace))
+    }
+
+    private func commit(_ pending: PendingSave, to store: LedgerStore) async -> Bool {
         do {
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
@@ -296,6 +324,9 @@ private enum LedgerDeletionJournal {
             self.pending = nil
             hasPendingSave = false
             error = nil
+            if let id = recovered.selectedShopID, id == pending.workspace.selectedShopID {
+                pending.onShopSelected?(id)
+            }
             return true
         } catch LedgerStoreError.erased {
             clearRetiredState()
@@ -425,15 +456,15 @@ private enum LedgerDeletionJournal {
         pending = nil; hasPendingSave = false; ready = false; search = ""
     }
 
-    func startShop(title: String) async -> Bool {
-        await change(key: "start-shop") { workspace in
+    func startShop(title: String, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
+        await change(key: "start-shop", onShopSelected: onSelected) { workspace in
             let shop = ShoppingLedger(title: title)
             workspace.shops.append(shop)
             workspace.selectedShopID = shop.id
         }
     }
 
-    func selectShop(_ id: UUID) async {
-        _ = await change(key: "select-\(id)") { $0.selectedShopID = id }
+    func selectShop(_ id: UUID, onSelected: ((UUID) -> Void)? = nil) async {
+        _ = await change(key: "select-\(id)", onShopSelected: onSelected) { $0.selectedShopID = id }
     }
 }

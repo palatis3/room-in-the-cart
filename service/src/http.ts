@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
-import { ServiceError,accessEnded,invalid } from './errors.js';
+import { ServiceError,accessEnded,invalid,unavailable } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
 import {DecisionHistory} from './decision-history.js';
 import {PriceBudgetHistory} from './history.js';
@@ -162,9 +162,24 @@ export function createHTTPServer(options:HTTPOptions) {
         const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
         if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold)throw new ServiceError(404,'unavailable','Use the selected helper view.');
       }
+      if(session?.auth.ownRequestsOnly){
+        const base='/v1/households/'+session.householdId;
+        const allowed=url.pathname==='/v1/session'||(method==='POST'&&url.pathname==='/v1/invites/redeem')
+          ||(method==='GET'&&(url.pathname===base+'/requests/mine'||url.pathname===base+'/requests/pickups'))||(method==='POST'&&url.pathname===base+'/commands')
+          ||(method==='PUT'&&url.pathname===base+'/devices/current/request-queue');
+        if(!allowed)throw unavailable();
+      }
       if(url.pathname==='/v1/session'&&method==='POST') {
-        const input=z.object({householdId:uuid,grantId:uuid.optional(),shopId:uuid.optional()}).strict().refine(value=>!(value.grantId&&value.shopId)).parse(await body(req));
-        const result=await repository.startWebSession(input.householdId,auth.identity,input.shopId?undefined:input.grantId??(session?.householdId===input.householdId?session.auth.viewGrantId:undefined),Boolean(browserIdentity),input.grantId?undefined:input.shopId??(session?.householdId===input.householdId?session.auth.selectedShopId:undefined));
+        const input=z.object({householdId:uuid,grantId:uuid.optional(),shopId:uuid.optional(),scope:z.literal('own_requests').optional()})
+          .strict().refine(value=>!(value.grantId&&(value.shopId||value.scope))).parse(await body(req));
+        const previous=session?.householdId===input.householdId?session.auth:undefined;
+        const ownRequestsOnly=!input.grantId&&(input.scope==='own_requests'||auth.ownRequestsOnly===true);
+        const grantId=ownRequestsOnly||input.shopId?undefined:input.grantId??previous?.viewGrantId;
+        const shopId=input.grantId?undefined:input.shopId??previous?.selectedShopId;
+        const result=await repository.startWebSession(input.householdId,auth.identity,{
+          browserBound:Boolean(browserIdentity),ownRequestsOnly,...(grantId?{viewGrantId:grantId}:{}),...(shopId?{selectedShopId:shopId}:{}),
+          ...(previous?.trustedDeviceId&&session?{previousSession:{deviceId:previous.trustedDeviceId,csrf:session.csrf}}:{})
+        });
         res.setHeader('Set-Cookie',`ritc_session=${result.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${browserIdentity?604800:Math.max(0,Math.floor((result.expiresAt.getTime()-Date.now())/1000))}`);
         send(200,result.session);return;
       }
@@ -189,7 +204,17 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(url.pathname==='/v1/child-invitations/native-auth/admit'&&method==='POST'){send(200,await guardian.nativeSigninAdmit(auth.identity,childNativeAdmitSchema.parse(await body(req,4096))));return;}
       if(url.pathname==='/v1/child-invitations/claim'&&method==='POST'){send(200,await guardian.claim(auth.identity,childClaimSchema.parse(await body(req,4096))));return;}
-      if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){const result=await guardian.finish(auth.identity,childFinishSchema.parse(await body(req,4096)));if(browserIdentity){const scoped=await repository.startWebSession(result.householdId,auth.identity,undefined,true,undefined,result.deviceToken);res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);const {deviceToken:_,...receipt}=result;send(200,receipt);return;}send(200,result);return;}
+      if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){
+        const input=childFinishSchema.parse(await body(req,4096));
+        const receipt=await guardian.finish(auth.identity,input);
+        if(browserIdentity){
+          const householdId=input.householdId.toLowerCase();
+          const scoped=await repository.startWebSession(householdId,auth.identity,{browserBound:true,pairedDeviceToken:input.deviceSecret});
+          res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);
+          send(200,{householdId,memberId:receipt.memberId,role:receipt.role,deviceId:receipt.deviceId});return;
+        }
+        send(200,receipt);return;
+      }
       const childClaim=/^\/v1\/child-invitations\/claims\/([^/]+)$/.exec(url.pathname);
       if(childClaim&&method==='GET'){send(200,await guardian.claimStatus(auth.identity,uuid.parse(url.searchParams.get('householdId')),uuid.parse(childClaim[1])));return;}
       const ownProposal=/^\/v1\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(url.pathname);
@@ -282,6 +307,11 @@ export function createHTTPServer(options:HTTPOptions) {
          if(financial[2]==='financial-reviews'&&method==='POST')return history.review(ctx,shopId,financialReviewSchema.parse(payload));
          if(financial[2]==='history-retire'&&method==='POST')return history.retire(ctx,shopId,historyRetireSchema.parse(payload));
         }
+        if(path==='/requests/pickups'&&method==='GET'){
+          const cursor=url.searchParams.get('cursor');
+          if(cursor)uuid.parse(cursor);
+          return repository.shops(ctx,'requests',cursor);
+        }
         if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned','history-owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
         const replacement=/^\/views\/([^/]+)\/replacements$/.exec(path);
         if(replacement&&method==='POST')return helperReview.replace(ctx,uuid.parse(replacement[1]),viewReplacementSchema.parse(payload));
@@ -313,6 +343,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/commands'&&method==='POST') {
           const command=parseCommand(payload), header=req.headers['x-request-queue-grant'];
           const queueGrant=header===undefined?undefined:uuid.parse(header).toLowerCase();
+          if(ctx.ownRequestsOnly && !['request.send','request.edit','request.withdraw'].includes(command.kind))throw unavailable();
           if(queueGrant && !['request.send','request.edit','request.withdraw'].includes(command.kind))throw invalid();
           return repository.execute(ctx,command,options.billing,queueGrant);
         }

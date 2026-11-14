@@ -29,7 +29,10 @@ import DeviceSurfaces
     }
     func commit(_ draft: SurfaceImportDraft) async throws {
         guard scope == draft.scope, let start = generation, !ledger.hasPendingSave else { throw SurfaceError.stale }
-        let saved = await ledger.editShop(key: "surface-import-" + draft.id.uuidString, shopID: draft.preview.shopID) { try $0.commitImport(draft.preview, decisions: draft.decisions) }
+        let saved = await ledger.editShop(key: "surface-import-" + draft.id.uuidString, shopID: draft.preview.shopID) {
+            try $0.commitImport(draft.preview, decisions: draft.decisions,
+                                originalSelection: draft.editedText == nil ? nil : draft.originalText)
+        }
         guard saved, scope == draft.scope, generation == start else { throw SurfaceError.unavailable }
     }
 }

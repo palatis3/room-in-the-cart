@@ -27,7 +27,7 @@ private struct GuardianSetupHost: View {
             runtime: { [weak household] in household?.guardianRuntimeScope }))
     }
     var body: some View {
-        GuardianEnrollmentView(model: model) {
+        GuardianEnrollmentView(model: model, serviceURL: household.service?.baseURL) {
             NavigationLink(GuardianCopy.text("Review or withdraw current permissions")) { HouseholdGuardianView(model: lifecycle) }
         }
     }
@@ -35,6 +35,7 @@ private struct GuardianSetupHost: View {
 
 struct GuardianEnrollmentView<Withdrawal: View>: View {
     @ObservedObject var model: GuardianEnrollmentModel
+    var serviceURL: URL? = nil
     @Environment(\.scenePhase) private var scenePhase
     @State private var cancelSelected = false
     @State private var clearSelected = false
@@ -79,6 +80,9 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
                     Text(invitation.token).font(.body.monospaced()).textSelection(.enabled).privacySensitive()
                         .accessibilityIdentifier("guardian.invitationToken")
                     LabeledContent(GuardianCopy.text("Expires"), value: GuardianCopy.date(invitation.expiresAt))
+                    if let serviceURL {
+                        BrowserInvitationShare(route: .child, serviceURL: serviceURL, code: invitation.token)
+                    }
                     ShareLink(item: invitation.token) { Text(GuardianCopy.text("Share child invitation")) }
                     Text(GuardianCopy.text("The child must use their own approved sign-in. Do not enter an adult account on the child's device."))
                     Button(GuardianCopy.text("I finished sharing; continue to pairing")) { Task { await model.clearRetryAfterStatusReview() } }

@@ -5,7 +5,6 @@ import XCTest
 @MainActor
 final class RoomInTheCartUITests: XCTestCase {
     private var app: XCUIApplication!
-    private var doneIdentifier = "Done"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -47,7 +46,7 @@ final class RoomInTheCartUITests: XCTestCase {
         enterComparison(item: title, firstQuantity: "8", cap: "30")
         compare()
         saveAndAssertDurableStatus()
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         tap(app.buttons["Recovery, exports and saved records"])
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 5))
 
@@ -101,7 +100,7 @@ final class RoomInTheCartUITests: XCTestCase {
         compare()
         assertContains("No packs needed for this item.")
         saveAndAssertDurableStatus()
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         tap(app.buttons["Recovery, exports and saved records"])
         tap(app.buttons["Delete this source"])
         tap(app.buttons["Delete from this iPhone"])
@@ -109,7 +108,7 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Confirmed-fictional-source-deletion")
         app.terminate()
         launch(reset: false)
-        tap(app.tabBars.buttons["Records"])
+        tap(tabButton("Records", symbol: "clock.arrow.circlepath"))
         assertContains("Your comparisons live here")
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "savedComparison").count, 0)
     }
@@ -126,6 +125,8 @@ final class RoomInTheCartUITests: XCTestCase {
         assertContains("Confirmed at home for this need: Not entered")
         XCTAssertFalse(app.staticTexts["comparisonNeedAfterStock"].exists)
         screenshot("English-item-scope")
+        assertContains("Usable amount in one pack: 7 1/2 items")
+        assertContains("Price for one pack (USD): $3.00")
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
         screenshot("English-known-item-only-result")
@@ -140,10 +141,20 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
         XCTAssertFalse(element("saveComparison").exists)
         screenshot("English-reopened-same-result")
-        tap(app.buttons["editComparison"])
+        let edit = app.buttons["editComparison"]
+        let results = element("comparisonResultsScroll")
+        // Edit is the first results row. Reveal it fully below the navigation bar.
+        for _ in 0..<8 where !edit.exists { results.swipeDown(velocity: .slow) }
+        revealFullyInComparison(edit)
+        edit.tap()
+        XCTAssertTrue(results.waitForNonExistence(timeout: 5), "Edit must open the saved comparison's input form")
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
         XCTAssertEqual(savedYield.value as? String, "7 1/2")
+        compare()
+        revealFullyInComparison(element("comparisonSourceNote"))
+        XCTAssertFalse(app.buttons["saveComparison"].exists, "Reviewing the same values must keep the saved result")
+        assertSavedStatus("Saved on this iPhone")
     }
 
     func testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart() throws {
@@ -152,6 +163,7 @@ final class RoomInTheCartUITests: XCTestCase {
         enterComparison(item: "Unknown yield wraps", firstQuantity: nil)
         compare()
         assertScope("Item-only comparison")
+        assertContains("Usable amount in one pack: Not entered")
         // iOS 17 gives both the decorative Label image and its text this identifier.
         // Inspect the readable warning, not the non-interactive image.
         let unknown = app.staticTexts.matching(identifier: "aIssue_usableQuantityUnknown").firstMatch
@@ -195,7 +207,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(source); source.typeText("120.0")
         let target = app.textFields["conversion.target"]
         tap(target); target.typeText("1")
-        dismissComparisonKeyboard(app.buttons["conversion.done"])
+        dismissComparisonKeyboard("conversion.done")
         tap(app.buttons["conversion.confirm"])
         compare()
         assertMoney("aTotal", amount: "5.00")
@@ -285,7 +297,7 @@ final class RoomInTheCartUITests: XCTestCase {
         captureComparisonFrames("Largest-text-Edit")
         screenshot("Largest-text-Edit-fully-visible")
         edit.tap()
-        let name = app.textFields["itemName"]
+        let name = comparisonInput("itemName")
         reveal(name)
         XCTAssertEqual(name.value as? String, "Accessible edit wraps")
         compare()
@@ -463,7 +475,7 @@ final class RoomInTheCartUITests: XCTestCase {
         let scroll = app.scrollViews["shopContentScroll"]
         let target = element("urgentRepairShortcut")
         let rows = ["Window: \(app.windows.firstMatch.frame)", "Shop scroll: \(scroll.frame)",
-                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible Shop: \(shopViewport)",
                     target.exists ? "Repair shortcut: \(target.frame); hittable=\(target.isHittable); \(target.label)" : "Repair shortcut: absent"]
         let attachment = XCTAttachment(string: rows.joined(separator: "\n"))
@@ -511,7 +523,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func captureComparisonFrames(_ name: String) {
         var rows = ["Window: \(app.windows.firstMatch.frame)", "List: \(element("comparisonResultsScroll").frame)",
-                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(tabFrameDescription)",
                     "Visible results: \(comparisonViewport)"]
         for id in ["editComparison", "aHeader", "bHeader", "comparisonSourceNote", "saveComparison", "savedStatus", "comparisonSavedDetails"] {
             let target = element(id)
@@ -532,7 +544,6 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
-        doneIdentifier = language == "es" ? "Listo" : "Done"
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
@@ -541,7 +552,19 @@ final class RoomInTheCartUITests: XCTestCase {
                                     "-UIUserInterfaceStyle", "Dark"]
         }
         app.launch()
-        XCTAssertTrue(app.tabBars.buttons[language == "es" ? "Compras" : "Shop"].waitForExistence(timeout: 15))
+        XCTAssertTrue(tabButton(language == "es" ? "Compras" : "Shop", symbol: "cart").waitForExistence(timeout: 15))
+    }
+
+    private func tabButton(_ label: String, symbol: String) -> XCUIElement {
+        let tab = app.tabBars.buttons[label]
+        if tab.exists { return tab }
+        // iPhone Duo exposes native side tabs as labeled symbol buttons.
+        return app.buttons.matching(NSPredicate(format: "label == %@ AND identifier == %@", label, symbol)).firstMatch
+    }
+
+    private var tabFrameDescription: String {
+        let bar = app.tabBars.firstMatch
+        return bar.exists ? String(describing: bar.frame) : "No bottom tab bar"
     }
 
     private func openEmptyComparison() {
@@ -616,7 +639,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func reopenSavedRecord(recordsLabel: String, item: String) {
-        tap(app.tabBars.buttons[recordsLabel])
+        tap(tabButton(recordsLabel, symbol: "clock.arrow.circlepath"))
         // Persistence checks intentionally reopen from the records list. A
         // restored comparison remains open until the person uses native Back.
         for _ in 0..<4 {
@@ -652,35 +675,46 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
-    private func dismissComparisonKeyboard(_ done: XCUIElement) {
-        let keyboard = app.keyboards.firstMatch
-        // Synthesized typing can temporarily move Done onto the next keyboard's Backspace key.
+    private func dismissComparisonKeyboard(_ identifier: String) {
+        // Sample the focused button and keyboard together. Separate live queries can
+        // cross a keyboard transition or spend the entire wait resolving one element.
         let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard keyboard.exists, done.exists else { return false }
-            let pad = keyboard.frame, bar = done.frame
-            return !pad.isEmpty && self.app.frame.intersects(pad) && !bar.isEmpty && bar.maxY <= pad.minY + 1
+            guard let root = try? self.app.snapshot() else { return false }
+            var nodes = [root]
+            var keyboard: CGRect?
+            var button: CGRect?
+            while let node = nodes.popLast() {
+                nodes.append(contentsOf: node.children)
+                guard !node.frame.isEmpty, root.frame.intersects(node.frame) else { continue }
+                if node.elementType == .keyboard { keyboard = node.frame }
+                if node.elementType == .button, node.identifier == identifier { button = node.frame }
+            }
+            guard let keyboard, let button else { return false }
+            return button.maxY <= keyboard.minY + 1
         }, object: nil)
-        guard XCTWaiter.wait(for: [visible], timeout: 5) == .completed else {
-            XCTFail("Done must be above the visible comparison keyboard")
+        guard XCTWaiter.wait(for: [visible], timeout: 10) == .completed else {
+            XCTFail("Expected \(identifier) above the visible comparison keyboard")
             return
         }
-        done.tap()
+        app.buttons[identifier].tap()
     }
 
     private func type(_ fields: [(id: String, text: String)]) {
-        let done = app.buttons[doneIdentifier]
-        for (index, entry) in fields.enumerated() {
+        var previousDone: String?
+        for entry in fields {
             let (id, text) = entry
             let field = comparisonInput(id)
             // A partially exposed row can be hittable underneath the keyboard accessory.
-            if index > 0, done.exists,
-               !field.exists || !field.isHittable || field.frame.midY >= done.frame.minY {
-                dismissComparisonKeyboard(done)
+            if let previousDone {
+                let done = app.buttons[previousDone]
+                if done.exists && (!field.exists || !field.isHittable || field.frame.midY >= done.frame.minY) {
+                    dismissComparisonKeyboard(previousDone)
+                }
             }
             focusComparisonInput(field)
             let fieldDone = app.buttons["comparison.done." + id]
             if !fieldDone.exists && !fieldDone.waitForExistence(timeout: 3) {
-                if done.exists { dismissComparisonKeyboard(done) }
+                if let previousDone, app.buttons[previousDone].exists { dismissComparisonKeyboard(previousDone) }
                 focusComparisonInput(field)
                 guard fieldDone.exists || fieldDone.waitForExistence(timeout: 3) else {
                     XCTFail("The comparison field must own keyboard focus before typing: " + id)
@@ -695,8 +729,9 @@ final class RoomInTheCartUITests: XCTestCase {
                 // At accessibility sizes the focused row can scroll out of the snapshot.
                 app.typeText(text)
             }
+            previousDone = "comparison.done." + id
         }
-        dismissComparisonKeyboard(done)
+        if let previousDone { dismissComparisonKeyboard(previousDone) }
         for (id, text) in fields {
             let field = comparisonInput(id)
             // UIKit exposes the value of an offscreen row while it is still in the hierarchy.

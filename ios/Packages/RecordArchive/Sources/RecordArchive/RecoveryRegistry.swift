@@ -574,9 +574,18 @@ public actor RecoveryRegistry {
     }
     public static func boundedRead(_ url: URL, maximum: Int = ArchiveCodec.maximumFileBytes) throws -> Data {
         guard url.isFileURL, maximum >= 0, maximum < Int.max else { throw ArchiveError.unavailable }
-        let handle: FileHandle
-        do { handle = try FileHandle(forReadingFrom: url) } catch { throw ArchiveError.unavailable }
+        // Refuse links during open and inspect that descriptor before reading. A
+        // selected pipe must return immediately, even when it has no writer.
+        let descriptor = url.withUnsafeFileSystemRepresentation { path -> Int32 in
+            guard let path else { return -1 }
+            return Darwin.open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
+        }
+        guard descriptor >= 0 else { throw ArchiveError.unavailable }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? handle.close() }
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, info.st_mode & S_IFMT == S_IFREG else { throw ArchiveError.unavailable }
+        guard info.st_size <= maximum else { throw ArchiveError.tooLarge }
         var bytes = Data()
         do {
             while let chunk = try handle.read(upToCount: min(65536, maximum + 1 - bytes.count)), !chunk.isEmpty {

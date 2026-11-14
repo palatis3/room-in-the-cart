@@ -190,6 +190,31 @@ struct PickupCheckoutView: View {
         return model.journey.map { !draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) } ?? true
     }
     var body: some View {
+        if let journey = model.journey, journey.basket?.phase == .frozen, let snapshot = model.frozenSnapshot {
+            Form {
+                PickupSaveStatus(model: model)
+                Section(pTr("Frozen · placement unconfirmed")) {
+                    if let quote = journey.frozenQuotes[snapshot.id] {
+                        let cap = journey.frozenCaps?[snapshot.id.uuidString]
+                        PickupQuoteTermsView(quote: quote, cap: cap)
+                        PickupSavedCheckoutPricingView(pricing: quote.pricing)
+                        if let result = try? CheckoutEngine.evaluate(quote, cap: cap) {
+                            PickupResultView(result: result)
+                        }
+                    }
+                    Button(pTr("Reopen draft and recheck prices")) {
+                        Task { _ = await model.reopenDraft(reviewing: snapshot) }
+                    }
+                    .disabled(model.saving || model.hasPendingSave)
+                }
+            }
+            .navigationTitle(pTr("Whole checkout"))
+        } else {
+            checkoutEditor
+        }
+    }
+
+    private var checkoutEditor: some View {
         Form {
             if !draftIsStale { PickupSaveStatus(model: model) }
             if draftIsStale {
@@ -629,6 +654,7 @@ struct PickupHandoffView: View {
     @State private var selectedLanguage: String?
     @State private var sharing: RetailerShare?
     @State private var retailerURL = ""
+    @State private var retailerOpenError: String?
 
     private struct RetailerShare: Identifiable {
         let snapshot: HandoffSnapshot
@@ -637,6 +663,13 @@ struct PickupHandoffView: View {
     }
     private var recipientLanguage: String {
         selectedLanguage ?? (locale.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+    }
+
+    static func retailerWebsite(_ input: String) -> URL? {
+        let address = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: address), url.scheme?.lowercased() == "https",
+              let host = url.host, !host.isEmpty else { return nil }
+        return url
     }
 
     var body: some View {
@@ -658,6 +691,13 @@ struct PickupHandoffView: View {
             PickupActivitySheet(text: share.text) { completed, destination in
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: share.snapshot, destination: destination) }
             }
+        }
+        .alert(pTr("Retailer handoff"), isPresented: Binding(
+            get: { retailerOpenError != nil }, set: { if !$0 { retailerOpenError = nil } }
+        )) {
+            Button(pTr("Done"), role: .cancel) {}
+        } message: {
+            Text(retailerOpenError ?? "")
         }
     }
 
@@ -690,15 +730,19 @@ struct PickupHandoffView: View {
                       model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                 sharing = RetailerShare(snapshot: snapshot, text: copy.fullText)
             } }.disabled(!model.hasCurrentBasketStockBasis)
+            HandoffPrintButton(copy: copy, allowed: access.unlocked && model.isCurrent(copy))
             PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
                                    language: recipientLanguage)
                 .id(snapshot.id)
             TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
             Button(pTr("Open retailer website")) { Task {
                 guard access.unlocked, model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
-                guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
+                guard let url = Self.retailerWebsite(retailerURL) else {
+                    retailerOpenError = pTr("Enter a valid https retailer address.")
+                    return
+                }
                 if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, snapshot: snapshot, destination: url.host) }
-                else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
+                else { retailerOpenError = pTr("Could not open the retailer. Placement remains unconfirmed.") }
             } }.disabled(!model.hasCurrentBasketStockBasis)
             Button(pTr("Still checking out")) { dismiss() }
             Button(pTr("I placed this order")) { Task {

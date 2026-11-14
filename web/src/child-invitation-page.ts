@@ -56,7 +56,9 @@ export class ChildInvitationPage {
   private visibility:'ready'|'hidden'|'checking'='ready';
   private visibilityRevision=0;
   private refreshAfterAction=false;
-  constructor(private readonly root:HTMLElement,private readonly api:ChildInvitationBrowserPort=new ChildInvitationAPI(),private token:string|null=null) {this.language=languageFor(root.ownerDocument.defaultView?.navigator.language??'en');}
+  constructor(private readonly root:HTMLElement,private readonly api:ChildInvitationBrowserPort=new ChildInvitationAPI(),private token:string|null=null, language?:Language) {
+    this.language = language ?? languageFor(root.ownerDocument.defaultView?.navigator.language ?? 'en');
+  }
   private check(generation:number):void {if(generation!==this.generation)throw new ApiError('access_ended',403);}
   clear():void {this.generation++;this.controller?.clear(true);this.controller=null;this.scope=null;this.child=null;this.token=null;this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;this.expected=null;}
   private async run(action:(generation:number)=>Promise<void>,retryingSignOut=false):Promise<void> {
@@ -254,7 +256,14 @@ export class ChildInvitationPage {
     document.documentElement.lang=this.language;this.root.replaceChildren();const header=el('header');header.append(el('p','Room in the Cart'));
     const select=el('select');select.id='language';select.setAttribute('aria-label',t('language'));
     for(const value of ['en','es'] as const){const option=el('option',t(value==='en'?'english':'spanish'));option.value=value;option.selected=value===this.language;select.append(option);}
-    select.addEventListener('change',()=>{this.language=select.value==='es'?'es':'en';this.render();this.root.querySelector<HTMLSelectElement>('#language')?.focus();});header.append(select);
+    select.addEventListener('change', () => {
+      this.language = select.value === 'es' ? 'es' : 'en';
+      const browser = document.defaultView;
+      if (browser) browser.history.replaceState(null, '', browser.location.pathname + '?lang=' + this.language);
+      this.render();
+      this.root.querySelector<HTMLSelectElement>('#language')?.focus();
+    });
+    header.append(select);
     const main=el('main');main.setAttribute('aria-busy',String(this.busy));main.append(el('h1',t('title')));
     // The original page retains an OTP or pairing intent when switching apps.
     // Its DOM stays free of private fields until the current session is verified.
@@ -287,10 +296,10 @@ export class ChildInvitationPage {
       if(state?.stage==='approved'||state?.stage==='finish_retry')main.append(button(state.stage==='finish_retry'?'retryFinish':'finish',()=>void this.run(generation=>this.finish(generation))));
     }else if(this.phase==='recovered')main.append(el('p',t('recoveryExplanation')));
     else if(this.phase==='active_missing')message('activeMissing');
-    else if(this.phase==='active'){const link=el('a',t('open'));link.href='/requests';main.append(link);}
+    else if(this.phase==='active'){const link=el('a',t('open'));link.href='/requests?lang='+this.language;main.append(link);}
     if(this.phase!=='unavailable'&&this.phase!=='loading'&&!this.logoutPending)main.append(button('refresh',()=>void this.start()));
     if(this.auth?.authenticated&&!this.logoutPending)main.append(button('signout',()=>void this.run(()=>this.signout(this.auth?.csrf??undefined))));
-    const help=el('a',t('help'));help.href='/help';main.append(help);this.root.append(header,main);
+    const help=el('a',t('help'));help.href='/help?lang='+this.language;main.append(help);this.root.append(header,main);
   }
 }
 
@@ -299,8 +308,12 @@ export class ChildInvitationPage {
 export function mountChildInvitationPage(root:HTMLElement,api:ChildInvitationBrowserPort=new ChildInvitationAPI()):boolean {
   const document=root.ownerDocument,window=document.defaultView;
   if(!window||!/^\/child-invite\/?$/.test(window.location.pathname))return false;
-  const token=consumeInvitation(window.location,window.history);window.history.replaceState(null,'',window.location.pathname);
-  const page=new ChildInvitationPage(root,api,token);
+  const selected = new URLSearchParams(window.location.search).get('lang');
+  const token = consumeInvitation(window.location, window.history);
+  // Only the supported interface language may survive the private invitation URL.
+  const language = selected === 'en' || selected === 'es' ? selected : undefined;
+  window.history.replaceState(null, '', window.location.pathname + (language ? '?lang=' + language : ''));
+  const page=new ChildInvitationPage(root,api,token,language);
   if(document.visibilityState==='hidden')page.conceal();else void page.start();
   const timer=window.setInterval(()=>page.checkExpiry(),1000);
   window.addEventListener('online',()=>void page.start());

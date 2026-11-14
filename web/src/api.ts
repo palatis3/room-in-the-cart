@@ -5,8 +5,9 @@ export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; nextShopOnly?:boolean; selectionRequired?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
+export interface RequestPickup {shopId:string;createdAt:string;nextShopOnly:boolean}
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
   householdId: string; memberId: string; role: 'contributor' | 'helper' | 'editor'; grantId?: string;
@@ -147,6 +148,8 @@ function parseSession(value: unknown): Session | null {
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
     enrolled: boolean(d.enrolled), ...requestQueueState(d),
+    ...(d.selectionRequired===undefined?{}:{selectionRequired:boolean(d.selectionRequired)}),
+    ...(d.nextShopOnly===undefined?{}:{nextShopOnly:boolean(d.nextShopOnly)}),
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
     ...(grantId ? { grantId } : {}) };
 }
@@ -202,14 +205,32 @@ export class API {
     return {householdId:identity(d.householdId), memberId:identity(d.memberId), role:d.role, ...(grantId ? {grantId} : {})};
   }
   async activateSession(householdId: string, csrf?: string, grantId?: string): Promise<void> {
-    const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {})}, csrf));
-    if (!active || active.household.id !== householdId || (grantId && active.grantId !== grantId)) return invalid();
+    const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {scope:'own_requests'})}, csrf));
+    if (!active || active.household.id !== householdId || active.grantId !== grantId || (!grantId && active.role !== 'contributor')) return invalid();
   }
   async setRequestQueue(session:Session,enabled:boolean):Promise<void>{
     const result=record(await this.call(`/v1/households/${segment(session.household.id)}/devices/current/request-queue`,'PUT',{enabled},session.csrf));
     const state=requestQueueState(result);
     if (!state.canSetRequestQueue || identity(record(result.household).id)!==session.household.id ||
         identity(result.memberId)!==session.memberId || (enabled ? !state.queueConsent : !!state.requestQueueGrant)) invalid();
+  }
+  async requestPickups(session:Session):Promise<RequestPickup[]> {
+    if(!isContributorSession(session))throw new ApiError('access_ended',403);
+    const pickups:RequestPickup[]=[],seen=new Set<string>(),cursors=new Set<string>();
+    let cursor:string|null=null;
+    do {
+      const page=record(await this.call('/v1/households/'+segment(session.household.id)+'/requests/pickups'+(cursor?'?cursor='+segment(cursor):'')));
+      if(!Array.isArray(page.shops)||page.shops.length>50)return invalid();
+      for(const value of page.shops){
+        const row=record(value),shopId=identity(row.shopId);
+        if(seen.has(shopId))return invalid();
+        seen.add(shopId);
+        pickups.push({shopId,createdAt:timestamp(row.createdAt),nextShopOnly:boolean(row.nextShopOnly)});
+      }
+      cursor=page.nextCursor===null?null:identity(page.nextCursor);
+      if(cursor){if(cursors.has(cursor)||cursors.size>=20)return invalid();cursors.add(cursor);}
+    }while(cursor);
+    return pickups;
   }
   async requests(session: Session): Promise<OwnRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
@@ -229,7 +250,7 @@ export class API {
     } while (cursor);
     return rows;
   }
-  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<void> {
+  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<OwnRequest> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     validateOwnCommand(command);
     const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant ? {'X-Request-Queue-Grant':requestQueueGrant} : {}));
@@ -237,6 +258,7 @@ export class API {
     const request = ownRequest(receipt.request);
     if (receipt.kind !== command.kind || request.shopId !== command.shopId
         || (command.kind !== 'request.send' && request.requestId !== command.body.requestId)) return invalid();
+    return request;
   }
   async view(session: Session): Promise<CookView> {
     if (!['helper', 'editor'].includes(session.role) || !session.enrolled || !session.grantId || !session.shopId) throw new ApiError('access_ended', 403);
@@ -284,10 +306,13 @@ export function consumeInvitation(location: Location, history: History): string 
   const url = new URL(location.href);
   const hash = new URLSearchParams(url.hash.slice(1));
   const token = hash.get('token') ?? url.searchParams.get('token');
-  if (token !== null) {
+  const manual = /^\/(invite|view)\/?$/.test(url.pathname) && url.searchParams.get('enterCode') === '1';
+  if (token !== null || manual) {
+    url.searchParams.delete('enterCode');
     url.hash = '';
     url.searchParams.delete('token');
     history.replaceState(null, '', url.pathname + url.search);
   }
-  return token;
+  // An empty invitation opens manual entry, including for an already enrolled browser.
+  return token ?? (manual ? '' : null);
 }

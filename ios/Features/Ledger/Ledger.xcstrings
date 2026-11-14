@@ -2257,6 +2257,22 @@
         }
       }
     },
+    "Original package label (%lld × %@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original package label (%lld × %@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta original del paquete (%lld × %@)"
+          }
+        }
+      }
+    },
     "Original wording": {
       "localizations": {
         "en": {
@@ -3615,6 +3631,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estos artículos o unidades no coinciden, o la cantidad existente no puede cubrir esta necesidad."
+          }
+        }
+      }
+    },
+    "This change is too large to save. Reduce the amount of data and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This change is too large to save. Reduce the amount of data and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este cambio es demasiado grande para guardarlo. Reduce la cantidad de datos y vuelve a intentarlo."
           }
         }
       }

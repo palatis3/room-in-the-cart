@@ -121,7 +121,10 @@ import UIKit
         reveal(amount)
         let value = amount.value as? String
         XCTAssertTrue(value == "" || (value != nil && value == amount.placeholderValue))
-        fill("14", into: "ledgerImportAmount-1")
+        fill("1/0", into: "ledgerImportAmount-1")
+        XCTAssertFalse(element("ledgerCommitImport").isEnabled)
+        XCTAssertTrue(element("ledgerImportAmountError-1").exists)
+        fill("14", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect wraps"]
         reveal(food)
@@ -489,18 +492,28 @@ import UIKit
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
-        fill("Market", into: "Store", replacing: true)
-        fill("West branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        replaceRetailerField("Source of these prices", with: "West checkout")
-        enableSwitch("Retailer total already includes all charges")
-        fill("37.20", into: "Inclusive total")
-        tap(app.buttons["Save and evaluate checkout"])
+        let done = app.buttons["Done"]
+        enterCheckoutTerms([("Store", "Market"), ("Branch", "West branch"),
+                            ("Pickup or delivery slot", "Tuesday 5 PM")], above: done)
+        replaceRetailerField("Source of these prices", with: "West checkout", above: done)
+        let save = app.buttons["Save and evaluate checkout"]
+        func saveInclusiveTotal(_ total: String) {
+            enableSwitch("Retailer total already includes all charges")
+            let amount = app.textFields["Inclusive total"]
+            revealContent(amount)
+            XCTAssertEqual(amount.value as? String, amount.placeholderValue)
+            amount.tap()
+            amount.typeText(total)
+            XCTAssertEqual(amount.value as? String, total)
+            // Submit directly from the amount field, with Save clear of the keyboard.
+            revealContent(save, above: done)
+            save.tap()
+        }
+        saveInclusiveTotal("37.20")
         assertText("Saved checkout result")
 
         for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
         replaceRetailerField("Branch", with: "East")
-        let save = app.buttons["Save and evaluate checkout"]
         revealContent(save)
         XCTAssertFalse(save.isEnabled)
         tap(app.buttons["Replace pricing after review"])
@@ -510,15 +523,7 @@ import UIKit
         revealContent(source)
         XCTAssertEqual(source.value as? String, source.placeholderValue)
         fill("East checkout", into: "Source of these prices")
-        enableSwitch("Retailer total already includes all charges")
-        let amount = app.textFields["Inclusive total"]
-        revealContent(amount)
-        XCTAssertEqual(amount.value as? String, amount.placeholderValue)
-        amount.tap()
-        amount.typeText("39.05")
-        XCTAssertEqual(amount.value as? String, "39.05")
-        app.buttons["Done"].tap()
-        tap(save)
+        saveInclusiveTotal("39.05")
         XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForExistence(timeout: 5))
         assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
         assertText("Market · East"); assertText("East checkout"); assertText("$39.05")
@@ -962,9 +967,9 @@ import UIKit
         XCTAssertEqual(header.value as? String, "Expanded")
     }
 
-    private func replaceRetailerField(_ id: String, with text: String) {
+    private func replaceRetailerField(_ id: String, with text: String, above inputBar: XCUIElement? = nil) {
         let field = element(id)
-        revealContent(field)
+        revealContent(field, above: inputBar)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         // These short, single-line test values leave trailing whitespace. Position

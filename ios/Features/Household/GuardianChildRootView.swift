@@ -131,14 +131,21 @@ struct GuardianChildRequestsView: View {
     @ObservedObject var household: HouseholdModel
     @State private var review: ReviewDestination?
     private struct ReviewDestination: Identifiable {
-        let id = UUID(); let scope: ContributorRequestScope
+        let id = UUID()
+        let scope: ContributorRequestScope
+        let pickupLabel: String
     }
     var body: some View {
         Form {
             Section { Text(GuardianCopy.text("Only your own requests and their status appear here. The shopper decides what goes into the basket.")) }
             if household.locked || household.projection == nil {
                 Section { Text(GuardianCopy.text("Your child access is being checked. Adult work remains locked.")) }
-            } else {
+            } else if let scope = household.projection {
+                Section {
+                    Text(verbatim: scope.household.label)
+                        .font(.headline)
+                        .accessibilityIdentifier("guardian.childHousehold")
+                }
                 Section(GuardianCopy.text("My requests")) {
                     Button(GuardianCopy.text("Refresh my requests")) { Task { await household.refresh() } }
                         .accessibilityIdentifier("guardian.childRequestsRefresh")
@@ -165,11 +172,21 @@ struct GuardianChildRequestsView: View {
                 }
                 Section(household.editing == nil ? ht("New request") : ht("Edit request")) {
                     if household.editing != nil || household.followingUp != nil { Button(ht("Cancel edit")) { household.cancelEdit() } }
+                    if household.requiresRequestPickupChoice && household.editing == nil && household.followingUp == nil {
+                        pickupPicker
+                    }
                     TextField(ht("Item"), text: $household.item).accessibilityIdentifier("guardian.childRequestItem")
                     TextField(ht("Quantity, optional"), text: $household.quantity)
-                    if household.editing == nil { Toggle(ht("Ask for next shop"), isOn: $household.forNextShop) }
+                    if household.requestRequiresNextShop {
+                        Text(ht("Request for next shop"))
+                    } else if household.editing == nil && (!household.requiresRequestPickupChoice || household.followingUp != nil || household.selectedRequestPickupID != nil) {
+                        Toggle(ht("Ask for next shop"), isOn: $household.forNextShop)
+                    }
                     Button(ht("Review request before sending")) {
-                        if let scope = household.contributorRequestScope { review = .init(scope: scope) }
+                        if let scope = household.contributorRequestScope {
+                            let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
+                            review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))
+                        }
                     }.disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("guardian.childRequestReview")
                     switch household.delivery {
@@ -179,7 +196,7 @@ struct GuardianChildRequestsView: View {
                     case .needsReview:
                         Text(ht("Review needed. Check received requests before creating a new request."))
                         Button(ht("I checked received requests; clear this retry")) { Task { await household.discardPendingAfterReview() } }
-                    case .received: Text(ht("Received by the household"))
+                    case .received(let receipt): Text(receipt.contributorDeliveryLabel)
                     case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
                     case .localDraft: Text(ht("Draft on screen. Send to ask the household."))
                     }
@@ -190,9 +207,44 @@ struct GuardianChildRequestsView: View {
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
         .sheet(item: $review) { value in
-            NavigationStack { ContributorRequestCaptureView(household: household, scope: value.scope, capture: false) }
+            NavigationStack {
+                ContributorRequestCaptureView(household: household, scope: value.scope, capture: false, pickupLabel: value.pickupLabel)
+            }
         }
     }
+    @ViewBuilder private var pickupPicker: some View {
+        Picker(GuardianCopy.text("Pickup for this request"), selection: Binding(
+            get: { household.selectedRequestPickupID },
+            set: { if let id = $0 { household.selectRequestPickup(id) } }
+        )) {
+            Text(GuardianCopy.text("Choose a pickup")).tag(nil as UUID?).disabled(true)
+            ForEach(household.requestPickups) { pickup in
+                Text(pickupLabel(pickup)).tag(Optional(pickup.shopId))
+            }
+        }
+        .pickerStyle(.menu)
+        .disabled(household.requestPickups.isEmpty || hasPendingRequest)
+        .accessibilityIdentifier("guardian.childRequestPickup")
+        if household.nextRequestPickupCursor != nil {
+            Button(GuardianCopy.text("Load more pickups")) { Task { await household.loadMoreRequestPickups() } }
+                .accessibilityIdentifier("guardian.childRequestMorePickups")
+        }
+    }
+
+    private var hasPendingRequest: Bool {
+        switch household.delivery {
+        case .waiting, .needsReview: true
+        default: false
+        }
+    }
+
+    private func pickupLabel(_ pickup: RequestPickup) -> String {
+        let id = pickup.shopId.uuidString.lowercased()
+        let prefix = String(id.prefix(8))
+        let collision = household.requestPickups.contains { $0.shopId != pickup.shopId && $0.shopId.uuidString.lowercased().hasPrefix(prefix) }
+        return GuardianCopy.date(pickup.createdAt) + " · " + (collision ? id : prefix)
+    }
+
     private func requestStatus(_ request: OwnRequest) -> String {
         if request.carriedForward == true { return ht("Moved to a later pickup for review") }
         switch request.status {
