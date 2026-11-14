@@ -136,14 +136,14 @@ extension OfferResult {
         packsToBuy.map { message("Whole packs to buy: %@", $0.formatted()) }
     }
     func purchasedText(in unit: UnitOfMeasure) -> String? {
-        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.displayName) }
+        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
     }
     func shortageText(in unit: UnitOfMeasure) -> String? {
         guard let remainingNeed, remainingNeed > .zero else { return nil }
-        return message("Still needed: %@ %@", amountText(remainingNeed), unit.displayName)
+        return message("Still needed: %@ %@", amountText(remainingNeed), unit.comparisonLabel(for: remainingNeed))
     }
     func leftoverText(in unit: UnitOfMeasure) -> String? {
-        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.displayName) }
+        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
     }
     var unitCeilingText: String? {
         unitCeiling.map { message("Maximum per pack for this item limit: %@", moneyText($0)) }
@@ -265,6 +265,17 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 }
 
 extension UnitOfMeasure {
+    func comparisonLabel(for amount: Rational) -> String {
+        guard amount == .one else { return displayName }
+        switch self {
+        case .count: return tr("item")
+        case .ounce: return tr("ounce (weight)")
+        case .cup: return tr("US cup")
+        case .fluidOunce: return tr("US fluid ounce")
+        default: return pUnitLabel(self, singular: true, language: nil)
+        }
+    }
+
     var displayName: String {
         switch self {
         case .count: return tr("items")

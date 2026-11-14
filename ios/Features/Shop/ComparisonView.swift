@@ -166,8 +166,8 @@ struct ComparisonView: View {
                 Text(tr("Item-only comparison")).font(.headline)
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
                     .foregroundStyle(Theme.secondary)
-                if !model.draft.needed.isEmpty {
-                    ComparisonMetric(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
+                if let need = try? ComparisonModel.quantity(model.draft.needed, model.draft.unit) {
+                    ComparisonMetric(message("Total need: %@ %@", need.originalLiteral, need.unit.comparisonLabel(for: need.amount)))
                 }
                 let stock = model.confirmedStock
                 let stockText = stock.map { pQuantity($0.originalLiteral, unit: $0.unit, singular: $0.amount == .one, language: nil) }
@@ -177,8 +177,8 @@ struct ComparisonView: View {
                     ComparisonMetric(message("Needed after confirmed stock: %@", remainingQuantity(remaining)),
                                      id: "comparisonNeedAfterStock")
                 }
-                if !model.draft.protected.isEmpty {
-                    ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
+                if let protected = try? ComparisonModel.quantity(model.draft.protected, model.draft.unit) {
+                    ComparisonMetric(message("Protected within that total: %@ %@", protected.originalLiteral, protected.unit.comparisonLabel(for: protected.amount)))
                 }
                 if let summary = result.purchaseSummary {
                     ComparisonMetric(summary, style: .headline, id: "comparisonPurchaseSummary")

@@ -383,6 +383,21 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testComparisonAmountLabelsKeepSingularUnitsAndDistinguishWeightFromVolume() throws {
+        let cases: [(UnitOfMeasure, String)] = [
+            (.count, tr("item")), (.ounce, tr("ounce (weight)")),
+            (.cup, tr("US cup")), (.fluidOunce, tr("US fluid ounce")),
+            (.gram, pTr("gram")), (.kilogram, pTr("kilogram")), (.pound, pTr("pound")),
+            (.milliliter, pTr("milliliter")), (.liter, pTr("liter"))
+        ]
+        for (unit, singular) in cases {
+            XCTAssertEqual(unit.comparisonLabel(for: try Rational(decimal: "1.00")), singular)
+            XCTAssertEqual(unit.comparisonLabel(for: .zero), unit.displayName)
+            XCTAssertEqual(unit.comparisonLabel(for: try Rational(2)), unit.displayName)
+        }
+    }
+
+    @MainActor
     func testKnownComparisonSaveCloseReopenRecomputesIdenticalAnswer() async throws {
         try await assertSaveReopen(unknownSecondYield: false)
     }

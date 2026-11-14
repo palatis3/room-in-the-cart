@@ -1848,6 +1848,23 @@
         }
       }
     },
+    "US cup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US cup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taza estadounidense"
+          }
+        }
+      }
+    },
     "US cups": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -1862,6 +1879,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "tazas estadounidenses"
+          }
+        }
+      }
+    },
+    "US fluid ounce": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US fluid ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza líquida estadounidense"
           }
         }
       }
@@ -2133,6 +2167,23 @@
         }
       }
     },
+    "item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidad"
+          }
+        }
+      }
+    },
     "items": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -2201,6 +2252,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "mililitros"
+          }
+        }
+      }
+    },
+    "ounce (weight)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ounce (weight)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza (peso)"
           }
         }
       }
