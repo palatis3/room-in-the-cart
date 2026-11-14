@@ -493,6 +493,23 @@
         }
       }
     },
+    "Restore finished. This account currently has Free access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore finished. This account currently has Free access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La restauración finalizó. Esta cuenta tiene acceso gratuito por el momento."
+          }
+        }
+      }
+    },
     "Restore Purchases": {
       "extractionState": "manual",
       "localizations": {

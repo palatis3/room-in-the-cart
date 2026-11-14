@@ -30,7 +30,7 @@ import SwiftUI
     private var generation = 0
     private var purchaseRejection: MembershipFailure?
 
-    enum Notice: Equatable { case pending, cancelled, restored, delivered, failed(MembershipFailure) }
+    enum Notice: Equatable { case pending, cancelled, restored, restoredFree, delivered, failed(MembershipFailure) }
 
     enum PurchaseReport: Equatable {
         case awaitingResult, pending, cancelled, unverified, verified(transactionID: String), failed(MembershipFailure)
@@ -59,6 +59,7 @@ import SwiftUI
                 case .pending: return "membership.status.notice.pending"
                 case .cancelled: return "membership.status.notice.cancelled"
                 case .restored: return "membership.status.notice.restored"
+                case .restoredFree: return "membership.status.notice.restored-free"
                 case .delivered: return "membership.status.notice.delivered"
                 case .failed(let issue): return "membership.status.notice.failure." + Self.failureID(issue)
                 }
@@ -350,8 +351,8 @@ import SwiftUI
             await refresh()
             guard session == generation else { return }
             if let issue = state.issue { notice = .failed(issue) }
-            else if state.hasPaidAccess(context: context, now: clock()) { notice = .restored }
-            else { notice = .failed(.unavailable) }
+            else if canManageSeats || hasPaidAccess { notice = .restored }
+            else { notice = .restoredFree }
         } catch {
             guard session == generation else { return }
             notice = .failed(failure(error))

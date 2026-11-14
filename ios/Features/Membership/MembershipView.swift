@@ -158,6 +158,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
     case .pending: return mtr("Apple reported a pending purchase status. Use Restore Purchases to check current membership access.")
     case .cancelled: return mtr("Apple reported a canceled purchase. Current membership access is shown above.")
     case .restored: return mtr("Your verified Household membership was restored.")
+    case .restoredFree: return mtr("Restore finished. This account currently has Free access.")
     case .delivered: return mtr("An App Store transaction was saved by your household service. Current membership access is shown above.")
     case .failed(let failure):
         switch failure {

@@ -932,9 +932,39 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testPurchaserWithBothSeatsAssignedToOthersCanRestoreWithoutTakingASeat() async {
+        let seats = ["adult-two", "adult-three"].map { MembershipSeat(userID: $0, displayName: $0, isAdult: true) }
+        for status in [MembershipStatus.active, .grace] {
+            let service = FakeMembershipService(snapshot: snapshot(status: status, seats: seats))
+            let store = FakeMembershipStorefront()
+            let model = makeModel(service, store)
+
+            await model.restore()
+
+            XCTAssertEqual(model.notice, .restored)
+            XCTAssertTrue(model.canManageSeats)
+            XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertEqual(model.state.snapshot?.seats, seats)
+            XCTAssertTrue(service.requestedSeatRevisions.isEmpty)
+            XCTAssertEqual(store.syncCount, 1)
+        }
+    }
+
+    func testRestoreReportsFreeAfterCheckingAnInactiveMembership() async {
+        for status in [MembershipStatus.free, .expired, .revoked, .billingRetry] {
+            let service = FakeMembershipService(snapshot: snapshot(status: status))
+            let model = makeModel(service, FakeMembershipStorefront())
+            await model.restore()
+            XCTAssertEqual(model.statusMessages, [.otherNotice(.restoredFree)])
+            XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertFalse(model.canManageSeats)
+        }
+    }
+
     func testOfferRetryCoalescesLoadsAndPreservesAnIndependentRestoreFailure() async {
         let store = FakeMembershipStorefront()
         let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.error = .unavailable
         let model = makeModel(service, store)
         await model.restore()
         XCTAssertEqual(model.notice, .failed(.unavailable))
@@ -1102,6 +1132,7 @@ import Combine
         let model = MembershipModel(context: second, service: service, storefront: FakeMembershipStorefront(), clock: { self.now })
         await model.restore()
         XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.notice, .restoredFree)
         await model.receive(.verified(transaction()))
         XCTAssertEqual(service.submissions, 0)
         XCTAssertEqual(model.notice, .failed(.notPurchaser))
