@@ -143,7 +143,7 @@ def main():
     parser.add_argument("app", type=Path)
     parser.add_argument("--configuration", choices=ENVIRONMENT_SUFFIXES, required=True)
     parser.add_argument("--require-release-metadata", action="store_true",
-                        help="require owner-supplied production support/privacy/terms URLs and the Apple product ID; this does not verify release readiness")
+                        help="require production household service and identity settings, public support and policy URLs, and the Apple product ID")
     args = parser.parse_args()
     if args.require_release_metadata and args.configuration != "Release":
         parser.error("--require-release-metadata requires --configuration Release")

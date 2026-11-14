@@ -19,7 +19,7 @@ on:
   workflow_call:
     inputs:
       require_release_metadata:
-        description: Reject missing production support, policy and Apple product metadata
+        description: Require production household endpoints, client key, Apple product ID and public support and policy URLs
         type: boolean
         default: false
 permissions:

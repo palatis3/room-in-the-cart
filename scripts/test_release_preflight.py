@@ -62,19 +62,26 @@ class ReleasePreflightTests(unittest.TestCase):
             (scripts / "app_configuration.py").write_bytes((ROOT / "scripts/app_configuration.py").read_bytes())
             config = root / "config"
             config.mkdir()
-            values = {"householdSubscriptionProductID": "org.grocery.annual", "supportURL": "https://grocery.org/support",
-                      "privacyPolicyURL": "https://grocery.org/privacy", "termsOfUseURL": "https://grocery.org/terms"}
-            (config / "staging.json").write_text(json.dumps({**values, "environment": "staging"}))
-            for release in (None, {"supportURL": "http://grocery.org/support"}, values):
-                with self.subTest(release=release):
+            store_fields = {"householdSubscriptionProductID": "org.grocery.annual", "supportURL": "https://grocery.org/support",
+                            "privacyPolicyURL": "https://grocery.org/privacy", "termsOfUseURL": "https://grocery.org/terms"}
+            backend = {"supabaseURL": "https://identity.grocery.org", "publishableKey": "sb_publishable_release",
+                       "serviceURL": "https://api.grocery.org"}
+            (config / "staging.json").write_text(json.dumps({
+                **store_fields, "environment": "staging", "supabaseURL": "https://staging-identity.grocery.org",
+                "publishableKey": "sb_publishable_staging", "serviceURL": "https://staging-api.grocery.org",
+            }))
+            for release, error in ((None, "Release metadata is incomplete"),
+                                   ({"supportURL": "http://grocery.org/support"}, "supportURL"),
+                                   (store_fields, "HouseholdServiceURL"), ({**store_fields, **backend}, None)):
+                with self.subTest(error=error):
                     if release is not None:
                         (config / "release.json").write_text(json.dumps(release))
                     run = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=scripts, capture_output=True, text=True)
-                    if release == values:
+                    if error is None:
                         self.assertEqual(run.returncode, 0, run.stderr)
                     else:
                         self.assertNotEqual(run.returncode, 0)
-                        self.assertIn("Release metadata is incomplete" if release is None else "supportURL", run.stderr)
+                        self.assertIn(error, run.stderr)
 
     def test_candidate_guard_accepts_matching_dispatch_and_actual_checkout(self):
         result = self.run_candidate_guard(self.sha, self.sha)

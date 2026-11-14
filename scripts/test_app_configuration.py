@@ -187,9 +187,17 @@ class AppConfigurationTests(unittest.TestCase):
             root = Path(folder)
             (root / "config").mkdir()
             config = {"environment": "production", "householdSubscriptionProductID": "com.grocery-app.household.annual", "privacyPolicyURL": "https://grocery-app.com/privacy", "termsOfUseURL": "https://grocery-app.com/terms", "supportURL": "https://grocery-app.com/support"}
+            config.update(supabaseURL="https://identity.grocery-app.com", publishableKey="sb_publishable_release",
+                          serviceURL="https://api.grocery-app.com")
             (root / "config/release.json").write_text(json.dumps(config))
             info = compiled_metadata(load_configuration(root, "Release"), "Release")
             require_release_metadata(info)
+            for key in ("SupabaseProjectURL", "SupabasePublishableKey", "HouseholdServiceURL"):
+                with self.subTest(missing=key), self.assertRaisesRegex(ValueError, key):
+                    require_release_metadata(dict(info, **{key: ""}))
+            for key in ("SupabaseProjectURL", "HouseholdServiceURL"):
+                with self.subTest(nonpublic=key), self.assertRaisesRegex(ValueError, key):
+                    require_release_metadata(dict(info, **{key: "https://127.0.0.1"}))
             for identifier in ("A.1_-", "X" * 100):
                 with self.subTest(identifier=identifier):
                     (root / "config/release.json").write_text(json.dumps(dict(config, householdSubscriptionProductID=identifier)))

@@ -23,7 +23,8 @@ HTTPS_AUTHORITY = re.compile(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
 PRODUCT_ID = re.compile(r"[A-Za-z0-9._-]{1,100}")
 LOCAL_STOREKIT_PRODUCT_ID = "local.testing.household.annual"
-RELEASE_METADATA = ("HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL")
+RELEASE_URLS = ("PrivacyPolicyURL", "TermsOfUseURL", "SupportURL", "SupabaseProjectURL", "HouseholdServiceURL")
+RELEASE_METADATA = ("HouseholdSubscriptionProductID", "SupabasePublishableKey", *RELEASE_URLS)
 NONPUBLIC_PAGE_DOMAINS = ("alt", "arpa", "example", "example.com", "example.net", "example.org",
                           "internal", "invalid", "local", "localhost", "onion", "test")
 IPV4_PROTOCOL_ADDRESSES = ipaddress.ip_network("192.0.0.0/24")
@@ -195,6 +196,6 @@ def require_release_metadata(info):
     product_id = info["HouseholdSubscriptionProductID"]
     if not isinstance(product_id, str) or not PRODUCT_ID.fullmatch(product_id) or product_id == LOCAL_STOREKIT_PRODUCT_ID:
         raise ValueError("Release metadata has an invalid HouseholdSubscriptionProductID")
-    for key in RELEASE_METADATA:
-        if key.endswith("URL") and not valid_page_url(info[key]):
+    for key in RELEASE_URLS:
+        if not valid_page_url(info[key]):
             raise ValueError(f"Release metadata has an invalid {key}")
