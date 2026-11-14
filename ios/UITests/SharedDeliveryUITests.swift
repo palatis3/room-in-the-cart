@@ -568,8 +568,15 @@ import XCTest
         XCTAssertEqual(confirmation.switches.count, 1)
         let control = confirmation.switches.firstMatch
         XCTAssertTrue(control.exists && control.isHittable)
-        control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
-        XCTAssertEqual(control.value as? String, "1")
+        XCTAssertEqual(control.value as? String, "0")
+        // Move the native switch to On, then verify the recipient confirmation
+        // after SwiftUI has updated the correction controls.
+        let off = control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
+        let on = control.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.5))
+        off.press(forDuration: 0.15, thenDragTo: on)
+        let confirmed = app.switches.matching(identifier: "delivery.cook.confirmDestination")
+            .matching(NSPredicate(format: "value == %@", "1")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 5))
         XCTAssertEqual(confirmation.value as? String, "1")
         tap(reviewCorrection)
         let correction = app.staticTexts["delivery.cook.correctionText"]

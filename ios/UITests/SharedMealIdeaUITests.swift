@@ -32,7 +32,9 @@ import XCTest
         tap(app.buttons["Use editable household idea template"])
         enterValue("Fractional chickpea supper", into: "Meal name", replacing: true)
         fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
-        XCTAssertEqual(app.textFields["Meal name"].value as? String, "Fractional chickpea supper",
+        let savedTitle = app.textFields["Meal name"]
+        reveal(savedTitle, searchTowardEndFirst: false)
+        XCTAssertEqual(savedTitle.value as? String, "Fractional chickpea supper",
                        "Leaving the title field must preserve the household’s wording")
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
@@ -93,16 +95,14 @@ import XCTest
         // The approved idea does not silently turn unrelated soup packs into
         // chickpeas. Add its own actual pack, leaving its unquoted price unknown.
         tap(app.buttons["Add shared line"])
-        let item = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@ AND identifier != %@", "sharedShop.line.", ".item", "sharedShop.line.66666666-6666-4666-8666-666666666666.item")).firstMatch
+        guard let chickpeaID = addedBasketLineID() else { return }
+        let line = "sharedShop.line." + chickpeaID
+        let item = app.textFields[line + ".item"]
         // The new row is inserted above Add; keep its identity stable after typing.
         reveal(item, fullyVisible: true, searchTowardEndFirst: false); item.tap(); item.typeText("Chickpeas\n")
         XCTAssertEqual(item.value as? String, "Chickpeas")
-        let prices = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "sharedShop.line.", ".price"))
-        let chickpeaPrice = prices.allElementsBoundByIndex.first { $0.identifier != "sharedShop.line.66666666-6666-4666-8666-666666666666.price" }
-        XCTAssertNotNil(chickpeaPrice)
-        guard let chickpeaPrice else { return }
-        let chickpeaID = String(chickpeaPrice.identifier.dropFirst("sharedShop.line.".count).dropLast(".price".count))
-        XCTAssertNotNil(UUID(uuidString: chickpeaID))
+        let chickpeaPrice = app.textFields[line + ".price"]
+        reveal(chickpeaPrice, fullyVisible: true)
         XCTAssertTrue((chickpeaPrice.value as? String ?? "").isEmpty || chickpeaPrice.value as? String == chickpeaPrice.placeholderValue)
         tap(app.buttons["Review entered shared shop"])
         XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
@@ -186,6 +186,30 @@ import XCTest
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-approved-proposal-reopens-after-authorized-parent-refresh")
+    }
+    private func addedBasketLineID() -> String? {
+        // The editor generates the new line UUID. Read it from a snapshot once
+        // the row is rendered, then use exact identifiers for both fields.
+        for attempt in 0...3 {
+            guard let snapshot = try? app.snapshot() else {
+                XCTFail("Could not inspect the added basket line")
+                return nil
+            }
+            var pending = snapshot.children
+            while let node = pending.popLast() {
+                pending.append(contentsOf: node.children)
+                guard node.elementType == .textField else { continue }
+                let parts = node.identifier.components(separatedBy: ".")
+                if parts.count == 4, parts[0] == "sharedShop", parts[1] == "line", parts[3] == "item",
+                   parts[2] != "66666666-6666-4666-8666-666666666666", UUID(uuidString: parts[2]) != nil {
+                    return parts[2]
+                }
+            }
+            // Add follows the basket rows in the lazy Form.
+            if attempt < 3 { scrollContent(upward: false) }
+        }
+        XCTFail("Missing the newly added basket item field")
+        return nil
     }
     private func enterFirstAdoption(chickpeaID: String) {
         guard let soup = revealManualSource(named: "Entered soup packs") else { return }
