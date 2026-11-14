@@ -26,6 +26,13 @@ preserved the comparison. The local results are in
 `.build/ErasedBackupNov13/qualification.json` and
 `.build/AccessibleRecordsDeletionNov14/qualification.json`.
 
+At `3dc272c3`, all 47 Records adapter and recovery tests passed on the iPhone SE
+simulator running iOS 17.0, with zero skips or reported runtime warnings. The
+app rejected a symbolic link selected for import and preserved the valid recipe
+when another recipe in the same file had an oversized ingredient. The saved batch
+reopened successfully. The XCTest result and selector check are in
+`.build/RecordsMinimum3dc2Nov14/`.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,
