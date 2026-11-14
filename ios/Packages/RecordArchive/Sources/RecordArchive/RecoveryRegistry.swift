@@ -464,6 +464,7 @@ public actor RecoveryRegistry {
         let ids = Set(insertedCopyIDs)
         var next = manifest
         next.records.removeAll { ids.contains($0.id) }
+        guard next.records.count != manifest.records.count else { return }
         purgeBackups(&next, removedCopies: ids)
         try persist(&next)
     }

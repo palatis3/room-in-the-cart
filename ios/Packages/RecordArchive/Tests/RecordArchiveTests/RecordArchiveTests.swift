@@ -355,6 +355,22 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(all.count, 2)
         XCTAssertEqual(all.first { $0.record.id == "shop-1" }?.record.title, "Dinner")
     }
+    func testRepeatedImportUndoPreservesUnrelatedPendingReview() async throws {
+        let url = try temporaryURL()
+        let registry = try RecoveryRegistry(url: url)
+        let imported = try await registry.apply(registry.review(envelope([record()])))
+        try await registry.undoImport(insertedCopyIDs: imported.insertedCopyIDs)
+
+        let other = try RecoveryRegistry(url: url)
+        let pending = try await other.review(envelope([record(id: "another")]))
+        let savedManifest = try Data(contentsOf: url)
+        try await registry.undoImport(insertedCopyIDs: [])
+        XCTAssertEqual(try Data(contentsOf: url), savedManifest)
+        try await registry.undoImport(insertedCopyIDs: imported.insertedCopyIDs)
+        XCTAssertEqual(try Data(contentsOf: url), savedManifest)
+        let result = try await other.apply(pending)
+        XCTAssertEqual(result.insertedCount, 1)
+    }
     func testFailedAtomicWriteLeavesRegistryEmptyAndRetryPreservesReview() async throws {
         let url = try temporaryURL()
         let actual = try RecoveryRegistry(url: url)
