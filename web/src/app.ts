@@ -148,6 +148,17 @@ export class WebApp {
     if(this.signOutPending)return;
     const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
     if(start!==this.proposalGeneration)return;
+    if (this.redemption && fresh) {
+      if (fresh.household.id !== this.redemption.householdId || fresh.memberId !== this.redemption.memberId) {
+        throw new ApiError('session_needed', 401);
+      }
+      if (fresh.grantId !== this.redemption.grantId) {
+        // Activation rotates CSRF. Keep the same member's current token for an
+        // explicit retry, without reading the other grant or displaying its data.
+        this.session = fresh;
+        throw new ApiError('grant_context_changed', 409);
+      }
+    }
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
       this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
@@ -420,10 +431,14 @@ export class WebApp {
       void this.run(async()=>{
         this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
         await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
-        const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
-        const opened=this.session as Session|null;
-        if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
-        if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
+        const accepted = this.redemption;
+        const opened = await this.api.session();
+        if (!opened) throw new ApiError('session_needed', 401);
+        this.notice = '';
+        await this.load(opened);
+        if (this.session?.household.id !== accepted.householdId || this.session.memberId !== accepted.memberId) {
+          throw new ApiError('session_needed', 401);
+        }
         this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
       });
     });

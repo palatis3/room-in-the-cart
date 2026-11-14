@@ -758,6 +758,28 @@ test('redeeming a helper link never opens a different most-recent grant',async()
  submit(root,dom);await waitForIdle(root);assert.doesNotMatch(root.textContent,/Different shop|Different private ingredient/);assert.match(root.textContent,/information changed/);
 });
 
+test('an enrolled adult accepting a cook invitation never reads another grant after activation',async t=>{
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/view?enterCode=1'});
+ t.after(()=>dom.window.close());
+ const root=dom.window.document.getElementById('app');
+ let current=session(),reads=0,redeems=0,activations=0;
+ const api=fakeAPI({
+  session:async()=>current,
+  redeem:async()=>{redeems++;return{householdId:'second',memberId:'member-b',role:'helper',grantId:'requested'};},
+  activateSession:async(_,csrf)=>{assert.equal(csrf,current.csrf);activations++;current={...session(),household:{id:'second',label:'Second household'},memberId:'member-b',role:'helper',grantId:activations===1?'other':'requested',csrf:'rotated-'+activations};},
+  view:async active=>{reads++;return{grantId:active.grantId,shopId:active.shopId,shopLabel:active.grantId,revision:1,asOf:'2026-11-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[]};}
+ });
+ const token=consumeInvitation(dom.window.location,dom.window.history);
+ await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+ type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));assert.match(root.textContent,/information changed/);
+ click(root,'Refresh');await waitForIdle(root);assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(redeems,1);assert.equal(activations,2);assert.equal(reads,1);
+ assert.equal(root.querySelector('#adult-attestation'),null);assert.match(root.textContent,/requested/);
+});
+
 test('helper session activation sends and verifies the selected grant',async()=>{
  const calls=[];const helper={...session(),role:'helper',grantId:'selected-grant'};
  const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify(helper),{status:200});});
