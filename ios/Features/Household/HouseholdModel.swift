@@ -562,7 +562,11 @@ struct DeviceReminderPersona: Equatable {
         do {
             let receipt = try await service.execute(operation)
             guard start == generation else { return }
-            delivery = .received(receipt); pending = nil; cancelEdit()
+            delivery = .received(receipt)
+            pending = nil
+            if receipt.kind != "request.withdraw" || editing?.id == receipt.request.id || followingUp?.id == receipt.request.id {
+                cancelEdit()
+            }
             requests.removeAll { $0.id == receipt.request.id }; requests.insert(receipt.request, at: 0)
             do { try await outbox.remove(operation.id) }
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }

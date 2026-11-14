@@ -390,6 +390,44 @@ import DeviceSurfaces
         XCTAssertEqual(fixture.attemptedGrants.count, 1); XCTAssertTrue(fixture.rows.isEmpty)
     }
 
+    func testWithdrawingOneRequestPreservesAnUnrelatedDraft() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let model = try await model(fixture, queue: queue)
+        model.item = "Cereal"
+        await model.sendRequest()
+        let cereal = try XCTUnwrap(model.requests.first)
+
+        model.item = "Rice"
+        model.quantity = "2 bags"
+        model.forNextShop = true
+        await model.withdraw(cereal)
+        XCTAssertEqual(model.requests.first?.status, "withdrawn")
+        XCTAssertEqual(model.item, "Rice")
+        XCTAssertEqual(model.quantity, "2 bags")
+        XCTAssertTrue(model.forNextShop)
+        XCTAssertEqual(fixture.commands.count, 2)
+    }
+
+    func testWithdrawingTheRequestBeingEditedClosesItsDraft() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let model = try await model(fixture, queue: queue)
+        model.item = "Rice"
+        await model.sendRequest()
+        let rice = try XCTUnwrap(model.requests.first)
+        model.edit(rice)
+        model.quantity = "2 bags"
+
+        await model.withdraw(rice)
+        XCTAssertEqual(model.requests.first?.status, "withdrawn")
+        XCTAssertNil(model.editing)
+        XCTAssertEqual(model.item, "")
+        XCTAssertEqual(model.quantity, "")
+    }
+
     func testRotatedGrantFencesOnlineWithdrawalAfterDisconnectedPost() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), grant = UUID(), device = ContributorCaptureVault()
