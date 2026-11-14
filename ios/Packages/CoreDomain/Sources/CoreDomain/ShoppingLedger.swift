@@ -1436,7 +1436,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 }
 
 private func normalizedProduct(_ value: String) -> String {
-    value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+    // Printable ASCII only needs case folding and space normalization.
+    if value.utf8.allSatisfy({ (0x20...0x7e).contains($0) }) {
+        return value.lowercased().split(separator: " ").joined(separator: " ")
+    }
+    return value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         .split(whereSeparator: \.isWhitespace).joined(separator: " ")
 }
 private func ledgerText(_ value: String, nonempty: Bool = false, maximum: Int = 8192) throws {
