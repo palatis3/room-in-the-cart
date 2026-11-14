@@ -169,17 +169,15 @@ import XCTest
         enterValue(label+" branch",into:prefix+"branch")
         enterValue("Entered retailer checkout",into:prefix+"source")
         enterValue(checkout,into:prefix+"itemSubtotal")
-        enterValue(checkout,into:prefix+"total")
-        enterValue(trip,into:prefix+"tripCash")
-        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
-
-        let total = app.textFields.matching(identifier:prefix+"total").firstMatch
-        reveal(total, fullyVisible:true)
-        assertFieldValue(total,text:checkout)
+        // Read the checkout value after Done while its row is still on screen.
+        // The assumptions follow it in the form, before the separate trip inputs.
+        fill(checkout,into:prefix+"total",requireDone:true)
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
+        enterValue(trip,into:prefix+"tripCash")
+        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
         let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
@@ -294,7 +292,10 @@ import XCTest
     }
     private func dismissBilingualKeyboardCardIfPresent() {
         let title = app.staticTexts["Type español e inglés"]
-        guard title.waitForExistence(timeout: 2) else {
+        // Spanish keyboard setup can present the bilingual card asynchronously.
+        // The English journey only needs to handle the card when it is visible.
+        let present = app.launchArguments.contains("es_US") ? title.waitForExistence(timeout: 2) : title.exists
+        guard present else {
             XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
             return
         }
