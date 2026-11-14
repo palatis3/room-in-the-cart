@@ -1920,6 +1920,23 @@
         }
       }
     },
+    "Evidence not saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence not saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardó el comprobante"
+          }
+        }
+      }
+    },
     "Enter a valid amount and evidence ID. Credits must link to an original posted charge.": {
       "extractionState": "manual",
       "localizations": {

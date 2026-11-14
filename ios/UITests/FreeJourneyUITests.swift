@@ -788,6 +788,11 @@ import XCTest
         back(to: "Close the pickup")
         tap(app.buttons["Close the pickup"])
         fill("2.00", into: "Amount")
+        tap(app.buttons["Save financial evidence"])
+        let missingReceipt = app.alerts["Evidence not saved"]
+        XCTAssertTrue(missingReceipt.waitForExistence(timeout: 5))
+        XCTAssertTrue(missingReceipt.staticTexts["Enter a valid amount and evidence ID. Credits must link to an original posted charge."].exists)
+        missingReceipt.buttons["Done"].tap()
         fill("net-receipt-2", into: "Unique receipt or transaction evidence ID")
         tap(app.buttons["Save financial evidence"])
         assertText("2.00")
