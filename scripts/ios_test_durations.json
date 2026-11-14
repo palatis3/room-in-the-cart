@@ -97,6 +97,7 @@
     "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart": 51,
     "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder": 75,
     "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack": 98,
+    "RoomInTheCartUITests/NavigationRestorationUITests/testInListPickupCreationAndSwitchRestoreTheChosenList": 36,
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList": 67,
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison": 22,
     "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart": 441,
