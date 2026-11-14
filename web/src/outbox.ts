@@ -1,5 +1,5 @@
 import { validateOwnCommand, isContributorSession, type Command, type Session } from './api.js';
-export interface Pending { id: string; scope: string; command: Command; createdAt: string }
+export interface Pending { id: string; scope: string; command: Command; createdAt: string; needsReview?: true }
 export function scopeFor(session: Session): string { return `${session.household.id}/${session.memberId}${session.requestQueueGrant ? "/"+session.requestQueueGrant : ""}`; }
 export class Outbox {
   constructor(private readonly factory?: IDBFactory) {}
@@ -43,6 +43,26 @@ export class Outbox {
       tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
     }); } finally { db.close(); }
   }
+  // Update only an existing edit in its original scope. A retry in another tab
+  // must not recreate a removed row or move the same correction into two drafts.
+  async reviewEdit(id:string, scope:string, action:'mark'|'take'):Promise<Pending|null> {
+    const db=await this.open();
+    try { return await new Promise((resolve,reject)=>{
+      const tx=db.transaction('pending','readwrite'), store=tx.objectStore('pending');
+      const read=store.get(id);let matched:Pending|null=null;
+      read.onsuccess=()=>{
+        const row=read.result as Pending|undefined;
+        if(!row || row.scope!==scope || row.command.kind!=='request.edit')return;
+        try {validatePending(row);} catch {tx.abort();return;}
+        if(action==='mark') {
+          matched={...row,needsReview:true};store.put(matched);
+        } else if(row.needsReview) {
+          matched=row;store.delete(id);
+        }
+      };
+      tx.oncomplete=()=>resolve(matched);tx.onabort=()=>reject(tx.error);tx.onerror=()=>reject(tx.error);
+    }); } finally {db.close();}
+  }
   async remove(id: string): Promise<void> { await this.mutate(store => store.delete(id)); }
   async clear(): Promise<void> { await this.mutate(store => store.clear()); }
   private async mutate(action:(store:IDBObjectStore)=>unknown): Promise<void> {
@@ -57,5 +77,6 @@ export class Outbox {
 function validatePending(pending: Pending): void {
   if (!pending || typeof pending.scope !== 'string' || !pending.scope || pending.id !== pending.command?.clientKey
       || typeof pending.createdAt !== 'string' || !Number.isFinite(Date.parse(pending.createdAt))) throw new Error('storage_invalid');
+  if(pending.needsReview!==undefined && (pending.needsReview!==true || pending.command.kind!=='request.edit'))throw new Error('storage_invalid');
   validateOwnCommand(pending.command);
 }

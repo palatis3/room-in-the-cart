@@ -501,6 +501,49 @@ test('a rejected edit retains the authored text until the contributor confirms a
  assert.equal(followup.shopId,edit.shopId);assert.equal(followup.body.route,'next');
 });
 
+test('rejected queued edit survives reload for explicit review and stays linked to its original pickup',async()=>{
+ const active={...session(),queueConsent:true,canSetRequestQueue:true};
+ const outbox=new Outbox(new IDBFactory()),commands=[];
+ const current={...own(),revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+ const old={...command(),kind:'request.edit',shopId:current.shopId,base:{shopRevision:0,authorityEpoch:0,requestRevision:1},
+  body:{requestId:current.requestId,originalItem:'Black beans',ownQuantity:'three cans'}};
+ await outbox.put({id:old.clientKey,scope:scopeFor(active),command:old,createdAt:new Date().toISOString()},active,true);
+ const api=fakeAPI({session:async()=>active,requests:async()=>[current],command:async(_,c)=>{
+  commands.push(c);if(c.kind==='request.edit')throw new ApiError('followup_required',409);
+  return {...own(),followupTo:current.requestId};
+ }});
+ const first=await setup(api,'en',outbox);
+ type(first.dom,'item','Rice');click(first.root,'Retry');await waitForIdle(first.root);
+ assert.equal(first.root.querySelector('#item').value,'Rice');assert.match(first.root.textContent,/Move correction to draft/);
+ assert.deepEqual(commands,[old]);first.dom.window.close();
+ const {root,dom}=await setup(api,'en',outbox);
+ assert.doesNotMatch(root.textContent,/Waiting to send from this browser/);
+ click(root,'Move correction to draft');await waitForIdle(root);
+ assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+ assert.equal(root.querySelector('#item').value,'Black beans');assert.equal(root.querySelector('#amount').value,'three cans');
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/Send follow-up/);assert.equal(commands.length,1);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(commands.length,2);assert.notEqual(commands[1].clientKey,old.clientKey);
+ assert.equal(commands[1].body.followupTo,current.requestId);assert.equal(commands[1].shopId,current.shopId);
+});
+
+test('only the owning queue can recover a rejected correction and concurrent tabs can take it once',async()=>{
+ const factory=new IDBFactory(),a=new Outbox(factory),b=new Outbox(factory);
+ const active={...session(),queueConsent:true},scope=scopeFor(active);
+ const edit={...command(),kind:'request.edit',base:{shopRevision:0,authorityEpoch:0,requestRevision:1},
+  body:{requestId:'request-a',originalItem:'Beans',ownQuantity:'2 cans'}};
+ const pending={id:edit.clientKey,scope,command:edit,createdAt:new Date().toISOString()};
+ await a.put(pending,active,true);
+ assert.equal(await b.reviewEdit(pending.id,'other scope','mark'),null);
+ assert.equal(await b.reviewEdit(pending.id,scope,'take'),null);
+ await a.reviewEdit(pending.id,scope,'mark');
+ assert.equal(await b.reviewEdit(pending.id,'other scope','take'),null);
+ const taken=await Promise.all([a.reviewEdit(pending.id,scope,'take'),b.reviewEdit(pending.id,scope,'take')]);
+ assert.deepEqual(taken.filter(Boolean),[{...pending,needsReview:true}]);
+ assert.equal(await b.reviewEdit(pending.id,scope,'mark'),null);
+ assert.deepEqual(await a.list(scope),[]);
+});
+
 test('received is retained if refresh fails after a committed send',async()=>{
  let reads=0;const {root,dom}=await setup(fakeAPI({requests:async()=>{if(++reads>1)throw new ApiError('network',0);return [];}}));
  type(dom,'item','Eggs');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Received by the shopper/);assert.doesNotMatch(root.textContent,/Not saved/);

@@ -588,12 +588,30 @@ export class WebApp {
       const label=this.el('label');label.className='checkbox';const cb=this.el('input');cb.type='checkbox';cb.checked=this.consent;cb.addEventListener('change',()=>{this.consent=cb.checked;});label.append(cb,this.el('span',this.t('Save pending requests on this browser')));form.append(label,this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
     }
     if(this.draft.item) form.append(this.button('Copy your text',()=>void this.run(async()=>{await navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);this.notice='Copied';})));
+    if(this.pending.some(p=>p.needsReview) && this.hasRequestDraft() && !this.uncertainSend) {
+      form.append(this.button('Discard current draft',()=>{this.draft=blank();this.review=false;this.retryCommand=null;this.render();}));
+    }
     if(target || this.retryCommand)main.append(form);
     else if(!session.selectionRequired)main.append(this.el('p',this.t('No pickup is accepting requests. Ask the shopper to start a pickup.')));
     if(this.pending.length) {
       const section=this.el('section');section.append(this.el('h2',this.t('Pending requests')));
-      for(const p of this.pending) {const card=this.el('article');card.className='card';card.append(this.el('p',String(p.command.body.originalItem??'')),this.el('p',this.t(this.confirmedOperations.has(p.id)?'Received; local cleanup pending':'Waiting to send from this browser')));
-        card.append(this.button('Retry',()=>void this.run(()=>this.retry(p))),this.button('Remove pending request',()=>void this.run(async()=>{await this.outbox.remove(p.id);this.pending=this.pending.filter(x=>x.id!==p.id);})));section.append(card);}
+      for(const p of this.pending) {
+        const card=this.el('article');card.className='card';
+        card.append(this.el('p',String(p.command.body.originalItem??'')));
+        if(p.needsReview) {
+          if(p.command.body.ownQuantity)card.append(this.el('p',String(p.command.body.ownQuantity)));
+          card.append(this.el('p',this.t('The original request changed. Review your correction before sending it again.')));
+          const move=this.button('Move correction to draft',()=>void this.run(()=>this.reviewQueuedEdit(p)));
+          card.append(move);
+          if(this.hasRequestDraft())card.append(this.el('p',this.t('Finish or discard your current draft first.')));
+        } else {
+          card.append(this.el('p',this.t(this.confirmedOperations.has(p.id)?'Received; local cleanup pending':'Waiting to send from this browser')),
+            this.button('Retry',()=>void this.run(()=>this.retry(p))));
+        }
+        card.append(this.button('Remove pending request',()=>void this.run(async()=>{
+          await this.outbox.remove(p.id);this.pending=this.pending.filter(x=>x.id!==p.id);
+        })));section.append(card);
+      }
       main.append(section);
     }
     const own=this.el('section');own.append(this.el('h2',this.t('Your requests')));
@@ -710,6 +728,29 @@ export class WebApp {
     this.notice='Waiting to send from this browser';
     this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
   }
+  private hasRequestDraft():boolean {
+    return Boolean(this.draft.item || this.draft.amount || this.draft.editing || this.draft.followup || this.retryCommand || this.review);
+  }
+  private async reviewQueuedEdit(p:Pending):Promise<void> {
+    if(this.hasRequestDraft()) {
+      this.notice='Finish or discard your current draft first.';return;
+    }
+    await this.load();
+    const s=this.session;
+    if(!s || !isContributorSession(s) || !s.enrolled || !s.queueConsent || scopeFor(s)!==p.scope)return;
+    const current=this.requests.find(row=>row.requestId===p.command.body.requestId && row.shopId===p.command.shopId);
+    if(!current || current.status==='withdrawn') {
+      this.notice='This request is no longer available for correction.';return;
+    }
+    const row=await this.outbox.reviewEdit(p.id,p.scope,'take');
+    this.pending=this.pending.filter(entry=>entry.id!==p.id);
+    if(!row || this.signOutPending || !this.session?.queueConsent || scopeFor(this.session)!==p.scope)return;
+    this.draft={item:String(row.command.body.originalItem),amount:String(row.command.body.ownQuantity??''),route:current.route,
+      editing:current.ownActionAllowed?current:null,followup:current.ownActionAllowed?null:current.requestId};
+    this.review=false;
+    this.notice=current.ownActionAllowed?'This request changed. Compare your draft with the current request before saving.':
+      'The shopper has already acted. Review your text as a follow-up.';
+  }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
     if(this.signOutPending||!fresh||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
@@ -719,7 +760,11 @@ export class WebApp {
     let received:OwnRequest|undefined;
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-      received=await this.api.command(fresh,p.command,fresh.requestQueueGrant);
+      try {received=await this.api.command(fresh,p.command,fresh.requestQueueGrant);} catch(error) {
+        if(p.command.kind!=='request.edit' || !isRequestRevisionConflict(error))throw error;
+        await this.outbox.reviewEdit(p.id,p.scope,'mark');
+        await this.reloadChangedRequest();return;
+      }
     }
     if(!choicesChanged)this.session=fresh;
     await this.finishReceived(p,true,received);
