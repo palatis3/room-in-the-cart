@@ -123,42 +123,44 @@ struct LargePrintList: View {
     @Environment(\.dismiss) private var dismiss
     let shop: ShoppingLedger
     let layout: LedgerListLayout
-    private let packageLabels: [UUID: [String]]
+    private let itemDetails: [UUID: [String]]
     @State private var printError = false
 
     init(shop: ShoppingLedger, layout: LedgerListLayout) {
         self.shop = shop
         self.layout = layout
-        var labels: [UUID: [String]] = [:]
+        var details: [UUID: [String]] = [:]
         var seen: [UUID: Set<String>] = [:]
         for source in shop.contributions where source.removedAt == nil {
-            let label: String
-            if let pack = source.originalPack {
-                let size = ledgerQuantity(pack.amountPerPack)
-                if let count = pack.count {
-                    label = ledgerFormat("Original package label (%lld × %@)", Int64(count), size)
-                } else {
-                    label = ledgerFormat("Amount per pack on the original label: %@", size)
-                }
-            } else if let capture = source.capture {
-                var facts: [String] = []
-                if let count = capture.packCount, !capture.unresolvedFields.contains(.packCount) {
-                    facts.append(captureText("Packs") + ": " + String(count))
-                }
-                if let size = capture.amountPerPack, !capture.unresolvedFields.contains(.amountPerPack) {
-                    facts.append(captureText("Usable amount per pack") + ": " + ledgerQuantity(size))
-                }
-                guard !facts.isEmpty else { continue }
-                label = facts.joined(separator: " · ")
-            } else {
-                continue
-            }
-            if seen[source.lineID, default: []].insert(label).inserted {
-                labels[source.lineID, default: []].append(label)
+            if let label = Self.packageLabel(for: source), seen[source.lineID, default: []].insert(label).inserted {
+                details[source.lineID, default: []].append(label)
             }
         }
-        packageLabels = labels
+        for (lineID, exclusions) in shop.listExclusions {
+            details[lineID, default: []].append(exclusions)
+        }
+        itemDetails = details
     }
+
+    private static func packageLabel(for source: LedgerContribution) -> String? {
+        if let pack = source.originalPack {
+            let size = ledgerQuantity(pack.amountPerPack)
+            if let count = pack.count {
+                return ledgerFormat("Original package label (%lld × %@)", Int64(count), size)
+            }
+            return ledgerFormat("Amount per pack on the original label: %@", size)
+        }
+        guard let capture = source.capture else { return nil }
+        var facts: [String] = []
+        if let count = capture.packCount, !capture.unresolvedFields.contains(.packCount) {
+            facts.append(captureText("Packs") + ": " + String(count))
+        }
+        if let size = capture.amountPerPack, !capture.unresolvedFields.contains(.amountPerPack) {
+            facts.append(captureText("Usable amount per pack") + ": " + ledgerQuantity(size))
+        }
+        return facts.isEmpty ? nil : facts.joined(separator: " · ")
+    }
+
     var body: some View {
         let groups = layout.groups(shop: shop)
         List {
@@ -175,7 +177,7 @@ struct LargePrintList: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.title2.bold())
                             Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.title3)
-                            ForEach(packageLabels[line.id] ?? [], id: \.self) { label in
+                            ForEach(itemDetails[line.id] ?? [], id: \.self) { label in
                                 Text(verbatim: label).font(.title3)
                             }
                         }
@@ -215,7 +217,7 @@ struct LargePrintList: View {
             for line in group.lines {
                 let amount = ledgerQuantity(try? shop.quantity(forLineID: line.id))
                 html += "<div class='item'><strong>\(escaped(line.name))</strong><br>\(escaped(amount))"
-                for label in packageLabels[line.id] ?? [] { html += "<br>" + escaped(label) }
+                for label in itemDetails[line.id] ?? [] { html += "<br>" + escaped(label) }
                 html += "</div>"
             }
         }

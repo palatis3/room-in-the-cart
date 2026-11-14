@@ -87,10 +87,13 @@ import CoreDomain
         imported.lines[0].quantity = Quantity(amount: try Rational(45), unit: .ounce, originalLiteral: "45")
         try shop.commitImport(imported)
         let captured = CaptureImportLine(originalText: "Private transcription", name: "rolled oats", packCount: 3,
-            amountPerPack: Quantity(amount: try Rational(12), unit: .ounce, originalLiteral: "12 oz"), purpose: "Private breakfast")
+            amountPerPack: Quantity(amount: try Rational(12), unit: .ounce, originalLiteral: "12 oz"), purpose: "Private breakfast", exclusions: ["added salt", "added salt"])
         let uncertain = CaptureImportLine(originalText: "Maybe eight bags", name: "lentils", packCount: 8,
             amountPerPack: captured.amountPerPack, unresolvedFields: [.packCount])
         try shop.commitImport(shop.stageCaptureImport(id: UUID(), originalText: "Voice draft", source: .voice, lines: [captured, uncertain]))
+        let hidden = try shop.addManualLine(name: "Private extra", quantity: nil, exclusions: ["retired restriction"])
+        try shop.setChecked(lineID: hidden, checked: true)
+        _ = try shop.addManualLine(name: "Crackers", quantity: nil, exclusions: ["<sesame> & nuts"])
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
         let renderer = LetterPageRenderer(formatter: listing.printFormatter())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
@@ -125,6 +128,9 @@ import CoreDomain
         XCTAssertTrue(text.contains(captureText("Packs") + ": 3"))
         XCTAssertTrue(text.contains(captureText("Usable amount per pack") + ": 12 " + ounce))
         XCTAssertFalse(text.contains(captureText("Packs") + ": 8"))
+        XCTAssertEqual(text.components(separatedBy: ledgerFormat("Exclusions: %@", "added salt")).count - 1, 1)
+        XCTAssertTrue(text.contains(ledgerFormat("Exclusions: %@", "<sesame> & nuts")))
+        XCTAssertFalse(text.contains("retired restriction"))
         XCTAssertEqual(numberedItems, (1...35).map { "Package number \($0)" })
         for hidden in ["Private note","Private helper","Milk","Private transcription","Private breakfast","Maybe eight bags"] { XCTAssertFalse(text.contains(hidden),hidden) }
     }

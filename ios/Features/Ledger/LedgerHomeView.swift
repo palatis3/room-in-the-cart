@@ -39,6 +39,7 @@ struct LedgerHomeView: View {
                             .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
                         factsSummary(shop)
                     }
+                    let exclusions = shop.listExclusions
                     let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
                     if groups.allSatisfy({ $0.lines.isEmpty }) {
                         Section(ledgerText("Shopping list")) {
@@ -49,7 +50,7 @@ struct LedgerHomeView: View {
                         ForEach(groups) { group in
                             Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
                                 ForEach(group.lines) { line in
-                                    row(line, shop: shop).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
+                                    row(line, shop: shop, exclusions: exclusions[line.id]).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
                                 }
                             }
                         }
@@ -206,9 +207,9 @@ struct LedgerHomeView: View {
             .disabled(model.saving || model.hasPendingSave)
     }
 
-    private func row(_ line: ShoppingLine, shop: ShoppingLedger) -> some View {
+    private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?) -> some View {
         let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
-        let details = [quantity, line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        let details = [quantity, exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         return HStack(alignment: .top, spacing: 10) {
             Button {
                 Task {
@@ -226,6 +227,7 @@ struct LedgerHomeView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(line.name).font(.headline)
                     Text(quantity).foregroundStyle(Theme.secondary)
+                    if let exclusions { Text(verbatim: exclusions) }
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle).font(.footnote).foregroundStyle(Theme.secondary) }
                 }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
