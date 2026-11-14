@@ -4,7 +4,7 @@ Updated November 14, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint
 
-[PR #7](https://github.com/palatis3/room-in-the-cart/pull/7) is qualifying head `cbd26299` against `main` at `a5d9c773`. GitHub and CircleCI are testing merge revision `9d345849`. The preceding hosted StoreKit run passed all 15 scenarios in English and all 15 in Spanish. [GitHub checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks) · [CircleCI workflow](https://app.circleci.com/workflow/9304c28a-c0c2-4387-aa6c-a8bd3884467e)
+[PR #7](https://github.com/palatis3/room-in-the-cart/pull/7) is qualifying head `6ae57842` against `main` at `a5d9c773`. GitHub and CircleCI are testing merge revision `0212c8f7`. The preceding hosted StoreKit run passed all 15 scenarios in English and all 15 in Spanish. [GitHub checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks) · [CircleCI workflow](https://app.circleci.com/workflow/3ab0b339-feba-4217-8874-aca4ad5cb272)
 
 The native household invitation share now gives contributors, cooks and children the appropriate browser address and a separately labeled private code. A recipient already signed in can open manual entry. The iOS 17 guardian journey opened and dismissed the system share sheet and completed pairing in 64.85 seconds (previously 180.36 seconds on the same simulator). All 1,024 model tests passed on iOS 17.0, and the unsigned arm64 Release archive and both extensions passed verification. In mobile Chromium, all three Spanish browser journeys reached their intended scopes with fictional service responses. The 177 web tests and 14 browser regressions passed. See `.build/NativeWebInvitationNov14/`. The new invitation handoff requires the updated companion web build for already-enrolled adult browsers.
 
@@ -1536,6 +1536,6 @@ Use ordinary permitted-record recovery rather than inventing a separate guardian
 recovery subsystem. Preserve these actual user requirements; do not turn every
 specialized implementation limitation into extra launch scope.
 
-Staging approval and completed deployment extend through048 for source5e5f5c90. Later hosted updates still need their applicable review and authorization. Paid Apple membership/signing, SMTP and KWS activation remain owner deferred. Operator: Venture House Group LLC. Support: hello@roominthecart.com.
+Staging runs schema 049 and the contributor pickup and child-pairing build from `6ae57842`. See `.build/Staging049PickupNov14/deployment-receipt.json`. Later hosted updates still need their applicable review and authorization. Paid Apple membership/signing, SMTP and KWS activation remain owner deferred. Operator: Venture House Group LLC. Support: hello@roominthecart.com.
 
 Historical originals remain in their evidence folders and git history. Previous handoff text is preserved at `.build/HandoffNov10/before-records-checkpoint-consolidation.md`.
