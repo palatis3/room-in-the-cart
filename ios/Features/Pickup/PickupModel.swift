@@ -578,7 +578,7 @@ struct PickupPersistenceLocation {
     @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?, reviewed draft: PickupCheckoutDraft? = nil) async -> Bool {
         guard hasCurrentBasketStockBasis else { error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false }
         return await change { value in
-            guard let basket = value.basket, basket.phase != .reportedPlaced else { throw PickupModelError.invalid }
+            guard let basket = value.basket, basket.phase == .draft else { throw PickupModelError.invalid }
             if let draft {
                 let expected = try draft.submission(for: value, workspaceID: sourceWorkspaceID)
                 guard expected.quote == quote, expected.cap == cap else { throw PickupCheckoutDraftError.staleSource }
@@ -591,7 +591,7 @@ struct PickupPersistenceLocation {
         }
     }
     func deferralPreview(_ ids: Set<UUID>) throws -> (BasketProposal, CheckoutComparison) {
-        guard let value = journey, let basket = value.basket, let quote = value.quote,
+        guard let value = journey, let basket = value.basket, basket.phase == .draft, let quote = value.quote,
               value.quotedRevisionID == basket.current.id, ids.isSubset(of: value.flexible), !ids.isEmpty else { throw PickupModelError.invalid }
         let proposal = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: ids.map { .remove($0) })
         let changed = try repriced(quote, removing: ids)
@@ -605,6 +605,7 @@ struct PickupPersistenceLocation {
         await change { value in
             guard var basket = value.basket, let quote = value.quote else { throw PickupModelError.missing }
             if value.proposals.contains(where: { $0.id == proposal.id }) { return }
+            guard basket.phase == .draft else { throw PickupModelError.invalid }
             let ids = Set(proposal.changes.compactMap { change -> UUID? in if case let .remove(id) = change { return id }; return nil })
             guard ids.isSubset(of: value.flexible), !value.plannedNeeds.contains(where: { ids.contains($0.orderLineID) && $0.priority == .protected }) else { throw PickupModelError.invalid }
             value.carriedMeals += value.plannedNeeds.filter { ids.contains($0.orderLineID) }
@@ -619,6 +620,7 @@ struct PickupPersistenceLocation {
     @discardableResult func undoDeferral(_ proposal: BasketProposal) async -> Bool {
         await change { value in
             guard var basket = value.basket else { throw PickupModelError.missing }
+            guard basket.phase == .draft else { throw PickupModelError.invalid }
             try basket.undo(operationID: UUID(), proposalID: proposal.id, expectedRevision: basket.current.id, revisionID: UUID(), at: clock())
             value.basket = basket; value.quote = nil; value.quotedRevisionID = nil; value.undoneProposals.insert(proposal.id)
             let restored = Set(basket.current.lines.map(\.id)); value.deferred.removeAll { restored.contains($0.line.id) }
@@ -703,8 +705,19 @@ struct PickupPersistenceLocation {
         guard !snapshot.revision.lines.isEmpty else { return false }
         return await change { value in
             guard var basket = value.basket, basket.id == snapshot.basketID,
-                  basket.current.id == snapshot.revision.id, basket.placements.isEmpty,
-                  let context = value.context else { throw PickupModelError.invalid }
+                  basket.current.id == snapshot.revision.id, basket.placements.isEmpty else { throw PickupModelError.invalid }
+            if let frozenQuote = value.frozenQuotes[snapshot.id] {
+                // Older versions allowed checkout terms to change after this handoff was frozen.
+                if let frozenCap = value.frozenCaps?[snapshot.id.uuidString] {
+                    value.cap = frozenCap
+                } else if value.quote != frozenQuote || value.context != frozenQuote.context {
+                    value.cap = nil
+                }
+                value.context = frozenQuote.context
+                value.quote = frozenQuote
+                value.quotedRevisionID = snapshot.revision.id
+            }
+            guard let context = value.context else { throw PickupModelError.invalid }
             let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id,
                                               reportedAt: clock(), reportedByLocalActorID: localActorID)
             try basket.reportPlaced(placement); value.basket = basket

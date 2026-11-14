@@ -25,6 +25,47 @@ final class PickupCheckoutDraftTests: XCTestCase {
         return value
     }
 
+    @MainActor func testFrozenCheckoutRejectsStalePricingAndPlacesAgainstTheReviewedBranch() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let model = PickupModel(databaseURL: file)
+        let original = try journey(.inclusiveTotal(.exact(money(300))))
+        let quote = try XCTUnwrap(original.quote)
+        let started = await model.start(from: [line()], shopID: shopID, context: quote.context)
+        let cap = CheckoutCap(scope: .wholeCheckout, commitmentsID: shopID, amount: money(500))
+        let saved = await model.setQuote(quote, cap: cap)
+        XCTAssertTrue(started && saved)
+        let editor = PickupCheckoutDraft(journey: try XCTUnwrap(model.journey))
+        let frozen = await model.freeze()
+        XCTAssertTrue(frozen)
+        let snapshot = try XCTUnwrap(model.frozenSnapshot)
+        let sealed = try XCTUnwrap(model.journey)
+        XCTAssertThrowsError(try editor.submission(for: sealed))
+        let source = quote.context
+        // An older app could save revised terms after freezing the original store.
+        let other = CheckoutContext(storeID: source.storeID, branchID: "Other branch", mode: source.mode, slot: source.slot,
+                                    commitmentsID: source.commitmentsID, observedAt: source.observedAt, source: source.source)
+        let changed = CheckoutQuote(scope: quote.scope, context: other, pricing: .inclusiveTotal(.exact(money(600))))
+        let overwritten = await model.setQuote(changed, cap: nil)
+        XCTAssertFalse(overwritten)
+        XCTAssertEqual(model.journey, sealed)
+        let legacy = await model.change {
+            $0.context = other
+            $0.quote = changed
+            $0.cap = nil
+        }
+        XCTAssertTrue(legacy)
+        let placed = await model.reportPlaced(reviewing: snapshot)
+        XCTAssertTrue(placed)
+        let restarted = PickupModel(databaseURL: file)
+        await restarted.load()
+        XCTAssertEqual(restarted.journey?.context, quote.context)
+        XCTAssertEqual(restarted.journey?.quote, quote)
+        XCTAssertEqual(restarted.journey?.cap, cap)
+        XCTAssertEqual(restarted.journey?.pickup?.orderLines.map(\.branchID), [quote.context.branchID])
+        XCTAssertEqual(restarted.journey?.basket?.placements.map(\.snapshotID), [snapshot.id])
+    }
+
     func testInclusiveHydrationKeepsQuoteAndCapScopesAndCommitmentsIndependent() throws {
         let cap = CheckoutCap(scope: .item, commitmentsID: UUID(), amount: money(5000))
         let value = try journey(.inclusiveTotal(.exact(money(300))), scope: .dinner, cap: cap)

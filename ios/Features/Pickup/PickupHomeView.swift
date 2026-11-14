@@ -190,6 +190,31 @@ struct PickupCheckoutView: View {
         return model.journey.map { !draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) } ?? true
     }
     var body: some View {
+        if let journey = model.journey, journey.basket?.phase == .frozen, let snapshot = model.frozenSnapshot {
+            Form {
+                PickupSaveStatus(model: model)
+                Section(pTr("Frozen · placement unconfirmed")) {
+                    if let quote = journey.frozenQuotes[snapshot.id] {
+                        let cap = journey.frozenCaps?[snapshot.id.uuidString]
+                        PickupQuoteTermsView(quote: quote, cap: cap)
+                        PickupSavedCheckoutPricingView(pricing: quote.pricing)
+                        if let result = try? CheckoutEngine.evaluate(quote, cap: cap) {
+                            PickupResultView(result: result)
+                        }
+                    }
+                    Button(pTr("Reopen draft and recheck prices")) {
+                        Task { _ = await model.reopenDraft(reviewing: snapshot) }
+                    }
+                    .disabled(model.saving || model.hasPendingSave)
+                }
+            }
+            .navigationTitle(pTr("Whole checkout"))
+        } else {
+            checkoutEditor
+        }
+    }
+
+    private var checkoutEditor: some View {
         Form {
             if !draftIsStale { PickupSaveStatus(model: model) }
             if draftIsStale {

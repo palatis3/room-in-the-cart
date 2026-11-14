@@ -174,7 +174,7 @@ struct PickupCheckoutDraft {
     }
 
     func matchesSource(_ journey: PickupJourney, workspaceID: UUID? = nil) -> Bool {
-        (sourceWorkspaceID == nil || sourceWorkspaceID == workspaceID) && journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID
+        journey.basket?.phase == .draft && (sourceWorkspaceID == nil || sourceWorkspaceID == workspaceID) && journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID
             && journey.quote == originalQuote && journey.quotedRevisionID == originalQuotedRevisionID
             && journey.earlierQuotes.last?.id == earlierQuoteRevision && journey.ledgerSourceRevisionID == ledgerSourceRevisionID
             && journey.context == originalContext && journey.cap == originalCap
