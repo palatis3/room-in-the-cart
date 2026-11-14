@@ -5986,6 +5986,74 @@
         }
       }
     },
+    "The shopper has already acted. Review your text as a follow-up.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shopper has already acted. Review your text as a follow-up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La persona que hace la compra ya tomó una decisión. Revisa tu texto para enviarlo como aclaración."
+          }
+        }
+      }
+    },
+    "This request changed. Review your correction before sending.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request changed. Review your correction before sending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud cambió. Revisa tu corrección antes de enviarla."
+          }
+        }
+      }
+    },
+    "Review my correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review my correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar mi corrección"
+          }
+        }
+      }
+    },
+    "This request is no longer available for correction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request is no longer available for correction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta solicitud ya no se puede corregir."
+          }
+        }
+      }
+    },
     "Review family requests": {
       "localizations": {
         "en": {
@@ -7716,6 +7784,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Retirar consentimiento"
+          }
+        }
+      }
+    },
+    "Withdraw this request?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw this request?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Retirar esta solicitud?"
           }
         }
       }

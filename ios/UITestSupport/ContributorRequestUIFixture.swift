@@ -200,6 +200,23 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
         if path.hasSuffix("/replay-windows") { return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands") {
+            if json["kind"] as? String == "request.withdraw" {
+                guard let key = json["clientKey"] as? String else { throw URLError(.badURL) }
+                if let receipt = receipts[key] { return try response(receipt) }
+                guard let body = json["body"] as? [String: Any], let requestID = body["requestId"] as? String,
+                      let shopID = json["shopId"] as? String, let base = json["base"] as? [String: Any],
+                      let index = rows.firstIndex(where: { $0["requestId"] as? String == requestID && $0["shopId"] as? String == shopID }),
+                      let revision = rows[index]["revision"] as? Int, base["requestRevision"] as? Int == revision,
+                      rows[index]["ownActionAllowed"] as? Bool == true else { throw URLError(.badServerResponse) }
+                rows[index]["revision"] = revision + 1
+                rows[index]["status"] = "withdrawn"
+                rows[index]["ownActionAllowed"] = false
+                let receipt: [String: Any] = ["operationId": UUID().uuidString, "kind": "request.withdraw", "request": rows[index]]
+                receipts[key] = receipt
+                posts += 1
+                changed?(posts, rows.count)
+                return try response(receipt)
+            }
             guard json["kind"] as? String == "request.send", let key = json["clientKey"] as? String,
                   let targetShop = json["shopId"] as? String, let body = json["body"] as? [String: Any] else { throw URLError(.unsupportedURL) }
             if childPickups, (targetShop != nextOnlyPickup || body["route"] as? String != "next") {

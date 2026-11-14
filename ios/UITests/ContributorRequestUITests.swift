@@ -72,6 +72,20 @@ import XCTest
         let saved = app.staticTexts["fixture.requestRows"]
         let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture saved requests: 1"), object: saved)
         XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 12), .completed, app.debugDescription)
+
+        let withdraw = app.buttons["household.withdrawRequest"]
+        tap(withdraw)
+        let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d", "Withdraw this request?", XCUIElement.ElementType.staticText.rawValue)).firstMatch
+        XCTAssertTrue(dialog.staticTexts["Withdraw this request?"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(dialog.staticTexts["Tortillas"].exists)
+        app.buttons["Cancel"].tap()
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
+
+        tap(withdraw)
+        dialog.buttons["Withdraw request"].tap()
+        XCTAssertTrue(app.staticTexts["Withdrawn"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(withdraw.exists)
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 2")
     }
 
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {

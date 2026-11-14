@@ -195,6 +195,7 @@ struct DeviceReminderPersona: Equatable {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
                 requests = page.requests; nextRequestCursor = page.nextCursor
+                reconcileContributorEdit()
                 try await prefetchContributorReplayWindow(service, start: start)
             }
             // Old device-bound operations require review; never attach them to this new enrollment.
@@ -293,6 +294,7 @@ struct DeviceReminderPersona: Equatable {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
                 requests = page.requests; nextRequestCursor = page.nextCursor
+                reconcileContributorEdit()
                 try await prefetchContributorReplayWindow(service, start: start)
             } else { requests = []; nextRequestCursor = nil }
         } catch { await show(error, start: start) }
@@ -339,6 +341,7 @@ struct DeviceReminderPersona: Equatable {
             guard start == generation else { return }
             for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
             nextRequestCursor = page.nextCursor
+            reconcileContributorEdit()
         } catch { await show(error, start: start) }
     }
     /// Current native authority and draft are captured together before opening review.
@@ -464,27 +467,56 @@ struct DeviceReminderPersona: Equatable {
             try await submitRequest(operation, projection: projection, offline: offline, start: start)
         } catch { await show(error, start: start) }
     }
+    var contributorDraftTitle: String {
+        if followingUp != nil { return ht("Send a follow-up") }
+        return editing == nil ? ht("New request") : ht("Edit request")
+    }
+    private func reconcileContributorEdit() {
+        guard pending == nil, let editing,
+              let current = requests.first(where: { $0.id == editing.id && $0.shopId == editing.shopId }),
+              current != editing else { return }
+        reconcileContributorDraft(with: current)
+    }
+    private func reconcileContributorDraft(with current: OwnRequest) {
+        contributorEnrollmentRevision = UUID()
+        if current.status == "withdrawn" {
+            cancelEdit()
+            notice = ht("Withdrawn")
+        } else if current.ownActionAllowed {
+            editing = current
+            followingUp = nil
+            forNextShop = current.route == "next"
+            notice = ht("This request changed. Review your correction before sending.")
+        } else {
+            editing = nil
+            followingUp = current
+            forNextShop = current.route == "next"
+            notice = ht("The shopper has already acted. Review your text as a follow-up.")
+        }
+    }
     func edit(_ request: OwnRequest) {
         guard request.ownActionAllowed, pending == nil, !busy, !locked else { return }
+        forNextShop = request.route == "next"
         followingUp = nil; editing = request; item = request.originalItem; quantity = request.ownQuantity ?? ""; delivery = .localDraft
     }
     func followUp(_ request: OwnRequest) {
-        guard !request.ownActionAllowed, pending == nil, !busy, !locked else { return }
+        guard !request.ownActionAllowed, request.status != "withdrawn", pending == nil, !busy, !locked else { return }
+        forNextShop = request.route == "next"
         editing = nil; followingUp = request; item = request.originalItem; quantity = request.ownQuantity ?? ""; delivery = .localDraft
     }
     func cancelEdit() { editing = nil; followingUp = nil; item = ""; quantity = ""; forNextShop = false }
     func withdraw(_ request: OwnRequest) async {
-        guard request.ownActionAllowed, let service, let projection,
+        guard request.ownActionAllowed, requests.contains(request), let service, let projection,
               pending == nil, !busy, !locked else { return }
         busy = true; notice = nil; defer { busy = false }; let start = generation
         do {
             let window = try await service.replayWindow()
-            guard start == generation else { return }
+            guard start == generation, requests.contains(request) else { return }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: request.shopId, kind: "request.withdraw",
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: request.revision), body: ["requestId": .string(request.requestId)])
             let operation = try await service.prepare(envelope: envelope, bootstrap: projection,
                 requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
-            guard start == generation else { return }
+            guard start == generation, requests.contains(request) else { return }
             try await submitRequest(operation, projection: projection, offline: false, start: start)
         } catch { await show(error, start: start) }
     }
@@ -550,6 +582,51 @@ struct DeviceReminderPersona: Equatable {
             }
             await show(error, start: start)
         }
+    }
+    var canReviewRejectedCorrection: Bool {
+        guard case .needsReview(let id, let code) = delivery, let pending, pending.id == id,
+              code == "followup_required" || code == "stale_base",
+              let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
+        return envelope.kind == "request.edit"
+    }
+    func reviewRejectedCorrection() async {
+        guard canReviewRejectedCorrection, !busy, !locked, let service, let pending,
+              let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes),
+              case .string(let requestID) = envelope.body["requestId"],
+              case .string(let wording) = envelope.body["originalItem"] else { return }
+        busy = true; defer { busy = false }
+        let start = generation
+        do {
+            let fresh = try await service.bootstrap()
+            guard start == generation else { return }
+            try validateGuardianChildProjection(fresh)
+            guard let prior = projection, fresh.enrolled, fresh.household.id == pending.householdID,
+                  fresh.memberId == pending.memberID, fresh.role == prior.role, fresh.grantId == prior.grantId,
+                  fresh.capabilities.contains("own_requests"), contributorDeviceID == pending.deviceID,
+                  await service.matches(pending, memberID: fresh.memberId) else { throw ClientError.accessEnded }
+            guard start == generation else { return }
+            try await clearExpiredQueuedRequests(fresh, permissionChanged: prior.requestQueueGrant != fresh.requestQueueGrant)
+            guard start == generation, self.pending?.id == pending.id else { return }
+            var page = try await service.ownRequests()
+            var seen = Set<String>()
+            while !page.requests.contains(where: { $0.requestId == requestID }), let cursor = page.nextCursor {
+                guard start == generation else { return }
+                guard seen.insert(cursor).inserted else { throw ClientError.invalidResponse }
+                page = try await service.ownRequests(cursor: cursor)
+            }
+            guard start == generation else { return }
+            guard let current = page.requests.first(where: { $0.requestId == requestID && $0.shopId == envelope.shopId }) else {
+                notice = ht("This request is no longer available for correction.")
+                return
+            }
+            try await outbox.remove(pending.id)
+            guard start == generation else { return }
+            self.pending = nil; delivery = .localDraft; attempts = 0
+            requests.removeAll { $0.id == current.id }; requests.insert(current, at: 0)
+            item = wording
+            if case .string(let amount) = envelope.body["ownQuantity"] { quantity = amount } else { quantity = "" }
+            reconcileContributorDraft(with: current)
+        } catch { await show(error, start: start) }
     }
     func discardPendingAfterReview() async {
         guard !busy, !locked, let pending else { return }

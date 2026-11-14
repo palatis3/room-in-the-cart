@@ -160,9 +160,9 @@ struct GuardianChildRequestsView: View {
                             if request.ownActionAllowed {
                                 HStack {
                                     Button(ht("Edit request")) { household.edit(request) }.buttonStyle(.borderless)
-                                    Button(ht("Withdraw request"), role: .destructive) { Task { await household.withdraw(request) } }.buttonStyle(.borderless)
+                                    ContributorWithdrawalButton(model: household, request: request)
                                 }
-                            } else {
+                            } else if request.status != "withdrawn" {
                                 Button(ht("Send a follow-up")) { household.followUp(request) }.buttonStyle(.borderless)
                             }
                         }
@@ -170,7 +170,7 @@ struct GuardianChildRequestsView: View {
                     if household.requests.isEmpty { Text(ht("No received requests in this view.")) }
                     if household.nextRequestCursor != nil { Button(ht("Load more requests")) { Task { await household.loadMoreRequests() } } }
                 }
-                Section(household.editing == nil ? ht("New request") : ht("Edit request")) {
+                Section(household.contributorDraftTitle) {
                     if household.editing != nil || household.followingUp != nil { Button(ht("Cancel edit")) { household.cancelEdit() } }
                     if household.requiresRequestPickupChoice && household.editing == nil && household.followingUp == nil {
                         pickupPicker
@@ -195,6 +195,9 @@ struct GuardianChildRequestsView: View {
                         Button(ht("Retry the same request")) { Task { await household.retry() } }
                     case .needsReview:
                         Text(ht("Review needed. Check received requests before creating a new request."))
+                        if household.canReviewRejectedCorrection {
+                            Button(ht("Review my correction")) { Task { await household.reviewRejectedCorrection() } }
+                        }
                         Button(ht("I checked received requests; clear this retry")) { Task { await household.discardPendingAfterReview() } }
                     case .received(let receipt): Text(receipt.contributorDeliveryLabel)
                     case .accessEnded: Text(ht("Household access has ended or needs sign-in."))

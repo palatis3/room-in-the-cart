@@ -117,9 +117,9 @@ struct HouseholdSettingsView: View {
                                     if request.ownActionAllowed {
                                         HStack {
                                             Button(ht("Edit request")) { model.edit(request) }.buttonStyle(.borderless)
-                                            Button(ht("Withdraw request"), role: .destructive) { Task { await model.withdraw(request) } }.buttonStyle(.borderless)
+                                            ContributorWithdrawalButton(model: model, request: request)
                                         }
-                                    } else {
+                                    } else if request.status != "withdrawn" {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
                                 }.accessibilityElement(children: .combine)
@@ -132,7 +132,7 @@ struct HouseholdSettingsView: View {
                         }
                     }
                     if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.editing != nil || model.followingUp != nil {
-                        Section(model.editing == nil ? ht("New request") : ht("Edit request")) {
+                        Section(model.contributorDraftTitle) {
                             if model.editing != nil || model.followingUp != nil { Button(ht("Cancel edit")) { model.cancelEdit() } }
                             if model.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
                             TextField(ht("Item"), text: $model.item)
@@ -214,6 +214,9 @@ struct HouseholdSettingsView: View {
             Button(ht("Retry the same request")) { Task { await model.retry() } }
         case .needsReview:
             Text(ht("Review needed. Check received requests before creating a new request."))
+            if model.canReviewRejectedCorrection {
+                Button(ht("Review my correction")) { Task { await model.reviewRejectedCorrection() } }
+            }
             Button(ht("I checked received requests; clear this retry")) { Task { await model.discardPendingAfterReview() } }
         case .received(let receipt): Label(receipt.contributorDeliveryLabel, systemImage: "checkmark.circle")
         case .accessEnded: Text(ht("Household access has ended or needs sign-in."))
@@ -231,5 +234,29 @@ struct HouseholdSettingsView: View {
         case "withdrawn": return ht("Withdrawn")
         default: return ht("Check current status")
         }
+    }
+}
+
+struct ContributorWithdrawalButton: View {
+    @ObservedObject var model: HouseholdModel
+    let request: OwnRequest
+    @State private var reviewed: OwnRequest?
+
+    var body: some View {
+        Button(ht("Withdraw request"), role: .destructive) { reviewed = request }
+            .accessibilityIdentifier("household.withdrawRequest")
+            .buttonStyle(.borderless)
+            .disabled(model.busy)
+            .confirmationDialog(ht("Withdraw this request?"), isPresented: Binding(
+                get: { reviewed != nil }, set: { if !$0 { reviewed = nil } }
+            ), titleVisibility: .visible, presenting: reviewed) { original in
+                Button(ht("Withdraw request"), role: .destructive) {
+                    Task { await model.withdraw(original) }
+                }
+                Button(ht("Cancel"), role: .cancel) {}
+            } message: { original in
+                Text(verbatim: [original.originalItem, original.ownQuantity].compactMap { $0 }.joined(separator: " · "))
+            }
+            .onChange(of: request) { _, _ in reviewed = nil }
     }
 }

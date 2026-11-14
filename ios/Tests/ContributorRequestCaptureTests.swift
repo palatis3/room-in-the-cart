@@ -399,6 +399,83 @@ import DeviceSurfaces
         XCTAssertEqual(fixture.commands.count, 1)
     }
 
+    func testShopperDeferralDuringContributorEditRequiresNewLinkedReview() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let model = try await model(fixture, queue: queue)
+        model.item = "Cereal"; model.quantity = "1 box"
+        await model.sendRequest()
+        let original = try XCTUnwrap(model.requests.first)
+        model.edit(original)
+        model.quantity = "2 boxes"
+        let stale = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+
+        fixture.rows[0]["status"] = "deferred"
+        fixture.rows[0]["route"] = "next"
+        fixture.rows[0]["revision"] = 2
+        fixture.rows[0]["ownActionAllowed"] = false
+        await model.refresh()
+        await model.withdraw(original)
+        XCTAssertEqual(fixture.commands.count, 1)
+        XCTAssertNil(model.editing)
+        XCTAssertEqual(model.followingUp?.requestId, original.requestId)
+        XCTAssertEqual(model.quantity, "2 boxes")
+        XCTAssertTrue(model.forNextShop)
+        await model.sendRequest(reviewed: stale, approved: true)
+        XCTAssertEqual(fixture.commands.count, 1)
+        guard model.followingUp != nil else { return }
+
+        let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        await model.sendRequest(reviewed: review, approved: true)
+        let sent = try JSONDecoder().decode(CommandEnvelope.self, from: XCTUnwrap(fixture.commands.last))
+        XCTAssertEqual(fixture.commands.count, 2)
+        XCTAssertEqual(sent.kind, "request.send")
+        XCTAssertEqual(sent.shopId, original.shopId)
+        XCTAssertEqual(sent.body["followupTo"], .string(original.requestId))
+        XCTAssertEqual(sent.body["route"], .string("next"))
+        XCTAssertEqual(sent.body["ownQuantity"], .string("2 boxes"))
+        XCTAssertEqual(fixture.rows.first?["ownQuantity"] as? String, "1 box")
+        XCTAssertEqual(fixture.rows.first?["status"] as? String, "deferred")
+    }
+
+    func testRejectedEditReopensFromItsOriginalBytesOnlyAfterAnAuthorizedRead() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        let model = try await model(fixture, queue: queue)
+        model.item = "Cereal"; model.quantity = "1 box"
+        await model.sendRequest()
+        let original = try XCTUnwrap(model.requests.first)
+        model.edit(original)
+        model.quantity = "2 boxes"
+        fixture.rows[0]["revision"] = 2
+        fixture.rows[0]["route"] = "next"
+        fixture.rows[0]["status"] = "deferred"
+        fixture.rows[0]["ownActionAllowed"] = false
+        await model.sendRequest()
+        XCTAssertTrue(model.canReviewRejectedCorrection)
+        fixture.failRequestRead = true
+        await model.reviewRejectedCorrection()
+        XCTAssertTrue(model.canReviewRejectedCorrection)
+        XCTAssertNil(model.followingUp)
+        fixture.failRequestRead = false
+        await model.reviewRejectedCorrection()
+        XCTAssertFalse(model.canReviewRejectedCorrection)
+        XCTAssertEqual(model.delivery, .localDraft)
+        XCTAssertEqual(model.followingUp?.requestId, original.requestId)
+        XCTAssertEqual(model.quantity, "2 boxes")
+        XCTAssertEqual(model.requests.first?.status, "deferred")
+        XCTAssertTrue(model.forNextShop)
+        XCTAssertEqual(fixture.commands.count, 2)
+        let reviewed = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        await model.sendRequest(reviewed: reviewed, approved: true)
+        let followup = try JSONDecoder().decode(CommandEnvelope.self, from: XCTUnwrap(fixture.commands.last))
+        XCTAssertEqual(followup.body["followupTo"], .string(original.requestId))
+        XCTAssertEqual(followup.body["route"], .string("next"))
+        XCTAssertEqual(fixture.commands.count, 3)
+    }
+
     func testOnlineEditWithDroppedPostClearsOnExpiryEvenWhenGrantIDIsUnchanged() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), grant = UUID()
@@ -645,6 +722,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     let childDeviceToken = Data(repeating: 1, count: 32).base64EncodedString().replacingOccurrences(of: "=", with: "")
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
     var offersQueuePermission = false, queueGrant: UUID?, queueExpiry: String?
+    var failRequestRead = false
     var dropBeforeCommit = false, attemptedGrants: [UUID?] = []
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
@@ -698,6 +776,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             return try response(["shops":shops,"nextCursor":NSNull()])
         }
         if path.hasSuffix("/requests/mine") {
+            if failRequestRead { throw URLError(.notConnectedToInternet) }
             if enrollmentRevoked {
                 privateReads += 1
                 return try response(["error": ["code": "access_ended"]], 403)
@@ -723,6 +802,11 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             }
             if let grant, grant != queueGrant { return try response(["error":["code":"queue_permission_ended"]],409) }
             receiptGrants[key] = grant
+            if json["kind"] as? String == "request.edit", let body = json["body"] as? [String: Any],
+               let target = rows.first(where: { $0["requestId"] as? String == body["requestId"] as? String }),
+               target["ownActionAllowed"] as? Bool == false {
+                return try response(["error": ["code": "followup_required"]], 409)
+            }
             if json["kind"] as? String == "request.withdraw" {
                 guard let target = json["body"] as? [String:Any], let i = rows.firstIndex(where: { $0["requestId"] as? String == target["requestId"] as? String }) else { throw URLError(.badServerResponse) }
                 rows[i]["status"] = "withdrawn"; rows[i]["ownActionAllowed"] = false
@@ -731,7 +815,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             }
             XCTAssertEqual(json["kind"] as? String, "request.send")
             let body = json["body"] as! [String: Any]
-            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":json["shopId"]!,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
+            let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":json["shopId"]!,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":body["followupTo"] ?? NSNull()]
             rows.append(row); let receipt: [String: Any] = ["operationId":UUID().uuidString,"kind":"request.send","request":row]; receipts[key] = receipt
             if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }
             return try response(receipt)
