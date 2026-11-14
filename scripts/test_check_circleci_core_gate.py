@@ -61,9 +61,9 @@ class CircleGateTests(unittest.TestCase):
                          GITHUB_REPOSITORY='palatis3/room-in-the-cart',
                          GITHUB_REF='refs/heads/codex/circleci-performance', IOS_SCOPE='full',
                          RELEASE_METADATA='', RITC_GITHUB_MAC_ONLY='true', GITHUB_SHA='1' * 40,
-                         CIRCLECI_CORE_SHA='', PR_REPO='')
+                         CIRCLECI_PR_HEAD_SHA='', PR_HEAD_SHA='', PR_REPO='')
         pr = dict(IOS_PROVIDER='github', GITHUB_EVENT_NAME='pull_request',
-                  PR_REPO=canonical['GITHUB_REPOSITORY'], CIRCLECI_CORE_SHA=canonical['GITHUB_SHA'])
+                  PR_REPO=canonical['GITHUB_REPOSITORY'], PR_HEAD_SHA='3' * 40, CIRCLECI_PR_HEAD_SHA='3' * 40)
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / 'out'
             for changes, expected in [
@@ -72,8 +72,9 @@ class CircleGateTests(unittest.TestCase):
                 ({'GITHUB_EVENT_NAME': 'push'}, None), ({'GITHUB_REPOSITORY': 'someone/fork'}, None),
                 ({'GITHUB_REF': 'refs/heads/main'}, None), ({'GITHUB_REF': 'refs/tags/codex/circleci-performance'}, None),
                 ({'IOS_SCOPE': 'dinner'}, None), ({'RELEASE_METADATA': 'true'}, None),
-                (pr, 'circleci'), ({**pr, 'CIRCLECI_CORE_SHA': '2' * 40}, 'github'),
-                ({**pr, 'CIRCLECI_CORE_SHA': ''}, 'github'), ({**pr, 'PR_REPO': 'someone/fork'}, 'github'),
+                (pr, 'circleci'), ({**pr, 'CIRCLECI_PR_HEAD_SHA': '2' * 40}, 'github'),
+                ({**pr, 'CIRCLECI_PR_HEAD_SHA': ''}, 'github'),
+                ({**pr, 'CIRCLECI_PR_HEAD_SHA': canonical['GITHUB_SHA']}, 'github'), ({**pr, 'PR_REPO': 'someone/fork'}, 'github'),
                 ({**pr, 'GITHUB_EVENT_NAME': 'push'}, 'github'), ({**pr, 'RELEASE_METADATA': 'true'}, 'github'),
                 ({**pr, 'GITHUB_EVENT_NAME': 'workflow_dispatch'}, 'github'),
             ]:

@@ -286,9 +286,13 @@ UI groups 01 through 03 from the ordinary ten-group plan. The assisted GitHub
 run handles the models and groups 04 through 10. Each worker verifies every
 assigned test against its results. To start the paired GitHub workflow on the
 performance branch, run `gh workflow run ci.yml --ref codex/circleci-performance -f ios_scope=full -f ios_provider=circleci`.
-For a same-repository pull request, select the exact synthetic merge SHA in
-the `RITC_CIRCLECI_CORE_SHA` repository variable and run CircleCI on that same
-SHA. The default route handles every group on GitHub when the SHA differs.
+For a same-repository pull request, set the repository variable
+`RITC_CIRCLECI_PR_HEAD_SHA` to the reviewed head commit before updating the PR.
+After GitHub creates the PR merge commit, fetch `refs/pull/<number>/merge`,
+verify its parents match the current base and selected head, and push that merge
+commit to `codex/circleci-performance`. The PR workflow starts automatically.
+Its final gate checks the CircleCI results on the exact GitHub merge commit.
+Other PR heads use the full GitHub route.
 The existing `codex/circleci-fallback` branch requests only the Swift packages.
 
 The producer restores Xcode's compilation cache for the pinned Xcode/runtime

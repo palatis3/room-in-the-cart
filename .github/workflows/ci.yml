@@ -146,15 +146,16 @@ jobs:
           IOS_PROVIDER: ${{ inputs.ios_provider || 'github' }}
           IOS_SCOPE: ${{ inputs.ios_scope }}
           PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-          CIRCLECI_CORE_SHA: ${{ vars.RITC_CIRCLECI_CORE_SHA }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CIRCLECI_PR_HEAD_SHA: ${{ vars.RITC_CIRCLECI_PR_HEAD_SHA }}
           RELEASE_METADATA: ${{ inputs.require_release_metadata }}
         run: |
           case "$IOS_PROVIDER" in
             github)
-              # The PR checkout and CircleCI must both build the synthetic merge SHA.
+              # Opt in before the push. The final gate verifies CircleCI on GITHUB_SHA (the merge commit).
               if [[ "$GITHUB_EVENT_NAME" == pull_request && "$GITHUB_REPOSITORY" == palatis3/room-in-the-cart &&
-                    "$PR_REPO" == "$GITHUB_REPOSITORY" && "$CIRCLECI_CORE_SHA" =~ ^[0-9a-f]{40}$ &&
-                    "$CIRCLECI_CORE_SHA" == "$GITHUB_SHA" && "$RELEASE_METADATA" != true ]]; then
+                    "$PR_REPO" == "$GITHUB_REPOSITORY" && "$CIRCLECI_PR_HEAD_SHA" =~ ^[0-9a-f]{40}$ &&
+                    "$CIRCLECI_PR_HEAD_SHA" == "$PR_HEAD_SHA" && "$RELEASE_METADATA" != true ]]; then
                 IOS_PROVIDER=circleci
               fi
               ;;
