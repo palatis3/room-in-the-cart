@@ -883,19 +883,19 @@
         }
       }
     },
-    "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.": {
+    "Only the adult who purchased this household’s membership can manage its subscription and assign seats.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats."
+            "value": "Only the adult who purchased this household’s membership can manage its subscription and assign seats."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu plaza usa la membresía de este hogar. Solo quien la compró puede suscribirse o cambiar las plazas."
+            "value": "Solo la persona adulta que compró la membresía de este hogar puede gestionar la suscripción y asignar plazas."
           }
         }
       }

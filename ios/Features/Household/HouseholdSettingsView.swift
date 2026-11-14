@@ -65,6 +65,10 @@ struct HouseholdSettingsView: View {
                 if let projection = model.projection {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
+                        if model.membershipSession != nil, projection.role == "contributor", projection.grantId == nil {
+                            NavigationLink(tr("Household membership")) { MembershipEntryView(household: model) }
+                                .accessibilityIdentifier("household.membership")
+                        }
                         Text(ht("Access is checked by the household service."))
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }

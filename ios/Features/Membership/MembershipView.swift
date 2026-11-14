@@ -34,7 +34,7 @@ struct MembershipView: View {
                     LabeledContent(mtr("Account"), value: context.purchaserName)
                     LabeledContent(mtr("Household"), value: context.householdName)
                     if context.appAccountToken == nil {
-                        Text(mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")).font(.footnote)
+                        Text(mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")).font(.footnote)
                     } else {
                         Text(mtr("This purchase is linked to this account and household. Restoring does not transfer it to another household.")).font(.footnote)
                     }
@@ -167,7 +167,7 @@ func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
         case .notConfigured: return mtr("Purchases are not available in this build.")
         case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
         case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
-        case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
+        case .notPurchaser: return mtr("Only the adult who purchased this household’s membership can manage its subscription and assign seats.")
         case .refreshRequired: return mtr("Membership changed. Review the current seats before making another change.")
         case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
         }
