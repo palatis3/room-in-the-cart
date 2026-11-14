@@ -457,6 +457,43 @@ test('pending edit carries request revision; withdrawal requires confirmation',a
  click(root,'Withdraw');assert.equal(sent.length,1);click(root,'Confirm withdrawal');await waitForIdle(root);assert.equal(sent[1].kind,'request.withdraw');
 });
 
+for (const action of ['Edit', 'Follow up']) {
+ test(`opening ${action} lets the contributor keep their current draft before replacing it`, async t => {
+  const row = action === 'Edit' ? own() : {...own(), status: 'deferred', ownActionAllowed: false, route: 'next'};
+  const commands = [];
+  const {root, dom} = await setup(fakeAPI({
+   requests: async () => [row],
+   command: async (_, command) => { commands.push(command); return row; }
+  }));
+  t.after(() => dom.window.close());
+  type(dom, 'item', 'Oats');
+  type(dom, 'amount', 'two packs');
+  let replace = false;
+  const prompt = t.mock.method(dom.window, 'confirm', () => replace);
+  const openRequest = () => click(root.querySelector('article[data-request-id]'), action);
+  openRequest();
+  assert.equal(root.querySelector('#item').value, 'Oats');
+  assert.equal(root.querySelector('#amount').value, 'two packs');
+  submit(root, dom);
+  openRequest();
+  assert.match(root.querySelector('form').textContent, /Review before sending.*Oats.*two packs/);
+  replace = true;
+  openRequest();
+  assert.equal(prompt.mock.calls.length, 3);
+  assert.equal(root.querySelector('#item').value, row.originalItem);
+  assert.equal(root.querySelector('#amount').value, row.ownQuantity);
+  assert.equal(root.ownerDocument.activeElement.id, 'item');
+  assert.equal(commands.length, 0);
+  submit(root, dom);
+  submit(root, dom);
+  await waitForIdle(root);
+  assert.equal(commands.length, 1);
+  assert.equal(commands[0].kind, action === 'Edit' ? 'request.edit' : 'request.send');
+  assert.equal(commands[0].body.requestId ?? commands[0].body.followupTo, row.requestId);
+  assert.equal(commands[0].shopId, row.shopId);
+ });
+}
+
 test('withdrawal confirmation belongs to the reviewed revision after a refresh',async()=>{
  let row=own();const commands=[];
  const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{commands.push(command);return row;}}));

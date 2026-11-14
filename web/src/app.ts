@@ -625,8 +625,11 @@ export class WebApp {
         card.append(this.el('p',this.t(purchaseLabel)));
       }
       if(r.clarification)card.append(this.el('p',r.clarification));
-      if(r.ownActionAllowed){card.append(this.button('Edit',()=>{if(this.uncertainSend)return;this.draft={item:r.originalItem,amount:r.ownQuantity??'',route:r.route,editing:r,followup:null};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));}
-      else if(r.status!=='withdrawn')card.append(this.button('Follow up',()=>{if(this.uncertainSend)return;this.draft={...blank(),item:r.originalItem,amount:r.ownQuantity??'',route:r.route,followup:r.requestId};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}));
+      if(r.ownActionAllowed){
+        card.append(this.button('Edit',()=>this.openRequestDraft(r)),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));
+      } else if(r.status!=='withdrawn'){
+        card.append(this.button('Follow up',()=>this.openRequestDraft(r)));
+      }
       if(this.withdrawn?.requestId===r.requestId){card.append(this.el('p',this.t('Withdraw this pending request?')),this.button('Confirm withdrawal',()=>void this.run(async()=>{
         const fresh=await this.reauthenticate(this.withdrawalCommand??undefined);
         this.withdrawalCommand??=this.makeCommand('request.withdraw',{requestId:r.requestId},r.revision,r.shopId);
@@ -638,6 +641,18 @@ export class WebApp {
         this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';await this.load();
       })),this.button('Cancel',()=>{this.withdrawn=null;this.render();}));}own.append(card);
     }main.append(own);
+  }
+  private openRequestDraft(row:OwnRequest):void {
+    if(this.uncertainSend)return;
+    if(this.hasRequestDraft() && !this.root.ownerDocument.defaultView?.confirm(this.t('Replace your current draft with this request?')))return;
+    this.draft={
+      item:row.originalItem,amount:row.ownQuantity??'',route:row.route,
+      editing:row.ownActionAllowed?row:null,followup:row.ownActionAllowed?null:row.requestId,
+    };
+    this.review=false;
+    this.retryCommand=null;
+    this.render();
+    this.root.querySelector<HTMLElement>('#item')?.focus();
   }
   private makeCommand(kind:string,body:Record<string,unknown>,requestRevision?:number,shopId=this.session!.shopId??''):Command {
     return {v:1,replayWindow:this.session!.replayWindow.id,clientKey:crypto.randomUUID(),shopId,kind,
@@ -729,7 +744,7 @@ export class WebApp {
     this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
   }
   private hasRequestDraft():boolean {
-    return Boolean(this.draft.item || this.draft.amount || this.draft.editing || this.draft.followup || this.retryCommand || this.review);
+    return Boolean(this.draft.item || this.draft.amount || this.draft.route==='next' || this.draft.editing || this.draft.followup || this.retryCommand || this.review);
   }
   private async reviewQueuedEdit(p:Pending):Promise<void> {
     if(this.hasRequestDraft()) {

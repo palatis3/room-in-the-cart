@@ -78,6 +78,7 @@ const es: Record<string, string> = {
   'The original request changed. Review your correction before sending it again.':'La solicitud original cambió. Revisa tu corrección antes de volver a enviarla.',
   'Move correction to draft':'Pasar la corrección al borrador',
   'Finish or discard your current draft first.':'Primero termina o descarta el borrador actual.',
+  'Replace your current draft with this request?':'¿Quieres reemplazar tu borrador actual con esta solicitud?',
   'Discard current draft':'Descartar el borrador actual',
   'This request is no longer available for correction.':'Esta solicitud ya no se puede corregir.',
   'Send follow-up':'Enviar aclaración',
