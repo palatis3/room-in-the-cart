@@ -15,6 +15,10 @@ const proposalNotices:Record<OwnProposal['status'],string> = {
 function reviewScope(session: Session): string {
   return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
 }
+function isRequestRevisionConflict(error:unknown):boolean {
+  return error instanceof ApiError && error.status===409 && (error.code==='followup_required'||error.code==='stale_base');
+}
+
 export class WebApp {
   private session:Session|null = null;
   private browserAuth:BrowserAuthState|null=null;
@@ -230,6 +234,7 @@ export class WebApp {
     } else {
       this.view=null;
       this.requests=await this.api.requests(fresh);
+      this.reconcileRequestActions();
       this.pickups=fresh.selectionRequired ? await this.api.requestPickups(fresh) : this.pickups.filter(p=>p.shopId===fresh.shopId);
       if(this.chosenPickupId && !this.pickups.some(p=>p.shopId===this.chosenPickupId) && !this.retryCommand){
         this.chosenPickupId=null;
@@ -255,6 +260,37 @@ export class WebApp {
     // Fresh authorized content supersedes a prior access denial, not receipt or storage warnings.
     if(this.session===fresh&&this.notice==='Access has ended. Ask your household for a new invitation.') {
       this.notice='';this.failurePurpose=null;
+    }
+  }
+  private async reloadChangedRequest():Promise<void> {
+    this.notice='This request changed. Review its current status.';
+    try {await this.load();} catch(error) {await this.fail(error,'load');}
+  }
+  private reconcileRequestActions():void {
+    if(this.withdrawn) {
+      const current=this.requests.find(row=>row.requestId===this.withdrawn?.requestId);
+      if(!current?.ownActionAllowed || current.revision!==this.withdrawn.revision) {
+        this.withdrawn=null;
+        this.withdrawalCommand=null;
+        this.notice='This request changed. Review its current status.';
+      }
+    }
+    const editing=this.draft.editing;
+    if(!editing || this.retryCommand || this.uncertainSend)return;
+    const current=this.requests.find(row=>row.requestId===editing.requestId);
+    if(!current || (current.revision===editing.revision && current.ownActionAllowed))return;
+    this.review=false;
+    if(current.ownActionAllowed) {
+      this.draft.editing=current;
+      this.notice='This request changed. Compare your draft with the current request before saving.';
+    } else if(current.status==='withdrawn') {
+      this.draft=blank();
+      this.notice='This request has been withdrawn.';
+    } else {
+      this.draft.editing=null;
+      this.draft.followup=current.requestId;
+      this.draft.route=current.route;
+      this.notice='The shopper has already acted. Review your text as a follow-up.';
     }
   }
   private async reauthenticate(command?:Command, grantId?:string, reviewPickupChanges=false):Promise<Session> {
@@ -516,12 +552,13 @@ export class WebApp {
       picker.addEventListener('change',()=>{this.chosenPickupId=picker.value||null;this.draft.route='current';this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#request-pickup')?.focus();});
       main.append(label,picker);
     }
+    if(this.draft.followup)form.append(this.el('h2',this.t('Follow up')));
     if(this.review) {
       const pickup=this.pickups.find(p=>p.shopId===target);
       if(target)form.append(this.el('p',this.t('Pickup for this request')+' · '+(pickup?this.pickupLabel(pickup):target.slice(0,8))));
       form.append(this.el('h2',this.t('Review before sending')),this.el('p',this.draft.item),this.el('p',this.draft.amount||this.t('Unknown amount')),this.el('p',this.t(routeForReview==='next'?'Next shop':'This pickup')));
       const back=this.button('Back to edit',()=>{this.review=false;this.render();});back.disabled=this.busy||this.uncertainSend;form.append(back);
-      const submit=this.button(this.draft.editing?'Save changes':'Send request',()=>{},true);submit.type='submit';form.append(submit);
+      const submit=this.button(this.draft.editing?'Save changes':this.draft.followup?'Send follow-up':'Send request',()=>{},true);submit.type='submit';form.append(submit);
       form.addEventListener('submit',e=>{e.preventDefault();void this.run(()=>this.send());});
     } else {
       this.field(form,'Item','item',this.draft.item,v=>{this.draft.item=v;},true);
@@ -574,7 +611,13 @@ export class WebApp {
       else if(r.status!=='withdrawn')card.append(this.button('Follow up',()=>{if(this.uncertainSend)return;this.draft={...blank(),item:r.originalItem,amount:r.ownQuantity??'',route:r.route,followup:r.requestId};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}));
       if(this.withdrawn?.requestId===r.requestId){card.append(this.el('p',this.t('Withdraw this pending request?')),this.button('Confirm withdrawal',()=>void this.run(async()=>{
         const fresh=await this.reauthenticate(this.withdrawalCommand??undefined);
-        this.withdrawalCommand??=this.makeCommand('request.withdraw',{requestId:r.requestId},r.revision,r.shopId);await this.api.command(fresh,this.withdrawalCommand);this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';await this.load();
+        this.withdrawalCommand??=this.makeCommand('request.withdraw',{requestId:r.requestId},r.revision,r.shopId);
+        try {await this.api.command(fresh,this.withdrawalCommand);} catch(error) {
+          if(!isRequestRevisionConflict(error))throw error;
+          this.withdrawn=null;this.withdrawalCommand=null;
+          await this.reloadChangedRequest();return;
+        }
+        this.withdrawn=null;this.withdrawalCommand=null;this.notice='Withdrawn';await this.load();
       })),this.button('Cancel',()=>{this.withdrawn=null;this.render();}));}own.append(card);
     }main.append(own);
   }
@@ -630,6 +673,11 @@ export class WebApp {
     try{received=await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
+      if(command.kind==='request.edit' && isRequestRevisionConflict(error)) {
+        if(persisted)await this.outbox.remove(p.id);
+        this.retryCommand=null;this.review=false;
+        await this.reloadChangedRequest();return;
+      }
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
         this.showQueued(p);return;
       }

@@ -457,6 +457,50 @@ test('pending edit carries request revision; withdrawal requires confirmation',a
  click(root,'Withdraw');assert.equal(sent.length,1);click(root,'Confirm withdrawal');await waitForIdle(root);assert.equal(sent[1].kind,'request.withdraw');
 });
 
+test('withdrawal confirmation belongs to the reviewed revision after a refresh',async()=>{
+ let row=own();const commands=[];
+ const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{commands.push(command);return row;}}));
+ click(root,'Withdraw');
+ row={...row,revision:2,ownQuantity:'four cans'};
+ click(root,'Refresh');await waitForIdle(root);
+ assert.doesNotMatch(root.textContent,/Confirm withdrawal/);
+ assert.match(root.textContent,/four cans/);
+ click(root,'Withdraw');click(root,'Confirm withdrawal');await waitForIdle(root);
+ assert.deepEqual(commands.map(c=>c.base.requestRevision),[2]);
+});
+
+test('a shopper decision during withdrawal refreshes status and retires the rejected action',async()=>{
+ let row=own();const commands=[];
+ const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{
+  commands.push(command);row={...row,revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+  throw new ApiError('followup_required',409);
+ }}));
+ click(root,'Withdraw');click(root,'Confirm withdrawal');await waitForIdle(root);
+ assert.match(root.textContent,/Saved for next shop/);assert.match(root.textContent,/Follow up/);
+ assert.doesNotMatch(root.textContent,/Confirm withdrawal/);assert.equal(commands.length,1);
+});
+
+test('a rejected edit retains the authored text until the contributor confirms a linked follow-up',async()=>{
+ let row=own();const commands=[];
+ const {root,dom}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{
+  commands.push(command);
+  if(command.kind==='request.edit'){
+   row={...row,revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+   throw new ApiError('followup_required',409);
+  }
+  return {...own(),followupTo:row.requestId,route:'next'};
+ }}));
+ click(root,'Edit');type(dom,'amount','three cans');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal(commands.length,1);assert.equal(root.querySelector('#amount').value,'three cans');
+ assert.match(root.textContent,/Saved for next shop/);assert.match(root.textContent,/Review your text as a follow-up/);
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/Send follow-up/);
+ assert.equal(commands.length,1);submit(root,dom);await waitForIdle(root);
+ const [edit,followup]=commands;
+ assert.equal(followup.kind,'request.send');assert.notEqual(followup.clientKey,edit.clientKey);
+ assert.equal(followup.body.followupTo,row.requestId);assert.equal(followup.body.ownQuantity,'three cans');
+ assert.equal(followup.shopId,edit.shopId);assert.equal(followup.body.route,'next');
+});
+
 test('received is retained if refresh fails after a committed send',async()=>{
  let reads=0;const {root,dom}=await setup(fakeAPI({requests:async()=>{if(++reads>1)throw new ApiError('network',0);return [];}}));
  type(dom,'item','Eggs');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Received by the shopper/);assert.doesNotMatch(root.textContent,/Not saved/);
