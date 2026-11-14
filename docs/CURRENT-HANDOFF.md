@@ -4,9 +4,9 @@ Updated November 14, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint
 
-GitHub is qualifying PR #7 at `bc22a846` against `main` at `a5d9c773`. CircleCI passed on their merge revision `1329431c`. [GitHub checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks) · [CircleCI workflow](https://app.circleci.com/workflow/4228b6e7-09de-494b-8c53-92883d8cf1ae)
+PR #7 targets `main` at `a5d9c773`. The preceding revision `bc22a846` passed CircleCI. Its English StoreKit verifier missed one interleaved log line. The updated verifier in `5b943ccb` read all 15 passes in each language from the original hosted results. All 1,017 Python checks passed with its reviewed source pin in `23e3f0c3`. [PR #7 checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks)
 
-The development branch at `8cf1ebfe` preserves a separate request draft when a contributor withdraws a request or receives a delayed receipt, including after reopening the app. Withdrawing the request being edited still closes its editor. All 1,036 model tests passed on iOS 17 and the unsigned iPhone archive passed bundle and symbol checks. The pickup search now has a labeled clear button in English and Spanish. On both iOS 17 and 27 the 500-item Release journey cleared and replaced searches, then reopened all 20 checkmarks. See `.build/ReleaseDraftAndSearchNov14/` and `.build/DraftAndSearchNov14/{min,current}/rendered/`.
+The contributor editor preserves a newer draft after withdrawal or receipt recovery. At `95b2a5b0`, reopening a saved correction also asks before replacing newer typing. On iOS 17, 26.2 and 27, Cancel preserved the new text and Replace restored the earlier correction without posting it. The 500-item Release search journey passed on iOS 17 and 27, including relaunch with all 20 checkmarks. See `.build/CorrectionReplacementNov14/` and `.build/DraftAndSearchNov14/{min,current}/rendered/`.
 
 Staging serves `a219e80c` on schema 049. All 212 upload files matched the PR revision. A Spanish WebKit session reopened an offline correction after the shopper deferred the original request. PostgreSQL recorded exactly one linked follow-up. English and Spanish Help and invitation navigation also passed in WebKit on the public staging alias. See `.build/PR7-bc22a846/staging-parity.json` and `.build/ContributorWebKitBc22Nov14/`.
 
