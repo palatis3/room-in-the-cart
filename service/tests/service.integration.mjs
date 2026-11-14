@@ -3,7 +3,7 @@ import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import {randomUUID,randomBytes} from 'node:crypto';
-import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
+import {generateKeyPair,exportJWK,createLocalJWKSet,decodeJwt,SignJWT} from 'jose';
 import {migrate} from '../scripts/migrate.mjs';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
@@ -250,7 +250,10 @@ test('real JWT auth denies missing, forged, expired, wrong issuer and wrong audi
     const token=await new SignJWT({session_id:randomUUID()}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(claims.iss).setAudience(claims.aud).setSubject(f.actors.Mia.subject).setIssuedAt().setExpirationTime(claims.exp).sign(privateKey);
     assert.equal((await f.http({token},'GET','/bootstrap')).status,401);
   }
-  assert.equal((await f.http({token:f.actors.Mia.token.slice(0,-2)+'zz'},'GET','/bootstrap')).status,401);
+  const {privateKey: untrustedKey} = await generateKeyPair('ES256');
+  const forgedToken = await new SignJWT(decodeJwt(f.actors.Mia.token))
+    .setProtectedHeader({alg:'ES256', kid:jwk.kid}).sign(untrustedKey);
+  assert.equal((await f.http({...f.actors.Mia, token:forgedToken},'GET','/bootstrap')).status,401);
 });
 test('whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once',async()=>{
   const f=await fixture(),sent=await f.send(),p=await f.preview(sent.request);assert.equal(p.status,200);
