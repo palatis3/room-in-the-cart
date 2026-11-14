@@ -2001,7 +2001,7 @@ import XCTest
         tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
         tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
         let amountLabel = copy("Amount, optional", "Cantidad, opcional")
-        let amount = editableElement(amountLabel)
+        let amount = app.textFields.matching(NSPredicate(format: "label == %@", amountLabel)).firstMatch
         reveal(amount)
         // Lazy ingredient rows share a localized Amount label. Retain the same
         // ingredient identity across scrolling and the review/edit transition.
