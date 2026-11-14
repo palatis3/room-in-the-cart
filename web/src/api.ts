@@ -202,8 +202,8 @@ export class API {
     return {householdId:identity(d.householdId), memberId:identity(d.memberId), role:d.role, ...(grantId ? {grantId} : {})};
   }
   async activateSession(householdId: string, csrf?: string, grantId?: string): Promise<void> {
-    const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {})}, csrf));
-    if (!active || active.household.id !== householdId || (grantId && active.grantId !== grantId)) return invalid();
+    const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {scope:'own_requests'})}, csrf));
+    if (!active || active.household.id !== householdId || active.grantId !== grantId || (!grantId && active.role !== 'contributor')) return invalid();
   }
   async setRequestQueue(session:Session,enabled:boolean):Promise<void>{
     const result=record(await this.call(`/v1/households/${segment(session.household.id)}/devices/current/request-queue`,'PUT',{enabled},session.csrf));

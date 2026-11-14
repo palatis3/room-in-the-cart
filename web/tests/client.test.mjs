@@ -715,8 +715,10 @@ test('invitation requires explicit adult review and validates the redemption rec
 
 test('session activation requires an authenticated response for the redeemed household',async()=>{
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify(session()),{status:200});});
- await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a'});
+ await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a',scope:'own_requests'});
  await assert.rejects(api.activateSession('household-b','csrf-test'),e=>e.code==='invalid_response');
+ const broader=new API(async()=>Response.json({...session(),role:'shopper'}));
+ await assert.rejects(broader.activateSession('household-a','csrf-test'),e=>e.code==='invalid_response');
 });
 
 test('joined invitation retries session activation without redeeming a single-use token twice',async()=>{

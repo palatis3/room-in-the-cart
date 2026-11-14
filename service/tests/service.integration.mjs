@@ -557,6 +557,61 @@ test('new private tables enforce tenant isolation and provider checker cannot le
   assert.equal(security.rows[0].public_execute,false);assert.equal(security.rows[0].prosecdef,true);assert.deepEqual(security.rows[0].proconfig,['search_path=pg_catalog']);
 });
 
+test('a browser switches between cook and contributor invitations for the same household',async()=>{
+  const {f,person,actor,grantId}=await helperFixture();
+  const cook=await f.http(actor,'POST','/v1/session',{householdId:f.h,grantId});
+  assert.equal(cook.status,200);
+  let cookie=cook.headers.get('set-cookie').split(';')[0],csrf=cook.data.csrf;
+  async function browser(path,body){
+    return fetch(origin+path,{method:body?'POST':'GET',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid','X-CSRF-Token':csrf,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  }
+  async function activate(input){
+    const response=await browser('/v1/session',input);
+    assert.equal(response.status,200);
+    cookie=response.headers.get('set-cookie').split(';')[0];
+    const state=await response.json();csrf=state.csrf;return state;
+  }
+  const contributed={householdId:f.h,scope:'own_requests'};
+  const deviceCount=async()=>(await admin.query('SELECT count(*)::int AS count FROM ritc.device WHERE household_id=$1 AND member_id=$2',[f.h,cook.data.memberId])).rows[0].count;
+  const before=await deviceCount(),oldCookCookie=cookie;
+  assert.equal((await f.http(actor,'POST','/v1/session',contributed)).status,403);
+  assert.equal(await deviceCount(),before,'denied first-time activation rolls back enrollment');
+  assert.equal((await browser('/v1/session',contributed)).status,403,'a cook alone cannot acquire contributor access');
+  const issued=await f.http('Mia','POST','/invites',{kind:'adult_contributor',expiresInHours:24});
+  assert.equal(issued.status,200);
+  const joined=await browser('/v1/invites/redeem',{token:issued.data.token,intent:'join',adultAttestation:true});
+  assert.equal(joined.status,200);assert.equal((await joined.json()).role,'contributor');
+  const active=await activate(contributed);
+  assert.equal(await deviceCount(),before,'switching roles reuses the current device');
+  assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:oldCookCookie}})).status,403,'the replaced cook cookie is unusable');
+  assert.equal(active.role,'contributor');assert.equal(active.grantId,undefined);
+  assert.deepEqual(active.capabilities.sort(),['own_requests','request_queue_permission']);
+  assert.equal((await (await browser('/v1/session')).json()).role,'contributor');
+  assert.equal((await browser('/v1/views/'+grantId+'/current')).status,404);
+  const base='/v1/households/'+f.h;
+  await f.send('Alex',{originalItem:'Another person’s groceries'});
+  const command={v:1,replayWindow:active.replayWindow.id,clientKey:randomUUID(),kind:'request.send',shopId:f.shopId,base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:randomUUID(),originalItem:'My rice',ownQuantity:null,authoredAt:new Date().toISOString(),route:'current'}};
+  assert.equal((await browser(base+'/commands',command)).status,200);
+  const mine=await browser(base+'/requests/mine');assert.equal(mine.status,200);
+  assert.deepEqual((await mine.json()).requests.map(row=>row.originalItem),['My rice']);
+  assert.equal((await browser(base+'/shops/'+f.shopId+'/inbox')).status,404);
+  assert.equal((await activate({householdId:f.h})).role,'contributor','refresh keeps the chosen scope');
+  assert.equal((await browser('/v1/session',{...contributed,grantId})).status,422);
+  const other=await activate({householdId:person.h});
+  assert.equal(other.role,'contributor','a cookie stays scoped in the household where this person is the shopper and organizer');
+  assert.deepEqual(other.capabilities.sort(),['own_requests','request_queue_permission']);
+  const privileged=person.envelope('Mia','shop.create',{quote:person.quote,lines:[person.line]},{shopRevision:0,authorityEpoch:0});
+  privileged.replayWindow=other.replayWindow.id;
+  assert.equal((await browser('/v1/households/'+person.h+'/commands',privileged)).status,404);
+  assert.equal((await activate({householdId:f.h,grantId})).grantId,grantId);
+  assert.equal((await browser('/v1/views/'+grantId+'/current')).status,200);
+  assert.equal((await browser(base+'/requests/mine')).status,404);
+  const renewed=await activate(contributed);
+  await admin.query('UPDATE ritc.member SET can_contribute=false WHERE household_id=$1 AND member_id=$2',[f.h,renewed.memberId]);
+  assert.equal((await browser(base+'/requests/mine')).status,403);
+  assert.equal((await browser('/v1/session')).status,403);
+});
+
 test('browser helper session stays bound to its selected grant and cannot fall back after revocation',async()=>{
   const {f,actor,projection,grantId}=await helperFixture();
   const newer=await f.http('Mia','POST','/views',{...projection,shopId:f.shopId,shopLabel:'Newer instructions',mode:'read',expiresInHours:24});

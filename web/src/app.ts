@@ -152,7 +152,7 @@ export class WebApp {
       if (fresh.household.id !== this.redemption.householdId || fresh.memberId !== this.redemption.memberId) {
         throw new ApiError('session_needed', 401);
       }
-      if (fresh.grantId !== this.redemption.grantId) {
+      if (fresh.grantId !== this.redemption.grantId || fresh.role !== this.redemption.role) {
         // Activation rotates CSRF. Keep the same member's current token for an
         // explicit retry, without reading the other grant or displaying its data.
         this.session = fresh;
