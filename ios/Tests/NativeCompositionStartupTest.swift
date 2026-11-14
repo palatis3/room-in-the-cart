@@ -480,6 +480,33 @@ import CoreDomain
         XCTAssertEqual(ledger.workspace, saved); XCTAssertEqual(ledger.revision, revision)
     }
 
+    func testWidgetPickerCompletionRequiresTheOriginalOpenListAndSession() async throws {
+        let f = try await coldURLFixture()
+        await f.composition.open(f.handle)
+        let first = try XCTUnwrap(f.ledger.shop?.id)
+        let generation = try XCTUnwrap(f.composition.generation)
+        let saved = await f.ledger.startShop(title: "Second pickup") { selected in
+            f.composition.followPickerSelection(selected, from: first, generation: generation)
+        }
+        XCTAssertTrue(saved)
+        let second = try XCTUnwrap(f.ledger.shop?.id)
+        guard case .shop(second) = f.composition.destination else {
+            return XCTFail("The widget sheet should follow the selection committed by its own picker")
+        }
+        f.composition.destination = nil
+        f.composition.followPickerSelection(second, from: first, generation: generation)
+        XCTAssertNil(f.composition.destination, "A dismissed sheet must stay dismissed")
+
+        f.composition.background()
+        await f.composition.foreground()
+        await f.ledger.selectShop(first)
+        f.composition.destination = .shop(second)
+        f.composition.followPickerSelection(first, from: second, generation: generation)
+        guard case .shop(second) = f.composition.destination else {
+            return XCTFail("A callback from before backgrounding must not redirect a newer presentation")
+        }
+    }
+
     func testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let cleanup = SQLiteFixtureDirectory(base, test: self)

@@ -409,6 +409,11 @@ import DeviceSurfaces
         }
         else { destination = .unavailable(UUID()) }
     }
+    func followPickerSelection(_ selectedID: UUID, from originalID: UUID, generation: UUID) {
+        guard self.generation == generation, ledger?.shop?.id == selectedID,
+              case .shop(originalID) = destination else { return }
+        destination = .shop(selectedID)
+    }
     func open(_ handle: RouteHandle) async {
         guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingHandle = handle; return }
         guard privateAuthorized else { destination = .unavailable(UUID()); return }
