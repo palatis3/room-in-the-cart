@@ -226,6 +226,18 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(report.recipes[0].ingredients[0], "2 cans (15 oz) tomatoes")
         XCTAssertEqual(report.recipes[0].yieldText, "three plates + lunch")
     }
+    func testRecipeExceedingNativeRecordSizeDoesNotBlockAnotherRecipeInTheFile() throws {
+        let step = String(repeating: "a", count: 32768)
+        let file = try JSONSerialization.data(withJSONObject: [
+            ["@type": "Recipe", "name": "Too large", "recipeInstructions": Array(repeating: step, count: 128)],
+            ["@type": "Recipe", "name": "Dinner", "recipeInstructions": [step]]
+        ])
+        let staged = try RecipeImporter.stage(file)
+        XCTAssertEqual(staged.skippedRows, 1)
+        XCTAssertEqual(staged.recipes.map(\.title), ["Dinner"])
+        XCTAssertEqual(staged.recipes.first?.steps, [step])
+    }
+
     func testRecipePreviewSkipsUnrelatedNodesAndIdentifiesOmittedInstructionFields() throws {
         let data = Data(#"""
         {"formatVersion":1,"@graph":[

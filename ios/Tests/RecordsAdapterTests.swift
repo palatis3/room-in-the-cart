@@ -822,6 +822,39 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: registryURL), before)
     }
 
+    @MainActor func testOversizedIngredientSkipsOnlyItsRecipeAndTheReviewedBatchReopens() async throws {
+        let directory = try temporaryDirectory()
+        let manifest = directory.appendingPathComponent("manifest.json")
+        let registry = try RecoveryRegistry(url: manifest)
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let ingredient = String(repeating: "ñ", count: 4096)
+        let recipes = [
+            ["@type": "Recipe", "name": "Arroz", "recipeIngredient": [ingredient]],
+            ["@type": "Recipe", "name": "Oversized", "recipeIngredient": [ingredient + "x"]]
+        ]
+        let selected = directory.appendingPathComponent("recipes.json")
+        try JSONSerialization.data(withJSONObject: recipes).write(to: selected)
+        await model.importFile(selected, recipes: true)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.recipeReport?.skippedRows, 1)
+        XCTAssertEqual(model.review?.rows.map(\.record.title), ["Arroz"])
+        let beforeApproval = try await registry.refreshList()
+        XCTAssertTrue(beforeApproval.isEmpty)
+
+        await model.applyReviewedImport()
+        let reopened = try RecoveryRegistry(url: manifest)
+        let records = try await reopened.refreshList()
+        XCTAssertEqual(records.count, 1)
+        let saved = try XCTUnwrap(records.first?.record)
+        let original = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(saved.nativePayload))
+        XCTAssertEqual(original.ingredients, [ingredient])
+        XCTAssertEqual(saved.helperLines.map(\.label), [ingredient])
+        await model.undoImport()
+        let afterUndo = try await reopened.refreshList()
+        XCTAssertTrue(afterUndo.isEmpty)
+    }
+
     @MainActor func testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome() async throws {
         let directory = try temporaryDirectory()
         let registryURL = directory.appendingPathComponent("manifest.json")

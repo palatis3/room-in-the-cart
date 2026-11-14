@@ -93,7 +93,17 @@ public enum RecipeImporter {
             } else if object["recipeInstructions"] != nil { skipped += 1; continue }
             let recipe = ImportedRecipe(title: title, yieldText: object["recipeYield"] as? String ?? "", ingredients: object["recipeIngredient"] as? [String] ?? [], steps: steps, sourceURL: object["url"] as? String, notes: object["notes"] as? String ?? object["description"] as? String ?? "")
             guard (try? recipe.validated()) != nil else { skipped += 1; continue }
-            if known.insert(recipe.id).inserted { recipes.append(recipe) } else { duplicates += 1 }
+            let payload = try ArchiveCodec.canonical(recipe)
+            let id = ArchiveCodec.digest(payload)
+            if known.contains(id) { duplicates += 1; continue }
+            // Every staged recipe must fit both its native record and ingredient projection.
+            guard payload.count <= ArchiveCodec.maximumNativeBytes,
+                  recipe.ingredients.allSatisfy({ $0.utf8.count <= ArchiveCodec.maximumHelperFieldBytes }) else {
+                skipped += 1
+                continue
+            }
+            known.insert(id)
+            recipes.append(recipe)
         }
         guard !recipes.isEmpty || duplicates > 0 else { throw ArchiveError.invalidRecipe }
         return RecipeImportReport(recipes: recipes, duplicateCount: duplicates, skippedRows: skipped, unsupportedFields: unsupported.sorted())
