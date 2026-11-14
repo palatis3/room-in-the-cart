@@ -53,6 +53,18 @@ import XCTest
         XCTAssertFalse(element("itemName").exists, "Transient unsaved forms do not become restored records")
         capture("Selected Dinners tab restored")
     }
+    func testColdCaptureShortcutOpensEntryForTheCurrentPickup() throws {
+        launch(reset: true)
+        tap(app.buttons["openPickupList"])
+        XCTAssertTrue(app.buttons["ledgerShopPicker"].waitForExistence(timeout: 8))
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        let shortcut = try XCTUnwrap(URL(string: "roominthecart-debug://surface/capture"))
+        app.open(shortcut)
+        XCTAssertTrue(app.textViews["ledgerImportText"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.buttons["ledgerCommitImport"].exists)
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }

@@ -50,6 +50,7 @@
     "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder": 160,
     "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock": 199,
     "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack": 217,
+    "RoomInTheCartUITests/NavigationRestorationUITests/testColdCaptureShortcutOpensEntryForTheCurrentPickup": 10,
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList": 139,
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison": 28,
     "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave": 337,
