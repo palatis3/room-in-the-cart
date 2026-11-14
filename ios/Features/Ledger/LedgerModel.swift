@@ -108,6 +108,7 @@ private enum LedgerDeletionJournal {
     var pendingLedgerDeletionReview: WholeLedgerDeletionReview? { pendingLedgerDeletion?.review }
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
+        let onShopSelected: ((UUID) -> Void)?
         let key: String
         let workspace: LedgerWorkspace
         let payload: Data
@@ -202,6 +203,10 @@ private enum LedgerDeletionJournal {
 
     @discardableResult
     func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, edit)
+    }
+
+    private func change(key: String, onShopSelected: ((UUID) -> Void)?, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         guard !saving, ready, !hasPendingLedgerDeletion else { return false }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
@@ -221,7 +226,7 @@ private enum LedgerDeletionJournal {
                 error = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
                 return false
             }
-            let change = PendingSave(key: key, workspace: candidate, payload: payload, base: revision,
+            let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
                                      operationID: UUID(), savedAt: clock())
             pending = change
             hasPendingSave = true
@@ -319,6 +324,9 @@ private enum LedgerDeletionJournal {
             self.pending = nil
             hasPendingSave = false
             error = nil
+            if let id = recovered.selectedShopID, id == pending.workspace.selectedShopID {
+                pending.onShopSelected?(id)
+            }
             return true
         } catch LedgerStoreError.erased {
             clearRetiredState()
@@ -448,15 +456,15 @@ private enum LedgerDeletionJournal {
         pending = nil; hasPendingSave = false; ready = false; search = ""
     }
 
-    func startShop(title: String) async -> Bool {
-        await change(key: "start-shop") { workspace in
+    func startShop(title: String, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
+        await change(key: "start-shop", onShopSelected: onSelected) { workspace in
             let shop = ShoppingLedger(title: title)
             workspace.shops.append(shop)
             workspace.selectedShopID = shop.id
         }
     }
 
-    func selectShop(_ id: UUID) async {
-        _ = await change(key: "select-\(id)") { $0.selectedShopID = id }
+    func selectShop(_ id: UUID, onSelected: ((UUID) -> Void)? = nil) async {
+        _ = await change(key: "select-\(id)", onShopSelected: onSelected) { $0.selectedShopID = id }
     }
 }

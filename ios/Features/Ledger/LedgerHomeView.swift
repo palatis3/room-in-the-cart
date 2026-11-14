@@ -9,6 +9,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
 
 struct LedgerHomeView: View {
     @ObservedObject var model: LedgerModel
+    var onShopSelected: ((UUID) -> Void)? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
     @State private var showingShopPicker = false
@@ -99,7 +100,7 @@ struct LedgerHomeView: View {
         .sheet(item: $sheet) { destination in
             NavigationStack {
                 switch destination {
-                case .newShop: LedgerNewShopView(model: model)
+                case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
                 case let .renameShop(id, title):
                     LedgerNewShopView(model: model, shopID: id, title: title)
                 case .entry:
@@ -146,7 +147,7 @@ struct LedgerHomeView: View {
         .accessibilityIdentifier("ledgerShopPicker")
         .confirmationDialog(shop.title, isPresented: $showingShopPicker, titleVisibility: .visible) {
             ForEach(model.workspace.shops, id: \.id) { item in
-                Button(item.title) { Task { await model.selectShop(item.id) } }
+                Button(item.title) { Task { await model.selectShop(item.id, onSelected: onShopSelected) } }
             }
             Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }
                 .accessibilityIdentifier("ledgerRenameShop")
@@ -275,10 +276,12 @@ struct LedgerNewShopView: View {
     @Environment(\.dismiss) private var dismiss
     private let originalID: UUID?
     private let originalTitle: String
+    private let onShopSelected: ((UUID) -> Void)?
     @State private var title: String
 
-    init(model: LedgerModel, shopID: UUID? = nil, title: String = "") {
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", onShopSelected: ((UUID) -> Void)? = nil) {
         self.model = model
+        self.onShopSelected = onShopSelected
         originalID = shopID
         originalTitle = title
         _title = State(initialValue: title)
@@ -307,7 +310,7 @@ struct LedgerNewShopView: View {
                 guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
                 shop.title = name
             }) { dismiss() }
-        } else if await model.startShop(title: name) { dismiss() }
+        } else if await model.startShop(title: name, onSelected: onShopSelected) { dismiss() }
     }
 }
 

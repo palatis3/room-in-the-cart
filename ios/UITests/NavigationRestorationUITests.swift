@@ -7,6 +7,37 @@ import XCTest
     override func setUpWithError() throws { continueAfterFailure = false }
     override func tearDownWithError() throws { app.terminate() }
 
+    func testInListPickupCreationAndSwitchRestoreTheChosenList() {
+        launch(reset: true)
+        tap(app.buttons["openPickupList"])
+        let picker = app.buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let firstName = picker.label
+        let secondName = "Second pickup"
+        let search = app.textFields["ledgerSearch"]
+        tap(search)
+        search.typeText("rice")
+        XCTAssertEqual(search.value as? String, "rice")
+        tap(picker)
+        tap(app.buttons["Start another pickup"])
+        let name = element("ledgerShopName")
+        tap(name)
+        name.typeText(secondName)
+        tap(app.buttons["ledgerCreateShop"])
+        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, secondName)
+        XCTAssertTrue(search.exists && search.value as? String == search.placeholderValue)
+        app.terminate(); launch(reset: false)
+        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        tap(picker)
+        tap(app.buttons[firstName])
+        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, firstName)
+        app.terminate(); launch(reset: false)
+        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
+        XCTAssertEqual(picker.label, firstName)
+    }
+
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
         tap(element("openPickupList"))
