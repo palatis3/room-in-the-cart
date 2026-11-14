@@ -303,8 +303,40 @@ import DeviceSurfaces
         XCTAssertEqual(fixture.rows.count, 1); XCTAssertEqual(fixture.commands, [bytes, bytes])
         guard case .received = reopened.delivery else { return XCTFail("Exact retry should recover the first receipt") }
         XCTAssertEqual(reopened.requests.first?.originalItem, review.item)
+        XCTAssertEqual(reopened.item, "Do not silently replace the pending request")
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testRetryingQueuedSendPreservesLaterTypingAndClearsAnUnchangedDraft() async throws {
+        for changeDraft in [false, true] {
+            let queue = location()
+            defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+            let fixture = ContributorCaptureFixture()
+            fixture.offersQueuePermission = true
+            fixture.queueGrant = UUID()
+            let model = try await model(fixture, queue: queue)
+            model.item = "Rice"
+            model.quantity = "2 bags"
+            fixture.windowFailure = .offline
+            await model.sendRequest()
+            guard case .waiting = model.delivery else { return XCTFail("Expected the request in the outbox") }
+
+            if changeDraft {
+                model.item = "Coffee"
+                model.quantity = "1 bag"
+                model.forNextShop = true
+            }
+            fixture.windowFailure = nil
+            await model.retry()
+            guard case .received(let receipt) = model.delivery else { return XCTFail("Missing the original receipt") }
+            XCTAssertEqual(receipt.request.originalItem, "Rice")
+            XCTAssertEqual(receipt.request.ownQuantity, "2 bags")
+            XCTAssertEqual(fixture.commands.count, 1)
+            XCTAssertEqual(model.item, changeDraft ? "Coffee" : "")
+            XCTAssertEqual(model.quantity, changeDraft ? "1 bag" : "")
+            XCTAssertEqual(model.forNextShop, changeDraft)
+        }
+    }
+
     func testOfflineBeforeSendQueuesExactRequestUntilAnAuthorizedRetryAfterRestart() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()

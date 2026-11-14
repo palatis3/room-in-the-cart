@@ -76,7 +76,10 @@ struct DeviceReminderPersona: Equatable {
         }
         return DeviceReminderPersona(subject: subject, projection: projection)
     }
-    private var pending: PendingOperation?
+    private var submittedDraft: ContributorRequestScope?
+    private var pending: PendingOperation? {
+        didSet { if oldValue?.id != pending?.id { submittedDraft = nil } }
+    }
     private var attempts = 0
     private var retryAfter = Date.distantPast
     private var generation = UUID()
@@ -479,7 +482,7 @@ struct DeviceReminderPersona: Equatable {
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: scope.editing?.revision), body: body)
             let operation = try await service.prepare(envelope: envelope, bootstrap: projection, requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
             guard start == generation, currentContributorRequestScope() == scope else { return }
-            try await submitRequest(operation, projection: projection, offline: offline, start: start)
+            try await submitRequest(operation, projection: projection, offline: offline, start: start, draft: scope)
         } catch { await show(error, start: start) }
     }
     var contributorDraftTitle: String {
@@ -535,7 +538,8 @@ struct DeviceReminderPersona: Equatable {
             try await submitRequest(operation, projection: projection, offline: false, start: start)
         } catch { await show(error, start: start) }
     }
-    private func submitRequest(_ operation: PendingOperation, projection: HouseholdBootstrap, offline: Bool, start: UUID) async throws {
+    private func submitRequest(_ operation: PendingOperation, projection: HouseholdBootstrap, offline: Bool, start: UUID,
+                               draft: ContributorRequestScope? = nil) async throws {
         let durableGrant = projection.requestQueueEnabled && operation.requestQueueGrant != nil
         if offline && !durableGrant {
             notice = ht("Enable offline requests while connected before saving a request offline.")
@@ -547,7 +551,9 @@ struct DeviceReminderPersona: Equatable {
             try await outbox.append(operation)
             guard start == generation else { return }
         }
-        pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
+        pending = operation
+        submittedDraft = draft
+        attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
         if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
         else { await deliver(operation, start: start) }
     }
@@ -562,12 +568,16 @@ struct DeviceReminderPersona: Equatable {
         do {
             let receipt = try await service.execute(operation)
             guard start == generation else { return }
+            let clearsDraft: Bool
+            if receipt.kind == "request.withdraw" {
+                clearsDraft = editing?.id == receipt.request.id || followingUp?.id == receipt.request.id
+            } else {
+                clearsDraft = submittedDraft != nil && submittedDraft == currentContributorRequestScope()
+            }
             delivery = .received(receipt)
             pending = nil
-            if receipt.kind != "request.withdraw" || editing?.id == receipt.request.id || followingUp?.id == receipt.request.id {
-                cancelEdit()
-            }
             requests.removeAll { $0.id == receipt.request.id }; requests.insert(receipt.request, at: 0)
+            if clearsDraft { cancelEdit() } else { reconcileContributorEdit() }
             do { try await outbox.remove(operation.id) }
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
         } catch {
