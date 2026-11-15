@@ -115,7 +115,9 @@ import XCTest
         tap(app.buttons["Review entered shared shop"])
         XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
         enterFirstAdoption(chickpeaID: chickpeaID)
-        tap(app.buttons["sharedTracking.preview"])
+        let reviewChanges = app.buttons["sharedTracking.preview"]
+        tap(reviewChanges)
+        XCTAssertTrue(reviewChanges.waitForNonExistence(timeout: 12), "The completed food and pack entries must open their review")
         // The preview begins with basket and checkout facts; the proposed
         // meal facts follow those sections.
         assertText("Fractional chickpea supper")
@@ -313,20 +315,6 @@ import XCTest
     private func enterTrackingText(_ text: String, field: XCUIElement) {
         reveal(field, fullyVisible: true); field.tap(); field.typeText(text)
         XCTAssertEqual(field.value as? String, text)
-        let keyboard = app.keyboards.firstMatch
-        if keyboard.exists && keyboard.frame.intersects(app.frame) {
-            // Scroll the production tracking Form to dismiss its keyboard.
-            let area = scrollableArea(), origin = app.coordinate(withNormalizedOffset: .zero)
-            let start = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.minY + area.height * 0.25 - app.frame.minY))
-            let end = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.maxY - 8 - app.frame.minY))
-            start.press(forDuration: 0.05, thenDragTo: end)
-            // UIKit can retain a keyboard preview below the screen after dismissal.
-            // Require an unobscured app, not removal of that offscreen AX element.
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                !keyboard.exists || !keyboard.frame.intersects(self.app.frame)
-            }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
-        }
     }
     private func assertProposalReady() {
         let prepare = element("household-idea-prepare-proposal")

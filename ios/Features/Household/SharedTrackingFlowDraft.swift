@@ -245,9 +245,10 @@ struct TrackingFlowDraft: Equatable {
         var additions: [SharedDemandContribution] = []
         let retiring = Set(mealChanges?.catalog.retirementCandidates ?? [])
         for manual in manuals where manual.enabled {
+            let productName = manual.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard manual.productConfirmed, let id = manual.lineID,
                   basket.contains(where: { $0.lineId == id.string }),
-                  !manual.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !productName.isEmpty,
                   !manual.original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
             // An explicit identity confirmation may use an existing product key;
             // never create a shared identity just because two labels are equal.
@@ -255,7 +256,7 @@ struct TrackingFlowDraft: Equatable {
             guard active.allSatisfy({ $0.productKey != nil }) || self.packs.first(where: { $0.id == id })?.confirmExistingSources == true else { throw ClientError.configuration }
             additions.append(.init(id: manual.id, lineId: id, source: .manual,
                 productKey: active.compactMap(\.productKey).first ?? "food.\(id.string)",
-                productName: manual.name, originalText: manual.original, quantity: try manual.amount.value(),
+                productName: productName, originalText: manual.original, quantity: try manual.amount.value(),
                 exclusions: Self.tags(manual.exclusions), contains: Self.tags(manual.contains)))
         }
         var clarifyingProtected: [SharedDemandID] = []
