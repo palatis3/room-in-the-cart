@@ -1845,10 +1845,11 @@ import XCTest
         englishCalendar.locale = Locale(identifier: "en_US")
         let englishMonth = englishCalendar.monthSymbols[monthIndex]
         let dayNumber = calendar.component(.day, from: date)
-        let day = app.datePickers.collectionViews.buttons.matching(NSPredicate(
+        let dayMatch = NSPredicate(
             format: "(label CONTAINS[cd] %@ OR label CONTAINS[cd] %@) AND label MATCHES %@",
             monthName, englishMonth, ".*\\b\(dayNumber)\\b.*"
-        )).firstMatch
+        )
+        let day = app.datePickers.collectionViews.buttons.matching(dayMatch).firstMatch
         let previous = offset < 0
         let monthButton = app.buttons.matching(NSPredicate(
             format: "label IN[c] %@ OR identifier CONTAINS[c] %@",
@@ -1864,9 +1865,28 @@ import XCTest
         let visible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: day)
         XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 8), .completed, formatter.string(from: date))
         day.tap()
-        if day.exists {
+        // Resolve the calendar and its day in one snapshot. A live day query
+        // can spend minutes resolving ancestors that disappeared on dismissal.
+        func calendarShowsDay() -> Bool? {
+            guard let screen = try? app.snapshot(), !screen.children.isEmpty else { return nil }
+            func containsDay(_ node: any XCUIElementSnapshot, inPicker: Bool, inGrid: Bool) -> Bool {
+                if inGrid && node.elementType == .button && dayMatch.evaluate(with: node) { return true }
+                let picker = inPicker || node.elementType == .datePicker
+                let grid = inGrid || (inPicker && node.elementType == .collectionView)
+                return node.children.contains { containsDay($0, inPicker: picker, inGrid: grid) }
+            }
+            return containsDay(screen, inPicker: false, inGrid: false)
+        }
+        guard let showingDay = calendarShowsDay() else {
+            XCTFail("Could not inspect the calendar after selecting " + formatter.string(from: date))
+            return
+        }
+        if showingDay {
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.07)).tap()
-            XCTAssertTrue(day.waitForNonExistence(timeout: 5))
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                calendarShowsDay() == false
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed, formatter.string(from: date))
         }
     }
 
