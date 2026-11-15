@@ -219,8 +219,9 @@ import XCTest
     }
     private func counts(previews: Int, posts: Int, writes: Int, retries: Int) {
         let value = "Previews: \(previews); POSTs: \(posts); Writes: \(writes); Exact retries: \(retries)"
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", value), object: app.staticTexts["fixture.foodEditor.counts"])
-        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 12), .completed)
+        let counts = app.staticTexts.matching(identifier: "fixture.foodEditor.counts")
+            .matching(NSPredicate(format: "label == %@", value)).firstMatch
+        XCTAssertTrue(counts.waitForExistence(timeout: 12), "Expected food editor counts: \(value)")
         XCTAssertFalse(app.staticTexts["fixture.foodEditor.rejected"].exists, app.debugDescription)
         XCTAssertFalse(app.staticTexts["fixture.failure"].exists, app.debugDescription)
     }
