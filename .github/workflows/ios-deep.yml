@@ -20,6 +20,7 @@ on:
       - 'scripts/check_swift_syntax.py'
       - 'scripts/select_ci_iphone.py'
       - 'scripts/boot_ios_simulator.py'
+      - 'scripts/check_storekit_runtime_mount.py'
       - 'scripts/is_storekit_launch_failure.py'
       - 'scripts/test_storekit_workflow.py'
       - 'scripts/ci_yaml_requirements.txt'
@@ -333,6 +334,9 @@ jobs:
           set -o pipefail
           output=".build/storekit-$STOREKIT_LOCALE"
           mkdir -p "$output"
+          if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then
+            python3 scripts/check_storekit_runtime_mount.py 2>&1 | tee "$output/StoreKitMount.log"
+          fi
           python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" 2>&1 | tee "$output/StoreKitBoot.log"
           test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
           test "${#test_runs[@]}" -eq 1

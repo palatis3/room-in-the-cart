@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import check_storekit_runtime_mount as runtime_mount
 from check_ci_workflows import FIXTURE_RUNNER, FIXTURE_SLOT_PREFIX, parse_workflow
 from is_storekit_launch_failure import is_launch_failure
 
@@ -122,6 +123,9 @@ class StoreKitWorkflowTests(unittest.TestCase):
             self.assertIn('test-without-building', command)
             self.assertNotIn('-project', command)
             self.assertNotIn('build-for-testing', command)
+            self.assertIn('if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then', command)
+            self.assertLess(command.index('python3 scripts/check_storekit_runtime_mount.py'),
+                            command.index('python3 scripts/boot_ios_simulator.py'))
             self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
             self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
             self.assertEqual(command.count('tee "$output/launch-failure/StoreKitRecoveryBoot.log"'), 2)
@@ -342,6 +346,53 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.execute(code, root, REQUIRE_CURRENT_STOREKIT=request, GITHUB_EVENT_NAME=event,
                              CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment))
             return dict(line.split('=', 1) for line in environment.read_text().splitlines()), native, download
+
+    def test_storekit_mount_distinguishes_replacement_from_healthy_images(self):
+        runtime = self.runtime_fixture('26.2', '23C54')
+        fallback = str(runtime_mount.FALLBACK / 'Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime')
+        preferred = fallback.replace(str(runtime_mount.FALLBACK), '/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54')
+        image = {'identifier': 'original', 'runtimeIdentifier': runtime['identifier'], 'build': '23C54',
+                 'state': 'Ready', 'kind': 'Patchable Cryptex Disk Image', 'runtimeBundlePath': fallback,
+                 'path': '/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/local.asset/AssetData'}
+        displaced = {**image, 'state': 'Unusable', 'unusableSubstate': 'Cryptex Mount Preferred'}
+        replacement = {**image, 'identifier': 'replacement', 'runtimeBundlePath': preferred}
+        for bundle, images, expected in [
+            (fallback, [image], 'fallback'),
+            (fallback, [{**image, 'kind': 'Disk Image'}], 'ready'),
+            (fallback, [{**image, 'path': '/Library/Developer/CoreSimulator/Images/local.dmg'}], 'ready'),
+            (None, [displaced], 'replacing'),
+            (preferred, [replacement, displaced], 'ready'),
+            (preferred, [{**replacement, 'build': 'wrong'}], 'unavailable'),
+            (preferred, [replacement, {**replacement, 'identifier': 'ambiguous'}], 'unavailable'),
+        ]:
+            with self.subTest(bundle=bundle, expected=expected):
+                runtime_list = {'runtimes': [self.runtime_fixture('26.2', '23C52')]}
+                if bundle:
+                    runtime_list['runtimes'].append({**runtime, 'bundlePath': bundle})
+                image_list = {i['identifier']: i for i in images}
+                with patch.object(runtime_mount, 'simctl', side_effect=[json.dumps(runtime_list), json.dumps(image_list)]):
+                    self.assertEqual(runtime_mount.mount_state(), expected)
+
+    def test_storekit_mount_rescans_once_only_for_observed_image_replacement(self):
+        for states, times, expected_scans, fails in [
+            (['ready'], [], 0, False),
+            (['unavailable'], [], 0, True),
+            (['fallback', 'replacing', 'ready'], [0, 0], 1, False),
+            (['replacing', 'unavailable', 'ready'], [0, 0], 1, False),
+            (['fallback', 'fallback'], [0, 61], 1, True),
+        ]:
+            with self.subTest(states=states), patch.object(runtime_mount, 'mount_state', side_effect=states), \
+                    patch.object(runtime_mount, 'simctl') as simctl, \
+                    patch('time.monotonic', side_effect=times), patch('time.sleep'):
+                if fails:
+                    with self.assertRaises(RuntimeError):
+                        runtime_mount.check_mount()
+                else:
+                    runtime_mount.check_mount()
+                if expected_scans:
+                    simctl.assert_called_once_with('runtime', 'scan-and-mount')
+                else:
+                    simctl.assert_not_called()
 
     def test_actual_runtime_policy_handles_pr_manual_and_pr_originated_reuse(self):
         cases = [('', 'pull_request', '26.2', '23C54'),
