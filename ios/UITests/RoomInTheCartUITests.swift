@@ -705,6 +705,7 @@ final class RoomInTheCartUITests: XCTestCase {
             return
         }
         app.buttons[identifier].tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: identifier))
     }
 
     private func type(_ fields: [(id: String, text: String)]) {
@@ -731,7 +732,17 @@ final class RoomInTheCartUITests: XCTestCase {
             }
             let keyboard = app.keyboards.firstMatch
             XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5))
-            if field.exists {
+            // For a standalone whole number, operate the displayed keys before
+            // dismissing the numeric keyboard. The needed amount may have multiple digits.
+            let numericFields = ["needed", "aQuantity", "aPrice", "bQuantity", "bPrice", "itemCap"]
+            if fields.count == 1, numericFields.contains(id), !text.isEmpty,
+               text.allSatisfy({ $0.isASCII && $0.isNumber }) {
+                for digit in text {
+                    let key = keyboard.keys[String(digit)]
+                    XCTAssertTrue(key.waitForExistence(timeout: 5) && key.isHittable)
+                    key.tap()
+                }
+            } else if field.exists {
                 field.typeText(text)
             } else {
                 // At accessibility sizes the focused row can scroll out of the snapshot.
