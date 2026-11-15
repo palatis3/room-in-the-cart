@@ -34,7 +34,7 @@ import XCTest
         assertText("This raw record does not calculate a remaining balance")
         XCTAssertFalse(app.buttons["Edit this period plan"].exists)
         XCTAssertFalse(element("history.applyReviewed").exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-granted-raw-plan-has-no-write-action")
         pricesTab()
         let reference = app.textFields["Saved observation reference"]
@@ -43,7 +43,7 @@ import XCTest
         XCTAssertTrue(app.buttons["Check access again"].waitForExistence(timeout:12))
         XCTAssertFalse(app.staticTexts["Grant-only oats"].exists)
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-foreign-reference-clears-protected-disclosure")
     }
     func testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource() {
@@ -62,7 +62,7 @@ import XCTest
         tap(app.buttons["Check access again"])
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
         XCTAssertFalse(app.staticTexts["$100.00"].exists)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-revocation-clears-raw-envelope-and-saved-source")
     }
     func testRefreshingHistoryAfterAnUnavailableRecordClearsBothDateFilters() throws {
@@ -142,7 +142,7 @@ import XCTest
         if app.buttons["Check access again"].waitForExistence(timeout:3) { tap(app.buttons["Check access again"]) }
         XCTAssertTrue(element("history.newObservation").waitForExistence(timeout:15))
         XCTAssertFalse(element("history.newObservation").isEnabled)
-        counter("writes",0)
+        assertNoWrites()
         capture("E09-grant-only-shop-discovered-independently-of-owned-shops")
     }
     private func openAllowedObservation() {
@@ -203,10 +203,10 @@ import XCTest
     private func tap(_ value: XCUIElement) { reveal(value); XCTAssertTrue(value.isHittable,value.debugDescription); value.tap() }
     private func fill(_ text: String, field: XCUIElement) { tap(field); app.typeText(text); let done = app.buttons.matching(identifier:"Done").firstMatch; if done.exists && done.isHittable { done.tap() } else { app.swipeDown() } }
     private func assertText(_ text: String) { let value = app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@",text)).firstMatch; reveal(value); XCTAssertTrue(value.isHittable,text) }
-    private func counter(_ id: String, _ count: Int) {
-        let label = id == "writes" ? "Writes":id == "paid" ? "Paid denied":id == "denied" ? "Denied":"Reads"
-        let e = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(label): \(count)"),object:element("fixture.h09."+id))
-        XCTAssertEqual(XCTWaiter.wait(for:[e],timeout:10),.completed)
+    private func assertNoWrites(file: StaticString = #filePath, line: UInt = #line) {
+        // The fixture header is always mounted, and its write count only increases.
+        let counter = app.staticTexts["fixture.h09.writes"]
+        XCTAssertEqual(try counter.snapshot().label, "Writes: 0", file: file, line: line)
     }
     private func atLeast(_ id: String, _ minimum: Int) {
         let value = element("fixture.h09."+id)
