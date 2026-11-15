@@ -322,6 +322,8 @@ variable to restore the usual routing for subsequent runs.
 
 During the November 14 outage run, GitHub slots 3 and 4 had finished their last native jobs by 14:53 UTC. At 16:01 UTC, the bilingual StoreKit retry, UI07 and the Spanish large-text store quote were waiting on slot 2. On the GitHub-only fallback, contributor group 05 and known-trip quote adoption now use slot 4. The lost-reply quote and Spanish large-text quote use slot 3. Compare the last required result and StoreKit wait on the next full batch. [Fixture job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663919) · [Core job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663924)
 
+On November 15, GitHub slot 4 finished its last fixture at 07:20 UTC. UI01 was still waiting on slot 1 when UI04 started there at 07:24 UTC. Full runs now send UI01 to GitHub slot 4 when using GitHub runners. Its preferred Bitrise runner remains M4 slot 0. [Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744700) · [Core jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744701)
+
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
 M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready.
 The existing M2 pool is `bitrise-runner-room in cart`; the new M4 pool is
