@@ -251,45 +251,66 @@ import XCTest
         capture("S26-first-adoption-explicit-soup-unknown-and-half-cup-meal-source")
     }
     private func assertVisibleFractionalMealNeed() {
-        // The meal source precedes its picker. Read its label and position in
-        // the same snapshot as the viewport while the lazy Form scrolls.
         let label = "Meal need, 1/2 cups"
+        guard visibleSnapshot(label, searchTowardEndFirst: false, matching: {
+            $0.elementType == .staticText && $0.label == label
+        }) != nil else { return }
+        XCTAssertTrue(app.staticTexts[label].firstMatch.isHittable, "Missing visible text: " + label)
+    }
+    private func visibleSnapshot(_ description: String, searchTowardEndFirst: Bool,
+                                 matching: (any XCUIElementSnapshot) -> Bool)
+        -> (element: any XCUIElementSnapshot, viewport: CGRect)? {
+        // Read the requested row and viewport together while the lazy Form scrolls.
         for attempt in 0...24 {
             guard let screen = try? app.snapshot() else {
-                XCTFail("Could not inspect the fractional meal source")
-                return
+                XCTFail("Could not inspect " + description)
+                return nil
             }
             let area = scrollableArea(screen: screen)
             var pending = screen.children
-            var frame = CGRect.zero
+            var match: (any XCUIElementSnapshot)?
             while let node = pending.popLast() {
-                if node.elementType == .staticText && node.label == label {
-                    frame = node.frame
+                if matching(node) {
+                    match = node
                     break
                 }
                 pending.append(contentsOf: node.children)
             }
-            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
-                XCTAssertTrue(app.staticTexts[label].firstMatch.isHittable, "Missing visible text: " + label)
-                return
+            let frame = match?.frame ?? .zero
+            if let match, !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+                return (match, area)
             }
             guard attempt < 24 else { break }
-            let upward = frame.isEmpty ? attempt >= 16 : frame.midY > area.midY
+            let searchUpward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst
+            let upward = frame.isEmpty ? searchUpward : frame.midY > area.midY
             let overflow = upward ? frame.maxY - area.maxY : area.minY - frame.minY
             let distance = !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
             scrollContent(upward: upward, area: area, distance: distance)
         }
-        XCTFail("Missing visible text: " + label)
+        XCTFail("Missing visible element: " + description)
+        return nil
     }
     private func acceptUnresolvedPack(_ itemID: String) {
-        let row = app.switches["sharedTracking.pack." + itemID]
-        reveal(row, fullyVisible: true)
-        XCTAssertEqual(row.switches.count, 1)
-        let control = row.switches.firstMatch
-        XCTAssertTrue(control.isEnabled && control.isHittable)
-        XCTAssertEqual(control.value as? String, "0", itemID)
-        // The Form row spans the label and track. Tap the native switch at its off thumb.
-        control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        let id = "sharedTracking.pack." + itemID
+        guard let (snapshot, viewport) = visibleSnapshot(id, searchTowardEndFirst: true, matching: {
+            $0.elementType == .switch && $0.identifier == id
+        }) else { return }
+        // A live descendant query can time out on this large Form. The native
+        // switch and the identified row share the same snapshot coordinates.
+        let switches = snapshot.children.filter { $0.elementType == .switch }
+        guard switches.count == 1, let native = switches.first, !native.frame.isEmpty,
+              snapshot.frame.contains(native.frame), viewport.contains(native.frame) else {
+            XCTFail("Missing a fully visible native switch in " + id)
+            return
+        }
+        XCTAssertTrue(native.isEnabled, id)
+        XCTAssertEqual(native.value as? String, "0", id)
+        let row = app.switches[id]
+        XCTAssertTrue(row.isHittable, id)
+        let thumbX = native.frame.minX + 0.25 * native.frame.width
+        let thumb = CGVector(dx: (thumbX - snapshot.frame.minX) / snapshot.frame.width,
+                             dy: (native.frame.midY - snapshot.frame.minY) / snapshot.frame.height)
+        row.coordinate(withNormalizedOffset: thumb).tap()
         let accepted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: row)
         XCTAssertEqual(XCTWaiter.wait(for: [accepted], timeout: 5), .completed, itemID)
         XCTAssertEqual(row.value as? String, "1", "The reviewed switch must be on: " + itemID)
