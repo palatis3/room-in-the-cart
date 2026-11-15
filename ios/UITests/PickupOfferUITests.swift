@@ -230,7 +230,12 @@ import XCTest
         XCTAssertTrue(start.waitForExistence(timeout: 8), "A placed receipt needs an entry for independent retailer confirmation")
         tap(start)
         tap(app.buttons["Edit wraps"])
-        fill("5", into: "pickup.amendment.amount", replacing: true)
+        let amount = app.textFields["pickup.amendment.amount"]
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "2")
+        amount.tap()
+        app.typeText(XCUIKeyboardKey.delete.rawValue + "5")
+        tap(app.buttons["Done"])
         tap(app.buttons["pickup.amendment.keepLine"])
         fill("Market confirmation ABC-51", into: "pickup.amendment.reference")
         tap(app.buttons["pickup.amendment.preview"])
