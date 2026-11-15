@@ -134,14 +134,16 @@ import XCTest
         let mealID = String(replace.identifier.dropFirst("mealRecovery.target.".count))
         tap(replace)
         let title = app.textFields["mealRecovery.title"]
-        let notes = app.textFields["mealRecovery.notes"]
+        let notes = editableElement("mealRecovery.notes")
         tapVisibleFormRow(title)
         title.typeText("Wednesday bean bowls" + XCUIKeyboardKey.return.rawValue)
         notes.typeText("Heat the beans for dinner")
         XCTAssertEqual(notes.value as? String, "Heat the beans for dinner")
-        let done = app.buttons["Done"]
+        let done = app.navigationBars["Replace a whole dinner"].buttons["Done"]
         XCTAssertTrue(done.isHittable)
         done.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+
         let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
         reveal(name)
         if replaceDraftIngredient {
@@ -157,8 +159,13 @@ import XCTest
         let nameID = ingredientID + ".name", amountID = ingredientID + ".amount"
         fill("Beans", into: nameID, useVisibleCenter: true, control: app.textFields[nameID])
         choose("Reviewed matching food", value: "Beans")
-        fill("4", into: amountID, useVisibleCenter: true, control: app.textFields[amountID])
+        let amount = app.textFields[amountID]
+        tapVisibleFormRow(amount)
+        amount.typeText("4")
+        XCTAssertEqual(amount.value as? String, "4")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
         enableSwitch("I reviewed every food identity, usable unit and inherited exclusion")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         let preview = element("mealRecovery.preview")
         XCTAssertTrue(preview.waitForExistence(timeout: 5) && preview.isHittable && preview.isEnabled)
         XCTAssertLessThanOrEqual(preview.frame.maxY, app.tabBars.buttons["Shop"].frame.minY,
@@ -270,6 +277,18 @@ import XCTest
         let spanish = try XCTUnwrap(reopenedInstruction.value as? String)
         XCTAssertTrue(spanish.hasPrefix("Instrucciones para cocinar"), spanish)
         XCTAssertTrue(spanish.contains("Wednesday bean bowls"))
+        // The recipient's preview and its readback timestamp must agree even with an English interface.
+        let datedLine = try XCTUnwrap(spanish.components(separatedBy: "\n\n").dropFirst().first)
+        let sourceDate = try XCTUnwrap(datedLine.components(separatedBy: " · ").first)
+        let recipientLocale = Locale(identifier: "es-US")
+        let dateParser = DateFormatter()
+        dateParser.locale = recipientLocale
+        dateParser.dateStyle = .full
+        dateParser.timeStyle = .short
+        let preparedAt = try XCTUnwrap(dateParser.date(from: sourceDate), sourceDate)
+        let readbackDate = preparedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: recipientLocale))
+        reveal(app.staticTexts["Current dated cook instruction"])
+        XCTAssertTrue(app.staticTexts[readbackDate].waitForExistence(timeout: 5), "Expected Spanish readback date: \(readbackDate)")
         tap(app.buttons["Review this saved copy"])
         reveal(reopenedInstruction, initiallyUpward: false)
         XCTAssertEqual(reopenedInstruction.value as? String, copy)
