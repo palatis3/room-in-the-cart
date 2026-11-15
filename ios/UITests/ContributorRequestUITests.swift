@@ -124,11 +124,24 @@ import XCTest
         tap(element("capture.reviewFields"))
 
         let atTop = XCTNSPredicateExpectation(predicate: NSPredicate { object, _ in
-            guard let text = object as? XCUIElement, text.exists, text.isHittable else { return false }
-            return text.frame.minY >= captureBar.frame.maxY && text.frame.minY < self.app.frame.midY
-        }, object: element("capture.structured.original"))
+            guard let app = object as? XCUIApplication, let screen = try? app.snapshot() else { return false }
+            // Read the original wording and its viewport together. Separate live
+            // descendant queries can spend the entire deadline resolving one row.
+            var pending = screen.children
+            var wording: (any XCUIElementSnapshot)?
+            var bar: (any XCUIElementSnapshot)?
+            while let node = pending.popLast() {
+                if node.elementType == .staticText && node.identifier == "capture.structured.original" { wording = node }
+                if node.elementType == .navigationBar && (node.identifier == "Capturar una solicitud" || node.label == "Capturar una solicitud") { bar = node }
+                pending.append(contentsOf: node.children)
+            }
+            guard let wording, let bar, wording.label == original, !wording.frame.isEmpty else { return false }
+            return wording.frame.minY >= bar.frame.maxY && wording.frame.minY < screen.frame.midY
+        }, object: app)
         XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
-        XCTAssertEqual(element("capture.structured.original").label, original)
+        let wording = app.staticTexts["capture.structured.original"]
+        XCTAssertTrue(wording.isHittable)
+        XCTAssertEqual(wording.label, original)
         capture("Spanish-large-text-original-at-top")
     }
 
