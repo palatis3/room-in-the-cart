@@ -86,6 +86,31 @@ import UserNotifications
         XCTAssertEqual(f.pickup.journey, before)
     }
 
+    func testNewReminderSuggestsAUsableMinuteBeforeAShortDeadline() async throws {
+        var currentTime = now
+        let f = try await fixture(clock: { currentTime })
+        let offer = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.cutoff != nil })
+        let cutoff = try XCTUnwrap(offer.cutoff)
+        currentTime = cutoff.addingTimeInterval(-20 * 60)
+        let offerContext = try await f.surfaces.reminderContext(offer, expiresAt: cutoff)
+        XCTAssertGreaterThan(offerContext.initialFireAt, currentTime)
+        XCTAssertLessThan(offerContext.initialFireAt, cutoff)
+
+        let deferral = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.cutoff == nil })
+        // Only one whole minute falls between these two instants.
+        currentTime = cutoff.addingTimeInterval(-15)
+        let expiry = cutoff.addingTimeInterval(15)
+        let deferralContext = try await f.surfaces.reminderContext(deferral, expiresAt: expiry)
+        XCTAssertEqual(deferralContext.initialFireAt, cutoff)
+        // A reminder at the exact expiry would arrive too late.
+        do {
+            _ = try await f.surfaces.reminderContext(deferral, expiresAt: cutoff)
+            XCTFail("Review must explain when no selectable minute is left")
+        } catch SurfaceError.expired {}
+        let records = try await f.surfaces.reminderStore?.all()
+        XCTAssertEqual(records?.count, 0)
+    }
+
     func testContextualResolutionRejectsOtherWorkspaceShopKindRevisionAndPassedCutoff() async throws {
         let f = try await fixture()
         let target = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.cutoff != nil })

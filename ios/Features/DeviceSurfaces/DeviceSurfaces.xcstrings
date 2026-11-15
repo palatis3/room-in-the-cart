@@ -817,6 +817,22 @@
         }
       }
     },
+    "There is no reminder time left before this deadline.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no reminder time left before this deadline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya no queda tiempo para programar un recordatorio antes del límite."
+          }
+        }
+      }
+    },
     "This reminder needs a fresh review.": {
       "localizations": {
         "en": {
