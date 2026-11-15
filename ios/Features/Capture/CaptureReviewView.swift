@@ -47,23 +47,46 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
 
     var body: some View {
         ScrollViewReader { scroll in
-            captureForm(scroll)
-                .task(id: reviewingFields) {
-                    guard reviewingFields else { return }
+            VStack(spacing: 0) {
+                captureForm(scroll)
+                if sourceTextFocused || structuredFieldFocus != nil {
+                    keyboardDoneBar
+                }
+            }
+            .task(id: reviewingFields) {
+                guard reviewingFields else { return }
+                await Task.yield()
+                guard !Task.isCancelled, reviewingFields, authorize() else { return }
+                scroll.scrollTo(StructuredCaptureReviewView.originalAnchor, anchor: .top)
+            }
+            .onChange(of: model.candidate != nil && !model.busy) { _, ready in
+                guard ready else { return }
+                Task { @MainActor in
                     await Task.yield()
-                    guard !Task.isCancelled, reviewingFields, authorize() else { return }
-                    scroll.scrollTo(StructuredCaptureReviewView.originalAnchor, anchor: .top)
+                    guard authorize(), model.candidate != nil, !model.busy, !reviewingFields else { return }
+                    scroll.scrollTo("capture.useText", anchor: .center)
+                    capturedTextFocused = true
                 }
-                .onChange(of: model.candidate != nil && !model.busy) { _, ready in
-                    guard ready else { return }
-                    Task { @MainActor in
-                        await Task.yield()
-                        guard authorize(), model.candidate != nil, !model.busy, !reviewingFields else { return }
-                        scroll.scrollTo("capture.useText", anchor: .center)
-                        capturedTextFocused = true
-                    }
-                }
+            }
         }
+    }
+
+    private var keyboardDoneBar: some View {
+        Button {
+            sourceTextFocused = false
+            structuredFieldFocus = nil
+        } label: {
+            Text(captureText("Done"))
+                .font(.body.weight(.semibold))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.action)
+        .accessibilityIdentifier(sourceTextFocused ? "capture.sourceDone" : "capture.itemNameDone")
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.horizontal)
+        .background(Theme.canvas, ignoresSafeAreaEdges: [])
     }
 
     private func captureForm(_ scroll: ScrollViewProxy) -> some View {
@@ -168,11 +191,6 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
         .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: sourceTextFocused || structuredFieldFocus != nil, title: captureText("Done"),
-                            identifier: sourceTextFocused ? "capture.sourceDone" : "capture.itemNameDone") {
-            sourceTextFocused = false
-            structuredFieldFocus = nil
-        }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }
         } }
