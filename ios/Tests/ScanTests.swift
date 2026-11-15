@@ -42,7 +42,25 @@ final class ScanParsingTests: XCTestCase {
         try FileManager.default.createSymbolicLink(at: link, withDestinationURL: file)
         XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(link))
         try Data(repeating: 0, count: CaptureLimits.imageBytes + 1).write(to: file)
-        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(file))
+        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(file)) {
+            XCTAssertEqual($0 as? ScanFailure, .tooLarge)
+        }
+    }
+    func testSelectedPhotoReplacedByLinkRejectsUnselectedBytes() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let selected = root.appendingPathComponent("selected.jpg")
+        let other = root.appendingPathComponent("other.jpg")
+        try Data("first".utf8).write(to: selected)
+        try Data("other".utf8).write(to: other)
+        let cached = try selected.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        XCTAssertEqual(cached.isRegularFile, true)
+        try FileManager.default.removeItem(at: selected)
+        try FileManager.default.createSymbolicLink(at: selected, withDestinationURL: other)
+        XCTAssertThrowsError(try SelectedPhotoTransfer.boundedData(selected)) {
+            XCTAssertEqual($0 as? ScanFailure, .invalidImage)
+        }
     }
     func testRealVisionFindsCodeWithoutInventingAProduct() async throws {
         let filter = try XCTUnwrap(CIFilter(name: "CIQRCodeGenerator"))

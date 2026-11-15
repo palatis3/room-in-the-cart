@@ -65,8 +65,8 @@ public struct IOSNotificationScheduler: NotificationScheduling, @unchecked Senda
 #endif
 
 /// Validate the open descriptor because URL resource values can outlive the file at that path.
-func readRegularFile(at url: URL, maximumBytes: Int) throws -> Data {
-    guard url.isFileURL else { throw SurfaceError.invalid }
+public func readRegularFile(at url: URL, maximumBytes: Int) throws -> Data {
+    guard url.isFileURL, maximumBytes >= 0, maximumBytes < Int.max else { throw SurfaceError.invalid }
     let descriptor = url.withUnsafeFileSystemRepresentation { path -> Int32 in
         guard let path else { return -1 }
         return Darwin.open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)

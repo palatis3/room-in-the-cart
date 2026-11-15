@@ -6,6 +6,14 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 15, 2026.
 
+On November 15, the Release app on the iPhone SE simulator running iOS 17.0
+read a bilingual package photo through the system photo picker. The shopper’s
+typed “2 Wraps” stayed in place until they explicitly used the OCR text. Cancel
+preserved the original list. A separate regression reproduced a provider file
+being replaced by a link to a different file of the same size. The corrected
+reader rejected that link and preserved the size-limit error for oversized
+photos. See `.build/PhotoSelectionNov15/{before.log,strict.log,picker/strict.log}`.
+
 At `61a2631e`, the Debug app on an iPhone SE simulator running iOS 17.0 saved
 an encrypted shopping list through the Files picker. Canceling the save kept
 the file ready. Canceling import left the records alone, and opening the same
