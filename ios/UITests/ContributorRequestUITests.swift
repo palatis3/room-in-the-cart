@@ -141,6 +141,7 @@ import XCTest
         let review = app.buttons["Review my correction"]
         reveal(item)
         XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
         XCTAssertEqual(amount.value as? String, "3 bags")
         tap(review)
         let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d",
@@ -156,6 +157,7 @@ import XCTest
         }
         reveal(item)
         XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
         XCTAssertEqual(amount.value as? String, "3 bags")
 
         tap(review)
@@ -163,6 +165,7 @@ import XCTest
         XCTAssertTrue(review.waitForNonExistence(timeout: 10))
         reveal(item)
         XCTAssertEqual(item.value as? String, "Cereal")
+        reveal(amount)
         XCTAssertEqual(amount.value as? String, "2 boxes")
         XCTAssertEqual(element("fixture.requestPosts").label, "Fixture request POSTs: 2")
         XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 1")
