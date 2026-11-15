@@ -536,6 +536,10 @@ struct SharedFoodDraft: Equatable {
             return
         }
         switch error as? ClientError {
+        case .service(status: 409, code: "food_preview_expired", correlationID: _, retryAfter: _):
+            // Expiry invalidates this approval, not the shopper or entered draft.
+            reviewedDraft = nil
+            notice = SharedDemandCopy.text("This review expired. Review the food amounts again before applying.")
         case .accessEnded, .sessionNeeded: cancel(); notice = SharedDemandCopy.text("Shared food access ended. Return to the household.")
         case .cancelled: cancel(); notice = SharedDemandCopy.text("The shop changed. Refresh and review again.")
         case .service(let status, _, _, _) where status == 409 || status == 403 || status == 404:

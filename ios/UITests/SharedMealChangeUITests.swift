@@ -177,7 +177,7 @@ import XCTest
         // Match the distinct reviewed value rather than obsolete legacy IDs.
         let row = app.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
             .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", expected, expected)).firstMatch
-        reveal(row, fullyVisible: true)
+        reveal(row, fullyVisible: true, searchTowardEndFirst: false)
         XCTAssertTrue((row.label + " " + (row.value as? String ?? "")).contains(expected), row.debugDescription)
     }
 
@@ -201,7 +201,7 @@ import XCTest
         reveal(review, fullyVisible: true)
         review.tap()
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             if target.exists && target.isHittable,
@@ -209,7 +209,7 @@ import XCTest
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
-            } else { upward = attempt < 16 }
+            } else { upward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst }
             scrollContent(upward: upward)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")

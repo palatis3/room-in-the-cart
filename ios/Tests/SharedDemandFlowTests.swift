@@ -659,6 +659,42 @@ import HouseholdClient
         XCTAssertNotNil(context.parent.notice); XCTAssertTrue(context.fixture.commandBytes.isEmpty)
         let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
     }
+    func testExpiredFoodPreviewPreservesAccessDraftAndRequiresFreshReviewBeforeSending() async throws {
+        let context = try await setup(); defer { context.close() }
+        let parent = context.parent
+        parent.draft.cap = "35.00"; parent.draft.lines[0].price = "2.15"
+        let entered = try parent.draft.candidate()
+        await parent.reviewEditor()
+        let editor = try XCTUnwrap(parent.foodEditor)
+        let flow = SharedDemandFlowModel(access: parent, editor: editor); await flow.load()
+        flow.draft.lines[0].acceptUnresolved = true
+        let draft = flow.draft
+        context.fixture.previewExpiry = "2000-01-01T00:00:00Z"
+        await flow.preview()
+        let expired = try XCTUnwrap(flow.review)
+        flow.acknowledged = true; await flow.apply()
+        XCTAssertTrue(parent.canReadFood); XCTAssertTrue(flow.permitted)
+        XCTAssertEqual(parent.foodEditor?.id, editor.id)
+        XCTAssertEqual(try parent.draft.candidate(), entered)
+        XCTAssertEqual(flow.draft, draft); XCTAssertNotNil(flow.page)
+        XCTAssertNil(flow.review); XCTAssertFalse(flow.acknowledged); XCTAssertFalse(flow.submitted)
+        XCTAssertEqual(flow.notice, "This review expired. Review the food amounts again before applying.")
+        XCTAssertNil(parent.pending); XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+        let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
+
+        context.fixture.previewExpiry = "2099-01-01T00:00:00Z"
+        await flow.preview()
+        let fresh = try XCTUnwrap(flow.review)
+        XCTAssertNotEqual(fresh.preview.previewId, expired.preview.previewId)
+        XCTAssertEqual(fresh.request, expired.request)
+        await flow.apply() // A fresh preview still requires explicit acknowledgment.
+        XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+        flow.acknowledged = true; await flow.apply()
+        let pending = try XCTUnwrap(parent.pending)
+        XCTAssertEqual(pending.sharedDemandBinding?.previewID, fresh.preview.previewId)
+        XCTAssertEqual(context.fixture.commandBytes, [pending.bytes])
+        XCTAssertTrue(parent.canReadFood)
+    }
     func testExpiredQuoteReplacementCancelAndRelaunchKeepExactReviewedBytesAndFoodIdentity() async throws {
         let context = try await setup(expiredQuote: true); defer { context.close() }
         let parent = context.parent
@@ -719,6 +755,8 @@ private final class FoodHTTPFixture: @unchecked Sendable {
     private var holding = false, held: [FoodHTTPProtocol] = []
     private var readStatus = 200, pageDelta = 0
     private var recovery = false
+    private var expiry = "2099-01-01T00:00:00Z"
+    var previewExpiry: String { get { lock.lock(); defer { lock.unlock() }; return expiry } set { lock.lock(); defer { lock.unlock() }; expiry = newValue } }
     var recoveryRequired: Bool { get { lock.lock(); defer { lock.unlock() }; return recovery } set { lock.lock(); defer { lock.unlock() }; recovery = newValue } }
     init(enabled: Bool = false, expiredQuote: Bool = false) { initiallyEnabled = enabled; self.expiredQuote = expiredQuote }
     var holdDemandReads: Bool { get { lock.lock(); defer { lock.unlock() }; return holding } set { lock.lock(); defer { lock.unlock() }; holding = newValue } }
@@ -793,7 +831,7 @@ private final class FoodHTTPFixture: @unchecked Sendable {
             let receipt: [String: Any] = ["schemaVersion": 1, "operationId": operation.string, "householdId": household.string, "shopId": shop.string, "baseRevision": before.revision, "resultRevision": result.revision,
                 "lines": try input.change.lines.map { ["id": $0.id.string, "before": NSNull(), "after": try object($0)] },
                 "contributions": try input.change.contributions.map { ["id": $0.id.string, "before": NSNull(), "after": try object($0)] }, "edges": []]
-            let resultJSON: [String: Any] = ["previewId": SharedDemandID().string, "previewDigest": String(repeating: "a", count: 64), "expiresAt": "2099-01-01T00:00:00Z",
+            let resultJSON: [String: Any] = ["previewId": SharedDemandID().string, "previewDigest": String(repeating: "a", count: 64), "expiresAt": expiry,
                 "before": try object(before), "after": try object(result), "receipt": receipt, "packs": try object(input.packs), "beforeTotals": initiallyEnabled ? [["lineId": line.string, "unit": "count", "quantity": ["numerator": "12", "denominator": "1"], "activeContributionIds": [manualID.string]]] : [],
                 "afterTotals": [["lineId": line.string, "unit": "count", "quantity": ["numerator": "12", "denominator": "1"], "activeContributionIds": result.contributions.map { $0.id.string }]],
                 "shopRevision": 1, "authorityEpoch": 1]
