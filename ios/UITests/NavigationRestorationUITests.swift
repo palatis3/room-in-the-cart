@@ -131,7 +131,7 @@ extension XCUIApplication {
     /// snapshot instead of waiting for that offscreen accessibility node to vanish.
     func waitForKeyboardDismissal(doneIdentifier: String, timeout: TimeInterval = 5,
                                   checking screenIsReady: @escaping (any XCUIElementSnapshot) -> Bool = { _ in true }) -> Bool {
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+        let dismissed = NSPredicate { _, _ in
             guard let root = try? self.snapshot(), !root.frame.isEmpty else { return false }
             var nodes = [root]
             while let node = nodes.popLast() {
@@ -141,8 +141,10 @@ extension XCUIApplication {
                 if node.elementType == .button && node.identifier == doneIdentifier { return false }
             }
             return screenIsReady(root)
-        }, object: nil)
-        return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
+        }
+        if dismissed.evaluate(with: nil) { return true }
+        let ready = XCTNSPredicateExpectation(predicate: dismissed, object: nil)
+        return XCTWaiter.wait(for: [ready], timeout: timeout) == .completed
     }
 
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {

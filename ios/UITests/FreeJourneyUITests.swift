@@ -618,8 +618,8 @@ import XCTest
                 let identity = ingredient ? field.identifier : name
                 if ingredient { XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field") }
                 field.typeText(value)
-                let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
-                XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(name)")
+                let done = app.buttons.matching(identifier: "Done").firstMatch
+                XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
                 done.tap()
                 // Resolve the field and keyboard in the same application snapshot.
                 // A separate field query can stall when the pack form moves after dismissal.
@@ -759,8 +759,9 @@ import XCTest
         let saveReviewed = app.buttons["Save reviewed checkout"]
         try tapCheckoutAction(saveReviewed)
         XCTAssertTrue(checkoutReview.waitForNonExistence(timeout: 8))
-        assertText("Saved checkout result")
-        assertText("3.00")
+        // These are the checkout heading and the exact total shown after the sheet closes.
+        reveal(app.staticTexts.matching(identifier: "Saved checkout result").firstMatch)
+        reveal(app.staticTexts.matching(identifier: "$3.00").firstMatch)
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
