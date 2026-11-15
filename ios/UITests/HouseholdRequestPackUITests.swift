@@ -806,8 +806,15 @@ import XCTest
         dismissKeyboardIfPresent()
         reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
-            // The accessibility frame includes the Form label. Tap the trailing switch itself.
-            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+            // The identified Form row spans both its label and its native switch.
+            // Tap the off thumb within the switch's own bounds.
+            XCTAssertEqual(control.switches.count, 1, label)
+            let native = control.switches.firstMatch
+            XCTAssertTrue(native.isEnabled && native.isHittable, label)
+            XCTAssertEqual(native.value as? String, "0", label)
+            native.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+            let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: control)
+            XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed, label)
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
