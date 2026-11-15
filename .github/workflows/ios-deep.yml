@@ -311,17 +311,24 @@ jobs:
               subprocess.run(["xcodebuild", "-downloadPlatform", "iOS", "-buildVersion", build,
                               "-architectureVariant", "arm64"], check=True, timeout=600)
               matches, devices = inventory()
-          assert len(matches) == 1, "Required StoreKit runtime is missing or ambiguous; no fallback"
-          actual = matches[0]
-          assert actual.get("isAvailable") is True and actual["version"] == version and actual["buildversion"] == build, actual
+          exact = [r for r in matches if r["buildversion"] == build]
+          assert len(exact) == 1, f"Expected one StoreKit runtime {runtime}/{build}; found {len(exact)}"
+          actual = exact[0]
+          assert actual.get("isAvailable") is True and actual["version"] == version, actual
           device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-17"
           devices = [d for d in devices if d.get("isAvailable") is True
                      and d["name"] == os.environ["CI_IPHONE_NAME"] and d["deviceTypeIdentifier"] == device_type]
           assert devices or not current, "Required current-OS image device is missing"
           locale = os.environ["STOREKIT_LOCALE"]
-          created = locale == "es" or not devices
+          # simctl lists devices under the identifier shared by all patch builds.
+          # Pin a new device to the selected bundle when that identifier is ambiguous.
+          multiple_builds = len(matches) > 1
+          created = multiple_builds or locale == "es" or not devices
           if created:
-              simulator = simctl("create", f"RITC-StoreKit-{locale}", device_type, runtime).strip()
+              target = actual["bundlePath"] if multiple_builds else runtime
+              if multiple_builds:
+                  assert Path(target).is_absolute() and Path(target).suffix == ".simruntime", target
+              simulator = simctl("create", f"RITC-StoreKit-{locale}", device_type, target).strip()
               assert simulator.upper() not in {d["udid"].upper() for d in devices}, "Expected a new simulator"
           else:
               simulator = devices[0]["udid"]
@@ -348,6 +355,14 @@ jobs:
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
           run_storekit() {
+            local version build
+            version=$(xcrun simctl getenv "$SIMULATOR_ID" SIMULATOR_RUNTIME_VERSION) || return 1
+            build=$(xcrun simctl getenv "$SIMULATOR_ID" SIMULATOR_RUNTIME_BUILD_VERSION) || return 1
+            printf 'Booted %s iOS %s/%s; required %s/%s\n' "$SIMULATOR_ID" "$version" "$build" \
+              "$STOREKIT_OS_VERSION" "$STOREKIT_OS_BUILD" | tee -a "$output/StoreKitBoot.log"
+            if [ "$version" != "$STOREKIT_OS_VERSION" ] || [ "$build" != "$STOREKIT_OS_BUILD" ]; then
+              return 1
+            fi
             xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
               -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
               -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \

@@ -163,6 +163,53 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.assertEqual((output / 'StoreKitBoot.log').read_text(), 'migration stopped\n')
                 self.assertFalse((output / 'StoreKit.log').exists())
 
+    def test_every_native_attempt_checks_the_booted_version_and_build(self):
+        command = self.step('storekit', identifier='storekit-native')['run']
+        for version, build, retry, expected_calls, expected_status in [
+            ('26.2', '23C54', False, 1, 0),
+            ('26.2', '23C52', False, 0, 1),
+            ('27.0', '23C54', False, 0, 1),
+            ('26.2', '23C52', True, 1, 1),
+        ]:
+            with self.subTest(version=version, build=build, retry=retry), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scripts = root / 'scripts'
+                scripts.mkdir()
+                for helper in ['check_storekit_runtime_mount', 'boot_ios_simulator', 'is_storekit_launch_failure']:
+                    (scripts / (helper + '.py')).touch()
+                products = root / '.build/StoreKitDerivedData/Build/Products'
+                products.mkdir(parents=True)
+                (products / 'LocalStoreKit.xctestrun').touch()
+                simctl = root / 'xcrun'
+                simctl.write_text("""#!/bin/sh
+if [ "$1" = xcresulttool ]; then echo '{}'; exit 0; fi
+[ "$1 $2 $3" = 'simctl getenv selected-device' ] || exit 99
+case "$4" in
+  SIMULATOR_RUNTIME_VERSION) echo "$OBSERVED_VERSION";;
+  SIMULATOR_RUNTIME_BUILD_VERSION)
+    if [ "$RETRY" = 1 ] && [ ! -f calls ]; then echo 23C54; else echo "$OBSERVED_BUILD"; fi;;
+  *) exit 99;;
+esac
+""")
+                xcode = root / 'xcodebuild'
+                xcode.write_text("""#!/bin/sh
+echo xcodebuild >> calls
+mkdir -p .build/storekit-es/StoreKit.xcresult
+if [ "$RETRY" = 1 ]; then exit 65; fi
+""")
+                for executable in [simctl, xcode]:
+                    executable.chmod(0o755)
+                result = subprocess.run(['bash', '-e', '-c', command], cwd=root, capture_output=True, text=True,
+                                        env={**os.environ, 'PATH': str(root) + ':' + os.environ['PATH'],
+                                             'SIMULATOR_ID': 'selected-device', 'STOREKIT_LOCALE': 'es',
+                                             'STOREKIT_OS_VERSION': '26.2', 'STOREKIT_OS_BUILD': '23C54',
+                                             'OBSERVED_VERSION': version, 'OBSERVED_BUILD': build,
+                                             'RETRY': '1' if retry else '0'})
+                self.assertEqual(result.returncode, expected_status, result.stderr)
+                self.assertIn(f'Booted selected-device iOS {version}/{build}; required 26.2/23C54', result.stdout)
+                calls = root / 'calls'
+                self.assertEqual(len(calls.read_text().splitlines()) if calls.exists() else 0, expected_calls)
+
     def test_locale_jobs_check_native_and_export_after_failures(self):
         job = self.jobs['storekit']
         self.assertEqual(job['needs'], 'storekit-build')
@@ -372,6 +419,24 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
                 self.assertEqual(environment['STOREKIT_OS_BUILD'], build)
                 download.assert_not_called()
+
+    def test_shared_identifier_creates_owned_device_from_the_exact_runtime_bundle(self):
+        exact = {**self.runtime_fixture('26.2', '23C54'),
+                 'bundlePath': '/Volumes/iOS_23C54/iOS 26.2.simruntime'}
+        other = {**exact, 'buildversion': '23C52', 'bundlePath': '/Volumes/iOS_23C52/iOS 26.2.simruntime'}
+        for locale, inventory in [('en', [other, exact]), ('es', [exact, other])]:
+            with self.subTest(locale=locale):
+                environment, native, download = self.prepare_runtime('', 'pull_request', inventory, locale=locale)
+                native.assert_called_with(['xcrun', 'simctl', 'create', 'RITC-StoreKit-' + locale,
+                                           'com.apple.CoreSimulator.SimDeviceType.iPhone-17',
+                                           exact['bundlePath']], text=True)
+                self.assertEqual(environment['SIMULATOR_ID'], environment['STOREKIT_CREATED_SIMULATOR'])
+                self.assertEqual(environment['STOREKIT_OS_BUILD'], '23C54')
+                download.assert_not_called()
+        for inventory in ([other, exact, exact], [other, {**exact, 'isAvailable': False}],
+                          [other, {**exact, 'bundlePath': 'relative.simruntime'}]):
+            with self.subTest(inventory=inventory), self.assertRaises(AssertionError):
+                self.prepare_runtime('', 'pull_request', inventory)
 
     def test_missing_compatibility_runtime_downloads_exact_build_and_creates_only_its_device(self):
         runtime = self.runtime_fixture('26.2', '23C54')
