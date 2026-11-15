@@ -135,6 +135,15 @@ import XCTest
         inputMeaning("18", id:"sharedQuotes.first.extraMinutes", title:"Extra minutes, optional")
         inputMeaning("40.00", id:"sharedQuotes.first.cap", title:"Applicable cap in USD, optional")
         capture("S27-filled-trip-time-cap-persistent-labels")
+        enableSwitch("sharedQuotes.first.eligibility")
+        tap(element("sharedQuotes.refresh"))
+        tap(element("sharedQuotes.enter"))
+        let cap = app.textFields["sharedQuotes.first.cap"]
+        reveal(cap)
+        assertFieldValue(cap, text: "")
+        let eligibility = app.switches["sharedQuotes.first.eligibility"].firstMatch
+        reveal(eligibility)
+        XCTAssertEqual(eligibility.value as? String, "0", "Fresh quotes need their own eligibility review")
         counter("saves",0); counter("proposals",0); counter("adoptions",0)
         tap(element("fixture.s27.switch")); openComparison()
         let named = element("sharedQuotes.grant.33333333-3333-4333-8333-333333333333")
