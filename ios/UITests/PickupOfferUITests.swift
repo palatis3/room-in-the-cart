@@ -87,7 +87,7 @@ import XCTest
         let save = app.buttons["Save observed arrival"]
         func enterArrivalValue(_ value: String, into label: String, replacing: Bool = false) {
             let field = app.textFields[label]
-            reveal(field, initiallyUpward: !replacing)
+            reveal(field, requireVisibleCenter: true, initiallyUpward: !replacing, reserveKeyboardSpace: false)
             field.tap()
             if replacing {
                 let previous = field.value as? String ?? ""
@@ -145,6 +145,12 @@ import XCTest
         XCTAssertEqual(app.textFields[segment].value as? String, "first bag")
         enterArrivalValue("4", into: received)
         enterArrivalValue("3", into: usable)
+        XCTAssertEqual(app.textFields[received].value as? String, "4")
+        XCTAssertEqual(app.textFields[usable].value as? String, "3")
+        let quantities = XCTAttachment(screenshot: app.screenshot())
+        quantities.name = "Physical and confirmed usable amounts before saving"
+        quantities.lifetime = .keepAlways
+        add(quantities)
         enableSwitch(match)
         tap(save)
         checkSavedRows(1)
@@ -441,7 +447,8 @@ import XCTest
         reveal(target, requireVisibleCenter: true)
         target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
-    private func reveal(_ target: XCUIElement, requireVisibleCenter: Bool = false, initiallyUpward: Bool = true) {
+    private func reveal(_ target: XCUIElement, requireVisibleCenter: Bool = false, initiallyUpward: Bool = true,
+                        reserveKeyboardSpace: Bool = true) {
         for attempt in 0...64 {
             // A lazy Form may not expose an offscreen row yet. Asking for
             // isHittable first makes XCTest retry a missing element before
@@ -452,7 +459,7 @@ import XCTest
             if requireVisibleCenter {
                 // XCTest briefly hides the software keyboard during typeText. It can
                 // rise over a lower field between a successful query and the tap.
-                area.size.height = min(area.height, app.frame.midY - area.minY)
+                if reserveKeyboardSpace { area.size.height = min(area.height, app.frame.midY - area.minY) }
                 if exists && target.isHittable {
                     let frame = target.frame
                     if area.contains(CGPoint(x: frame.midX, y: frame.midY)) { return }

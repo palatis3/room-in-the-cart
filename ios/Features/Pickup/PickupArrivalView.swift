@@ -59,10 +59,8 @@ struct PickupArrivalView: View {
                 }
                 TextField(pTr("Actual item name"), text: $entry.item)
                     .focused($focused, equals: .item)
-                TextField(pTr("Physical amount received"), text: $entry.received).keyboardType(.numbersAndPunctuation)
-                    .focused($focused, equals: .received)
-                TextField(pTr("Confirmed usable amount (optional)"), text: $entry.usable).keyboardType(.numbersAndPunctuation)
-                    .focused($focused, equals: .usable)
+                quantityField(pTr("Physical amount received"), text: $entry.received, field: .received)
+                quantityField(pTr("Confirmed usable amount (optional)"), text: $entry.usable, field: .usable)
                 Picker(pTr("Unit"), selection: $entry.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $entry.matched)
                 TextField(pTr("Delivery or receipt evidence ID"), text: receiptField($eventID))
@@ -107,6 +105,21 @@ struct PickupArrivalView: View {
         .navigationTitle(pTr("What came home"))
         .disabled(model.saving)
     }
+
+    private func quantityField(_ title: String, text: Binding<String>, field: Field) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: title)
+                .font(.subheadline)
+                .accessibilityHidden(true)
+            TextField(title, text: text, prompt: Text(verbatim: ""))
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.numbersAndPunctuation)
+                .accessibilityLabel(Text(verbatim: title))
+                .focused($focused, equals: field)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
     private func receiptKey(for line: PickupOrderLine) -> ReceiptKey {
         ReceiptKey(sourceEventID: eventID, orderLineID: line.id, branchID: line.branchID, segmentID: segment)
     }
