@@ -269,10 +269,26 @@ import XCTest
         capture("Guardian separate permission recorded")
         tap("guardian.invite"); XCTAssertTrue(element("guardian.invitationToken").waitForExistence(timeout:10))
         tap("household.shareBrowserInvitation")
-        guard let closeShare = readySystemShareClose(in: app) else {
-            XCTFail("Expected the system share sheet for the browser invitation"); return
+        let activity = app.otherElements["ActivityListView"]
+        XCTAssertTrue(activity.waitForExistence(timeout: 90))
+        let popover = app.popovers.containing(.other, identifier: "ActivityListView").firstMatch
+        if popover.exists {
+            let invitation = activity.descendants(matching: .any).matching(NSPredicate(
+                format: "label CONTAINS %@ AND label CONTAINS %@", "https://fixture.invalid/child-invite", "fixture-opaque-invitation"
+            )).firstMatch
+            XCTAssertTrue(invitation.waitForExistence(timeout: 90))
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.exists)
+            let bounds = dismiss.frame, sheet = popover.frame
+            let above = sheet.minY - bounds.minY, below = bounds.maxY - sheet.maxY
+            let outsideY = above > below ? above / 2 : bounds.height - below / 2
+            dismiss.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: bounds.width / 2, dy: outsideY)).tap()
+        } else {
+            guard let closeShare = readySystemShareClose(in: app) else { return }
+            closeShare.tap()
         }
-        closeShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 10))
         XCTAssertTrue(element("guardian.invitationToken").waitForExistence(timeout: 10))
         let clearRetry=app.buttons["Check status, then clear local retry"]; reveal(clearRetry); clearRetry.tap()
         XCTAssertTrue(element("guardian.clearRetryCancel").waitForExistence(timeout:5)); element("guardian.clearRetryCancel").tap()
