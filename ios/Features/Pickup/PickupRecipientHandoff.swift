@@ -201,6 +201,7 @@ struct PickupRecipientSection: View {
     @State private var copied = false
 
     private var name: String { recipient.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var canCompareVersions: Bool { membership.model?.hasPaidAccess == true }
     private var allowed: Bool {
         access.unlocked && !household.locked && scenePhase == .active &&
             (household.projection.map { ["organizer","shopper"].contains($0.role) } ?? true)
@@ -208,7 +209,7 @@ struct PickupRecipientSection: View {
     private func correction(_ copy: HandoffCopy) -> HandoffCorrection? {
         guard allowed else { return nil }
         return model.reviewedCorrection(copy, recipient: name, destinationConfirmed: destinationConfirmed,
-                                        privateWordingConfirmed: privateWordingConfirmed, paid: membership.model?.hasPaidAccess == true,
+                                        privateWordingConfirmed: privateWordingConfirmed, paid: canCompareVersions,
                                         reviewedRevision: reviewRevision)
     }
     var body: some View {
@@ -247,8 +248,10 @@ struct PickupRecipientSection: View {
                 }
                 Text(pTr("A sent version does not prove receipt or acknowledgment. Cancelling share does not mark it sent."))
                 if current {
-                    Toggle(pTr("I know the previous copy went to this recipient"), isOn: $destinationConfirmed)
-                        .disabled(name.isEmpty || last == nil)
+                    if canCompareVersions {
+                        Toggle(pTr("I know the previous copy went to this recipient"), isOn: $destinationConfirmed)
+                            .disabled(name.isEmpty || last == nil)
+                    }
                     if copy.needsPrivateReview {
                         Toggle(pTr("Include the saved custom or private wording in this correction"), isOn: $privateWordingConfirmed)
                     }
@@ -272,6 +275,11 @@ struct PickupRecipientSection: View {
                     }
                     if copied { Text(pTr("Copied. Mark the version sent only after sending it.")) }
                 } else { Text(pTr("The source changed. Prepare and review the current instruction.")) }
+            }
+            .onChange(of: canCompareVersions) { _, _ in
+                destinationConfirmed = false
+                privateWordingConfirmed = false
+                resetReview()
             }
             .onChange(of: language) { _, _ in destinationConfirmed = false; resetReview() }
             .onChange(of: recipient) { _, _ in destinationConfirmed = false; privateWordingConfirmed = false; resetReview() }

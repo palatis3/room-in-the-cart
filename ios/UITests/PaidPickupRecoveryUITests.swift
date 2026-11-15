@@ -55,6 +55,17 @@ import XCTest
         XCTAssertFalse(copy.contains("Wednesday quesadillas"))
         tap(app.buttons["Save dated copy"])
         show(app.buttons["Share saved dated copy"])
+        let recipient = app.textFields["handoffRecipient"]
+        tap(recipient)
+        recipient.typeText("Ana\n")
+        tap(app.buttons["I sent this version to this recipient"])
+        let knownDestination = app.switches["I know the previous copy went to this recipient"]
+        show(knownDestination)
+        XCTAssertTrue(knownDestination.isEnabled)
+        confirm("I know the previous copy went to this recipient")
+        tap(app.buttons["Review correction"])
+        let changes = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Changes to the handoff")).firstMatch
+        show(changes)
         app.terminate()
         launch(fresh: false, expired: true)
         tap(app.buttons["Repair a meal"])
@@ -64,6 +75,17 @@ import XCTest
         tap(app.navigationBars.buttons.firstMatch)
         tap(app.buttons["Tell the cook"])
         tap(app.buttons["Review this saved copy"])
+        show(recipient, down: false)
+        recipient.tap()
+        recipient.typeText("Ana\n")
+        show(app.staticTexts["Acknowledgment unknown"])
+        let review = app.buttons["Review correction"]
+        show(review)
+        XCTAssertFalse(knownDestination.exists, "Free resend uses the complete dated instruction")
+        review.tap()
+        show(app.staticTexts["Complete current instruction"])
+        tap(app.buttons["Copy reviewed correction"])
+        show(app.staticTexts["Copied. Mark the version sent only after sending it."])
         show(editor, down: false)
         XCTAssertEqual(try XCTUnwrap(editor.value as? String), copy)
     }
