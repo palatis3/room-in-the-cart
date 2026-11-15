@@ -19,16 +19,27 @@ import UIKit
         tap(element("ledgerImport"))
         let english = "1 1/2 cups of arroz"
         let spanish = "1 1/2 tazas de arroz"
-        fill(english, into: "ledgerImportText", fieldType: .textView)
-        tap(element("ledgerReviewImport"))
+        func review(_ original: String) {
+            let editor = app.textViews["ledgerImportText"]
+            revealContent(editor)
+            editor.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            editor.typeText(original)
+            XCTAssertEqual(editor.value as? String, original)
+            // Review list ends editing and stages the wording in one action.
+            let review = app.buttons["ledgerReviewImport"]
+            revealContent(review, above: app.buttons["Done"])
+            review.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        review(english)
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect arroz"]
         reveal(food)
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
         tap(element("ledgerImport"))
-        fill(spanish, into: "ledgerImportText", fieldType: .textView)
-        tap(element("ledgerReviewImport"))
+        review(spanish)
         let apply = element("ledgerCommitImport")
         XCTAssertFalse(apply.isEnabled)
         let decision = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "How to add this line")).firstMatch
