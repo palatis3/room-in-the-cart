@@ -65,6 +65,8 @@ final class SharedFallbackUITests: XCTestCase {
         }
 
         let bounds = app.frame
+        var rowIdentifier = ""
+        var rowLabel = ""
         var usedNativeSwitch = false
         for attempt in 0..<3 {
             guard let row = try? element.snapshot() else {
@@ -81,6 +83,9 @@ final class SharedFallbackUITests: XCTestCase {
             guard !frame.isEmpty, bounds.contains(thumb) else {
                 return XCTFail("Switch thumb outside the viewport: \(frame)", file: file, line: line)
             }
+            rowIdentifier = row.identifier
+            rowLabel = row.label
+            XCTAssertFalse(rowIdentifier.isEmpty && rowLabel.isEmpty, file: file, line: line)
             usedNativeSwitch = !switches.isEmpty
             app.coordinate(withNormalizedOffset: .zero)
                 .withOffset(CGVector(dx: thumb.x - bounds.minX, dy: thumb.y - bounds.minY)).tap()
@@ -88,11 +93,22 @@ final class SharedFallbackUITests: XCTestCase {
         }
 
         let applied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let row = try? element.snapshot(), row.value as? String == value else { return false }
-            let switches = nativeSwitches(in: row)
-            return usedNativeSwitch
-                ? switches.count == 1 && switches[0].value as? String == value
-                : switches.isEmpty
+            // SwiftUI can replace the accessibility row when the agreement changes.
+            // Read the updated row and its thumb from the same application snapshot.
+            guard let screen = try? self.app.snapshot() else { return false }
+            var pending = screen.children
+            while let row = pending.popLast() {
+                let matches = rowIdentifier.isEmpty ? row.label == rowLabel : row.identifier == rowIdentifier
+                if row.elementType == .switch && matches {
+                    guard row.value as? String == value else { return false }
+                    let switches = nativeSwitches(in: row)
+                    return usedNativeSwitch
+                        ? switches.count == 1 && switches[0].value as? String == value
+                        : switches.isEmpty
+                }
+                pending.append(contentsOf: row.children)
+            }
+            return false
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }

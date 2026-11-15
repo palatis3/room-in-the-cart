@@ -19,17 +19,17 @@ import XCTest
     func testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview() {
         app.launchArguments = ["--ui-testing", "--shared-idea-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        XCTAssertTrue(element("fixture.s26.open").waitForExistence(timeout: 25))
-        tap(element("fixture.s26.open"))
-        tap(app.buttons["Use editable household idea template"])
+        XCTAssertTrue(button("fixture.s26.open").waitForExistence(timeout: 25))
+        tap(button("fixture.s26.open"))
+        useEditableTemplate()
         fill("Cancelled household idea", into: "Meal name", replacing: true)
         tap(app.navigationBars.buttons.element(boundBy: 0))
         waitCounter("ideas", "Fixture idea writes: 0")
         waitCounter("proposals", "Fixture meal proposals: 0")
         waitCounter("basket", "Fixture basket writes: 0")
 
-        tap(element("fixture.s26.open"))
-        tap(app.buttons["Use editable household idea template"])
+        tap(button("fixture.s26.open"))
+        useEditableTemplate()
         enterValue("Fractional chickpea supper", into: "Meal name", replacing: true)
         fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
         let savedTitle = app.textFields["Meal name"]
@@ -56,13 +56,13 @@ import XCTest
         fill("2", into: "Usable yield denominator", replacing: true)
         fill("Household measured cup and reviewed drained yield", into: "household-idea-evidence", replacing: true)
         XCTAssertEqual(app.textFields["household-idea-evidence"].value as? String, "Household measured cup and reviewed drained yield")
-        tap(element("household-idea-save"))
+        tap(button("household-idea-save"))
         waitCounter("ideas", "Fixture idea writes: 1")
         assertVisibleSupplyPreview()
         capture("S26-exact-fraction-household-supply-preview")
         enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
         openAdultApproval()
-        tap(element("household-idea-cancel-approval"))
+        tap(button("household-idea-cancel-approval"))
         waitCounter("ideas", "Fixture idea writes: 1")
         waitCounter("proposals", "Fixture meal proposals: 0")
         openAdultApproval()
@@ -73,24 +73,24 @@ import XCTest
         assertText("Approved idea only")
         capture("S26-adult-approved-without-proposal-or-basket-write")
 
-        tap(element("household-idea-propose"))
+        tap(button("household-idea-propose"))
         assertProposalReady()
-        tap(element("household-idea-prepare-proposal"))
+        tap(button("household-idea-prepare-proposal"))
         assertText("1/2")
         tap(app.buttons["Cancel proposal review"])
         waitCounter("proposals", "Fixture meal proposals: 0")
-        tap(element("household-idea-prepare-proposal"))
-        tap(element("household-idea-send-proposal"))
+        tap(button("household-idea-prepare-proposal"))
+        tap(button("household-idea-send-proposal"))
         waitCounter("proposals", "Fixture meal proposals: 1")
         waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-separate-proposal-received-without-basket-write")
 
-        tap(element("fixture.s26.switch"))
+        tap(button("fixture.s26.switch"))
         tap(app.buttons["Guest, ingredient, and serving-group proposals"])
         tap(app.buttons["Fractional chickpea supper"])
         assertText("1/2")
         capture("S26-shopper-visible-approved-fractional-proposal")
-        tap(element("meal-change-shopper-review"))
+        tap(button("meal-change-shopper-review"))
         assertText("Entered soup packs")
         // The approved idea does not silently turn unrelated soup packs into
         // chickpeas. Add its own actual pack, leaving its unquoted price unknown.
@@ -148,8 +148,8 @@ import XCTest
     }
     func testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn() {
         app.launchArguments = ["--ui-testing", "--shared-idea-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch(); XCTAssertTrue(element("fixture.s26.open").waitForExistence(timeout: 25))
-        tap(element("fixture.s26.open")); tap(app.buttons["Use editable household idea template"])
+        app.launch(); XCTAssertTrue(button("fixture.s26.open").waitForExistence(timeout: 25))
+        tap(button("fixture.s26.open")); useEditableTemplate()
         fill("Route lifecycle beans", into: "Meal name", replacing: true)
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
         for _ in 0..<3 { scrollContent(upward: false) }
@@ -158,17 +158,17 @@ import XCTest
         enterValue("1", into: "Usable yield numerator", replacing: true)
         fill("1", into: "Usable yield denominator", replacing: true)
         fill("Household measured beans and package", into: "household-idea-evidence", replacing: true)
-        tap(element("household-idea-save")); waitCounter("ideas", "Fixture idea writes: 1")
+        tap(button("household-idea-save")); waitCounter("ideas", "Fixture idea writes: 1")
         enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
         openAdultApproval(); tap(app.buttons["Approve meal and quantities"])
         waitCounter("ideas", "Fixture idea writes: 2")
-        tap(element("household-idea-propose"))
+        tap(button("household-idea-propose"))
         assertProposalReady()
-        tap(element("household-idea-prepare-proposal"))
+        tap(button("household-idea-prepare-proposal"))
         // Preparing inserts the reviewed meal facts above the send action in the Form.
         assertMealFact("shared-meal-preparation-minutes", contains: "25")
         assertText("Ingredient quantity, 250 grams")
-        let send = element("household-idea-send-proposal")
+        let send = button("household-idea-send-proposal")
         reveal(send, fullyVisible: true)
         XCTAssertTrue(send.isEnabled, "The approved meal must be ready to send after reviewing its facts")
         capture("S26-reviewed-proposal-action-before-cancellation")
@@ -184,10 +184,19 @@ import XCTest
                                                          "Route lifecycle beans", "Adult approved")).firstMatch
         reveal(savedIdea, fullyVisible: true, searchTowardEndFirst: false)
         savedIdea.tap()
-        tap(element("household-idea-propose")); assertProposalReady()
+        tap(button("household-idea-propose")); assertProposalReady()
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-approved-proposal-reopens-after-authorized-parent-refresh")
+    }
+    private func useEditableTemplate() {
+        let template = app.buttons["Use editable household idea template"]
+        // The saved-ideas section loads after navigation. Scroll only once
+        // its action exists and tap the row inside the form's visible area.
+        XCTAssertTrue(template.waitForExistence(timeout: 8))
+        reveal(template, fullyVisible: true)
+        template.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.staticTexts["Source: app-owned editable template"].waitForExistence(timeout: 5))
     }
     private func addedBasketLineID() -> String? {
         // The editor generates the new line UUID. Read it from a snapshot once
@@ -317,22 +326,26 @@ import XCTest
         XCTAssertEqual(field.value as? String, text)
     }
     private func assertProposalReady() {
-        let prepare = element("household-idea-prepare-proposal")
+        let prepare = button("household-idea-prepare-proposal")
         reveal(prepare, fullyVisible: true)
         XCTAssertTrue(prepare.exists)
         XCTAssertTrue(prepare.isEnabled, "The scoped approved proposal must remain actionable after navigation")
     }
     private func openAdultApproval() {
-        let review = element("household-idea-approve")
+        let review = button("household-idea-approve")
         reveal(review, fullyVisible: true)
         XCTAssertTrue(review.isEnabled, "The reviewed complete draft must enable adult approval")
         review.tap()
         XCTAssertTrue(app.buttons["Approve meal and quantities"].waitForExistence(timeout: 5))
-        XCTAssertTrue(element("household-idea-cancel-approval").waitForExistence(timeout: 5))
+        XCTAssertTrue(button("household-idea-cancel-approval").waitForExistence(timeout: 5))
     }
     private func waitCounter(_ id: String, _ label: String) {
-        let reached = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", label), object: element("fixture.s26." + id))
+        let counter = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "fixture.s26." + id)).firstMatch
+        let reached = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", label), object: counter)
         XCTAssertEqual(XCTWaiter.wait(for: [reached], timeout: 12), .completed)
+    }
+    private func button(_ id: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "identifier == %@", id)).firstMatch
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
@@ -345,10 +358,30 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
+    private func presentedInputTop(keyboard: XCUIElement, done: XCUIElement) -> CGFloat? {
+        // The keyboard can receive text while sliding in. Its Done bar must be
+        // above the visible keyboard before a drag or tap goes to the next field.
+        let bounds = app.frame
+        var inputTop: CGFloat?
+        func measure() -> Bool {
+            guard keyboard.exists, done.exists else { return false }
+            let keys = keyboard.frame, bar = done.frame
+            guard !keys.isEmpty, !bar.isEmpty, bounds.contains(keys), bar.maxY <= keys.minY + 1 else { return false }
+            inputTop = bar.minY
+            return true
+        }
+        if !measure() {
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in measure() }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, "Present the editing keyboard and Done bar")
+        }
+        return inputTop
+    }
     private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier: id).firstMatch
-        if app.keyboards.firstMatch.exists {
-            reveal(field, fullyVisible: true)
+        let keyboard = app.keyboards.firstMatch, done = button("household-idea-keyboard-done")
+        if keyboard.exists || done.exists {
+            guard let top = presentedInputTop(keyboard: keyboard, done: done) else { return }
+            reveal(field, fullyVisible: true, aboveInputTop: top)
             XCTAssertTrue(field.isHittable)
             field.tap()
         } else { tap(field) }
@@ -384,13 +417,14 @@ import XCTest
                           "The keyboard and Done button must disappear after editing " + id)
         }
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true,
+                        aboveInputTop: CGFloat? = nil) {
         for attempt in 0..<24 {
             let exists = target.exists
             // Most controls are already actionable. Do not query every keyboard
             // and navigation bar unless a viewport check or scroll is needed.
             if !fullyVisible && exists && target.isHittable { return }
-            let area = scrollableArea()
+            let area = scrollableArea(aboveInputTop: aboveInputTop)
             let frame = exists ? target.frame : .zero
             // A partly visible multiline switch can be hittable while its
             // trailing control is still behind the software keyboard.
@@ -405,20 +439,33 @@ import XCTest
             let distance = exists && !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
             scrollContent(upward: upward, area: area, distance: distance)
         }
-        let area = scrollableArea()
+        let area = scrollableArea(aboveInputTop: aboveInputTop)
         XCTAssertTrue(target.exists && target.isHittable &&
                       (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
                       "Missing fully actionable UI element: \(target.debugDescription)")
     }
-    private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
-        // The Form ends above its Done bar. A field behind the bar can still
-        // report hittable while a tap leaves the preceding input focused.
-        let done = app.buttons["household-idea-keyboard-done"]
-        let doneFrame = done.exists ? done.frame : .zero
-        let inputTop = doneFrame.intersects(bounds) && !doneFrame.isEmpty ? min(keyboardTop, doneFrame.minY) : keyboardTop
+    private func scrollableArea(aboveInputTop: CGFloat? = nil) -> CGRect {
+        // Observe the keyboard, navigation bars and Done button in the same layout.
+        guard let screen = try? app.snapshot() else {
+            XCTFail("Could not read the shared meal form viewport")
+            return .zero
+        }
+        let bounds = screen.frame
+        var inputTop = aboveInputTop ?? bounds.maxY
+        var barBottom = bounds.minY + 88
+        var elements: [any XCUIElementSnapshot] = [screen]
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if !frame.isEmpty && frame.intersects(bounds) {
+                if element.elementType == .keyboard ||
+                    (element.elementType == .button && element.identifier == "household-idea-keyboard-done") {
+                    inputTop = min(inputTop, frame.minY)
+                } else if element.elementType == .navigationBar {
+                    barBottom = max(barBottom, frame.maxY)
+                }
+            }
+            elements.append(contentsOf: element.children)
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, inputTop - 140))
         let bottom = min(bounds.maxY - 100, inputTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
@@ -434,7 +481,13 @@ import XCTest
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: startY - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: endY - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        if distance != nil {
+            // A focused field can coast past the viewport on release. Stop at
+            // the measured position before lifting the finger.
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        } else {
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
     }
     private func assertVisibleSupplyPreview() {
         let expected = [
