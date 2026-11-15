@@ -207,6 +207,28 @@ import HouseholdClient
         guard case .permittedOnly = model.periodAnalysis else { return XCTFail("Expected only permitted subtotal") }
         XCTAssertNil(model.pending)
     }
+    func testRefreshingPeriodListCannotKeepAnEarlierFullBalanceAfterAccessNarrows() async throws {
+        let (model, service, _, _) = try await setup()
+        let id = service.saved.periodId
+        await model.openPeriod(id, analyze: true)
+        XCTAssertNotNil(model.selectedPeriod)
+        guard case .complete = model.periodAnalysis else { return XCTFail("Expected the initial full balance") }
+
+        service.analysis = .permittedOnly(service.subtotal)
+        service.beforePeriodList = {
+            XCTAssertNil(model.selectedPeriod)
+            XCTAssertNil(model.periodAnalysis)
+            XCTAssertFalse(model.canEditSelectedPeriod)
+        }
+        await model.loadPeriods()
+        XCTAssertEqual(model.periods.map(\.periodId), [id])
+        XCTAssertNil(model.selectedPeriod)
+        XCTAssertNil(model.periodAnalysis)
+        await model.openPeriod(id, analyze: true)
+        guard case .permittedOnly(let subtotal) = model.periodAnalysis else { return XCTFail("Expected the permitted subtotal") }
+        XCTAssertEqual(subtotal, service.subtotal)
+        XCTAssertNil(model.selectedPeriod)
+    }
     func testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead() async throws {
         let (model, service, _, _) = try await setup()
         await model.openPeriod(service.saved.periodId, analyze: true); XCTAssertNotNil(model.selectedPeriod)
@@ -354,6 +376,7 @@ private let nilKey = "initial"
     var pricePages: [String: HistoryPriceObservationPage] = [:]
     var readablePages: [String: HistoryReadableShopPage] = [:]
     var priceError: Error?, analysisError: Error?, authorizationError: Error?, observationReadError: Error?
+    var beforePeriodList: (() -> Void)?
     var beforePrepare: (() async throws -> Void)?, beforePeriodRead: (() async -> Void)?
     var beforeObservationSend: ((PriceObservationIntent) async throws -> Void)?
     var loseObservationResponse = false, losePeriodResponse = false
@@ -372,7 +395,10 @@ private let nilKey = "initial"
     func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }
-    func budgetPeriods(cursor: String?) async throws -> HistoryBudgetPeriodPage { .init(periods: [.init(periodId: saved.periodId, revision: saved.revision, updatedAt: "2025-01-01T00:00:00Z")], nextCursor: nil) }
+    func budgetPeriods(cursor: String?) async throws -> HistoryBudgetPeriodPage {
+        beforePeriodList?()
+        return .init(periods: [.init(periodId: saved.periodId, revision: saved.revision, updatedAt: "2025-01-01T00:00:00Z")], nextCursor: nil)
+    }
     func budgetPeriod(periodID: String) async throws -> HistoryPeriodResponse { await beforePeriodRead?(); if let analysisError { throw analysisError }; return analysis }
     func savedBudgetPeriod(periodID: String) async throws -> HistorySavedBudgetPeriod { rawReads += 1; return saved }
     func preparePriceObservation(_ observation: HistoryPriceObservation) async throws -> PriceObservationIntent { try await beforePrepare?(); return try .init(subject: "adult", householdID: household, memberID: member, deviceID: "device", observation: observation) }

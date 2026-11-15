@@ -172,6 +172,10 @@ enum HistoryReviewedWrite: Equatable {
     func loadPeriods(more: Bool = false) async {
         guard authorized, !busy, !more || periodCursor != nil else { return }
         busy = true; defer { busy = false }; let start = generation; let cursor = more ? periodCursor : nil
+        // The index lists the owner's record IDs even after a source grant changes.
+        // Opening a detail checks its current sources separately.
+        selectedPeriod = nil
+        periodAnalysis = nil
         if !more { periods = []; periodCursor = nil; seenPeriodCursors = [] }
         do {
             let page = try await service.budgetPeriods(cursor: cursor)

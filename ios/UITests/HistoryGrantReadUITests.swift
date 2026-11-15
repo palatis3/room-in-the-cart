@@ -49,6 +49,10 @@ import XCTest
     func testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource() {
         openGrantedHistory(); openAllowedObservation(); assertText("Grant-only oats")
         periodTab(); openRawPlan(); assertText("Permitted saved November plan")
+        tap(element("history.loadPeriods"))
+        XCTAssertTrue(element("history.openRawPeriod").waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
+        openRawPlan(); assertText("Permitted saved November plan")
         tap(element("fixture.h09.revoke"))
         tap(element("history.openRawPeriod")); atLeast("denied",1)
         XCTAssertTrue(app.buttons["Check access again"].waitForExistence(timeout:12))
