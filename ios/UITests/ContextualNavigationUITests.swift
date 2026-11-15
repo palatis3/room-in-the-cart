@@ -19,7 +19,7 @@ import UIKit
         tap(element("ledgerImport"))
         let english = "1 1/2 cups of arroz"
         let spanish = "1 1/2 tazas de arroz"
-        fill(english, into: "ledgerImportText")
+        fill(english, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         tap(element("ledgerCommitImport"))
         let food = app.buttons["Inspect arroz"]
@@ -27,7 +27,7 @@ import UIKit
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
         tap(element("ledgerImport"))
-        fill(spanish, into: "ledgerImportText")
+        fill(spanish, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         let apply = element("ledgerCommitImport")
         XCTAssertFalse(apply.isEnabled)
@@ -112,7 +112,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let source = "2 packs of 6 to 8 wraps"
-        fill(source, into: "ledgerImportText")
+        fill(source, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Packs on the original label: 2")
         let unresolved = "Amount per pack on the original label: Quantity unresolved"
@@ -142,7 +142,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let original = "2x15 oz pinto beans"
-        fill(original, into: "ledgerImportText")
+        fill(original, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Packs on the original label: 2")
         assertText("Amount per pack on the original label: 15 ounces (weight)")
@@ -168,7 +168,7 @@ import UIKit
         tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let label = "2 cans of seltzer, 12 fl. oz. each"
-        fill(label, into: "ledgerImportText")
+        fill(label, into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport"))
         assertText("Amount per pack on the original label: 12 US fluid ounces")
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
@@ -428,7 +428,7 @@ import UIKit
     func testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap() {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         let apply = app.buttons["Apply reviewed checkout copy"]
@@ -465,6 +465,9 @@ import UIKit
         assertText("Hold comparison unresolved")
         fill("45", into: holdLabel)
         assertText("Hold less available funds: $5.00")
+        XCTAssertEqual(hold.value as? String, "45")
+        XCTAssertEqual(funds.value as? String, "40")
+        capture("S05-reviewed-hold-and-available-funds")
         assertText(capResult)
 
         reveal(compareHold)
@@ -488,7 +491,7 @@ import UIKit
     func testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote() {
         launchRetailerHistoryWalk()
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
@@ -552,7 +555,7 @@ import UIKit
     private func enterWeighedPickup(knownTax: Bool) {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
@@ -642,7 +645,12 @@ import UIKit
         tap(app.navigationBars["Check price by weight"].buttons["Whole checkout"])
         XCTAssertTrue(app.navigationBars["Whole checkout"].waitForExistence(timeout: 5))
         let price = app.textFields["Price for apples"]
-        reveal(price)
+        // The basket's price fields are above the weight-review link we just left.
+        for _ in 0..<8 {
+            if price.exists && price.isHittable { break }
+            scrollContent(upward: false)
+        }
+        XCTAssertTrue(price.exists && price.isHittable)
         XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
     }
 
@@ -653,7 +661,7 @@ import UIKit
         XCTAssertFalse(element("records.managedViews").exists)
         shopRoot()
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
@@ -720,7 +728,7 @@ import UIKit
             XCTAssertEqual(branch.label, "Current pickup branch: East branch")
         }
         tap(element("openPickupList"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
@@ -995,8 +1003,8 @@ import UIKit
         let done = app.buttons["Done"]
         if done.isHittable { done.tap() }
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id)
+    private func fill(_ text: String, into id: String, replacing: Bool = false, fieldType: XCUIElement.ElementType = .textField) {
+        let field = app.descendants(matching: fieldType).matching(identifier: id).firstMatch
         revealContent(field)
         field.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The field must have keyboard focus: \(id)")

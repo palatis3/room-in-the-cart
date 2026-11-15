@@ -116,8 +116,17 @@ struct PickupEvidenceField: View {
     let title: String
     @Binding var amount: String
     var body: some View {
-        TextField(title, text: $amount).keyboardType(.decimalPad)
-            .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: title)
+                .font(.subheadline)
+                .accessibilityHidden(true)
+            TextField(title, text: $amount, prompt: Text(verbatim: ""))
+                .textFieldStyle(.roundedBorder)
+                .controlSize(.large)
+                .keyboardType(.decimalPad)
+                .accessibilityLabel(Text(verbatim: title))
+                .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+        }
     }
 }
 @MainActor func pickupEvidence(_ text: String) throws -> CostEvidence {
@@ -852,11 +861,8 @@ private struct PickupWeightReview: View {
                 Picker(pTr("Price and increment unit"), selection: $unit) {
                     ForEach([UnitOfMeasure.pound, .ounce, .kilogram, .gram], id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(pTr("Price per selected weight unit")).font(.caption).accessibilityHidden(true)
-                    PickupEvidenceField(title: pTr("Price per selected weight unit"), amount: $rate)
-                        .focused($field, equals: .rate).accessibilityIdentifier("checkout.weightRate")
-                }
+                PickupEvidenceField(title: pTr("Price per selected weight unit"), amount: $rate)
+                    .focused($field, equals: .rate).accessibilityIdentifier("checkout.weightRate")
                 VStack(alignment: .leading, spacing: 4) {
                     Text(pTr("Retailer billing increment")).font(.caption).accessibilityHidden(true)
                     TextField(pTr("Retailer billing increment"), text: $increment)

@@ -8,6 +8,10 @@ PR #7 is testing head `bafec24d` on merge commit `04ce53fb`. GitHub built the un
 
 The development branch has follow-up fixes for arrival quantities, checkout deferrals and item prices. The iOS 17 split-delivery walkthrough kept received and usable amounts separately labeled. Changing a deferral selection now dismisses its preview, and replaying Apply preserves the saved revision. The bilingual checkout walkthrough reopened the same saved groceries in Spanish and distinguished the item “Tax” from the tax charge “Impuesto.” Local results are in `.build/ArrivalQuantityLabelsNov15/visible/strict.log`, `.build/DeferralReviewNov15/fixed/strict.log` and `.build/CheckoutPriceNamesNov15/after/strict.log`.
 
+On the development branch, the iOS 17 iPhone SE simulator passed all 1,038 model tests on `2ede1aa2`. The unsigned device Release archive at that revision passed app, extension and crash-symbol checks. Results are in `.build/Release2ede1aa2Nov15`.
+
+The subsequent checkout screen fix keeps a visible label above every editable dollar amount. The before screenshot showed a $45 hold and $40 available funds as bare numbers. The revised screen names both, keeps the $5 difference separate from the $8 of grocery budget remaining, and clears both entries when the shopper turns the comparison off. The hold and weighed-produce journeys passed on iPhone 17 with iOS 27.0 and zero recorded runtime warnings. Screenshots and results are in `.build/CheckoutMoneyLabelsNov15/{before,verified}`.
+
 ### Previous PR revision
 
 GitHub built the unsigned iPhone Release archive for PR #7, head `a82a52c2` and merge commit `2d1adb12`. All 1,038 model tests passed with zero recorded runtime warnings. StoreKit passed in English and Spanish. On the Mac, installing the current Release build over a November 4 simulator installation preserved the contents of all 15 existing database tables. The saved November 4 dinner reopened with its original name and date. [Release archive check](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744701/job/132704705998) · [Model tests](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744701/job/132704706195)
