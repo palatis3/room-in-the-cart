@@ -229,13 +229,12 @@ import XCTest
     private func tap(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
         reveal(target, initialSearchDirection: initialSearchDirection)
         XCTAssertTrue(target.isHittable,
-                      "Cannot tap \(target.identifier): frame \(target.frame), keyboard \(app.keyboards.firstMatch.frame), content \(scrollableArea())")
+                      "Cannot tap \(target.identifier): frame \(target.frame), keyboard \(app.keyboards.firstMatch.frame), content \(contentViewport().area)")
         target.tap()
     }
     private func assertText(_ text: String, initialSearchDirection: SearchDirection = .towardEnd) {
-        let target = app.staticTexts.matching(identifier: text).firstMatch
-        reveal(target, initialSearchDirection: initialSearchDirection)
-        XCTAssertTrue(target.isHittable, text)
+        let target = app.staticTexts.matching(NSPredicate(format: "label == %@", text)).firstMatch
+        reveal(target, initialSearchDirection: initialSearchDirection, textLabel: text)
     }
     private func assertField(_ id: String, value: String, initialSearchDirection: SearchDirection = .towardEnd) {
         let field = app.textFields[id]
@@ -279,24 +278,27 @@ import XCTest
         }
         XCTAssertEqual(toggle.value as? String, expected, id)
     }
-    private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd) {
+    private func reveal(_ target: XCUIElement, initialSearchDirection: SearchDirection = .towardEnd, textLabel: String? = nil) {
         let startsBySwipingUp = initialSearchDirection == .towardEnd
         for attempt in 0..<30 {
-            var area = scrollableArea()
-            let exists = target.exists
-            var frame = exists ? target.frame : .zero
+            // The source rows and viewport can be read in one snapshot. Resolving a
+            // second live frame for an already visible label timed out after Cancel.
+            let viewport = contentViewport(textLabel: textLabel)
+            var area = viewport.area
+            var frame = viewport.textFrame
+            if textLabel == nil && target.exists { frame = target.frame }
             if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY && target.isHittable {
                 if !keyboardMayBeVisible { return }
                 // Keyboard presentation can change the viewport while XCTest
                 // resolves the field. Confirm both against the updated layout.
-                area = scrollableArea(); frame = target.frame
+                area = contentViewport().area; frame = target.frame
                 if target.isHittable && !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             }
             // Toolbars lie outside the content viewport, but their complete
             // button frame still has to fit the app and be directly actionable.
             if keyboardMayBeVisible && !frame.isEmpty && target.elementType == .button && target.identifier == "sharedFood.done" && app.frame.contains(frame) && target.isHittable { return }
             let fallbackUpward = (attempt / 6) % 2 == 0 ? startsBySwipingUp : !startsBySwipingUp
-            let upward = exists && !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
+            let upward = !frame.isEmpty ? frame.midY > area.midY : fallbackUpward
             let origin = app.coordinate(withNormalizedOffset: .zero), bounds = app.frame
             let high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
             origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
@@ -305,11 +307,12 @@ import XCTest
         }
         XCTFail("Missing fully visible control: " + target.debugDescription)
     }
-    private func scrollableArea() -> CGRect {
+    private func contentViewport(textLabel: String? = nil) -> (area: CGRect, textFrame: CGRect) {
         let snapshot = try? app.snapshot(), bounds = snapshot?.frame ?? app.frame
         // Use actual obstructions. A fixed bottom inset hides a fully visible
         // final Form row on home-button iPhones, where it cannot scroll higher.
         var bottom = bounds.maxY, top = bounds.minY + 95, nodes = snapshot.map { [$0] } ?? []
+        var textFrame = CGRect.zero
         // A root snapshot can omit the keyboard's separate accessibility
         // window. Check that window from text entry until dismissal is observed.
         if keyboardMayBeVisible {
@@ -318,6 +321,9 @@ import XCTest
         }
         while let node = nodes.popLast() {
             if !node.frame.isEmpty && node.frame.intersects(bounds) {
+                if let textLabel, node.elementType == .staticText && node.label == textLabel {
+                    textFrame = node.frame
+                }
                 if node.elementType == .navigationBar { top = max(top, node.frame.maxY + 8) }
                 if node.elementType == .keyboard { bottom = min(bottom, node.frame.minY - 12) }
                 if node.identifier == "sharedFood.done" { bottom = min(bottom, node.frame.minY - 8) }
@@ -327,7 +333,8 @@ import XCTest
             }
             nodes.append(contentsOf: node.children)
         }
-        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        let area = CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        return (area, textFrame)
     }
     private func capture(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
