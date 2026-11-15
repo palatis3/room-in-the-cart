@@ -5426,6 +5426,22 @@
         }
       }
     },
+    "The remaining dinners have protected portions that do not fit this meal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The remaining dinners have protected portions that do not fit this meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas restantes tienen porciones protegidas que no se ajustan a esta comida."
+          }
+        }
+      }
+    },
     "The week could not be read. Check access and the pickup time zone.": {
       "localizations": {
         "en": {

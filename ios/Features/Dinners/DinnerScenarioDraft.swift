@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-struct DinnerScenarioMealDraft: Identifiable {
+struct DinnerScenarioMealDraft: Identifiable, Equatable {
     var id = UUID()
     var name = ""
     var portions = ""
@@ -100,6 +100,9 @@ struct DinnerScenarioDraft {
     init(shop: ShoppingLedger, state: DinnerPlanningState) {
         shopID = shop.id; baseRevision = shop.revisionID; planningRevision = state.revisionID; zone = shop.basis.timeZoneIdentifier
         branch = shop.basis.branch; mode = ShoppingMode(rawValue: shop.basis.mode.rawValue) ?? .pickup; slot = shop.basis.slot ?? Date()
+        if let scheduled = try? DinnerLibraryPairings.scheduledMeals(shop: shop, state: state), !scheduled.isEmpty {
+            meals = scheduled
+        }
         baseline = shop.lines.filter { $0.trashedAt == nil }.map { DinnerBaselineCostDraft(id: $0.id, name: $0.name) }
     }
     mutating func prepareMatches(accepted: [AcceptedDinner]) throws {

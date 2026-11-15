@@ -18,8 +18,9 @@ struct DinnerScenarioEditor: View {
         var initial = DinnerScenarioDraft(shop: shop, state: model.state)
         #if DEBUG && DINNER_DECISION_UI_FIXTURE
         let reviewedLibrary = try? DinnerDecisionUIFixture.seed(&initial, shop: shop, state: model.state)
-        _library = State(initialValue: reviewedLibrary); _target = State(initialValue: reviewedLibrary?.target)
+        _library = State(initialValue: reviewedLibrary)
         #endif
+        _target = State(initialValue: initial.meals.first { !$0.protected && $0.currentDinnerID != nil }?.id)
         _draft = State(initialValue: initial)
     }
     private func reviewScenarios() {
@@ -64,7 +65,6 @@ struct DinnerScenarioEditor: View {
             if model.state.acceptedDinners.isEmpty {
                 Section { NavigationLink(dinnerText("Accept a dinner before comparing scenarios")) { DinnerTemplateEditor(model: model, purpose: .reusable) } }
             } else {
-                DinnerScenarioMealFields(model: model, draft: $draft)
                 Section(dinnerText("Pair with the accepted library")) {
                     Button(dinnerText("Load chosen dinners and protected serving groups")) {
                         guard let shop = model.shop else { return }
@@ -77,12 +77,21 @@ struct DinnerScenarioEditor: View {
                         Text(dinnerText("Choose a meal")).tag(UUID?.none)
                         ForEach(draft.meals.filter { !$0.protected }) { meal in Text(meal.name).tag(Optional(meal.id)) }
                     }
+                    .onChange(of: target) { _, newTarget in
+                        if library?.target != newTarget { library = nil }
+                    }
                     Button(dinnerText("Find accepted dinners not chosen for this pickup")) {
                         findCandidates(offset: 0)
                     }.disabled(target == nil)
                     if let library {
-                        if library.candidates.isEmpty { Text(dinnerText("No new pairing; these dinners are already selected.")) }
-                        else { Text(dinnerText("Review each candidate’s ingredient matches and complete plan timing below.")) }
+                        if library.candidates.isEmpty {
+                            Text(library.allAcceptedDinnersChosen
+                                 ? dinnerText("No new pairing; these dinners are already selected.")
+                                 : dinnerText("The remaining dinners have protected portions that do not fit this meal."))
+                                .accessibilityIdentifier("dinnerPairingEmpty")
+                        } else {
+                            Text(dinnerText("Review each candidate’s ingredient matches and complete plan timing below."))
+                        }
                         if library.pageOffset > 0 { Button(dinnerText("Previous candidate group")) { findCandidates(offset: max(0,library.pageOffset-32)) } }
                         if library.excludedByLimit > 0 {
                             Text(dinnerFormat("Untested alternatives: %d", library.excludedByLimit))
@@ -90,6 +99,13 @@ struct DinnerScenarioEditor: View {
                         }
                     }
                 }
+                DinnerScenarioMealFields(model: model, draft: $draft)
+                    .onChange(of: draft.meals) { _, meals in
+                        library = nil
+                        if !meals.contains(where: { $0.id == target && !$0.protected }) {
+                            target = meals.first { !$0.protected && $0.currentDinnerID != nil }?.id
+                        }
+                    }
                 Section(dinnerText("Explicit recipe ingredient matches")) {
                     Text(dinnerText("Prepare matches after choosing recipes and portions. Then explicitly select the same food identity only where those ingredients really are interchangeable."))
                     Button(dinnerText("Prepare required ingredient matches")) {
@@ -161,13 +177,13 @@ struct DinnerScenarioEditor: View {
                 Section {
                     Button(dinnerText("Review complete scenarios")) {
                         reviewScenarios()
-                    }.disabled(!model.editable)
+                    }.disabled(!model.editable || library?.candidates.isEmpty == true)
                 }
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Scenario evidence")).dinnerAccess(model, budget: true)
              .toolbar {
-                if library != nil {
+                if let library, !library.candidates.isEmpty {
                     ToolbarItem(placement: .primaryAction) {
                         Button(dinnerText("Review"), action: reviewScenarios).accessibilityIdentifier("dinnerScenarioReview")
                     }

@@ -114,6 +114,14 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         capture("S15-S17-" + language)
         tap(app.buttons["dinnerApply"])
         XCTAssertTrue(origin.waitForExistence(timeout: 8))
+        tap(origin)
+        let noNewPair = app.staticTexts["dinnerPairingEmpty"]
+        reveal(noNewPair)
+        XCTAssertEqual(noNewPair.label, language == "es"
+                       ? "No hay una combinación nueva; estas cenas ya están seleccionadas."
+                       : "No new pairing; these dinners are already selected.")
+        XCTAssertFalse(app.buttons["dinnerScenarioReview"].exists)
+        tap(cancel)
         openChosenDinners(language)
         let tacos = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Tacos'")).firstMatch
         tap(tacos)

@@ -16,6 +16,7 @@ struct DinnerLibraryPairings {
     let shopRevision: UUID
     let planningRevision: UUID
     let commitments: [DinnerScenarioMealDraftSnapshot]
+    let allAcceptedDinnersChosen: Bool
     let pageOffset: Int
     let excludedByLimit: Int
     var candidates: [LibraryPairingCandidate]
@@ -100,12 +101,14 @@ struct DinnerLibraryPairings {
         }
         let excluded = chosen(in: shop, state: state).union(commitments.compactMap(\.currentDinnerID))
         let targetPortions = commitments.first { $0.id == target }?.portions
-        let available = state.acceptedDinners.filter { !excluded.contains($0.id) &&
-            (!$0.template.servingGroups.contains(where: \.isProtected) || $0.template.servings == targetPortions) }
+        let unchosen = state.acceptedDinners.filter { !excluded.contains($0.id) }
+        let available = unchosen.filter {
+            !$0.template.servingGroups.contains(where: \.isProtected) || $0.template.servings == targetPortions
+        }
         guard offset >= 0, offset == 0 || offset < available.count else { throw DinnerPlanningError.stalePreview }
         let batch = Array(available.dropFirst(offset).prefix(32))
         let library = Self(target: target, shopID: shop.id, shopRevision: shop.revisionID, planningRevision: state.revisionID,
-                           commitments: commitments, pageOffset: offset, excludedByLimit: available.count - offset - batch.count,
+                           commitments: commitments, allAcceptedDinnersChosen: unchosen.isEmpty, pageOffset: offset, excludedByLimit: available.count - offset - batch.count,
                            candidates: batch.map { .init(id: $0.id, title: $0.template.title) })
         var matches = [DinnerRecipeMatchDraft]()
         var seen = Set<[UUID]>()

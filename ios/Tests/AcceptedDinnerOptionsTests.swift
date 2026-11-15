@@ -52,6 +52,32 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         XCTAssertThrowsError(try library.build(draft,shop:shop,state:state))
     }
 
+    func testPairingWithOnlyAnUnchosenProtectedDinnerExplainsWhyItDoesNotFit() throws {
+        let chosen = dinner("Pasta", count: 2)
+        var shop = ShoppingLedger(title: "Current list", basis: .init(branch: "Main"))
+        let target = try shop.chooseMeal(chosen.template, at: now)
+        var state = DinnerPlanningState()
+        let grant = access(shop.id, paid: true)
+        try state.accept(chosen, access: grant, at: now)
+
+        func search() throws -> DinnerLibraryPairings {
+            var draft = DinnerScenarioDraft(shop: shop, state: state)
+            XCTAssertEqual(draft.meals.map(\.id), [target])
+            return try DinnerLibraryPairings.prepare(&draft, target: target, shop: shop, state: state)
+        }
+        let allChosen = try search()
+        XCTAssertTrue(allChosen.candidates.isEmpty)
+        XCTAssertTrue(allChosen.allAcceptedDinnersChosen)
+
+        let protectedMeal = MealTemplate(title: "Stew", servings: try Rational(2),
+                                         ingredients: [.init(name: "Beans", quantity: q(2))],
+                                         servingGroups: [.init(name: "Lunch", servings: .one, isProtected: true)])
+        try state.accept(.init(id: UUID(), template: protectedMeal, acceptedAt: now), access: grant, at: now)
+        let incompatible = try search()
+        XCTAssertTrue(incompatible.candidates.isEmpty)
+        XCTAssertFalse(incompatible.allAcceptedDinnersChosen)
+    }
+
     struct RecoveryFixture {
         var journey: PickupJourney
         let line: UUID
@@ -408,6 +434,10 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         _ = try DinnerPlanningEngine.apply(preview.proposal,ledger:&shop,state:&state,access:grant,phase:.draft,at:now)
         XCTAssertEqual(Set(shop.mealOccurrences.filter { $0.removedAt == nil }.map(\.title)),["New dinner","Other dinner"])
         XCTAssertNil(shop.mealOccurrences.first { $0.id == preserved }?.removedAt)
+        let next = DinnerScenarioDraft(shop: shop, state: state)
+        XCTAssertEqual(next.baseRevision, shop.revisionID)
+        XCTAssertEqual(Set(next.meals.compactMap(\.currentDinnerID)), [new.id, other.id])
+        XCTAssertFalse(next.meals.contains { $0.currentDinnerID == old.id })
         XCTAssertThrowsError(try library.replacement(for:scenario,shop:shop,state:state))
     }
 
