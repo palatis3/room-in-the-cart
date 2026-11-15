@@ -636,7 +636,7 @@ import XCTest
             }
             return nil
         }
-        func focusReviewedField(_ name: String) throws -> String? {
+        func focusReviewedField(_ name: String) throws -> (identity: String, snapshot: any XCUIElementSnapshot)? {
             for attempt in 0...24 {
                 let screen = try app.snapshot()
                 let field = reviewedField(named: name, in: screen)
@@ -650,7 +650,7 @@ import XCTest
                         // each resolve it again while the keyboard changes the form.
                         let origin = app.coordinate(withNormalizedOffset: .zero)
                         origin.withOffset(CGVector(dx: center.x - screen.frame.minX, dy: center.y - screen.frame.minY)).tap()
-                        return identity
+                        return (identity, field)
                     }
                 }
                 if attempt < 24 {
@@ -661,17 +661,18 @@ import XCTest
             XCTFail("No visible center for reviewed field: \(name)")
             return nil
         }
-        func fillReviewedFields(_ fields: [(String, String)]) throws {
+        func fillReviewedFields(_ fields: [(String, String)], doneIdentifier: String = "Done") throws {
             for (name, value) in fields {
-                guard let identity = try focusReviewedField(name) else { return }
+                guard let focused = try focusReviewedField(name) else { return }
+                let identity = focused.identity
                 if ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name) {
                     XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field")
                 }
                 app.typeText(value)
-                let done = app.buttons.matching(identifier: "Done").firstMatch
+                let done = app.buttons.matching(identifier: doneIdentifier).firstMatch
                 XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
                 done.tap()
-                let ready = app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10) { screen in
+                let ready = app.waitForKeyboardDismissal(doneIdentifier: doneIdentifier, timeout: 10) { screen in
                     reviewedField(named: identity, in: screen)?.value as? String == value
                 }
                 XCTAssertTrue(ready, "Done must dismiss the keyboard and preserve the exact value '\(value)' for \(name)")
@@ -738,17 +739,21 @@ import XCTest
         // the new terms before reviewing and replacing their pricing evidence.
         for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
                               ("Pickup or delivery slot", "Tuesday 5 PM")] {
-            let field = app.textFields[name]
-            tap(field)
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
-            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
-                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            // The hosted failure spent 54 seconds entering these three fields,
+            // including repeated lookups across keyboard changes. Retain the field's
+            // identity and prior value, then type into that verified focus.
+            guard let focused = try focusReviewedField(name) else { return }
+            let keyboard = app.keyboards.firstMatch
+            XCTAssertTrue(keyboard.exists || keyboard.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
+            if let old = focused.snapshot.value as? String, !old.isEmpty, old != focused.snapshot.placeholderValue {
+                app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
             }
-            field.typeText(value)
-            XCTAssertEqual(field.value as? String, value, name)
+            app.typeText(value)
+            XCTAssertEqual(reviewedField(named: focused.identity, in: try app.snapshot())?.value as? String, value, name)
         }
         tap(app.buttons["Done"])
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5),
+                      "Done must leave the checkout unobscured and remove its input bar")
         assertText("Pricing details to preserve")
         assertText("Wraps")
         assertText("$3.00")
@@ -761,17 +766,19 @@ import XCTest
         let source = app.textFields["Source of these prices"]
         reveal(source, initiallyUpward: false)
         XCTAssertEqual(source.value as? String, source.placeholderValue, "Replacement pricing starts with a blank source")
-        source.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for Source of these prices")
-        source.typeText("Retailer preview reviewed by shopper")
-        XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper", "Source of these prices")
+        guard let focusedSource = try focusReviewedField("Source of these prices") else { return }
+        let sourceKeyboard = app.keyboards.firstMatch
+        XCTAssertTrue(sourceKeyboard.exists || sourceKeyboard.waitForExistence(timeout: 5), "Show the keyboard for Source of these prices")
+        app.typeText("Retailer preview reviewed by shopper")
+        XCTAssertEqual(reviewedField(named: focusedSource.identity, in: try app.snapshot())?.value as? String,
+                       "Retailer preview reviewed by shopper", "Source of these prices")
         tap(app.buttons["Done"])
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"),
                       "Done must leave the checkout unobscured and remove its input bar")
         XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper")
         enableSwitch("Retailer total already includes all charges")
         let total = app.textFields["Inclusive total"]
-        fill("3.00", into: "Inclusive total", requireDone: true, control: total)
+        try fillReviewedFields([("Inclusive total", "3.00")])
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10))
         XCTAssertEqual(try total.snapshot().value as? String, "3.00")
         func tapCheckoutAction(_ button: XCUIElement) throws {
@@ -838,11 +845,12 @@ import XCTest
         tap(app.buttons["Record what came home"])
         choose("Original order line", value: "Wraps")
         choose("What happened", value: "Partial fill")
-        fill("4", into: "Physical amount received")
-        fill("4", into: "Confirmed usable amount (optional)")
+        try fillReviewedFields([
+            ("Physical amount received", "4"), ("Confirmed usable amount (optional)", "4"),
+        ], doneIdentifier: "arrival.keyboardDone")
         enableSwitch("I checked the identity, units and meal constraints")
-        fill("segment-1", into: "Segment ID (distinct for each split delivery)",
-             control: app.textFields["Segment ID (distinct for each split delivery)"])
+        try fillReviewedFields([("Segment ID (distinct for each split delivery)", "segment-1")],
+                               doneIdentifier: "arrival.keyboardDone")
         tap(app.buttons["Save observed arrival"])
         assertText("segment-1")
         capture("Free-observed-short-fill")
@@ -850,8 +858,9 @@ import XCTest
         assertText("Lunch")
         assertText("Still short")
         choose("Reviewed matching food need", value: "Wraps")
-        fill("Two checked freezer wraps", into: "Actual food or freezer batch")
-        fill("2", into: "Confirmed usable amount")
+        try fillReviewedFields([
+            ("Actual food or freezer batch", "Two checked freezer wraps"), ("Confirmed usable amount", "2"),
+        ])
         enableSwitch("I reviewed identity, exclusions and usable quantity")
         tap(app.buttons["Confirm this separate stock lot"])
         choose("Affected meal need", value: "Wrap dinner")
@@ -872,13 +881,14 @@ import XCTest
         assertText("Set aside two lunch wraps first")
         back(to: "Close the pickup")
         tap(app.buttons["Close the pickup"])
-        fill("2.00", into: "Amount")
+        try fillReviewedFields([("Amount", "2.00")], doneIdentifier: "pickup.settlement.doneTyping")
         tap(app.buttons["Save financial evidence"])
         let missingReceipt = app.alerts["Evidence not saved"]
         XCTAssertTrue(missingReceipt.waitForExistence(timeout: 5))
         XCTAssertTrue(missingReceipt.staticTexts["Enter a valid amount and evidence ID. Credits must link to an original posted charge."].exists)
         missingReceipt.buttons["Done"].tap()
-        fill("net-receipt-2", into: "Unique receipt or transaction evidence ID")
+        try fillReviewedFields([("Unique receipt or transaction evidence ID", "net-receipt-2")],
+                               doneIdentifier: "pickup.settlement.doneTyping")
         tap(app.buttons["Save financial evidence"])
         assertText("2.00")
         XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
