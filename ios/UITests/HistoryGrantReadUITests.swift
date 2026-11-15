@@ -61,6 +61,66 @@ import XCTest
         counter("writes",0)
         capture("E09-revocation-clears-raw-envelope-and-saved-source")
     }
+    func testRefreshingHistoryAfterAnUnavailableRecordClearsBothDateFilters() throws {
+        openGrantedHistory()
+        let start = app.switches["Filter from an evidence date"]
+        let end = app.switches["Filter through an evidence date"]
+        func setFilter(_ row: XCUIElement, enabled: Bool) {
+            reveal(row)
+            let thumb = row.switches.firstMatch
+            (thumb.exists ? thumb : row).tap()
+            XCTAssertEqual(row.value as? String, enabled ? "1" : "0")
+        }
+        setFilter(start, enabled: true)
+        let date = app.datePickers.buttons.matching(NSPredicate(format: "label MATCHES %@", ".*[0-9]{4}$")).firstMatch
+        reveal(date)
+        let initial = date.label
+        let bar = app.navigationBars["Prices and period budgets"].frame
+        let origin = app.frame.origin
+        let title = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: bar.midX - origin.x, dy: bar.midY - origin.y))
+        date.tap()
+        let days = app.datePickers.collectionViews.buttons
+        let day = days.matching(NSPredicate(format: "enabled == true AND selected == false")).firstMatch
+        XCTAssertTrue(day.waitForExistence(timeout: 5))
+        day.tap()
+        func containsCalendar(_ node: any XCUIElementSnapshot, inPicker: Bool = false) -> Bool {
+            if inPicker && node.elementType == .collectionView { return true }
+            return node.children.contains { containsCalendar($0, inPicker: inPicker || node.elementType == .datePicker) }
+        }
+        if containsCalendar(try app.snapshot()) {
+            title.tap()
+        }
+        reveal(date)
+        let chosen = date.label
+        XCTAssertNotEqual(chosen, initial)
+        setFilter(start, enabled: false)
+        XCTAssertFalse(app.staticTexts["Observed on or after"].exists)
+        setFilter(start, enabled: true)
+        XCTAssertEqual(date.label, chosen)
+        setFilter(end, enabled: true)
+        XCTAssertTrue(app.staticTexts["Observed on or before"].exists)
+        setFilter(end, enabled: false)
+        XCTAssertEqual(start.value as? String, "1")
+        setFilter(end, enabled: true)
+
+        let reference = app.textFields["Saved observation reference"]
+        fill(foreign, field: reference)
+        tap(element("history.openSavedObservation"))
+        atLeast("denied", 1)
+        let refresh = app.buttons["Check access again"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 12))
+        tap(refresh)
+        XCTAssertTrue(element("history.newObservation").waitForExistence(timeout: 12))
+        reveal(start)
+        XCTAssertEqual(start.value as? String, "0", "Reloading history clears its lower date bound")
+        reveal(end)
+        XCTAssertEqual(end.value as? String, "0", "Reloading history clears its upper date bound")
+        XCTAssertFalse(app.staticTexts["Observed on or after"].exists)
+        XCTAssertFalse(app.staticTexts["Observed on or before"].exists)
+        setFilter(start, enabled: true)
+        XCTAssertNotEqual(date.label, chosen, "A refreshed history session starts with a new date selection")
+    }
     private func openGrantedHistory() {
         app.launch()
         XCTAssertTrue(element("fixture.h09.openHistory").waitForExistence(timeout:20))

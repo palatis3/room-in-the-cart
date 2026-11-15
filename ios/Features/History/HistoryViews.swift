@@ -9,10 +9,6 @@ struct HistoryEntryView: View {
     @State private var section = "prices"
     @State private var editingObservation = false
     @State private var observationReference = ""
-    @State private var useStartDate = false
-    @State private var useEndDate = false
-    @State private var startDate = Date().addingTimeInterval(-30 * 86400)
-    @State private var endDate = Date()
     @State private var selectedShop = ""
     @State private var clearingRetry = false
     private enum NumericField: Hashable {
@@ -92,10 +88,6 @@ struct HistoryEntryView: View {
         .onChange(of: model.ownedShops) { _, shops in
             if !shops.contains(where: { $0.shopId == selectedShop }) { selectedShop = "" }
         }
-        .onChange(of: useStartDate) { _, enabled in model.filter.from = enabled ? startDate : nil }
-        .onChange(of: useEndDate) { _, enabled in model.filter.through = enabled ? endDate : nil }
-        .onChange(of: startDate) { _, value in if useStartDate { model.filter.from = value } }
-        .onChange(of: endDate) { _, value in if useEndDate { model.filter.through = value } }
     }
 
     @ViewBuilder private var priceRecords: some View {
@@ -140,10 +132,10 @@ struct HistoryEntryView: View {
                 Text(HistoryCopy.text("All fulfillment modes")).tag("")
                 ForEach(HistoryFulfillmentMode.allCases, id: \.rawValue) { value in Text(HistoryCopy.mode(value.rawValue)).tag(value.rawValue) }
             }
-            Toggle(HistoryCopy.text("Filter from an evidence date"), isOn: $useStartDate)
-            if useStartDate { DatePicker(HistoryCopy.text("Observed on or after"), selection: $startDate, displayedComponents: [.date, .hourAndMinute]) }
-            Toggle(HistoryCopy.text("Filter through an evidence date"), isOn: $useEndDate)
-            if useEndDate { DatePicker(HistoryCopy.text("Observed on or before"), selection: $endDate, displayedComponents: [.date, .hourAndMinute]) }
+            HistoryDateFilter(toggleTitle: HistoryCopy.text("Filter from an evidence date"), pickerTitle: HistoryCopy.text("Observed on or after"),
+                              defaultDate: Date().addingTimeInterval(-30 * 86400), date: $model.filter.from, lastSelection: $model.filter.lastStartDate)
+            HistoryDateFilter(toggleTitle: HistoryCopy.text("Filter through an evidence date"), pickerTitle: HistoryCopy.text("Observed on or before"),
+                              defaultDate: Date(), date: $model.filter.through, lastSelection: $model.filter.lastEndDate)
             Text(HistoryCopy.text("Filters apply only to loaded, authorized records. Load more to continue searching."))
                 .font(.footnote)
             ForEach(model.filteredObservations, id: \.id) { observation in
@@ -444,6 +436,30 @@ struct HistoryEntryView: View {
             guard var draft = model.periodDraft, let index = draft.reservations.firstIndex(where: { $0.id == id }), !draft.reservations[index].isFinal else { return }
             draft.reservations[index].plannedAt = value; model.periodDraft = draft
         })
+    }
+}
+
+private struct HistoryDateFilter: View {
+    let toggleTitle: String
+    let pickerTitle: String
+    let defaultDate: Date
+    @Binding var date: Date?
+    @Binding var lastSelection: Date?
+
+    var body: some View {
+        Toggle(toggleTitle, isOn: Binding(
+            get: { date != nil },
+            set: { enabled in
+                if enabled {
+                    date = lastSelection ?? defaultDate
+                } else {
+                    lastSelection = date
+                    date = nil
+                }
+            }))
+        if let selection = Binding($date) {
+            DatePicker(pickerTitle, selection: selection, displayedComponents: [.date, .hourAndMinute])
+        }
     }
 }
 
