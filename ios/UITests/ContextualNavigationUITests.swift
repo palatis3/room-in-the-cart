@@ -732,7 +732,7 @@ import UIKit
                 (prefix + "source", "Customer entered quote"), (prefix + "itemSubtotal", items),
                 (prefix + "eligibilityTerms", terms), (prefix + "total", total)
             ])
-            enableSwitch(prefix + "allChargesIncluded", nativeThumb: slot == "second")
+            enableSwitch(prefix + "allChargesIncluded", nativeThumb: true)
             enableSwitch(prefix + "quantitiesMatched")
             enableSwitch(prefix + "singleStore")
             tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
@@ -902,24 +902,28 @@ import UIKit
         } else {
             revealContent(control)
         }
-        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "before-tap") }
+        if label == "quote.first.allChargesIncluded" {
+            captureQuoteSwitchBoundary(control, native: native, offset: offThumb, phase: "before-tap")
+        }
         if nativeThumb {
             XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the quote row")
             let coordinate = native.coordinate(withNormalizedOffset: offThumb)
             XCTAssertTrue(control.isEnabled && control.isHittable && native.isEnabled && native.isHittable)
             XCTAssertTrue(scrollableArea().contains(coordinate.screenPoint), "The native thumb must be inside visible content")
             if native.value as? String == "0" { coordinate.tap() }
-            XCTAssertEqual(native.value as? String, "1", label)
         } else if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
-        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "after-tap-before-assertion") }
+        if label == "quote.first.allChargesIncluded" {
+            captureQuoteSwitchBoundary(control, native: native, offset: offThumb, phase: "after-tap-before-assertion")
+        }
+        if nativeThumb { XCTAssertEqual(native.value as? String, "1", label) }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     /// Bounded read-only observation for the original synthetic S27 journey.
     /// The recorded point is the frame-derived intended point, not proof of delivered touch coordinates.
-    private func captureQuoteSwitchBoundary(_ control: XCUIElement, phase: String) {
+    private func captureQuoteSwitchBoundary(_ control: XCUIElement, native: XCUIElement, offset: CGVector, phase: String) {
         let started = ProcessInfo.processInfo.systemUptime
         func rect(_ value: CGRect) -> [Double] {
             [Double(value.minX), Double(value.minY), Double(value.width), Double(value.height)]
@@ -929,15 +933,16 @@ import UIKit
             return ["exists": true, "frame": rect(element.frame), "enabled": element.isEnabled,
                     "hittable": element.isHittable, "value": element.value as? String ?? "<non-string>"]
         }
-        let controlFrame = control.exists ? control.frame : .zero
+        let nativeFrame = native.frame
         var record: [String: Any] = [
-            "schema": 1, "phase": phase, "wallTime": Date().timeIntervalSince1970,
+            "schema": 2, "phase": phase, "wallTime": Date().timeIntervalSince1970,
             "startUptime": started,
-            "control": state(control), "applicationFrame": rect(app.frame),
+            "control": state(control), "nativeFrame": rect(nativeFrame), "applicationFrame": rect(app.frame),
             "navigation": state(app.navigationBars.firstMatch), "tabs": state(app.tabBars.firstMatch),
             "keyboard": state(app.keyboards.firstMatch), "done": state(app.buttons["quoteKeyboardDone"]),
-            "intendedNormalizedPoint": [0.92, 0.5],
-            "intendedFrameDerivedPoint": [Double(controlFrame.minX + controlFrame.width * 0.92), Double(controlFrame.midY)]
+            "intendedNormalizedPoint": [Double(offset.dx), Double(offset.dy)],
+            "intendedFrameDerivedPoint": [Double(nativeFrame.minX + nativeFrame.width * offset.dx),
+                                          Double(nativeFrame.minY + nativeFrame.height * offset.dy)]
         ]
         record["endUptime"] = ProcessInfo.processInfo.systemUptime
         let json = (try? JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]))
