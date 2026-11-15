@@ -279,7 +279,15 @@ On the 24 GB development Mac, let a failing PR journey take the next free simula
 
 ### CircleCI during a Bitrise outage
 
-Use only the remaining prepaid CircleCI credits. The last three-worker run used 9,895 credits and left 7,617. Use the full GitHub route for the next full candidate. A smaller CircleCI run can use the balance when its estimated cost fits.
+Run the next full candidate on GitHub. The last three-worker CircleCI run used
+9,895 credits. CircleCI still lists a 2% automatic refill threshold during
+the paid plan’s cancellation period. The minimum refill costs $15.
+
+Before pushing to a CircleCI branch, check the current balance and active jobs
+in the organization’s Plan dashboard. Use the existing credits for a smaller job
+only if the balance can cover its full timeout at the executor’s credit rate,
+any other active jobs, and accrued storage or network usage while staying above
+the refill threshold. If the available margin is unclear, use GitHub.
 
 Push the candidate to `codex/circleci-canary` for one simulator build and one UI
 group. Push to `codex/circleci-performance` for the five Swift packages, one
