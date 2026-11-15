@@ -306,15 +306,16 @@ jobs:
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
             -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
             -jobs 2 -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
-            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build 2>&1 | tee .build/ReleaseBuild.log
-      - name: Verify the compiled iPhone app and embedded extensions
+            -archivePath .build/RoomInTheCart.xcarchive \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive 2>&1 | tee .build/ReleaseBuild.log
+      - name: Verify the archived iPhone app, embedded extensions and crash symbols
         shell: bash
         run: |
           args=(--configuration Release)
           if [[ "$REQUIRE_RELEASE_METADATA" == true ]]; then
             args+=(--require-release-metadata)
           fi
-          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app "${args[@]}"
+          python3 scripts/check_built_app.py .build/RoomInTheCart.xcarchive "${args[@]}"
       - name: Retain Release compilation log
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

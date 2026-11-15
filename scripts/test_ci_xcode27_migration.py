@@ -89,11 +89,12 @@ class Xcode27MigrationTests(unittest.TestCase):
                 else:
                     self.assertEqual(build['shell'], 'bash')  # GitHub's explicit bash shell retains -eo pipefail.
                     self.assertEqual(build['timeout-minutes'], 30)
-                    self.assertIn('CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build', build['run'])
-                    verify = next(s for s in steps if s.get('name') == 'Verify the compiled iPhone app and embedded extensions')
+                    self.assertIn('CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO archive', build['run'])
+                    verify = next(s for s in steps if s.get('name') == 'Verify the archived iPhone app, embedded extensions and crash symbols')
                     self.assertLess(steps.index(build), steps.index(verify))
                     self.assertNotIn('if', verify)
-                    self.assertIn('scripts/check_built_app.py', verify['run'])
+                    self.assertIn('-archivePath .build/RoomInTheCart.xcarchive', build['run'])
+                    self.assertIn('scripts/check_built_app.py .build/RoomInTheCart.xcarchive', verify['run'])
             for diagnostic in ('sw_vers', 'uname -m', '/Applications/Xcode*.app'):
                 self.assertLess(command.index(diagnostic), command.index('bash scripts/check_ci_xcode27.sh'))
             if (workflow, name) == ('ios-deep.yml', 'storekit'):
