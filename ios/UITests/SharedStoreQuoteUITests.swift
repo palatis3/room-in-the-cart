@@ -192,18 +192,22 @@ import XCTest
         fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
-        let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
-        let confirm = app.buttons["sharedQuotes.confirm"]
-        // The unknown-trip explanation can push the confirmation row outside the lazy Form.
-        reveal(confirm)
-        XCTAssertFalse(confirm.isEnabled)
-        reveal(acknowledgment)
+        let confirmID = "sharedQuotes.confirm"
+        let acknowledgmentID = "sharedQuotes.acknowledged"
+        guard let initial = visibleQuoteRow(confirmID) else { return }
+        XCTAssertFalse(initial.isEnabled)
+        guard let acknowledgment = visibleQuoteRow(acknowledgmentID) else { return }
         XCTAssertFalse(acknowledgment.isSelected)
-        tap(acknowledgment)
-        XCTAssertTrue(acknowledgment.isSelected)
-        reveal(confirm)
-        XCTAssertTrue(confirm.isEnabled)
-        tap(confirm)
+        let acknowledgmentButton = app.buttons[acknowledgmentID]
+        XCTAssertTrue(acknowledgmentButton.isHittable)
+        acknowledgmentButton.tap()
+        guard let selected = visibleQuoteRow(acknowledgmentID) else { return }
+        XCTAssertTrue(selected.isSelected)
+        guard let reviewed = visibleQuoteRow(confirmID) else { return }
+        XCTAssertTrue(reviewed.isEnabled)
+        let confirmButton = app.buttons[confirmID]
+        XCTAssertTrue(confirmButton.isHittable)
+        confirmButton.tap()
     }
     private func fixture(_ label: String) { tap(element("fixture.s27.showControls")); tap(app.buttons[label]) }
     private func counter(_ id: String, _ n: Int) {
@@ -326,12 +330,12 @@ import XCTest
         }
     }
     // Lazy form rows can disappear between exists/isHittable/frame queries. Locate this
-    // short result in one tree, scroll it fully into view, then assert its real text.
-    private func assertVisibleLabel(_ id: String, contains text: String) {
+    // row and its viewport in the same snapshot before reading its state.
+    private func visibleQuoteRow(_ id: String) -> XCUIElementSnapshot? {
         for attempt in 0..<30 {
             let snapshot: XCUIElementSnapshot
             do { snapshot = try app.snapshot() }
-            catch { XCTFail("Unable to inspect the current quote review: \(error)"); return }
+            catch { XCTFail("Unable to inspect the current quote review: \(error)"); return nil }
             let area = scrollableArea(snapshot: snapshot)
             var pending = snapshot.children
             var matches: [XCUIElementSnapshot] = []
@@ -339,21 +343,25 @@ import XCTest
                 if node.identifier == id { matches.append(node) }
                 pending.append(contentsOf: node.children)
             }
-            guard matches.count <= 1 else { XCTFail("Ambiguous quote result: " + id); return }
+            guard matches.count <= 1 else { XCTFail("Ambiguous quote result: " + id); return nil }
             let target = matches.first
             if let target, !target.frame.isEmpty,
                target.frame.minY >= area.minY, target.frame.maxY <= area.maxY,
                target.frame.minX >= snapshot.frame.minX, target.frame.maxX <= snapshot.frame.maxX {
-                XCTAssertTrue(target.label.contains(text), target.label)
-                XCTAssertTrue(element(id).isHittable, "Quote result must be visible and hittable: " + id)
-                return
+                return target
             }
             let up: Bool
             if let target, !target.frame.isEmpty { up = target.frame.midY > area.midY }
             else { up = (attempt / 6) % 2 == 0 }
             scrollContent(upward: up, area: area)
         }
-        XCTFail("Could not display the complete quote result: " + id)
+        XCTFail("Could not display the complete quote row: " + id)
+        return nil
+    }
+    private func assertVisibleLabel(_ id: String, contains text: String) {
+        guard let row = visibleQuoteRow(id) else { return }
+        XCTAssertTrue(row.label.contains(text), row.label)
+        XCTAssertTrue(element(id).isHittable, "Quote result must be visible and hittable: " + id)
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {
