@@ -93,6 +93,41 @@ import UIKit
         XCTAssertNil(tools.status)
     }
 
+    func testRefreshingRecoverySelectionRequiresDisclosureOfChangedEvidence() async throws {
+        let (original, source) = try package()
+        let (unchanged, _) = try package()
+        let registry = try RecoveryRegistry(url: location().appendingPathComponent("registry.json"))
+        var records = [original, unchanged]
+        let tools = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await tools.refresh()
+        tools.selectAll()
+        tools.generateRecoveryKey()
+        let originalID = RecordsToolsModel.mediaSelectionID(try XCTUnwrap(original.media?.first), record: original)
+        let unchangedID = RecordsToolsModel.mediaSelectionID(try XCTUnwrap(unchanged.media?.first), record: unchanged)
+        tools.selectedMediaIDs = [originalID, unchangedID]
+
+        tools.selectedIDs.remove(RecordsToolsModel.selectionID(original))
+        tools.selectAll()
+        XCTAssertEqual(tools.selectedMediaIDs, [unchangedID])
+        tools.selectedMediaIDs.insert(originalID)
+
+        var correction = source
+        correction.reviewedText = "New private package wording"
+        records[0].media = [try RecordsMediaCodec.attachment(correction)]
+        await tools.refresh()
+        XCTAssertEqual(tools.selectedMediaIDs, [unchangedID])
+        await tools.prepareExport(.encryptedRecovery)
+        let file = try EncryptedArchive.open(XCTUnwrap(tools.preparedDocument).data, key: tools.recoveryKey)
+        XCTAssertNil(try XCTUnwrap(file.payload.records.first { $0.id == original.id }).media)
+        XCTAssertEqual(try XCTUnwrap(file.payload.records.first { $0.id == unchanged.id }).media, unchanged.media)
+
+        tools.selectedMediaIDs.insert(originalID)
+        await tools.prepareExport(.encryptedRecovery)
+        let reviewed = try EncryptedArchive.open(XCTUnwrap(tools.preparedDocument).data, key: tools.recoveryKey)
+        XCTAssertEqual(try XCTUnwrap(reviewed.payload.records.first { $0.id == original.id }).media, records[0].media)
+    }
+
     func testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer() async throws {
         let (record, source) = try package(), root = try location()
         let sourceRegistry = try RecoveryRegistry(url: root.appendingPathComponent("source.json"))

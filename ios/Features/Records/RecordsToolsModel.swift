@@ -69,7 +69,13 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     /// announce success before the underlying operation has finished.
     @Published private(set) var actionOutcomeID: UUID?
     @Published private(set) var error: ArchiveError?
-    @Published var selectedIDs: Set<RecordsSelectionID> = []
+    @Published var selectedIDs: Set<RecordsSelectionID> = [] {
+        didSet {
+            if !oldValue.isSubset(of: selectedIDs), !selectedMediaIDs.isEmpty {
+                selectedMediaIDs = selectedMediaIDs.filter { selectedIDs.contains($0.record) }
+            }
+        }
+    }
     /// Attachment disclosure is separate from record selection and defaults off.
     @Published var selectedMediaIDs: Set<RecordsMediaSelectionID> = []
     @Published var recoveryKey = "" {
@@ -198,6 +204,12 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             } else if sourceListing.recoveredCopyIDsByRecord != batch.recoveredCopyIDsByRecord {
                 backupStatuses = [:]
             }
+            if !selectedMediaIDs.isEmpty {
+                // A capture can change without changing the ledger revision or attachment ID.
+                let reviewed = Self.attachments(in: currentRecords, selectedRecords: selectedIDs, selectedMedia: selectedMediaIDs)
+                let refreshed = Self.attachments(in: batch.records, selectedRecords: selectedIDs, selectedMedia: selectedMediaIDs)
+                selectedMediaIDs = selectedMediaIDs.filter { reviewed[$0] != nil && reviewed[$0] == refreshed[$0] }
+            }
             verifiedLiveImportListing = true
             sourceListing = batch
         }
@@ -211,7 +223,6 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         publishListing(batch, startedIn: generation, backups: listing.backups)
         recoveredRecords = listing.recovered
         selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
-        selectedMediaIDs.formIntersection(Set(currentRecords.flatMap { record in (record.media ?? []).map { Self.mediaSelectionID($0, record: record) } }))
     }
     func refresh() async {
         do {
@@ -289,9 +300,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
             try requireAuthorization(authorize)
             guard !containsRetiredHistory(liveIDs), liveIDs.isEmpty || generation == liveSharedGeneration else { throw ArchiveError.staleReview }
-            guard selectedIDs == requested,
-                  choice != .encryptedRecovery || (selectedMediaIDs == mediaSelection && recoveryKey == selectedKey) else {
-                throw ArchiveError.exportSelectionChanged
+            guard selectedIDs == requested else { throw ArchiveError.exportSelectionChanged }
+            if choice == .encryptedRecovery {
+                let stillDisclosed = Self.attachments(in: currentRecords, selectedRecords: requested, selectedMedia: selectedMediaIDs)
+                guard stillDisclosed == disclosed, recoveryKey == selectedKey else { throw ArchiveError.exportSelectionChanged }
             }
             preparedLiveIDs = liveIDs
             preparedIsPrivate = choice == .encryptedRecovery || choice == .ownerText
