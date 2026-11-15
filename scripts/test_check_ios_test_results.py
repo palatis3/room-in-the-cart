@@ -133,6 +133,22 @@ class ExecutionLogTests(unittest.TestCase):
         ]
         self.assertEqual(execution_log_failures(iter(line + "\r\n" for line in log), expected), [])
 
+    def test_storekit_record_can_interrupt_the_process_name_pid_or_thread_id(self):
+        timestamp = "2026-11-14 12:00:00.000000+0000 "
+        header = "RoomInTheCart[123:456]"
+        payload = " [Default] Fixture message"
+        # bc22a846's English job split the header immediately before the colon.
+        for boundary in range(1, len(header)):
+            with self.subTest(boundary=boundary):
+                log = [self.start, timestamp + header[:boundary] + self.done,
+                       header[boundary:] + payload, self.success]
+                self.assertEqual(execution_log_failures(log, [self.selector]), [])
+
+        for following in ("456]" + payload, ":thread]" + payload, ":456] extra" + payload, ":456]"):
+            with self.subTest(following=following):
+                log = [self.start, timestamp + "RoomInTheCart[123" + self.done, following, self.success]
+                self.assertTrue(execution_log_failures(log, [self.selector]))
+
     def test_split_process_recovery_preserves_lifecycle_gates(self):
         def split(record):
             return [self.split_prefix + record, self.split_suffix]

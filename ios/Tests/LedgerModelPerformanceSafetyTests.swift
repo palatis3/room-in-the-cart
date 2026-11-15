@@ -1,4 +1,5 @@
 import XCTest
+import SQLite3
 import CoreDomain
 import LocalStore
 @testable import RoomInTheCart
@@ -85,6 +86,41 @@ import LocalStore
         XCTAssertTrue(model.workspace.mealTemplates.isEmpty)
     }
 
+    func testOversizedSavePreservesCommittedPickupAndAllowsSmallerEdit() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let started = await model.startShop(title: "Original pickup")
+        XCTAssertTrue(started)
+        let original = try model.exportPayload()
+        let revision = model.revision
+
+        // Quotation marks fit the note limit but take two bytes each in JSON.
+        let notes = String(repeating: "\"", count: 8192)
+        let dinners = (1...260).map { MealTemplate(title: "Dinner \($0)", notes: notes) }
+        var candidate = model.workspace
+        candidate.mealTemplates = dinners
+        try candidate.validate()
+        XCTAssertGreaterThan(try payload(candidate).count, LedgerStore.maximumPayloadBytes)
+
+        let oversized = await model.change(key: "dinners") { $0.mealTemplates = dinners }
+        XCTAssertFalse(oversized)
+        XCTAssertFalse(model.hasPendingSave)
+        XCTAssertEqual(model.error, ledgerText("This change is too large to save. Reduce the amount of data and try again."))
+        XCTAssertEqual(model.revision, revision)
+        XCTAssertEqual(try model.exportPayload(), original)
+
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertEqual(try reopened.exportPayload(), original)
+        let smaller = await model.change(key: "dinners") { $0.mealTemplates = [dinners[0]] }
+        XCTAssertTrue(smaller)
+        XCTAssertEqual(model.workspace.mealTemplates, [dinners[0]])
+        XCTAssertEqual(model.revision, revision + 1)
+    }
+
     func testCommittedCandidateMatchesDurableBytesAndReopenedWorkspace() async throws {
         let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("ledger.sqlite")
@@ -95,7 +131,28 @@ import LocalStore
         let line = CaptureImportLine(originalText: "two packs rice", name: "rice", packCount: 2,
             amountPerPack: Quantity(amount: try Rational(3, 2), unit: .kilogram, originalLiteral: "1.5 kg"), purpose: "dinner")
         let preview = try XCTUnwrap(model.shop).stageCaptureImport(id: UUID(), originalText: line.originalText, source: .voice, lines: [line])
-        let imported = await model.editShop(key: "capture", shopID: shopID) { try $0.commitImport(preview) }
+        // Queue an edit from the UI actor before the first save suspends for encoding.
+        // Hold the SQLite writer until the competing task runs, independent of scheduling.
+        var connection: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &connection), SQLITE_OK)
+        let lock = try XCTUnwrap(connection)
+        defer { sqlite3_close(lock) }
+        XCTAssertEqual(sqlite3_exec(lock, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+        var competingEdit: Task<Bool, Never>?
+        let initialRevision = model.revision
+        let imported = await model.editShop(key: "capture", shopID: shopID) { shop in
+            try shop.commitImport(preview)
+            competingEdit = Task { @MainActor in
+                defer { XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK) }
+                XCTAssertTrue(model.saving)
+                XCTAssertEqual(model.revision, initialRevision)
+                return await model.startShop(title: "Overlapping pickup")
+            }
+        }
+        let competing = try XCTUnwrap(competingEdit)
+        let accepted = await competing.value
+        XCTAssertFalse(accepted)
+        XCTAssertEqual(model.revision, initialRevision + 1)
         XCTAssertTrue(imported); XCTAssertFalse(model.hasPendingSave)
         let committed = model.workspace
         let exported = try model.exportPayload()

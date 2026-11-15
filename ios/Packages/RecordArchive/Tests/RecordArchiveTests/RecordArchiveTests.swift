@@ -1,4 +1,5 @@
 import XCTest
+import Darwin
 @testable import RecordArchive
 
 final class RecordArchiveTests: XCTestCase {
@@ -225,6 +226,18 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(report.recipes[0].ingredients[0], "2 cans (15 oz) tomatoes")
         XCTAssertEqual(report.recipes[0].yieldText, "three plates + lunch")
     }
+    func testRecipeExceedingNativeRecordSizeDoesNotBlockAnotherRecipeInTheFile() throws {
+        let step = String(repeating: "a", count: 32768)
+        let file = try JSONSerialization.data(withJSONObject: [
+            ["@type": "Recipe", "name": "Too large", "recipeInstructions": Array(repeating: step, count: 128)],
+            ["@type": "Recipe", "name": "Dinner", "recipeInstructions": [step]]
+        ])
+        let staged = try RecipeImporter.stage(file)
+        XCTAssertEqual(staged.skippedRows, 1)
+        XCTAssertEqual(staged.recipes.map(\.title), ["Dinner"])
+        XCTAssertEqual(staged.recipes.first?.steps, [step])
+    }
+
     func testRecipePreviewSkipsUnrelatedNodesAndIdentifiesOmittedInstructionFields() throws {
         let data = Data(#"""
         {"formatVersion":1,"@graph":[
@@ -279,6 +292,29 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertEqual(current.payload.records.first?.title, "Fixture dinner")
         XCTAssertThrowsError(try ArchiveCodec.decode(Data(contentsOf: directory.appendingPathComponent("archive-v0-unsupported.json")))) { XCTAssertEqual($0 as? ArchiveError, .unsupportedVersion) }
     }
+    func testRecoveryReadOpensOnlyTheSelectedRegularFile() throws {
+        let source = try temporaryURL()
+        let contents = Data("private backup".utf8)
+        try contents.write(to: source)
+        XCTAssertEqual(try RecoveryRegistry.boundedRead(source, maximum: contents.count), contents)
+
+        let link = source.appendingPathExtension("link")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: source)
+        let pipe = source.appendingPathExtension("fifo")
+        XCTAssertEqual(mkfifo(pipe.path, S_IRUSR | S_IWUSR), 0)
+        // Keep the fixture open so a regression also terminates deterministically.
+        let endpoint = Darwin.open(pipe.path, O_RDWR | O_NONBLOCK)
+        guard endpoint >= 0 else { return XCTFail("Could not open the test pipe") }
+        defer { Darwin.close(endpoint) }
+        let sample: [UInt8] = [1, 2]
+        XCTAssertEqual(Darwin.write(endpoint, sample, sample.count), sample.count)
+        for url in [link, pipe, source.deletingLastPathComponent()] {
+            XCTAssertThrowsError(try RecoveryRegistry.boundedRead(url, maximum: 1)) {
+                XCTAssertEqual($0 as? ArchiveError, .unavailable)
+            }
+        }
+    }
+
     func testDepthAndFileReadAreBounded() throws {
         let excessive = Data((String(repeating: "[", count: 49) + "0" + String(repeating: "]", count: 49)).utf8)
         XCTAssertThrowsError(try ArchiveCodec.preflight(excessive)) { XCTAssertEqual($0 as? ArchiveError, .tooLarge) }
@@ -318,6 +354,22 @@ final class RecordArchiveTests: XCTestCase {
         let all = try await first.refreshList()
         XCTAssertEqual(all.count, 2)
         XCTAssertEqual(all.first { $0.record.id == "shop-1" }?.record.title, "Dinner")
+    }
+    func testRepeatedImportUndoPreservesUnrelatedPendingReview() async throws {
+        let url = try temporaryURL()
+        let registry = try RecoveryRegistry(url: url)
+        let imported = try await registry.apply(registry.review(envelope([record()])))
+        try await registry.undoImport(insertedCopyIDs: imported.insertedCopyIDs)
+
+        let other = try RecoveryRegistry(url: url)
+        let pending = try await other.review(envelope([record(id: "another")]))
+        let savedManifest = try Data(contentsOf: url)
+        try await registry.undoImport(insertedCopyIDs: [])
+        XCTAssertEqual(try Data(contentsOf: url), savedManifest)
+        try await registry.undoImport(insertedCopyIDs: imported.insertedCopyIDs)
+        XCTAssertEqual(try Data(contentsOf: url), savedManifest)
+        let result = try await other.apply(pending)
+        XCTAssertEqual(result.insertedCount, 1)
     }
     func testFailedAtomicWriteLeavesRegistryEmptyAndRetryPreservesReview() async throws {
         let url = try temporaryURL()

@@ -26,7 +26,7 @@ M4_BUILD_JOBS = {RELEASE_BUILD_JOB}
 ROUTED_NATIVE_JOBS = FIXTURE_JOBS | M4_BUILD_JOBS | {CORE_BUILD_JOB, ('ci.yml', 'ios-tests'), ('ios-deep.yml', 'storekit')}
 # One reviewed routing expression, not arbitrary runner selection. Reusable
 # workflows inherit their caller's event; unknown events fail back to GitHub.
-FIXTURE_TRUSTED = ("github.repository == 'palatis3/room-in-the-cart' && "
+FIXTURE_TRUSTED = ("vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && "
                    "(github.event_name == 'push' || github.event_name == 'workflow_dispatch' || "
                    "github.event_name == 'workflow_call' || github.event_name == 'schedule' || "
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")

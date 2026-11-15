@@ -36,12 +36,21 @@ Use Node 22.23.5 and install/build the service first. Load credentials from the 
 npm --prefix service ci --ignore-scripts
 npm --prefix service run build
 npm --prefix service run operations -- status
+npm --prefix service run --silent operations -- status --check
 npm --prefix service run operations -- run
 ```
 
 `status` checks the worker role and emits aggregate counters without housekeeping. `run` performs one bounded batch and emits the same counters. Both need `WORKER_DATABASE_URL`; the CLI authenticates through the dedicated database login and does not need the HTTP cron secret. Exit code 0 means the bounded invocation completed, 1 means it failed, and 2 means invalid arguments. Pending work still appears in a successful result and can require operator attention.
 
+Use `status --check` for a monitor that acts on the process exit code. It reads the same aggregate counters as `status`. Exit 0 means healthy, 3 means the worker reported a condition requiring attention, 1 means the check could not complete, and 2 means invalid arguments. The scheduled HTTP job writes an attention result at warning severity and keeps HTTP 200 for a completed batch. Configure the log monitor to notify the operating owner on warnings, failures, or a missing daily run.
+
 ## Monitoring and recovery
+
+An independent monitor can detect a missed run even when the worker never starts. Store its secret HTTPS success URL in `OPERATIONS_HEARTBEAT_URL` and its optional, distinct failure URL in `OPERATIONS_HEARTBEAT_FAILURE_URL`. Use separate checks for staging and production. Only an authenticated scheduled request with Vercel’s cron user agent sends a heartbeat. Manual runs do not reset the timer.
+
+The worker sends an empty POST after each scheduled batch. A healthy batch uses the success URL. A batch requiring attention or a worker failure uses the failure URL when configured. A rejected, redirected or timed-out heartbeat produces the fixed warning `operations_heartbeat_unconfirmed`. The maintenance response still reports the worker outcome. A monitor outage does not rerun the batch.
+
+Set the monitor schedule to match the daily 08:00 UTC cron with enough grace for the scheduler’s execution window (for example, 75 minutes). When activating alerts, use a separate test check to exercise an explicit failure, a missed window and recovery. Record the operating owner’s confirmation that the alerts reached them. Keep the secret URLs out of logs and receipts.
 
 Retain only the emitted `operations_result`/`operations_failed` objects in the operations log sink. They contain counters, duration, fixed mode/configuration flags, and attention state; never session/subject/household IDs, credentials, grocery text, provider response bodies, or exception messages. `ritc.operations_health()` is worker-only and returns aggregate counts. Application users and public callers cannot read these counters.
 

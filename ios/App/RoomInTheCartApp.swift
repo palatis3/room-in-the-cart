@@ -6,6 +6,21 @@ import DeviceSurfaces
 #else
 @main struct RoomInTheCartApp: App {
     @UIApplicationDelegateAdaptor private var notificationDelegate: SurfaceNotificationDelegate
+    init() {
+        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+        RITCAppCaptureProbe.install()
+        #endif
+        // Keep inactive navigation labels legible against both system bar appearances.
+        UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
+    }
+    var body: some Scene {
+        WindowGroup { GroceryWindow(notificationDelegate: notificationDelegate) }
+    }
+}
+
+/// Observe activation in the window that receives widget and shortcut URLs.
+private struct GroceryWindow: View {
+    let notificationDelegate: SurfaceNotificationDelegate
     @StateObject private var model = AppModel()
     @StateObject private var ledger = LedgerModel()
     @StateObject private var pickup = PickupModel()
@@ -20,87 +35,78 @@ import DeviceSurfaces
     @StateObject private var recoveryFixture = PrivatePickupRecoveryFixture()
     #endif
     @AppStorage("appearance") private var appearance = "system"
-    init() {
-        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
-        RITCAppCaptureProbe.install()
-        #endif
-        // Keep inactive navigation labels legible against both system bar appearances.
-        UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
-    }
-    var body: some Scene {
-        WindowGroup {
-            Group {
-                if scenePhase != .active && access.isProtected {
-                    Theme.canvas.ignoresSafeArea()
-                } else { root }
-            }.environment(\.pickupLedger, ledger)
-                .environmentObject(model)
-                .environmentObject(ledger).environmentObject(pickup)
-                .environmentObject(household).environmentObject(access)
-                .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
-                .environmentObject(guardianChild)
-                .environment(\.guardianChildCoordinator, guardianChild)
-                .tint(Theme.action)
-                .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
-                .task {
+    var body: some View {
+        Group {
+            if scenePhase != .active && access.isProtected {
+                Theme.canvas.ignoresSafeArea()
+            } else { root }
+        }.environment(\.pickupLedger, ledger)
+            .environmentObject(model)
+            .environmentObject(ledger).environmentObject(pickup)
+            .environmentObject(household).environmentObject(access)
+            .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
+            .environmentObject(guardianChild)
+            .environment(\.guardianChildCoordinator, guardianChild)
+            .tint(Theme.action)
+            .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
+            .task {
+                if guardianChild.presented {
+                    guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                } else if !access.unlocked { surfaces.background() }
+                navigation.bind(app: model, ledger: ledger, household: household, access: access)
+                pickup.bindCookLedger(ledger)
+                membership.bind(to: household)
+                surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access,
+                              sceneActive: scenePhase == .active && !guardianChild.presented)
+                let child = guardianChild, routing = navigation, deviceSurfaces = surfaces
+                notificationDelegate.bind { [weak child, weak routing, weak deviceSurfaces] handle in
+                    guard child?.presented == false else { return }
+                    routing?.preferIncomingLink()
+                    deviceSurfaces?.receiveReminderTap(handle)
+                }
+                if guardianChild.presented { await guardianChild.resume() }
+                else { await openAdultWorkspace() }
+            }
+            .onOpenURL {
+                guard !guardianChild.presented else { return }
+                navigation.preferIncomingLink(); surfaces.handle(url: $0)
+            }
+            .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
+                                 set: { surfaces.destination = $0 })) { destination in
+                NavigationStack {
+                    DeviceSurfacesDestination(composition: surfaces, destination: destination,
+                                              ledger: ledger, pickup: pickup, household: household)
+                }.environment(\.pickupLedger, ledger)
+                    .environmentObject(ledger).environmentObject(pickup)
+                    .environmentObject(household).environmentObject(access)
+                    .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
+            }
+            .modifier(HouseholdWorkspaceProtection(household: household, access: access))
+            .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
+            .onChange(of: guardianChild.presented) { _, childActive in
+                if childActive {
+                    navigation.suspend()
+                    guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                }
+            }
+            .onChange(of: access.unlocked) { _, unlocked in
+                if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background {
+                    guardianChild.suspend()
+                    navigation.suspend(); surfaces.background(); access.background(); household.lock()
+                }
+                if phase == .active {
                     if guardianChild.presented {
                         guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
-                    } else if !access.unlocked { surfaces.background() }
-                    navigation.bind(app: model, ledger: ledger, household: household, access: access)
-                    pickup.bindCookLedger(ledger)
-                    membership.bind(to: household)
-                    surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access,
-                                  sceneActive: scenePhase == .active && !guardianChild.presented)
-                    let child = guardianChild, routing = navigation, deviceSurfaces = surfaces
-                    notificationDelegate.bind { [weak child, weak routing, weak deviceSurfaces] handle in
-                        guard child?.presented == false else { return }
-                        routing?.preferIncomingLink()
-                        deviceSurfaces?.receiveReminderTap(handle)
-                    }
-                    if guardianChild.presented { await guardianChild.resume() }
-                    else { await openAdultWorkspace() }
-                }
-                .onOpenURL {
-                    guard !guardianChild.presented else { return }
-                    navigation.preferIncomingLink(); surfaces.handle(url: $0)
-                }
-                .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
-                                     set: { surfaces.destination = $0 })) { destination in
-                    NavigationStack {
-                        DeviceSurfacesDestination(composition: surfaces, destination: destination,
-                                                  ledger: ledger, pickup: pickup, household: household)
-                    }.environment(\.pickupLedger, ledger)
-                        .environmentObject(ledger).environmentObject(pickup)
-                        .environmentObject(household).environmentObject(access)
-                        .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
-                }
-                .modifier(HouseholdWorkspaceProtection(household: household, access: access))
-                .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
-                .onChange(of: guardianChild.presented) { _, childActive in
-                    if childActive {
-                        navigation.suspend()
-                        guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                        Task { await guardianChild.resume() }
+                    } else {
+                        navigation.resume(); membership.foreground()
+                        Task { await openAdultWorkspace() }
                     }
                 }
-                .onChange(of: access.unlocked) { _, unlocked in
-                    if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
-                }
-                .onChange(of: scenePhase) { _, phase in
-                    if phase == .background {
-                        guardianChild.suspend()
-                        navigation.suspend(); surfaces.background(); access.background(); household.lock()
-                    }
-                    if phase == .active {
-                        if guardianChild.presented {
-                            guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
-                            Task { await guardianChild.resume() }
-                        } else {
-                            navigation.resume(); membership.foreground()
-                            Task { await openAdultWorkspace() }
-                        }
-                    }
-                }
-        }
+            }
     }
     @ViewBuilder private var root: some View {
         #if DEBUG && targetEnvironment(simulator)

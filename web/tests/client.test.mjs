@@ -33,6 +33,105 @@ test('only a generation and its live expiry authorize storage in a decoded sessi
  await assert.rejects(parse({...base,capabilities:[],requestQueueGrant:grant,requestQueueUntil:until}));
 });
 
+test('a protected pickup shows the next shop before sending and keeps the draft when the destination changes',async()=>{
+ for(const initial of [true,false]){
+  let nextOnly=initial;const sends=[];
+  const api=fakeAPI({session:async()=>({...session(),nextShopOnly:nextOnly}),command:async(_,cmd)=>{sends.push(cmd);return {...own(),route:'next'};}});
+  const {root,dom}=await setup(api);
+  if(initial){assert.equal(root.querySelector('#route').value,'next');assert.ok(root.querySelector('#route').disabled);}
+  type(dom,'item','Tortillas');submit(root,dom);nextOnly=true;
+  if(!initial){
+   submit(root,dom);await waitForIdle(root);
+   assert.equal(sends.length,0);assert.match(root.querySelector('form').textContent,/Next shop/);
+   assert.match(root.querySelector('form').textContent,/Tortillas/);
+  }
+  submit(root,dom);await waitForIdle(root);
+  assert.equal(sends.length,1);assert.equal(sends[0].body.route,'next');
+  assert.match(root.textContent,/Received for the next shop/);dom.window.close();
+ }
+});
+
+test('a contributor chooses the intended pickup when two are open and reviews the dated destination',async()=>{
+ const choices=[{shopId:'first',createdAt:'2026-11-10T12:00:00Z',nextShopOnly:false},{shopId:'second',createdAt:'2026-11-12T16:00:00Z',nextShopOnly:true}];
+ const sent=[];const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>choices,command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId,route:cmd.body.route};}}));
+ assert.doesNotMatch(root.textContent,/No pickup is accepting/);
+ const picker=root.querySelector('#request-pickup');assert.ok(picker);assert.equal(picker.value,'');
+ picker.value='second';picker.dispatchEvent(new dom.window.Event('change',{bubbles:true}));
+ type(dom,'item','Tortillas');assert.equal(root.querySelector('#route').value,'next');
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/November 12/);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(sent.length,1);assert.equal(sent[0].shopId,'second');assert.equal(sent[0].body.route,'next');dom.window.close();
+});
+
+test('a pickup closing during review keeps the draft and requires explicit review of the remaining destination', async()=>{
+ for(const action of ['send','refresh']){
+  let active={...session(),shopId:null,selectionRequired:true};
+  const sent=[];
+  const pickups=['first','second'].map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}));
+  const {root,dom}=await setup(fakeAPI({session:async()=>active,requestPickups:async()=>pickups,
+   command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId};}}));
+  const picker=root.querySelector('#request-pickup');
+  picker.value='second';picker.dispatchEvent(new dom.window.Event('change'));
+  type(dom,'item','Brown rice');submit(root,dom);
+  active={...active,shopId:'first',selectionRequired:false};
+  if(action==='send')submit(root,dom);else click(root,'Refresh');
+  await waitForIdle(root);
+  assert.equal(sent.length,0);
+  assert.equal(root.querySelector('#item').value,'Brown rice');
+  assert.match(root.textContent,/Available pickups changed/);
+  submit(root,dom);assert.match(root.querySelector('form').textContent,/first/);
+  submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(sent.map(c=>c.shopId),['first']);dom.window.close();
+ }
+});
+
+test('a second pickup opening during review preserves the draft and asks for a destination', async () => {
+  for (const action of ['send', 'refresh']) {
+    let active = {...session(), shopId: 'first', selectionRequired: false};
+    const pickups = ['first', 'second'].map(shopId => ({shopId, nextShopOnly: false, createdAt: '2026-11-10T12:00:00Z'}));
+    const sent = [];
+    const {root, dom} = await setup(fakeAPI({
+      session: async () => active,
+      requestPickups: async () => pickups,
+      command: async (_, cmd) => { sent.push(cmd); return {...own(), shopId: cmd.shopId}; }
+    }));
+    type(dom, 'item', 'Corn tortillas');
+    type(dom, 'amount', 'one pack');
+    submit(root, dom);
+    active = {...active, shopId: null, selectionRequired: true};
+    if (action === 'send') submit(root, dom);
+    else click(root, 'Refresh');
+    await waitForIdle(root);
+    assert.equal(sent.length, 0);
+    const picker = root.querySelector('#request-pickup');
+    assert.ok(picker, 'same contributor should see the open pickups');
+    assert.equal(picker.value, '');
+    picker.value = 'second';
+    picker.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(root.querySelector('#item').value, 'Corn tortillas');
+    assert.equal(root.querySelector('#amount').value, 'one pack');
+    submit(root, dom);
+    assert.match(root.querySelector('form').textContent, /second/);
+    submit(root, dom);
+    await waitForIdle(root);
+    assert.deepEqual(sent.map(command => command.shopId), ['second']);
+    dom.window.close();
+  }
+});
+
+test('refresh after a reviewed pickup disappears offers the remaining choices', async()=>{
+ let shops=['first','second','third'];
+ const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>shops.map(shopId=>({shopId,nextShopOnly:false,createdAt:'2026-11-10T12:00:00Z'}))}));
+ const choose=value=>{const picker=root.querySelector('#request-pickup');picker.value=value;picker.dispatchEvent(new dom.window.Event('change'));};
+ choose('first');type(dom,'item','Carrots');submit(root,dom);
+ shops=['second','third'];click(root,'Refresh');await waitForIdle(root);
+ assert.equal(root.querySelector('#request-pickup').value,'');
+ assert.equal(root.querySelector('form'),null);choose('third');
+ assert.equal(root.querySelector('#item').value,'Carrots');dom.window.close();
+});
+
 test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment', async()=>{
  const current=session(),grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
  const base={household:current.household,memberId:current.memberId,capabilities:['request_queue_permission'],queueConsent:false};
@@ -50,11 +149,48 @@ test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment'
  await assert.rejects(change(false,active));
 });
 
+test('Requests honors the public page language and keeps later selections on reload', async () => {
+  for (const [query, expected] of [['?lang=es', 'es'], ['?lang=en', 'en'], ['?lang=other', 'en'], ['', 'en']]) {
+    const dom = new JSDOM('<div id="app"></div>', {url: 'https://food.example/requests' + query});
+    Object.defineProperty(dom.window.navigator, 'language', {value: 'en-US'});
+    const root = dom.window.document.getElementById('app');
+    const api = {session: async () => session(), ownRequests: async () => []};
+    const start = () => new WebApp(root, api, new Outbox(new IDBFactory())).start();
+    await start();
+    const select = root.querySelector('#language');
+    assert.equal(select.value, expected);
+    const next = expected === 'es' ? 'en' : 'es';
+    select.value = next;
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.location.search, '?lang=' + next);
+    assert.equal(dom.window.document.activeElement.id, 'language');
+    await start();
+    assert.equal(dom.window.document.documentElement.lang, next);
+    assert.equal(root.querySelector('#language').value, next);
+    dom.window.close();
+  }
+});
+
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
  assert.equal(consumeInvitation(dom.window.location,dom.window.history),'fragment-secret');
  assert.equal(dom.window.location.href,'https://food.example/invite');
  assert.equal(dom.window.localStorage.length,0);
+});
+
+test('shared code-entry links prompt enrolled adults before joining or changing views',async t=>{
+ for(const path of ['/invite','/view/']){
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example'+path+'?enterCode=1&lang=es'});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app');
+  const token=consumeInvitation(dom.window.location,dom.window.history);
+  assert.equal(dom.window.location.search,'?lang=es');
+  const api=fakeAPI({redeem:async()=>assert.fail('Opening the link cannot join a household')});
+  await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+  assert.ok(root.querySelector('#invitation'));assert.ok(root.querySelector('#adult-attestation'));
+  assert.equal(root.querySelector('#item'),null);
+  assert.doesNotMatch(root.textContent,/Family A/);
+ }
 });
 
 test('companion links accept the trailing slashes served by the host',async(t)=>{
@@ -100,6 +236,67 @@ test('offline unconsented send is not saved and retry preserves operation key',a
  const sent=[];const {root,dom}=await setup(fakeAPI({command:async(s,c)=>{sent.push(c);throw new ApiError('network',0);}}));
  type(dom,'item','Milk');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Milk/);
  submit(root,dom);await waitForIdle(root);assert.equal(sent.length,2);assert.equal(sent[0].clientKey,sent[1].clientKey);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+});
+
+test('a pickup choice change keeps an unconfirmed request bound to its reviewed pickup', async t => {
+  for (const queued of [false, true]) {
+    for (const refresh of [false, true]) {
+      const first = 'original', other = 'new-shop';
+      const pickups = [first, other].map(shopId => ({shopId, nextShopOnly: false, createdAt: '2026-11-10T12:00:00Z'}));
+      let active = {...session(), shopId: null, selectionRequired: true, queueConsent: queued};
+      const attempts = [];
+      const {root, dom} = await setup(fakeAPI({
+        session: async () => active,
+        requestPickups: async () => pickups,
+        command: async (_, cmd) => {
+          attempts.push(structuredClone(cmd));
+          if (attempts.length === 1) throw new ApiError('network', 0);
+          return {...own(), shopId: cmd.shopId};
+        }
+      }));
+      t.after(() => dom.window.close());
+      const picker = root.querySelector('#request-pickup');
+      picker.value = first;
+      picker.dispatchEvent(new dom.window.Event('change'));
+      if (queued) root.querySelector('input[type=checkbox]').click();
+      type(dom, 'item', 'Cereal');
+      submit(root, dom); submit(root, dom); await waitForIdle(root);
+      assert.equal(attempts.length, 1);
+      active = {...active, selectionRequired: false, shopId: other};
+      if (refresh) { click(root, 'Refresh'); await waitForIdle(root); }
+      if (queued) click(root, 'Retry');
+      else {
+        if (refresh) assert.match(root.querySelector('form').textContent, /original/);
+        submit(root, dom);
+      }
+      await waitForIdle(root);
+      assert.deepEqual(attempts.map(c => c.shopId), [first, first]);
+      assert.deepEqual(attempts[1], attempts[0]);
+      assert.match(root.textContent, /Received by the shopper/);
+    }
+  }
+});
+
+test('changed pickup choices never carry an unconfirmed request to a different contributor', async t => {
+  for (const queued of [false, true]) {
+    let active = {...session(), queueConsent: queued};
+    let attempts = 0;
+    const {root,dom} = await setup(fakeAPI({
+      session: async () => active,
+      command: async () => { attempts++; throw new ApiError('network', 0); }
+    }));
+    t.after(() => dom.window.close());
+    if (queued) root.querySelector('input[type=checkbox]').click();
+    type(dom, 'item', 'Private shopping request');
+    submit(root, dom); submit(root, dom); await waitForIdle(root);
+    active = {...active, memberId:'another-member', selectionRequired:true, shopId:null};
+    if (queued) click(root, 'Retry');
+    else submit(root, dom);
+    await waitForIdle(root);
+    assert.equal(attempts, 1);
+    assert.doesNotMatch(root.textContent, /Private shopping request/);
+    assert.match(root.textContent, /Access has ended/);
+  }
 });
 
 test('explicitly consented disconnected request is durably queued, never labeled received',async()=>{
@@ -258,6 +455,130 @@ test('pending edit carries request revision; withdrawal requires confirmation',a
  click(root,'Edit');type(dom,'amount','three cans');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.equal(sent[0].kind,'request.edit');assert.equal(sent[0].base.requestRevision,1);assert.equal(sent[0].shopId,'shop-original');assert.equal(sent[0].body.ownQuantity,'three cans');
  click(root,'Withdraw');assert.equal(sent.length,1);click(root,'Confirm withdrawal');await waitForIdle(root);assert.equal(sent[1].kind,'request.withdraw');
+});
+
+for (const action of ['Edit', 'Follow up']) {
+ test(`opening ${action} lets the contributor keep their current draft before replacing it`, async t => {
+  const row = action === 'Edit' ? own() : {...own(), status: 'deferred', ownActionAllowed: false, route: 'next'};
+  const commands = [];
+  const {root, dom} = await setup(fakeAPI({
+   requests: async () => [row],
+   command: async (_, command) => { commands.push(command); return row; }
+  }));
+  t.after(() => dom.window.close());
+  type(dom, 'item', 'Oats');
+  type(dom, 'amount', 'two packs');
+  let replace = false;
+  const prompt = t.mock.method(dom.window, 'confirm', () => replace);
+  const openRequest = () => click(root.querySelector('article[data-request-id]'), action);
+  openRequest();
+  assert.equal(root.querySelector('#item').value, 'Oats');
+  assert.equal(root.querySelector('#amount').value, 'two packs');
+  submit(root, dom);
+  openRequest();
+  assert.match(root.querySelector('form').textContent, /Review before sending.*Oats.*two packs/);
+  replace = true;
+  openRequest();
+  assert.equal(prompt.mock.calls.length, 3);
+  assert.equal(root.querySelector('#item').value, row.originalItem);
+  assert.equal(root.querySelector('#amount').value, row.ownQuantity);
+  assert.equal(root.ownerDocument.activeElement.id, 'item');
+  assert.equal(commands.length, 0);
+  submit(root, dom);
+  submit(root, dom);
+  await waitForIdle(root);
+  assert.equal(commands.length, 1);
+  assert.equal(commands[0].kind, action === 'Edit' ? 'request.edit' : 'request.send');
+  assert.equal(commands[0].body.requestId ?? commands[0].body.followupTo, row.requestId);
+  assert.equal(commands[0].shopId, row.shopId);
+ });
+}
+
+test('withdrawal confirmation belongs to the reviewed revision after a refresh',async()=>{
+ let row=own();const commands=[];
+ const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{commands.push(command);return row;}}));
+ click(root,'Withdraw');
+ row={...row,revision:2,ownQuantity:'four cans'};
+ click(root,'Refresh');await waitForIdle(root);
+ assert.doesNotMatch(root.textContent,/Confirm withdrawal/);
+ assert.match(root.textContent,/four cans/);
+ click(root,'Withdraw');click(root,'Confirm withdrawal');await waitForIdle(root);
+ assert.deepEqual(commands.map(c=>c.base.requestRevision),[2]);
+});
+
+test('a shopper decision during withdrawal refreshes status and retires the rejected action',async()=>{
+ let row=own();const commands=[];
+ const {root}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{
+  commands.push(command);row={...row,revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+  throw new ApiError('followup_required',409);
+ }}));
+ click(root,'Withdraw');click(root,'Confirm withdrawal');await waitForIdle(root);
+ assert.match(root.textContent,/Saved for next shop/);assert.match(root.textContent,/Follow up/);
+ assert.doesNotMatch(root.textContent,/Confirm withdrawal/);assert.equal(commands.length,1);
+});
+
+test('a rejected edit retains the authored text until the contributor confirms a linked follow-up',async()=>{
+ let row=own();const commands=[];
+ const {root,dom}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{
+  commands.push(command);
+  if(command.kind==='request.edit'){
+   row={...row,revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+   throw new ApiError('followup_required',409);
+  }
+  return {...own(),followupTo:row.requestId,route:'next'};
+ }}));
+ click(root,'Edit');type(dom,'amount','three cans');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal(commands.length,1);assert.equal(root.querySelector('#amount').value,'three cans');
+ assert.match(root.textContent,/Saved for next shop/);assert.match(root.textContent,/Review your text as a follow-up/);
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/Send follow-up/);
+ assert.equal(commands.length,1);submit(root,dom);await waitForIdle(root);
+ const [edit,followup]=commands;
+ assert.equal(followup.kind,'request.send');assert.notEqual(followup.clientKey,edit.clientKey);
+ assert.equal(followup.body.followupTo,row.requestId);assert.equal(followup.body.ownQuantity,'three cans');
+ assert.equal(followup.shopId,edit.shopId);assert.equal(followup.body.route,'next');
+});
+
+test('rejected queued edit survives reload for explicit review and stays linked to its original pickup',async()=>{
+ const active={...session(),queueConsent:true,canSetRequestQueue:true};
+ const outbox=new Outbox(new IDBFactory()),commands=[];
+ const current={...own(),revision:2,route:'next',status:'deferred',ownActionAllowed:false};
+ const old={...command(),kind:'request.edit',shopId:current.shopId,base:{shopRevision:0,authorityEpoch:0,requestRevision:1},
+  body:{requestId:current.requestId,originalItem:'Black beans',ownQuantity:'three cans'}};
+ await outbox.put({id:old.clientKey,scope:scopeFor(active),command:old,createdAt:new Date().toISOString()},active,true);
+ const api=fakeAPI({session:async()=>active,requests:async()=>[current],command:async(_,c)=>{
+  commands.push(c);if(c.kind==='request.edit')throw new ApiError('followup_required',409);
+  return {...own(),followupTo:current.requestId};
+ }});
+ const first=await setup(api,'en',outbox);
+ type(first.dom,'item','Rice');click(first.root,'Retry');await waitForIdle(first.root);
+ assert.equal(first.root.querySelector('#item').value,'Rice');assert.match(first.root.textContent,/Move correction to draft/);
+ assert.deepEqual(commands,[old]);first.dom.window.close();
+ const {root,dom}=await setup(api,'en',outbox);
+ assert.doesNotMatch(root.textContent,/Waiting to send from this browser/);
+ click(root,'Move correction to draft');await waitForIdle(root);
+ assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+ assert.equal(root.querySelector('#item').value,'Black beans');assert.equal(root.querySelector('#amount').value,'three cans');
+ submit(root,dom);assert.match(root.querySelector('form').textContent,/Send follow-up/);assert.equal(commands.length,1);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(commands.length,2);assert.notEqual(commands[1].clientKey,old.clientKey);
+ assert.equal(commands[1].body.followupTo,current.requestId);assert.equal(commands[1].shopId,current.shopId);
+});
+
+test('only the owning queue can recover a rejected correction and concurrent tabs can take it once',async()=>{
+ const factory=new IDBFactory(),a=new Outbox(factory),b=new Outbox(factory);
+ const active={...session(),queueConsent:true},scope=scopeFor(active);
+ const edit={...command(),kind:'request.edit',base:{shopRevision:0,authorityEpoch:0,requestRevision:1},
+  body:{requestId:'request-a',originalItem:'Beans',ownQuantity:'2 cans'}};
+ const pending={id:edit.clientKey,scope,command:edit,createdAt:new Date().toISOString()};
+ await a.put(pending,active,true);
+ assert.equal(await b.reviewEdit(pending.id,'other scope','mark'),null);
+ assert.equal(await b.reviewEdit(pending.id,scope,'take'),null);
+ await a.reviewEdit(pending.id,scope,'mark');
+ assert.equal(await b.reviewEdit(pending.id,'other scope','take'),null);
+ const taken=await Promise.all([a.reviewEdit(pending.id,scope,'take'),b.reviewEdit(pending.id,scope,'take')]);
+ assert.deepEqual(taken.filter(Boolean),[{...pending,needsReview:true}]);
+ assert.equal(await b.reviewEdit(pending.id,scope,'mark'),null);
+ assert.deepEqual(await a.list(scope),[]);
 });
 
 test('received is retained if refresh fails after a committed send',async()=>{
@@ -431,6 +752,50 @@ test('uncertain memory retry cannot cross identities or silently make another op
  current={...session(),memberId:'other-member'};submit(root,dom);await waitForIdle(root);
  assert.equal(sent.length,1);assert.doesNotMatch(root.textContent,/Private original|No-salt frijoles/);
 });
+
+for (const change of ['expiry', 'refresh', 'turn off']) {
+  test(`an online request keeps its receipt key after offline permission changes via ${change}`, async t => {
+    const disabled = {...session(), canSetRequestQueue:true};
+    const expires = Date.now() + 60000;
+    let active = {...disabled, queueConsent:true, requestQueueGrant:'first-grant', requestQueueUntil:new Date(expires).toISOString()};
+    const attempts = [];
+    const receipts = new Map();
+    const outbox = new Outbox(new IDBFactory());
+    t.mock.method(outbox, 'put', async () => { throw new Error('Storage quota exceeded'); });
+    const {dom, root, app} = await setup(fakeAPI({
+      session: async () => active,
+      setRequestQueue: async (_session, enabled) => { assert.equal(enabled, false); active = disabled; },
+      command: async (_session, cmd, grant) => {
+        assert.equal(grant, undefined);
+        attempts.push(structuredClone(cmd));
+        if (!receipts.has(cmd.clientKey)) receipts.set(cmd.clientKey, {...own(), requestId:cmd.body.clientRequestId});
+        if (attempts.length === 1) throw new ApiError('network', 0);
+        return receipts.get(cmd.clientKey);
+      }
+    }), 'en', outbox);
+    t.after(() => dom.window.close());
+    type(dom, 'item', 'Corn tortillas');
+    submit(root, dom); submit(root, dom); await waitForIdle(root);
+    assert.match(root.textContent, /Receipt is unconfirmed/);
+    if (change === 'turn off') {
+      click(root, 'Turn off and clear pending requests');
+      await waitForIdle(root);
+    } else {
+      active = disabled;
+      if (change === 'expiry') {
+        t.mock.method(Date, 'now', () => expires + 1);
+        app.checkExpiry();
+      } else {
+        await app.start();
+      }
+    }
+    submit(root, dom); await waitForIdle(root);
+    assert.equal(attempts.length, 2);
+    assert.deepEqual(attempts[1], attempts[0]);
+    assert.equal(receipts.size, 1);
+    assert.match(root.textContent, /Received by the shopper/);
+  });
+}
 
 test('the device switch restores only its exact grant and removes earlier pending text after rotation',async()=>{
  let current={...session(),canSetRequestQueue:true};
@@ -678,8 +1043,10 @@ test('invitation requires explicit adult review and validates the redemption rec
 
 test('session activation requires an authenticated response for the redeemed household',async()=>{
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify(session()),{status:200});});
- await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a'});
+ await api.activateSession('household-a','csrf-test');assert.equal(calls[0].path,'/v1/session');assert.equal(calls[0].options.method,'POST');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a',scope:'own_requests'});
  await assert.rejects(api.activateSession('household-b','csrf-test'),e=>e.code==='invalid_response');
+ const broader=new API(async()=>Response.json({...session(),role:'shopper'}));
+ await assert.rejects(broader.activateSession('household-a','csrf-test'),e=>e.code==='invalid_response');
 });
 
 test('joined invitation retries session activation without redeeming a single-use token twice',async()=>{
@@ -719,6 +1086,28 @@ test('redeeming a helper link never opens a different most-recent grant',async()
  const app=new WebApp(root,fakeAPI({session:async()=>current,redeem:async()=>({householdId:'household-a',memberId:'member-a',role:'helper',grantId:'requested-grant'}),activateSession:async()=>{current={...session(),role:'helper',grantId:'wrong-grant'};},view:async()=>({grantId:'wrong-grant',shopId:'shop-a',shopLabel:'Different shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Different private ingredient',amount:'one',action:'Do not display'}]})}),new Outbox(new IDBFactory()),'secret');
  await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
  submit(root,dom);await waitForIdle(root);assert.doesNotMatch(root.textContent,/Different shop|Different private ingredient/);assert.match(root.textContent,/information changed/);
+});
+
+test('an enrolled adult accepting a cook invitation never reads another grant after activation',async t=>{
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/view?enterCode=1'});
+ t.after(()=>dom.window.close());
+ const root=dom.window.document.getElementById('app');
+ let current=session(),reads=0,redeems=0,activations=0;
+ const api=fakeAPI({
+  session:async()=>current,
+  redeem:async()=>{redeems++;return{householdId:'second',memberId:'member-b',role:'helper',grantId:'requested'};},
+  activateSession:async(_,csrf)=>{assert.equal(csrf,current.csrf);activations++;current={...session(),household:{id:'second',label:'Second household'},memberId:'member-b',role:'helper',grantId:activations===1?'other':'requested',csrf:'rotated-'+activations};},
+  view:async active=>{reads++;return{grantId:active.grantId,shopId:active.shopId,shopLabel:active.grantId,revision:1,asOf:'2026-11-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[]};}
+ });
+ const token=consumeInvitation(dom.window.location,dom.window.history);
+ await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
+ type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));assert.match(root.textContent,/information changed/);
+ click(root,'Refresh');await waitForIdle(root);assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(redeems,1);assert.equal(activations,2);assert.equal(reads,1);
+ assert.equal(root.querySelector('#adult-attestation'),null);assert.match(root.textContent,/requested/);
 });
 
 test('helper session activation sends and verifies the selected grant',async()=>{

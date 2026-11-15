@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 public enum SurfaceInfo {
@@ -63,6 +64,26 @@ public struct IOSNotificationScheduler: NotificationScheduling, @unchecked Senda
 }
 #endif
 
+/// Validate the open descriptor because URL resource values can outlive the file at that path.
+func readRegularFile(at url: URL, maximumBytes: Int) throws -> Data {
+    guard url.isFileURL else { throw SurfaceError.invalid }
+    let descriptor = url.withUnsafeFileSystemRepresentation { path -> Int32 in
+        guard let path else { return -1 }
+        return Darwin.open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
+    }
+    guard descriptor >= 0 else { throw SurfaceError.unavailable }
+    let file = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    defer { try? file.close() }
+    var info = stat()
+    guard fstat(descriptor, &info) == 0 else { throw SurfaceError.unavailable }
+    guard info.st_mode & S_IFMT == S_IFREG, info.st_size > 0 else { throw SurfaceError.invalid }
+    guard info.st_size <= maximumBytes else { throw SurfaceError.capacity }
+    let bytes = try file.read(upToCount: maximumBytes + 1) ?? Data()
+    guard bytes.count <= maximumBytes else { throw SurfaceError.capacity }
+    guard bytes.count == info.st_size else { throw SurfaceError.invalid }
+    return bytes
+}
+
 public struct WidgetProjectionFile: Sendable {
     public let url: URL
     public init(directory: URL) throws {
@@ -70,9 +91,7 @@ public struct WidgetProjectionFile: Sendable {
         url = directory.appendingPathComponent("widget-projection-v1.json")
     }
     public func read() throws -> WidgetProjection {
-        let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey])
-        guard values.isRegularFile == true, values.isSymbolicLink != true, let size = values.fileSize, size <= 4096 else { throw SurfaceError.corrupt }
-        return try WidgetProjection.decode(Data(contentsOf: url))
+        try WidgetProjection.decode(readRegularFile(at: url, maximumBytes: WidgetProjection.maximumBytes))
     }
     /// Root calls only after the underlying private transaction commits.
     public func publishAfterCommit(_ projection: WidgetProjection) throws {

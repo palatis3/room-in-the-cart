@@ -80,9 +80,6 @@ import XCTest
         XCTAssertTrue(waitForLabel("fixture.records.savedFiles", "F07 encrypted files: 1"))
         XCTAssertTrue(waitForLabel("fixture.records.fileHidesSource", "F07 file hides source: yes"))
         assertEvidence(copies: 1)
-        // Collapse only the export disclosure. Generated key and saved encrypted
-        // file remain available to the actual import control below it.
-        tap(recovery, upward: true)
 
         tap(element("records.chooseFile"))
         let related = app.staticTexts["Related revision — keep both copies"]
@@ -148,12 +145,8 @@ import XCTest
         reveal(value, upward: upward)
         let nativeSwitch = value.switches.firstMatch
         XCTAssertTrue(nativeSwitch.exists, "The reviewed row must contain its native switch")
-        reveal(nativeSwitch, upward: upward)
-        if nativeSwitch.value as? String == "0" {
-            nativeSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
-        }
-        XCTAssertEqual(nativeSwitch.value as? String, "1", "The native switch must be on")
-        XCTAssertEqual(value.value as? String, "1", "The reviewed switch must be on")
+        reveal(nativeSwitch, upward: upward, requiresFullFrame: true)
+        enableVisibleRecordsSwitch(nativeSwitch, in: value)
     }
     private func assertVisibleStatus(_ expected: String) {
         XCTAssertTrue(waitForLabel("records.status", expected))
@@ -161,17 +154,21 @@ import XCTest
         // Do not scroll here: the completed model action must route its own result.
         XCTAssertTrue(touchableArea().contains(CGPoint(x: status.frame.midX, y: status.frame.midY)), "The completed action's result was not brought into view")
     }
-    private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true) {
+    private func reveal(_ value: XCUIElement, upward: Bool = false, requiresHitTarget: Bool = true, requiresFullFrame: Bool = false) {
+        func visible(in viewport: CGRect) -> Bool {
+            guard value.exists, !requiresHitTarget || value.isHittable else { return false }
+            let frame = value.frame
+            return requiresFullFrame ? viewport.insetBy(dx: 0, dy: 8).contains(frame) : viewport.contains(CGPoint(x: frame.midX, y: frame.midY))
+        }
         for attempt in 0..<48 {
             let viewport = touchableArea()
-            if value.exists && (!requiresHitTarget || value.isHittable),
-               viewport.contains(CGPoint(x: value.frame.midX, y: value.frame.midY)) { return }
+            if visible(in: viewport) { return }
             let contentUp: Bool
             if value.exists && !value.frame.isEmpty { contentUp = value.frame.midY > viewport.midY }
             else { contentUp = attempt < 24 ? !upward : upward }
             scrollContent(upward: contentUp)
         }
-        XCTAssertTrue(value.exists && (!requiresHitTarget || value.isHittable) && touchableArea().contains(CGPoint(x: value.frame.midX, y: value.frame.midY)), value.debugDescription)
+        XCTAssertTrue(visible(in: touchableArea()), value.debugDescription)
     }
     private func touchableArea() -> CGRect {
         let bounds = app.frame, keyboard = app.keyboards.firstMatch, tabs = app.tabBars.firstMatch

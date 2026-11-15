@@ -206,6 +206,51 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testEditingWhileComparisonSaveIsPendingKeepsNewInputAndFeedback() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("local.sqlite")
+        let store = try ComparisonStore(url: url)
+        var writer: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &writer), SQLITE_OK)
+        defer { sqlite3_close(writer) }
+        XCTAssertEqual(sqlite3_exec(writer, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+
+        let original = makeDraft(unknownSecondYield: false)
+        let started = expectation(description: "Captured the reviewed draft for persistence")
+        var firstSave = true
+        let model = ComparisonModel(draft: original, clock: {
+            if firstSave { firstSave = false; started.fulfill() }
+            return Date()
+        })
+        let save = Task { await model.save(in: store) }
+        await fulfillment(of: [started], timeout: 3)
+        XCTAssertTrue(model.saving)
+        model.draft.aPrice = "4."
+        model.compare()
+        let feedback = try XCTUnwrap(model.error)
+        XCTAssertEqual(sqlite3_exec(writer, "COMMIT", nil, nil, nil), SQLITE_OK)
+        await save.value
+
+        XCTAssertEqual(model.draft.aPrice, "4.")
+        XCTAssertEqual(model.error, feedback)
+        XCTAssertNil(model.savedAt)
+        let firstRecord = try await store.load(id: original.id)
+        let saved = try XCTUnwrap(firstRecord)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: saved.payload).draft, original)
+
+        model.draft.aPrice = "4.95"
+        model.compare()
+        await model.save(in: store)
+        XCTAssertNil(model.error)
+        XCTAssertNotNil(model.savedAt)
+        let secondRecord = try await store.load(id: original.id)
+        let updated = try XCTUnwrap(secondRecord)
+        XCTAssertEqual(updated.revision, saved.revision + 1)
+        XCTAssertEqual(try JSONDecoder().decode(SavedPayload.self, from: updated.payload).draft, model.draft)
+    }
+
+    @MainActor
     func testEditingTwoCopiesOfAComparisonPreservesTheNewerSavedPrice() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -338,6 +383,21 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testComparisonAmountLabelsKeepSingularUnitsAndDistinguishWeightFromVolume() throws {
+        let cases: [(UnitOfMeasure, String)] = [
+            (.count, tr("item")), (.ounce, tr("ounce (weight)")),
+            (.cup, tr("US cup")), (.fluidOunce, tr("US fluid ounce")),
+            (.gram, pTr("gram")), (.kilogram, pTr("kilogram")), (.pound, pTr("pound")),
+            (.milliliter, pTr("milliliter")), (.liter, pTr("liter"))
+        ]
+        for (unit, singular) in cases {
+            XCTAssertEqual(unit.comparisonLabel(for: try Rational(decimal: "1.00")), singular)
+            XCTAssertEqual(unit.comparisonLabel(for: .zero), unit.displayName)
+            XCTAssertEqual(unit.comparisonLabel(for: try Rational(2)), unit.displayName)
+        }
+    }
+
+    @MainActor
     func testKnownComparisonSaveCloseReopenRecomputesIdenticalAnswer() async throws {
         try await assertSaveReopen(unknownSecondYield: false)
     }
@@ -345,6 +405,29 @@ final class AppModelTests: XCTestCase {
     @MainActor
     func testUnknownComparisonSaveCloseReopenStaysUnresolved() async throws {
         try await assertSaveReopen(unknownSecondYield: true)
+    }
+
+    @MainActor
+    func testOversizedComparisonNamesIdentifyTheFieldAndKeepOriginalInput() {
+        let limit = String(repeating: "é", count: 256)
+        let oversized = limit + "a"
+        let names: [(WritableKeyPath<ComparisonDraft, String>, String)] = [
+            (\.item, tr("Shorten the item name, then compare again.")),
+            (\.aLabel, tr("Shorten the name for Pack A, then compare again.")),
+            (\.bLabel, tr("Shorten the name for Pack B, then compare again."))
+        ]
+        for (field, feedback) in names {
+            let model = ComparisonModel(draft: makeDraft(unknownSecondYield: false))
+            model.draft[keyPath: field] = oversized
+            model.compare()
+            XCTAssertNil(model.result)
+            XCTAssertEqual(model.error, feedback)
+            XCTAssertEqual(model.draft[keyPath: field], oversized)
+            model.draft[keyPath: field] = limit
+            model.compare()
+            XCTAssertNil(model.error)
+            XCTAssertNotNil(model.result)
+        }
     }
 
     @MainActor

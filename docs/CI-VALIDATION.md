@@ -6,8 +6,10 @@ The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on
 Bitrise M2 slot 1 ahead of core UI04. It now uses M2 slot 2. External pull
 requests use GitHub slot 2 for the same selector. Replaying the two completed
 batches projects 3m33s and 1m30s earlier completion of the last check after
-allowing two minutes for an additional runner pickup. Compare the next hosted
-batch with those estimates. [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
+allowing two minutes for an additional runner pickup. In the first hosted batch with the change, UI04 ran from 19:37:32 to
+19:52:26 UTC while the Undo fixture ran from 19:42:09 to 19:48:37. All
+6m28s of the fixture overlapped UI04. End-to-end savings cannot be isolated
+from this one run. [UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271240/job/132109415364) · [Undo fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/43489271120/job/132108132135) [Fixture job](https://github.com/palatis3/room-in-the-cart/actions/runs/43480838515/job/132078208068)
 · [Core UI04](https://github.com/palatis3/room-in-the-cart/actions/runs/43472025183/job/132050046503)
 
 Three Thread Sanitizer reports identified state shared by async HouseholdClient
@@ -275,7 +277,40 @@ release requirements and known failures remain visible.
 
 On the 24 GB development Mac, let a failing PR journey take the next free simulator slot. During the November 12 run, several simultaneous simulator sessions coincided with memory pressure warnings, 17 GB of swap use and a current-runtime calibration that spent minutes in XCTest startup. When that happens, run the optional calibration after a repair finishes. Backend checks and hosted jobs can continue.
 
+### CircleCI during a Bitrise outage
+
+Push the candidate to `codex/circleci-canary` for one simulator build and one UI
+group. Push to `codex/circleci-performance` for the five Swift packages, one
+simulator build, and up to three M4 Pro Medium test workers. These workers run
+UI groups 01 through 03 from the ordinary ten-group plan. The assisted GitHub
+run handles the models and groups 04 through 10. Each worker verifies every
+assigned test against its results. To start the paired GitHub workflow on the
+performance branch, run `gh workflow run ci.yml --ref codex/circleci-performance -f ios_scope=full -f ios_provider=circleci`.
+For a same-repository pull request, set the repository variable
+`RITC_CIRCLECI_PR_HEAD_SHA` to the reviewed head commit before updating the PR.
+After GitHub creates the PR merge commit, fetch `refs/pull/<number>/merge`,
+verify its parents match the current base and selected head, and push that merge
+commit to `codex/circleci-performance`. The PR workflow starts automatically.
+Its final gate checks the CircleCI results on the exact GitHub merge commit.
+Other PR heads use the full GitHub route.
+The existing `codex/circleci-fallback` branch requests only the Swift packages.
+
+The producer restores Xcode's compilation cache for the pinned Xcode/runtime
+and saves updated compiler outputs. Within a workflow, all workers download
+the test products and selection from that workflow's build. Each worker checks
+the source revision, Xcode build, and simulator runtime before running tests.
+Ordinary branch pushes do not request these CircleCI Mac jobs. Once Bitrise
+recovers, stop pushing candidates to the CircleCI branches.
+
 ### GitHub and Bitrise capacity
+
+If Bitrise is unavailable, set the repository Actions variable
+`RITC_GITHUB_MAC_ONLY` to `true` before starting a candidate. Workflows containing
+this switch use the five GitHub macOS queues with the same tests, Xcode and
+artifact checks. Already assigned jobs keep their runner labels. Clear the
+variable to restore the usual routing for subsequent runs.
+
+During the November 14 outage run, GitHub slots 3 and 4 had finished their last native jobs by 14:53 UTC. At 16:01 UTC, the bilingual StoreKit retry, UI07 and the Spanish large-text store quote were waiting on slot 2. On the GitHub-only fallback, contributor group 05 and known-trip quote adoption now use slot 4. The lost-reply quote and Spanish large-text quote use slot 3. Compare the last required result and StoreKit wait on the next full batch. [Fixture job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663919) · [Core job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663924)
 
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
 M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready.

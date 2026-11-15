@@ -8,6 +8,8 @@ import StoreKitTest
     private let productID = "local.testing.household.annual"
     private let accountToken = UUID()
     private var session: SKTestSession!
+    // Hosted StoreKit has taken over 32 seconds to return from a deferred purchase.
+    private let askToBuyResponseTimeout: Duration = .seconds(60)
     private var cancellationTraceStart: ContinuousClock.Instant?
     private var cancellationTraceCount = 0
 
@@ -208,6 +210,16 @@ import StoreKitTest
         try await eventually("The observed transaction remains unfinished") {
             await storefront.unfinishedTransactions().contains { self.id($0) == String(purchased.id) }
         }
+        // Exercise the recovery branch with a real transaction. Only the
+        // update's failure classification is supplied by this fixture.
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidCertificateChain))
+        guard case .verified(let checked) = recovered else {
+            return XCTFail("An independent StoreKit read must verify the same active purchase")
+        }
+        XCTAssertEqual(checked.transactionID, String(purchased.id))
+        XCTAssertEqual(checked.appAccountToken, accountToken)
+        let badSignature = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidSignature))
+        XCTAssertNil(badSignature)
     }
 
     func testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock() async throws {
@@ -236,10 +248,8 @@ import StoreKitTest
         let purchase = beginPurchase(model)
         defer { model.stop() }
         do {
-            // A fresh hosted StoreKit session took 15s to return its pending result.
-            // Keep the complete pending boundary while allowing that first response.
-            try await eventually("A real Ask to Buy request reaches pending approval", timeout: .seconds(30)) {
-                purchase.finished && model.purchaseReport == .pending
+            try await eventually("A real Ask to Buy request reaches pending approval", timeout: askToBuyResponseTimeout) {
+                model.purchaseReport == .pending
                     && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
             }
         } catch {
@@ -264,10 +274,9 @@ import StoreKitTest
             throw error
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
-        // Follow the documented pending-result then approval sequence. The test
-        // session can expose its pending request before the purchase call returns.
+        // StoreKit has reported pending. The model may still be checking unfinished
+        // transactions when the parent responds to the request.
         XCTAssertEqual(model.notice, .pending)
-        XCTAssertFalse(model.isBusy)
         assertFree(model)
         XCTAssertEqual(session.allTransactions().count, 1, "The fresh approval fixture contains only its pending request")
         // Bounded structural diagnostics only. No transaction identity, token,
@@ -344,7 +353,8 @@ import StoreKitTest
         observe("before-approval")
         try session.approveAskToBuyTransaction(identifier: request.identifier)
         observe("after-approval")
-        try await eventually("Approval completes the purchase flow and attempts durable delivery") {
+        // The hosted first current-entitlements read alone has taken 11 seconds.
+        try await eventually("Approval completes the purchase flow and attempts durable delivery", timeout: askToBuyResponseTimeout) {
             guard purchase.finished else { observe("purchase-open"); return false }
             // Read the identity from StoreKit 2 itself; do not assume that an
             // SKTestTransaction.identifier equals a StoreKit.Transaction.id.
@@ -359,6 +369,7 @@ import StoreKitTest
             guard approved.count == 1, let transaction = approved.first else { return false }
             return model.deliveryOutcomes[transaction.transactionID] == .failed(.notConfigured)
         }
+        XCTAssertFalse(model.isBusy)
         XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)),
                       "The exact verified transaction's service-delivery failure remains visible")
         try await eventually("Approved transaction appears in current entitlements") {
@@ -438,22 +449,26 @@ import StoreKitTest
         assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
         try await AppStore.sync()
-        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
-        var pendingCount = 0, purchasedCount = 0, failedCount = 0, deferredCount = 0
-        var currentCount = 0, verifiedCount = 0, unverifiedCount = 0
-        repeat {
-            let transactions = session.allTransactions().filter { $0.identifier == request.identifier }
-            pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
-            purchasedCount = transactions.filter { $0.state == .purchased }.count
-            failedCount = transactions.filter { $0.state == .failed }.count
-            deferredCount = transactions.filter { $0.state == .deferred }.count
-            let current = await storefront.currentTransactions()
-            currentCount = current.count
-            verifiedCount = current.filter { if case .verified = $0 { return true }; return false }.count
-            unverifiedCount = current.filter { if case .unverified = $0 { return true }; return false }.count
-            if purchase.finished && pendingCount == 0 && currentCount == 0 { break }
+        // The session can reconcile the decline before the purchase API returns.
+        let responseDeadline = ContinuousClock.now.advanced(by: askToBuyResponseTimeout)
+        try await eventually("The decline clears the pending flag and grants no entitlement") {
+            guard !self.session.allTransactions().contains(where: {
+                $0.identifier == request.identifier && $0.pendingAskToBuyConfirmation
+            }) else { return false }
+            return await storefront.currentTransactions().isEmpty
+        }
+        while !purchase.finished && ContinuousClock.now < responseDeadline {
             try await Task.sleep(for: .milliseconds(100))
-        } while ContinuousClock.now < deadline
+        }
+        let transactions = session.allTransactions().filter { $0.identifier == request.identifier }
+        let pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
+        let purchasedCount = transactions.filter { $0.state == .purchased }.count
+        let failedCount = transactions.filter { $0.state == .failed }.count
+        let deferredCount = transactions.filter { $0.state == .deferred }.count
+        let current = await storefront.currentTransactions()
+        let currentCount = current.count
+        let verifiedCount = current.filter { if case .verified = $0 { return true }; return false }.count
+        let unverifiedCount = current.filter { if case .unverified = $0 { return true }; return false }.count
         var returnedDeclinedRequest = false
         for await result in StoreKit.Transaction.currentEntitlements {
             if case .verified(let transaction) = result, transaction.id == UInt64(request.identifier),
@@ -555,20 +570,30 @@ import StoreKitTest
     }
 
     func testRenewalKeepsOriginalPurchaseAndNoLocalUnlock() async throws {
-        session.timeRate = .oneRenewalEveryTwoSeconds
         let original = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
-        try await eventually("Renewal creates another transaction") {
-            self.session.allTransactions().contains { $0.identifier != UInt(original.id) }
-        }
+        // Start with a completed prior term. The renewal itself must stay subject
+        // to the app's normal service verification and delivery rules.
+        await original.finish()
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
+        try await eventually("The previous term is current and its purchase is complete") {
+            let current = await storefront.currentTransactions()
+            let unfinished = await storefront.unfinishedTransactions()
+            return current.contains { self.id($0) == String(original.id) }
+                && !unfinished.contains { self.id($0) == String(original.id) }
+        }
+        try session.forceRenewalOfSubscription(productIdentifier: productID)
         try await eventually("The renewed transaction retains the original purchase identity") {
             await storefront.currentTransactions().contains {
                 guard case .verified(let transaction) = $0 else { return false }
                 return transaction.originalTransactionID == String(original.originalID)
                     && transaction.transactionID != String(original.id)
+                    && transaction.appAccountToken == self.accountToken
+                    && self.session.allTransactions().contains { String($0.identifier) == transaction.transactionID }
             }
         }
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(original, .invalidCertificateChain))
+        XCTAssertNil(recovered, "A verified renewal cannot stand in for a different transaction on the same account and SKU")
         await model.refresh()
         assertFree(model)
     }
@@ -594,6 +619,8 @@ import StoreKitTest
         defer { model.stop() }
         let current = await storefront.currentTransactions()
         XCTAssertTrue(current.isEmpty)
+        let recovered = await storefront.verifiedCurrentTransaction(after: .unverified(purchased, .invalidCertificateChain))
+        XCTAssertNil(recovered, "A revoked purchase cannot be recovered from its rejected update")
         await model.refresh()
         assertFree(model)
     }
@@ -704,7 +731,7 @@ import StoreKitTest
             privacyURL: URL(string: "https://example.invalid/privacy"), termsURL: URL(string: "https://example.invalid/terms")),
             context: MembershipContext(purchaserID: "local-test-adult", purchaserName: "Local test adult",
                 householdID: "local-test-household", householdName: "Local test household", appAccountToken: accountToken),
-            service: UnavailableMembershipService(), storefront: storefront)
+            service: LocalPurchaseContext(accountToken: accountToken), storefront: storefront)
     }
 
     private func assertFree(_ model: MembershipModel, file: StaticString = #filePath, line: UInt = #line) {
@@ -734,4 +761,15 @@ import StoreKitTest
         throw ScenarioFailure.timeout
     }
     private enum ScenarioFailure: Error { case unexpectedPurchase, timeout }
+}
+
+
+// StoreKit supplies real local transactions while the household delivery service is unavailable.
+@MainActor private struct LocalPurchaseContext: MembershipEntitlementService {
+    let accountToken: UUID
+    func purchaseContext(householdID: String) async throws -> UUID { accountToken }
+    func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
+    func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
+    func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }
+    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
 }

@@ -54,8 +54,8 @@ final class PickupOfferReviewTests: XCTestCase {
         let url = location()
         defer { try? FileManager.default.removeItem(at: url) }
         let model = try await placed(store: ComparisonStore(url: url))
-        func charge(id: UUID = UUID(), cents: Int64 = 700) -> SettlementEntry {
-            SettlementEntry(id: id, evidenceKey: "receipt-7", kind: .postedCharge,
+        func charge(id: UUID = UUID(), key: String = "receipt-7", cents: Int64 = 700) -> SettlementEntry {
+            SettlementEntry(id: id, evidenceKey: key, kind: .postedCharge,
                             amount: Money(minorUnits: cents), occurredAt: now)
         }
         let entry = charge()
@@ -64,12 +64,12 @@ final class PickupOfferReviewTests: XCTestCase {
         let revision = try XCTUnwrap(model.journey?.revision)
         let reopened = PickupModel(databaseURL: url)
         await reopened.load()
-        for retry in [entry, charge()] {
+        for retry in [entry, charge(), charge(key: " receipt-7 ")] {
             let accepted = await reopened.settle(retry)
             XCTAssertTrue(accepted)
             XCTAssertEqual(reopened.journey?.revision, revision)
         }
-        let conflict = await reopened.settle(charge(cents: 701))
+        let conflict = await reopened.settle(charge(key: "receipt-7 ", cents: 701))
         XCTAssertFalse(conflict)
         let reader = PickupModel(databaseURL: url)
         await reader.load()

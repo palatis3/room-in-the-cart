@@ -113,6 +113,9 @@ import CoreDomain
         for batch in shop.importBatches {
             lines += ["", joined([ledgerText("Imported list"), stamp(batch.createdAt)])]
             if let undone = batch.undoneAt { lines.append(joined([ledgerText("Import undone"), stamp(undone)])) }
+            if let original = batch.originalSelection {
+                lines.append(field(ledgerText("Original wording"), original))
+            }
             for entry in batch.preview.lines {
                 let decision: String
                 switch batch.decisions[entry.id] ?? .addNew {

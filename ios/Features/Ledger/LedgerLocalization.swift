@@ -25,6 +25,12 @@ func ledgerQuantity(_ quantity: Quantity?) -> String {
     return "\(amountText(quantity.amount)) \(quantity.unit.displayName)"
 }
 
+extension ShoppingLedger {
+    var listExclusions: [UUID: String] {
+        itemExclusions.mapValues { ledgerFormat("Exclusions: %@", $0.joined(separator: ", ")) }
+    }
+}
+
 func ledgerAmountInput(_ value: Rational) -> String {
     value.denominator == 1 ? "\(value.numerator)" : "\(value.numerator)/\(value.denominator)"
 }

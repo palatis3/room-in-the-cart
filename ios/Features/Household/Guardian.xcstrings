@@ -577,6 +577,22 @@
         }
       }
     },
+    "Choose a pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un pedido"
+          }
+        }
+      }
+    },
     "Clear this local retry?": {
       "localizations": {
         "en": {
@@ -945,6 +961,22 @@
         }
       }
     },
+    "Load more pickups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more pickups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más pedidos"
+          }
+        }
+      }
+    },
     "Local retry cleared after checking status. A setup or permission already saved by the service is unchanged.": {
       "localizations": {
         "en": {
@@ -1101,6 +1133,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Permiso retirado"
+          }
+        }
+      }
+    },
+    "Pickup for this request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup for this request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedido para esta solicitud"
           }
         }
       }

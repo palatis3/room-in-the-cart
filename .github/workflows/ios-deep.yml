@@ -221,10 +221,10 @@ jobs:
     needs: storekit-build
     name: StoreKit English and Spanish
     concurrency:
-      group: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}2
+      group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}2
       queue: max
       cancel-in-progress: false
-    runs-on: ${{ github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
     # Composite cap replaces two independent 45-minute jobs. Each locale keeps
     # its original 35-minute native step and 120-second case allowances.
     timeout-minutes: 90

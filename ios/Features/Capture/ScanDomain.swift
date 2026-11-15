@@ -57,6 +57,7 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let target: CaptureTarget
     let originalText: String
+    var reviewedText: String? = nil
     let reviewedLabel: String
     let imageJPEG: Data?
     let barcode: CapturedBarcode?
@@ -69,6 +70,7 @@ struct SourceMediaRecord: Codable, Equatable, Identifiable, Sendable {
               reviewedLabel.utf8.count <= 512, !reviewedLabel.contains("\0"),
               receiptLines.count <= 200, Set(receiptLines.map(\.id)).count == receiptLines.count else { throw ScanFailure.invalidText }
         try ScanLimits.text(originalText)
+        if let reviewedText { try ScanLimits.text(reviewedText) }
         var total = 0
         for row in receiptLines {
             for text in [row.originalText, row.reviewedText, row.quantityNote, row.priceNote] {

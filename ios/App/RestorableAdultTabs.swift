@@ -24,6 +24,7 @@ struct RestorableAdultTabs: View {
     }
 }
 struct RestoredDestinationView: View {
+    @EnvironmentObject private var navigation: NavigationRestorationModel
     @EnvironmentObject private var app: AppModel
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var household: HouseholdModel
@@ -37,7 +38,9 @@ struct RestoredDestinationView: View {
                 case .shoppingList(let actor, let workspace, let shop):
                     if actor == access.localActorID, ledger.ready, !ledger.hasPendingLedgerDeletion,
                        ledger.sourceWorkspaceID == workspace, ledger.shop?.id == shop {
-                        LedgerHomeView(model: ledger).navigationTitle(ledger.shop?.title ?? tr("Shop"))
+                        LedgerHomeView(model: ledger, onShopSelected: { [weak navigation] id in
+                            navigation?.replaceShoppingList(destination, with: id)
+                        }).navigationTitle(ledger.shop?.title ?? tr("Shop"))
                     } else { unavailable }
                 case .comparison(let actor, let workspace, let id):
                     if actor == access.localActorID, app.ready, app.hasLoadedRecords, app.error == nil, app.store?.workspaceID == workspace,

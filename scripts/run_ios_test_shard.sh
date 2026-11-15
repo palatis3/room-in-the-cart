@@ -4,7 +4,6 @@ set -euo pipefail
 : "${TEST_SHARD:?Choose a shard from the build manifest}"
 : "${EXPECTED_TEST_COUNT:?Use the count from the build matrix}"
 # Verbose system capture can add minutes to a simple local layout failure.
-# Hosted/release evidence always keeps the original on-failure policy.
 diagnostics="${LOCAL_TEST_DIAGNOSTICS:-on-failure}"
 case "$diagnostics" in
     on-failure) ;;
@@ -15,6 +14,11 @@ case "$diagnostics" in
         fi ;;
     *) echo 'LOCAL_TEST_DIAGNOSTICS must be on-failure or never.' >&2; exit 2 ;;
 esac
+# CircleCI kills silent steps while Xcode waits for a simulator sysdiagnose.
+# The native result bundle still retains test failures and their attachments.
+if [ "${CIRCLECI:-}" = true ]; then
+    diagnostics=never
+fi
 echo "XCTest verbose diagnostics: $diagnostics"
 selection=".build/test-plan/$TEST_SHARD.txt"
 test -s "$selection"

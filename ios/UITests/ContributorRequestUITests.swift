@@ -41,6 +41,54 @@ import XCTest
         }
     }
 
+    func testGuardianChildChoosesPickupAndReviewsNextShopRequest() {
+        app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["My requests"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.staticTexts["guardian.childHousehold"].label, "Fixture home")
+        fill("Tortillas", into: "guardian.childRequestItem")
+        let review = app.buttons["guardian.childRequestReview"]
+        if app.keyboards.firstMatch.exists {
+            app.textFields["guardian.childRequestItem"].typeText("\n")
+        }
+        XCTAssertTrue(review.exists)
+        XCTAssertFalse(review.isEnabled)
+
+        tap(app.buttons["guardian.childRequestMorePickups"])
+        tap(app.buttons["guardian.childRequestPickup"])
+        let secondPickup = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "22222222")).firstMatch
+        XCTAssertTrue(secondPickup.waitForExistence(timeout: 8), app.debugDescription)
+        secondPickup.tap()
+        tap(app.buttons["guardian.childRequestsRefresh"])
+        tap(review)
+        XCTAssertTrue(app.navigationBars["Review your request"].waitForExistence(timeout: 10))
+        let reviewedPickup = element("guardian.childReviewedPickup")
+        let destination = reviewedPickup.label + (reviewedPickup.value as? String ?? "")
+        XCTAssertTrue(destination.contains("22222222"), destination)
+        XCTAssertTrue(destination.contains("2026"), destination)
+        let route = element("household.request.reviewDestination")
+        XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Request for next shop"))
+        enableSwitch("I reviewed the original wording, item, quantity, packs, exclusions and destination.")
+        tap(app.buttons["household.request.sendReviewed"])
+        let saved = app.staticTexts["fixture.requestRows"]
+        let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture saved requests: 1"), object: saved)
+        XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 12), .completed, app.debugDescription)
+
+        let withdraw = app.buttons["household.withdrawRequest"]
+        tap(withdraw)
+        let dialog = app.alerts["Withdraw this request?"]
+        XCTAssertTrue(dialog.staticTexts["Withdraw this request?"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(dialog.staticTexts["Tortillas"].exists)
+        dialog.buttons["Cancel"].tap()
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
+
+        tap(withdraw)
+        dialog.buttons["Withdraw request"].tap()
+        XCTAssertTrue(app.staticTexts["Withdrawn"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(withdraw.exists)
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 2")
+    }
+
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
         app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
         app.launch()
@@ -82,6 +130,45 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
         XCTAssertEqual(element("capture.structured.original").label, original)
         capture("Spanish-large-text-original-at-top")
+    }
+
+    func testCancellingCorrectionReplacementPreservesDraftUntilConfirmed() {
+        app.launchArguments = ["--ui-testing", "--rejected-correction-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        waitForHousehold(timeout: 20)
+        let item = app.textFields["Item"]
+        let amount = app.textFields["Quantity, optional"]
+        let review = app.buttons["Review my correction"]
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "3 bags")
+        tap(review)
+        let dialog = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType != %d",
+            "Replace your current draft with the saved correction?", XCUIElement.ElementType.staticText.rawValue)).firstMatch
+        XCTAssertTrue(dialog.buttons["Replace draft"].waitForExistence(timeout: 5))
+        let cancel = app.buttons["Cancel"]
+        if cancel.isHittable {
+            cancel.tap()
+        } else {
+            let dismiss = app.otherElements["PopoverDismissRegion"]
+            XCTAssertTrue(dismiss.exists)
+            dismiss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        }
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Rice")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "3 bags")
+
+        tap(review)
+        dialog.buttons["Replace draft"].tap()
+        XCTAssertTrue(review.waitForNonExistence(timeout: 10))
+        reveal(item)
+        XCTAssertEqual(item.value as? String, "Cereal")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "2 boxes")
+        XCTAssertEqual(element("fixture.requestPosts").label, "Fixture request POSTs: 2")
+        XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 1")
     }
 
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {

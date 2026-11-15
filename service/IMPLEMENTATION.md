@@ -50,6 +50,7 @@ All household routes require the device credential, except enrollment. UUIDs are
 | `DELETE /v1/households/{h}/devices/current` | Revoke this enrolled device/windows. |
 | `POST /v1/households/{h}/replay-windows` | `{}` returns `{id,expiresAt}`. |
 | `GET /v1/households/{h}/bootstrap` | Minimal household label, own member ID, current shop ID, role and capabilities. |
+| `GET /v1/households/{h}/requests/pickups?cursor={shopId}` | Contributor destinations when multiple pickups are open. Each choice contains only `shopId`, `createdAt`, and `nextShopOnly`. Send the chosen ID in the request command. A fresh request to a closed pickup returns `409 pickup_closed`. |
 | `GET /v1/households/{h}/requests/mine?cursor={requestId}` | Own-only paginated request projection; includes owning shopId, never prices or other authors. |
 | `GET /v1/households/{h}/shops/{s}` | Current shopper's reviewed quote, basket, revision and epoch. |
 | `GET /v1/households/{h}/shops/{s}/inbox?cursor={requestId}` | Current shopper only. |

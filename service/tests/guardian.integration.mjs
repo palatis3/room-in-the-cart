@@ -149,8 +149,16 @@ test('browser covered child OTP installs scoped HttpOnly session and omits crede
  const signed=await call(null,'/v1/auth/email/verify','POST',{code:'123456'},headers);ok(signed);const nextCookie=signed.headers.getSetCookie().find(value=>value.startsWith('__Host-ritc_auth=')).split(';')[0];csrf=signed.data.csrf;const signedHeaders={Origin:webOrigin,Cookie:nextCookie,'x-csrf-token':csrf};
  const admission=ok(await call(null,'/v1/child-invitations/session','GET',undefined,{Cookie:nextCookie}));assert.equal(admission.admitted,true);assert.equal(admission.scope,'own_requests');assert.equal(admission.inviteId,invitation.inviteId);assert.equal(admission.status,'admitted');
  const claimInput={clientKey:randomUUID(),token:invitation.token,pairingCode:'QWER2345'},claim=ok(await call(null,'/v1/child-invitations/claim','POST',claimInput,signedHeaders));const latest=await read(f,setup.enrollmentId);ok(await call(f.adult,f.base+'/guardian/enrollments/'+setup.enrollmentId+'/confirm-child','POST',{clientKey:randomUUID(),baseRevision:latest.revision,claimId:claim.claimId,pairingCode:claimInput.pairingCode}));
- const finish={clientKey:randomUUID(),householdId:f.house.householdId,claimId:claim.claimId,pairingCode:claimInput.pairingCode,deviceSecret:randomBytes(32).toString('base64url')};const result=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(result);assert.equal(result.data.deviceToken,undefined);assert.ok(!JSON.stringify(result.data).includes(finish.deviceSecret));const scope=result.headers.get('set-cookie');assert.ok(scope.includes('HttpOnly'));const scopeCookie=scope.split(';')[0];
+ const finish={clientKey:randomUUID(),householdId:f.house.householdId,claimId:claim.claimId,pairingCode:claimInput.pairingCode,deviceSecret:randomBytes(32).toString('base64url')};
+ const result=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(result);
+ assert.deepEqual(Object.keys(result.data).sort(),['deviceId','householdId','memberId','role']);
+ assert.ok(!JSON.stringify(result.data).includes(finish.deviceSecret));
+ const scope=result.headers.get('set-cookie');assert.ok(scope.includes('HttpOnly'));const scopeCookie=scope.split(';')[0];
+ const [cookieHousehold,sessionToken]=scopeCookie.slice('ritc_session='.length).split('.');
+ assert.equal(cookieHousehold,f.house.householdId);assert.match(sessionToken,/^[A-Za-z0-9_-]{43}$/);assert.notEqual(sessionToken,finish.deviceSecret);
  const session=ok(await call(null,'/v1/session','GET',undefined,{Cookie:nextCookie+'; '+scopeCookie}));assert.equal(session.authenticated,true);assert.equal(session.memberId,result.data.memberId);assert.deepEqual(session.capabilities,['own_requests']);
+ // A stored receipt cannot redirect the scoped cookie or extend the browser response.
+ await admin.query("UPDATE ritc.guardian_intent SET response=response||jsonb_build_object('householdId',$3::uuid,'internalDetail','fixture') WHERE household_id=$1 AND client_key=$2 AND kind='finish'",[f.house.householdId,finish.clientKey,randomUUID()]);
  const retry=await call(null,'/v1/child-invitations/finish','POST',finish,signedHeaders);ok(retry);assert.deepEqual(retry.data,result.data);assert.ok(retry.headers.get('set-cookie').includes('HttpOnly'));assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.web_session WHERE household_id=$1 AND device_id=$2',[f.house.householdId,result.data.deviceId])).rows[0].n,1);
 });
 test('non-organizer cannot create child membership and organizer role loss blocks pending finalization',async()=>{
@@ -198,12 +206,46 @@ test('reconsent is a fresh guardian generation; organizer-revoked membership can
  await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.house.householdId,next.receipt.memberId]);await admin.query('UPDATE ritc.member SET organizer=false WHERE household_id=$1 AND member_id=$2',[f.house.householdId,f.house.memberId]);
  const rejected=await call(f.adult,f.base+'/guardian/enrollments','POST',{clientKey:randomUUID(),childId:next.receipt.memberId,noticeVersion:notices[0].version,noticeDigest:notices[0].digest,language:'en',childLocation:'US',guardianDeclaration:'parent_or_legal_guardian'});assert.equal(rejected.data.error.code,'organizer_required');
 });
-test('enrolled child submits only own request and never receives basket, budget, roster or another author request',async()=>{
- const f=await family();await active(f);const adultWindow=ok(await call(f.adult,f.base+'/replay-windows','POST',{})),shopId=randomUUID();const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:3800,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()};
- ok(await call(f.adult,f.base+'/commands','POST',{v:1,replayWindow:adultWindow.id,clientKey:randomUUID(),shopId,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[]}}));const childWindow=ok(await call(f.child,f.base+'/replay-windows','POST',{}));
- for(const [person,window,item]of [[f.adult,adultWindow,'Private adult item'],[f.child,childWindow,'Own child item']])ok(await call(person,f.base+'/commands','POST',{v:1,replayWindow:window.id,clientKey:randomUUID(),shopId,kind:'request.send',base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:randomUUID(),originalItem:item,ownQuantity:'one',authoredAt:new Date().toISOString()}}));
- const own=ok(await call(f.child,f.base+'/requests/mine'));assert.equal(own.requests.length,1);assert.equal(own.requests[0].originalItem,'Own child item');const raw=JSON.stringify(own);for(const forbidden of ['Private adult item','capMinor','unitPrice','budget','guardian','parentEmail'])assert.ok(!raw.includes(forbidden));
- for(const route of ['/members','/shops/'+shopId,'/shops/'+shopId+'/inbox','/guardian/consents'])assert.equal((await call(f.child,f.base+route)).status,404);
+test('paired child chooses an open pickup and sees only their own request until consent is revoked',async()=>{
+ const f=await family();
+ await active(f);
+ const adultWindow=ok(await call(f.adult,f.base+'/replay-windows','POST',{}));
+ const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:3800,capScope:'wholeCheckout',
+  fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,
+  observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()};
+ const other=randomUUID(),target=randomUUID();
+ for(const shopId of [other,target]){
+  ok(await call(f.adult,f.base+'/commands','POST',{v:1,replayWindow:adultWindow.id,clientKey:randomUUID(),
+   shopId,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[]}}));
+ }
+ const bootstrap=ok(await call(f.child,f.base+'/bootstrap'));
+ assert.equal(bootstrap.selectionRequired,true);
+ assert.equal(bootstrap.shopId,null);
+ assert.equal(bootstrap.canSelectShop,false);
+ assert.deepEqual(bootstrap.capabilities,['own_requests']);
+ const choices=ok(await call(f.child,f.base+'/requests/pickups'));
+ assert.deepEqual(new Set(choices.shops.map(r=>r.shopId)),new Set([target,other]));
+ for(const row of choices.shops)assert.deepEqual(Object.keys(row).sort(),['createdAt','nextShopOnly','shopId']);
+ const childWindow=ok(await call(f.child,f.base+'/replay-windows','POST',{}));
+ const send=(person,window,shopId,item)=>call(person,f.base+'/commands','POST',{v:1,replayWindow:window.id,
+  clientKey:randomUUID(),shopId,kind:'request.send',base:{shopRevision:0,authorityEpoch:0},
+  body:{clientRequestId:randomUUID(),originalItem:item,ownQuantity:'one',authoredAt:new Date().toISOString()}});
+ ok(await send(f.adult,adultWindow,other,'Private adult item'));
+ const receipt=ok(await send(f.child,childWindow,target,'Own child item'));
+ const own=ok(await call(f.child,f.base+'/requests/mine'));
+ assert.equal(own.requests.length,1);
+ assert.equal(own.requests[0].originalItem,'Own child item');
+ assert.equal(own.requests[0].shopId,target);
+ assert.equal(own.requests[0].requestId,receipt.request.requestId);
+ const raw=JSON.stringify([own,choices,receipt]);
+ for(const forbidden of ['Private adult item','capMinor','unitPrice','budget','guardian','parentEmail'])assert.ok(!raw.includes(forbidden));
+ for(const route of ['/members','/shops','/shops/'+target,'/shops/'+target+'/inbox','/guardian/consents']){
+  assert.equal((await call(f.child,f.base+route)).status,404);
+ }
+ const {consents}=ok(await call(f.adult,f.base+'/guardian/consents'));
+ ok(await call(f.adult,f.base+'/guardian/consents/'+consents[0].consentId+'/revoke','POST',{}));
+ assert.equal((await call(f.child,f.base+'/requests/pickups')).status,403);
+ assert.equal((await send(f.child,childWindow,target,'Revoked attempt')).status,403);
 });
 
 test('trusted finish and pending-child identity deletion serialize in both deterministic lock orders',async t=>{

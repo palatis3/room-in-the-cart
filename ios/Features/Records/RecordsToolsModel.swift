@@ -125,7 +125,6 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     var selectedMediaBytes: Int { selectedSnapshot.reduce(0) { count, record in count + (record.media ?? []).filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: record)) }.reduce(0) { $0 + $1.data.count } } }
     func canDeleteSource(_ record: ArchiveRecord) -> Bool { deleteSource != nil && deletable(record) }
     var canReviewWholeLedgerDeletion: Bool { wholeLedgerDeletionAction != nil }
-    var recoveredDeletionAllowsUndo: Bool { cleanupRecovered == nil }
     var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count, locale: recordsInterfaceLocale) }
     nonisolated static func selectionID(_ record: ArchiveRecord) -> RecordsSelectionID {
         RecordsSelectionID(origin: record.origin, recordID: record.id, revision: record.revision)
@@ -403,19 +402,14 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         } catch { fail(error, reveal: true) }
     }
-    func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async -> Bool {
-        guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { return false }
-        busy = true; error = nil; review = nil; recipeReport = nil
+    func stageManualRecipe(_ recipe: ImportedRecipe, from presentation: ImportPresentation) async throws {
+        guard !busy, presentation.entry == .manualRecipe, accepts(presentation) else { throw ArchiveError.unavailable }
+        busy = true; error = nil; discardImportReview()
         defer { busy = false }
-        do {
-            let authorize = presentation.authorize
-            let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
-            try await stage(ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: recipe.id), authorize: authorize)
-            return true
-        } catch {
-            fail(error)
-            return false
-        }
+        let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
+        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery,
+                                             origin: record.origin, revision: record.revision)
+        try await stage(envelope, authorize: presentation.authorize)
     }
     private var reviewAuthorization: Authorization?
     private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
@@ -520,10 +514,24 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         let title: String
         fileprivate let target: Target
         fileprivate let authorize: Authorization
-        var copyCount: Int? {
-            if case let .recovered(review) = target { return review.count }
-            return nil
+    }
+    func deletionMessage(for review: DeletionReview) -> String {
+        let scope: String
+        let canUndo: Bool
+        switch review.target {
+        case .source:
+            scope = recordsText("Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected.")
+            canUndo = sourceUndo != nil
+        case let .recovered(copies):
+            let count = String(format: recordsText("Recovered copies selected for deletion: %lld."), Int64(copies.count))
+            let effect = cleanupRecovered == nil
+                ? recordsText("The original records and exported files are unaffected.")
+                : recordsText("Their separate workspaces will also be deleted. The original records and exported files are unaffected.")
+            scope = count + "\n\n" + effect
+            canUndo = cleanupRecovered == nil
         }
+        let undo = canUndo ? recordsText("You can undo this deletion during this app session.") : recordsText("This cannot be undone.")
+        return scope + " " + undo
     }
     func reviewRecoveredDeletion(_ scope: RecoveryDeleteScope, title: String) -> DeletionReview? {
         do {

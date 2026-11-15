@@ -36,6 +36,7 @@ struct ContextualReminderLink: View {
 /// Opening and reviewing this form never requests notification permission or
 /// registers a notice. Only the shared editor's explicit Schedule action can.
 struct SurfaceReminderSetup: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var composition: DeviceSurfacesComposition
     let target: SurfaceReminderTarget
     let sourceSavedAt: Date?
@@ -64,7 +65,10 @@ struct SurfaceReminderSetup: View {
                         LabeledContent(SurfaceCopy.text("Pickup last saved"), value: sourceSavedAt.formatted(date: .complete, time: .shortened))
                     }
                     Text(SurfaceCopy.text("Opening or reviewing this reminder does not schedule a notification. Your shop and retailer decision stay unchanged."))
-                    if let cutoff = target.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: cutoff.formatted(date: .complete, time: .shortened)) }
+                    if let cutoff = target.cutoff {
+                        LabeledContent(SurfaceCopy.text("Offer cutoff"),
+                                       value: reminderCutoffText(cutoff, timeZoneID: target.timeZoneID, locale: locale))
+                    }
                     else if let expiryBinding = Binding($expiry) {
                         DatePicker(SurfaceCopy.text("Reminder expiry"), selection: expiryBinding)
                             .accessibilityIdentifier("reminder.expiry")

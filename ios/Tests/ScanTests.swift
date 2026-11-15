@@ -226,6 +226,10 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .packageReference)
         let record = try model.reviewed(target: target, label: "Rice", barcode: nil)
         XCTAssertEqual(record.originalText, "rize"); XCTAssertEqual(model.source, .paste)
+        let attachment = try RecordsMediaCodec.attachment(record)
+        let reopened = try RecordsMediaCodec.decode(attachment)
+        XCTAssertEqual(reopened.reviewedText, "rice")
+        XCTAssertEqual(reopened.originalText, "rize")
     }
     func testRejectedPastePreservesCurrentReviewAndValidPasteClearsTheFailure() {
         let model = ScanModel(text: "Receipt from Tuesday")

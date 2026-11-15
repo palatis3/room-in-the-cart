@@ -121,6 +121,35 @@ test('unavailable production child entry scrubs secrets before availability and 
   for(const copy of Object.values(childInvitationCopy)){assert.ok(copy.en&&copy.es);assert.notEqual(copy.en,copy.es);}assert.deepEqual(calls,['availability']);dom.window.close();
 });
 
+test('child invitation keeps only the selected language in history and the Help link',async t=>{
+  for (const selected of ['es','en','unsupported']) {
+    const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/child-invite?lang='+selected+'&token=secret&email=private#token=fragment'});
+    t.after(()=>dom.window.close());
+    const fallback=selected==='es'?'en':'es';
+    Object.defineProperty(dom.window.navigator,'language',{value:fallback+'-US'});
+    const supported=selected==='en'||selected==='es';
+    const initial=supported?selected:fallback;
+    const cleanURL='https://food.example/child-invite';
+    const root=dom.window.document.getElementById('app');
+    const checks=[];
+    const api={availability:async language=>{
+      checks.push([language,dom.window.location.href]);
+      return {available:false,reason:'provider_configuration_required'};
+    }};
+    mountChildInvitationPage(root,api);
+    await new Promise(done=>setImmediate(done));
+    assert.deepEqual(checks,[[initial,cleanURL+(supported?'?lang='+initial:'')]]);
+    const selector=root.querySelector('#language');
+    assert.equal(selector.value,initial);
+    const next=initial==='es'?'en':'es';
+    selector.value=next;selector.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.document.activeElement.id,'language');
+    assert.equal(dom.window.location.href,cleanURL+'?lang='+next);
+    assert.equal(root.querySelector('a').getAttribute('href'),'/help?lang='+next);
+    assert.equal(root.querySelector('form'),null);
+  }
+});
+
 test('new entry isolates exact child path and main hook preserves public and helper dispatch',()=>{
   for(const path of ['/child-invite-extra','/invite','/view','/privacy']){const dom=new JSDOM('<div id="app">untouched</div>',{url:'https://food.example'+path});assert.equal(mountChildInvitationPage(dom.window.document.getElementById('app')),false);assert.equal(dom.window.document.getElementById('app').textContent,'untouched');}
   const main=readFileSync(new URL('../src/main.ts',import.meta.url),'utf8');assert.match(main,/!mountPublicPage\(root\)\s*&&\s*!mountChildInvitationPage\(root\)/);

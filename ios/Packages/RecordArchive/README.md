@@ -16,11 +16,11 @@ Supported fields:
 
 - `name`: required nonempty string, preserved verbatim.
 - `recipeYield`: optional string, preserved without guessing servings.
-- `recipeIngredient`: optional array of original ingredient strings; unknown quantities remain unknown.
+- `recipeIngredient`: optional array of original ingredient strings, up to 8,192 UTF-8 bytes per ingredient. Unknown quantities remain unknown.
 - `recipeInstructions`: optional string, string array, or array of `HowToStep` objects with `text` strings.
 - `url`: optional HTTP(S) source URL without credentials. Attribution only; never fetched.
 - `notes`: optional string; otherwise `description` supplies notes.
 
-Other fields are reported, unsupported rows are skipped and duplicate content is identified. No context fetching, website traversal, script execution or remote parsing occurs. The preview shows staged recipes, duplicates, skipped rows and unsupported fields before one atomic batch is saved. Undo removes only copies actually inserted by that batch. The native recipe adapter preserves the original recipe and requires a person to review servings and quantities before adopting a dinner.
+The preview reports other fields, skips unsupported recipes (including individual recipes exceeding the 4 MiB native-record limit) and identifies duplicate content. No context fetching, website traversal, script execution or remote parsing occurs. The preview shows staged recipes, duplicates, skipped rows and unsupported fields before one atomic batch is saved. Undo removes only copies actually inserted by that batch. The native recipe adapter preserves the original recipe and requires a person to review servings and quantities before adopting a dinner.
 
 Run focused tests with `swift test --package-path ios/Packages/RecordArchive --scratch-path /tmp/record-archive-tests`. App composition and simulator validation are separate integration checks.

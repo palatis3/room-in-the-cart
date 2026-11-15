@@ -51,30 +51,48 @@ final class SharedFallbackUITests: XCTestCase {
         reveal(element,file:file,line:line); element.tap()
     }
     private func toggle(_ element: XCUIElement, to value: String = "1", file: StaticString = #filePath, line: UInt = #line) {
-        reveal(element,file:file,line:line)
-        // A partially visible SwiftUI switch can report hittable while its trailing knob is under the home indicator.
-        let knob = element.switches.firstMatch
-        let hasNativeSwitch = knob.exists
-        let control = hasNativeSwitch ? knob : element
-        reveal(control, file: file, line: line)
-        if control.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
-        if control.frame.midY < app.frame.minY + 72 { app.swipeDown() }
-        // The hosted recording shows a track-center tap leaving the visible
-        // native switch off. Target its current thumb, then check both states.
-        let thumbX: CGFloat = control.value as? String == "1" ? 0.75 : 0.25
-        control.coordinate(withNormalizedOffset: CGVector(dx: thumbX, dy: 0.5)).tap()
-        // The hosted agreement tap turns the switch on, but resolving the old
-        // nested query afterward can fail. Check both values in one fresh tree.
-        let applied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let snapshot = try? element.snapshot(), snapshot.value as? String == value else { return false }
-            guard hasNativeSwitch else { return true }
-            var descendants = snapshot.children
-            var nativeSwitches: [XCUIElementSnapshot] = []
-            while let child = descendants.popLast() {
-                if child.elementType == .switch { nativeSwitches.append(child) }
-                descendants.append(contentsOf: child.children)
+        reveal(element, file: file, line: line)
+        // SwiftUI may expose a row and a native switch. Keep the native thumb
+        // geometry and values, without asking XCTest to resolve a nested query.
+        func nativeSwitches(in row: XCUIElementSnapshot) -> [XCUIElementSnapshot] {
+            var pending = row.children
+            var switches: [XCUIElementSnapshot] = []
+            while let child = pending.popLast() {
+                if child.elementType == .switch { switches.append(child) }
+                pending.append(contentsOf: child.children)
             }
-            return nativeSwitches.count == 1 && nativeSwitches[0].value as? String == value
+            return switches
+        }
+
+        let bounds = app.frame
+        var usedNativeSwitch = false
+        for attempt in 0..<3 {
+            guard let row = try? element.snapshot() else {
+                return XCTFail("Could not read the switch row", file: file, line: line)
+            }
+            let switches = nativeSwitches(in: row)
+            XCTAssertLessThanOrEqual(switches.count, 1, file: file, line: line)
+            let control = switches.first ?? row
+            let frame = control.frame
+            if attempt < 2 && frame.midY > bounds.maxY - 72 { app.swipeUp(); continue }
+            if attempt < 2 && frame.midY < bounds.minY + 72 { app.swipeDown(); continue }
+            let fraction: CGFloat = control.value as? String == "1" ? 0.75 : 0.25
+            let thumb = CGPoint(x: frame.minX + frame.width * fraction, y: frame.midY)
+            guard !frame.isEmpty, bounds.contains(thumb) else {
+                return XCTFail("Switch thumb outside the viewport: \(frame)", file: file, line: line)
+            }
+            usedNativeSwitch = !switches.isEmpty
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: thumb.x - bounds.minX, dy: thumb.y - bounds.minY)).tap()
+            break
+        }
+
+        let applied = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let row = try? element.snapshot(), row.value as? String == value else { return false }
+            let switches = nativeSwitches(in: row)
+            return usedNativeSwitch
+                ? switches.count == 1 && switches[0].value as? String == value
+                : switches.isEmpty
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }

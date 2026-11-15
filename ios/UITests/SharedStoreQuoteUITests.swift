@@ -55,7 +55,10 @@ import XCTest
         counter("adoptions",0)
         capture("S27-assigned-shopper-explicit-adoption-review")
         confirm(); counter("adoptions",1)
-        assertText("Prices from the former store are invalid")
+        // Confirmation scrolls to the result at the bottom. The price warning belongs to the first section.
+        let priceWarning = app.staticTexts["Prices from the former store are invalid. Review a fresh checkout quote before freezing."]
+        reveal(priceWarning, searchTowardEndFirst: false)
+        XCTAssertTrue(priceWarning.exists && priceWarning.isHittable)
         assertText("Earlier revision or shopper assignment")
         capture("S27-adopted-draft-requires-fresh-checkout-prices")
         fixture("Freeze shared shop")
@@ -148,9 +151,9 @@ import XCTest
     }
     private func openAdult() { app.launch(); openComparison() }
     private func openComparison() {
-        let link = element("sharedShop.storeQuotes")
-        if !link.waitForExistence(timeout:8) { reveal(link) }
-        tap(link)
+        let link = app.buttons["sharedShop.storeQuotes"]
+        reveal(link, fullyVisible: true)
+        link.tap()
         let ready = app.descendants(matching:.any).matching(NSPredicate(format:"identifier IN %@",["sharedQuotes.scope","sharedQuotes.retry"])).firstMatch
         XCTAssertTrue(ready.waitForExistence(timeout:15))
     }
@@ -169,17 +172,15 @@ import XCTest
         enterValue(label+" branch",into:prefix+"branch")
         enterValue("Entered retailer checkout",into:prefix+"source")
         enterValue(checkout,into:prefix+"itemSubtotal")
-        enterValue(checkout,into:prefix+"total")
-        enterValue(trip,into:prefix+"tripCash")
-        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
-
-        let total = app.textFields.matching(identifier:prefix+"total").firstMatch
-        reveal(total, fullyVisible:true)
-        assertFieldValue(total,text:checkout)
+        // Read the checkout value after Done while its row is still on screen.
+        // The assumptions follow it in the form, before the separate trip inputs.
+        fill(checkout,into:prefix+"total",requireDone:true)
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
+        enterValue(trip,into:prefix+"tripCash")
+        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
         let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
@@ -294,7 +295,10 @@ import XCTest
     }
     private func dismissBilingualKeyboardCardIfPresent() {
         let title = app.staticTexts["Type español e inglés"]
-        guard title.waitForExistence(timeout: 2) else {
+        // Spanish keyboard setup can present the bilingual card asynchronously.
+        // The English journey only needs to handle the card when it is visible.
+        let present = app.launchArguments.contains("es_US") ? title.waitForExistence(timeout: 2) : title.exists
+        guard present else {
             XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
             return
         }
@@ -347,7 +351,7 @@ import XCTest
         let target = app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
         reveal(target); XCTAssertTrue(target.exists && target.isHittable,"Missing visible text: "+text)
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<30 {
             let exists = target.exists
             let hittable = exists && target.isHittable
@@ -357,7 +361,7 @@ import XCTest
             if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let up: Bool
             if exists && !frame.isEmpty { up = frame.midY > area.midY }
-            else { up = (attempt / 6) % 2 == 0 }
+            else { up = (attempt / 6).isMultiple(of: 2) ? searchTowardEndFirst : !searchTowardEndFirst }
             // A large drag can dismiss the keyboard and carry a nearby field
             // out of the lazy Form, triggering a long search in both directions.
             let overflow = up ? frame.maxY - area.maxY : area.minY - frame.minY

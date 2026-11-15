@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import CoreDomain
 
 struct HandoffPiece: Codable, Equatable {
@@ -30,6 +31,12 @@ struct RecipientSend: Codable, Equatable {
     }
 }
 
+extension BasketPackage {
+    func localizedDescription(language: String) -> String {
+        "\(count) × " + pQuantity(amountPerPack, unit: unit, language: language)
+    }
+}
+
 struct HandoffCopy: Equatable, Identifiable {
     let shopID: UUID
     let channel: HandoffChannel
@@ -44,7 +51,13 @@ struct HandoffCopy: Equatable, Identifiable {
 
     static func retailer(_ snapshot: HandoffSnapshot, language: String) -> Self {
         let pieces = snapshot.revision.lines.map { line in
-            let text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            var text = "\(line.name) — \(pQuantity(line.quantity, language: language))"
+            if let packages = line.packages {
+                text += " · " + packages.map { $0.localizedDescription(language: language) }.joined(separator: " + ")
+            }
+            if let exclusions = line.itemExclusions {
+                text += " · " + pCook("Keep these exclusions", language: language) + ": " + exclusions.joined(separator: ", ")
+            }
             let unresolved: String?
             switch line.expectedCost {
             case .exact: unresolved = nil
@@ -269,4 +282,73 @@ struct PickupRecipientSection: View {
         }
     }
     private func resetReview() { reviewRevision = nil; copied = false }
+}
+
+struct HandoffPrintButton: View {
+    let copy: HandoffCopy
+    let allowed: Bool
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var reviewingPrivateText = false
+    @State private var printError = false
+    @State private var activeRenderer: PickupPrintPageRenderer?
+
+    var body: some View {
+        let title = pTr(copy.channel == .cook ? "Print saved cook instruction" : "Print dated list")
+        Button(title) {
+            if copy.needsPrivateReview {
+                reviewingPrivateText = true
+            } else {
+                presentPrint()
+            }
+        }
+        .disabled(!allowed || activeRenderer != nil)
+        .alert(pTr("Include the saved private or edited wording in this printout?"), isPresented: $reviewingPrivateText) {
+            Button(pTr("Print this private copy")) { presentPrint() }
+            Button(pTr("Cancel"), role: .cancel) {}
+        }
+        .alert(ledgerText("Printing is unavailable"), isPresented: $printError) {
+            Button(ledgerText("Done")) {}
+        }
+        .onChange(of: allowed) { _, allowed in if !allowed { dismissPrint() } }
+        .onChange(of: copy) { _, _ in dismissPrint() }
+        .onChange(of: scenePhase) { _, phase in if phase == .background { dismissPrint() } }
+        .onDisappear { dismissPrint() }
+    }
+
+    private func presentPrint() {
+        guard allowed, scenePhase == .active, activeRenderer == nil else { return }
+        guard UIPrintInteractionController.isPrintingAvailable else { printError = true; return }
+        let text = NSAttributedString(string: copy.fullText, attributes: [
+            .font: UIFont.systemFont(ofSize: 20), .foregroundColor: UIColor.black
+        ])
+        let renderer = PickupPrintPageRenderer(text: text)
+        let controller = UIPrintInteractionController.shared
+        let info = UIPrintInfo(dictionary: nil)
+        info.jobName = "Room in the Cart"
+        info.outputType = .grayscale
+        controller.printInfo = info
+        controller.printPageRenderer = renderer
+        activeRenderer = renderer
+        if !controller.present(animated: true, completionHandler: { controller, _, error in
+            if controller.printPageRenderer === renderer { controller.printPageRenderer = nil }
+            guard activeRenderer === renderer else { return }
+            activeRenderer = nil
+            printError = error != nil
+        }) {
+            if controller.printPageRenderer === renderer { controller.printPageRenderer = nil }
+            activeRenderer = nil
+            printError = true
+        }
+    }
+
+    private func dismissPrint() {
+        reviewingPrivateText = false
+        guard let renderer = activeRenderer else { return }
+        activeRenderer = nil
+        let controller = UIPrintInteractionController.shared
+        if controller.printPageRenderer === renderer {
+            controller.dismiss(animated: false)
+            controller.printPageRenderer = nil
+        }
+    }
 }

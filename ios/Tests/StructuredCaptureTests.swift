@@ -155,7 +155,7 @@ final class StructuredCaptureTests: XCTestCase {
     }
 
     func testMultipliedAndNestedPackLabelsKeepExactPackEvidenceWithoutInventingMissingContents() throws {
-        let label = "2 × 15 oz pinto beans"
+        let label = "2 × 15 oz (425 g) pinto beans"
         var draft = try row(label)
         XCTAssertEqual(draft.name, "pinto beans")
         XCTAssertEqual(draft.packCount, "2")

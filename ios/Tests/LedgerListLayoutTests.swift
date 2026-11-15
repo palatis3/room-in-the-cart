@@ -14,6 +14,30 @@ import CoreDomain
         return shop
     }
 
+    func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        await model.open()
+        let started = await model.startShop(title: "Saturday")
+        XCTAssertTrue(started)
+        let first = try XCTUnwrap(model.shop?.id)
+        model.search = "beans"
+        await model.selectShop(first)
+        let edited = await model.editShop(key: "add-beans", shopID: first) {
+            _ = try $0.addManualLine(name: "beans", quantity: nil)
+        }
+        XCTAssertTrue(edited)
+        XCTAssertEqual(model.search, "beans")
+        let next = await model.startShop(title: "Sunday")
+        XCTAssertTrue(next)
+        XCTAssertEqual(model.search, "")
+        model.search = "tomatoes"
+        await model.selectShop(first)
+        XCTAssertEqual(model.search, "")
+        XCTAssertEqual(model.shop?.search(model.search).map(\.name), ["beans"])
+    }
+
     func testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch() throws {
         var a = try populated("Market A")
         let b = try populated("Market A"), other = try populated("Market B")
@@ -80,10 +104,22 @@ import CoreDomain
         var shop = try populated("Corner Market")
         try shop.handle(lineID: shop.lines[1].id, by: "Private helper")
         for i in 1...35 { _ = try shop.addManualLine(name: "Package number \(i)", quantity: nil) }
+        let literal = "<Flour> & \"Rice\""
+        _ = try shop.addManualLine(name: literal, quantity: nil)
+        var imported = try shop.stageImport(text: "2 15 oz (425 g) cans of beans, no salt added")
+        // Keep the shopper's edited total distinct from the package facts on the original label.
+        imported.lines[0].quantity = Quantity(amount: try Rational(45), unit: .ounce, originalLiteral: "45")
+        try shop.commitImport(imported)
+        let captured = CaptureImportLine(originalText: "Private transcription", name: "rolled oats", packCount: 3,
+            amountPerPack: Quantity(amount: try Rational(12), unit: .ounce, originalLiteral: "12 oz"), purpose: "Private breakfast", exclusions: ["added salt", "added salt"])
+        let uncertain = CaptureImportLine(originalText: "Maybe eight bags", name: "lentils", packCount: 8,
+            amountPerPack: captured.amountPerPack, unresolvedFields: [.packCount])
+        try shop.commitImport(shop.stageCaptureImport(id: UUID(), originalText: "Voice draft", source: .voice, lines: [captured, uncertain]))
+        let hidden = try shop.addManualLine(name: "Private extra", quantity: nil, exclusions: ["retired restriction"])
+        try shop.setChecked(lineID: hidden, checked: true)
+        _ = try shop.addManualLine(name: "Crackers", quantity: nil, exclusions: ["<sesame> & nuts"])
         let listing = LargePrintList(shop: shop, layout: LedgerListLayout())
-        let formatter = UISimpleTextPrintFormatter(attributedText: listing.printText())
-        let renderer = LetterPageRenderer()
-        renderer.addPrintFormatter(formatter,startingAtPageAt:0)
+        let renderer = LetterPageRenderer(formatter: listing.printFormatter())
         let data = UIGraphicsPDFRenderer(bounds:renderer.paperRect).pdfData { context in
             let count = renderer.numberOfPages
             renderer.prepare(forDrawingPages:NSRange(location:0,length:count))
@@ -91,13 +127,40 @@ import CoreDomain
         }
         let pdf = try XCTUnwrap(PDFDocument(data:data))
         XCTAssertGreaterThan(pdf.pageCount,1)
+        var numberedItems: [String] = []
+        for index in 0..<pdf.pageCount {
+            let page = try XCTUnwrap(pdf.page(at: index))
+            let lines = page.selection(for: page.bounds(for: .mediaBox))?.selectionsByLine() ?? []
+            let footers = lines.filter { $0.string == "Room in the Cart" }
+            XCTAssertEqual(footers.count, 1, "Page \(index + 1)")
+            let footer = try XCTUnwrap(footers.first).bounds(for: page)
+            XCTAssertLessThan(footer.maxY, 70)
+            let body = lines.filter { $0.string != "Room in the Cart" }
+            numberedItems += body.compactMap(\.string).filter { $0.hasPrefix("Package number ") }
+            if let last = body.last?.string {
+                XCTAssertFalse(last.hasPrefix("Package number "), "Each item and its quantity must print on the same page")
+            }
+            XCTAssertFalse(body.isEmpty, "A footer must not create a blank page")
+            XCTAssertTrue(body.allSatisfy { $0.bounds(for: page).minY > footer.maxY })
+        }
         let text = try XCTUnwrap(pdf.string)
-        for wanted in ["Corner Market","Apples","Soap","Package number 35"] { XCTAssertTrue(text.contains(wanted),wanted) }
-        for hidden in ["Private note","Private helper","Milk"] { XCTAssertFalse(text.contains(hidden),hidden) }
+        for wanted in ["Corner Market","Apples","Soap","Package number 35",literal] { XCTAssertTrue(text.contains(wanted),wanted) }
+        let ounce = UnitOfMeasure.ounce.displayName
+        XCTAssertTrue(text.contains("beans, no salt added"))
+        XCTAssertTrue(text.contains("45 " + ounce))
+        XCTAssertTrue(text.contains(ledgerFormat("Original package label (%lld × %@)", Int64(2), "15 " + ounce)))
+        XCTAssertTrue(text.contains(captureText("Packs") + ": 3"))
+        XCTAssertTrue(text.contains(captureText("Usable amount per pack") + ": 12 " + ounce))
+        XCTAssertFalse(text.contains(captureText("Packs") + ": 8"))
+        XCTAssertEqual(text.components(separatedBy: ledgerFormat("Exclusions: %@", "added salt")).count - 1, 1)
+        XCTAssertTrue(text.contains(ledgerFormat("Exclusions: %@", "<sesame> & nuts")))
+        XCTAssertFalse(text.contains("retired restriction"))
+        XCTAssertEqual(numberedItems, (1...35).map { "Package number \($0)" })
+        for hidden in ["Private note","Private helper","Milk","Private transcription","Private breakfast","Maybe eight bags"] { XCTAssertFalse(text.contains(hidden),hidden) }
     }
 }
 
-private final class LetterPageRenderer: UIPrintPageRenderer {
+private final class LetterPageRenderer: PickupPrintPageRenderer {
     override var paperRect: CGRect { CGRect(x:0,y:0,width:612,height:792) }
     override var printableRect: CGRect { paperRect.insetBy(dx:36,dy:36) }
 }

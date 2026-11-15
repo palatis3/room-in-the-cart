@@ -6,6 +6,36 @@ final class CorrectionSettingsOutcomeTests: XCTestCase {
         CaptureCorrection(id: UUID(), original: original, replacement: replacement, createdAt: .distantPast)
     }
 
+    @MainActor func testDamagedSpellingMemoryCanBeDeletedWithoutLosingAnotherLanguage() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = CaptureCorrectionStore(directory: directory)
+        let profile = "local:" + UUID().uuidString
+        let spanish = CaptureCorrectionScope(profileID: profile, localeIdentifier: "es-US")
+        let english = CaptureCorrectionScope(profileID: profile, localeIdentifier: "en-US")
+        let model = CaptureCorrectionsModel(store: store)
+        await model.bind(spanish)
+        await model.setEnabled(true)
+        await model.remember(original: "limmon", replacement: "limón")
+        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        XCTAssertEqual(files.count, 1)
+        let spanishFile = try XCTUnwrap(files.first)
+        try await store.setEnabled(true, scope: english)
+        try await store.remember(original: "lemmon", replacement: "lemon", scope: english)
+        let expectedEnglish = try await store.load(english)
+
+        try Data("{".utf8).write(to: spanishFile)
+        await model.remember(original: "tomatte", replacement: "tomate")
+        XCTAssertTrue(model.failed)
+        XCTAssertNil(model.suggestion(for: "limmon"))
+        await model.setEnabled(false)
+        XCTAssertFalse(model.failed)
+        XCTAssertEqual(model.snapshot, .init())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: spanishFile.path))
+        let retainedEnglish = try await store.load(english)
+        XCTAssertEqual(retainedEnglish, expectedEnglish)
+    }
+
     @MainActor func testRegionalCaptureFilesRemainManageableWithoutReenablingOrMixingLanguages() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

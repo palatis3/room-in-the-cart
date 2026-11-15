@@ -18,7 +18,7 @@ import SwiftUI
     // reason. They neither describe a later purchase call nor prove delivery.
     @Published private(set) var callbackRejections: [MembershipFailure] = []
     let configuration: MembershipConfiguration
-    let context: MembershipContext?
+    @Published private(set) var context: MembershipContext?
     @Published private(set) var eligibleAdults: [MembershipSeat]
     private let service: any MembershipEntitlementService
     private let storefront: any MembershipStorefront
@@ -30,7 +30,7 @@ import SwiftUI
     private var generation = 0
     private var purchaseRejection: MembershipFailure?
 
-    enum Notice: Equatable { case pending, cancelled, restored, delivered, failed(MembershipFailure) }
+    enum Notice: Equatable { case pending, cancelled, restored, restoredFree, delivered, failed(MembershipFailure) }
 
     enum PurchaseReport: Equatable {
         case awaitingResult, pending, cancelled, unverified, verified(transactionID: String), failed(MembershipFailure)
@@ -59,6 +59,7 @@ import SwiftUI
                 case .pending: return "membership.status.notice.pending"
                 case .cancelled: return "membership.status.notice.cancelled"
                 case .restored: return "membership.status.notice.restored"
+                case .restoredFree: return "membership.status.notice.restored-free"
                 case .delivered: return "membership.status.notice.delivered"
                 case .failed(let issue): return "membership.status.notice.failure." + Self.failureID(issue)
                 }
@@ -160,11 +161,11 @@ import SwiftUI
         }
     }
     var canPurchase: Bool {
-        !isStopped && configuration.isReady && context?.appAccountToken != nil && offer != nil && !isBusy && canStartNewPurchase
+        !isStopped && configuration.isReady && offer != nil && !isBusy && canStartNewPurchase
     }
 
     private var canStartNewPurchase: Bool {
-        !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
+        context?.appAccountToken != nil && !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
             && !deliveryOutcomes.values.contains(.failed(.deliveryPending))
     }
 
@@ -241,14 +242,8 @@ import SwiftUI
             }
         }
         do {
-            let snapshot = try await service.fetch(context: context)
+            try await refreshSeatRoster(context: context, session: session)
             guard session == generation else { return }
-            try state.accept(snapshot, context: context, now: clock())
-            if canManageSeats {
-                let adults = try await service.seatCandidates(context: context)
-                guard session == generation else { return }
-                eligibleAdults = adults.filter { $0.isAdult }
-            } else { eligibleAdults = [] }
             // A successful Free projection does not erase a rejected restore or undelivered transaction.
             if let deliveryFailure { state.fail(deliveryFailure); notice = .failed(deliveryFailure) }
         } catch {
@@ -257,6 +252,17 @@ import SwiftUI
             state.fail(issue)
             if issue == .signInRequired || issue == .membershipInactive { eligibleAdults = [] }
         }
+    }
+
+    private func refreshSeatRoster(context: MembershipContext, session: Int) async throws {
+        let snapshot = try await service.fetch(context: context)
+        guard session == generation else { return }
+        try state.accept(snapshot, context: context, now: clock())
+        if canManageSeats {
+            let adults = try await service.seatCandidates(context: context)
+            guard session == generation else { return }
+            eligibleAdults = adults.filter { $0.isAdult }
+        } else { eligibleAdults = [] }
     }
 
     func purchase() async {
@@ -279,6 +285,25 @@ import SwiftUI
             return
         }
         guard canStartNewPurchase else { return }
+        // Another adult may have become the purchaser since this screen opened.
+        do {
+            let currentToken = try await service.purchaseContext(householdID: context.householdID)
+            guard session == generation, canStartNewPurchase else { return }
+            guard currentToken == appAccountToken else { throw MembershipFailure.accountMismatch }
+        } catch {
+            guard session == generation else { return }
+            let issue = error as? MembershipFailure ?? .unavailable
+            if issue == .notPurchaser || issue == .accountMismatch {
+                var readOnly = context
+                readOnly.appAccountToken = nil
+                self.context = readOnly
+                updatesTask?.cancel()
+                updatesTask = nil
+            }
+            // Nothing was submitted to Apple. The shopper can retry a network failure.
+            _ = reject(issue == .deliveryPending ? .unavailable : issue)
+            return
+        }
         // Only a new actual StoreKit purchase call resets its report. Observer
         // updates, restores and unrelated rejections cannot resolve this request.
         purchaseRejection = nil
@@ -326,8 +351,8 @@ import SwiftUI
             await refresh()
             guard session == generation else { return }
             if let issue = state.issue { notice = .failed(issue) }
-            else if state.hasPaidAccess(context: context, now: clock()) { notice = .restored }
-            else { notice = .failed(.unavailable) }
+            else if canManageSeats || hasPaidAccess { notice = .restored }
+            else { notice = .restoredFree }
         } catch {
             guard session == generation else { return }
             notice = .failed(failure(error))
@@ -335,8 +360,12 @@ import SwiftUI
     }
 
     /// Named seats are service mutations. They never grant the current-shop role or budget scope.
-    func replaceSeat(userID: String?, replacingUserID: String?) async {
+    func replaceSeat(userID: String?, replacingUserID: String?, reviewedRevision: Int) async {
         guard !isBusy, canManageSeats, let context, let snapshot = state.snapshot else { return }
+        guard reviewedRevision == snapshot.revision else {
+            _ = reject(.refreshRequired)
+            return
+        }
         isBusy = true
         let session = generation
         defer { isBusy = false }
@@ -345,6 +374,19 @@ import SwiftUI
                 context: context, revision: snapshot.revision)
             guard session == generation else { return }
             try state.accept(updated, context: context, now: clock())
+            if notice == .failed(.refreshRequired) { notice = nil }
+        } catch MembershipFailure.refreshRequired {
+            guard session == generation else { return }
+            // Refresh what the purchaser can review. A conflict never retries the seat mutation.
+            eligibleAdults = []
+            do {
+                try await refreshSeatRoster(context: context, session: session)
+                guard session == generation else { return }
+                _ = reject(.refreshRequired)
+            } catch {
+                guard session == generation else { return }
+                _ = reject(failure(error))
+            }
         } catch {
             guard session == generation else { return }
             _ = reject(failure(error))

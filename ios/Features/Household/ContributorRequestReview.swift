@@ -2,6 +2,12 @@ import Foundation
 import CoreDomain
 import HouseholdClient
 
+extension OwnReceipt {
+    var contributorDeliveryLabel: String {
+        kind == "request.send" && request.route == "next" ? ht("Received for the next shop.") : ht("Received by the household")
+    }
+}
+
 /// An in-memory review lease. It contains no authority restored from capture text.
 struct ContributorRequestScope: Equatable {
     let generation: UUID

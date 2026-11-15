@@ -130,7 +130,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     root.append(main);
     const footer = element('footer'); footer.className = 'public-footer';
     footer.append(element('p', labels.footer[language]));
-    const invited = element('a', labels.invited[language]); invited.href = '/requests'; footer.append(invited); root.append(footer);
+    const invited = element('a', labels.invited[language]); invited.href = '/requests?lang=' + language; footer.append(invited); root.append(footer);
     if (restoreLanguageFocus) languageSelect.focus();
   };
   render();

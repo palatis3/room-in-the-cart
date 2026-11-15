@@ -287,12 +287,20 @@ public actor ReminderCoordinator {
         }
         guard let current = try? await store.get(id), current.version == row.version, current.status != .cancelled else { return }
         if let authorized, !(await authorized()) { return }
+        // The system permission prompt can outlast the time the shopper reviewed.
+        guard now() < row.intent.fireAt else {
+            _ = try? await store.mark(id, version: row.version, status: .expired)
+            return
+        }
         do {
             try await scheduler.add(ReminderNotification(row.intent))
             if let authorized, !(await authorized()) { await scheduler.remove([identifier]); return }
             let marked = try await store.mark(id, version: row.version, status: .scheduled)
             if !marked { await scheduler.remove([identifier]) }
-        } catch { _ = try? await store.mark(id, version: row.version, status: .retryNeeded) }
+        } catch {
+            let status: ReminderStatus = now() >= row.intent.fireAt || error as? SurfaceError == .expired ? .expired : .retryNeeded
+            _ = try? await store.mark(id, version: row.version, status: status)
+        }
     }
 }
 

@@ -122,6 +122,25 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         .init(subject:"fixture-guardian",householdID:GuardianFixtureData.householdID,memberID:GuardianFixtureData.memberID,
               generation:UUID(),enrollmentRevision:UUID())
     }
+    func testBrowserInvitationSharesOnlyThePublicRouteInTheAddressAndPreservesTheCode() throws {
+        let origin = try XCTUnwrap(URL(string: "https://family.grocery.example:8443/"))
+        let code = "fictional-secret.ABC123"
+        for route in BrowserInvitationRoute.allCases {
+            let share = try XCTUnwrap(route.shareText(serviceURL: origin, code: code))
+            let lines = share.components(separatedBy: "\n")
+            XCTAssertEqual(lines.count, 5)
+            let expected = route == .child ? "child-invite" : route.rawValue + "?enterCode=1"
+            XCTAssertEqual(lines[1], "https://family.grocery.example:8443/" + expected)
+            XCTAssertEqual(lines.last, code)
+            XCTAssertFalse(lines.dropLast().joined().contains(code))
+        }
+        for invalid in ["http://family.grocery.example", "https://person@family.grocery.example",
+                        "https://family.grocery.example/?tenant=1", "https://family.grocery.example/#private",
+                        "https://family.grocery.example/api"] {
+            XCTAssertNil(BrowserInvitationRoute.child.shareText(serviceURL: try XCTUnwrap(URL(string: invalid)), code: code))
+        }
+        XCTAssertNil(BrowserInvitationRoute.child.shareText(serviceURL: origin, code: ""))
+    }
     func testUnavailableNoticePreventsSetupAndVerificationIsNotPermission() async throws {
         let scope = scope(), store = GuardianIntentStore(vault: GuardianModelVault()), unavailable = try GuardianNativeFixture(scope: scope, available: false)
         let blocked = GuardianEnrollmentModel(scope:scope,service:unavailable,store:store,runtime:{ scope })

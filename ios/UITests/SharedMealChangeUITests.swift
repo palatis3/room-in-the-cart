@@ -41,8 +41,8 @@ import XCTest
     private func reviewFoodAmounts() {
         enableSwitch("I reviewed the changed meal and all retained food commitments")
         enableSwitch("I accept unresolved quantities or restrictions for this item")
-        tap(element("sharedFood.preview"))
-        reveal(element("sharedFood.apply")); XCTAssertFalse(element("sharedFood.apply").isEnabled)
+        tap(app.buttons["sharedFood.preview"])
+        reveal(app.buttons["sharedFood.apply"]); XCTAssertFalse(app.buttons["sharedFood.apply"].isEnabled)
     }
     private func approveSharedDraft() {
         assertText("Entered soup packs")
@@ -53,10 +53,10 @@ import XCTest
         assertText("Unresolved quantities or restrictions accepted for this item")
         capture("S17-actual-shared-pack-and-checkout-review")
         enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
-        tap(element("sharedFood.apply"))
+        tap(app.buttons["sharedFood.apply"])
         let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: element("fixture.s17.applications"))
         XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 10), .completed)
-        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
         capture("S17-actual-shared-apply-confirmed-once")
     }
     func testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce() {
@@ -134,11 +134,11 @@ import XCTest
         assertDeadline(contains: "America/New_York (UTC−04:00)")
         assertDeadline(contains: "America/New_York (UTC−05:00)")
         enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
-        tap(element("sharedFood.apply"))
+        tap(app.buttons["sharedFood.apply"])
         let count = element("fixture.s17.applications")
         let published = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: count)
         XCTAssertEqual(XCTWaiter.wait(for: [published], timeout: 10), .completed)
-        XCTAssertTrue(element("sharedFood.apply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
 
         tap(app.buttons["Edit shared items and quote"])
         tap(app.buttons["Edit this meal"])

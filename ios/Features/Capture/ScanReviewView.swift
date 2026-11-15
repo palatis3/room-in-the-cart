@@ -44,6 +44,10 @@ import CoreDomain
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
     }
     var body: some View {
+        ScrollViewReader { scroll in scanForm(scroll) }
+    }
+
+    private func scanForm(_ scroll: ScrollViewProxy) -> some View {
         Form {
             if reviewingIngredients {
                 StructuredCaptureReviewView(lines: $ingredients, corrections: corrections, correctionScope: correctionScope,
@@ -55,6 +59,17 @@ import CoreDomain
                 recipeFields
             } else {
                 captureControls
+                if let failure = model.failure {
+                    Section {
+                        Text(failureText(failure))
+                        if failure == .permissionDenied || failure == .unavailable {
+                            Button(captureText("Type item")) {
+                                scroll.scrollTo("scan.sourceEditor", anchor: .center)
+                                focusedField = .sourceText
+                            }.accessibilityIdentifier("scan.typeItem")
+                        }
+                    }
+                }
                 if let candidate = model.candidate {
                     Section(captureText("Captured source — review before using")) {
                         sourceImage(candidate.originalImageData)
@@ -67,6 +82,7 @@ import CoreDomain
                 }
                 Section(captureText("Editable source text")) {
                     TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
+                        .id("scan.sourceEditor")
                         .accessibilityIdentifier("scan.sourceEditor")
                         .focused($focusedField, equals: .sourceText)
                         .disabled(model.busy || loadingPhoto)
@@ -90,7 +106,9 @@ import CoreDomain
                 }
             }
             if let error { Section { Text(error).accessibilityIdentifier("scan.error") } }
-            if let failure = model.failure { Section { Text(failureText(failure)) } }
+            if (reviewingIngredients || recipe != nil), let failure = model.failure {
+                Section { Text(failureText(failure)) }
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focusedField != nil || structuredFieldFocus != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
@@ -304,11 +322,17 @@ import CoreDomain
     private func loadPhoto(_ item: PhotosPickerItem?) {
         photoTask?.cancel(); guard localPhotoConsent, let item, !model.closed else { return }; loadingPhoto = true
         photoTask = Task { @MainActor in
-            defer { if photo == item { loadingPhoto = false } }
+            defer {
+                if photo == item {
+                    loadingPhoto = false
+                    // Let the shopper choose this asset again after reviewing or retrying it.
+                    photo = nil
+                }
+            }
             do {
                 guard let selected = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
                 guard localPhotoConsent, !Task.isCancelled, photo == item, authorize(), !model.closed else { return }
-                model.stage(selected.data)
+                model.stage(try selected.data)
             } catch { if !Task.isCancelled, !model.closed { model.inputFailed(error as? ScanFailure ?? .invalidImage) } }
         }
     }

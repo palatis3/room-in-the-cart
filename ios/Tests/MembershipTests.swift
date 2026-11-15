@@ -932,9 +932,39 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testPurchaserWithBothSeatsAssignedToOthersCanRestoreWithoutTakingASeat() async {
+        let seats = ["adult-two", "adult-three"].map { MembershipSeat(userID: $0, displayName: $0, isAdult: true) }
+        for status in [MembershipStatus.active, .grace] {
+            let service = FakeMembershipService(snapshot: snapshot(status: status, seats: seats))
+            let store = FakeMembershipStorefront()
+            let model = makeModel(service, store)
+
+            await model.restore()
+
+            XCTAssertEqual(model.notice, .restored)
+            XCTAssertTrue(model.canManageSeats)
+            XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertEqual(model.state.snapshot?.seats, seats)
+            XCTAssertTrue(service.requestedSeatRevisions.isEmpty)
+            XCTAssertEqual(store.syncCount, 1)
+        }
+    }
+
+    func testRestoreReportsFreeAfterCheckingAnInactiveMembership() async {
+        for status in [MembershipStatus.free, .expired, .revoked, .billingRetry] {
+            let service = FakeMembershipService(snapshot: snapshot(status: status))
+            let model = makeModel(service, FakeMembershipStorefront())
+            await model.restore()
+            XCTAssertEqual(model.statusMessages, [.otherNotice(.restoredFree)])
+            XCTAssertFalse(model.hasPaidAccess)
+            XCTAssertFalse(model.canManageSeats)
+        }
+    }
+
     func testOfferRetryCoalescesLoadsAndPreservesAnIndependentRestoreFailure() async {
         let store = FakeMembershipStorefront()
         let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.error = .unavailable
         let model = makeModel(service, store)
         await model.restore()
         XCTAssertEqual(model.notice, .failed(.unavailable))
@@ -963,6 +993,53 @@ import Combine
         XCTAssertNotNil(model.offer)
         XCTAssertFalse(model.hasPaidAccess)
         XCTAssertEqual(model.statusMessages, [.otherNotice(.failed(.unavailable))])
+    }
+
+    func testChangedPurchaserCannotOpenApplePaymentSheetFromAnOlderOffer() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        XCTAssertTrue(model.canPurchase)
+        service.purchaseContextError = .notPurchaser
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.notPurchaser))
+        XCTAssertNil(model.purchaseReport)
+        XCTAssertFalse(model.canPurchase)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(service.submissions, 0)
+        XCTAssertNil(model.context?.appAccountToken)
+        await model.restore()
+        XCTAssertEqual(store.syncCount, 0)
+        XCTAssertEqual(store.purchaseCount, 0)
+    }
+
+    func testPurchaseAccountCheckCanRetryAfterAServiceInterruption() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        service.purchaseContextError = .deliveryPending
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.unavailable))
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertTrue(model.canPurchase)
+        service.purchaseContextError = nil
+        await model.purchase()
+        XCTAssertEqual(store.purchaseCount, 1)
+    }
+
+    func testReplacedAccountTokenCannotReachStoreKit() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.loadOffer()
+        service.purchaseToken = UUID()
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.accountMismatch))
+        XCTAssertNil(model.purchaseReport)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(service.submissions, 0)
     }
 
     func testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice() async {
@@ -1018,6 +1095,36 @@ import Combine
         XCTAssertTrue(store.finished.isEmpty)
     }
 
+    func testRemovedSeatDropsRosterRejectsDelayedResponsesAndAcceptsLaterReassignment() throws {
+        let adult = MembershipSeat(userID: "adult-two", displayName: "Sam", isAdult: true)
+        let member = MembershipContext(purchaserID: adult.userID, purchaserName: adult.displayName,
+            householdID: context.householdID, householdName: context.householdName, appAccountToken: nil)
+        func privateFree(at date: Date) -> MembershipSnapshot {
+            .init(householdID: member.householdID, purchaserID: member.purchaserID, revision: 0, status: .free,
+                expiresAt: nil, graceExpiresAt: nil, verifiedAt: date, validUntil: date, seats: [])
+        }
+        let paid = snapshot(revision: 4, seats: [adult])
+        let removed = privateFree(at: now.addingTimeInterval(-5))
+        var state = MembershipState()
+        try state.accept(paid, context: member, now: now)
+        try state.accept(removed, context: member, now: now)
+        XCTAssertEqual(state.snapshot, removed)
+        XCTAssertFalse(state.hasPaidAccess(context: member, now: now))
+        try state.accept(paid, context: member, now: now)
+        // Even a previously unseen revision can have been read before the removal.
+        try state.accept(snapshot(revision: 5, seats: [adult]), context: member, now: now)
+        XCTAssertEqual(state.snapshot, removed)
+        XCTAssertTrue(state.freeRecordsAndExportAvailable)
+
+        let reassigned = MembershipSnapshot(householdID: paid.householdID, purchaserID: paid.purchaserID,
+            revision: 6, status: .active, expiresAt: paid.expiresAt, graceExpiresAt: nil,
+            verifiedAt: now, validUntil: paid.validUntil, seats: [adult])
+        try state.accept(reassigned, context: member, now: now)
+        try state.accept(removed, context: member, now: now)
+        XCTAssertEqual(state.snapshot, reassigned)
+        XCTAssertTrue(state.hasPaidAccess(context: member, now: now))
+    }
+
     func testUnseatedAdultNeverGetsPaidAccessFromSharedSnapshot() async {
         let second = MembershipContext(purchaserID: "unseated-adult", purchaserName: "Sam", householdID: context.householdID,
             householdName: "Home", appAccountToken: nil)
@@ -1025,6 +1132,7 @@ import Combine
         let model = MembershipModel(context: second, service: service, storefront: FakeMembershipStorefront(), clock: { self.now })
         await model.restore()
         XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.notice, .restoredFree)
         await model.receive(.verified(transaction()))
         XCTAssertEqual(service.submissions, 0)
         XCTAssertEqual(model.notice, .failed(.notPurchaser))
@@ -1052,6 +1160,52 @@ import Combine
         XCTAssertEqual(model.notice, .failed(.accountMismatch))
         XCTAssertEqual(service.submissions, 0)
         XCTAssertTrue(store.finished.isEmpty)
+    }
+
+    func testSeatConflictLoadsCurrentRosterWithoutReplayingRemoval() async {
+        let second = MembershipSeat(userID: "adult-two", displayName: "Sam", isAdult: true)
+        let service = FakeMembershipService(snapshot: snapshot())
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        await model.refresh()
+        service.snapshot = snapshot(revision: 2, seats: [second])
+        let reads = store.unfinishedReads
+
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(model.state.snapshot?.revision, 2)
+        XCTAssertEqual(model.state.snapshot?.seats, [second])
+        XCTAssertEqual(model.eligibleAdults, [second])
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
+        XCTAssertEqual(store.unfinishedReads, reads)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertTrue(model.canManageSeats)
+        XCTAssertEqual(model.notice, .failed(.refreshRequired))
+
+        // A menu tap captured before the roster changed cannot use its newer revision.
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
+        service.seatUpdateResponse = snapshot(revision: 3, seats: [])
+        await model.replaceSeat(userID: nil, replacingUserID: second.userID, reviewedRevision: 2)
+        XCTAssertEqual(service.requestedSeatRevisions, [1, 2])
+        XCTAssertEqual(model.state.snapshot?.seats, [])
+        XCTAssertNil(model.notice)
+    }
+
+    func testSeatConflictFollowedByAccessLossClearsRosterAndStopsChanges() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        let model = makeModel(service, FakeMembershipStorefront())
+        await model.refresh()
+        service.snapshot = snapshot(revision: 2)
+        service.error = .signInRequired
+
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertNil(model.state.snapshot)
+        XCTAssertTrue(model.eligibleAdults.isEmpty)
+        XCTAssertFalse(model.canManageSeats)
+        XCTAssertFalse(model.hasPaidAccess)
+        XCTAssertEqual(model.notice, .failed(.signInRequired))
+        await model.replaceSeat(userID: nil, replacingUserID: context.purchaserID, reviewedRevision: 1)
+        XCTAssertEqual(service.requestedSeatRevisions, [1])
     }
 
     func testSessionRejectionImmediatelyClearsPaidProjection() async {
@@ -1308,7 +1462,7 @@ import Combine
         source.membershipSession = session(subject: "new-subject-with-old-projection")
         source.events.send(.identity)
         await settle { coordinator.model == nil && stores[0].activeObservers == 0 }
-        coordinator.foreground(); coordinator.retry()
+        coordinator.foreground(); await coordinator.retry()
         await Task.yield()
         XCTAssertEqual(stores.count, 1)
         source.events.send(.projection)
@@ -1350,10 +1504,18 @@ import Combine
         source.credentialError = .signInRequired
         coordinator.foreground()
         await settle { coordinator.model == nil && coordinator.failure && store.activeObservers == 0 }
-        coordinator.foreground(); coordinator.retry()
+        coordinator.foreground(); await coordinator.retry()
         await Task.yield()
         XCTAssertNil(coordinator.model)
         XCTAssertEqual(store.observerStarts, 1)
+        XCTAssertEqual(source.authorizationRefreshes, 1)
+        source.credentialError = nil
+        source.onAuthorizationRefresh = { [weak source] in source?.events.send(.projection) }
+        await coordinator.retry()
+        await settle { coordinator.model?.hasPaidAccess == true && !coordinator.isLoading }
+        XCTAssertEqual(source.authorizationRefreshes, 2)
+        XCTAssertEqual(store.observerStarts, 2)
+        coordinator.stop()
     }
 
     func testMissingDeploymentConfigurationKeepsPurchaseDisabled() async {
@@ -1391,7 +1553,20 @@ import Combine
         if let error { throw error }; return snapshot
     }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { snapshot.seats }
-    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot { snapshot }
+    var purchaseContextError: MembershipFailure?
+    var purchaseToken = UUID(uuidString: "33333333-3333-4333-8333-333333333333")!
+    func purchaseContext(householdID: String) async throws -> UUID {
+        if let purchaseContextError { throw purchaseContextError }
+        return purchaseToken
+    }
+    var requestedSeatRevisions: [Int] = []
+    var seatUpdateResponse: MembershipSnapshot?
+    func replaceSeat(userID: String?, replacingUserID: String?, context: MembershipContext, revision: Int) async throws -> MembershipSnapshot {
+        requestedSeatRevisions.append(revision)
+        guard revision == snapshot.revision else { throw MembershipFailure.refreshRequired }
+        if let seatUpdateResponse { snapshot = seatUpdateResponse }
+        return snapshot
+    }
 }
 
 @MainActor private final class FakeMembershipStorefront: MembershipStorefront {
@@ -1541,6 +1716,12 @@ private final class MembershipURLProtocol: URLProtocol {
     let events = PassthroughSubject<MembershipSessionEvent, Never>()
     var membershipSessionChanges: AnyPublisher<MembershipSessionEvent, Never> { events.eraseToAnyPublisher() }
     var onScopeChange: (() -> Void)?
+    var authorizationRefreshes = 0
+    var onAuthorizationRefresh: (() -> Void)?
+    func refreshMembershipAuthorization() async {
+        authorizationRefreshes += 1
+        onAuthorizationRefresh?()
+    }
     var credentialReads = 0
     var credentialError: MembershipFailure?
     init(session: MembershipSession) { membershipSession = session }

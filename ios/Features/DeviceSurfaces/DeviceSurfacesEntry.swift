@@ -170,8 +170,11 @@ struct DeviceSurfacesDestination: View {
                 else if composition.privateAuthorized { LedgerHomeView(model: ledger) }
                 else { SurfaceUnavailableView() }
             case .shop(let id):
-                if composition.privateAuthorized, selected, ledger.shop?.id == id { LedgerHomeView(model: ledger) }
-                else { SurfaceUnavailableView() }
+                if selected, let generation = composition.generation, ledger.shop?.id == id {
+                    LedgerHomeView(model: ledger, onShopSelected: { [weak composition] newID in
+                        composition?.followPickerSelection(newID, from: id, generation: generation)
+                    })
+                } else { SurfaceUnavailableView() }
             case .offer(let journey, let offerID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
                     Form {

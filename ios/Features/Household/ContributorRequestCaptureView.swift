@@ -5,6 +5,7 @@ import SwiftUI
     @ObservedObject var household: HouseholdModel
     let scope: ContributorRequestScope
     let capture: Bool
+    var pickupLabel: String? = nil
     @State private var review: ContributorRequestReview?
     @State private var approved = false
     @State private var failure: String?
@@ -21,16 +22,23 @@ import SwiftUI
                     Section(ht("Request the household will receive")) {
                         LabeledContent(ht("Item"), value: review.item)
                         LabeledContent(ht("Quantity"), value: review.quantity.isEmpty ? ht("Unknown amount") : review.quantity)
+                        if let pickupLabel {
+                            LabeledContent(GuardianCopy.text("Pickup for this request"), value: pickupLabel)
+                                .accessibilityIdentifier("guardian.childReviewedPickup")
+                        }
                         LabeledContent(ht("Destination"), value: scope.destination)
+                            .accessibilityIdentifier("household.request.reviewDestination")
                         if scope.editing != nil { Text(ht("This edits only your selected request.")) }
                         if scope.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
                         Text(ht("Only the shopper can change the basket. Sending a request does not buy an item or confirm its price."))
                     }
                     Section {
                         Toggle(ht("I reviewed the original wording, item, quantity, packs, exclusions and destination."), isOn: $approved)
+                            .disabled(sending)
                             .accessibilityIdentifier("household.request.approve")
                         Button(ht("Send reviewed request")) { Task {
                             guard authorized, approved else { return }
+                            failure = nil
                             sending = true
                             await household.sendRequest(reviewed: review, approved: true)
                             sending = false
@@ -42,10 +50,11 @@ import SwiftUI
                             }
                         } }.disabled(!authorized || !approved).accessibilityIdentifier("household.request.sendReviewed")
                         if let failure { Text(failure).accessibilityIdentifier("household.request.reviewError") }
-                        Text(ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
+                        Text(sending ? ht("Waiting for the household to confirm receipt")
+                                     : ht("Cancelling leaves your request unsent. No captured photo or audio is sent with this request."))
                     }
                 }.navigationTitle(ht("Review your request"))
-                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(sending) } }
             } else if capture {
                 let captureLanguage = CaptureCorrectionScope.appLanguage()
                 CaptureReviewView(initialText: scope.quantity.isEmpty ? scope.item : scope.quantity + " " + scope.item,
@@ -62,6 +71,7 @@ import SwiftUI
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
             }
         }
+        .interactiveDismissDisabled(sending)
         .task {
             if !capture { do { review = try ContributorRequestReview.typed(scope: scope) } catch { failure = message(error) } }
             while !Task.isCancelled {

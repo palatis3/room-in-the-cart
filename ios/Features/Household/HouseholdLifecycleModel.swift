@@ -46,6 +46,7 @@ import HouseholdClient
         self.subject = subject; self.service = service; self.store = store; self.deviceStore = deviceStore
         self.onEnrolled = onEnrolled; self.onAccessEnded = onAccessEnded
     }
+    var serviceURL: URL { service.baseURL }
     var isHelper: Bool { scope?.grantId != nil && ["helper", "editor"].contains(scope?.role ?? "") }
     var canAdminister: Bool { !isHelper && scope?.capabilities.contains("household_admin") == true }
     var canShare: Bool { !isHelper && scope?.role == "shopper" && scope?.shopId != nil }

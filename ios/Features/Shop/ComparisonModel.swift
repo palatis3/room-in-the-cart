@@ -136,14 +136,14 @@ extension OfferResult {
         packsToBuy.map { message("Whole packs to buy: %@", $0.formatted()) }
     }
     func purchasedText(in unit: UnitOfMeasure) -> String? {
-        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.displayName) }
+        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
     }
     func shortageText(in unit: UnitOfMeasure) -> String? {
         guard let remainingNeed, remainingNeed > .zero else { return nil }
-        return message("Still needed: %@ %@", amountText(remainingNeed), unit.displayName)
+        return message("Still needed: %@ %@", amountText(remainingNeed), unit.comparisonLabel(for: remainingNeed))
     }
     func leftoverText(in unit: UnitOfMeasure) -> String? {
-        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.displayName) }
+        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
     }
     var unitCeilingText: String? {
         unitCeiling.map { message("Maximum per pack for this item limit: %@", moneyText($0)) }
@@ -161,9 +161,10 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 
 @MainActor final class ComparisonModel: ObservableObject {
     @Published var draft: ComparisonDraft {
-        didSet { if draft != oldValue { result = nil; savedAt = nil } }
+        didSet { if draft != oldValue { comparison = nil; savedAt = nil } }
     }
-    @Published var result: CoreDomain.ComparisonResult?
+    @Published private(set) var comparison: (inputs: ComparisonRequest, result: CoreDomain.ComparisonResult)?
+    var result: CoreDomain.ComparisonResult? { comparison?.result }
     @Published var error: String?
     @Published var savedAt: Date?
     @Published var saving = false
@@ -208,8 +209,6 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         return Money(minorUnits: scaled / value.denominator, currency: .usd)
     }
 
-    var confirmedStock: Quantity? { try? Self.quantity(draft.stock, draft.unit) }
-
     func request() throws -> ComparisonRequest {
         func confirmedBasis(_ conversion: ComparisonConversion?, sourceUnit: UnitOfMeasure) throws -> UnitBasis? {
             guard let conversion else { return nil }
@@ -230,10 +229,18 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     }
 
     func compare() {
-        result = nil
+        comparison = nil
         error = nil
-        do { result = try PackComparison.evaluate(request()) }
-        catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
+        do {
+            let inputs = try request()
+            comparison = (inputs, try PackComparison.evaluate(inputs))
+        } catch DomainError.invalidInput("itemNameTooLong") {
+            error = tr("Shorten the item name, then compare again.")
+        } catch DomainError.invalidInput("offerANameTooLong") {
+            error = tr("Shorten the name for Pack A, then compare again.")
+        } catch DomainError.invalidInput("offerBNameTooLong") {
+            error = tr("Shorten the name for Pack B, then compare again.")
+        } catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
     }
 
     func save(in store: ComparisonStore?) async {
@@ -254,8 +261,10 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
             let saved = try await store.save(id: savedDraft.id, title: savedDraft.item, payload: payload, savedAt: clock(),
                                              requiring: [savedDraft.id: savedRevision])
             savedRevision = saved.revision
-            if draft == savedDraft { savedAt = saved.savedAt }
-            error = nil
+            if draft == savedDraft {
+                savedAt = saved.savedAt
+                error = nil
+            }
         } catch ComparisonStoreError.staleRevision {
             error = tr("This saved comparison changed. Reopen it to review the latest prices before saving your edits.")
         } catch { Diagnostics.record(.localSaveFailed); self.error = tr("Could not save on this iPhone. Your entries are still here. Try again.") }
@@ -263,6 +272,17 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 }
 
 extension UnitOfMeasure {
+    func comparisonLabel(for amount: Rational) -> String {
+        guard amount == .one else { return displayName }
+        switch self {
+        case .count: return tr("item")
+        case .ounce: return tr("ounce (weight)")
+        case .cup: return tr("US cup")
+        case .fluidOunce: return tr("US fluid ounce")
+        default: return pUnitLabel(self, singular: true, language: nil)
+        }
+    }
+
     var displayName: String {
         switch self {
         case .count: return tr("items")

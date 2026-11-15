@@ -81,6 +81,16 @@ def main():
                 # UI04 and UI08 formerly queued behind each other on M4 slot 3.
                 row['provider'] = 'bitrise' if shard in ('ui-04', 'ui-05') else 'github'
             consumers.append(row)
+        provider = os.environ.get('IOS_PROVIDER', 'github')
+        if provider == 'circleci':
+            delegated = {'ui-01', 'ui-02', 'ui-03'}
+            expected = {f'ui-{i:02}' for i in range(1, 11)}
+            if scope != 'full' or {row['shard'] for row in consumers} != expected:
+                raise ValueError('CircleCI requires the ordinary full ten-shard plan')
+            consumers = [row for row in consumers if row['shard'] not in delegated]
+            print('CircleCI runs ' + ', '.join(sorted(delegated)) + ' from the same full plan.')
+        elif provider != 'github':
+            raise ValueError(f'Unknown iOS test provider: {provider}')
         model_count = len(selected['shards']['models']['test_identifiers'])
         with args.github_output.open('a', encoding='utf-8') as output:
             print('matrix=' + json.dumps({'include': consumers}), file=output)
