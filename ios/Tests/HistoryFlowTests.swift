@@ -35,6 +35,86 @@ import HouseholdClient
         await model.load(); XCTAssertTrue(model.authorized); XCTAssertTrue(model.canEdit)
         return (model, service, store, box)
     }
+    func testRemountedHistoryReloadsCurrentGrantAfterAnInvalidatedRead() async throws {
+        for denyFreshAccess in [false, true] {
+            let (model, service, _, box) = try await setup()
+            let suspended = expectation(description: "Period read suspended")
+            let release = AsyncStream<Void>.makeStream()
+            service.beforePeriodRead = {
+                suspended.fulfill()
+                for await _ in release.stream { break }
+            }
+            let oldRead = Task { await model.openPeriod(service.saved.periodId, analyze: true) }
+            await fulfillment(of: [suspended], timeout: 3)
+            let previous = try XCTUnwrap(box.value)
+            box.value = nil
+            model.invalidate()
+            box.value = .init(generation: UUID(), subject: previous.subject, householdID: previous.householdID,
+                              memberID: previous.memberID, currentShopID: nil, authorityStamp: "contributor")
+            service.ownedSources = []
+            var currentLoads = 0
+            service.beforeOwnedList = {
+                currentLoads += 1
+                if denyFreshAccess { throw ClientError.service(status: 403, code: "unavailable", correlationID: nil, retryAfter: nil) }
+            }
+            let requested = expectation(description: "Remount and foreground requested access")
+            requested.expectedFulfillmentCount = 2
+            func requestAccess() -> Task<Void, Never> {
+                Task { requested.fulfill(); await model.load() }
+            }
+            let mount = requestAccess(), foreground = requestAccess()
+            await fulfillment(of: [requested], timeout: 3)
+            XCTAssertTrue(model.busy)
+            XCTAssertFalse(model.authorized)
+            XCTAssertEqual(currentLoads, 0)
+            release.continuation.finish()
+            await oldRead.value; await mount.value; await foreground.value
+            XCTAssertEqual(currentLoads, 1)
+            XCTAssertFalse(model.busy)
+            XCTAssertEqual(model.authorized, !denyFreshAccess)
+            XCTAssertTrue(model.ownedShops.isEmpty)
+            XCTAssertNil(model.selectedPeriod)
+            XCTAssertNil(model.periodAnalysis)
+            if denyFreshAccess {
+                XCTAssertTrue(model.periods.isEmpty)
+                XCTAssertNotNil(model.notice)
+            } else {
+                XCTAssertEqual(model.periods.map(\.periodId), [service.saved.periodId])
+            }
+        }
+    }
+    func testForegroundReloadWaitsForInvalidatedWriteAndDoesNotResend() async throws {
+        let (model, service, store, _) = try await setup()
+        enterObservation(model); model.approved = true
+        let suspended = expectation(description: "Observation write suspended")
+        let release = AsyncStream<Void>.makeStream()
+        service.beforeObservationSend = { _ in
+            suspended.fulfill()
+            for await _ in release.stream { break }
+        }
+        let write = Task { await model.applyReviewed() }
+        await fulfillment(of: [suspended], timeout: 3)
+        await model.load() // A regular refresh cannot interrupt the live write.
+        XCTAssertTrue(model.busy)
+        model.invalidate()
+        var currentLoads = 0
+        service.beforeOwnedList = { currentLoads += 1 }
+        let requested = expectation(description: "Foreground requested access")
+        let foreground = Task { requested.fulfill(); await model.load() }
+        await fulfillment(of: [requested], timeout: 3)
+        XCTAssertEqual(currentLoads, 0)
+        XCTAssertNil(model.pending)
+        release.continuation.finish()
+        await write.value; await foreground.value
+        XCTAssertEqual(currentLoads, 1)
+        XCTAssertTrue(model.authorized)
+        XCTAssertEqual(service.observationSends.count, 1)
+        let durable = await store.read()
+        XCTAssertEqual(durable.pending.count, 1)
+        XCTAssertEqual(model.pending, durable.pending.first)
+        XCTAssertFalse(model.canApply)
+        XCTAssertNil(model.selectedObservation)
+    }
     private func enterObservation(_ model: HistoryFeatureModel) {
         model.beginObservation(); model.observationDraft.itemName = "Oats"; model.observationDraft.packLabel = "12 oz"
         model.observationDraft.store = "Store"; model.observationDraft.branch = "North"; model.observationDraft.sourceText = "Shelf label"
@@ -376,6 +456,7 @@ private let nilKey = "initial"
     var pricePages: [String: HistoryPriceObservationPage] = [:]
     var readablePages: [String: HistoryReadableShopPage] = [:]
     var priceError: Error?, analysisError: Error?, authorizationError: Error?, observationReadError: Error?
+    var beforeOwnedList: (() throws -> Void)?
     var beforePeriodList: (() -> Void)?
     var beforePrepare: (() async throws -> Void)?, beforePeriodRead: (() async -> Void)?
     var beforeObservationSend: ((PriceObservationIntent) async throws -> Void)?
@@ -391,7 +472,7 @@ private let nilKey = "initial"
     func observation(channel: HistoryPriceChannel = .storeShelf, mode: HistoryFulfillmentMode = .inStore, branch: String = "North") throws -> HistoryPriceObservation {
         try .init(shopId: shop, itemName: "Oats", packLabel: "12 oz", usablePack: nil, price: .exact(minor: 349), store: "Store", branch: branch, channel: channel, mode: mode, eligibility: "", observedAt: "2025-01-02T12:00:00Z", sourceText: "Shelf label", sourceLocale: "en-US")
     }
-    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { ownedPages[cursor ?? nilKey] ?? .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
+    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { try beforeOwnedList?(); return ownedPages[cursor ?? nilKey] ?? .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
     func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }

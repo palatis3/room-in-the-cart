@@ -100,7 +100,17 @@ enum HistoryReviewedWrite: Equatable {
     func enforceRuntime() { if scope != nil && !authorized { invalidate() } }
     private func live(_ start: UUID) -> Bool { generation == start && authorized }
     func load() async {
-        guard !busy, let current = runtime() else { return }
+        guard !Task.isCancelled, let current = runtime() else { return }
+        if busy {
+            // A remounted view can request access while an invalidated read or write
+            // is still finishing. Preserve serialization with that operation.
+            guard scope == nil else { return }
+            let requestedGeneration = generation
+            for await occupied in $busy.values {
+                if !occupied { break }
+            }
+            guard !Task.isCancelled, generation == requestedGeneration, runtime() == current else { return }
+        }
         invalidate(); scope = current; busy = true; defer { busy = false }; let start = generation
         do {
             let epoch = await store.epoch()
