@@ -279,6 +279,8 @@ On the 24 GB development Mac, let a failing PR journey take the next free simula
 
 ### CircleCI during a Bitrise outage
 
+Use only the remaining prepaid CircleCI credits. The last three-worker run used 9,895 credits and left 7,617. Use the full GitHub route for the next full candidate. A smaller CircleCI run can use the balance when its estimated cost fits.
+
 Push the candidate to `codex/circleci-canary` for one simulator build and one UI
 group. Push to `codex/circleci-performance` for the five Swift packages, one
 simulator build, and up to three M4 Pro Medium test workers. These workers run
