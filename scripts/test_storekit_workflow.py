@@ -220,20 +220,21 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
         self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-native.outcome != 'skipped' }}")
         self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
 
-    def test_created_simulator_cleanup_and_fresh_spanish_device_on_each_runtime(self):
+    def test_created_simulator_cleanup_and_fresh_device_for_both_locales_on_each_runtime(self):
         cleanup = self.step('storekit', name='Remove the simulator created by this locale job')
         self.assertEqual(cleanup['if'], "${{ always() && steps.storekit-runtime.outcome == 'success' && env.STOREKIT_CREATED_SIMULATOR != '' }}")
         self.assertEqual(cleanup['run'], 'xcrun simctl delete "$STOREKIT_CREATED_SIMULATOR"')
         for request, version, build in [('', '26.2', '23C54'), ('true', '27.0', '24A434')]:
             runtime = self.runtime_fixture(version, build)
-            with self.subTest(version=version):
-                environment, native, _ = self.prepare_runtime(request, 'pull_request', [runtime], locale='es')
-                self.assertEqual(environment['SIMULATOR_ID'], '22222222-3333-4444-8555-666666666666')
-                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
-                self.assertEqual(native.call_args.args[0][-1], runtime['identifier'])
-                with self.assertRaises(AssertionError):
-                    self.prepare_runtime(request, 'pull_request', [runtime], locale='es',
-                                         created='11111111-2222-4333-8444-555555555555')
+            for locale in ('en', 'es'):
+                with self.subTest(version=version, locale=locale):
+                    environment, native, _ = self.prepare_runtime(request, 'pull_request', [runtime], locale=locale)
+                    self.assertEqual(environment['SIMULATOR_ID'], '22222222-3333-4444-8555-666666666666')
+                    self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
+                    self.assertEqual(native.call_args.args[0][-1], runtime['identifier'])
+                    with self.assertRaises(AssertionError):
+                        self.prepare_runtime(request, 'pull_request', [runtime], locale=locale,
+                                             created='11111111-2222-4333-8444-555555555555')
 
     def test_only_an_unstarted_storekit_plan_with_the_launch_service_crash_can_retry(self):
         reason = ('Failed to install or launch the test runner. (Underlying Error: '
@@ -413,8 +414,9 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
             with self.subTest(request=request, event=event):
                 runtime = self.runtime_fixture(version, build)
                 environment, native, download = self.prepare_runtime(request, event, [runtime])
-                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], '')
-                native.assert_called_once_with(['xcrun', 'simctl', 'list', '-j'], text=True)
+                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
+                native.assert_any_call(['xcrun', 'simctl', 'list', '-j'], text=True)
+                self.assertEqual(sum(call.args[0][2:3] == ['create'] for call in native.call_args_list), 1)
                 self.assertEqual(environment['CI_IPHONE_RUNTIME'], runtime['identifier'])
                 self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
                 self.assertEqual(environment['STOREKIT_OS_BUILD'], build)

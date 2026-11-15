@@ -322,21 +322,18 @@ jobs:
           locale = os.environ["STOREKIT_LOCALE"]
           # simctl lists devices under the identifier shared by all patch builds.
           # Pin a new device to the selected bundle when that identifier is ambiguous.
+          # Both locales own a fresh device; never inherit the image's StoreKit state.
           multiple_builds = len(matches) > 1
-          created = multiple_builds or locale == "es" or not devices
-          if created:
-              target = actual["bundlePath"] if multiple_builds else runtime
-              if multiple_builds:
-                  assert Path(target).is_absolute() and Path(target).suffix == ".simruntime", target
-              simulator = simctl("create", f"RITC-StoreKit-{locale}", device_type, target).strip()
-              assert simulator.upper() not in {d["udid"].upper() for d in devices}, "Expected a new simulator"
-          else:
-              simulator = devices[0]["udid"]
+          target = actual["bundlePath"] if multiple_builds else runtime
+          if multiple_builds:
+              assert Path(target).is_absolute() and Path(target).suffix == ".simruntime", target
+          simulator = simctl("create", f"RITC-StoreKit-{locale}", device_type, target).strip()
+          assert simulator.upper() not in {d["udid"].upper() for d in devices}, "Expected a new simulator"
           simulator = str(UUID(simulator)).upper()
           print(f"Selected iPhone 17 {simulator}; installed iOS {actual['version']}/{actual['buildversion']}")
           with Path(os.environ["GITHUB_ENV"]).open("a") as output:
               output.write(f"CI_IPHONE_RUNTIME={runtime}\nSTOREKIT_OS_VERSION={version}\nSTOREKIT_OS_BUILD={build}\nSIMULATOR_ID={simulator}\n")
-              output.write(f"STOREKIT_CREATED_SIMULATOR={simulator if created else ''}\n")
+              output.write(f"STOREKIT_CREATED_SIMULATOR={simulator}\n")
           PYCODE
       - name: Run StoreKit scenarios
         id: storekit-native
