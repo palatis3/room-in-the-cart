@@ -243,15 +243,56 @@ import XCTest
         guard let confirm = revealUnconfirmedSourceMatch() else { return }
         confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertEqual(confirm.value as? String, "1")
-        // Resolve the identifier after changing its value, rather than keeping a
-        // query that deliberately stops matching once the switch is on.
-        // The source's quantity precedes its basket picker and confirmation.
-        assertText("1/2 cups", searchTowardEndFirst: false)
-        enableSwitch("sharedTracking.pack.66666666-6666-4666-8666-666666666666")
+        assertVisibleFractionalMealNeed()
+        acceptUnresolvedPack("66666666-6666-4666-8666-666666666666")
         let unit = app.buttons["sharedTracking.pack." + chickpeaID + ".unit"]
         tap(unit); tap(app.buttons["cups"])
-        enableSwitch("sharedTracking.pack." + chickpeaID)
+        acceptUnresolvedPack(chickpeaID)
         capture("S26-first-adoption-explicit-soup-unknown-and-half-cup-meal-source")
+    }
+    private func assertVisibleFractionalMealNeed() {
+        // The meal source precedes its picker. Read its label and position in
+        // the same snapshot as the viewport while the lazy Form scrolls.
+        let label = "Meal need, 1/2 cups"
+        for attempt in 0...24 {
+            guard let screen = try? app.snapshot() else {
+                XCTFail("Could not inspect the fractional meal source")
+                return
+            }
+            let area = scrollableArea(screen: screen)
+            var pending = screen.children
+            var frame = CGRect.zero
+            while let node = pending.popLast() {
+                if node.elementType == .staticText && node.label == label {
+                    frame = node.frame
+                    break
+                }
+                pending.append(contentsOf: node.children)
+            }
+            if !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
+                XCTAssertTrue(app.staticTexts[label].firstMatch.isHittable, "Missing visible text: " + label)
+                return
+            }
+            guard attempt < 24 else { break }
+            let upward = frame.isEmpty ? attempt >= 16 : frame.midY > area.midY
+            let overflow = upward ? frame.maxY - area.maxY : area.minY - frame.minY
+            let distance = !frame.isEmpty && overflow > 0 ? max(24, overflow + 16) : nil
+            scrollContent(upward: upward, area: area, distance: distance)
+        }
+        XCTFail("Missing visible text: " + label)
+    }
+    private func acceptUnresolvedPack(_ itemID: String) {
+        let row = app.switches["sharedTracking.pack." + itemID]
+        reveal(row, fullyVisible: true)
+        XCTAssertEqual(row.switches.count, 1)
+        let control = row.switches.firstMatch
+        XCTAssertTrue(control.isEnabled && control.isHittable)
+        XCTAssertEqual(control.value as? String, "0", itemID)
+        // The Form row spans the label and track. Tap the native switch at its off thumb.
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+        let accepted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [accepted], timeout: 5), .completed, itemID)
+        XCTAssertEqual(row.value as? String, "1", "The reviewed switch must be on: " + itemID)
     }
     private func revealManualSource(named name: String) -> XCUIElement? {
         // A compound ancestor/descendant query can stall while this lazy Form
@@ -444,9 +485,9 @@ import XCTest
                       (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
                       "Missing fully actionable UI element: \(target.debugDescription)")
     }
-    private func scrollableArea(aboveInputTop: CGFloat? = nil) -> CGRect {
+    private func scrollableArea(aboveInputTop: CGFloat? = nil, screen: (any XCUIElementSnapshot)? = nil) -> CGRect {
         // Observe the keyboard, navigation bars and Done button in the same layout.
-        guard let screen = try? app.snapshot() else {
+        guard let screen = screen ?? (try? app.snapshot()) else {
             XCTFail("Could not read the shared meal form viewport")
             return .zero
         }
@@ -519,10 +560,10 @@ import XCTest
         reveal(fact)
         XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
-    private func assertText(_ text: String, searchTowardEndFirst: Bool = true) {
+    private func assertText(_ text: String) {
         let matches = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text))
         if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
-        reveal(matches.firstMatch, searchTowardEndFirst: searchTowardEndFirst)
+        reveal(matches.firstMatch)
         XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
     }
     private func assertElementContains(_ id: String, _ text: String) {

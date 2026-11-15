@@ -1,6 +1,8 @@
 # Current implementation and acceptance map
 
-## Current checkpoint — November 10, focused product completion
+Use the [52-requirement map](#launch-requirement-traceability) and the [27-screen map](#route-traceability) to find the implementation and evidence for a particular feature. Foundation schedules the direct retailer connection (E05) for a later release. Each result applies to the build and environment where it ran. The [current handoff](CURRENT-HANDOFF.md#current-checkpoint) identifies the revision under test. The [first-release checklist](RELEASE-EXECUTION.md#execution-order) tracks the outstanding signing, device, provider, human review and rollout work.
+
+## November 10 component checkpoint
 
 Selected shared historical backup is implemented locally, including food allocation
 ancestry, stock chronology and carried delivery corrections between pickups.

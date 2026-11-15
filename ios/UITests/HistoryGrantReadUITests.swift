@@ -99,7 +99,10 @@ import XCTest
         setFilter(start, enabled: true)
         XCTAssertEqual(date.label, chosen)
         setFilter(end, enabled: true)
-        XCTAssertTrue(app.staticTexts["Observed on or before"].exists)
+        // On an iPhone SE the picker starts below its switch in the scrolling form.
+        let endPickerLabel = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Observed on or before")).firstMatch
+        reveal(endPickerLabel)
+        XCTAssertTrue(endPickerLabel.isHittable)
         setFilter(end, enabled: false)
         XCTAssertEqual(start.value as? String, "1")
         setFilter(end, enabled: true)
