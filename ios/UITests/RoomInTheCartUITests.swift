@@ -673,10 +673,10 @@ final class RoomInTheCartUITests: XCTestCase {
         id == "itemName" ? element(id) : app.textFields[id]
     }
 
-    private func focusComparisonInput(_ field: XCUIElement) {
+    private func focusComparisonInput(_ field: XCUIElement, id: String) {
         reveal(field)
-        if field.elementType == .textView {
-            // iOS 17 can choose the very top edge of an empty multiline editor.
+        if id == "itemName" {
+            // Tap the center of the multiline name on both TextView and TextField runtimes.
             field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         } else {
             field.tap()
@@ -719,11 +719,11 @@ final class RoomInTheCartUITests: XCTestCase {
                     dismissComparisonKeyboard(previousDone)
                 }
             }
-            focusComparisonInput(field)
+            focusComparisonInput(field, id: id)
             let fieldDone = app.buttons["comparison.done." + id]
             if !fieldDone.exists && !fieldDone.waitForExistence(timeout: 3) {
                 if let previousDone, app.buttons[previousDone].exists { dismissComparisonKeyboard(previousDone) }
-                focusComparisonInput(field)
+                focusComparisonInput(field, id: id)
                 guard fieldDone.exists || fieldDone.waitForExistence(timeout: 3) else {
                     XCTFail("The comparison field must own keyboard focus before typing: " + id)
                     return
