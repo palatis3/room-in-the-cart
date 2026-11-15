@@ -4,7 +4,17 @@ This checklist orders the remaining work; it does not replace Foundation 2.1's
 52 requirements, 27 screen contracts or B11 acceptance. The authoritative scope
 is [the build contract](product/foundation-gen2.1/08-build.md) and the requirement
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
-is one checkpoint, not release authorization. Updated November 14, 2026.
+is one checkpoint, not release authorization. Updated November 15, 2026.
+
+At `61a2631e`, the Debug app on an iPhone SE simulator running iOS 17.0 saved
+an encrypted shopping list through the Files picker. Canceling the save kept
+the file ready. Canceling import left the records alone, and opening the same
+backup twice produced one recovered copy. After uninstalling the app, a fresh
+installation rejected the file without its key and recovered it with the key.
+After relaunch, the separate list showed two pears and one unit of rolled oats.
+The current shopping workspace still had zero revisions. The four UI runs and
+the database verification are under `.build/RecordsSystemFilesNov15`. The
+physical-iPhone check remains open.
 
 On November 12, the `099d6bf6` native Records adapters and real local service
 exported the shopper’s current shop and history. The named planner received 404
