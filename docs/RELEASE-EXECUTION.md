@@ -6,6 +6,15 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 15, 2026.
 
+The November 15 staging update rehearsal preserved the original saved comparison
+byte-for-byte, then saved and reopened a second revision after changing the
+confirmed stock. The iOS 17 simulator also reached the staging service and
+opened Spanish Help and English Support in Safari. The staging UI helper now
+returns to the Shop root when launch restores a saved comparison. The Mac's
+staging preview was updated after verification, preserving its seven durable
+files at installation. See `.build/StagingUpgrade6c60Nov15/qualification.json`.
+Signed distribution and physical-device update checks remain open.
+
 The B05 unreadable-recipe-photo walkthrough used the system photo picker and
 the Release app on an iPhone SE simulator running iOS 17.0. Before the fix,
 the unreadable result was below the visible capture controls. The revised
