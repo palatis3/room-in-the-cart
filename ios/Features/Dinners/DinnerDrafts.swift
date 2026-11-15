@@ -143,6 +143,11 @@ struct DinnerStoreDraft {
     var tripCash = ""; var extraMinutes = ""; var alreadyPlanned = false
     private var saved: StoreQuoteOption?
     var writtenSlot: String?
+
+    var reviewedLabel: String {
+        if saved?.label == label { return label }
+        return label.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     private static let unreviewedCharges = "Included charges are unreviewed"
     private static let unknownTotal = "Checkout total is unknown"
 
@@ -225,7 +230,7 @@ struct DinnerStoreDraft {
         default: cash = enteredCash.map(CostEvidence.exact) ?? .unknown(reason: "Trip cash is unknown")
         }
         let cap = basis.cap.map { CheckoutCap(scope: basis.capScope == .wholeShop ? .wholeCheckout : basis.capScope == .dinnersOnly ? .dinner : .item, commitmentsID: commitments.id, amount: $0) }
-        return StoreQuoteOption(id: id, label: label, commitments: commitments,
+        return StoreQuoteOption(id: id, label: reviewedLabel, commitments: commitments,
             quote: CheckoutQuote(scope: saved?.quote.scope ?? .wholeCheckout, context: context, pricing: retainedCheckout?.pricing ?? .inclusiveTotal(evidence)),
             available: availability == 0 ? nil : availability == 1, quantitiesMatched: quantitiesMatched, singleStore: singleStore,
             trip: StoreTripEvidence(incrementalCash: cash,

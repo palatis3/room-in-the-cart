@@ -232,7 +232,7 @@ private struct SharedStoreQuotesContent: View {
     }
     private func entered(_ draft: DinnerStoreDraft, cap: String, capScope: String, eligibility: Bool) throws -> EnteredStoreQuote {
         func cents(_ text: String) throws -> Int? { try DinnerEntry.money(text).map { Int($0.minorUnits) } }
-        let value = EnteredStoreQuote(label: draft.label, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
+        let value = EnteredStoreQuote(label: draft.reviewedLabel, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
             slot: ISO8601DateFormatter().string(from: draft.slot), observedAt: ISO8601DateFormatter().string(from: draft.observedAt), source: draft.source,
             terms: draft.eligibilityTerms, itemsMinor: try cents(draft.itemSubtotal), checkoutMinor: try cents(draft.total), allChargesIncluded: draft.allChargesIncluded,
             available: draft.availability == 0 ? nil : draft.availability == 1, quantitiesMatched: draft.quantitiesMatched, singleStore: draft.singleStore,

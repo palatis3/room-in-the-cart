@@ -55,7 +55,10 @@ import XCTest
         counter("adoptions",0)
         capture("S27-assigned-shopper-explicit-adoption-review")
         confirm(); counter("adoptions",1)
-        assertText("Prices from the former store are invalid")
+        // Confirmation scrolls to the result at the bottom. The price warning belongs to the first section.
+        let priceWarning = app.staticTexts["Prices from the former store are invalid. Review a fresh checkout quote before freezing."]
+        reveal(priceWarning, searchTowardEndFirst: false)
+        XCTAssertTrue(priceWarning.exists && priceWarning.isHittable)
         assertText("Earlier revision or shopper assignment")
         capture("S27-adopted-draft-requires-fresh-checkout-prices")
         fixture("Freeze shared shop")
@@ -348,7 +351,7 @@ import XCTest
         let target = app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
         reveal(target); XCTAssertTrue(target.exists && target.isHittable,"Missing visible text: "+text)
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<30 {
             let exists = target.exists
             let hittable = exists && target.isHittable
@@ -358,7 +361,7 @@ import XCTest
             if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let up: Bool
             if exists && !frame.isEmpty { up = frame.midY > area.midY }
-            else { up = (attempt / 6) % 2 == 0 }
+            else { up = (attempt / 6).isMultiple(of: 2) ? searchTowardEndFirst : !searchTowardEndFirst }
             // A large drag can dismiss the keyboard and carry a nearby field
             // out of the lazy Form, triggering a long search in both directions.
             let overflow = up ? frame.maxY - area.maxY : area.minY - frame.minY

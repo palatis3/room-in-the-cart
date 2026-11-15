@@ -458,7 +458,7 @@ import CoreDomain
         let itemized = CheckoutPricing.components(lines: [.init(id: UUID(), name: "Beans", cost: range)], lineSetComplete: false,
             fees: [.init(id: "pickup", rule: .fixed(.unknown(reason: "Weekend fee")))], discounts: [], tax: .exact(.zero), deposits: .exact(.zero))
         func option(_ set: DinnerCommitmentSet, pricing: CheckoutPricing, slot: String) -> StoreQuoteOption {
-            StoreQuoteOption(label: "Quoted", commitments: set, quote: .init(scope: .dinner,
+            StoreQuoteOption(label: " Quoted ", commitments: set, quote: .init(scope: .dinner,
                 context: .init(storeID: "North", branchID: "Market", mode: .delivery, slot: slot, commitmentsID: set.id,
                                observedAt: now, source: "Printed quote"), pricing: pricing), available: nil, quantitiesMatched: false, singleStore: false,
                 trip: .init(incrementalCash: range, extraMinutes: nil, tripAlreadyPlanned: false), eligibilityTerms: "Card required")
@@ -469,7 +469,7 @@ import CoreDomain
         let persisted = try JSONDecoder().decode(TwoStoreQuotePair.self, from: JSONEncoder().encode(saved))
         var draft = DinnerQuoteEditDraft(persisted)
         XCTAssertTrue(draft.hasSeparateCommitments)
-        draft.first.label = "Correct retailer"; draft.second.eligibilityTerms = "Member weekends"
+        draft.first.label = " Correct retailer "; draft.second.eligibilityTerms = "Member weekends"
         let revised = try draft.pair(for: shop)
         try revised.validate()
         XCTAssertNotEqual(revised.id, saved.id); XCTAssertEqual(revised.baseRevisionID, shop.revisionID)
@@ -479,6 +479,7 @@ import CoreDomain
         XCTAssertEqual(revised.first.trip, saved.first.trip); XCTAssertEqual(revised.second.trip, saved.second.trip)
         XCTAssertNil(revised.first.available); XCTAssertNil(revised.first.adoptionBasis)
         XCTAssertEqual(revised.first.cap?.amount, shop.basis.cap)
+        XCTAssertEqual(revised.second.label, " Quoted ")
         XCTAssertEqual(revised.first.label, "Correct retailer"); XCTAssertEqual(revised.second.eligibilityTerms, "Member weekends")
         XCTAssertEqual(saved.second.eligibilityTerms, "Card required")
         XCTAssertThrowsError(try draft.pair(for: ShoppingLedger(title: "Other pickup")))
