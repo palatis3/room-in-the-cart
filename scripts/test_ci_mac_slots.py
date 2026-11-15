@@ -46,6 +46,7 @@ class MacSlotMetadataTests(unittest.TestCase):
             'SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave': (2, 3),
             'SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable': (2, 3),
             'SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption': (0, 4),
+            'DinnerDecisionSheetUITests': (1, 2),
         })
 
     def test_all_three_planners_keep_complete_cases_and_emit_valid_slots(self):
