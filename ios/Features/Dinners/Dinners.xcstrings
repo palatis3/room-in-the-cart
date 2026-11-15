@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa los montos en dólares sin separadores de miles y con un máximo de dos decimales, por ejemplo, 1000,50."
+          }
+        }
+      }
+    },
     "Protected servings: %@": {
       "extractionState": "manual",
       "localizations": {

@@ -45,6 +45,7 @@ private struct SharedStoreQuotesContent: View {
     @FocusState private var inputFocus: String?
     @AccessibilityFocusState private var reviewFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
+    private var displayedNotice: String? { (entering ? entryNotice : nil) ?? model.notice }
     var body: some View {
         ScrollViewReader { proxy in
         Form {
@@ -157,7 +158,7 @@ private struct SharedStoreQuotesContent: View {
                     Button(StoreQuoteCopy.text("Refresh and clear local retry"), role: .destructive) { clearing = true }
                 }.id("store-quote-pending")
             }
-            if let notice = model.notice ?? entryNotice {
+            if let notice = displayedNotice {
                 Text(notice).accessibilityIdentifier("sharedQuotes.notice").accessibilityFocused($resultFocused).id("store-quote-result")
             }
             if model.busy { ProgressView(ht("Checking service…")) }
@@ -185,12 +186,12 @@ private struct SharedStoreQuotesContent: View {
                 proxy.scrollTo("store-quote-pending", anchor: .top)
             }
         }
-        .onChange(of: model.notice ?? entryNotice) { _, notice in
+        .onChange(of: displayedNotice) { _, notice in
             resultFocused = false
             guard notice != nil else { return }
             Task { @MainActor in
                 await Task.yield()
-                guard (model.notice ?? entryNotice) == notice else { return }
+                guard displayedNotice == notice else { return }
                 proxy.scrollTo("store-quote-result", anchor: .center)
                 resultFocused = true
             }
@@ -213,6 +214,8 @@ private struct SharedStoreQuotesContent: View {
                     _ = try SharedStoreQuoteMath.compare(options, commitments: page.commitments, shopID: page.shopId)
                     acknowledgedReviewID = nil; entryNotice = nil
                     Task { await model.prepareSave(options) }
+                } catch let validation as DinnerDraftValidationError {
+                    entryNotice = validation.errorDescription
                 } catch { entryNotice = StoreQuoteCopy.text("Enter both stores, branches, sources, dates and valid amounts. Blank costs and unreviewed availability remain unknown.") }
             }.buttonStyle(PrimaryAction()).accessibilityIdentifier("sharedQuotes.reviewSave")
             Button(dinnerText("Cancel")) { entering = false }

@@ -29,6 +29,10 @@ enum DinnerEntry {
     static func money(_ text: String) throws -> Money? {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
+        if let separator = value.firstIndex(where: { $0 == "," || $0 == "." }),
+           value[separator...].dropFirst().count > 2 {
+            throw DinnerDraftValidationError.currencyPrecision
+        }
         let cents = try singleNumber(value).multiplied(by: Rational(100))
         guard cents.denominator == 1 else { throw DomainError.invalidNumber }
         return Money(minorUnits: cents.numerator)
@@ -71,7 +75,16 @@ struct DinnerGroupDraft: Identifiable {
 }
 /// Keep field context at the parser boundary; unrelated numeric errors must not
 /// be described as a servings problem.
-enum DinnerDraftValidationError: Error, Equatable { case totalServings }
+enum DinnerDraftValidationError: LocalizedError, Equatable {
+    case totalServings, currencyPrecision
+
+    var errorDescription: String? {
+        switch self {
+        case .totalServings: return dinnerText("Total servings: enter a number greater than zero.")
+        case .currencyPrecision: return dinnerText("Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.")
+        }
+    }
+}
 
 struct DinnerTemplateDraft {
     let id: UUID
