@@ -80,8 +80,7 @@ import XCTest
             app.terminate(); launch(reset: true)
             XCTAssertTrue(element("fixture.stock.savedUnits").waitForExistence(timeout: 20))
             tap(element("stockBatch-77777777-7777-4777-8777-777777777777"))
-            tap(element("stockReview.amount")); app.typeText("3")
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            enterReviewAmount()
             let done = app.buttons["Done"]
             XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
             let before = try keyboardState()
@@ -137,11 +136,25 @@ import XCTest
         if reset { app.launchArguments.append("--reset-stock-review-fixture") }
         app.launch()
     }
+    private func enterReviewAmount() {
+        let amount = app.textFields["stockReview.amount"]
+        tap(amount)
+        // Enter the digit on the presented keyboard before operating its Done bar.
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let three = keyboard.keys["3"]
+        XCTAssertTrue(three.waitForExistence(timeout: 5) && three.isHittable)
+        three.tap()
+        XCTAssertEqual(amount.value as? String, "3")
+    }
     private func openBatchAndPreview() {
         tap(element("stockBatch-77777777-7777-4777-8777-777777777777"))
-        let amount = element("stockReview.amount"); tap(amount); app.typeText("3")
+        enterReviewAmount()
         let done = app.buttons["Done"]
-        if done.exists && done.isHittable { done.tap() }
+        XCTAssertTrue(done.isHittable)
+        XCTAssertLessThanOrEqual(done.frame.maxY, app.keyboards.firstMatch.frame.minY + 1)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         enableSwitch("stockReview.identityChecked")
         tap(element("stockReview.preview"))
     }
