@@ -20,7 +20,7 @@ TABLES = {'tr': 'Localizable', 'message': 'Localizable',
           'helpText': 'Help', 'StoreQuoteCopy.text': 'StoreQuotes', 'GuardianCopy.text': 'Guardian',
           'DeviceManagementCopy.text': 'DeviceManagement', 'requestDuplicateText': 'RequestDuplicates', 'changeText': 'OneChange',
           'sharedRecoveryText': 'Recovery', 'cookLabel': 'DeliveryCook', 'fallbackText': 'SharedFallback',
-          'OrderAmendmentCopy.text': 'OrderAmendment'}
+          'OrderAmendmentCopy.text': 'OrderAmendment', 'recoveryText': 'PickupRecovery'}
 UI_CALLS = {'Text', 'Label', 'Button', 'Toggle', 'Section', 'Picker',
             'NavigationLink', 'ContentUnavailableView'}
 STRING = re.compile(r'"(?:\\.|[^"\\])*"')
