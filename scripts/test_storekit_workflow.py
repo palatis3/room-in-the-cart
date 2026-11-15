@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import plistlib
-import re
 import subprocess
 import tempfile
 import unittest
@@ -91,11 +90,12 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertEqual(len(selectors), 15)
         self.assertEqual(len(set(selectors)), 15)
         self.assertTrue(all(value.startswith('RoomInTheCartTests/StoreKitScenarioTests/') for value in selectors))
-        self.assertNotIn('strategy', self.jobs['storekit'])
-        for name, (locale, _, _) in EXPECTED.items():
-            for phase in ('native', 'results', 'verify'):
-                step = self.step('storekit', identifier=f'storekit-{locale}-{phase}')
-                self.assertEqual(step['env'], {'STOREKIT_LOCALE': locale, 'STOREKIT_CONFIGURATION': name})
+        job = self.jobs['storekit']
+        self.assertEqual(job['strategy'], {'fail-fast': False, 'matrix': {'locale': ['en', 'es']}})
+        self.assertEqual(job['env']['STOREKIT_LOCALE'], '${{ matrix.locale }}')
+        english, spanish = EXPECTED
+        self.assertEqual(job['env']['STOREKIT_CONFIGURATION'],
+                         "${{ matrix.locale == 'en' && '" + english + "' || '" + spanish + "' }}")
 
     def test_one_build_exact_artifact_and_test_without_building(self):
         build = self.jobs['storekit-build']
@@ -113,38 +113,37 @@ class StoreKitWorkflowTests(unittest.TestCase):
         download = next(step for step in tests['steps'] if step.get('uses', '').startswith('actions/download-artifact@'))
         self.assertEqual(download['with']['artifact-ids'], '${{ needs.storekit-build.outputs.artifact }}')
         self.assertNotIn('run-id', download['with'])
-        self.assertEqual(tests['timeout-minutes'], 90)  # Sum of the former independent job caps.
+        self.assertEqual(tests['timeout-minutes'], 55)
         self.assertEqual(sum(step.get('id') == 'storekit-runtime' for step in tests['steps']), 1)
         self.assertEqual(sum(step.get('id') == 'storekit-restore' for step in tests['steps']), 1)
-        for locale in ('en', 'es'):
-            native = self.step('storekit', identifier=f'storekit-{locale}-native')
-            command = native['run']
-            self.assertIn('-xctestrun "${test_runs[0]}"', command)
-            self.assertIn('test-without-building', command)
-            self.assertNotIn('-project', command)
-            self.assertNotIn('build-for-testing', command)
-            self.assertIn('if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then', command)
-            self.assertLess(command.index('python3 scripts/check_storekit_runtime_mount.py'),
-                            command.index('python3 scripts/boot_ios_simulator.py'))
-            self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
-            self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
-            self.assertEqual(command.count('tee "$output/launch-failure/StoreKitRecoveryBoot.log"'), 2)
-            self.assertIn('"$output/first-tests.json" "$native_status" "$SIMULATOR_ID"', command)
-            self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
-            self.assertIn('-default-test-execution-time-allowance 120', command)
-            self.assertIn('-maximum-test-execution-time-allowance 120', command)
-            self.assertIn('-collect-test-diagnostics on-failure', command)
-            self.assertEqual(native['timeout-minutes'], 35)
-            verifier = self.step('storekit', identifier=f'storekit-{locale}-verify')
-            self.assertIn('--expected-count 15', verifier['run'])
-            self.assertIn('testPlanConfiguration', verifier['run'])
-            self.assertEqual(verifier['if'], "${{ !cancelled() && steps.storekit-" + locale + "-results.outcome == 'success' }}")
-            upload = next(step for step in tests['steps'] if step.get('with', {}).get('name') ==
-                          'storekit-' + locale + '-${{ github.run_attempt }}')
-            self.assertEqual(upload['if'], 'always()')
-            self.assertIn(f'.build/storekit-{locale}/', upload['with']['path'])
-            self.assertIn('.build/StoreKitRuntime.log', upload['with']['path'])
-            self.assertIn('.build/storekit-product-inventory.json', upload['with']['path'])
+        native = self.step('storekit', identifier='storekit-native')
+        command = native['run']
+        self.assertIn('-xctestrun "${test_runs[0]}"', command)
+        self.assertIn('test-without-building', command)
+        self.assertNotIn('-project', command)
+        self.assertNotIn('build-for-testing', command)
+        self.assertIn('if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then', command)
+        self.assertLess(command.index('python3 scripts/check_storekit_runtime_mount.py'),
+                        command.index('python3 scripts/boot_ios_simulator.py'))
+        self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
+        self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
+        self.assertEqual(command.count('tee "$output/launch-failure/StoreKitRecoveryBoot.log"'), 2)
+        self.assertIn('"$output/first-tests.json" "$native_status" "$SIMULATOR_ID"', command)
+        self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
+        self.assertIn('-default-test-execution-time-allowance 120', command)
+        self.assertIn('-maximum-test-execution-time-allowance 120', command)
+        self.assertIn('-collect-test-diagnostics on-failure', command)
+        self.assertEqual(native['timeout-minutes'], 35)
+        verifier = self.step('storekit', identifier='storekit-verify')
+        self.assertIn('--expected-count 15', verifier['run'])
+        self.assertIn('testPlanConfiguration', verifier['run'])
+        self.assertEqual(verifier['if'], "${{ !cancelled() && steps.storekit-results.outcome == 'success' }}")
+        upload = next(step for step in tests['steps'] if step.get('with', {}).get('name') ==
+                      'storekit-${{ matrix.locale }}-${{ github.run_attempt }}')
+        self.assertEqual(upload['if'], 'always()')
+        self.assertIn('.build/storekit-${{ matrix.locale }}/', upload['with']['path'])
+        self.assertIn('.build/StoreKitRuntime.log', upload['with']['path'])
+        self.assertIn('.build/storekit-product-inventory.json', upload['with']['path'])
         self.assertFalse(any(step.get('continue-on-error') for step in tests['steps']))
 
     def test_pretest_boot_failure_keeps_locale_log_and_exit_status(self):
@@ -154,9 +153,9 @@ class StoreKitWorkflowTests(unittest.TestCase):
             helper.parent.mkdir()
             helper.write_text('import sys\nprint("migration stopped", file=sys.stderr)\nsys.exit(70)\n')
             for locale in ('en', 'es'):
-                step = self.step('storekit', identifier=f'storekit-{locale}-native')
+                step = self.step('storekit', identifier='storekit-native')
                 result = subprocess.run(['bash', '-e', '-c', step['run']], cwd=root,
-                                        env={**os.environ, **step['env'], 'SIMULATOR_ID': 'fixture'},
+                                        env={**os.environ, 'STOREKIT_LOCALE': locale, 'SIMULATOR_ID': 'fixture'},
                                         capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, 70)
                 self.assertIn('migration stopped', result.stdout)
@@ -164,69 +163,30 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.assertEqual((output / 'StoreKitBoot.log').read_text(), 'migration stopped\n')
                 self.assertFalse((output / 'StoreKit.log').exists())
 
-    def test_second_locale_is_eligible_after_first_native_export_or_verifier_failure(self):
-        native = self.step('storekit', identifier='storekit-es-native')
-        setup = self.step('storekit', identifier='storekit-es-device')
-        self.assertEqual(native['if'], "${{ !cancelled() && steps.storekit-es-device.outcome == 'success' }}")
-        expression = setup['if']
-        self.assertEqual(expression, "${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}")
-        # Evaluate the actual small Actions predicate against prior step outcomes.
-        # The explicit cancellation status function prevents implicit success().
-        def eligible(outcomes, cancelled=False):
-            value = expression.removeprefix('${{ ').removesuffix(' }}')
-            value = value.replace('!cancelled()', str(not cancelled)).replace('&&', 'and')
-            value = re.sub(r'steps\.([a-z-]+)\.outcome',
-                           lambda match: repr(outcomes.get(match[1], '')), value)
-            return eval(value, {'__builtins__': {}}, {})
-        successful = {'storekit-restore': 'success', 'storekit-runtime': 'success',
-                      **{f'storekit-en-{phase}': 'success' for phase in ('native', 'results', 'verify')}}
-        self.assertTrue(eligible(successful))
-        for phase in ('native', 'results', 'verify'):
-            for outcome in ('failure', 'skipped', 'cancelled'):
-                with self.subTest(phase=phase, outcome=outcome):
-                    self.assertTrue(eligible({**successful, f'storekit-en-{phase}': outcome}))
-        for setup in ('storekit-restore', 'storekit-runtime'):
-            for outcome in ('failure', 'skipped', 'cancelled', ''):
-                self.assertFalse(eligible({**successful, setup: outcome}))
-        self.assertFalse(eligible(successful, cancelled=True))
-        steps = self.jobs['storekit']['steps']
-        positions = {step.get('id'): index for index, step in enumerate(steps)}
-        self.assertLess(positions['storekit-en-verify'], positions['storekit-es-device'])
-        self.assertLess(positions['storekit-es-device'], positions['storekit-es-native'])
-        for locale in ('en', 'es'):
-            export = self.step('storekit', identifier=f'storekit-{locale}-results')
-            self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-" + locale + "-native.outcome != 'skipped' }}")
-            self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
+    def test_locale_jobs_check_native_and_export_after_failures(self):
+        job = self.jobs['storekit']
+        self.assertEqual(job['needs'], 'storekit-build')
+        self.assertIs(job['strategy']['fail-fast'], False)
+        native = self.step('storekit', identifier='storekit-native')
+        self.assertEqual(native['if'], "${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}")
+        export = self.step('storekit', identifier='storekit-results')
+        self.assertEqual(export['if'], "${{ !cancelled() && steps.storekit-native.outcome != 'skipped' }}")
+        self.assertLess(export['run'].index('get test-results summary'), export['run'].index('get test-results tests'))
 
-    def test_spanish_uses_new_device_on_selected_runtime_and_rejects_failed_creation(self):
-        step = self.step('storekit', identifier='storekit-es-device')
-        code = self.python_block(step)
-        english = '11111111-2222-4333-8444-555555555555'
-        spanish = '22222222-3333-4444-8555-666666666666'
-        runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-26-2'
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            env = root / 'environment'
-            def prepare():
-                self.execute(code, root, GITHUB_ENV=str(env), SIMULATOR_ID=english, CI_IPHONE_RUNTIME=runtime)
-            with patch('subprocess.run', return_value=subprocess.CompletedProcess([], 0)) as shutdown, \
-                    patch('subprocess.check_output', return_value=spanish) as create:
-                prepare()
-                shutdown.assert_called_once_with(['xcrun', 'simctl', 'shutdown', english], capture_output=True, text=True)
-                create.assert_called_once_with(['xcrun', 'simctl', 'create', 'RITC-StoreKit-es',
-                                                'com.apple.CoreSimulator.SimDeviceType.iPhone-17', runtime], text=True)
-                self.assertEqual(env.read_text(), f'SIMULATOR_ID={spanish}\n')
-                env.unlink()
-                create.return_value = english
+    def test_created_simulator_cleanup_and_fresh_spanish_device_on_each_runtime(self):
+        cleanup = self.step('storekit', name='Remove the simulator created by this locale job')
+        self.assertEqual(cleanup['if'], "${{ always() && steps.storekit-runtime.outcome == 'success' && env.STOREKIT_CREATED_SIMULATOR != '' }}")
+        self.assertEqual(cleanup['run'], 'xcrun simctl delete "$STOREKIT_CREATED_SIMULATOR"')
+        for request, version, build in [('', '26.2', '23C54'), ('true', '27.0', '24A434')]:
+            runtime = self.runtime_fixture(version, build)
+            with self.subTest(version=version):
+                environment, native, _ = self.prepare_runtime(request, 'pull_request', [runtime], locale='es')
+                self.assertEqual(environment['SIMULATOR_ID'], '22222222-3333-4444-8555-666666666666')
+                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
+                self.assertEqual(native.call_args.args[0][-1], runtime['identifier'])
                 with self.assertRaises(AssertionError):
-                    prepare()
-                self.assertFalse(env.exists())
-                shutdown.return_value = subprocess.CompletedProcess([], 1, stderr='shutdown failed')
-                create.reset_mock()
-                with self.assertRaises(SystemExit):
-                    prepare()
-                create.assert_not_called()
-                self.assertFalse(env.exists())
+                    self.prepare_runtime(request, 'pull_request', [runtime], locale='es',
+                                         created='11111111-2222-4333-8444-555555555555')
 
     def test_only_an_unstarted_storekit_plan_with_the_launch_service_crash_can_retry(self):
         reason = ('Failed to install or launch the test runner. (Underlying Error: '
@@ -273,12 +233,11 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.assertFalse(is_launch_failure(log, {k: v for k, v in tests.items() if k != field}, 70, simulator))
 
     def test_locale_gate_rejects_every_failed_skipped_cancelled_or_missing_outcome(self):
-        gate = self.step('storekit', identifier='storekit-locales-gate')
+        gate = self.step('storekit', identifier='storekit-locale-gate')
         self.assertEqual(gate['if'], 'always()')
         self.assertEqual(gate['env']['STOREKIT_STEP_RESULTS'], '${{ toJSON(steps) }}')
         code = self.python_block(gate)
-        successful = {f'storekit-{locale}-{phase}': {'outcome': 'success'}
-                      for locale in ('en', 'es') for phase in ('native', 'results', 'verify')}
+        successful = {f'storekit-{phase}': {'outcome': 'success'} for phase in ('native', 'results', 'verify')}
         self.execute(code, ROOT, STOREKIT_STEP_RESULTS=json.dumps(successful))
         for name in successful:
             for outcome in ('failure', 'skipped', 'cancelled', '', None):
@@ -319,7 +278,8 @@ class StoreKitWorkflowTests(unittest.TestCase):
         return {'identifier': 'com.apple.CoreSimulator.SimRuntime.iOS-' + version.replace('.', '-'),
                 'version': version, 'buildversion': build, 'isAvailable': True}
 
-    def prepare_runtime(self, request, event, runtimes, *, after_download=None, existing_device=True, download_error=None):
+    def prepare_runtime(self, request, event, runtimes, *, after_download=None, existing_device=True, download_error=None,
+                        locale='en', created='22222222-3333-4444-8555-666666666666'):
         """Execute the actual workflow block with only native subprocesses replaced."""
         code = self.python_block(self.step('storekit', identifier='storekit-runtime'))
         simulator = '11111111-2222-4333-8444-555555555555'
@@ -334,9 +294,8 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 return json.dumps({'runtimes': installed, 'devices': {
                     r['identifier']: [device] if existing_device else [] for r in installed}})
             if command[2:3] == ['create']:
-                self.assertEqual(command[3:5], ['RITC-StoreKit-compatibility', device['deviceTypeIdentifier']])
-                self.assertEqual(command[5], 'com.apple.CoreSimulator.SimRuntime.iOS-26-2')
-                return simulator + '\n'
+                self.assertEqual(command[3:5], [f'RITC-StoreKit-{locale}', device['deviceTypeIdentifier']])
+                return created + '\n'
             self.fail(f'Unexpected native command: {command}')
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -344,7 +303,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
             with patch('subprocess.check_output', side_effect=fake_simctl) as native, \
                     patch('subprocess.run', side_effect=download_error) as download:
                 self.execute(code, root, REQUIRE_CURRENT_STOREKIT=request, GITHUB_EVENT_NAME=event,
-                             CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment))
+                             CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment), STOREKIT_LOCALE=locale)
             return dict(line.split('=', 1) for line in environment.read_text().splitlines()), native, download
 
     def test_storekit_mount_distinguishes_replacement_from_healthy_images(self):
@@ -379,7 +338,10 @@ class StoreKitWorkflowTests(unittest.TestCase):
             (['unavailable'], [], 0, True),
             (['fallback', 'replacing', 'ready'], [0, 0], 1, False),
             (['replacing', 'unavailable', 'ready'], [0, 0], 1, False),
-            (['fallback', 'fallback'], [0, 61], 1, True),
+            (['fallback', 'fallback', 'fallback', 'replacing', 'ready'], [0, 61, 590, 600], 1, False),
+            (['fallback', 'fallback'], [0, 661], 1, True),
+            (['replacing', 'replacing'], [0, 61], 1, True),
+            (['fallback', 'replacing', 'unavailable'], [0, 100, 161], 1, True),
         ]:
             with self.subTest(states=states), patch.object(runtime_mount, 'mount_state', side_effect=states), \
                     patch.object(runtime_mount, 'simctl') as simctl, \
@@ -404,6 +366,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
             with self.subTest(request=request, event=event):
                 runtime = self.runtime_fixture(version, build)
                 environment, native, download = self.prepare_runtime(request, event, [runtime])
+                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], '')
                 native.assert_called_once_with(['xcrun', 'simctl', 'list', '-j'], text=True)
                 self.assertEqual(environment['CI_IPHONE_RUNTIME'], runtime['identifier'])
                 self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
@@ -417,7 +380,8 @@ class StoreKitWorkflowTests(unittest.TestCase):
         download.assert_called_once_with(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', '23C54',
                                           '-architectureVariant', 'arm64'], check=True, timeout=600)
         self.assertEqual(sum(call.args[0][2:3] == ['create'] for call in native.call_args_list), 1)
-        self.assertEqual(environment['SIMULATOR_ID'], '11111111-2222-4333-8444-555555555555')
+        self.assertEqual(environment['SIMULATOR_ID'], '22222222-3333-4444-8555-666666666666')
+        self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
 
     def test_runtime_setup_rejects_wrong_build_version_unavailable_or_missing_current_without_fallback(self):
         good = self.runtime_fixture('26.2', '23C54')
@@ -438,7 +402,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.prepare_runtime('', 'pull_request', [], after_download=[good], download_error=error)
 
     def test_result_checks_exact_runtime_build_device_and_locale_for_both_policies(self):
-        code = self.python_block(self.step('storekit', identifier='storekit-en-verify'))
+        code = self.python_block(self.step('storekit', identifier='storekit-verify'))
         for version, build in [('26.2', '23C54'), ('27.0', '24A434')]:
             for locale in EXPECTED:
                 with tempfile.TemporaryDirectory() as directory:

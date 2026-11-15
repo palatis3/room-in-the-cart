@@ -231,8 +231,12 @@ def validate_workflows(paths, policy=POLICY):
                             f'Wrong Release producer dual-provider slots: {identity}')
                 else:
                     require(0 <= expected < slot_count and concurrency['group'] == slot_prefix + str(expected), f'Wrong fixed native slot: {identity}')
-                require('strategy' not in job or 'matrix' not in job['strategy'],
-                        f'Static slot policy cannot silently accept a new matrix: {identity}')
+                if identity == ('ios-deep.yml', 'storekit'):
+                    require(job.get('strategy') == {'fail-fast': False, 'matrix': {'locale': ['en', 'es']}},
+                            'Both StoreKit locale jobs must independently use the same fixed slot')
+                else:
+                    require('strategy' not in job or 'matrix' not in job['strategy'],
+                            f'Static slot policy cannot silently accept a new matrix: {identity}')
             else:
                 require(concurrency['group'] == matrix_group, f'Wrong global native matrix group: {identity}')
                 matrix = job.get('strategy', {}).get('matrix')

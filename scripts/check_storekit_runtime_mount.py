@@ -12,14 +12,15 @@ BUILD = "23C54"
 FALLBACK = Path("/Library/Developer/CoreSimulator/Volumes/iOS_23C54")
 
 
-def simctl(*args):
-    return subprocess.check_output(["xcrun", "simctl", *args], text=True, timeout=240)
+def simctl(*args, deadline=None):
+    timeout = 240 if deadline is None else min(240, max(0, deadline - time.monotonic()))
+    return subprocess.check_output(["xcrun", "simctl", *args], text=True, timeout=timeout)
 
 
-def mount_state():
-    runtimes = json.loads(simctl("list", "runtimes", "-j"))["runtimes"]
+def mount_state(deadline=None):
+    runtimes = json.loads(simctl("list", "runtimes", "-j", deadline=deadline))["runtimes"]
     selected = [r for r in runtimes if r["identifier"] == RUNTIME and r["buildversion"] == BUILD]
-    images = [image for image in json.loads(simctl("runtime", "list", "-j")).values()
+    images = [image for image in json.loads(simctl("runtime", "list", "-j", deadline=deadline)).values()
               if image.get("runtimeIdentifier") == RUNTIME and image.get("build") == BUILD]
     if len(selected) == 1 and selected[0]["isAvailable"]:
         bundle = Path(selected[0]["bundlePath"])
@@ -48,15 +49,19 @@ def check_mount():
         raise RuntimeError(f"StoreKit runtime {RUNTIME}/{BUILD} is unavailable or ambiguous")
     print(f"Reconciling {state} StoreKit Cryptex mount before boot", flush=True)
     simctl("runtime", "scan-and-mount")
-    # The hosted replacement mounted about eight seconds after unmount began.
-    deadline = time.monotonic() + 60
+    # On the hosted runner an explicit rescan left the fallback in place. The
+    # periodic scan replaced that mount after 600s; the actual remount took 8s.
+    deadline = time.monotonic() + (660 if state == "fallback" else 60)
     while True:
-        state = mount_state()
+        state = mount_state(deadline=deadline)
         if state == "ready":
             return
-        if time.monotonic() >= deadline:
+        now = time.monotonic()
+        if state != "fallback":
+            deadline = min(deadline, now + 60)
+        if now >= deadline:
             raise RuntimeError(f"StoreKit runtime {RUNTIME}/{BUILD} after rescan: {state}")
-        time.sleep(2)
+        time.sleep(min(10, deadline - now))
 
 
 if __name__ == "__main__":

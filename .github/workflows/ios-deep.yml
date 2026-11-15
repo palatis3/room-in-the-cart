@@ -220,18 +220,24 @@ jobs:
           if-no-files-found: warn
   storekit:
     needs: storekit-build
-    name: StoreKit English and Spanish
+    name: StoreKit ${{ matrix.locale }}
+    # Each locale starts on a fresh runner. Both use the same provider slot and compiled products.
+    strategy:
+      fail-fast: false
+      matrix:
+        locale: [en, es]
     concurrency:
       group: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'ritc-bitrise-slot-' || 'ritc-macos-slot-' }}2
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
-    # Composite cap replaces two independent 45-minute jobs. Each locale keeps
-    # its original 35-minute native step and 120-second case allowances.
-    timeout-minutes: 90
+    # Allow the 15-minute runtime setup, the 35-minute native step, and artifact handling.
+    timeout-minutes: 55
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_NAME: iPhone 17
+      STOREKIT_LOCALE: ${{ matrix.locale }}
+      STOREKIT_CONFIGURATION: ${{ matrix.locale == 'en' && 'US English — local StoreKit' || 'US Spanish app · Spanish (Mexico) offer · USA storefront' }}
       REQUIRE_CURRENT_STOREKIT: ${{ inputs.require_current_storekit }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -311,26 +317,26 @@ jobs:
           device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-17"
           devices = [d for d in devices if d.get("isAvailable") is True
                      and d["name"] == os.environ["CI_IPHONE_NAME"] and d["deviceTypeIdentifier"] == device_type]
-          if devices:
-              simulator = devices[0]["udid"]
+          assert devices or not current, "Required current-OS image device is missing"
+          locale = os.environ["STOREKIT_LOCALE"]
+          created = locale == "es" or not devices
+          if created:
+              simulator = simctl("create", f"RITC-StoreKit-{locale}", device_type, runtime).strip()
+              assert simulator.upper() not in {d["udid"].upper() for d in devices}, "Expected a new simulator"
           else:
-              assert not current, "Required current-OS image device is missing"
-              # This ephemeral consumer owns only the device returned by this create call.
-              simulator = simctl("create", "RITC-StoreKit-compatibility", device_type, runtime).strip()
+              simulator = devices[0]["udid"]
           simulator = str(UUID(simulator)).upper()
           print(f"Selected iPhone 17 {simulator}; installed iOS {actual['version']}/{actual['buildversion']}")
           with Path(os.environ["GITHUB_ENV"]).open("a") as output:
               output.write(f"CI_IPHONE_RUNTIME={runtime}\nSTOREKIT_OS_VERSION={version}\nSTOREKIT_OS_BUILD={build}\nSIMULATOR_ID={simulator}\n")
+              output.write(f"STOREKIT_CREATED_SIMULATOR={simulator if created else ''}\n")
           PYCODE
-      - name: Run StoreKit en scenarios
-        id: storekit-en-native
+      - name: Run StoreKit scenarios
+        id: storekit-native
         if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
         timeout-minutes: 35
-        env: &storekit-en-env
-          STOREKIT_LOCALE: en
-          STOREKIT_CONFIGURATION: US English — local StoreKit
         shell: bash
-        run: &storekit-native |
+        run: |
           set -o pipefail
           output=".build/storekit-$STOREKIT_LOCALE"
           mkdir -p "$output"
@@ -367,21 +373,19 @@ jobs:
           else
             exit "$native_status"
           fi
-      - name: Export StoreKit en results even after a failed scenario
-        id: storekit-en-results
-        if: ${{ !cancelled() && steps.storekit-en-native.outcome != 'skipped' }}
-        env: *storekit-en-env
+      - name: Export StoreKit results even after a failed scenario
+        id: storekit-results
+        if: ${{ !cancelled() && steps.storekit-native.outcome != 'skipped' }}
         shell: bash
-        run: &storekit-export |
+        run: |
           test -d ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult"
           xcrun xcresulttool get test-results summary --path ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --compact > ".build/storekit-$STOREKIT_LOCALE/storekit-summary.json"
           xcrun xcresulttool get test-results tests --path ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --compact > ".build/storekit-$STOREKIT_LOCALE/storekit-tests.json"
-      - name: Verify exact StoreKit en configuration and all scenario results
-        id: storekit-en-verify
-        if: ${{ !cancelled() && steps.storekit-en-results.outcome == 'success' }}
-        env: *storekit-en-env
+      - name: Verify exact StoreKit configuration and all scenario results
+        id: storekit-verify
+        if: ${{ !cancelled() && steps.storekit-results.outcome == 'success' }}
         shell: bash
-        run: &storekit-verify |
+        run: |
           set -o pipefail
           python3 - <<'PYCODE'
           import json, os
@@ -402,74 +406,18 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: storekit-en-${{ github.run_attempt }}
+          name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}
           include-hidden-files: true
           path: |
-            .build/storekit-en/
+            .build/storekit-${{ matrix.locale }}/
             .build/StoreKitRuntime.log
             .build/storekit-product-inventory.json
           retention-days: 7
-      - name: Prepare a separate simulator for Spanish StoreKit
-        id: storekit-es-device
-        if: ${{ !cancelled() && steps.storekit-restore.outcome == 'success' && steps.storekit-runtime.outcome == 'success' }}
-        timeout-minutes: 8
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import os, subprocess
-          from pathlib import Path
-          from uuid import UUID
-          english = str(UUID(os.environ["SIMULATOR_ID"])).upper()
-          stopped = subprocess.run(["xcrun", "simctl", "shutdown", english], capture_output=True, text=True)
-          if stopped.returncode:
-              # The English launch may already have failed before booting.
-              if stopped.returncode != 149 or "Unable to shutdown device in current state: Shutdown" not in stopped.stderr.splitlines():
-                  raise SystemExit(stopped.stderr or stopped.returncode)
-          created = subprocess.check_output(["xcrun", "simctl", "create", "RITC-StoreKit-es",
-                                             "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
-                                             os.environ["CI_IPHONE_RUNTIME"]], text=True)
-          spanish = str(UUID(created.strip())).upper()
-          assert spanish != english, "Spanish requires a fresh StoreKit device"
-          with Path(os.environ["GITHUB_ENV"]).open("a") as output:
-              output.write(f"SIMULATOR_ID={spanish}\n")
-          print(f"English device {english}; Spanish device {spanish}")
-          PYCODE
-      - name: Run StoreKit es scenarios
-        id: storekit-es-native
-        if: ${{ !cancelled() && steps.storekit-es-device.outcome == 'success' }}
-        timeout-minutes: 35
-        env: &storekit-es-env
-          STOREKIT_LOCALE: es
-          STOREKIT_CONFIGURATION: US Spanish app · Spanish (Mexico) offer · USA storefront
-        shell: bash
-        run: *storekit-native
-      - name: Export StoreKit es results even after a failed scenario
-        id: storekit-es-results
-        if: ${{ !cancelled() && steps.storekit-es-native.outcome != 'skipped' }}
-        env: *storekit-es-env
-        shell: bash
-        run: *storekit-export
-      - name: Verify exact StoreKit es configuration and all scenario results
-        id: storekit-es-verify
-        if: ${{ !cancelled() && steps.storekit-es-results.outcome == 'success' }}
-        env: *storekit-es-env
-        shell: bash
-        run: *storekit-verify
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: storekit-es-${{ github.run_attempt }}
-          include-hidden-files: true
-          path: |
-            .build/storekit-es/
-            .build/StoreKitRuntime.log
-            .build/storekit-product-inventory.json
-          retention-days: 7
-      - name: Remove the Spanish StoreKit simulator
-        if: ${{ always() && steps.storekit-es-device.outcome == 'success' }}
-        run: xcrun simctl delete "$SIMULATOR_ID"
-      - name: Require both complete StoreKit locale outcomes
-        id: storekit-locales-gate
+      - name: Remove the simulator created by this locale job
+        if: ${{ always() && steps.storekit-runtime.outcome == 'success' && env.STOREKIT_CREATED_SIMULATOR != '' }}
+        run: xcrun simctl delete "$STOREKIT_CREATED_SIMULATOR"
+      - name: Require the complete StoreKit locale outcome
+        id: storekit-locale-gate
         if: always()
         env:
           STOREKIT_STEP_RESULTS: ${{ toJSON(steps) }}
@@ -477,8 +425,7 @@ jobs:
           python3 - <<'PYCODE'
           import json, os
           steps = json.loads(os.environ["STOREKIT_STEP_RESULTS"])
-          required = [f"storekit-{locale}-{phase}" for locale in ("en", "es")
-                      for phase in ("native", "results", "verify")]
+          required = ["storekit-native", "storekit-results", "storekit-verify"]
           failures = {name: steps.get(name, {}).get("outcome", "missing") for name in required
                       if steps.get(name, {}).get("outcome") != "success"}
           if failures:
