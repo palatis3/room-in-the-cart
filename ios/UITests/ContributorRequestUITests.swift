@@ -302,8 +302,7 @@ import XCTest
         XCTAssertTrue(done.waitForExistence(timeout: 5), "The source editor must offer Done")
         XCTAssertTrue(done.isHittable)
         done.tap()
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Done must dismiss the capture keyboard")
     }
     private func dismissBilingualKeyboardCardIfPresent() {
         let title = app.staticTexts["Type español e inglés"]
@@ -319,8 +318,7 @@ import XCTest
         XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
             capture("Bilingual-keyboard-card-before-dismissal")
             next.tap()
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            XCTAssertTrue(title.waitForNonExistence(timeout: 5), "The identified keyboard onboarding card must dismiss")
             capture("Bilingual-keyboard-card-dismissed")
         }
     }
