@@ -52,10 +52,10 @@ struct SharedFinancialEvidenceView: View {
                 if let record {
                     if let totals = model.financialSummary {
                         Section(pTr("Actual money · separate from food")) {
-                            LabeledContent(pTr("Paid so far"), value: pMoney(totals.paidSoFar)).accessibilityIdentifier("financial.paid")
-                            LabeledContent(pTr("Pending credits · not deducted"), value: pMoney(totals.pendingCredits)).accessibilityIdentifier("financial.pending")
-                            LabeledContent(pTr("Credits already included in charges"), value: pMoney(totals.includedCredits)).accessibilityIdentifier("financial.included")
-                            LabeledContent(pTr("Payment holds · not spending"), value: pMoney(totals.paymentHolds))
+                            settlementFact(pTr("Paid so far"), value: pMoney(totals.paidSoFar)).accessibilityIdentifier("financial.paid")
+                            settlementFact(pTr("Pending credits · not deducted"), value: pMoney(totals.pendingCredits)).accessibilityIdentifier("financial.pending")
+                            settlementFact(pTr("Credits already included in charges"), value: pMoney(totals.includedCredits)).accessibilityIdentifier("financial.included")
+                            settlementFact(pTr("Payment holds · not spending"), value: pMoney(totals.paymentHolds))
                         }
                     }
                     if model.financialRetry != nil {
@@ -77,12 +77,12 @@ struct SharedFinancialEvidenceView: View {
                                 Text(serviceDate(entry.occurredAt)?.formatted() ?? entry.occurredAt).font(.footnote)
                                 if let key = entry.chargeEvidenceKey ?? entry.holdEvidenceKey,
                                    let original = record.entries.first(where: { $0.evidenceKey == key }) {
-                                    LabeledContent(entry.kind == .holdRelease ? pTr("Original payment hold") : pTr("Original posted charge"),
+                                    settlementFact(entry.kind == .holdRelease ? pTr("Original payment hold") : pTr("Original posted charge"),
                                                    value: original.choice).font(.footnote)
                                 }
                                 if [.includedCredit, .postedCredit].contains(entry.kind), let credit = entry.creditId,
                                    let pending = record.entries.first(where: { $0.kind == .pendingCredit && $0.creditId == credit }) {
-                                    LabeledContent(financialText("Credit being settled"), value: pending.choice).font(.footnote)
+                                    settlementFact(financialText("Credit being settled"), value: pending.choice).font(.footnote)
                                 }
                             }
                         }
@@ -172,7 +172,7 @@ private struct SharedFinancialEditor: View {
                 }
                 if kind == .holdRelease {
                     linkage(pTr("Original payment hold"), placeholder: pTr("Choose a hold"), entries: holds)
-                    if let originalHold { LabeledContent(pTr("Amount"), value: pMoney(originalHold.money)) }
+                    if let originalHold { settlementFact(pTr("Amount"), value: pMoney(originalHold.money)) }
                 } else {
                     PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount).accessibilityIdentifier("financial.amount")
                 }

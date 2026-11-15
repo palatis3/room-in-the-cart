@@ -4,13 +4,15 @@ Updated November 15, 2026. Active goal: finish the complete Foundation 2.1 first
 
 ## Current checkpoint
 
-PR #7 is testing head `bafec24d` on merge commit `04ce53fb`. GitHub built the unsigned Release archive and passed all 1,038 model tests with zero recorded runtime warnings. The full UI suite is in progress. The StoreKit consumer is on its second attempt after simulator startup was cancelled before any purchase scenario ran. [PR checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks) · [Release archive](https://github.com/palatis3/room-in-the-cart/actions/runs/43695816907/job/132756112216) · [StoreKit retry](https://github.com/palatis3/room-in-the-cart/actions/runs/43695816859/job/132760858841)
+PR #7 is testing head `bafec24d` on merge commit `04ce53fb`. GitHub built the unsigned Release archive and passed all 1,038 model tests with zero recorded runtime warnings. The full UI suite is in progress. On the second StoreKit attempt English passed all 15 scenarios. Spanish passed 14 before the host unmounted the iOS 26.2 runtime and terminated the simulator during the last scenario. [PR checks](https://github.com/palatis3/room-in-the-cart/pull/7/checks) · [Release archive](https://github.com/palatis3/room-in-the-cart/actions/runs/43695816907/job/132756112216) · [StoreKit retry](https://github.com/palatis3/room-in-the-cart/actions/runs/43695816859/job/132760858841)
 
 The development branch has follow-up fixes for arrival quantities, checkout deferrals and item prices. The iOS 17 split-delivery walkthrough kept received and usable amounts separately labeled. Changing a deferral selection now dismisses its preview, and replaying Apply preserves the saved revision. The bilingual checkout walkthrough reopened the same saved groceries in Spanish and distinguished the item “Tax” from the tax charge “Impuesto.” Local results are in `.build/ArrivalQuantityLabelsNov15/visible/strict.log`, `.build/DeferralReviewNov15/fixed/strict.log` and `.build/CheckoutPriceNamesNov15/after/strict.log`.
 
 On the development branch, the iOS 17 iPhone SE simulator passed all 1,038 model tests on `2ede1aa2`. The unsigned device Release archive at that revision passed app, extension and crash-symbol checks. Results are in `.build/Release2ede1aa2Nov15`.
 
 The subsequent checkout screen fix keeps a visible label above every editable dollar amount. The before screenshot showed a $45 hold and $40 available funds as bare numbers. The revised screen names both, keeps the $5 difference separate from the $8 of grocery budget remaining, and clears both entries when the shopper turns the comparison off. The hold and weighed-produce journeys passed on iPhone 17 with iOS 27.0 and zero recorded runtime warnings. Screenshots and results are in `.build/CheckoutMoneyLabelsNov15/{before,verified}`.
+
+The personal and shared pickup screens now use the app’s text color for settlement amounts and linked charges. The paid amount measured 2.74:1 against white before the change and 12.93:1 afterward on iOS 17. The same row measured 14.18:1 in dark mode on iOS 27. The iOS 17 shared closeout preserved a $37.20 paid total when a $2.40 pending credit was linked to the net charge. See `.build/SharedSettlement5867Nov15/fixed` for the rendered screens, XCTest results and unsigned Release archive.
 
 ### Previous PR revision
 

@@ -1,6 +1,12 @@
 import SwiftUI
 import CoreDomain
 
+func settlementFact(_ label: String, value: String) -> some View {
+    LabeledContent(label) {
+        Text(verbatim: value).foregroundStyle(Theme.ink)
+    }
+}
+
 struct PickupSettlementView: View {
     @ObservedObject var model: PickupModel
     @State private var kind: SettlementKind = .postedCharge
@@ -36,10 +42,10 @@ struct PickupSettlementView: View {
             PickupSaveStatus(model: model)
             if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
                 Section(pTr("Actual money · separate from food")) {
-                    LabeledContent(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
-                    LabeledContent(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
-                    LabeledContent(pTr("Credits already included in charges"), value: pMoney(summary.includedCredits))
-                    LabeledContent(pTr("Payment holds · not spending"), value: pMoney(summary.paymentHolds))
+                    settlementFact(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
+                    settlementFact(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
+                    settlementFact(pTr("Credits already included in charges"), value: pMoney(summary.includedCredits))
+                    settlementFact(pTr("Payment holds · not spending"), value: pMoney(summary.paymentHolds))
                     Text(pTr("A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again."))
                 }
             }
@@ -70,7 +76,7 @@ struct PickupSettlementView: View {
                             Text("\(entry.evidenceKey) · \(pMoney(entry.amount))").tag(entry.evidenceKey)
                         }
                     }
-                    if let selectedHold { LabeledContent(pTr("Amount"), value: pMoney(selectedHold.amount)) }
+                    if let selectedHold { settlementFact(pTr("Amount"), value: pMoney(selectedHold.amount)) }
                 } else {
                     PickupEvidenceField(title: pTr("Amount"), amount: $amount).focused($field, equals: .amount)
                 }
@@ -113,12 +119,12 @@ struct PickupSettlementView: View {
                             Text(pTr("This entry is dated later and is excluded from these totals."))
                         }
                         if let id = entry.creditID {
-                            LabeledContent(pTr("Credit ID"), value: id)
+                            settlementFact(pTr("Credit ID"), value: id)
                         }
                         if let original = entry.chargeEvidenceKey {
-                            LabeledContent(pTr("Original posted charge"), value: original)
+                            settlementFact(pTr("Original posted charge"), value: original)
                         } else if let hold = entry.holdEvidenceKey {
-                            LabeledContent(pTr("Original payment hold"), value: hold)
+                            settlementFact(pTr("Original payment hold"), value: hold)
                         }
                     }
                 }
