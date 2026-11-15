@@ -1713,7 +1713,9 @@ import XCTest
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
         }
-        tap(element("ledgerReviewDinner")); applyFrom(copy("Manual dinner", "Cena manual"))
+        // Review is a native button below the lazy form. A typed lookup lets
+        // reveal keep scrolling while that row is still outside the viewport.
+        tap(app.buttons["ledgerReviewDinner"]); applyFrom(copy("Manual dinner", "Cena manual"))
         openMealWeek(title: weekTitle)
         chooseMealWeekDate(originalDay, from: Date(), in: weekPicker, formatter: dateFormatter)
         if moveAcrossWeek {

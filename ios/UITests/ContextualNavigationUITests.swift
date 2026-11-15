@@ -305,7 +305,7 @@ import UIKit
         let done = app.buttons["Done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
         done.tap()
-        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Done must dismiss the editor keyboard")
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 5), "Done must dismiss the editor keyboard")
         XCTAssertTrue(editor.value as? String == fixture, "Editing and Done must preserve the original paste after undoing the edit")
         capture("S02-500-line-native-paste-at-largest-text")
 
