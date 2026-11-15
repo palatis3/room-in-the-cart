@@ -606,33 +606,54 @@ import XCTest
                                                                "dinnerOccurrence-", "Wrap dinner")).firstMatch
             reveal(occurrence)
         }
-        func fillReviewedFields(_ fields: [(String, String)]) {
-            // These controls are TextFields. Reveal their visible center once;
-            // repeating the broad lookup and reveal adds work to every entry.
+        func reviewedField(named name: String, in screen: any XCUIElementSnapshot) -> (any XCUIElementSnapshot)? {
+            var pending = [screen]
+            while let node = pending.popLast() {
+                if node.elementType == .textField,
+                   node.identifier == name || node.label == name || node.placeholderValue == name {
+                    return node
+                }
+                pending.append(contentsOf: node.children.reversed())
+            }
+            return nil
+        }
+        func focusReviewedField(_ name: String) throws -> String? {
+            for attempt in 0...24 {
+                let screen = try app.snapshot()
+                let field = reviewedField(named: name, in: screen)
+                let area = scrollableArea(from: screen)
+                let frame = field?.frame ?? .zero
+                let center = CGPoint(x: frame.midX, y: frame.midY)
+                if let field, !frame.isEmpty, area.insetBy(dx: 0, dy: 12).contains(center) {
+                    let identity = field.identifier.isEmpty ? name : field.identifier
+                    if app.textFields.matching(identifier: identity).firstMatch.isHittable {
+                        // Resolve the native field once. Element-relative taps and typing
+                        // each resolve it again while the keyboard changes the form.
+                        let origin = app.coordinate(withNormalizedOffset: .zero)
+                        origin.withOffset(CGVector(dx: center.x - screen.frame.minX, dy: center.y - screen.frame.minY)).tap()
+                        return identity
+                    }
+                }
+                if attempt < 24 {
+                    scrollContent(upward: frame.isEmpty ? attempt < 12 : center.y > area.midY,
+                                  area: area, bounds: screen.frame)
+                }
+            }
+            XCTFail("No visible center for reviewed field: \(name)")
+            return nil
+        }
+        func fillReviewedFields(_ fields: [(String, String)]) throws {
             for (name, value) in fields {
-                let field = app.textFields.matching(identifier: name).firstMatch
-                tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
-                // Ingredient labels repeat across lazy rows. Keep the concrete
-                // identity and native type from entry for the post-Done readback.
-                let ingredient = ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name)
-                let identity = ingredient ? field.identifier : name
-                if ingredient { XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field") }
-                field.typeText(value)
+                guard let identity = try focusReviewedField(name) else { return }
+                if ["Ingredient name", "Amount, optional", "Ingredient exclusions, one per line"].contains(name) {
+                    XCTAssertTrue(identity.hasPrefix("ingredient."), "Retain the concrete ingredient field")
+                }
+                app.typeText(value)
                 let done = app.buttons.matching(identifier: "Done").firstMatch
                 XCTAssertTrue((done.exists || done.waitForExistence(timeout: 5)) && done.isHittable, "Done must be reachable from \(name)")
                 done.tap()
-                // Resolve the field and keyboard in the same application snapshot.
-                // A separate field query can stall when the pack form moves after dismissal.
                 let ready = app.waitForKeyboardDismissal(doneIdentifier: "Done", timeout: 10) { screen in
-                    var pending = [screen]
-                    while let node = pending.popLast() {
-                        let matchesPrompt = !ingredient && (node.label == identity || node.placeholderValue == identity)
-                        if node.elementType == .textField, node.identifier == identity || matchesPrompt {
-                            return node.value as? String == value
-                        }
-                        pending.append(contentsOf: node.children)
-                    }
-                    return false
+                    reviewedField(named: identity, in: screen)?.value as? String == value
                 }
                 XCTAssertTrue(ready, "Done must dismiss the keyboard and preserve the exact value '\(value)' for \(name)")
             }
@@ -650,13 +671,13 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerNewTemplate"])
-        fillReviewedFields([
+        try fillReviewedFields([
             ("ledgerDinnerTitle", "Wrap dinner"), ("ledgerDinnerServings", "6"),
             ("Ingredient name", "Wraps"), ("Amount, optional", "6"),
             ("Ingredient exclusions, one per line", "No sesame"),
         ])
         tap(app.buttons["Add serving group"])
-        fillReviewedFields([("Group name", "Lunch"), ("Group servings", "2")])
+        try fillReviewedFields([("Group name", "Lunch"), ("Group servings", "2")])
         enableSwitch("Protected group")
         tap(app.buttons["ledgerReviewDinner"])
         assertText("Lunch")
@@ -675,7 +696,7 @@ import XCTest
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
         tap(app.buttons["ledgerPackChoice"])
-        fillReviewedFields([
+        try fillReviewedFields([
             ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
             ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
             ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
