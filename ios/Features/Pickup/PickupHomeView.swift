@@ -116,7 +116,7 @@ struct PickupEvidenceField: View {
     let title: String
     @Binding var amount: String
     var body: some View {
-        TextField(pTr(title), text: $amount).keyboardType(.decimalPad)
+        TextField(title, text: $amount).keyboardType(.decimalPad)
             .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
     }
 }
@@ -129,6 +129,10 @@ func pickupResultText(_ result: CheckoutResult) -> String {
     if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
     return "\(pTr("At least")) \(pMoney(result.total.lowerBound)) · \(pTr("total unresolved"))"
 }
+private func pickupLinePriceTitle(_ name: String) -> String {
+    String(format: pTr("Price for %@"), name)
+}
+
 private func pickupComponentName(_ component: String) -> String {
     if component.hasPrefix("line:") { return pTr("Item price") }
     if component.hasPrefix("fee:") { return pTr("Retailer fee") }
@@ -143,6 +147,20 @@ private func pickupComponentName(_ component: String) -> String {
 }
 struct PickupResultView: View {
     let result: CheckoutResult
+    var pricing: CheckoutPricing? = nil
+
+    private var uncertaintyDescriptions: [String] {
+        guard !result.uncertainties.isEmpty else { return [] }
+        var lineNames: [String: String] = [:]
+        if case let .components(lines, _, _, _, _, _)? = pricing {
+            for line in lines { lineNames["line:\(line.id.uuidString)"] = line.name }
+        }
+        return result.uncertainties.map { issue in
+            let label = lineNames[issue.component].map(pickupLinePriceTitle) ?? pickupComponentName(issue.component)
+            return "\(label): \(pTr(issue.reason))"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(pickupResultText(result)).font(.title2.bold())
@@ -153,8 +171,8 @@ struct PickupResultView: View {
             case let .within(_, headroom): Text("\(pTr("Within this scope’s cap · room remaining")) \(pMoney(headroom))")
             case let .over(_, overage): Text("\(pTr("Over this scope’s cap by")) \(pMoney(overage))")
             }
-            ForEach(Array(result.uncertainties.enumerated()), id: \.offset) { _, issue in
-                Text("\(pickupComponentName(issue.component)): \(pTr(issue.reason))").font(.caption)
+            ForEach(Array(uncertaintyDescriptions.enumerated()), id: \.offset) { _, description in
+                Text(verbatim: description).font(.caption)
             }
         }
     }
@@ -199,7 +217,7 @@ struct PickupCheckoutView: View {
                         PickupQuoteTermsView(quote: quote, cap: cap)
                         PickupSavedCheckoutPricingView(pricing: quote.pricing)
                         if let result = try? CheckoutEngine.evaluate(quote, cap: cap) {
-                            PickupResultView(result: result)
+                            PickupResultView(result: result, pricing: quote.pricing)
                         }
                     }
                     Button(pTr("Reopen draft and recheck prices")) {
@@ -246,7 +264,7 @@ struct PickupCheckoutView: View {
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
                     Text(pTr("Selected items only")).tag(CheckoutScope.item)
                 }
-                PickupEvidenceField(title: "Spending cap", amount: $draft.cap).focused($field, equals: .cap)
+                PickupEvidenceField(title: pTr("Spending cap"), amount: $draft.cap).focused($field, equals: .cap)
                 Picker(pTr("Spending cap scope"), selection: $draft.capScope) {
                     Text(pTr("Whole checkout")).tag(CheckoutScope.wholeCheckout)
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
@@ -271,18 +289,18 @@ struct PickupCheckoutView: View {
                 } else {
                     Toggle(pTr("Retailer total already includes all charges"), isOn: $draft.inclusive)
                     Text(pTr("Blank means unknown. Enter 0 only for a confirmed zero charge."))
-                    if draft.inclusive { PickupEvidenceField(title: "Inclusive total", amount: $draft.total).focused($field, equals: .total) }
+                    if draft.inclusive { PickupEvidenceField(title: pTr("Inclusive total"), amount: $draft.total).focused($field, equals: .total) }
                     else {
                         ForEach(draft.displayLines) { line in
-                            PickupEvidenceField(title: line.name, amount: Binding(get: { draft.prices[line.id] ?? "" }, set: { draft.prices[line.id] = $0 }))
+                            PickupEvidenceField(title: pickupLinePriceTitle(line.name), amount: Binding(get: { draft.prices[line.id] ?? "" }, set: { draft.prices[line.id] = $0 }))
                                 .focused($field, equals: .line(line.id))
                         }
                         Toggle(pTr("All original items are represented"), isOn: $draft.complete)
-                        PickupEvidenceField(title: "Fee below threshold or fixed fee", amount: $draft.fee).focused($field, equals: .fee)
-                        PickupEvidenceField(title: "Fee waived at subtotal (optional)", amount: $draft.threshold).focused($field, equals: .threshold)
-                        PickupEvidenceField(title: "Eligible discount", amount: $draft.discount).focused($field, equals: .discount)
-                        PickupEvidenceField(title: "Tax", amount: $draft.tax).focused($field, equals: .tax)
-                        PickupEvidenceField(title: "Deposits and other charges", amount: $draft.deposits).focused($field, equals: .deposits)
+                        PickupEvidenceField(title: pTr("Fee below threshold or fixed fee"), amount: $draft.fee).focused($field, equals: .fee)
+                        PickupEvidenceField(title: pTr("Fee waived at subtotal (optional)"), amount: $draft.threshold).focused($field, equals: .threshold)
+                        PickupEvidenceField(title: pTr("Eligible discount"), amount: $draft.discount).focused($field, equals: .discount)
+                        PickupEvidenceField(title: pTr("Tax"), amount: $draft.tax).focused($field, equals: .tax)
+                        PickupEvidenceField(title: pTr("Deposits and other charges"), amount: $draft.deposits).focused($field, equals: .deposits)
                     }
                 }
                 Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
@@ -292,7 +310,7 @@ struct PickupCheckoutView: View {
                     NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
                         .accessibilityIdentifier("checkout.weightReview")
                     Text(pTr("Saved checkout result")).font(.headline)
-                    PickupResultView(result: result)
+                    PickupResultView(result: result, pricing: draft.reviewedQuote?.pricing)
                 }
             }.disabled(draftIsStale)
             if !draftIsStale {
@@ -302,7 +320,7 @@ struct PickupCheckoutView: View {
                             PickupQuoteTermsView(quote: record.quote, cap: record.cap)
                             PickupSavedCheckoutPricingView(pricing: record.quote.pricing)
                             if let result = try? CheckoutEngine.evaluate(record.quote, cap: record.cap) {
-                                PickupResultView(result: result)
+                                PickupResultView(result: result, pricing: record.quote.pricing)
                             }
                             Divider()
                         }
@@ -313,8 +331,8 @@ struct PickupCheckoutView: View {
                 Section(pTr("Payment hold · separate from spending")) {
                     Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)
                     if comparingHold {
-                        PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold).focused($field, equals: .hold)
-                        PickupEvidenceField(title: "Available funds (private, this screen only)", amount: $availableFunds).focused($field, equals: .funds)
+                        PickupEvidenceField(title: pTr("Retailer-displayed hold"), amount: $hold).focused($field, equals: .hold)
+                        PickupEvidenceField(title: pTr("Available funds (private, this screen only)"), amount: $availableFunds).focused($field, equals: .funds)
                         if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
                             Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
                         } else { Text(pTr("Hold comparison unresolved")) }
@@ -345,8 +363,8 @@ struct PickupCheckoutView: View {
                     }
                     .disabled(selected.isEmpty)
                     if let preview {
-                        Text(pTr("Current checkout")); PickupResultView(result: preview.comparison.before)
-                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.comparison.after)
+                        Text(pTr("Current checkout")); PickupResultView(result: preview.comparison.before, pricing: draft.reviewedQuote?.pricing)
+                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.comparison.after, pricing: draft.reviewedQuote?.pricing)
                         Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview) { self.preview = nil; selected = []; populate() } } }
                         Button(pTr("Cancel preview")) { self.preview = nil }
                     }
@@ -382,7 +400,7 @@ struct PickupCheckoutView: View {
                         PickupQuoteTermsView(quote: review.quote, cap: review.cap)
                         PickupSavedCheckoutPricingView(pricing: review.quote.pricing)
                         if let result = try? CheckoutEngine.evaluate(review.quote, cap: review.cap) {
-                            PickupResultView(result: result)
+                            PickupResultView(result: result, pricing: review.quote.pricing)
                         }
                     }
                     if model.journey.map({ review.draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) }) == true {
@@ -836,7 +854,7 @@ private struct PickupWeightReview: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(pTr("Price per selected weight unit")).font(.caption).accessibilityHidden(true)
-                    PickupEvidenceField(title: "Price per selected weight unit", amount: $rate)
+                    PickupEvidenceField(title: pTr("Price per selected weight unit"), amount: $rate)
                         .focused($field, equals: .rate).accessibilityIdentifier("checkout.weightRate")
                 }
                 VStack(alignment: .leading, spacing: 4) {

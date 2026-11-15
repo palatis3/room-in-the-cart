@@ -11384,6 +11384,23 @@
         }
       }
     },
+    "Price for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de %@"
+          }
+        }
+      }
+    },
     "Price per selected weight unit": {
       "localizations": {
         "en": {

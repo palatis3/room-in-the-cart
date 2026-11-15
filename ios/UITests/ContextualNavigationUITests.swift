@@ -560,7 +560,7 @@ import UIKit
         let terms = [("Store", "Family market"), ("Branch", "Main branch"),
                      ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
                      ("Spending cap", "38")]
-        let charges: [(String, String?)] = [("rice", "34"), ("Fee below threshold or fixed fee", "0"),
+        let charges: [(String, String?)] = [("Price for rice", "34"), ("Fee below threshold or fixed fee", "0"),
                                             ("Eligible discount", "0"), ("Tax", knownTax ? "0" : nil),
                                             ("Deposits and other charges", "0")]
         // Move focus between checkout fields in Form order, then dismiss once.
@@ -582,6 +582,8 @@ import UIKit
         done.tap()
         XCTAssertTrue(done.waitForNonExistence(timeout: 5))
         tap(app.buttons["Save and evaluate checkout"])
+        let unknownApples = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Price for apples:")).firstMatch
+        reveal(unknownApples)
         tap(element("checkout.weightReview"))
         tap(element("checkout.weightLine")); tap(app.buttons["apples"])
         func enterWeightTerms(rate: String, increment: String, replacing: Bool = false) {
@@ -639,7 +641,7 @@ import UIKit
         }
         tap(app.navigationBars["Check price by weight"].buttons["Whole checkout"])
         XCTAssertTrue(app.navigationBars["Whole checkout"].waitForExistence(timeout: 5))
-        let price = app.textFields["apples"]
+        let price = app.textFields["Price for apples"]
         reveal(price)
         XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
     }

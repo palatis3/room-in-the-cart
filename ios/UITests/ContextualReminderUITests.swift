@@ -24,7 +24,7 @@ import XCTest
         fill("Main branch", into: app.textFields["Branch"], replacing: true)
         fill("Tuesday 5 PM", into: app.textFields["Pickup or delivery slot"], replacing: true)
         fill("Retailer preview", into: app.textFields["Source of these prices"], replacing: true)
-        fill("4.00", into: app.textFields["coffee"]); fill("3.00", into: app.textFields["wraps"])
+        fill("4.00", into: app.textFields["Price for coffee"]); fill("3.00", into: app.textFields["Price for wraps"])
         for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: app.textFields[label]) }
         tap(app.buttons["Save and evaluate checkout"])
         enableSwitch("coffee"); enableSwitch("Include in deferral preview")
