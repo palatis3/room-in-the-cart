@@ -70,11 +70,13 @@ DELIVERY_SHARDS = {
 # Move devices to02 and civil dates to04, retaining the same five groups.
 # Current evidence and remaining timing uncertainty: docs/CI-VALIDATION.md.
 BALANCED_SUITES = {
-    "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
+    # The nine guardian cases took 7–10 minutes in recent GitHub runs.
+    # Group 01 finished in 14 minutes while group 05 approached its 40-minute limit.
+    "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "GuardianEnrollmentUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests", "HouseholdDevicesUITests"),
     "contributor-balanced-03": ("HouseholdRequestPackUITests",),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
-    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
+    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"

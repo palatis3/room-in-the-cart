@@ -124,7 +124,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
         shared_edits = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertIn(deadline, [value.removesuffix("()") for value in shared_edits])
         first_sign_in = f"{UI_TARGET}/GuardianEnrollmentUITests/testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock"
-        self.assertIn(first_sign_in, [value.removesuffix("()") for value in shared_edits])
+        enrollment = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
+        self.assertIn(first_sign_in, [value.removesuffix("()") for value in enrollment])
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
         self.assertEqual(len(fallbacks["test_identifiers"]), 2)
