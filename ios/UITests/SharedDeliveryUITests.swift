@@ -9,7 +9,6 @@ import XCTest
             let capture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             capture.name = "Shared delivery failure"; capture.lifetime = .keepAlways; add(capture)
         }
-        app.terminate()
     }
 
     private func capture(_ name: String) {
@@ -525,7 +524,7 @@ import XCTest
 
         let recipient = app.textFields["delivery.cook.recipient"]
         let check = app.buttons["delivery.cook.checkRecipient"], mark = app.buttons["delivery.cook.markSent"]
-        let last = app.descendants(matching: .any).matching(identifier: "delivery.cook.lastSent").firstMatch
+        let last = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "delivery.cook.lastSent")).firstMatch
         func assertFirstVersionSent() {
             reveal(last)
             let text = [last.label, last.value as? String ?? ""].joined(separator: " ")
