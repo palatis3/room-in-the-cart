@@ -23,8 +23,14 @@ XCTEST_ANIMATION_IDLE = re.compile(
     r"[ \t]*(?:t[ \t]*=[ \t]*(?P<elapsed>[0-9]+(?:\.[0-9]+)?)s[ \t]+)?"
     r"App animations complete notification not received, will attempt to continue\."
 )
+PROCESS_TIMESTAMP = r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
+# The simulator's E5 compiler can emit this whole diagnostic without a newline.
+XCTEST_VM_COMPILER_PREFIX = re.compile(
+    PROCESS_TIMESTAMP + r"RoomInTheCart\[[0-9]+:[0-9]+\] \[e5rt\] E5RT encountered an STL exception\. "
+    r"msg = On-device compilation within a VM only supports CPU currently(?=Test Case )"
+)
 XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
-    r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
+    PROCESS_TIMESTAMP +
     r"(?P<header>[A-Za-z0-9:\[]+)(?P<record>Test Case .+)"
 )
 XCTEST_APP_LOG = re.compile(
@@ -33,7 +39,10 @@ XCTEST_APP_LOG = re.compile(
 
 
 def recover_interleaved_case(line, following_line):
-    """Recover a complete XCTest record interleaved into the app's process header."""
+    """Recover XCTest output joined to a known simulator diagnostic or process header."""
+    compiler = XCTEST_VM_COMPILER_PREFIX.match(line)
+    if compiler:
+        return line[compiler.end():]
     prefix = XCTEST_SPLIT_PROCESS_PREFIX.fullmatch(line)
     if prefix is None:
         return line

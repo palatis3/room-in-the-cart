@@ -169,6 +169,19 @@ class ExecutionLogTests(unittest.TestCase):
             with self.subTest(log=log):
                 self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
 
+    def test_vm_compiler_message_without_newline_preserves_the_actual_xctest_event(self):
+        diagnostic = ("2026-11-15 09:06:49.647198+0000 RoomInTheCart[28013:80627] [e5rt] "
+                      "E5RT encountered an STL exception. msg = On-device compilation within a VM only supports CPU currently")
+        def failures(line):
+            return execution_log_failures([self.start, line, self.success], [self.selector])
+
+        self.assertEqual(failures(diagnostic + self.done), [])
+        for invalid in (diagnostic + ' quoted: ' + self.done, diagnostic.replace('[e5rt]', '[Default]') + self.done,
+                        diagnostic + self.case + 'failed (0.002 seconds).', diagnostic + self.done + ' extra'):
+            with self.subTest(line=invalid):
+                self.assertTrue(failures(invalid))
+        self.assertTrue(execution_log_failures([self.start, self.done, diagnostic + self.done, self.success], [self.selector]))
+
     def test_embedded_or_unproven_records_cannot_supply_missing_completion(self):
         for fragment in (
             ["some output: " + self.done],
