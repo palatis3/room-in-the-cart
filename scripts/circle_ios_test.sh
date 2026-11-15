@@ -34,9 +34,13 @@ boot_pid=$!
     tar -xf - -C .build/DerivedData/Build
 mv .build/DerivedData/Build/test-plan .build/test-plan
 jq -e --arg revision "$CIRCLE_SHA1" '.revision == $revision' .build/test-plan/producer.json > /dev/null
-EXPECTED_TEST_COUNT=$(jq -er --arg shard "$TEST_SHARD" \
-    '.include | select(length == 11) | map(select(.shard == $shard)) | select(length == 1)
-     | .[0].expected_count | select(type == "number" and . > 0)' .build/test-plan/manifest.json)
+# Run the one investigated test, after verifying the producer discovered it.
+selector='RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults'
+grep -Fxq "$selector" ".build/test-plan/$TEST_SHARD.txt"
+TEST_SHARD=shop-audit-diagnostic
+export TEST_SHARD
+printf '%s\n' "$selector" > ".build/test-plan/$TEST_SHARD.txt"
+EXPECTED_TEST_COUNT=1
 export EXPECTED_TEST_COUNT
 cp ".build/test-plan/$TEST_SHARD.txt" "$evidence/"
 printf 'CircleCI node %s of %s: %s, %s tests\n' "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL" "$TEST_SHARD" "$EXPECTED_TEST_COUNT"

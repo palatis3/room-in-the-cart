@@ -399,10 +399,12 @@ final class RoomInTheCartUITests: XCTestCase {
         saveAndAssertDurableStatus()
     }
 
+    private var auditPhase = "Original unfiltered audit"
+
     func testAutomatedAccessibilityAuditOnShopAndKnownResults() throws {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true
-        launch()
+        launch(hostedAuditGeometry: true)
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
         XCTAssertNoThrow(try auditAccessibility())
@@ -432,6 +434,34 @@ final class RoomInTheCartUITests: XCTestCase {
         captureComparisonFrames("Complete-Save-before-audit")
         screenshot("Complete-Save-before-audit")
         XCTAssertNoThrow(try auditAccessibility())
+        for phase in ["Partial Save", "Save outside viewport", "Missing painted text control"] {
+            auditPhase = phase
+            CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                CFNotificationName("dev.roominthecart.circle54-geometry" as CFString), nil, nil, true)
+            if phase == "Missing painted text control" {
+                XCTAssertTrue(app.staticTexts["Accessible reference"].waitForExistence(timeout: 5))
+                XCTAssertFalse(app.staticTexts["Diagnostic blue umbrellas"].exists)
+            } else {
+                let expectedHeader: CGFloat = phase == "Partial Save" ? 112.667 : 167.0
+                let header = app.staticTexts["bHeader"]
+                let settled = NSPredicate { _, _ in header.exists && abs(header.frame.minY - expectedHeader) <= 2 }
+                XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: settled, object: nil)], timeout: 5), .completed)
+                captureComparisonFrames(phase)
+            }
+            recordAuditViewport(phase + " before")
+            var findings = 0
+            XCTAssertNoThrow(try app.performAccessibilityAudit(for: .elementDetection) { issue in
+                findings += 1
+                print("Measured \(phase): \(issue.compactDescription) — \(issue.detailedDescription)")
+                self.recordAuditViewport(phase + " callback")
+                return false
+            })
+            print("Measured \(phase): \(findings) element-detection reports")
+            recordAuditViewport(phase + " after")
+            if phase == "Missing painted text control" {
+                XCTAssertGreaterThan(findings, 0, "Expected element detection to report visibly painted text absent from the accessibility hierarchy")
+            }
+        }
     }
 
     private var shopViewport: CGRect {
@@ -533,8 +563,17 @@ final class RoomInTheCartUITests: XCTestCase {
         attachment.name = name + " — exact frames"; attachment.lifetime = .keepAlways; add(attachment)
     }
 
+    private func recordAuditViewport(_ name: String) {
+        screenshot(name)
+        let hierarchy = XCTAttachment(string: app.debugDescription)
+        hierarchy.name = name + " hierarchy"
+        hierarchy.lifetime = .keepAlways
+        add(hierarchy)
+    }
+
     private func auditAccessibility() throws {
         try app.performAccessibilityAudit { issue in
+            self.recordAuditViewport(self.auditPhase + " issue")
             let element = issue.element
             if let element {
                 print("Accessibility audit: \(issue.detailedDescription), id=\(element.identifier), label=\(element.label), frame=\(element.frame)")
@@ -549,9 +588,10 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
-    private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
+    private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false, hostedAuditGeometry: Bool = false) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
+        if hostedAuditGeometry { app.launchArguments.append("--hosted-audit-geometry") }
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if largeDark {
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
