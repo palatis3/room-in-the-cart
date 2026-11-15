@@ -105,6 +105,24 @@ jobs:
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
+      - name: Select the weekly GitHub compiler cache
+        id: github-cache-key
+        continue-on-error: true
+        if: >-
+          runner.environment == 'github-hosted' && github.repository == 'palatis3/room-in-the-cart' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch' ||
+           github.event_name == 'workflow_call' || github.event_name == 'schedule' ||
+           (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+      - name: Cache GitHub Xcode compiler outputs
+        id: github-cas
+        if: steps.github-cache-key.outputs.week != ''
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: .build/github-xcode-cas
+          key: ritc-xcode-cas-v1-arm64-27A9275-24A434-Debug-${{ env.FIXTURE_PROFILE }}-${{ steps.github-cache-key.outputs.week }}
       - name: Activate Bitrise Xcode compilation cache
         id: compilation-cache
         if: runner.environment == 'self-hosted'
@@ -117,8 +135,18 @@ jobs:
       - name: Build fixture app and UI tests for iPhone
         id: build
         shell: bash
+        env:
+          RITC_CAS_OUTCOME: ${{ steps.github-cas.outcome }}
+          RITC_CAS_HIT: ${{ steps.github-cas.outputs.cache-hit }}
         run: |
           set -o pipefail
+          cache_settings=()
+          if [[ "$RITC_CAS_OUTCOME" == success ]]; then
+            # A failed download can leave an incomplete archive extraction.
+            if [[ "$RITC_CAS_HIT" != true ]]; then rm -rf .build/github-xcode-cas; fi
+            cache_settings=(COMPILATION_CACHE_ENABLE_CACHING=YES COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES
+                            "COMPILATION_CACHE_CAS_PATH=$PWD/.build/github-xcode-cas")
+          fi
           configuration=Debug
           bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
           conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
@@ -129,7 +157,7 @@ jobs:
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
-            CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
+            "${cache_settings[@]}" CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
             2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
           boot_status=0
           wait "$boot_pid" || boot_status=$?
