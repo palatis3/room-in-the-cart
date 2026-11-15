@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import signal
+import sys
 import subprocess
 import tempfile
 import unittest
@@ -124,9 +126,9 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertNotIn('build-for-testing', command)
         self.assertIn('if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then', command)
         self.assertLess(command.index('python3 scripts/check_storekit_runtime_mount.py'),
-                        command.index('python3 scripts/boot_ios_simulator.py'))
-        self.assertIn('python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"', command)
-        self.assertEqual(command.count('python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID"'), 1)
+                        command.index('boot_storekit_simulator "$SIMULATOR_ID"'))
+        self.assertIn('boot_storekit_simulator "$SIMULATOR_ID"', command)
+        self.assertEqual(command.count('boot_storekit_simulator --restart "$SIMULATOR_ID"'), 1)
         self.assertEqual(command.count('tee "$output/launch-failure/StoreKitRecoveryBoot.log"'), 2)
         self.assertIn('"$output/first-tests.json" "$native_status" "$SIMULATOR_ID"', command)
         self.assertIn('-only-test-configuration "$STOREKIT_CONFIGURATION"', command)
@@ -145,6 +147,37 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertIn('.build/StoreKitRuntime.log', upload['with']['path'])
         self.assertIn('.build/storekit-product-inventory.json', upload['with']['path'])
         self.assertFalse(any(step.get('continue-on-error') for step in tests['steps']))
+
+    def test_boot_deadline_kills_only_owned_group_and_preserves_helper_status(self):
+        command = self.step('storekit', identifier='storekit-native')['run']
+        code = command.split("""python3 - "$@" <<'PYCODE'""", 1)[1].split('\n', 1)[1].split('\nPYCODE', 1)[0]
+        for args in (['selected-device'], ['--restart', 'selected-device']):
+            for status, expected in ((0, 0), (70, 70), (-signal.SIGTERM, 143), ('timeout', 124)):
+                with self.subTest(args=args, status=status), \
+                        patch('subprocess.Popen') as popen, patch('os.killpg') as kill, \
+                        patch.object(sys, 'argv', ['-', *args]):
+                    process = popen.return_value
+                    process.pid = 43210
+                    if status == 'timeout':
+                        process.wait.side_effect = [subprocess.TimeoutExpired('boot', 480), -signal.SIGKILL]
+                    else:
+                        process.wait.return_value = status
+                    with self.assertRaises(SystemExit) as result:
+                        exec(compile(code, 'storekit-boot-deadline', 'exec'), {})
+                    self.assertEqual(result.exception.code, expected)
+                    # Keep helper output live. Killing its entire owned group
+                    # also closes a hanging simctl child's inherited tee pipe.
+                    popen.assert_called_once_with(
+                        [sys.executable, 'scripts/boot_ios_simulator.py', *args], start_new_session=True)
+                    self.assertEqual(process.wait.call_args_list[0].kwargs, {'timeout': 480})
+                    if status == 'timeout':
+                        kill.assert_called_once_with(process.pid, signal.SIGKILL)
+                        self.assertEqual(process.wait.call_count, 2)
+                        self.assertEqual(process.wait.call_args.args, ())
+                        self.assertEqual(process.wait.call_args.kwargs, {})
+                    else:
+                        kill.assert_not_called()
+                        self.assertEqual(process.wait.call_count, 1)
 
     def test_pretest_boot_failure_keeps_locale_log_and_exit_status(self):
         with tempfile.TemporaryDirectory() as directory:

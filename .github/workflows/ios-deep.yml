@@ -347,7 +347,30 @@ jobs:
           if [ "$STOREKIT_OS_BUILD" = 23C54 ]; then
             python3 scripts/check_storekit_runtime_mount.py 2>&1 | tee "$output/StoreKitMount.log"
           fi
-          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" 2>&1 | tee "$output/StoreKitBoot.log"
+          boot_storekit_simulator() {
+            # A silent bootstatus must not consume the entire native step budget.
+            # Bound only this owned helper/process group; keep its output live.
+            python3 - "$@" <<'PYCODE'
+          import os, signal, subprocess, sys
+          process = subprocess.Popen(
+              [sys.executable, "scripts/boot_ios_simulator.py", *sys.argv[1:]],
+              start_new_session=True,
+          )
+          try:
+              status = process.wait(timeout=480)
+          except subprocess.TimeoutExpired:
+              try:
+                  os.killpg(process.pid, signal.SIGKILL)
+              except ProcessLookupError:
+                  pass
+              process.wait()
+              print("StoreKit simulator boot exceeded 480 seconds; stopped its owned boot process group.",
+                    file=sys.stderr, flush=True)
+              status = 124
+          sys.exit(status if status >= 0 else 128 - status)
+          PYCODE
+          }
+          boot_storekit_simulator "$SIMULATOR_ID" 2>&1 | tee "$output/StoreKitBoot.log"
           test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
@@ -376,10 +399,10 @@ jobs:
             mv "$output/StoreKit.xcresult" "$output/StoreKit.log" "$output/first-tests.json" "$output/launch-failure/"
             if [ "$native_status" -eq 65 ]; then
               echo 'Restarting the simulator after a pre-test StoreKit launch service death.'
-              python3 scripts/boot_ios_simulator.py --restart "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
+              boot_storekit_simulator --restart "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
             else
               echo 'Rechecking the same simulator after Xcode listed no concrete iOS Simulator destinations.'
-              python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
+              boot_storekit_simulator "$SIMULATOR_ID" 2>&1 | tee "$output/launch-failure/StoreKitRecoveryBoot.log"
             fi
             run_storekit
           else
