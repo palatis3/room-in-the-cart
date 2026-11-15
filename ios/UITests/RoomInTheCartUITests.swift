@@ -541,7 +541,9 @@ final class RoomInTheCartUITests: XCTestCase {
             } else {
                 print("Accessibility audit: \(issue.detailedDescription), no element supplied")
             }
-            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(element?.debugDescription ?? "No element supplied")")
+            // XCTest can supply only a screenshot. Keep the app hierarchy at the time of the finding.
+            let hierarchy = element?.debugDescription ?? self.app.debugDescription
+            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(hierarchy)")
             details.name = "Accessibility issue details"
             details.lifetime = .keepAlways
             self.add(details)
