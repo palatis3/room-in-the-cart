@@ -63,6 +63,7 @@ struct ReminderQuietHoursDraft: Equatable {
     @State private var fireAt: Date
     @State private var timeZoneID: String
     @FocusState private var timeZoneFocused: Bool
+    @AccessibilityFocusState private var statusFocused: Bool
     @State private var quiet: Bool
     @State private var quietTimes: ReminderQuietHoursDraft
     @State private var reviewed: ReminderIntent?
@@ -82,6 +83,16 @@ struct ReminderQuietHoursDraft: Equatable {
         _quietTimes = State(initialValue: ReminderQuietHoursDraft(context.initialQuietHours))
     }
     public var body: some View {
+        ScrollViewReader { scroll in
+            reminderForm.onChange(of: version) { _, _ in
+                guard let saved, saved.status != .cancelled else { return }
+                scroll.scrollTo("reminder.status", anchor: .center)
+                statusFocused = true
+            }
+        }
+    }
+
+    private var reminderForm: some View {
         Form {
             if let sourceTitle {
                 Section {
@@ -90,7 +101,11 @@ struct ReminderQuietHoursDraft: Equatable {
                 }
             }
             Section(SurfaceCopy.text("Current reminder")) {
-                Text(statusText).accessibilityIdentifier("reminder.status").accessibilityAddTraits(.updatesFrequently)
+                Text(statusText)
+                    .accessibilityIdentifier("reminder.status")
+                    .accessibilityAddTraits(.updatesFrequently)
+                    .accessibilityFocused($statusFocused)
+                    .id("reminder.status")
                 if let saved, saved.status == .scheduled {
                     Text(display(saved.intent.fireAt, timeZone: saved.intent.localTime.timeZoneID))
                     Text(saved.intent.localTime.timeZoneID)

@@ -56,7 +56,12 @@ import XCTest
         XCTAssertFalse(app.alerts.firstMatch.exists)
         capture("S12-deferral-reminder-reviewed-unscheduled")
         tap(element("reminder.schedule"))
-        assertElementContains("reminder.status", "Reminder not scheduled. Notifications are off")
+        let deniedStatus = element("reminder.status")
+        let visibleDenial = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            deniedStatus.exists && deniedStatus.label.contains("Reminder not scheduled. Notifications are off") && deniedStatus.isHittable
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleDenial], timeout: 8), .completed,
+                       "Show the outcome of Schedule without requiring the shopper to scroll.")
         tap(element("reminder.close"))
         tap(app.buttons["Request a reminder for this deferral"])
         reveal(expiryPicker)
