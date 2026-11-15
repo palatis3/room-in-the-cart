@@ -2000,6 +2000,7 @@
 				"DEBUG_INFORMATION_FORMAT" = "dwarf";
 				"ENABLE_TESTABILITY" = "YES";
 				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited) STAGING";
+				"DEBUG_INFORMATION_FORMAT[sdk=iphoneos*]" = "dwarf-with-dsym";
 			};
 			"name" = "Staging";
 		};

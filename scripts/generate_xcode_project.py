@@ -57,6 +57,8 @@ def config_list(key, base, is_project=False):
             settings["RITC_SURFACE_URL_SCHEME"] = "roominthecart" + ("-" + name.lower() if name != "Release" else "")
         if is_project:
             settings.update(ONLY_ACTIVE_ARCH="YES" if name != "Release" else "NO", SWIFT_OPTIMIZATION_LEVEL="-Onone" if name != "Release" else "-O", DEBUG_INFORMATION_FORMAT="dwarf" if name != "Release" else "dwarf-with-dsym", ENABLE_TESTABILITY="YES" if name != "Release" else "NO", SWIFT_ACTIVE_COMPILATION_CONDITIONS="$(inherited) " + {"Debug": "DEBUG", "Staging": "STAGING", "Release": "RELEASE"}[name])
+            if name == "Staging":
+                settings["DEBUG_INFORMATION_FORMAT[sdk=iphoneos*]"] = "dwarf-with-dsym"
         elif name == "Staging" and key in STAGING_SUITES:
             # The staging scheme runs its live service and Safari smoke suites.
             # Debug-only package fixtures require modules compiled for testing.
@@ -215,9 +217,10 @@ def main():
     args = parser.parse_args()
     stale = []
     for path, content in outputs().items():
+        if path.exists() and path.read_text() == content:
+            continue
         if args.check:
-            if not path.exists() or path.read_text() != content:
-                stale.append(str(path.relative_to(ROOT)))
+            stale.append(str(path.relative_to(ROOT)))
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
