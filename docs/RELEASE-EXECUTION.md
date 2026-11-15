@@ -6,6 +6,17 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 15, 2026.
 
+The B05 unreadable-recipe-photo walkthrough used the system photo picker and
+the Release app on an iPhone SE simulator running iOS 17.0. Before the fix,
+the unreadable result was below the visible capture controls. The revised
+screen brought the explanation into view, including the full Spanish sentence
+at maximum Dynamic Type. Keeping the typed draft, cancelling and relaunching
+preserved the saved wrap dinner. All rows of the three shopping databases
+matched the original fixture, including both meal occurrences. Selecting a
+real QR image showed its identifier and the manual-match message. See
+`.build/UnreadableRecipePhotoNov15/{final-spanish,detected-code}/strict.log`
+and `final-spanish-stores.json` in the same evidence directory.
+
 On November 15, the Release app on the iPhone SE simulator running iOS 17.0
 read a bilingual package photo through the system photo picker. The shopper’s
 typed “2 Wraps” stayed in place until they explicitly used the OCR text. Cancel

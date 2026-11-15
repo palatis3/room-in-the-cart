@@ -33,6 +33,7 @@ import CoreDomain
     @State private var reviewingIngredients = false
     @State private var error: String?
     @FocusState private var focusedField: InputField?
+    @AccessibilityFocusState private var capturedWordingFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -44,7 +45,16 @@ import CoreDomain
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
     }
     var body: some View {
-        ScrollViewReader { scroll in scanForm(scroll) }
+        ScrollViewReader { scroll in
+            scanForm(scroll)
+                .task(id: model.candidate != nil && !model.busy) {
+                    guard model.candidate != nil, !model.busy else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, authorize(), model.candidate != nil else { return }
+                    scroll.scrollTo("scan.capturedWording", anchor: .top)
+                    capturedWordingFocused = true
+                }
+        }
     }
 
     private func scanForm(_ scroll: ScrollViewProxy) -> some View {
@@ -73,9 +83,14 @@ import CoreDomain
                 if let candidate = model.candidate {
                     Section(captureText("Captured source — review before using")) {
                         sourceImage(candidate.originalImageData)
-                        Text(candidate.originalText.isEmpty ? captureText("No readable text. You can type it below.") : candidate.originalText).textSelection(.enabled)
-                        Text(captureText("A readable barcode is only a code. Match the product yourself."))
-                        ForEach(candidate.barcodes) { code in Text(code.value).textSelection(.enabled) }
+                        Text(candidate.originalText.isEmpty ? captureText("No readable text. You can type it below.") : candidate.originalText)
+                            .textSelection(.enabled)
+                            .id("scan.capturedWording")
+                            .accessibilityFocused($capturedWordingFocused)
+                        if !candidate.barcodes.isEmpty {
+                            Text(captureText("A readable barcode is only a code. Match the product yourself."))
+                            ForEach(candidate.barcodes) { code in Text(code.value).textSelection(.enabled) }
+                        }
                         Button(captureText("Use this source for review")) { model.acceptCandidate(); resetDerived() }
                         Button(captureText("Keep my current draft")) { model.discardCandidate() }
                     }
