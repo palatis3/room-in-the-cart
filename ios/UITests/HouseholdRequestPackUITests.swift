@@ -445,22 +445,21 @@ import XCTest
         assertNoWrites()
     }
 
-    func testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts() {
+    func testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts() throws {
         openCerealReview(extraArguments: ["--request-other-meal-fixture"])
         let title = "Other meals in this shop"
         let controls = app.buttons.matching(NSPredicate(format: "label == %@", title))
         let control = controls.firstMatch
         let label = app.staticTexts.matching(NSPredicate(format: "label == %@", title)).firstMatch
-        let other = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")).firstMatch
+        let ordinaryID = "household.decision.meal.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        let other = app.staticTexts[ordinaryID]
 
-        func assertReviewedFacts() {
+        func assertReviewedFacts() throws {
             for (id, expected) in [
                 ("88888888-8888-4888-8888-888888888888", ["Sam’s wrap lunch", "Lunch · November 4, 2026", "Protected portions, 1"]),
                 ("99999999-9999-4999-8999-999999999999", ["Mia’s wrap lunch", "Lunch · November 5, 2026", "Protected portions, 1"])
             ] {
-                let row = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal." + id)).firstMatch
-                reveal(row, fullyVisible: true)
-                let observedLabel = row.label
+                let observedLabel = try reviewedMealLabel("household.decision.meal." + id)
                 for fact in expected { XCTAssertTrue(observedLabel.contains(fact), observedLabel) }
             }
             for (id, amount) in [("household.decision.before-total", "$37.20"),
@@ -519,25 +518,53 @@ import XCTest
             }
         }
 
-        assertReviewedFacts()
+        try assertReviewedFacts()
         assertControl("Collapsed")
         XCTAssertFalse(other.exists)
         // Tap the actual text center, never the trailing disclosure chevron.
         label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         assertControl("Expanded")
-        reveal(other, fullyVisible: true)
-        let ordinaryLabel = other.label
+        let ordinaryLabel = try reviewedMealLabel(ordinaryID)
         for fact in ["Family rice dinner", "Dinner · November 6, 2026", "Portions, 4"] {
             XCTAssertTrue(ordinaryLabel.contains(fact), ordinaryLabel)
         }
         XCTAssertFalse(ordinaryLabel.contains("Protected portions"))
         capture("S24-other-meals-expanded-ordinary-facts")
-        assertReviewedFacts()
+        try assertReviewedFacts()
         assertControl("Expanded")
         label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         assertControl("Collapsed")
         XCTAssertFalse(other.exists)
-        assertReviewedFacts()
+        try assertReviewedFacts()
+    }
+
+    private func reviewedMealLabel(_ id: String) throws -> String {
+        // Read the visible meal and the foreground review sheet in one snapshot.
+        // Re-resolving a lazy row's frame can stall even while its text is on screen.
+        for attempt in 0...24 {
+            let screen = try app.snapshot()
+            var pending = screen.children
+            var meal: (any XCUIElementSnapshot)?
+            var bar: CGRect?
+            var bottom = screen.frame.maxY - 16
+            while let node = pending.popLast() {
+                if node.elementType == .staticText && node.identifier == id { meal = node }
+                if node.elementType == .navigationBar && node.identifier == "Review request" { bar = node.frame }
+                if node.elementType == .keyboard { bottom = min(bottom, node.frame.minY - 16) }
+                pending.append(contentsOf: node.children)
+            }
+            let top = try XCTUnwrap(bar, "Review request must be in the foreground").maxY + 12
+            let viewport = CGRect(x: screen.frame.minX, y: top, width: screen.frame.width, height: max(0, bottom - top))
+            if let meal, !meal.frame.isEmpty, viewport.contains(meal.frame) {
+                XCTAssertTrue(app.staticTexts[id].isHittable, id)
+                return meal.label
+            }
+            if attempt < 24 {
+                let upward = meal.map { $0.frame.midY > viewport.midY } ?? (attempt < 16)
+                scrollContent(upward: upward)
+            }
+        }
+        return try XCTUnwrap(nil as String?, "Missing fully visible meal: " + id)
     }
 
     func testLargestTextShowsCompleteProtectedLunchNamesAndDates() throws {
