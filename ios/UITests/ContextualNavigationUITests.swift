@@ -775,9 +775,10 @@ import UIKit
         tapQuoteRow("Save reviewed comparison")
         tapQuoteRow("Preview using Market B")
         assertText("East branch")
-        let adoptedSlot = element("quoteAdoptionSlot")
+        let adoptedSlot = app.staticTexts["quoteAdoptionSlot"]
         reveal(adoptedSlot)
-        XCTAssertTrue(adoptedSlot.label.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlot.label),adoptedSlot.label)
+        let adoptedSlotLabel = adoptedSlot.label
+        XCTAssertTrue(adoptedSlotLabel.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlotLabel), adoptedSlotLabel)
         tap(app.buttons["dinnerCancelPreview"])
         XCTAssertFalse(app.staticTexts["Current pickup branch: East branch"].exists)
         tapQuoteRow("Preview using Market B"); tap(app.buttons["dinnerApply"])
