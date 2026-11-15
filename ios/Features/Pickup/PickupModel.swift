@@ -174,6 +174,14 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     var recoveryPreparation: PickupRecoveryPreparation? = nil
     var sourceURL: String? = nil
 }
+struct PickupDeferralReview {
+    fileprivate let workspaceID: UUID
+    fileprivate let shopID: UUID
+    fileprivate let sourceRevision: Int64
+    fileprivate let proposal: BasketProposal
+    let comparison: CheckoutComparison
+}
+
 struct EarlierCheckoutQuote: Codable, Equatable, Identifiable {
     let id: Int64 // The durable pickup revision that held this quote.
     let basketRevisionID: UUID
@@ -565,6 +573,22 @@ struct PickupPersistenceLocation {
             return false
         } catch { self.error = pTr("Not saved. Retry this change before continuing; your last saved pickup is intact."); return false }
     }
+    private func confirmSavedRevision(of id: UUID) async -> Bool {
+        saving = true
+        defer { saving = false }
+        do {
+            guard let store, let revision = storeRevisions[id],
+                  try await store.load(id: id)?.revision == revision else {
+                await reloadAfterStaleRevision()
+                return false
+            }
+            error = nil
+            return true
+        } catch {
+            self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+            return false
+        }
+    }
     private func reloadAfterStaleRevision() async {
         ready = false
         journeys = []; storeRevisions = [:]
@@ -605,24 +629,40 @@ struct PickupPersistenceLocation {
             value.quote = quote; value.context = quote.context; value.cap = cap; value.quotedRevisionID = basket.current.id
         }
     }
-    func deferralPreview(_ ids: Set<UUID>) throws -> (BasketProposal, CheckoutComparison) {
-        guard let value = journey, let basket = value.basket, basket.phase == .draft, let quote = value.quote,
-              value.quotedRevisionID == basket.current.id, ids.isSubset(of: value.flexible), !ids.isEmpty else { throw PickupModelError.invalid }
+    func deferralPreview(_ ids: Set<UUID>) throws -> PickupDeferralReview {
+        guard hasCurrentBasketStockBasis, let workspaceID = sourceWorkspaceID, let value = journey,
+              let basket = value.basket, basket.phase == .draft, let quote = value.quote, value.quotedRevisionID == basket.current.id,
+              !ids.isEmpty, ids.isSubset(of: value.flexible), ids.isSubset(of: basket.current.lines.map(\.id)),
+              !value.plannedNeeds.contains(where: { ids.contains($0.orderLineID) && $0.priority == .protected })
+        else { throw PickupModelError.invalid }
         let proposal = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: ids.map { .remove($0) })
         let changed = try repriced(quote, removing: ids)
-        return (proposal, try CheckoutEngine.compare(before: quote, after: changed, cap: value.cap))
+        let comparison = try CheckoutEngine.compare(before: quote, after: changed, cap: value.cap)
+        return PickupDeferralReview(workspaceID: workspaceID, shopID: value.id, sourceRevision: value.revision,
+                                    proposal: proposal, comparison: comparison)
     }
     private func repriced(_ quote: CheckoutQuote, removing ids: Set<UUID>) throws -> CheckoutQuote {
         guard case let .components(lines, complete, fees, discounts, tax, deposits) = quote.pricing else { throw PickupModelError.invalid }
         return CheckoutQuote(scope: quote.scope, context: quote.context, pricing: .components(lines: lines.filter { !ids.contains($0.id) }, lineSetComplete: complete, fees: fees, discounts: discounts, tax: tax, deposits: deposits))
     }
-    @discardableResult func applyDeferral(_ proposal: BasketProposal) async -> Bool {
-        await change { value in
-            guard var basket = value.basket, let quote = value.quote else { throw PickupModelError.missing }
-            if value.proposals.contains(where: { $0.id == proposal.id }) { return }
-            guard basket.phase == .draft else { throw PickupModelError.invalid }
+    @discardableResult func applyDeferral(_ review: PickupDeferralReview) async -> Bool {
+        guard ready, !saving, pending == nil, sourceWorkspaceID == review.workspaceID,
+              var value = journey, value.id == review.shopID else { return false }
+        let proposal = review.proposal
+        if let applied = value.proposals.first(where: { $0.id == proposal.id }) {
+            guard applied == proposal, !value.undoneProposals.contains(proposal.id) else { return false }
+            return await confirmSavedRevision(of: value.id)
+        }
+        guard value.revision == review.sourceRevision, hasCurrentBasketStockBasis else {
+            error = pTr("The pickup changed. Preview the deferral again before applying.")
+            return false
+        }
+        do {
+            guard var basket = value.basket, basket.phase == .draft, let quote = value.quote else { throw PickupModelError.invalid }
             let ids = Set(proposal.changes.compactMap { change -> UUID? in if case let .remove(id) = change { return id }; return nil })
-            guard ids.isSubset(of: value.flexible), !value.plannedNeeds.contains(where: { ids.contains($0.orderLineID) && $0.priority == .protected }) else { throw PickupModelError.invalid }
+            guard ids.isSubset(of: value.flexible),
+                  !value.plannedNeeds.contains(where: { ids.contains($0.orderLineID) && $0.priority == .protected })
+            else { throw PickupModelError.invalid }
             value.carriedMeals += value.plannedNeeds.filter { ids.contains($0.orderLineID) }
             value.plannedNeeds.removeAll { ids.contains($0.orderLineID) }
             let removed = basket.current.lines.filter { ids.contains($0.id) }
@@ -630,6 +670,10 @@ struct PickupPersistenceLocation {
             value.quote = try repriced(quote, removing: ids); value.quotedRevisionID = basket.current.id
             value.proposals.append(proposal)
             value.deferred += removed.map { DeferredPickupNeed(id: UUID(), sourceShopID: value.id, line: $0) }
+            return await save(value)
+        } catch {
+            self.error = pTr("Check the amounts and units. Your saved pickup has not changed.")
+            return false
         }
     }
     @discardableResult func undoDeferral(_ proposal: BasketProposal) async -> Bool {
@@ -812,20 +856,8 @@ struct PickupPersistenceLocation {
         guard ready, !saving, pending == nil else { return false }
         if let original = journeys.first(where: { $0.urgent.contains { $0.id == need.id && $0.carriedFromID == nil } }) {
             guard original.urgent.contains(need) else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
-            saving = true
-            defer { saving = false }
-            do {
-                guard let store, let revision = storeRevisions[original.id],
-                      try await store.load(id: original.id)?.revision == revision else {
-                    await reloadAfterStaleRevision()
-                    return false
-                }
-            } catch {
-                self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
-                return false
-            }
+            guard await confirmSavedRevision(of: original.id) else { return false }
             selectedID = original.id
-            error = nil
             return true
         }
         var value: PickupJourney

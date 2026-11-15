@@ -28,7 +28,18 @@ import XCTest
         for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: app.textFields[label]) }
         tap(app.buttons["Save and evaluate checkout"])
         enableSwitch("coffee"); enableSwitch("Include in deferral preview")
-        tap(app.buttons["Preview deferrals together"]); tap(app.buttons["Apply reviewed deferral"])
+        let preview = app.buttons["Preview deferrals together"]
+        let apply = app.buttons["Apply reviewed deferral"]
+        tap(preview)
+        reveal(apply)
+        let included = app.switches["Include in deferral preview"]
+        reveal(included)
+        included.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(included.value as? String, "0")
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 3), "Changing the selected groceries must dismiss the old preview")
+        enableSwitch("Include in deferral preview")
+        tap(preview)
+        tap(apply)
         back(to: "Start the next shop"); tap(app.buttons["Start the next shop"])
         tap(app.buttons["Request a reminder for this deferral"])
         XCTAssertEqual(element("reminder.subject").label, "coffee")

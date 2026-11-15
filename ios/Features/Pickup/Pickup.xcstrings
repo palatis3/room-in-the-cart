@@ -10188,6 +10188,23 @@
         }
       }
     },
+    "The pickup changed. Preview the deferral again before applying.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pickup changed. Preview the deferral again before applying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra cambió. Vuelve a revisar qué artículos dejarás para después antes de aplicar el cambio."
+          }
+        }
+      }
+    },
     "The saved pickup changed or was removed. Reopen its current details before trying again.": {
       "extractionState": "manual",
       "localizations": {

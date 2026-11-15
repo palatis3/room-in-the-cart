@@ -177,7 +177,7 @@ struct PickupCheckoutView: View {
     @State private var reviewingReplacement = false
     @State private var reopeningCurrent = false
     @State private var selected: Set<UUID> = []
-    @State private var preview: (BasketProposal, CheckoutComparison)?
+    @State private var preview: PickupDeferralReview?
     @State private var formError: String?
     @State private var comparingHold = false
     @State private var hold = ""
@@ -333,17 +333,21 @@ struct PickupCheckoutView: View {
                             Text("\(need.name): \(pQuantity(need.amount)) · \(pTr(need.priority == .protected ? "Protected" : "Required"))").font(.caption)
                         }
                         if model.journey?.flexible.contains(line.id) == true {
-                            Toggle(pTr("Include in deferral preview"), isOn: Binding(get: { selected.contains(line.id) }, set: { if $0 { selected.insert(line.id) } else { selected.remove(line.id) } }))
+                            Toggle(pTr("Include in deferral preview"), isOn: Binding(get: { selected.contains(line.id) }, set: { included in
+                                preview = nil
+                                if included { selected.insert(line.id) } else { selected.remove(line.id) }
+                            }))
                         }
                     }
                     Button(pTr("Preview deferrals together")) {
                         do { preview = try model.deferralPreview(selected); formError = nil }
                         catch { formError = pTr("Select flexible lines and save a complete component quote first.") }
                     }
+                    .disabled(selected.isEmpty)
                     if let preview {
-                        Text(pTr("Current checkout")); PickupResultView(result: preview.1.before)
-                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.1.after)
-                        Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview.0) { self.preview = nil; selected = []; populate() } } }
+                        Text(pTr("Current checkout")); PickupResultView(result: preview.comparison.before)
+                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.comparison.after)
+                        Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview) { self.preview = nil; selected = []; populate() } } }
                         Button(pTr("Cancel preview")) { self.preview = nil }
                     }
                     ForEach(model.journey?.proposals.filter { !(model.journey?.undoneProposals.contains($0.id) ?? false) } ?? []) { proposal in
@@ -356,6 +360,10 @@ struct PickupCheckoutView: View {
         .keyboardDoneAction(visible: field != nil, title: pTr("Done")) { field = nil }
         .disabled(model.saving)
         .onAppear { populate() }
+        .onChange(of: model.journey?.revision) { _, _ in
+            preview = nil
+            selected.formIntersection(model.journey?.flexible ?? [])
+        }
         .onChange(of: model.journey?.basket?.current.id) { _, _ in populate() }
         .onChange(of: model.selectedID) { _, _ in populate() }
         .onChange(of: model.journey?.quote) { _, _ in populate() }
