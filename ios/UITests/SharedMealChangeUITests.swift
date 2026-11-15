@@ -61,8 +61,7 @@ import XCTest
     }
     func testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce() {
         launch(); chooseOccurrence()
-        fill("Two guests; reviewed local ingredients", into: "meal-change-reason", replacing: true)
-        tap(element("meal-change-prepare"))
+        enterReasonAndPrepare("Two guests; reviewed local ingredients")
         assertText("Fixture guest soup")
         capture("S17-planner-original-and-proposed-review")
         tap(app.buttons["Cancel proposal review"])
@@ -93,11 +92,10 @@ import XCTest
     }
     func testRemovingBoundSideReachesProposalReviewAndCancelMakesNoSharedWrite() {
         launch(ingredientRemoval: true); chooseOccurrence()
-        fill("Remove only the tomato side; keep the protected lunch", into: "meal-change-reason", replacing: true)
         tap(app.buttons["Tomato side"])
         tap(app.buttons["Remove proposed ingredient"])
         XCTAssertFalse(app.buttons["Tomato side"].exists)
-        tap(app.buttons["meal-change-prepare"])
+        enterReasonAndPrepare("Remove only the tomato side; keep the protected lunch")
         reveal(app.buttons["meal-change-send"])
         XCTAssertTrue(app.buttons["meal-change-send"].isEnabled)
         capture("S17-bound-side-removed-review-keeps-other-allocations")
@@ -194,12 +192,14 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
-        app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
+    private func enterReasonAndPrepare(_ reason: String) {
+        let field = element("meal-change-reason")
+        tap(field)
+        field.typeText(reason)
+        XCTAssertEqual(field.value as? String, reason)
+        let review = app.buttons["meal-change-prepare"]
+        reveal(review, fullyVisible: true)
+        review.tap()
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
