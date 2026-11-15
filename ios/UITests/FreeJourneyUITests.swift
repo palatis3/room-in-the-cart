@@ -402,10 +402,17 @@ import XCTest
 
         let picker = app.buttons["pickup.retailerRecipientLanguage"]
         let preview = app.staticTexts["pickup.datedRetailerPreview"]
-        reveal(picker, initiallyUpward: false)
+        func chooseRecipientLanguage(_ language: String) {
+            revealScrollableContent(picker, initiallyUpward: false, entireRow: true)
+            // The menu's current value is the trailing control in this Form row.
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            let option = app.buttons[language]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), "The recipient language menu must offer \(language)")
+            option.tap()
+        }
+        reveal(preview, initiallyUpward: false)
         let english = preview.label
-        picker.tap()
-        app.buttons["Español (EE. UU.)"].tap()
+        chooseRecipientLanguage("Español (EE. UU.)")
         XCTAssertTrue(preview.label.hasPrefix("Compra revisada"))
         XCTAssertTrue(preview.label.contains("Wraps — 2 unidades"))
         let spanish = preview.label
@@ -422,8 +429,7 @@ import XCTest
         tap(app.collectionViews.buttons["Preparar envío a la tienda"])
         reveal(preview)
         XCTAssertEqual(preview.label, spanish)
-        tap(picker)
-        app.buttons["Inglés (EE. UU.)"].tap()
+        chooseRecipientLanguage("Inglés (EE. UU.)")
         XCTAssertEqual(preview.label, english)
         tap(app.buttons["Copiar lista con fecha"])
         capture("Retailer-Spanish-interface-English-copy")
