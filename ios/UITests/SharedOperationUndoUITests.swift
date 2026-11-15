@@ -59,7 +59,11 @@ import XCTest
         setSwitch("sharedUndo.pack." + wraps + ".unknown", on: false)
         setSwitch("sharedUndo.pack." + apples + ".acceptUnknown", on: true)
         fill("8", id: "sharedUndo.pack." + wraps + ".amount", initialSearchDirection: .towardStart)
-        tap(app.buttons["sharedUndo.preview"])
+        let preview = app.buttons["sharedUndo.preview"]
+        reveal(preview)
+        XCTAssertTrue(preview.isHittable)
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        preview.tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         assertMealReview(spanish: spanish)
         setSwitch("sharedUndo.acknowledged", on: true); tap(app.buttons["sharedUndo.apply"])
