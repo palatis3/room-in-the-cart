@@ -1566,7 +1566,8 @@ import XCTest
 
     func testMealWeekReservationDraftCannotFollowAnotherPickup() {
         launch(reset: true)
-        tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons.matching(NSPredicate(format: "identifier == %@", "dinnerStartPickup")).firstMatch)
         fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
         fill("Fictional original lunch", into: "Food name", requireDone: true, control: app.textFields["Food name"])
