@@ -165,8 +165,9 @@ def load_configuration(root, name):
             raise ValueError("operatorName must be a bounded literal name without control or format characters")
     if name == "Release" and (origins or config.get("publishableKey")):
         staging = load_configuration(root, "Staging")
+        staging_origins = {backend_origin(staging[key]) for key in BACKEND_URL_KEYS if staging.get(key)}
         for key, origin in origins.items():
-            if staging.get(key) and origin == backend_origin(staging[key]):
+            if origin in staging_origins:
                 raise ValueError(f"release.json {key} must use an origin separate from staging")
         if config.get("publishableKey") and config["publishableKey"] == staging.get("publishableKey"):
             raise ValueError("release.json publishableKey must be separate from staging")

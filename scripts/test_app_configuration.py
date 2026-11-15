@@ -56,8 +56,8 @@ class AppConfigurationTests(unittest.TestCase):
             self.assertEqual(load_configuration(root, "Release"), release)
             self.assertEqual(load_configuration(root, "Staging"), staging)
             for key, aliases in {
-                "supabaseURL": (staging["supabaseURL"], "https://STAGING-AUTH.grocery-app.com.:443/subpath"),
-                "serviceURL": (staging["serviceURL"], "https://Staging-Service.grocery-app.com:443/another-path"),
+                "supabaseURL": (staging["supabaseURL"], staging["serviceURL"], "https://STAGING-AUTH.grocery-app.com.:443/subpath"),
+                "serviceURL": (staging["serviceURL"], staging["supabaseURL"], "https://Staging-Service.grocery-app.com:443/another-path"),
                 "publishableKey": (staging["publishableKey"],),
             }.items():
                 for value in aliases:
