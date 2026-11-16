@@ -1,5 +1,11 @@
 # Local CI validation
 
+## November 16 GitHub runtime replacement
+
+The GitHub UI consumers export and import the pinned iOS 27.0/24A434 runtime before simulator selection. This addresses the MobileAsset unmounts observed in the frozen f4 batch. The isolated import took 17 seconds; all eight original UI09 cases executed and final inventory retained the same Ready image, mount and bundle, with zero recorded runtime warnings or runner restarts. Seven cases passed. The remaining broad Review lookup in the 500-line paste test is corrected and passes its original local case in 36.739 seconds. This evidence supports the next combined qualification, not a claim that the diagnostic workflow passed.
+
+Preparation validates every target before deleting any registration, preserves other platforms and requires a real exported bundle before removal. An independent post-test runtime check runs even after native failure. Only the three GitHub UI consumer jobs use this path; their native 40-minute limits and case allowances are unchanged. Private Records fixtures retain their restricted reporting boundary. Evidence: `.build/RuntimeImportCanaryNov16/` and `.build/GitHubRuntimeImportNov16/validation.json`.
+
 ## November 13 meal Undo scheduling and sanitizer feedback
 
 The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on

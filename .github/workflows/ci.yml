@@ -675,7 +675,7 @@ jobs:
       cancel-in-progress: false
     needs: ios-build
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-m4' && 'bitrise-runner-ci 2' || matrix.provider == 'bitrise' && 'bitrise-runner-room in cart') || 'xcode-27' }}
-    timeout-minutes: 55
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       # Share five GitHub, three M2 and six M4 queues with fixture jobs.
@@ -718,6 +718,11 @@ jobs:
               raise SystemExit(f"Unexpected core consumer runtime: {runtime}")
           print(f"Core consumer runtime: {runtime['version']}/{runtime['buildversion']}")
           PYCODE
+      - name: Import the GitHub iOS runtime before boot
+        id: imported-runtime
+        if: runner.environment == 'github-hosted'
+        timeout-minutes: 20
+        run: python3 scripts/prepare_github_ios_runtime.py prepare
       - name: Select isolated iPhone simulator for ui-01 and ui-05
         timeout-minutes: 8
         run: |
@@ -759,6 +764,27 @@ jobs:
       - name: Run selected tests and verify complete execution
         timeout-minutes: 40
         run: bash scripts/run_ios_test_shard.sh
+      - name: Verify the imported runtime after tests
+        if: always() && steps.imported-runtime.outcome == 'success'
+        timeout-minutes: 2
+        run: python3 scripts/prepare_github_ios_runtime.py verify
+      - name: Retain GitHub runtime diagnostics
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        timeout-minutes: 3
+        run: |
+          mkdir -p .build/github-ios-runtime
+          xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
+          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+      - name: Upload GitHub runtime evidence
+        continue-on-error: true
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: github-runtime-core-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: .build/github-ios-runtime
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Clean up only the owned simulator after result export
         if: always()
         timeout-minutes: 2
