@@ -223,51 +223,57 @@ jobs:
         owner\": owner, \"sourceUDID\": source_id, \"sourceName\": source[\"name\"],\n               \"deviceTypeIdentifier\"\
         : device_type, \"runtime\": runtime_identity(runtime), \"nonce\": nonce,\n               \"createdName\": owned_name(owner,\
         \ nonce), \"createdUDID\": None,\n               \"creationStatus\": \"pending\", \"cleanup\": {\"status\": \"not-run\"\
-        }}\n    path.parent.mkdir(parents=True, exist_ok=True)\n    save_receipt(path, receipt)\n    try:\n        created\
-        \ = str(UUID(simctl(\"create\", receipt[\"createdName\"], device_type, runtime).strip())).upper()\n        if any(device.get(\"\
-        udid\", \"\").upper() == created for rows in devices.values() for device in rows):\n            raise ValueError(\"\
-        Creation returned a device already present in the input inventory\")\n        receipt.update(createdUDID=created,\
-        \ creationStatus=\"created\")\n        save_receipt(path, receipt)\n        device = current_owned_device(receipt)\n\
-        \        if device is None or device.get(\"state\") != \"Shutdown\":\n            raise ValueError(\"Fresh device\
-        \ was not found in Shutdown state\")\n        receipt[\"creationStatus\"] = \"verified\"\n        save_receipt(path,\
-        \ receipt)\n        publish(created, receipt[\"createdName\"])\n        return receipt\n    except (KeyError, ValueError,\
-        \ OSError, subprocess.SubprocessError) as error:\n        receipt[\"creationStatus\"] = \"failed\"\n        receipt[\"\
-        creationError\"] = str(error)\n        if isinstance(error, subprocess.CalledProcessError) and error.stderr:\n   \
-        \         receipt[\"creationStderr\"] = error.stderr[-16384:]\n        save_receipt(path, receipt)\n        raise\n\
-        \n\ndef cleanup(path):\n    if not path.exists() and not path.is_symlink():\n        print(\"No simulator ownership\
-        \ receipt; no device cleanup attempted.\")\n        return\n    if path.is_symlink() or not path.is_file() or path.stat().st_size\
-        \ > 65536:\n        raise ValueError(\"Refusing an invalid simulator ownership receipt\")\n    receipt = json.loads(path.read_text(encoding=\"\
-        utf-8\"))\n    # Verify ownership before recording anything or issuing a simulator mutation.\n    if receipt.get(\"\
-        schema\") != 1 or receipt.get(\"owner\") != owner_identity():\n        raise ValueError(\"Simulator receipt belongs\
-        \ to another CI owner or toolchain\")\n    if receipt.get(\"createdName\") != owned_name(receipt[\"owner\"], receipt[\"\
-        nonce\"]):\n        raise ValueError(\"Simulator receipt has an invalid owned device name\")\n    created = receipt.get(\"\
-        createdUDID\")\n    if created is None:\n        receipt[\"cleanup\"] = {\"status\": \"no-created-device\", \"note\"\
-        : \"No verified creation UUID; no device mutation attempted.\"}\n        save_receipt(path, receipt)\n        return\n\
-        \    if str(UUID(created)).upper() != created or created == str(UUID(receipt[\"sourceUDID\"])).upper():\n        raise\
-        \ ValueError(\"Refusing to clean up the source image device or invalid UUID\")\n    if os.environ.get(\"SIMULATOR_ID\"\
-        , created) != created:\n        raise ValueError(\"Current simulator environment does not match the owned UUID\")\n\
-        \    receipt[\"cleanup\"] = {\"status\": \"checking\"}\n    save_receipt(path, receipt)\n    try:\n        device\
-        \ = current_owned_device(receipt)\n        if device is not None:\n            if device.get(\"state\") == \"Booted\"\
-        :\n                receipt[\"cleanup\"][\"status\"] = \"shutting-down\"\n                save_receipt(path, receipt)\n\
-        \                simctl(\"shutdown\", created)\n                device = current_owned_device(receipt)\n         \
-        \   if device is None or device.get(\"state\") != \"Shutdown\":\n                raise ValueError(\"Owned device is\
-        \ not safely shut down; refusing deletion\")\n            receipt[\"cleanup\"][\"status\"] = \"deleting\"\n      \
-        \      save_receipt(path, receipt)\n            simctl(\"delete\", created)\n            if current_owned_device(receipt)\
-        \ is not None:\n                raise ValueError(\"Owned device remains after deletion\")\n            receipt[\"\
-        cleanup\"] = {\"status\": \"deleted\"}\n        else:\n            receipt[\"cleanup\"] = {\"status\": \"already-absent\"\
-        }\n        save_receipt(path, receipt)\n        print(\"Owned CI simulator cleanup: \" + receipt[\"cleanup\"][\"status\"\
-        ])\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:\n        receipt[\"cleanup\"\
-        ] = {\"status\": \"failed\", \"error\": str(error)}\n        save_receipt(path, receipt)\n        raise\n\n\ndef publish(udid,\
-        \ name):\n    print(f\"Using {name} simulator ({udid})\")\n    with open(os.environ[\"GITHUB_ENV\"], \"a\") as output:\n\
-        \        output.write(f\"SIMULATOR_ID={udid}\\n\")\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n\
-        \    mode = parser.add_mutually_exclusive_group()\n    mode.add_argument(\"--create-owned\", type=Path, metavar=\"\
-        RECEIPT\")\n    mode.add_argument(\"--cleanup-owned\", type=Path, metavar=\"RECEIPT\")\n    args = parser.parse_args()\n\
-        \    try:\n        if args.cleanup_owned:\n            cleanup(args.cleanup_owned)\n        else:\n            devices\
+        }}\n    path.parent.mkdir(parents=True, exist_ok=True)\n    save_receipt(path, receipt)\n    try:\n        bundle\
+        \ = Path(receipt[\"runtime\"][\"bundlePath\"])\n        root = bundle / \"Contents/Resources/RuntimeRoot\"\n     \
+        \   receipt[\"runtimeFilesystem\"] = {\"bundle\": str(bundle), \"bundleExists\": bundle.is_dir(),\n              \
+        \                          \"runtimeRoot\": str(root), \"runtimeRootExists\": root.is_dir(),\n                   \
+        \                     \"rootSymlink\": root.is_symlink()}\n        receipt[\"creationRuntimeArgument\"] = str(bundle)\n\
+        \        save_receipt(path, receipt)\n        if not (bundle.is_dir() and root.is_dir()):\n            raise ValueError(\"\
+        Exact imported runtime bundle/root unavailable\")\n        created = str(UUID(simctl(\"create\", receipt[\"createdName\"\
+        ], device_type, str(bundle)).strip())).upper()\n        if any(device.get(\"udid\", \"\").upper() == created for rows\
+        \ in devices.values() for device in rows):\n            raise ValueError(\"Creation returned a device already present\
+        \ in the input inventory\")\n        receipt.update(createdUDID=created, creationStatus=\"created\")\n        save_receipt(path,\
+        \ receipt)\n        device = current_owned_device(receipt)\n        if device is None or device.get(\"state\") !=\
+        \ \"Shutdown\":\n            raise ValueError(\"Fresh device was not found in Shutdown state\")\n        receipt[\"\
+        creationStatus\"] = \"verified\"\n        save_receipt(path, receipt)\n        publish(created, receipt[\"createdName\"\
+        ])\n        return receipt\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:\n   \
+        \     receipt[\"creationStatus\"] = \"failed\"\n        receipt[\"creationError\"] = str(error)\n        if isinstance(error,\
+        \ subprocess.CalledProcessError) and error.stderr:\n            receipt[\"creationStderr\"] = error.stderr[-16384:]\n\
+        \        save_receipt(path, receipt)\n        raise\n\n\ndef cleanup(path):\n    if not path.exists() and not path.is_symlink():\n\
+        \        print(\"No simulator ownership receipt; no device cleanup attempted.\")\n        return\n    if path.is_symlink()\
+        \ or not path.is_file() or path.stat().st_size > 65536:\n        raise ValueError(\"Refusing an invalid simulator\
+        \ ownership receipt\")\n    receipt = json.loads(path.read_text(encoding=\"utf-8\"))\n    # Verify ownership before\
+        \ recording anything or issuing a simulator mutation.\n    if receipt.get(\"schema\") != 1 or receipt.get(\"owner\"\
+        ) != owner_identity():\n        raise ValueError(\"Simulator receipt belongs to another CI owner or toolchain\")\n\
+        \    if receipt.get(\"createdName\") != owned_name(receipt[\"owner\"], receipt[\"nonce\"]):\n        raise ValueError(\"\
+        Simulator receipt has an invalid owned device name\")\n    created = receipt.get(\"createdUDID\")\n    if created\
+        \ is None:\n        receipt[\"cleanup\"] = {\"status\": \"no-created-device\", \"note\": \"No verified creation UUID;\
+        \ no device mutation attempted.\"}\n        save_receipt(path, receipt)\n        return\n    if str(UUID(created)).upper()\
+        \ != created or created == str(UUID(receipt[\"sourceUDID\"])).upper():\n        raise ValueError(\"Refusing to clean\
+        \ up the source image device or invalid UUID\")\n    if os.environ.get(\"SIMULATOR_ID\", created) != created:\n  \
+        \      raise ValueError(\"Current simulator environment does not match the owned UUID\")\n    receipt[\"cleanup\"\
+        ] = {\"status\": \"checking\"}\n    save_receipt(path, receipt)\n    try:\n        device = current_owned_device(receipt)\n\
+        \        if device is not None:\n            if device.get(\"state\") == \"Booted\":\n                receipt[\"cleanup\"\
+        ][\"status\"] = \"shutting-down\"\n                save_receipt(path, receipt)\n                simctl(\"shutdown\"\
+        , created)\n                device = current_owned_device(receipt)\n            if device is None or device.get(\"\
+        state\") != \"Shutdown\":\n                raise ValueError(\"Owned device is not safely shut down; refusing deletion\"\
+        )\n            receipt[\"cleanup\"][\"status\"] = \"deleting\"\n            save_receipt(path, receipt)\n        \
+        \    simctl(\"delete\", created)\n            if current_owned_device(receipt) is not None:\n                raise\
+        \ ValueError(\"Owned device remains after deletion\")\n            receipt[\"cleanup\"] = {\"status\": \"deleted\"\
+        }\n        else:\n            receipt[\"cleanup\"] = {\"status\": \"already-absent\"}\n        save_receipt(path,\
+        \ receipt)\n        print(\"Owned CI simulator cleanup: \" + receipt[\"cleanup\"][\"status\"])\n    except (KeyError,\
+        \ ValueError, OSError, subprocess.SubprocessError) as error:\n        receipt[\"cleanup\"] = {\"status\": \"failed\"\
+        , \"error\": str(error)}\n        save_receipt(path, receipt)\n        raise\n\n\ndef publish(udid, name):\n    print(f\"\
+        Using {name} simulator ({udid})\")\n    with open(os.environ[\"GITHUB_ENV\"], \"a\") as output:\n        output.write(f\"\
+        SIMULATOR_ID={udid}\\n\")\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    mode =\
+        \ parser.add_mutually_exclusive_group()\n    mode.add_argument(\"--create-owned\", type=Path, metavar=\"RECEIPT\"\
+        )\n    mode.add_argument(\"--cleanup-owned\", type=Path, metavar=\"RECEIPT\")\n    args = parser.parse_args()\n  \
+        \  try:\n        if args.cleanup_owned:\n            cleanup(args.cleanup_owned)\n        else:\n            devices\
         \ = json.load(sys.stdin)[\"devices\"]\n            if args.create_owned:\n                provision(devices, args.create_owned)\n\
         \            else:\n                _, device = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'), os.environ.get('CI_IPHONE_NAME'))\n\
         \                publish(device[\"udid\"], device[\"name\"])\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError)\
         \ as error:\n        parser.exit(1, f\"Simulator selection/ownership failed: {error}\\n\")\n\n\nif __name__ == \"\
-        __main__\":\n    main()\nRITC_OWNERSHIP_HELPER\nprintf '%s  %s\\n' '5f8ca6cdc3f22feb81da9d5b828490e2d2f9fd560f48292667e990978a583a41'\
+        __main__\":\n    main()\nRITC_OWNERSHIP_HELPER\nprintf '%s  %s\\n' 'e6123dd7149ad9aadf60603f77d7817b563c5bcffae9fb77b89875b6876a1737'\
         \ '.build/select_ci_iphone.py' | shasum -a 256 -c -\nxcrun simctl list -j > .build/test-before-create.json\nxcrun\
         \ simctl list devices available -j | python3 .build/select_ci_iphone.py --create-owned .build/test-simulator-ownership.json\n"
     - name: Boot the owned iPhone
