@@ -164,7 +164,7 @@ class ObserverTests(unittest.TestCase):
 
 
 class DiagnosticWorkflowTests(unittest.TestCase):
-    def test_manual_isolated_slot_and_only_serial_boot_changes_contributor_build(self):
+    def test_manual_isolated_slot_and_unchanged_build_between_state_observations(self):
         workflow = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]
         source = parse_workflow(ROOT / '.github/workflows/ios-fixtures.yml')[0]
         self.assertEqual(set(workflow['on']), {'workflow_dispatch'})
@@ -182,14 +182,15 @@ class DiagnosticWorkflowTests(unittest.TestCase):
         expected['run'] = expected['run'].replace('\nxcodebuild -project', '\npython3 scripts/diagnose_producer_wait.py -- xcodebuild -project')
         expected['run'] = expected['run'].replace(
             '# Discovery needs a ready simulator, but compilation can run during boot.\n'
-            'python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &\nboot_pid=$!',
-            '# Diagnostic: require boot completion before starting the unchanged build.\n'
-            'python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" || exit $?')
+            'python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &\nboot_pid=$!\n', '')
         expected['run'] = expected['run'].replace(
             'boot_status=0\nwait "$boot_pid" || boot_status=$?\n'
-            'if (( build_status != 0 )); then exit "$build_status"; fi\nexit "$boot_status"',
-            'exit "$build_status"')
-        self.assertEqual(build, expected)
+            'if (( build_status != 0 )); then exit "$build_status"; fi\nexit "$boot_status"\n', '')
+        actual = copy.deepcopy(build)
+        before, observation = actual['run'].split('observe_owned_state() {\n', 1)
+        _, native = observation.split('observe_owned_state before-build || exit $?\n', 1)
+        actual['run'] = before + native.split('observation_status=0\n', 1)[0]
+        self.assertEqual(actual, expected)
         upload = job['steps'][job['steps'].index(build) + 1]
         self.assertEqual(upload['name'], 'Upload observer and build evidence before runtime verification')
         self.assertEqual(upload['if'], 'always()')
@@ -212,7 +213,7 @@ class DiagnosticWorkflowTests(unittest.TestCase):
                 self.assertIn(old, job['steps'])
         self.assertFalse(any(s.get('id') in ('models','upload') for s in job['steps']))
 
-    def test_serial_boot_failure_stops_before_compile_and_build_status_is_preserved(self):
+    def test_build_precedes_boot_and_failure_status_has_priority_over_observation(self):
         workflow = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]
         script = next(s['run'] for s in workflow['jobs']['producer-wait']['steps'] if s.get('id') == 'build')
         # Execute the actual shell body with native entry points replaced by
@@ -221,6 +222,11 @@ class DiagnosticWorkflowTests(unittest.TestCase):
 bash() { return 0; }
 python3() {
   case "$1" in
+    -)
+      cat > /dev/null
+      printf '%s\n' "$2" >> "$EVENTS"
+      if [[ "$2" == before-build ]]; then return "$BEFORE_STATUS"; fi
+      return "$AFTER_STATUS";;
     scripts/plan_ios_fixture_tests.py) printf 'FIXTURE_CONDITIONS';;
     scripts/boot_ios_simulator.py)
       printf 'boot\n' >> "$EVENTS"
@@ -232,19 +238,62 @@ python3() {
   esac
 }
 '''
-        for boot_status, build_status, expected_status, events in (
-                (23, 0, 23, ['boot']), (0, 7, 7, ['boot', 'build']), (0, 0, 0, ['boot', 'build'])):
-            with self.subTest(boot=boot_status, build=build_status), tempfile.TemporaryDirectory() as directory:
+        for before_status, build_status, after_status, boot_status, expected_status, events in (
+                (2, 0, 0, 0, 2, ['before-build']),
+                (0, 7, 3, 0, 7, ['before-build', 'build', 'after-build']),
+                (0, 0, 3, 0, 3, ['before-build', 'build', 'after-build']),
+                (0, 0, 0, 23, 23, ['before-build', 'build', 'after-build', 'boot']),
+                (0, 0, 0, 0, 0, ['before-build', 'build', 'after-build', 'boot'])):
+            with self.subTest(statuses=(before_status, build_status, after_status, boot_status)), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory)
                 (path / '.build/ios-build-evidence').mkdir(parents=True)
                 event_file = path / 'events.txt'
                 env = dict(os.environ, EVENTS=str(event_file), BOOT_STATUS=str(boot_status),
-                           BUILD_STATUS=str(build_status), RITC_CAS_OUTCOME='skipped',
+                           BUILD_STATUS=str(build_status), BEFORE_STATUS=str(before_status),
+                           AFTER_STATUS=str(after_status), RITC_CAS_OUTCOME='skipped',
                            SIMULATOR_ID='owned-device', FIXTURE_PROFILE='contributor')
                 result = subprocess.run(['/bin/bash', '-e', '-c', stubs + script], cwd=path,
                                         env=env, capture_output=True, text=True, timeout=5)
                 self.assertEqual(result.returncode, expected_status, result.stderr)
                 self.assertEqual(event_file.read_text().splitlines(), events)
+
+    def test_snapshot_requires_owned_shutdown_before_but_records_booted_after(self):
+        import select_ci_iphone
+        workflow = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]
+        script = next(s['run'] for s in workflow['jobs']['producer-wait']['steps'] if s.get('id') == 'build')
+        code = script.split("<<'PYCODE'\n", 1)[1].split('\nPYCODE', 1)[0]
+        for phase, state, device_id, exit_code, succeeds in (
+                ('before-build', 'Shutdown', 'owned', 0, True),
+                ('before-build', 'Booted', 'owned', 0, False),
+                ('after-build', 'Booted', 'owned', 0, True),
+                ('after-build', 'Shutdown', 'foreign', 0, False),
+                ('after-build', 'Shutdown', 'owned', 1, False)):
+            with self.subTest(phase=phase, state=state, device=device_id, exit=exit_code), tempfile.TemporaryDirectory() as directory:
+                previous = Path.cwd()
+                try:
+                    os.chdir(directory)
+                    Path('.build').mkdir()
+                    receipt = {'schema': 1, 'owner': {'job': 'owner'}, 'creationStatus': 'verified',
+                               'nonce': 'nonce', 'createdName': 'owned-name', 'createdUDID': 'owned',
+                               'runtime': {'identifier': 'exact-runtime'}}
+                    Path('.build/test-simulator-ownership.json').write_text(json.dumps(receipt))
+                    def collect(command, path, timeout):
+                        self.assertEqual(command, ['xcrun', 'simctl', 'list', 'devices', '-j'])
+                        self.assertEqual(timeout, 10)
+                        path.write_text(json.dumps({'devices': {'exact-runtime': [
+                            {'udid': device_id, 'name': 'owned-name', 'state': state}]}}))
+                        return {'status': 'completed', 'exitCode': exit_code}
+                    with patch.object(subject, 'collect', side_effect=collect), \
+                            patch.object(select_ci_iphone, 'owner_identity', return_value=receipt['owner']), \
+                            patch.object(select_ci_iphone, 'owned_name', return_value='owned-name'), \
+                            patch.dict(os.environ, SIMULATOR_ID='owned'), patch('sys.argv', ['-', phase]):
+                        if succeeds: exec(compile(code, 'workflow-snapshot', 'exec'), {})
+                        else:
+                            with self.assertRaises(AssertionError): exec(compile(code, 'workflow-snapshot', 'exec'), {})
+                    self.assertTrue(Path('.build/producer-wait/' + phase + '-devices.json').is_file())
+                    self.assertTrue(Path('.build/producer-wait/' + phase + '-device-capture.json').is_file())
+                finally:
+                    os.chdir(previous)
 
 
 if __name__ == '__main__':

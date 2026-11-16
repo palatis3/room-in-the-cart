@@ -151,15 +151,48 @@ jobs:
         configuration=Debug
         bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
         conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
-        # Diagnostic: require boot completion before starting the unchanged build.
-        python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" || exit $?
+        observe_owned_state() {
+          python3 - "$1" <<'PYCODE'
+        import json, os, sys
+        from pathlib import Path
+        sys.path.insert(0, 'scripts')
+        from diagnose_producer_wait import collect
+        from select_ci_iphone import owner_identity, owned_name
+        phase = sys.argv[1]
+        receipt = json.loads(Path('.build/test-simulator-ownership.json').read_text())
+        assert receipt['schema'] == 1 and receipt['owner'] == owner_identity()
+        assert receipt['creationStatus'] == 'verified'
+        assert receipt['createdName'] == owned_name(receipt['owner'], receipt['nonce'])
+        assert receipt['createdUDID'] == os.environ['SIMULATOR_ID']
+        directory = Path('.build/producer-wait')
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / (phase + '-devices.json')
+        outcome = collect(['xcrun', 'simctl', 'list', 'devices', '-j'], path, 10)
+        (directory / (phase + '-device-capture.json')).write_text(json.dumps(outcome) + '\n')
+        print('Owned device snapshot ' + phase + ': ' + json.dumps(outcome), flush=True)
+        assert outcome == {'status': 'completed', 'exitCode': 0}, 'Device snapshot unavailable'
+        rows = json.loads(path.read_text())['devices'][receipt['runtime']['identifier']]
+        matches = [d for d in rows if d['udid'] == receipt['createdUDID']]
+        assert len(matches) == 1 and matches[0]['name'] == receipt['createdName']
+        state = matches[0]['state']
+        print('Owned device state ' + phase + ': ' + state, flush=True)
+        if phase == 'before-build':
+            assert state == 'Shutdown', 'Build must start with the owned device Shutdown'
+        PYCODE
+        }
+        observe_owned_state before-build || exit $?
         build_status=0
         python3 scripts/diagnose_producer_wait.py -- xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
           -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
           -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
           "${cache_settings[@]}" CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
           2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
-        exit "$build_status"
+        observation_status=0
+        observe_owned_state after-build || observation_status=$?
+        if (( build_status != 0 )); then exit "$build_status"; fi
+        if (( observation_status != 0 )); then exit "$observation_status"; fi
+        # Diagnostic: boot only after successful compilation and state capture.
+        python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
     - name: Upload observer and build evidence before runtime verification
       if: always()
       continue-on-error: true
