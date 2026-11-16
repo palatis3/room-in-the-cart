@@ -164,7 +164,7 @@ class ObserverTests(unittest.TestCase):
 
 
 class DiagnosticWorkflowTests(unittest.TestCase):
-    def test_manual_isolated_slot_and_unchanged_contributor_build(self):
+    def test_manual_isolated_slot_and_only_serial_boot_changes_contributor_build(self):
         workflow = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]
         source = parse_workflow(ROOT / '.github/workflows/ios-fixtures.yml')[0]
         self.assertEqual(set(workflow['on']), {'workflow_dispatch'})
@@ -180,6 +180,15 @@ class DiagnosticWorkflowTests(unittest.TestCase):
         build = next(s for s in job['steps'] if s.get('id') == 'build')
         expected = copy.deepcopy(next(s for s in original['steps'] if s.get('id') == 'build'))
         expected['run'] = expected['run'].replace('\nxcodebuild -project', '\npython3 scripts/diagnose_producer_wait.py -- xcodebuild -project')
+        expected['run'] = expected['run'].replace(
+            '# Discovery needs a ready simulator, but compilation can run during boot.\n'
+            'python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &\nboot_pid=$!',
+            '# Diagnostic: require boot completion before starting the unchanged build.\n'
+            'python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" || exit $?')
+        expected['run'] = expected['run'].replace(
+            'boot_status=0\nwait "$boot_pid" || boot_status=$?\n'
+            'if (( build_status != 0 )); then exit "$build_status"; fi\nexit "$boot_status"',
+            'exit "$build_status"')
         self.assertEqual(build, expected)
         upload = job['steps'][job['steps'].index(build) + 1]
         self.assertEqual(upload['name'], 'Upload observer and build evidence before runtime verification')
@@ -202,6 +211,40 @@ class DiagnosticWorkflowTests(unittest.TestCase):
                     'Retain GitHub runtime diagnostics','Clean up only the owned simulator after result export'):
                 self.assertIn(old, job['steps'])
         self.assertFalse(any(s.get('id') in ('models','upload') for s in job['steps']))
+
+    def test_serial_boot_failure_stops_before_compile_and_build_status_is_preserved(self):
+        workflow = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]
+        script = next(s['run'] for s in workflow['jobs']['producer-wait']['steps'] if s.get('id') == 'build')
+        # Execute the actual shell body with native entry points replaced by
+        # functions. No simulator, compiler, receipt helper or planner runs.
+        stubs = '''
+bash() { return 0; }
+python3() {
+  case "$1" in
+    scripts/plan_ios_fixture_tests.py) printf 'FIXTURE_CONDITIONS';;
+    scripts/boot_ios_simulator.py)
+      printf 'boot\n' >> "$EVENTS"
+      return "$BOOT_STATUS";;
+    scripts/diagnose_producer_wait.py)
+      printf 'build\n' >> "$EVENTS"
+      return "$BUILD_STATUS";;
+    *) return 99;;
+  esac
+}
+'''
+        for boot_status, build_status, expected_status, events in (
+                (23, 0, 23, ['boot']), (0, 7, 7, ['boot', 'build']), (0, 0, 0, ['boot', 'build'])):
+            with self.subTest(boot=boot_status, build=build_status), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory)
+                (path / '.build/ios-build-evidence').mkdir(parents=True)
+                event_file = path / 'events.txt'
+                env = dict(os.environ, EVENTS=str(event_file), BOOT_STATUS=str(boot_status),
+                           BUILD_STATUS=str(build_status), RITC_CAS_OUTCOME='skipped',
+                           SIMULATOR_ID='owned-device', FIXTURE_PROFILE='contributor')
+                result = subprocess.run(['/bin/bash', '-e', '-c', stubs + script], cwd=path,
+                                        env=env, capture_output=True, text=True, timeout=5)
+                self.assertEqual(result.returncode, expected_status, result.stderr)
+                self.assertEqual(event_file.read_text().splitlines(), events)
 
 
 if __name__ == '__main__':
