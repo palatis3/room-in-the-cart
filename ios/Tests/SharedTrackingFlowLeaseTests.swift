@@ -26,7 +26,7 @@ import SwiftUI
             typealias F = TrackingFlowReviewFixture
             let fixture = try F.scenario()
             review = try F.candidateReview(fixture); accepted = try F.accepted(fixture)
-            let state = review.page.state!, action = try F.action((fixture["page"] as! [String: Any])["state"] as! [String: Any])
+            let state = review.page.state!, action = F.action((fixture["page"] as! [String: Any])["state"] as! [String: Any])
             let body = action["body"] as! [String: Any]
             trackingShop = try F.decode(["shopId": state.graph.shopId.string, "shopRevision": 8, "authorityEpoch": 3, "phase": "draft",
                 "lines": body["lines"]!, "quote": body["quote"]!, "meals": [], "frozenRevision": NSNull(), "placedRevision": NSNull()])

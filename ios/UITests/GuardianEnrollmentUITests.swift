@@ -9,7 +9,8 @@ import XCTest
         app.terminate()
     }
     private func launch(_ scenario: String? = nil, spanish: Bool = false, rootSynthetic: Bool = false) {
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","-AppleLanguages",spanish ? "(es)" : "(en)","-AppleLocale",spanish ? "es_US" : "en_US"]
         if spanish { app.launchArguments.append("--guardian-fixture-largest-text") }
         if let scenario { app.launchArguments.append(scenario) }

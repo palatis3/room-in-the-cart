@@ -17,7 +17,8 @@ import XCTest
         app.terminate()
     }
     func testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto() {
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing", "--records-media-fixture", "--reset-records-media-fixture",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

@@ -12,7 +12,8 @@ import XCTest
         app.terminate()
     }
     func launch(_ mode: String, reset: Bool = true) {
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing", mode, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-library-privacy-fixture") }
         app.launch()

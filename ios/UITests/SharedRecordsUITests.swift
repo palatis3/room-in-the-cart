@@ -18,7 +18,8 @@ import XCTest
     private func journey(spanish: Bool) {
         func text(_ en: String, _ es: String) -> String { spanish ? es : en }
         let language = spanish ? "ES" : "EN"
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
         app.launchArguments = ["--ui-testing", "--shared-records-fixture", "--reset-shared-records-fixture",
             "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         app.launch()
