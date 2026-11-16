@@ -364,6 +364,7 @@ class CleanupTests(unittest.TestCase):
         self.preferred_multiple = False
         self.third_preferred_survivor = False
         self.retiring_preferred = False
+        self.retiring_key = WATCH
         self.retiring_change = None
         self.attachment_until = None
         self.attachment_path = None
@@ -409,10 +410,10 @@ class CleanupTests(unittest.TestCase):
 
     def capture(self, name, timeout=30):
         if self.deletes == 1 and not self.clean_first:
-            if self.retiring_preferred and WATCH in self.rows:
-                self.rows[WATCH].update(state='Unusable', unusableSubstate='Cryptex Mount Preferred',
+            if self.retiring_preferred and self.retiring_key in self.rows:
+                self.rows[self.retiring_key].update(state='Unusable', unusableSubstate='Cryptex Mount Preferred',
                                         unusableErrorMessage='Cryptex Mount Preferred')
-                if self.retiring_change: self.rows[WATCH].update(self.retiring_change)
+                if self.retiring_change: self.rows[self.retiring_key].update(self.retiring_change)
             if self.changed_old and IOS_OLD in self.rows:
                 self.rows[IOS_OLD]['version'] = '26.2'
             if self.elapsed >= 5 and not self.stuck_deleting:
@@ -496,6 +497,8 @@ class CleanupTests(unittest.TestCase):
                 self.rows[identifier]['state'] = 'Deleting'
             for identifier in (IOS, TV):
                 self.rows.pop(identifier)
+            if self.retiring_preferred and self.retiring_key == TV:
+                self.rows[TV] = copy.deepcopy(self.initial[TV])
             self.rows[NEW_TV] = {**ORIGINAL[TV], 'identifier': NEW_TV}
             if self.wrong_recreation:
                 self.rows[NEW_TV].update(self.wrong_recreation)
@@ -659,6 +662,85 @@ class CleanupTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, '210 seconds'):
             subject.cleanup_original_images(self.initial)
         self.assertEqual((self.elapsed, self.deletes, self.scans), (210, 1, 0))
+
+    def test_pending_retirement_can_publish_mount_bound_to_original_bundle(self):
+        self.configure_pending_preferred_retirement()
+        mount = '/Library/Developer/CoreSimulator/Volumes/watchOS_24R362'
+        for rows in (self.initial, self.rows):
+            rows[WATCH].pop('mountPath', None)
+            rows[WATCH]['runtimeBundlePath'] = mount + '/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 27.0.simruntime'
+        self.retiring_change = {'mountPath': mount}
+        mounts, observations = subject.cleanup_original_images(self.initial)
+        self.assertIn(mount, mounts)
+        self.assertEqual((self.elapsed, self.deletes, self.scans, observations), (70, 2, 2, 13))
+        second = json.loads((self.evidence / 'delete-recreated-originals-before.json').read_text())
+        self.assertNotIn(WATCH, second)
+
+    def test_new_pending_mount_never_counts_as_retirement_or_authorizes_deletion(self):
+        self.configure_pending_preferred_retirement(); self.stuck_deleting = True
+        mount = '/Library/Developer/CoreSimulator/Volumes/watchOS_24R362'
+        for rows in (self.initial, self.rows):
+            rows[WATCH].pop('mountPath', None)
+            rows[WATCH]['runtimeBundlePath'] = mount + '/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 27.0.simruntime'
+        self.retiring_change = {'mountPath': mount}
+        with self.assertRaisesRegex(AssertionError, '210 seconds'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (210, 1, 0))
+
+    def test_pending_mount_rejects_existing_change_foreign_path_or_changed_bundle(self):
+        mount = '/Library/Developer/CoreSimulator/Volumes/watchOS_24R362'
+        bundle = mount + '/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 27.0.simruntime'
+        for previous, change in (
+                ('/existing/mount', {'mountPath': mount}),
+                (None, {'mountPath': '/foreign'}),
+                (None, {'mountPath': '/Library/Developer/CoreSimulator/Volumes/watchOS_24R999'}),
+                (None, {'mountPath': mount, 'runtimeBundlePath': bundle + '.other'})):
+            with self.subTest(previous=previous, change=change):
+                self.configure_pending_preferred_retirement()
+                for rows in (self.initial, self.rows):
+                    rows[WATCH]['mountPath'] = previous
+                    rows[WATCH]['runtimeBundlePath'] = bundle
+                self.retiring_change = change
+                with self.assertRaises(AssertionError): subject.cleanup_original_images(self.initial)
+                self.assertEqual((self.deletes, self.scans), (1, 0))
+                self.deletes = 0; self.rows = copy.deepcopy(self.initial)
+
+    def configure_copying_preferred_retirement(self):
+        self.retiring_preferred = True
+        self.retiring_key = TV
+        mount = '/Library/Developer/CoreSimulator/Volumes/tvOS_24J360'
+        for rows in (self.initial, self.rows):
+            rows[TV]['state'] = 'Copying'
+            rows[TV].pop('mountPath', None)
+            rows[TV]['runtimeBundlePath'] = mount + '/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 27.0.simruntime'
+        self.retiring_change = {'mountPath': mount}
+
+    def test_original_copying_to_preferred_waits_for_actual_retirement(self):
+        self.configure_copying_preferred_retirement()
+        subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (70, 2, 2))
+        self.assertIn(TV, self.receipt()['pendingPreferredRetirements'])
+        second = json.loads((self.evidence / 'delete-recreated-originals-before.json').read_text())
+        self.assertNotIn(TV, second)
+        self.assertNotIn('retainedPreferredTwins', self.receipt())
+
+    def test_persistent_original_copying_to_preferred_times_out_without_second_mutation(self):
+        self.configure_copying_preferred_retirement(); self.stuck_deleting = True
+        with self.assertRaisesRegex(AssertionError, '210 seconds'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (210, 1, 0))
+
+    def test_original_copying_preferred_rejects_identity_bundle_kind_and_state_changes(self):
+        for change in ({'build': 'wrong'}, {'path': '/foreign'}, {'parentMountPath': '/foreign'},
+                       {'runtimeBundlePath': '/foreign'}, {'kind': 'Disk Image'},
+                       {'unusableSubstate': 'Mount Failed'}, {'unusableErrorMessage': 'other'},
+                       {'runtimeIdentifier': None}, {'mountPath': '/foreign'}):
+            with self.subTest(change=change):
+                self.configure_copying_preferred_retirement()
+                self.retiring_change.update(change)
+                with self.assertRaises(AssertionError): subject.cleanup_original_images(self.initial)
+                self.assertEqual((self.deletes, self.scans), (1, 0))
+                self.deletes = 0; self.rows = copy.deepcopy(self.initial)
 
     def test_pending_retirement_does_not_accept_identity_kind_or_other_unusable_state(self):
         for change in ({'build': 'wrong'}, {'path': '/foreign'}, {'parentMountPath': '/foreign'},
