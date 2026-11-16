@@ -6,6 +6,8 @@ The GitHub UI consumers export and import the pinned iOS 27.0/24A434 runtime bef
 
 Preparation validates every target before deleting any registration, preserves other platforms and requires a real exported bundle before removal. An independent post-test runtime check runs even after native failure. Only the three GitHub UI consumer jobs use this path; their native 40-minute limits and case allowances are unchanged. Private Records fixtures retain their restricted reporting boundary. Evidence: `.build/RuntimeImportCanaryNov16/` and `.build/GitHubRuntimeImportNov16/validation.json`.
 
+GitHub compatibility StoreKit jobs also import exact iOS 26.2/23C54 before creating the existing locale device. Diagnostic `43794186963` passed all 15 Spanish scenarios, zero skips/warnings/restarts and the independent stability check. The helper handles only the observed asset-purge error, waits for the asynchronously registered exact image, and fails on unknown identity or remaining source payload. Current-OS and self-hosted policy are preserved. The full offline suite passes 1,057 tests; evidence is in `.build/StoreKitImportCanaryNov16/async-artifact/` and `.build/CombinedRuntimeNov16/`.
+
 ## November 13 meal Undo scheduling and sanitizer feedback
 
 The English created-dinner Undo fixture took 6m29s, 6m37s and 6m41s on
