@@ -1,6 +1,6 @@
 # Room in the Cart — current handoff
 
-Updated November 16, 2026, 15:31 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
+Updated November 16, 2026, 15:51 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical specification handoff statements that the app is unbuilt are superseded by inspected code and results.
 
@@ -9,6 +9,8 @@ Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](produc
 **One changed diagnostic is queued:** [43897047561](https://github.com/palatis3/room-in-the-cart/actions/runs/43897047561), exact `1a12e85a947a446fa50fd63ce0773fa69b1311cb`; no job assigned as of15:31UTC. Root owns review/integration/dispatch; Sol `pr7_watch` owns API monitoring and original downloads in `.build/ProducerCompile1a12Nov16/`. Astra `storekit_import_probe` completed implementation and review. No Dot/Lumpy. Read authoritative status; a polling timeout never authorizes restart.
 
 The experiment compiles against the **same prepared owned simulator while Shutdown**, records its actual state afterwards, then boots only after successful compilation and state capture. Native arguments, SDK, contributor conditions, cache settings, original build failure status, runtime verification and35-minute cap remain intact. It does not use a generic destination or skip tests. The diagnostic itself builds but does not enumerate/execute tests. Root reviewed the complete diff;14focused tests passed0.123s, plus actionlint, AST and all inline shell/Python syntax. Only isolated ci.yml and its test changed. Log `/tmp/ritc-compile-before-boot-tests.log`; prior preparation receipt `.build/ProducerSerial8b13Nov16/prepared-successor.json`.
+
+**Local native validation of1a12 passed:** same contributor build-for-testing completed in113.105s on this Mac using Xcode27.1/27A9275 and existingiOS27.0/24A434. The dedicated device was observed Shutdown before/during/after. Arm64 app, model-test and UI-test products plus the SDK27.1 xctestrun were verified. The temporary device was deleted and all prior device IDs preserved. Evidence `.build/LocalCompileBeforeBoot1a12Nov16/{receipt,product-verification,cleanup}.json`; warnings remain recorded. This is compilation proof only: no local runtime replacement, test execution or hosted qualification.
 
 **8b13 is terminal cancelled at15:29:00UTC under GitHub's35-minute maximum.** Run43889721377/job133377333184 was admitted14:49:00; native step cancelled15:25:15, early observer/build upload cancelled15:27:23, runtime verification never passed. Only early setup published; workflow-log ZIP is empty and terminal job-log requests returned404. Sol is closing publication checks in `.build/ProducerSerial8b13Nov16/`. No full build, sample file or post-runtime proof exists.
 
