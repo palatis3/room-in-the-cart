@@ -1,193 +1,65 @@
-# ISOLATED DIAGNOSTIC ONLY: never merge this workflow into normal CI.
+# ISOLATED CACHE-FREE BUILD PROBE: never merge this workflow into normal CI.
 name: CI
-run-name: Producer package graph wait diagnostic
+run-name: Bitrise uncached iOS app build
 'on':
   workflow_dispatch: {}
 permissions:
   contents: read
-env:
-  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
-  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
-  CI_IPHONE_NAME: iPhone 17
+concurrency:
+  group: ritc-bitrise-recovery-canary
+  cancel-in-progress: false
 jobs:
-  producer-wait:
-    if: github.event_name == 'workflow_dispatch' && github.repository == 'palatis3/room-in-the-cart' && github.ref
-      == 'refs/heads/codex/producer-wait-diagnostic-nov16'
-    runs-on: xcode-27
-    timeout-minutes: 35
-    concurrency:
-      group: ritc-macos-slot-0
-      queue: max
-      cancel-in-progress: false
+  uncached-build:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'palatis3/room-in-the-cart' && github.ref == 'refs/heads/codex/bitrise-uncached-build-nov16'
+    runs-on: 'bitrise-runner-ci 2'
+    timeout-minutes: 25
     env:
-      FIXTURE_PROFILE: contributor
-      TEST_SHARD: fixture-build
+      DEVELOPER_DIR: /Applications/Xcode-27.1.0.app/Contents/Developer
     steps:
-    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      with:
-        persist-credentials: false
-    - name: Require the isolated manual diagnostic
-      run: |-
-        test "$GITHUB_EVENT_NAME" = workflow_dispatch
-        test "$GITHUB_REPOSITORY" = palatis3/room-in-the-cart
-        test "$GITHUB_REF" = refs/heads/codex/producer-wait-diagnostic-nov16
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-    - name: Require the reviewed Xcode 27.1 toolchain
-      run: |
-        if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then
-          bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer
-          test -d "$bitrise_xcode"
-          test "$(DEVELOPER_DIR="$bitrise_xcode" /usr/bin/xcodebuild -version)" = $'Xcode 27.1\nBuild version 27A9275'
-          if [ ! -e /Applications/Xcode_27.1.app ]; then
-            sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
-          fi
-        fi
-        sw_vers
-        uname -m
-        printf '%s\n' /Applications/Xcode*.app
-        bash scripts/check_ci_xcode27.sh
-        python3 - <<'PYCODE'
-        import os, sys
-        sys.path.insert(0, "scripts")
-        from select_ci_iphone import runtime_identity
-        runtime = runtime_identity(os.environ["CI_IPHONE_RUNTIME"])
-        if runtime["version"] != "27.0" or runtime["buildversion"] != "24A434":
-            raise SystemExit(f"Unexpected fixture runtime: {runtime}")
-        print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
-        PYCODE
-    - name: Import the GitHub iOS runtime before boot
-      id: imported-runtime
-      if: runner.environment == 'github-hosted'
-      timeout-minutes: 20
-      run: python3 scripts/prepare_github_ios_runtime.py prepare
-    - name: Select an iPhone simulator
-      timeout-minutes: 8
-      run: |
-        if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted ]]; then
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
-            --create-owned .build/test-simulator-ownership.json
-        else
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-        fi
-    - name: Check Swift syntax before compilation
-      timeout-minutes: 3
-      run: python3 scripts/check_swift_syntax.py
-    - name: Select the weekly GitHub compiler cache
-      id: github-cache-key
-      continue-on-error: true
-      if: |-
-        runner.environment == 'github-hosted' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' ||
-         github.event_name == 'workflow_call' || github.event_name == 'schedule' ||
-         (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
-      run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
-    - name: Cache GitHub Xcode compiler outputs
-      id: github-cas
-      if: steps.github-cache-key.outputs.week != ''
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-      continue-on-error: true
-      timeout-minutes: 3
-      with:
-        path: .build/github-xcode-cas
-        key: ritc-xcode-cas-v1-arm64-27A9275-24A434-Debug-${{ env.FIXTURE_PROFILE }}-${{ steps.github-cache-key.outputs.week
-          }}
-    - name: Activate Bitrise Xcode compilation cache
-      id: compilation-cache
-      if: runner.environment == 'self-hosted'
-      continue-on-error: true
-      timeout-minutes: 3
-      run: bash scripts/activate_bitrise_xcode_cache.sh
-    - name: Report unavailable optional compilation cache
-      if: steps.compilation-cache.outcome == 'failure'
-      run: echo '::warning::Bitrise cache activation failed; the required build and tests still run.'
-    - name: Print setup evidence outcome
-      if: always()
-      timeout-minutes: 1
-      run: |-
-        python3 - <<'PYCODE'
-        import json, os
-        from pathlib import Path
-        for name, path in [('runtime', '.build/github-ios-runtime/target.json'), ('owned simulator', '.build/test-simulator-ownership.json'), ('saved payload', '.build/github-ios-runtime/saved-payload.json')]:
-            file = Path(path)
-            print(f"Producer setup evidence: {name} receipt {'present' if file.is_file() else 'absent'}", flush=True)
-            if file.is_file():
-                data = json.loads(file.read_text())
-                if name == 'runtime':
-                    print(f"Producer setup runtime: {data.get('build')} {data.get('state')} {data.get('kind')}", flush=True)
-                elif name == 'saved payload':
-                    print(f"Producer saved payload: mode={data.get('mode')} bytes={data.get('bytes')} sha256={data.get('sha256')}", flush=True)
-        print(f"Producer cache: outcome={os.environ.get('RITC_CAS_OUTCOME', '<unset>')} cache-hit={os.environ.get('RITC_CAS_HIT') or '<unset>'}", flush=True)
-        PYCODE
-      env:
-        RITC_CAS_OUTCOME: ${{ steps.github-cas.outcome }}
-        RITC_CAS_HIT: ${{ steps.github-cas.outputs.cache-hit }}
-    - name: Upload setup evidence before native build
-      if: always()
-      continue-on-error: true
-      timeout-minutes: 2
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-      with:
-        name: producer-setup-${{ github.run_attempt }}
-        path: |-
-          .build/github-ios-runtime
-          .build/test-simulator-ownership.json
-        include-hidden-files: true
-        retention-days: 7
-        if-no-files-found: warn
-    - name: Build fixture app and UI tests for iPhone
-      id: build
-      shell: bash
-      env:
-        RITC_CAS_OUTCOME: ${{ steps.github-cas.outcome }}
-        RITC_CAS_HIT: ${{ steps.github-cas.outputs.cache-hit }}
-      run: |
-        set -o pipefail
-        cache_settings=()
-        if [[ "$RITC_CAS_OUTCOME" == success ]]; then
-          # A failed download can leave an incomplete archive extraction.
-          if [[ "$RITC_CAS_HIT" != true ]]; then rm -rf .build/github-xcode-cas; fi
-          cache_settings=(COMPILATION_CACHE_ENABLE_CACHING=YES COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES
-                          "COMPILATION_CACHE_CAS_PATH=$PWD/.build/github-xcode-cas")
-        fi
-        configuration=Debug
-        bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
-        conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
-        # Discovery needs a ready simulator, but compilation can run during boot.
-        python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
-        boot_pid=$!
-        build_status=0
-        python3 scripts/diagnose_producer_wait.py -- xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
-          -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-          -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
-          "${cache_settings[@]}" CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
-          2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
-        boot_status=0
-        wait "$boot_pid" || boot_status=$?
-        if (( build_status != 0 )); then exit "$build_status"; fi
-        exit "$boot_status"
-    - name: Verify the imported runtime after producer execution
-      if: always() && steps.imported-runtime.outcome == 'success'
-      timeout-minutes: 2
-      run: python3 scripts/prepare_github_ios_runtime.py verify
-    - name: Retain GitHub runtime diagnostics
-      if: always() && steps.imported-runtime.outcome != 'skipped'
-      timeout-minutes: 3
-      run: python3 scripts/collect_github_runtime_diagnostics.py
-    - name: Clean up only the owned simulator after result export
-      if: always() && runner.environment == 'github-hosted'
-      timeout-minutes: 2
-      run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
-    - name: Upload producer wait and final runtime evidence
-      if: always()
-      continue-on-error: true
-      timeout-minutes: 2
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-      with:
-        name: producer-wait-${{ github.run_attempt }}
-        path: |-
-          .build/producer-wait
-          .build/ios-build-evidence
-          .build/github-ios-runtime
-          .build/test-simulator-ownership.json
-        include-hidden-files: true
-        retention-days: 7
-        if-no-files-found: warn
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: ios
+      - name: Verify the uncached build environment
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = self-hosted
+          test "$(uname -m)" = arm64
+          test "$(uname -s)" = Darwin
+          test "$("$DEVELOPER_DIR/usr/bin/xcodebuild" -version)" = $'Xcode 27.1\nBuild version 27A9275'
+          mkdir -p .build/uncached-build
+          git rev-parse HEAD > .build/uncached-build/source.txt
+          "$DEVELOPER_DIR/usr/bin/xcodebuild" -version > .build/uncached-build/xcode.txt
+          sw_vers > .build/uncached-build/macos.txt
+          build_dir=$(mktemp -d "$RUNNER_TEMP/ritc-uncached-derived.XXXXXX")
+          printf 'RITC_UNCACHED_DERIVED=%s\n' "$build_dir" >> "$GITHUB_ENV"
+          printf '%s\n' 'No cache restore/save or activation steps; direct Xcode executable; fresh DerivedData; compiler CAS disabled.' > .build/uncached-build/cache-policy.txt
+      - name: Build the iOS app without compilation cache
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$DEVELOPER_DIR/usr/bin/xcodebuild" \
+            -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RITC_UNCACHED_DERIVED" -jobs 2 \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO \
+            COMPILATION_CACHE_ENABLE_CACHING=NO build \
+            2>&1 | tee .build/uncached-build/build.log
+          app="$RITC_UNCACHED_DERIVED/Build/Products/Debug-iphonesimulator/RoomInTheCart.app"
+          test -f "$app/RoomInTheCart"
+          /usr/bin/file "$app/RoomInTheCart" > .build/uncached-build/product.txt
+          /usr/bin/shasum -a 256 "$app/RoomInTheCart" >> .build/uncached-build/product.txt
+      - name: Retain uncached build evidence
+        if: always()
+        timeout-minutes: 2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bitrise-uncached-build-${{ github.run_attempt }}
+          path: .build/uncached-build
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
