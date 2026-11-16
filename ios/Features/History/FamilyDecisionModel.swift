@@ -27,6 +27,9 @@ import HouseholdClient
     var canWrite: Bool { live && !busy && pending == nil && epoch != nil }
     func load() async {
         await run {
+            // A refreshed assignment list does not reauthorize previously displayed decisions.
+            self.record = nil
+            self.forgetSearch()
             let epoch = await self.store.epoch()
             let page = try await self.service.historyOwnedShops()
             guard self.live else { return }
