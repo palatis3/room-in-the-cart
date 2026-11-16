@@ -1,6 +1,6 @@
-# ISOLATED CACHE-FREE BUILD PROBE: never merge this workflow into normal CI.
+# ISOLATED CACHE BUILD PROBE: never merge this workflow into normal CI.
 name: CI
-run-name: Bitrise uncached iOS app build
+run-name: Bitrise cached iOS app build and warm comparison
 'on':
   workflow_dispatch: {}
 permissions:
@@ -9,8 +9,8 @@ concurrency:
   group: ritc-bitrise-recovery-canary
   cancel-in-progress: false
 jobs:
-  uncached-build:
-    if: github.event_name == 'workflow_dispatch' && github.repository == 'palatis3/room-in-the-cart' && github.ref == 'refs/heads/codex/bitrise-uncached-build-nov16'
+  cached-build:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'palatis3/room-in-the-cart' && github.ref == 'refs/heads/codex/bitrise-cached-build-nov16'
     runs-on: 'bitrise-runner-ci 2'
     timeout-minutes: 25
     env:
@@ -19,8 +19,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-          sparse-checkout: ios
-      - name: Verify the uncached build environment
+          sparse-checkout: |
+            ios
+            scripts
+      - name: Verify the cache comparison environment
         timeout-minutes: 2
         shell: bash
         run: |
@@ -29,37 +31,56 @@ jobs:
           test "$(uname -m)" = arm64
           test "$(uname -s)" = Darwin
           test "$("$DEVELOPER_DIR/usr/bin/xcodebuild" -version)" = $'Xcode 27.1\nBuild version 27A9275'
-          mkdir -p .build/uncached-build
-          git rev-parse HEAD > .build/uncached-build/source.txt
-          "$DEVELOPER_DIR/usr/bin/xcodebuild" -version > .build/uncached-build/xcode.txt
-          sw_vers > .build/uncached-build/macos.txt
-          build_dir=$(mktemp -d "$RUNNER_TEMP/ritc-uncached-derived.XXXXXX")
-          printf 'RITC_UNCACHED_DERIVED=%s\n' "$build_dir" >> "$GITHUB_ENV"
-          printf '%s\n' 'No cache restore/save or activation steps; direct Xcode executable; fresh DerivedData; compiler CAS disabled.' > .build/uncached-build/cache-policy.txt
-      - name: Build the iOS app without compilation cache
-        timeout-minutes: 20
+          mkdir -p .build/cached-build
+          git rev-parse HEAD > .build/cached-build/source.txt
+          "$DEVELOPER_DIR/usr/bin/xcodebuild" -version > .build/cached-build/xcode.txt
+          sw_vers > .build/cached-build/macos.txt
+          cold_dir=$(mktemp -d "$RUNNER_TEMP/ritc-cache-cold.XXXXXX")
+          warm_dir=$(mktemp -d "$RUNNER_TEMP/ritc-cache-warm.XXXXXX")
+          printf 'RITC_CACHE_COLD_DERIVED=%s\nRITC_CACHE_WARM_DERIVED=%s\n' "$cold_dir" "$warm_dir" >> "$GITHUB_ENV"
+          printf '%s\n' 'Same app source as uncached a0406a72; pinned Bitrise CLI activation; two fresh DerivedData directories; actual cache hits require log evidence.' > .build/cached-build/cache-policy.txt
+      - name: Activate the existing pinned Bitrise Xcode cache
+        timeout-minutes: 3
+        run: bash scripts/activate_bitrise_xcode_cache.sh
+      - name: Build the app with compilation cache enabled
+        timeout-minutes: 10
         shell: bash
-        run: |
+        env:
+          RITC_CACHE_PASS: cold
+        run: &cache-build |
           set -euo pipefail
-          "$DEVELOPER_DIR/usr/bin/xcodebuild" \
-            -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+          if [[ "$RITC_CACHE_PASS" == cold ]]; then
+            build_dir="$RITC_CACHE_COLD_DERIVED"
+          else
+            test "$RITC_CACHE_PASS" = warm
+            build_dir="$RITC_CACHE_WARM_DERIVED"
+          fi
+          start_seconds=$SECONDS
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration Debug -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RITC_UNCACHED_DERIVED" -jobs 2 \
+            -derivedDataPath "$build_dir" -jobs 2 \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO \
-            COMPILATION_CACHE_ENABLE_CACHING=NO build \
-            2>&1 | tee .build/uncached-build/build.log
-          app="$RITC_UNCACHED_DERIVED/Build/Products/Debug-iphonesimulator/RoomInTheCart.app"
+            COMPILATION_CACHE_ENABLE_CACHING=YES COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES build \
+            2>&1 | tee ".build/cached-build/$RITC_CACHE_PASS.log"
+          printf '%s\n' "$((SECONDS - start_seconds))" > ".build/cached-build/$RITC_CACHE_PASS-seconds.txt"
+          app="$build_dir/Build/Products/Debug-iphonesimulator/RoomInTheCart.app"
           test -f "$app/RoomInTheCart"
-          /usr/bin/file "$app/RoomInTheCart" > .build/uncached-build/product.txt
-          /usr/bin/shasum -a 256 "$app/RoomInTheCart" >> .build/uncached-build/product.txt
-      - name: Retain uncached build evidence
+          /usr/bin/file "$app/RoomInTheCart" > ".build/cached-build/$RITC_CACHE_PASS-product.txt"
+          /usr/bin/shasum -a 256 "$app/RoomInTheCart" >> ".build/cached-build/$RITC_CACHE_PASS-product.txt"
+      - name: Rebuild with fresh products to observe warm cache reuse
+        timeout-minutes: 10
+        shell: bash
+        env:
+          RITC_CACHE_PASS: warm
+        run: *cache-build
+      - name: Retain cache-enabled build evidence
         if: always()
         timeout-minutes: 2
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: bitrise-uncached-build-${{ github.run_attempt }}
-          path: .build/uncached-build
+          name: bitrise-cached-build-${{ github.run_attempt }}
+          path: .build/cached-build
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
