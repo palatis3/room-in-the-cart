@@ -41,6 +41,7 @@ run_tests() {
         "${selectors[@]}" test-without-building 2>&1 | tee "$log" || native_status=$?
     # Record even failed native attempts before any potentially failing JSON
     # export. Timing is diagnostic; preserve the native/strict acceptance gates.
+    echo 'XCTest phase: recording native timing'
     python3 scripts/report_ios_test_timing.py --test-log "$log" --output "$timing" || \
         echo 'Native timing observation unavailable; retained log remains authoritative.' >&2
     return "$native_status"
@@ -77,8 +78,12 @@ if ! run_tests "$result" "$log"; then
 fi
 # Readable failed bundles are useful too. The raw result and logs are uploaded
 # even if Xcode cannot export JSON after an infrastructure failure.
+echo 'XCTest phase: exporting summary'
 xcrun xcresulttool get test-results summary --path "$result" --compact > .build/test-summary.json
+echo 'XCTest phase: exporting test details'
 xcrun xcresulttool get test-results tests --path "$result" --compact > .build/test-details.json
+echo 'XCTest phase: validating results and runtime warnings'
 python3 scripts/check_ios_test_results.py --selectors "$selection" --expected-count "$EXPECTED_TEST_COUNT" \
     --summary .build/test-summary.json --tests .build/test-details.json --result-bundle "$result" --test-log "$log"
+echo 'XCTest phase: validation finished'
 exit "$test_status"
