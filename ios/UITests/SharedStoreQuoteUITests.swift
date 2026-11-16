@@ -59,11 +59,18 @@ import XCTest
         let priceWarning = app.staticTexts["Prices from the former store are invalid. Review a fresh checkout quote before freezing."]
         reveal(priceWarning, searchTowardEndFirst: false)
         XCTAssertTrue(priceWarning.exists && priceWarning.isHittable)
-        assertText("Earlier revision or shopper assignment")
+        // Resolve the known warning directly; a partial-label predicate repeatedly
+        // retried this lazy row during the hosted journey after adoption.
+        let earlierRevision = app.staticTexts["Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft."]
+        reveal(earlierRevision)
+        XCTAssertTrue(earlierRevision.exists && earlierRevision.isHittable)
         capture("S27-adopted-draft-requires-fresh-checkout-prices")
         fixture("Freeze shared shop")
         tap(element("sharedQuotes.refresh"))
-        assertText("Saved proof is read-only")
+        // Refresh is below the saved proof; the frozen notice is in the first section.
+        let frozenProof = app.staticTexts["This shop is frozen or placed. Saved proof is read-only; it cannot change the order."]
+        reveal(frozenProof, searchTowardEndFirst: false)
+        XCTAssertTrue(frozenProof.exists && frozenProof.isHittable)
         XCTAssertFalse(element("sharedQuotes.enter").exists)
         counter("adoptions",1)
         capture("S27-frozen-proof-cannot-adopt")
@@ -272,8 +279,12 @@ import XCTest
     }
     private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch
-        reveal(field, fullyVisible: true)
-        tap(field)
+        // Adjacent-field focus can reposition the keyboard and Form. Locate the
+        // complete field and its unobscured viewport in the same snapshot.
+        guard let row = visibleQuoteRow(id) else { return }
+        XCTAssertEqual(row.elementType, .textField)
+        XCTAssertTrue(field.isHittable, "The visible quote field must be hittable: " + id)
+        field.tap()
         dismissBilingualKeyboardCardIfPresent()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5), "Show the keyboard for \(id)")
         // Targeted typing requires this field to have keyboard focus.

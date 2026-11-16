@@ -48,9 +48,15 @@ import XCTest
         XCTAssertEqual(app.staticTexts["guardian.childHousehold"].label, "Fixture home")
         fill("Tortillas", into: "guardian.childRequestItem")
         let review = app.buttons["guardian.childRequestReview"]
-        if app.keyboards.firstMatch.exists {
-            app.textFields["guardian.childRequestItem"].typeText("\n")
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists {
+            let returnKey = keyboard.buttons["Return"]
+            XCTAssertTrue(returnKey.isEnabled)
+            XCTAssertTrue(returnKey.isHittable)
+            returnKey.tap()
+            XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         }
+        XCTAssertEqual(app.textFields["guardian.childRequestItem"].value as? String, "Tortillas")
         XCTAssertTrue(review.exists)
         XCTAssertFalse(review.isEnabled)
 
@@ -253,13 +259,17 @@ import XCTest
             }
             XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before acknowledging \(label)")
             if control.exists && !control.frame.isEmpty {
-                // The accessibility row includes a multiline label. Its actual
-                // trailing switch can be visible while part of that label is not.
-                let coordinate = control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                // The row includes a multiline label. Target its native off thumb.
+                XCTAssertEqual(control.switches.count, 1, label)
+                let native = control.switches.firstMatch
+                let coordinate = native.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5))
                 let point = coordinate.screenPoint
-                if control.isEnabled && control.isHittable && area.contains(point) {
+                if control.isEnabled && control.isHittable && native.isEnabled && native.isHittable && area.contains(point) {
                     print("CONTRIBUTOR_SWITCH_TAP label=\(label) point=\(point) area=\(area)")
-                    if control.value as? String == "0" { coordinate.tap() }
+                    if control.value as? String == "0" {
+                        XCTAssertEqual(native.value as? String, "0", label)
+                        coordinate.tap()
+                    }
                     XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
                     return
                 }
