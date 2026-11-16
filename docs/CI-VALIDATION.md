@@ -324,6 +324,8 @@ During the November 14 outage run, GitHub slots 3 and 4 had finished their last 
 
 On November 15, GitHub slot 4 finished its last fixture at 07:20 UTC. UI01 was still waiting on slot 1 when UI04 started there at 07:24 UTC. Full runs now send UI01 to GitHub slot 4 when using GitHub runners. Its preferred Bitrise runner remains M4 slot 0. [Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744700) · [Core jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744701)
 
+In the next candidate after `f4c52431`, DinnerDecision uses GitHub fallback slot 3 instead of slot 2. In that batch, slot 3 finished at 01:32 UTC on November 16 while UI07 still occupied slot 2 ahead of DinnerDecision and the Spanish StoreKit retry. Prior DinnerDecision jobs took about 11–13 minutes. Moving this one group can use that idle capacity; actual savings remain to be measured on the next full run. Default Bitrise routing, five-slot capacity and all selected tests remain unchanged. [Core job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43770727863) · [Fixture job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43770727791)
+
 The reviewed capacity is five GitHub jobs, three M2 Pro Bitrise jobs and six
 M4 Large Bitrise jobs: up to **14 simultaneous native jobs** when work is ready.
 The existing M2 pool is `bitrise-runner-room in cart`; the new M4 pool is

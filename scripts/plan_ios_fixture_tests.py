@@ -208,8 +208,9 @@ def matrix(inventory=None, *, github_mac_only=False):
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 3,
         "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": 3,
         "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": 4,
-        # In run 43647625784, UI07 freed slot 2 while DinnerDecision waited behind UI04 and UI06 on slot 1.
-        "DinnerDecisionSheetUITests": 2,
+        # In run 43770727863, slot 3 finished while UI07 still held slot 2
+        # ahead of DinnerDecision and the Spanish StoreKit infrastructure retry.
+        "DinnerDecisionSheetUITests": 3,
     }
     for index, row in enumerate(rows):
         lane = lane_overrides.get(row["shard"], index % 8)
