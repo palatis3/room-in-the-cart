@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import uuid
 
 import prepare_github_storekit_runtime as preparation
@@ -151,6 +151,74 @@ class RuntimeImportTests(unittest.TestCase):
         with patch.dict(preparation.os.environ, {'RUNNER_ENVIRONMENT': 'self-hosted', 'GITHUB_ACTIONS': 'true'}):
             with self.assertRaises(AssertionError):
                 preparation.prepare()
+
+    def test_import_uses_only_the_exact_nonempty_exported_dmg(self):
+        tree = ast.parse(Path(preparation.__file__).read_text())
+        entry = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'prepare')
+        start = next(i for i, node in enumerate(entry.body) if isinstance(node, ast.Assign)
+                     and any(isinstance(target, ast.Name) and target.id == 'disk_image' for target in node.targets))
+        end = next(i for i, node in enumerate(entry.body) if isinstance(node, ast.Assign)
+                   and any(isinstance(target, ast.Name) and target.id == 'after_import' for target in node.targets))
+        code = compile(ast.Module(body=entry.body[start:end], type_ignores=[]), str(preparation.__file__), 'exec')
+        bundle = self.evidence / 'runtime.exportedBundle'
+        payload_name = Path('Restore/043-87504-067.dmg')
+        payload = bundle / payload_name
+        payload.parent.mkdir(parents=True)
+        operation = Mock(return_value=subprocess.CompletedProcess([], 0))
+        context = {'bundles': [bundle], 'payload_name': payload_name, 'evidence': self.evidence,
+                   'json': json, 'developer': '/Applications/Xcode_27.1.app/Contents/Developer',
+                   'operation': operation}
+        for state in ('missing', 'empty', 'present'):
+            with self.subTest(state=state):
+                operation.reset_mock()
+                if state != 'missing':
+                    payload.write_bytes(b'payload' if state == 'present' else b'')
+                if state == 'present':
+                    exec(code, context)
+                    operation.assert_called_once_with('import', [
+                        'sudo', '-n', '/usr/bin/env', 'DEVELOPER_DIR=' + context['developer'],
+                        '/usr/bin/xcodebuild', '-importPlatform', str(payload.resolve())])
+                    recorded = json.loads((self.evidence / 'import-input.json').read_text())
+                    self.assertEqual(recorded['relativePayload'], str(payload_name))
+                    self.assertEqual(recorded['mode'], 'direct-dmg')
+                else:
+                    with self.assertRaises(AssertionError):
+                        exec(code, context)
+                    operation.assert_not_called()
+        operation.return_value = subprocess.CompletedProcess([], 70)
+        with self.assertRaises(subprocess.CalledProcessError):
+            exec(code, context)
+
+    def test_standalone_guard_rejects_cryptex_parent_or_non_image_storage(self):
+        target = {'kind': 'Disk Image', 'path': '/Library/Developer/CoreSimulator/Images/runtime.dmg'}
+        preparation.require_standalone(target)
+        for change in ({'kind': 'Patchable Cryptex Disk Image'}, {'kind': 'Cryptex Disk Image'},
+                       {'parentMountPath': '/tmp/runtime.exportedBundle'}, {'parentIdentifier': 'parent'},
+                       {'parentMountPath': '/persistent/export'}, {'path': '/tmp/runtime.dmg'},
+                       {'path': '/Library/Developer/CoreSimulator/Volumes/iOS_23C54'}):
+            with self.subTest(change=change), self.assertRaises(AssertionError):
+                preparation.require_standalone(dict(target, **change))
+    def test_preparation_requires_an_existing_nonempty_mount_path(self):
+        tree = ast.parse(Path(preparation.__file__).read_text())
+        entry = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'prepare')
+        start = next(i for i, node in enumerate(entry.body) if isinstance(node, ast.Expr)
+                     and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name)
+                     and node.value.func.id == 'require_standalone')
+        end = next(i for i, node in enumerate(entry.body) if isinstance(node, ast.Assign)
+                   and any(isinstance(target, ast.Name) and target.id == 'snapshot' for target in node.targets))
+        code = compile(ast.Module(body=entry.body[start:end], type_ignores=[]), str(preparation.__file__), 'exec')
+        mount = self.evidence / 'mounted-runtime'
+        bundle = mount / 'iOS 26.2.simruntime'
+        bundle.mkdir(parents=True)
+        target = {'identifier': self.known['identifier'], 'kind': 'Disk Image',
+                  'path': '/Library/Developer/CoreSimulator/Images/runtime.dmg',
+                  'mountPath': str(mount), 'runtimeBundlePath': str(bundle), 'supportedArchitectures': ['arm64']}
+        context = {'target': target, 'Path': Path, 'uuid': uuid, 'require_standalone': preparation.require_standalone}
+        with patch.object(Path, 'exists', return_value=True):
+            exec(code, context)
+            for bad_mount in ('', None, str(self.evidence / 'missing-mount')):
+                with self.subTest(mount=bad_mount), self.assertRaises(AssertionError):
+                    exec(code, dict(context, target=dict(target, mountPath=bad_mount)))
 
 
 if __name__ == '__main__':

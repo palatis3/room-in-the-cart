@@ -442,8 +442,11 @@ jobs:
           assert len(selected) == 1 and selected[0]['identifier'] == before['identifier']
           after = selected[0]
           assert after['state'] == 'Ready'
+          assert after.get('kind') == 'Disk Image', 'Expected standalone imported disk image'
+          assert not after.get('parentMountPath') and not after.get('parentIdentifier'), 'Imported image acquired a parent'
           for key in ('build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath'):
               assert before.get(key) == after.get(key), key
+          assert Path(after['path']).exists(), 'Imported image disappeared'
           assert Path(after['runtimeBundlePath']).is_dir() and Path(after['mountPath']).is_dir()
           output = Path('.build') / ('storekit-' + os.environ['STOREKIT_LOCALE'])
           assert not (output / 'launch-failure').exists(), 'Imported StoreKit runtime required recovery'

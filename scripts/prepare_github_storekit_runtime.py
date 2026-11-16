@@ -8,6 +8,14 @@ import uuid
 from pathlib import Path
 
 
+def require_standalone(target):
+    """Reject the fallback Cryptex/temporary-parent form that lost its runtime."""
+    assert target.get("kind") == "Disk Image", target
+    assert not target.get("parentMountPath") and not target.get("parentIdentifier"), target
+    path = target.get("path", "")
+    assert path.startswith("/Library/Developer/CoreSimulator/") and "/Images/" in path, path
+
+
 def prepare():
     assert os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted"
     assert os.environ.get("GITHUB_ACTIONS") == "true"
@@ -189,16 +197,22 @@ def prepare():
     assert not any(asset_state.values()), "Original disk-image payload remains available for re-registration"
     operation("confirm-removal-scan", ["xcrun", "simctl", "runtime", "scan-and-mount"]).check_returncode()
     confirm_absence()
+    disk_image = bundles[0] / payload_name
+    assert disk_image.is_file() and disk_image.stat().st_size > 0
+    (evidence / "import-input.json").write_text(json.dumps({
+        "mode": "direct-dmg", "path": str(disk_image.resolve()),
+        "bundle": str(bundles[0].resolve()), "relativePayload": str(payload_name)}) + "\n")
     operation("import", ["sudo", "-n", "/usr/bin/env", "DEVELOPER_DIR=" + developer,
-                         "/usr/bin/xcodebuild", "-importPlatform", str(bundles[0].resolve())]).check_returncode()
+                         "/usr/bin/xcodebuild", "-importPlatform", str(disk_image.resolve())]).check_returncode()
     after_import = images("after-import.json")
     assert not original_rows(after_import), "Original asset reappeared during import"
     installed = targets(after_import)
     assert len(installed) == 1 and installed[0].get("state") == "Ready", installed
     target = installed[0]
+    (evidence / "registration-candidate.json").write_text(json.dumps(target, indent=2) + "\n")
+    require_standalone(target)
     uuid.UUID(target["identifier"])
     path = target.get("path", "")
-    assert path.startswith("/Library/Developer/CoreSimulator/") and "/Images/" in path, path
     assert Path(path).exists() and Path(target["runtimeBundlePath"]).is_dir()
     assert target.get("mountPath") and Path(target["mountPath"]).is_dir()
     assert "arm64" in target.get("supportedArchitectures", [])

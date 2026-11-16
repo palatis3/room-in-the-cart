@@ -468,7 +468,8 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
     def test_import_stability_rejects_runtime_changes_pending_assets_and_recovery(self):
         code = self.step('storekit', identifier='storekit-import-stability')['run']
         for locale in ('en', 'es'):
-            for change in ('none', 'uuid', 'mount', 'pending', 'recovery', 'restart'):
+            for change in ('none', 'uuid', 'mount', 'pending', 'recovery', 'restart',
+                           'cryptex', 'parent-mount', 'parent-id', 'missing-image'):
                 with self.subTest(locale=locale, change=change), tempfile.TemporaryDirectory() as directory:
                     root = Path(directory)
                     evidence = root / '.build/storekit-runtime-import'
@@ -477,9 +478,12 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
                     mount.mkdir()
                     bundle = mount / 'iOS 26.2.simruntime'
                     bundle.mkdir()
+                    image = root / 'imported.dmg'
+                    image.write_bytes(b'image')
                     target = {'identifier': 'imported-id', 'state': 'Ready', 'build': '23C54',
+                              'kind': 'Disk Image',
                               'runtimeIdentifier': 'com.apple.CoreSimulator.SimRuntime.iOS-26-2',
-                              'path': '/Library/Developer/CoreSimulator/Images/imported.dmg',
+                              'path': str(image),
                               'mountPath': str(mount), 'runtimeBundlePath': str(bundle)}
                     (evidence / 'target.json').write_text(json.dumps(target))
                     (evidence / 'original-asset-paths.json').write_text(json.dumps({'roots': ['/original/AssetData']}))
@@ -493,6 +497,14 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
                         after['identifier'] = 'changed-id'
                     if change == 'mount':
                         after['mountPath'] = '/changed-mount'
+                    if change == 'cryptex':
+                        after['kind'] = 'Patchable Cryptex Disk Image'
+                    if change == 'parent-mount':
+                        after['parentMountPath'] = '/temporary/exportedBundle'
+                    if change == 'parent-id':
+                        after['parentIdentifier'] = 'unexpected-parent'
+                    if change == 'missing-image':
+                        image.unlink()
                     snapshot = {after['identifier']: after}
                     if change == 'pending':
                         snapshot['pending'] = {'path': '/original/AssetData/Restore/runtime.dmg', 'state': 'Verifying'}
