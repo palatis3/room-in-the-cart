@@ -38,97 +38,159 @@ jobs:
         \ndef capture(name, timeout=30):\n    raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'],\
         \ text=True, timeout=timeout)\n    (evidence / name).write_text(raw)\n    value = json.loads(raw)\n    assert isinstance(value,\
         \ dict)\n    return value\n\ndef targets(rows):\n    return [r for r in rows.values() if r.get('runtimeIdentifier')\
-        \ == runtime and r.get('build') == build]\n\ndef prepare():\n    before = capture('before.json')\n    assert any(r.get('state')\
-        \ == 'Ready' for r in targets(before))\n    export = Path('.build/runtime-export')\n    export.mkdir()\n    with (evidence\
-        \ / 'export.log').open('w') as log:\n        result = subprocess.run(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion',\
-        \ build,\n                                 '-exportPath', str(export.resolve()), '-architectureVariant', 'arm64'],\n\
-        \                                stdout=log, stderr=subprocess.STDOUT)\n    (evidence / 'export-exit.json').write_text(json.dumps({'exit':\
-        \ result.returncode}) + '\\n')\n    # The documented exporter may return 70 even when its exported bundle exists.\n\
-        \    # A real import and exact registration check below remain mandatory.\n    assert result.returncode in (0, 70)\n\
-        \    bundles = list(export.glob('*.exportedBundle'))\n    assert len(bundles) == 1 and bundles[0].is_dir(), 'Expected\
-        \ one exported platform bundle'\n    assert any(f.is_file() and f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n\
-        \    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle': str(bundles[0]),\n        'files': [{'name':\
-        \ str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n                  for f in bundles[0].rglob('*') if\
-        \ f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY') == 'palatis3/room-in-the-cart'\n\
-        \    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n    assert os.getuid()\
-        \ != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]\n    assert\
-        \ len(payloads) == 1\n    import hashlib, plistlib\n    saved_image = payloads[0].resolve()\n    assert str(saved_image).startswith(str(export.resolve())\
-        \ + '/')\n    def sha256(path):\n        digest = hashlib.sha256()\n        with path.open('rb') as source:\n    \
-        \        for chunk in iter(lambda: source.read(1024 * 1024), b''):\n                digest.update(chunk)\n       \
-        \ return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence / 'saved-payload.json').write_text(json.dumps({'path':\
-        \ str(saved_image), 'sha256': digest}) + '\\n')\n    devices = json.loads(subprocess.check_output(['xcrun', 'simctl',\
-        \ 'list', 'devices', '-j'], text=True, timeout=30))\n    assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values()\
-        \ for d in rows)\n    current = capture('all-before-removal.json')\n    assert current, 'No preloaded runtimes to\
-        \ isolate'\n    for key, row in current.items():\n        uuid.UUID(key)\n        assert row.get('identifier') ==\
-        \ key and row.get('deletable') is True\n        assert row.get('path', '').startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\
-        \ '/Library/Developer/CoreSimulator/'))\n    old_mounts = {r.get('mountPath') for r in current.values() if r.get('mountPath')}\n\
-        \    old_paths = {r['path'] for r in current.values()}\n    def disk_state(name):\n        raw = subprocess.check_output(['hdiutil',\
-        \ 'info', '-plist'], timeout=30)\n        (evidence / (name + '.plist')).write_bytes(raw)\n        mounts = subprocess.check_output(['/sbin/mount'],\
-        \ text=True, timeout=30)\n        (evidence / (name + '.mounts.txt')).write_text(mounts)\n        return plistlib.loads(raw),\
-        \ mounts\n    disk_state('disks-before-removal')\n    for name, command in [('delete-all-dry-run', ['xcrun', 'simctl',\
-        \ 'runtime', 'delete', 'all', '--dry-run']),\n                          ('delete-all', ['xcrun', 'simctl', 'runtime',\
-        \ 'delete', 'all'])]:\n        with (evidence / (name + '.log')).open('w') as output:\n            result = subprocess.run(command,\
-        \ stdout=output, stderr=subprocess.STDOUT, timeout=300)\n        (evidence / (name + '-exit.json')).write_text(json.dumps({'exit':\
-        \ result.returncode}) + '\\n')\n        result.check_returncode()\n    deadline = time.monotonic() + 210\n    count\
-        \ = 0\n    recreated_cleanup = False\n    def is_original_recreation(key, row):\n        return (key not in current\
-        \ and row.get('identifier') == key and row.get('deletable') is True\n                and row.get('state') in ('Ready',\
-        \ 'Unusable')\n                and any(row.get('path') == original.get('path')\n                        and row.get('runtimeIdentifier')\
-        \ == original.get('runtimeIdentifier')\n                        and row.get('build') == original.get('build')\n  \
-        \                      for original in current.values()))\n    while True:\n        rows = capture('all-removal-wait-'\
-        \ + str(count) + '.json')\n        if not rows:\n            break\n        if not all(r.get('state') == 'Deleting'\
-        \ for r in rows.values()):\n            assert not recreated_cleanup and all(is_original_recreation(k, r) for k, r\
-        \ in rows.items()), 'Unexpected or repeated non-deleting runtime remains'\n            for key in rows:\n        \
-        \        uuid.UUID(key)\n            old_mounts.update(r['mountPath'] for r in rows.values() if r.get('mountPath'))\n\
-        \            (evidence / 'recreated-original-assets.json').write_text(json.dumps(rows, indent=2) + '\\n')\n      \
-        \      remaining = deadline - time.monotonic()\n            assert remaining > 0, 'Original cleanup deadline expired'\n\
-        \            with (evidence / 'delete-recreated-originals.log').open('w') as output:\n                result = subprocess.run(['xcrun',\
-        \ 'simctl', 'runtime', 'delete', 'all'],\n                                        stdout=output, stderr=subprocess.STDOUT,\
-        \ timeout=min(300, remaining))\n            (evidence / 'delete-recreated-originals-exit.json').write_text(json.dumps({'exit':\
-        \ result.returncode}) + '\\n')\n            result.check_returncode()\n            recreated_cleanup = True\n    \
-        \        count += 1\n            continue\n        assert time.monotonic() < deadline, 'All-runtime removal did not\
-        \ settle'\n        time.sleep(5); count += 1\n    with (evidence / 'all-removal-scan.log').open('w') as output:\n\
-        \        subprocess.run(['xcrun', 'simctl', 'runtime', 'scan-and-mount'], stdout=output, stderr=subprocess.STDOUT,\
-        \ timeout=60, check=True)\n    deadline = time.monotonic() + 60\n    count = 0\n    while True:\n        assert not\
-        \ capture('all-absence-' + str(count) + '.json'), 'Runtime registration reappeared'\n        assert not any(os.path.ismount(m)\
-        \ for m in old_mounts), 'Old runtime volume is still mounted'\n        assert time.monotonic() < deadline or count\
-        \ > 0\n        if time.monotonic() >= deadline:\n            break\n        time.sleep(5); count += 1\n    disks,\
-        \ mounts = disk_state('disks-after-removal')\n    assert not any(' on ' + m + ' (' in mounts for m in old_mounts)\n\
-        \    attached = [entity.get('mount-point') for image in disks.get('images', []) for entity in image.get('system-entities',\
-        \ [])]\n    assert not old_mounts.intersection(attached), 'Old image still attached'\n    for image in disks.get('images',\
-        \ []):\n        attached_path = image.get('image-path', '')\n        assert not any(attached_path == root or attached_path.startswith(root.rstrip('/')\
-        \ + '/')\n                       for root in old_paths), 'Old runtime image remains attached without a mount'\n  \
-        \  for original in old_paths:\n        path = Path(original)\n        assert not path.is_file(), 'Original runtime\
-        \ image remains'\n        if path.is_dir():\n            assert not any(f.is_file() for f in path.rglob('*.dmg')),\
-        \ 'Original MobileAsset payload remains'\n    assert saved_image.is_file() and sha256(saved_image) == digest\n   \
-        \ (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations': 0, 'oldMounts': sorted(old_mounts),\n\
-        \        'absenceObservations': count + 1, 'savedPayloadSha256': digest}) + '\\n')\n    def original_rows(rows):\n\
-        \        # No other preloaded runtime is allowed to return during this experiment.\n        return [r for r in rows.values()\
-        \ if r.get('runtimeIdentifier') != runtime or r.get('build') != build]\n    payloads = [f for f in bundles[0].rglob('*.dmg')\
-        \ if f.is_file() and f.stat().st_size > 0]\n    assert len(payloads) == 1, 'Expected one exact exported disk-image\
-        \ payload'\n    disk_image = payloads[0]\n    (evidence / 'import-input.json').write_text(json.dumps({\n        'mode':\
-        \ 'direct-dmg', 'path': str(disk_image.resolve()),\n        'relativePayload': str(disk_image.relative_to(bundles[0]))})\
-        \ + '\\n')\n    with (evidence / 'import.log').open('w') as log:\n        subprocess.run(['sudo', '-n', '/usr/bin/env',\n\
-        \                        'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',\n                      \
-        \  '/usr/bin/xcodebuild', '-importPlatform', str(disk_image.resolve())],\n                       stdout=log, stderr=subprocess.STDOUT,\
-        \ check=True)\n    after = capture('after-import.json')\n    assert not original_rows(after), 'Original asset reappeared\
-        \ during import'\n    installed = targets(after)\n    assert len(installed) == 1 and installed[0].get('state') ==\
-        \ 'Ready'\n    target = installed[0]\n    assert target.get('kind') == 'Disk Image', target\n    assert not target.get('parentMountPath')\
-        \ and not target.get('parentIdentifier'), target\n    assert target.get('mountPath') and Path(target['mountPath']).is_dir()\n\
-        \    path = target.get('path', '')\n    assert path.startswith('/Library/Developer/CoreSimulator/') and '/Images/'\
-        \ in path, path\n    assert Path(path).exists() and Path(target['runtimeBundlePath']).is_dir()\n    assert 'arm64'\
-        \ in target.get('supportedArchitectures', [])\n    (evidence / 'target.json').write_text(json.dumps(target, indent=2)\
-        \ + '\\n')\n    print('Imported iOS 27.0/24A434 runtime verified.')\n\n\ndef verify():\n    current = capture('after-tests.json')\n\
-        \    before = json.loads((evidence / 'target.json').read_text())\n    # Preserve physical availability even when registry\
-        \ mount metadata vanishes.\n    # This is diagnostic evidence only: the identity/mount assertions below stay strict.\n\
-        \    filesystem = {'observedAt': time.time(), 'paths': {}}\n    for key in ('path', 'mountPath', 'runtimeBundlePath'):\n\
-        \        value = before.get(key)\n        filesystem['paths'][key] = {\n            'path': value,\n            'exists':\
-        \ Path(value).exists() if value else None,\n            'isDirectory': Path(value).is_dir() if value else None,\n\
-        \        }\n        if key == 'mountPath':\n            filesystem['paths'][key]['isMount'] = os.path.ismount(value)\
-        \ if value else None\n    (evidence / 'verification-filesystem.json').write_text(json.dumps(filesystem, indent=2)\
-        \ + '\\n')\n    installed = targets(current)\n    assert len(current) == 1, 'An unused runtime reappeared'\n    assert\
-        \ len(installed) == 1, 'Expected exactly one target registration'\n    after = installed[0]\n    assert after['state']\
-        \ == 'Ready'\n    assert after.get('kind') == 'Disk Image', after\n    assert not after.get('parentMountPath') and\
-        \ not after.get('parentIdentifier'), after\n    assert after.get('mountPath') and Path(after['mountPath']).is_dir()\n\
+        \ == runtime and r.get('build') == build]\n\ndef classify_bulk_result(status, detail, before):\n    \"\"\"Recognize\
+        \ only the two observed aggregate-error forms, bound to this command.\"\"\"\n    if status == 0:\n        assert not\
+        \ detail.strip(), 'Unexpected successful bulk-delete output'\n        return []\n    assert status == 1 and detail.strip(),\
+        \ 'Unknown aggregate-delete exit'\n    classified = []\n    seen = set()\n    for line in detail.splitlines():\n \
+        \       if not line:\n            continue\n        matches = []\n        for identifier, row in before.items():\n\
+        \            assert row['identifier'] == identifier\n            # P is the observed Patchable Cryptex prefix, not\
+        \ a generic error parser.\n            if row.get('kind') != 'Patchable Cryptex Disk Image':\n                continue\n\
+        \            platform_name = row['runtimeIdentifier'].split('.SimRuntime.', 1)[1].split('-', 1)[0]\n            prefix\
+        \ = f\"Error deleting P: {identifier} {platform_name} ({row['version']} - {row['build']}) \"\n            deleting\
+        \ = (prefix + '(Deleting): Attempting to delete image: ' + identifier +\n                        ' (Please retry in\
+        \ 180s, if the image is not removed)')\n            purging = (prefix + '(Ready): Removed the runtime, but did not\
+        \ reclaim its MobileAsset: ' +\n                       row['path'].rstrip('/') + '/')\n            if line == deleting:\n\
+        \                matches.append('already-deleting')\n            elif (line == purging and row.get('state') == 'Ready'\
+        \ and\n                  row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_') and\n         \
+        \         row['path'].endswith('.asset/AssetData')):\n                matches.append('mobileasset-not-reclaimed')\n\
+        \            else:\n                continue\n            assert identifier not in seen, 'Repeated error for one runtime'\n\
+        \            seen.add(identifier)\n            classified.append({'identifier': identifier, 'classification': matches[-1],\n\
+        \                               'runtimeIdentifier': row['runtimeIdentifier'], 'build': row['build'],\n          \
+        \                     'version': row['version'], 'path': row['path'], 'line': line})\n        assert len(matches)\
+        \ == 1, 'Unknown or ambiguous aggregate-delete line: ' + line\n    assert classified\n    return classified\n\n\n\
+        def original_catalog(rows):\n    \"\"\"Capture allowed disk-image descendants while the original payloads still exist.\"\
+        \"\"\n    catalog = {}\n    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier')\
+        \ == key and row.get('deletable') is True\n        root = row['path']\n        assert root.startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\n\
+        \                                '/Library/Developer/CoreSimulator/'))\n        assert '..' not in Path(root).parts\n\
+        \        identity = {k: row[k] for k in ('runtimeIdentifier', 'build', 'version')}\n        assert all(isinstance(v,\
+        \ str) and v for v in identity.values())\n        if root in catalog:\n            assert catalog[root]['identity']\
+        \ == identity, 'Shared path has conflicting identity'\n            continue\n        path = Path(root)\n        payloads\
+        \ = ([root] if path.is_file() else\n                    [str(p) for p in path.rglob('*.dmg') if p.is_file()])\n  \
+        \      assert all(str(Path(p).resolve()) == p for p in payloads), 'Unexpected payload symlink'\n        catalog[root]\
+        \ = {'identity': identity, 'payloads': sorted(payloads)}\n    assert catalog\n    return catalog\n\n\ndef validate_original_rows(rows,\
+        \ catalog, *, pending=False):\n    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier')\
+        \ == key and row.get('deletable') is True\n        path = row.get('path')\n        roots = [root for root, entry in\
+        \ catalog.items()\n                 if path == root or (path in entry['payloads'] and row.get('parentMountPath') ==\
+        \ root)]\n        assert len(roots) == 1, 'Foreign or unrecorded original-asset path'\n        for field, value in\
+        \ catalog[roots[0]]['identity'].items():\n            assert row.get(field) == value or (pending and row.get(field)\
+        \ is None), 'Original identity changed: ' + field\n        allowed = ('Copying', 'Verifying', 'Mounting', 'Ready',\
+        \ 'Unusable', 'Deleting')\n        assert row.get('state') in allowed, 'Unexpected original runtime state'\n\n\ndef\
+        \ cleanup_original_images(current):\n    \"\"\"At most two bulk deletions; all recognized errors remain recorded and\
+        \ verified.\"\"\"\n    import plistlib\n    catalog = original_catalog(current)\n    (evidence / 'original-payload-catalog.json').write_text(json.dumps(catalog,\
+        \ indent=2) + '\\n')\n    old_mounts = {r['mountPath'] for r in current.values() if r.get('mountPath')}\n    receipt\
+        \ = {'mutationLimit': 2, 'mutations': 0, 'totalDeadlineSeconds': 600, 'stage': 'preflight'}\n    deadline = time.monotonic()\
+        \ + 600\n\n    def save():\n        (evidence / 'aggregate-cleanup.json').write_text(json.dumps(receipt, indent=2)\
+        \ + '\\n')\n\n    def remaining(limit):\n        value = min(limit, deadline - time.monotonic())\n        assert value\
+        \ > 0, 'Aggregate cleanup exceeded 600 seconds'\n        return value\n\n    def observe(name):\n        rows = capture(name\
+        \ + '.json', timeout=remaining(30))\n        validate_original_rows(rows, catalog, pending=True)\n        old_mounts.update(r['mountPath']\
+        \ for r in rows.values() if r.get('mountPath'))\n        return rows\n\n    def disk_state(name):\n        raw = subprocess.check_output(['hdiutil',\
+        \ 'info', '-plist'], timeout=remaining(30))\n        (evidence / (name + '.plist')).write_bytes(raw)\n        mounts\
+        \ = subprocess.check_output(['/sbin/mount'], text=True, timeout=remaining(30))\n        (evidence / (name + '.mounts.txt')).write_text(mounts)\n\
+        \        return plistlib.loads(raw), mounts\n\n    def missing_payloads():\n        return [p for entry in catalog.values()\
+        \ for p in entry['payloads'] if Path(p).exists()]\n\n    def physical_absence(name):\n        assert not missing_payloads(),\
+        \ 'Original payload remains'\n        for root in catalog:\n            path = Path(root)\n            assert not\
+        \ path.is_file(), 'Original runtime image remains'\n            assert not any(p.is_file() for p in path.rglob('*.dmg')),\
+        \ 'Unrecorded original payload remains'\n        assert not any(os.path.ismount(m) for m in old_mounts), 'Old runtime\
+        \ volume is still mounted'\n        disks, mounts = disk_state(name)\n        assert not any(' on ' + m + ' (' in\
+        \ mounts for m in old_mounts), 'Old runtime mount remains'\n        for image in disks.get('images', []):\n      \
+        \      attached_path = image.get('image-path', '')\n            assert not any(attached_path == root or attached_path.startswith(root.rstrip('/')\
+        \ + '/')\n                           for root in catalog), 'Old runtime image remains attached without a mount'\n\
+        \            assert not old_mounts.intersection(e.get('mount-point') for e in image.get('system-entities', [])), 'Old\
+        \ image remains mounted'\n\n    def command(name, args, *, before=None):\n        receipt['stage'] = name\n      \
+        \  if before is not None:\n            assert receipt['mutations'] < 2, 'No third deletion permitted'\n          \
+        \  receipt['mutations'] += 1\n            (evidence / (name + '-before.json')).write_text(json.dumps(before, indent=2)\
+        \ + '\\n')\n        save()\n        with (evidence / (name + '.log')).open('w') as output:\n            result = subprocess.run(args,\
+        \ stdout=output, stderr=subprocess.STDOUT, timeout=remaining(300 if before is not None else 60))\n        (evidence\
+        \ / (name + '-exit.json')).write_text(json.dumps({'exit': result.returncode}) + '\\n')\n        if before is None:\n\
+        \            result.check_returncode()\n        else:\n            classified = classify_bulk_result(result.returncode,\
+        \ (evidence / (name + '.log')).read_text(), before)\n            (evidence / (name + '-classification.json')).write_text(json.dumps({\n\
+        \                'exit': result.returncode, 'requiresVerification': True, 'recognizedErrors': classified}, indent=2)\
+        \ + '\\n')\n\n    def wait_retired(before, name, *, allow_recreated):\n        until = time.monotonic() + remaining(210)\n\
+        \        attempt = 0\n        while True:\n            rows = observe(name + '-' + str(attempt))\n            for\
+        \ key, row in rows.items():\n                if key in before:\n                    assert all(row.get(k) == before[key].get(k)\
+        \ for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n                    assert row.get('state')\
+        \ == 'Deleting', 'Old registration did not enter Deleting'\n                else:\n                    assert allow_recreated,\
+        \ 'Runtime recreated after second deletion; no further mutation permitted'\n            if not set(before).intersection(rows):\n\
+        \                return rows\n            assert time.monotonic() < until, 'Original deletion did not retire within\
+        \ 210 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            attempt\
+        \ += 1\n\n    def all_ready(rows):\n        validate_original_rows(rows, catalog)\n        return all(r.get('state')\
+        \ in ('Ready', 'Unusable') for r in rows.values())\n\n    def payloads_registered(rows):\n        for root, entry\
+        \ in catalog.items():\n            surviving = [p for p in entry['payloads'] if Path(p).exists()]\n            if\
+        \ surviving and not any(r.get('path') == root for r in rows.values()):\n                if not all(any(r.get('path')\
+        \ == p for r in rows.values()) for p in surviving):\n                    return False\n        return True\n\n   \
+        \ try:\n        save()\n        disk_state('disks-before-removal')\n        command('delete-all-dry-run', ['xcrun',\
+        \ 'simctl', 'runtime', 'delete', 'all', '--dry-run'])\n        first = observe('delete-all-current')\n        validate_original_rows(first,\
+        \ catalog)\n        assert first, 'Runtime inventory disappeared before command'\n        command('delete-all', ['xcrun',\
+        \ 'simctl', 'runtime', 'delete', 'all'], before=first)\n        wait_retired(first, 'all-removal-wait', allow_recreated=True)\n\
+        \        command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n        until = time.monotonic()\
+        \ + remaining(120)\n        count = 0\n        while True:\n            rows = observe('recovery-settle-' + str(count))\n\
+        \            assert not set(first).intersection(rows), 'Original UUID returned after retirement'\n            # Pending\
+        \ identities are observable but can never authorize deletion.\n            known = all(all(r.get(k) for k in ('runtimeIdentifier',\
+        \ 'build', 'version')) for r in rows.values())\n            if known and all_ready(rows) and payloads_registered(rows):\n\
+        \                break\n            assert time.monotonic() < until, 'Recovery scan did not settle within 120 seconds'\n\
+        \            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            count += 1\n        if\
+        \ rows:\n            second = observe('delete-recreated-current')\n            assert second, 'Recreated inventory\
+        \ disappeared before second deletion'\n            assert not set(first).intersection(second)\n            assert\
+        \ all_ready(second) and payloads_registered(second), 'Recovery changed before second deletion'\n            command('delete-recreated-originals',\
+        \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=second)\n            wait_retired(second, 'recreated-removal-wait',\
+        \ allow_recreated=False)\n        assert not observe('all-before-confirmation'), 'Runtime remains before confirmation'\n\
+        \        command('confirm-removal-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n        receipt['stage']\
+        \ = 'sustained-absence'; save()\n        until = time.monotonic() + 60\n        count = 0\n        while True:\n \
+        \           assert not observe('all-absence-' + str(count)), 'Runtime registration reappeared'\n            physical_absence('disks-absence-'\
+        \ + str(count))\n            if time.monotonic() >= until:\n                break\n            time.sleep(max(0, min(5,\
+        \ until - time.monotonic(), remaining(5))))\n            count += 1\n        receipt.update(outcome='success', absenceObservations=count\
+        \ + 1, oldMounts=sorted(old_mounts))\n        save()\n        return old_mounts, count + 1\n    except BaseException\
+        \ as error:\n        receipt.update(outcome='failure', error=str(error)); save(); raise\n\n\ndef prepare():\n    before\
+        \ = capture('before.json')\n    assert any(r.get('state') == 'Ready' for r in targets(before))\n    export = Path('.build/runtime-export')\n\
+        \    export.mkdir()\n    with (evidence / 'export.log').open('w') as log:\n        result = subprocess.run(['xcodebuild',\
+        \ '-downloadPlatform', 'iOS', '-buildVersion', build,\n                                 '-exportPath', str(export.resolve()),\
+        \ '-architectureVariant', 'arm64'],\n                                stdout=log, stderr=subprocess.STDOUT)\n    (evidence\
+        \ / 'export-exit.json').write_text(json.dumps({'exit': result.returncode}) + '\\n')\n    # The documented exporter\
+        \ may return 70 even when its exported bundle exists.\n    # A real import and exact registration check below remain\
+        \ mandatory.\n    assert result.returncode in (0, 70)\n    bundles = list(export.glob('*.exportedBundle'))\n    assert\
+        \ len(bundles) == 1 and bundles[0].is_dir(), 'Expected one exported platform bundle'\n    assert any(f.is_file() and\
+        \ f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle':\
+        \ str(bundles[0]),\n        'files': [{'name': str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n      \
+        \            for f in bundles[0].rglob('*') if f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY')\
+        \ == 'palatis3/room-in-the-cart'\n    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n\
+        \    assert os.getuid() != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size\
+        \ > 0]\n    assert len(payloads) == 1\n    import hashlib, plistlib\n    saved_image = payloads[0].resolve()\n   \
+        \ assert str(saved_image).startswith(str(export.resolve()) + '/')\n    def sha256(path):\n        digest = hashlib.sha256()\n\
+        \        with path.open('rb') as source:\n            for chunk in iter(lambda: source.read(1024 * 1024), b''):\n\
+        \                digest.update(chunk)\n        return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence\
+        \ / 'saved-payload.json').write_text(json.dumps({'path': str(saved_image), 'sha256': digest}) + '\\n')\n    devices\
+        \ = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j'], text=True, timeout=30))\n   \
+        \ assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values() for d in rows)\n    current = capture('all-before-removal.json')\n\
+        \    assert current, 'No preloaded runtimes to isolate'\n    old_mounts, absence_observations = cleanup_original_images(current)\n\
+        \    assert saved_image.is_file() and sha256(saved_image) == digest\n    (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations':\
+        \ 0, 'oldMounts': sorted(old_mounts),\n        'absenceObservations': absence_observations, 'savedPayloadSha256':\
+        \ digest}) + '\\n')\n    def original_rows(rows):\n        # No other preloaded runtime is allowed to return during\
+        \ this experiment.\n        return [r for r in rows.values() if r.get('runtimeIdentifier') != runtime or r.get('build')\
+        \ != build]\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]\n    assert\
+        \ len(payloads) == 1, 'Expected one exact exported disk-image payload'\n    disk_image = payloads[0]\n    (evidence\
+        \ / 'import-input.json').write_text(json.dumps({\n        'mode': 'direct-dmg', 'path': str(disk_image.resolve()),\n\
+        \        'relativePayload': str(disk_image.relative_to(bundles[0]))}) + '\\n')\n    with (evidence / 'import.log').open('w')\
+        \ as log:\n        subprocess.run(['sudo', '-n', '/usr/bin/env',\n                        'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',\n\
+        \                        '/usr/bin/xcodebuild', '-importPlatform', str(disk_image.resolve())],\n                 \
+        \      stdout=log, stderr=subprocess.STDOUT, check=True)\n    after = capture('after-import.json')\n    assert not\
+        \ original_rows(after), 'Original asset reappeared during import'\n    installed = targets(after)\n    assert len(installed)\
+        \ == 1 and installed[0].get('state') == 'Ready'\n    target = installed[0]\n    assert target.get('kind') == 'Disk\
+        \ Image', target\n    assert not target.get('parentMountPath') and not target.get('parentIdentifier'), target\n  \
+        \  assert target.get('mountPath') and Path(target['mountPath']).is_dir()\n    path = target.get('path', '')\n    assert\
+        \ path.startswith('/Library/Developer/CoreSimulator/') and '/Images/' in path, path\n    assert Path(path).exists()\
+        \ and Path(target['runtimeBundlePath']).is_dir()\n    assert 'arm64' in target.get('supportedArchitectures', [])\n\
+        \    (evidence / 'target.json').write_text(json.dumps(target, indent=2) + '\\n')\n    print('Imported iOS 27.0/24A434\
+        \ runtime verified.')\n\n\ndef verify():\n    current = capture('after-tests.json')\n    before = json.loads((evidence\
+        \ / 'target.json').read_text())\n    # Preserve physical availability even when registry mount metadata vanishes.\n\
+        \    # This is diagnostic evidence only: the identity/mount assertions below stay strict.\n    filesystem = {'observedAt':\
+        \ time.time(), 'paths': {}}\n    for key in ('path', 'mountPath', 'runtimeBundlePath'):\n        value = before.get(key)\n\
+        \        filesystem['paths'][key] = {\n            'path': value,\n            'exists': Path(value).exists() if value\
+        \ else None,\n            'isDirectory': Path(value).is_dir() if value else None,\n        }\n        if key == 'mountPath':\n\
+        \            filesystem['paths'][key]['isMount'] = os.path.ismount(value) if value else None\n    (evidence / 'verification-filesystem.json').write_text(json.dumps(filesystem,\
+        \ indent=2) + '\\n')\n    installed = targets(current)\n    assert len(current) == 1, 'An unused runtime reappeared'\n\
+        \    assert len(installed) == 1, 'Expected exactly one target registration'\n    after = installed[0]\n    assert\
+        \ after['state'] == 'Ready'\n    assert after.get('kind') == 'Disk Image', after\n    assert not after.get('parentMountPath')\
+        \ and not after.get('parentIdentifier'), after\n    assert after.get('mountPath') and Path(after['mountPath']).is_dir()\n\
         \    for key in ('identifier', 'build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath'):\n        assert\
         \ before.get(key) == after.get(key), 'Runtime changed during tests: ' + key\n    assert Path(after['path']).exists()\
         \ and Path(after['runtimeBundlePath']).is_dir()\n    print('Imported runtime identity, mount and bundle retained.')\n\
@@ -138,7 +200,7 @@ jobs:
         \ == 'arm64'\n    assert os.environ.get('CI_IPHONE_RUNTIME') == runtime\n    assert os.environ.get('DEVELOPER_DIR')\
         \ == '/Applications/Xcode_27.1.app/Contents/Developer'\n    evidence.mkdir(parents=True, exist_ok=True)\n    if args.operation\
         \ == 'prepare':\n        prepare()\n    else:\n        verify()\n\n\nif __name__ == '__main__':\n    main()\nRITC_RUNTIME_HELPER\n\
-        printf '%s  %s\\n' '7d52474641e20df45ce938e1a81e748cf3abbd9353c7fa0be32911d4d89abd04' '.build/prepare_github_ios_runtime.py'\
+        printf '%s  %s\\n' 'e9124478682fa9128f94272022274d5eed7de0fedc861dadbe4ed81cf40d9992' '.build/prepare_github_ios_runtime.py'\
         \ | shasum -a 256 -c -\npython3 .build/prepare_github_ios_runtime.py prepare\n"
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
