@@ -653,10 +653,7 @@ jobs:
       - name: Retain GitHub runtime diagnostics
         if: always() && steps.imported-runtime.outcome != 'skipped'
         timeout-minutes: 3
-        run: |
-          mkdir -p .build/github-ios-runtime
-          xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
-          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+        run: python3 scripts/collect_github_runtime_diagnostics.py
       - name: Clean up only the owned simulator after result export
         if: always() && runner.environment == 'github-hosted'
         timeout-minutes: 2
@@ -811,10 +808,7 @@ jobs:
       - name: Retain GitHub runtime diagnostics
         if: always() && steps.imported-runtime.outcome != 'skipped'
         timeout-minutes: 3
-        run: |
-          mkdir -p .build/github-ios-runtime
-          xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
-          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+        run: python3 scripts/collect_github_runtime_diagnostics.py
       - name: Clean up only the owned simulator after result export
         if: always()
         timeout-minutes: 2

@@ -1199,8 +1199,11 @@ class RuntimeWorkflowTests(unittest.TestCase):
             verify = next(s for s in steps if s.get("name") == "Verify the imported runtime after tests")
             self.assertNotIn("matrix.shard", verify["if"])
             diagnostic = next(s for s in steps if s.get("name") == "Retain GitHub runtime diagnostics")
-            self.assertIn('process == "simdiskimaged"', diagnostic["run"])
-            self.assertIn('process CONTAINS "CoreSimulatorService"', diagnostic["run"])
+            self.assertEqual(diagnostic["run"], "python3 scripts/collect_github_runtime_diagnostics.py")
+            self.assertEqual(diagnostic["timeout-minutes"], 3)
+            collector = (ROOT / "scripts/collect_github_runtime_diagnostics.py").read_text()
+            self.assertIn('process == "simdiskimaged"', collector)
+            self.assertIn('process CONTAINS "CoreSimulatorService"', collector)
 
 
 
