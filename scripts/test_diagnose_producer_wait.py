@@ -69,11 +69,27 @@ class ObserverTests(unittest.TestCase):
                 self.assertEqual(capture.call_count, 2)
                 self.build.kill.assert_not_called()
 
-    def test_completed_graph_or_exited_child_is_not_sampled(self):
-        Path('.build/ios-build-evidence/build.log').write_text('Resolve Package Graph\nResolved source packages:\n')
-        with patch.object(subject, 'collect', return_value={'status':'completed','exitCode':0}) as capture:
-            subject.observe(self.build)
-        self.assertEqual(capture.call_count, 2)
+    def test_log_phase_labels_do_not_gate_the_single_owned_sample(self):
+        log = Path('.build/ios-build-evidence/build.log')
+        for text, phase in [('', 'no-graph-marker'),
+                            ('Resolve Package Graph\n', 'graph-started'),
+                            ('Resolve Package Graph\nResolved source packages:\n', 'graph-completed'),
+                            (None, 'unknown')]:
+            with self.subTest(phase=phase):
+                if text is None:
+                    log.unlink()
+                else:
+                    log.write_text(text)
+                with patch.object(subject, 'collect', return_value={'status':'completed','exitCode':0}) as capture:
+                    subject.observe(self.build)
+                self.assertEqual(capture.call_count, 3)
+                self.assertEqual(capture.call_args.args[0][0], '/usr/bin/sample')
+                receipt = json.loads((subject.DIRECTORY / 'capture.json').read_text())
+                self.assertEqual(receipt['packageGraphPhase'], phase)
+                self.assertEqual(receipt['outcome'], 'sample-attempted')
+                self.build.kill.assert_not_called()
+
+    def test_exited_child_is_not_sampled(self):
         self.build.poll.return_value = 0
         with patch.object(subject, 'collect') as capture:
             subject.observe(self.build)

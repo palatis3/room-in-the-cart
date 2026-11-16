@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnostic-only: sample one owned build still resolving packages after five minutes."""
+"""Diagnostic-only: sample one owned build still running after five minutes."""
 import json
 import os
 from pathlib import Path
@@ -40,9 +40,12 @@ def owned_process(text, pid, parent, uid):
             rows[0][3] == DEVELOPER + '/usr/bin/xcodebuild')
 
 
-def package_graph_pending(text):
-    return ('Resolve Package Graph' in text and
-            'Resolved source packages:' not in text.rsplit('Resolve Package Graph', 1)[1])
+def package_graph_phase(text):
+    if 'Resolve Package Graph' not in text:
+        return 'no-graph-marker'
+    if 'Resolved source packages:' in text.rsplit('Resolve Package Graph', 1)[1]:
+        return 'graph-completed'
+    return 'graph-started'
 
 
 def print_sample_excerpt(path):
@@ -77,11 +80,13 @@ def observe(build):
                 build.poll() is not None):
             receipt['outcome'] = 'owned-live-build-not-confirmed'
             return
-        text = Path('.build/ios-build-evidence/build.log').read_text(errors='replace')
-        receipt['packageGraphPending'] = package_graph_pending(text)
-        if not receipt['packageGraphPending']:
-            receipt['outcome'] = 'package-graph-not-pending'
-            return
+        # Log delivery can lag the process. Label the observation, but never use
+        # a buffered marker to decide whether to collect this diagnostic sample.
+        try:
+            text = Path('.build/ios-build-evidence/build.log').read_text(errors='replace')
+            receipt['packageGraphPhase'] = package_graph_phase(text)
+        except OSError as error:
+            receipt.update(packageGraphPhase='unknown', buildLogError=str(error))
         # The retained Popen owns this unreaped child. A PID cannot be reused
         # before it is reaped; no external PID or process-name match is sampled.
         save()
@@ -95,6 +100,7 @@ def observe(build):
     finally:
         save()
         print('Producer wait capture: ' + receipt['outcome'] +
+              '; phase=' + receipt.get('packageGraphPhase', 'unknown') +
               '; tree=' + receipt.get('processTree', {}).get('status', 'not-run') +
               '; sample=' + receipt.get('sample', {}).get('status', 'not-run') +
               '; sample-exit=' + str(receipt.get('sample', {}).get('exitCode', 'unavailable')), flush=True)
@@ -108,7 +114,7 @@ def run(command):
     DIRECTORY.mkdir(parents=True, exist_ok=True)
     # Resolve to the same reviewed toolchain explicitly; preserve every argument.
     build = subprocess.Popen([DEVELOPER + '/usr/bin/xcodebuild', *command[1:]])
-    print('Producer wait observer: started; one capture after 300 seconds if package graph remains pending.', flush=True)
+    print('Producer wait observer: started; one capture after 300 seconds if the owned build is still running.', flush=True)
     try:
         status = build.wait(timeout=300)
         (DIRECTORY / 'capture.json').write_text(json.dumps({'outcome': 'build-exited-before-observation', 'exitCode': status}) + '\n')
