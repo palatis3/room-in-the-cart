@@ -39,7 +39,8 @@ class RuntimeReplacementTests(unittest.TestCase):
         os.chdir(temporary.name)
         self.addCleanup(os.chdir, previous)
         subject.evidence.mkdir(parents=True)
-        self.other = registration(OTHER, runtimeIdentifier="watchOS", build="24R362")
+        self.other = registration(OTHER, runtimeIdentifier="watchOS", build="24R362",
+                                  path="/System/Library/AssetsV2/watchOS/other.asset/AssetData")
         self.rows = {OLD: registration(OLD), OTHER: self.other}
         self.imported = registration(NEW, path=IMAGE)
         self.commands = []
@@ -51,6 +52,14 @@ class RuntimeReplacementTests(unittest.TestCase):
         self.missing_bundle = False
         self.change_before_delete = False
         self.runtime_reads = 0
+        self.delete_callback = None
+        self.scan_callback = None
+        self.read_callback = None
+        self.elapsed = 0
+
+        def sleep(seconds):
+            self.elapsed += seconds
+
         original_dir, original_exists = Path.is_dir, Path.exists
 
         def is_dir(path):
@@ -60,6 +69,8 @@ class RuntimeReplacementTests(unittest.TestCase):
             return True if str(path) == IMAGE else original_exists(path)
 
         for patcher in [
+            patch.object(subject.time, "monotonic", side_effect=lambda: self.elapsed),
+            patch.object(subject.time, "sleep", side_effect=sleep),
             patch.object(subject.subprocess, "run", side_effect=self.run_command),
             patch.object(subject.subprocess, "check_output", side_effect=self.read_command),
             patch.object(Path, "is_dir", is_dir),
@@ -74,6 +85,8 @@ class RuntimeReplacementTests(unittest.TestCase):
             return json.dumps({"devices": {subject.runtime: [{"state": self.device_state}]}})
         self.assertEqual(command, ["xcrun", "simctl", "runtime", "list", "-j"])
         self.runtime_reads += 1
+        if self.read_callback:
+            self.read_callback()
         if self.change_before_delete and self.runtime_reads == 3:
             self.rows[OLD]["build"] = "wrong"
         return json.dumps(self.rows)
@@ -86,9 +99,15 @@ class RuntimeReplacementTests(unittest.TestCase):
             if self.export_present:
                 bundle = Path(command[6]) / "iOS.exportedBundle"
                 bundle.mkdir()
-                (bundle / "payload").write_bytes(b"synthetic runtime payload")
+                (bundle / "runtime.dmg").write_bytes(b"synthetic runtime payload")
             return subprocess.CompletedProcess(command, self.export_status)
+        if command == ["xcrun", "simctl", "runtime", "scan-and-mount"]:
+            if self.scan_callback:
+                self.scan_callback()
+            return subprocess.CompletedProcess(command, 0)
         if command[:4] == ["xcrun", "simctl", "runtime", "delete"]:
+            if self.delete_callback:
+                return self.delete_callback(command, kwargs)
             del self.rows[command[4]]
             if self.shared_delete:
                 self.rows.pop(TWIN, None)
@@ -205,6 +224,185 @@ class RuntimeReplacementTests(unittest.TestCase):
                  self.assertRaises(AssertionError):
                 subject.main()
         self.assertEqual(self.commands, [])
+
+    def test_already_deleting_shared_twin_is_observed_without_second_delete(self):
+        self.rows[TWIN] = registration(TWIN, state="Unusable")
+
+        def delete(command, kwargs):
+            self.assertEqual(command[-1], OLD)
+            self.rows.pop(OLD)
+            self.rows[TWIN]["state"] = "Deleting"
+            return subprocess.CompletedProcess(command, 0)
+
+        def read():
+            if self.elapsed >= 180:
+                self.rows.pop(TWIN, None)
+
+        self.delete_callback, self.read_callback = delete, read
+        subject.prepare()
+        self.assertEqual(len(self.deletions()), 1)
+        self.assertEqual(self.elapsed, 180)
+        subject.verify()
+
+    def test_stuck_deleting_twin_fails_at_210_seconds_without_import_or_repeat_delete(self):
+        self.rows[OLD]["state"] = "Deleting"
+        # The initial readiness guard still requires a Ready sibling.
+        self.rows[TWIN] = registration(TWIN)
+        with self.assertRaisesRegex(AssertionError, "210 seconds"):
+            subject.prepare()
+        self.assertEqual(self.elapsed, 210)
+        self.assertEqual(self.deletions(), [])
+        self.assertFalse((subject.evidence / "target.json").exists())
+
+    def test_exact_code24_race_waits_for_disappearance(self):
+        def delete(command, kwargs):
+            self.rows[OLD]["state"] = "Deleting"
+            kwargs["stdout"].write(
+                "An error was encountered processing the command "
+                "(domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=24):\n"
+                "Attempting to delete image: " + OLD +
+                " (Please retry in 178s, if the image is not removed)\n")
+            return subprocess.CompletedProcess(command, 24)
+
+        def read():
+            if self.elapsed >= 180:
+                self.rows.pop(OLD, None)
+
+        self.delete_callback, self.read_callback = delete, read
+        subject.prepare()
+        self.assertEqual(len(self.deletions()), 1)
+        self.assertEqual(self.elapsed, 180)
+
+    def test_unqualified_delete_error_is_fatal(self):
+        def delete(command, kwargs):
+            kwargs["stdout"].write("Unrelated deletion failure, code=24")
+            return subprocess.CompletedProcess(command, 24)
+        self.delete_callback = delete
+        with self.assertRaises(subprocess.CalledProcessError):
+            subject.prepare()
+        self.assertEqual(self.elapsed, 0)
+        self.assertFalse(any(c[-1] == "scan-and-mount" for c in self.commands))
+
+    def configure_purge_recovery(self, *, wrong_identity=False, pending_forever=False,
+                                 retry_error=False, late_pending=False):
+        count = [0]
+
+        def delete(command, kwargs):
+            identifier = command[-1]
+            self.rows.pop(identifier)
+            if identifier == OLD or retry_error:
+                kwargs["stdout"].write(
+                    "An error was encountered processing the command "
+                    "(domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=30):\n"
+                    "Removed the runtime, but did not reclaim its MobileAsset: " + ASSET + "/\n"
+                    "Run 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again.\n")
+                return subprocess.CompletedProcess(command, 30)
+            return subprocess.CompletedProcess(command, 0)
+
+        def scan():
+            count[0] += 1
+            if count[0] == 1:
+                self.rows[TWIN] = registration(
+                    TWIN, state="Copying", runtimeIdentifier=None, build=None,
+                    path=ASSET + "/runtime.dmg", parentMountPath=ASSET)
+
+        def read():
+            if count[0] == 1 and TWIN in self.rows and self.elapsed >= 5 and not pending_forever:
+                self.rows[TWIN].update(runtimeIdentifier=subject.runtime,
+                                       build="wrong" if wrong_identity else subject.build, state="Ready")
+            if count[0] == 2 and late_pending and self.elapsed >= 10:
+                self.rows[TWIN] = registration(TWIN, state="Copying", runtimeIdentifier=None,
+                                               build=None, path=ASSET + "/runtime.dmg", parentMountPath=ASSET)
+
+        self.delete_callback, self.scan_callback, self.read_callback = delete, scan, read
+        return count
+
+    def test_code30_scans_then_removes_only_identified_original_payload_once(self):
+        count = self.configure_purge_recovery()
+        subject.prepare()
+        subject.verify()
+        self.assertEqual(count[0], 2)  # One recovery scan and its removal confirmation.
+        self.assertEqual([c[-1] for c in self.deletions()], [OLD, TWIN])
+        self.assertEqual(self.rows[OTHER], self.other)
+        self.assertGreaterEqual(self.elapsed, 50)
+
+    def test_code30_scan_wrong_build_prevents_retry_deletion(self):
+        self.configure_purge_recovery(wrong_identity=True)
+        with self.assertRaises(AssertionError):
+            subject.prepare()
+        self.assertEqual([c[-1] for c in self.deletions()], [OLD])
+        self.assertFalse((subject.evidence / "target.json").exists())
+
+    def test_code30_pending_original_payload_cannot_be_ignored(self):
+        self.configure_purge_recovery(pending_forever=True)
+        with self.assertRaisesRegex(AssertionError, "did not settle"):
+            subject.prepare()
+        self.assertEqual(self.elapsed, 120)
+        self.assertEqual([c[-1] for c in self.deletions()], [OLD])
+
+    def test_code30_second_delete_error_is_fatal_without_another_recovery(self):
+        count = self.configure_purge_recovery(retry_error=True)
+        with self.assertRaises(subprocess.CalledProcessError):
+            subject.prepare()
+        self.assertEqual(count[0], 1)
+        self.assertEqual([c[-1] for c in self.deletions()], [OLD, TWIN])
+
+    def test_code30_late_pending_child_blocks_import(self):
+        self.configure_purge_recovery(late_pending=True)
+        with self.assertRaisesRegex(AssertionError, "reappeared"):
+            subject.prepare()
+        self.assertFalse((subject.evidence / "target.json").exists())
+
+    def test_code30_wrong_asset_message_cannot_authorize_scan(self):
+        def delete(command, kwargs):
+            self.rows.pop(command[-1])
+            kwargs["stdout"].write(
+                "(domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=30):\n"
+                "Removed the runtime, but did not reclaim its MobileAsset: /another/asset/\n"
+                "Run 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again.\n")
+            return subprocess.CompletedProcess(command, 30)
+        self.delete_callback = delete
+        with self.assertRaises(subprocess.CalledProcessError):
+            subject.prepare()
+        self.assertFalse(any(c[-1] == "scan-and-mount" for c in self.commands))
+
+    def test_code30_unexpected_child_path_prevents_retry_deletion(self):
+        self.configure_purge_recovery()
+        original_scan = self.scan_callback
+
+        def scan():
+            original_scan()
+            self.rows[TWIN]["path"] = ASSET + "/unexpected.dmg"
+
+        self.scan_callback = scan
+        with self.assertRaises(AssertionError):
+            subject.prepare()
+        self.assertEqual([c[-1] for c in self.deletions()], [OLD])
+
+    def test_code30_successful_retry_with_surviving_payload_blocks_import(self):
+        self.configure_purge_recovery()
+        original_exists = Path.exists
+
+        def exists(path):
+            return True if str(path) == ASSET + "/runtime.dmg" else original_exists(path)
+
+        with patch.object(Path, "exists", exists), self.assertRaisesRegex(AssertionError, "payload remains"):
+            subject.prepare()
+        self.assertFalse((subject.evidence / "target.json").exists())
+
+    def test_successful_delete_waits_for_its_own_deleting_registration(self):
+        def delete(command, kwargs):
+            self.rows[OLD]["state"] = "Deleting"
+            return subprocess.CompletedProcess(command, 0)
+
+        def read():
+            if self.elapsed >= 5:
+                self.rows.pop(OLD, None)
+
+        self.delete_callback, self.read_callback = delete, read
+        subject.prepare()
+        self.assertEqual(len(self.deletions()), 1)
+        self.assertEqual(self.elapsed, 5)
 
 
 class RuntimeWorkflowTests(unittest.TestCase):
