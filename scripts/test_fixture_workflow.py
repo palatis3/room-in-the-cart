@@ -69,6 +69,25 @@ class FixtureDependencyTests(unittest.TestCase):
                         self.assertNotIn(private, result.stdout + result.stderr)
                         self.assertEqual((root / "records-fixture.log").read_text().count(private), 3)
 
+    def test_runtime_evidence_upload_precedes_large_results_after_owned_cleanup(self):
+        workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /
+                                       ".github/workflows/ios-fixtures.yml")
+        for job in ("contributor-tests", "dinner-tests"):
+            with self.subTest(job=job):
+                steps = workflow["jobs"][job]["steps"]
+                diagnostics = next(s for s in steps if s.get("name") == "Retain GitHub runtime diagnostics")
+                cleanup = next(s for s in steps if "--cleanup-owned" in s.get("run", ""))
+                runtime, = [s for s in steps if s.get("name") == "Upload GitHub runtime evidence"]
+                results = next(s for s in steps if s.get("id") == "fixture_results_upload")
+                self.assertLess(steps.index(diagnostics), steps.index(cleanup))
+                self.assertLess(steps.index(cleanup), steps.index(runtime))
+                self.assertLess(steps.index(runtime), steps.index(results))
+                self.assertEqual(runtime["if"], "always() && steps.imported-runtime.outcome != 'skipped' && "
+                                 "matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'")
+                self.assertIs(runtime["continue-on-error"], True)
+                self.assertEqual(runtime["with"]["path"].splitlines(),
+                                 [".build/github-ios-runtime", ".build/test-simulator-ownership.json"])
+
     def test_failed_result_upload_retries_only_the_same_non_media_files(self):
         workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /
                                        ".github/workflows/ios-fixtures.yml")

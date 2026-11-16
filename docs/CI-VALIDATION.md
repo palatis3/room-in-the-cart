@@ -29,6 +29,11 @@ then retire and pass the full absence checks. Any unresolved identity, including
 the observed watchOS row, still fails preparation. This correction has local
 regression coverage; hosted recovery remains unproven.
 
+Fixture consumers upload their existing runtime evidence immediately after
+diagnostics and owned-device cleanup, before the larger XCTest result bundle.
+This prevents a slow result transfer from delaying runtime evidence publication.
+The artifact contents, privacy exclusions, retries and job count are unchanged.
+
 [Diagnostic 43832196302](https://github.com/palatis3/room-in-the-cart/actions/runs/43832196302)
 passed the unchanged original produce journey in 393.932 seconds, with no recorded
 runtime warnings or native restarts. It exercised the exact asset-recovery path,
