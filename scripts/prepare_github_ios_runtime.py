@@ -215,20 +215,36 @@ def cleanup_original_images(current):
     def missing_payloads():
         return [p for entry in catalog.values() for p in entry['payloads'] if Path(p).exists()]
 
-    def physical_absence(name):
+    def physical_absence(name, *, allow_pending=False):
         assert not missing_payloads(), 'Original payload remains'
         for root in catalog:
             path = Path(root)
             assert not path.is_file(), 'Original runtime image remains'
             assert not any(p.is_file() for p in path.rglob('*.dmg')), 'Unrecorded original payload remains'
-        assert not any(os.path.ismount(m) for m in old_mounts), 'Old runtime volume is still mounted'
         disks, mounts = disk_state(name)
-        assert not any(' on ' + m + ' (' in mounts for m in old_mounts), 'Old runtime mount remains'
+        pending = []
         for image in disks.get('images', []):
             attached_path = image.get('image-path', '')
-            assert not any(attached_path == root or attached_path.startswith(root.rstrip('/') + '/')
-                           for root in catalog), 'Old runtime image remains attached without a mount'
-            assert not old_mounts.intersection(e.get('mount-point') for e in image.get('system-entities', [])), 'Old image remains mounted'
+            roots = [root for root in catalog if attached_path == root or attached_path.startswith(root.rstrip('/') + '/')]
+            image_mounts = {e['mount-point'] for e in image.get('system-entities', []) if e.get('mount-point')}
+            if roots:
+                assert len(roots) == 1
+                root = roots[0]
+                assert attached_path == root or attached_path in catalog[root]['payloads'], 'Unrecorded original image remains attached'
+                assert all(m.startswith(('/Library/Developer/CoreSimulator/Volumes/',
+                                         '/private/var/run/com.apple.security.cryptexd/mnt/')) for m in image_mounts), 'Unexpected original image mount path'
+                old_mounts.update(image_mounts)
+                pending.append('Old runtime image remains attached: ' + attached_path)
+            else:
+                assert not old_mounts.intersection(image_mounts), 'Foreign image occupies an old runtime mount'
+        if any(os.path.ismount(m) for m in old_mounts):
+            pending.append('Old runtime volume is still mounted')
+        if any(' on ' + m + ' (' in mounts for m in old_mounts):
+            pending.append('Old runtime mount remains')
+        (evidence / (name + '-pending.json')).write_text(json.dumps(pending, indent=2) + '\n')
+        if not allow_pending:
+            assert not pending, '; '.join(pending)
+        return not pending
 
     def command(name, args, *, before=None):
         receipt['stage'] = name
@@ -262,7 +278,7 @@ def cleanup_original_images(current):
             assert key in retained_preferred, 'Original UUID returned after retirement'
             assert preferred_cryptex_twin(key, before, rows, catalog) == retained_preferred[key], 'Preferred twin changed'
 
-    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None, allow_preferred=False):
+    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None, allow_preferred=False, deleting_errors=()):
         until = time.monotonic() + remaining(210)
         attempt = 0
         while True:
@@ -270,7 +286,17 @@ def cleanup_original_images(current):
             for key, row in rows.items():
                 if key in before:
                     assert all(row.get(k) == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))
-                    if row.get('state') != 'Deleting':
+                    if key in deleting_errors and row.get('state') == 'Unusable':
+                        original = before[key]
+                        assert original.get('state') == 'Deleting' and original.get('kind') == 'Patchable Cryptex Disk Image'
+                        assert re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\.asset/AssetData', original['path'])
+                        assert original.get('parentMountPath') == original['path']
+                        assert all(row.get(k) == original.get(k) for k in ('kind', 'parentMountPath', 'mountPath'))
+                        assert row.get('unusableSubstate') == row.get('unusableErrorMessage') == 'Cryptex Mount Preferred'
+                        # Still outstanding: this observation never authorizes another deletion.
+                        receipt.setdefault('pendingPreferredRetirements', {})[key] = attempt
+                        save()
+                    elif row.get('state') != 'Deleting':
                         assert allow_preferred, 'Old registration did not enter Deleting'
                         twin = preferred_cryptex_twin(key, before, rows, catalog)
                         assert retained_preferred.get(key, twin) == twin, 'Preferred twin changed'
@@ -313,7 +339,8 @@ def cleanup_original_images(current):
         validate_original_rows(first, catalog)
         assert first, 'Runtime inventory disappeared before command'
         first_errors = command('delete-all', ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=first)
-        wait_retired(first, 'all-removal-wait', allow_recreated=True, allow_preferred=not first_errors)
+        wait_retired(first, 'all-removal-wait', allow_recreated=True, allow_preferred=not first_errors,
+                     deleting_errors={e['identifier'] for e in first_errors if e['classification'] == 'already-deleting'})
         command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])
         until = time.monotonic() + remaining(120)
         count = 0
@@ -367,6 +394,16 @@ def cleanup_original_images(current):
             wait_retired(exact, 'asset-recovery-removal-wait', allow_recreated=False)
         assert not observe('all-before-confirmation'), 'Runtime remains before confirmation'
         command('confirm-removal-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])
+        receipt['stage'] = 'physical-settle'; save()
+        until = time.monotonic() + remaining(210)
+        count = 0
+        while True:
+            assert not observe('physical-settle-' + str(count)), 'Runtime registration reappeared during physical settle'
+            if physical_absence('disks-settle-' + str(count), allow_pending=True):
+                break
+            assert time.monotonic() < until, 'Original physical cleanup did not settle within 210 seconds'
+            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))
+            count += 1
         receipt['stage'] = 'sustained-absence'; save()
         until = time.monotonic() + 60
         count = 0

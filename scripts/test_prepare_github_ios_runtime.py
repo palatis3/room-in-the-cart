@@ -246,6 +246,15 @@ class CleanupTests(unittest.TestCase):
         self.preferred_second_survivor = False
         self.preferred_multiple = False
         self.third_preferred_survivor = False
+        self.retiring_preferred = False
+        self.retiring_change = None
+        self.attachment_until = None
+        self.attachment_path = None
+        self.attachment_mount = '/Library/Developer/CoreSimulator/Volumes/watchOS_24R362'
+        self.mount_until = 0
+        self.late_attachment = False
+        self.physical_registry_return = False
+        self.physical_start_elapsed = 0
         original_is_file = Path.is_file
         original_rglob = Path.rglob
         original_exists = Path.exists
@@ -283,6 +292,10 @@ class CleanupTests(unittest.TestCase):
 
     def capture(self, name, timeout=30):
         if self.deletes == 1 and not self.clean_first:
+            if self.retiring_preferred and WATCH in self.rows:
+                self.rows[WATCH].update(state='Unusable', unusableSubstate='Cryptex Mount Preferred',
+                                        unusableErrorMessage='Cryptex Mount Preferred')
+                if self.retiring_change: self.rows[WATCH].update(self.retiring_change)
             if self.changed_old and IOS_OLD in self.rows:
                 self.rows[IOS_OLD]['version'] = '26.2'
             if self.elapsed >= 5 and not self.stuck_deleting:
@@ -303,6 +316,8 @@ class CleanupTests(unittest.TestCase):
                 self.rows[RECOVERY_ID]['state'] = 'Ready'
             if self.asset_change and RECOVERY_ID in self.rows:
                 self.rows[RECOVERY_ID].update(self.asset_change)
+        if self.physical_registry_return and name.startswith('physical-settle-'):
+            self.rows[NEW_TV] = {**ORIGINAL[TV], 'identifier': NEW_TV}
         result = copy.deepcopy(self.rows)
         (self.evidence / name).write_text(json.dumps(result))
         return result
@@ -358,6 +373,7 @@ class CleanupTests(unittest.TestCase):
         if self.deletes == 1:
             if self.clean_first:
                 self.rows.clear(); self.payloads.clear()
+                self.elapsed += self.physical_start_elapsed
                 return subprocess.CompletedProcess(command, 0)
             for identifier in (WATCH, IOS_OLD):
                 self.rows[identifier]['state'] = 'Deleting'
@@ -419,9 +435,15 @@ class CleanupTests(unittest.TestCase):
                 raise OSError('disk capture unavailable')
             images = [{'image-path': self.payload_for[ORIGINAL[TV]['path']],
                        'system-entities': [{'dev-entry': '/dev/disk23'}]}] if self.attached else []
+            if ((self.scans >= 2 and self.attachment_until is not None and self.elapsed < self.attachment_until)
+                    or (self.late_attachment and self.scans == 2 and self.elapsed >= self.scan_time + 10)):
+                images.append({'image-path': self.attachment_path or self.payload_for[ORIGINAL[WATCH]['path']],
+                               'system-entities': [{'dev-entry': '/dev/disk22s1', 'mount-point': self.attachment_mount}]})
             return plistlib.dumps({'images': images})
         self.assertEqual(command, ['/sbin/mount'])
-        return '' if kwargs.get('text') else b''
+        mounts = ('/dev/disk22s1 on ' + self.attachment_mount + ' (apfs, sealed, read-only)\n'
+                  if self.scans >= 2 and self.elapsed < self.mount_until else '')
+        return mounts if kwargs.get('text') else mounts.encode()
 
     def receipt(self):
         return json.loads((self.evidence / 'aggregate-cleanup.json').read_text())
@@ -500,6 +522,77 @@ class CleanupTests(unittest.TestCase):
             subject.cleanup_original_images(self.initial)
         self.assertEqual((self.deletes, self.scans), (2, 1))
 
+    def configure_pending_preferred_retirement(self):
+        self.retiring_preferred = True
+        self.initial[WATCH]['state'] = 'Deleting'
+        self.rows[WATCH]['state'] = 'Deleting'
+
+    def test_observed_deleting_to_preferred_waits_for_real_uuid_retirement(self):
+        self.configure_pending_preferred_retirement()
+        subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (2, 2))
+        self.assertEqual(self.elapsed, 70)
+        self.assertIn(WATCH, self.receipt()['pendingPreferredRetirements'])
+        second = json.loads((self.evidence / 'delete-recreated-originals-before.json').read_text())
+        self.assertNotIn(WATCH, second)
+        self.assertNotIn('retainedPreferredTwins', self.receipt())
+
+    def test_persistent_preferred_retirement_expires_without_scan_or_second_mutation(self):
+        self.configure_pending_preferred_retirement(); self.stuck_deleting = True
+        with self.assertRaisesRegex(AssertionError, '210 seconds'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (210, 1, 0))
+
+    def test_pending_retirement_does_not_accept_identity_kind_or_other_unusable_state(self):
+        for change in ({'build': 'wrong'}, {'path': '/foreign'}, {'parentMountPath': '/foreign'},
+                       {'kind': 'Disk Image'}, {'unusableSubstate': 'Mount Failed'},
+                       {'unusableErrorMessage': 'other'}, {'runtimeIdentifier': None}):
+            with self.subTest(change=change):
+                self.configure_pending_preferred_retirement(); self.retiring_change = change
+                with self.assertRaises(AssertionError): subject.cleanup_original_images(self.initial)
+                self.assertEqual((self.deletes, self.scans), (1, 0))
+                self.deletes = 0; self.rows = copy.deepcopy(self.initial)
+
+    def test_confirmation_scan_exposes_old_attachment_and_new_mount_before_absence_clock(self):
+        self.clean_first = True; self.attachment_until = 10; self.mount_until = 15
+        self.initial[WATCH].pop('mountPath'); self.rows[WATCH].pop('mountPath')
+        mounts, observations = subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (1, 2))
+        self.assertEqual(self.elapsed, 75)
+        self.assertEqual(observations, 13)
+        self.assertIn(self.attachment_mount, mounts)
+        pending = json.loads((self.evidence / 'disks-settle-0-pending.json').read_text())
+        self.assertTrue(any('remains attached:' in item for item in pending))
+        self.assertIn('Old runtime mount remains', pending)
+        self.assertFalse(json.loads((self.evidence / 'disks-settle-3-pending.json').read_text()))
+
+    def test_unknown_attached_descendant_or_foreign_image_on_old_mount_fails_immediately(self):
+        for value in (ORIGINAL[WATCH]['path'] + '/Restore/unrecorded.dmg', '/foreign/runtime.dmg'):
+            with self.subTest(value=value):
+                self.clean_first = True; self.attachment_until = 10; self.attachment_path = value
+                with self.assertRaises(AssertionError): subject.cleanup_original_images(self.initial)
+                self.assertEqual((self.elapsed, self.deletes, self.scans), (0, 1, 2))
+                self.deletes = self.scans = 0; self.rows = copy.deepcopy(self.initial)
+                self.payloads = set(self.payload_for.values())
+
+    def test_registry_recreation_during_physical_settle_is_not_waited_away(self):
+        self.clean_first = self.physical_registry_return = True
+        with self.assertRaisesRegex(AssertionError, 'reappeared during physical settle'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (1, 2))
+
+    def test_new_attachment_after_confirmation_fails_without_resetting_absence_clock(self):
+        self.clean_first = self.late_attachment = True
+        with self.assertRaisesRegex(AssertionError, 'remains attached:'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (10, 1, 2))
+
+    def test_physical_settle_cannot_extend_total_six_hundred_second_budget(self):
+        self.clean_first = True; self.physical_start_elapsed = 500; self.attachment_until = 1000
+        with self.assertRaisesRegex(AssertionError, '600 seconds'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.elapsed, self.deletes, self.scans), (600, 1, 2))
+
     def test_clean_first_deletion_does_not_make_second_mutation(self):
         self.clean_first = True
         subject.cleanup_original_images(self.initial)
@@ -535,9 +628,10 @@ class CleanupTests(unittest.TestCase):
 
     def test_mounted_old_volume_blocks_success(self):
         self.mounted = True
-        with self.assertRaisesRegex(AssertionError, 'still mounted'):
+        with self.assertRaisesRegex(AssertionError, 'physical cleanup did not settle within 210 seconds'):
             subject.cleanup_original_images(self.initial)
         self.assertEqual(self.deletes, 2)
+        self.assertEqual(self.elapsed, 220)  # Existing cleanup10 + physical ceiling210; no retries.
 
     def test_foreign_build_or_payload_path_never_authorizes_second_deletion(self):
         for change in ({'build': 'wrong'}, {'path': ORIGINAL[TV]['path'] + '/unknown.dmg'}):
@@ -568,9 +662,10 @@ class CleanupTests(unittest.TestCase):
 
     def test_detached_filesystem_but_attached_old_image_is_rejected(self):
         self.attached = True
-        with self.assertRaisesRegex(AssertionError, 'attached without a mount'):
+        with self.assertRaisesRegex(AssertionError, 'physical cleanup did not settle within 210 seconds'):
             subject.cleanup_original_images(self.initial)
         self.assertEqual(self.deletes, 2)
+        self.assertEqual(self.elapsed, 220)
 
     def test_surviving_payload_blocks_success(self):
         self.residual_payload = True

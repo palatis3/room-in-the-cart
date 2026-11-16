@@ -29,6 +29,17 @@ then retire and pass the full absence checks. Any unresolved identity, including
 the observed watchOS row, still fails preparation. This correction has local
 regression coverage; hosted recovery remains unproven.
 
+Further normal-batch evidence showed an already-deleting original registration
+becoming preferred-Unusable, and deleted original images remaining attached or
+mounted after the final scan. Recognized original registrations now wait for
+actual retirement within the existing 210-second bound. After the confirmation
+scan, known original attachments and mounts have a bounded 210-second settle
+phase inside the same 600-second total cleanup budget. The registry must remain
+empty; unknown identities and payloads fail. Only then does the unchanged
+60-second continuous absence check begin. Reappearance during that minute fails
+without restarting its clock. No forced detach or additional mutation is added.
+Originals establish the pending states; hosted recovery is still unverified.
+
 Fixture consumers upload their existing runtime evidence immediately after
 diagnostics and owned-device cleanup, before the larger XCTest result bundle.
 This prevents a slow result transfer from delaying runtime evidence publication.
