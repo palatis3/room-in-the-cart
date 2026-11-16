@@ -272,9 +272,20 @@ import XCTest
                     .press(forDuration: 0.1, thenDragTo: left)
             }
             // Expanding the quantity fields can replace the row.
-            let changed = app.switches.matching(identifier: id)
-                .matching(NSPredicate(format: "value == %@", expected)).firstMatch
-            XCTAssertTrue(changed.waitForExistence(timeout: 5), id)
+            // The switch can already be on while a live value-filtered query stalls.
+            // Read the identified row from one fresh tree for each state check.
+            let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let snapshot = try? self.app.snapshot() else { return false }
+                var nodes = [snapshot]
+                while let node = nodes.popLast() {
+                    if node.elementType == .switch && node.identifier == id {
+                        return node.value as? String == expected
+                    }
+                    nodes.append(contentsOf: node.children)
+                }
+                return false
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed, id)
         }
         XCTAssertEqual(toggle.value as? String, expected, id)
     }
