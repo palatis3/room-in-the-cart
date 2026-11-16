@@ -98,19 +98,27 @@ jobs:
         \            (evidence / name).write_bytes(raw)\n            observations['commands'][name] = {'outcome': 'success'}\n\
         \        except Exception as error:\n            observations['commands'][name] = {'outcome': 'failure', 'error':\
         \ str(error)}\n    (evidence / 'failure-filesystem.json').write_text(json.dumps(observations, indent=2) + '\\n')\n\
-        \n\ndef cleanup_original_images(current):\n    \"\"\"At most two bulk deletions; all recognized errors remain recorded\
-        \ and verified.\"\"\"\n    import plistlib\n    catalog = original_catalog(current)\n    (evidence / 'original-payload-catalog.json').write_text(json.dumps(catalog,\
+        \n\ndef eligible_asset_recovery(first_errors, second_errors, catalog):\n    \"\"\"Authorize one previously unretried\
+        \ asset, never another bulk cleanup pass.\"\"\"\n    assert len(second_errors) == 1, 'Asset recovery requires exactly\
+        \ one second-pass error'\n    error = second_errors[0]\n    assert error['classification'] == 'mobileasset-not-reclaimed'\n\
+        \    root = error['path']\n    prior_purges = {e['path'] for e in first_errors if e['classification'] == 'mobileasset-not-reclaimed'}\n\
+        \    assert root not in prior_purges, 'This asset already received its purge retry'\n    assert root in catalog and\
+        \ catalog[root]['payloads'], 'No original payload recorded for this asset'\n    assert all(error.get(k) == value for\
+        \ k, value in catalog[root]['identity'].items())\n    return root\n\n\ndef cleanup_original_images(current):\n   \
+        \ \"\"\"Two bulk deletions and at most one documented, asset-specific UUID recovery.\"\"\"\n    import plistlib\n\
+        \    catalog = original_catalog(current)\n    (evidence / 'original-payload-catalog.json').write_text(json.dumps(catalog,\
         \ indent=2) + '\\n')\n    old_mounts = {r['mountPath'] for r in current.values() if r.get('mountPath')}\n    receipt\
-        \ = {'mutationLimit': 2, 'mutations': 0, 'totalDeadlineSeconds': 600, 'stage': 'preflight'}\n    deadline = time.monotonic()\
-        \ + 600\n\n    def save():\n        (evidence / 'aggregate-cleanup.json').write_text(json.dumps(receipt, indent=2)\
-        \ + '\\n')\n\n    def remaining(limit):\n        value = min(limit, deadline - time.monotonic())\n        assert value\
-        \ > 0, 'Aggregate cleanup exceeded 600 seconds'\n        return value\n\n    def observe(name):\n        rows = capture(name\
-        \ + '.json', timeout=remaining(30))\n        validate_original_rows(rows, catalog, pending=True)\n        old_mounts.update(r['mountPath']\
-        \ for r in rows.values() if r.get('mountPath'))\n        return rows\n\n    def disk_state(name):\n        raw = subprocess.check_output(['hdiutil',\
-        \ 'info', '-plist'], timeout=remaining(30))\n        (evidence / (name + '.plist')).write_bytes(raw)\n        mounts\
-        \ = subprocess.check_output(['/sbin/mount'], text=True, timeout=remaining(30))\n        (evidence / (name + '.mounts.txt')).write_text(mounts)\n\
-        \        return plistlib.loads(raw), mounts\n\n    def missing_payloads():\n        return [p for entry in catalog.values()\
-        \ for p in entry['payloads'] if Path(p).exists()]\n\n    def physical_absence(name):\n        assert not missing_payloads(),\
+        \ = {'mutationLimit': 3, 'bulkMutationLimit': 2, 'mutations': 0, 'totalDeadlineSeconds': 600, 'stage': 'preflight'}\n\
+        \    deadline = time.monotonic() + 600\n\n    def save():\n        (evidence / 'aggregate-cleanup.json').write_text(json.dumps(receipt,\
+        \ indent=2) + '\\n')\n\n    def remaining(limit):\n        value = min(limit, deadline - time.monotonic())\n     \
+        \   assert value > 0, 'Aggregate cleanup exceeded 600 seconds'\n        return value\n\n    def observe(name):\n \
+        \       rows = capture(name + '.json', timeout=remaining(30))\n        validate_original_rows(rows, catalog, pending=True)\n\
+        \        old_mounts.update(r['mountPath'] for r in rows.values() if r.get('mountPath'))\n        return rows\n\n \
+        \   def disk_state(name):\n        raw = subprocess.check_output(['hdiutil', 'info', '-plist'], timeout=remaining(30))\n\
+        \        (evidence / (name + '.plist')).write_bytes(raw)\n        mounts = subprocess.check_output(['/sbin/mount'],\
+        \ text=True, timeout=remaining(30))\n        (evidence / (name + '.mounts.txt')).write_text(mounts)\n        return\
+        \ plistlib.loads(raw), mounts\n\n    def missing_payloads():\n        return [p for entry in catalog.values() for\
+        \ p in entry['payloads'] if Path(p).exists()]\n\n    def physical_absence(name):\n        assert not missing_payloads(),\
         \ 'Original payload remains'\n        for root in catalog:\n            path = Path(root)\n            assert not\
         \ path.is_file(), 'Original runtime image remains'\n            assert not any(p.is_file() for p in path.rglob('*.dmg')),\
         \ 'Unrecorded original payload remains'\n        assert not any(os.path.ismount(m) for m in old_mounts), 'Old runtime\
@@ -120,20 +128,28 @@ jobs:
         \ + '/')\n                           for root in catalog), 'Old runtime image remains attached without a mount'\n\
         \            assert not old_mounts.intersection(e.get('mount-point') for e in image.get('system-entities', [])), 'Old\
         \ image remains mounted'\n\n    def command(name, args, *, before=None):\n        receipt['stage'] = name\n      \
-        \  if before is not None:\n            assert receipt['mutations'] < 2, 'No third deletion permitted'\n          \
-        \  receipt['mutations'] += 1\n            (evidence / (name + '-before.json')).write_text(json.dumps(before, indent=2)\
-        \ + '\\n')\n        save()\n        with (evidence / (name + '.log')).open('w') as output:\n            result = subprocess.run(args,\
-        \ stdout=output, stderr=subprocess.STDOUT, timeout=remaining(300 if before is not None else 60))\n        (evidence\
-        \ / (name + '-exit.json')).write_text(json.dumps({'exit': result.returncode}) + '\\n')\n        if before is None:\n\
-        \            result.check_returncode()\n        else:\n            classified = classify_bulk_result(result.returncode,\
-        \ (evidence / (name + '.log')).read_text(), before)\n            (evidence / (name + '-classification.json')).write_text(json.dumps({\n\
+        \  if before is not None:\n            if args == ['xcrun', 'simctl', 'runtime', 'delete', 'all']:\n             \
+        \   assert receipt['mutations'] < 2, 'No third bulk deletion permitted'\n            else:\n                assert\
+        \ name == 'delete-recovered-asset' and receipt['mutations'] == 2\n                assert len(before) == 1 and args\
+        \ == ['xcrun', 'simctl', 'runtime', 'delete', next(iter(before))]\n                assert receipt.get('assetRecoveryRoot'),\
+        \ 'Exact deletion lacks recovery authorization'\n            receipt['mutations'] += 1\n            (evidence / (name\
+        \ + '-before.json')).write_text(json.dumps(before, indent=2) + '\\n')\n        save()\n        with (evidence / (name\
+        \ + '.log')).open('w') as output:\n            result = subprocess.run(args, stdout=output, stderr=subprocess.STDOUT,\
+        \ timeout=remaining(300 if before is not None else 60))\n        (evidence / (name + '-exit.json')).write_text(json.dumps({'exit':\
+        \ result.returncode}) + '\\n')\n        if before is None:\n            result.check_returncode()\n        else:\n\
+        \            if name == 'delete-recovered-asset':\n                result.check_returncode()  # No fourth mutation\
+        \ or further recovery on any error.\n            classified = classify_bulk_result(result.returncode, (evidence /\
+        \ (name + '.log')).read_text(), before)\n            (evidence / (name + '-classification.json')).write_text(json.dumps({\n\
         \                'exit': result.returncode, 'requiresVerification': True, 'recognizedErrors': classified}, indent=2)\
-        \ + '\\n')\n\n    def wait_retired(before, name, *, allow_recreated):\n        until = time.monotonic() + remaining(210)\n\
-        \        attempt = 0\n        while True:\n            rows = observe(name + '-' + str(attempt))\n            for\
-        \ key, row in rows.items():\n                if key in before:\n                    assert all(row.get(k) == before[key].get(k)\
-        \ for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n                    assert row.get('state')\
-        \ == 'Deleting', 'Old registration did not enter Deleting'\n                else:\n                    assert allow_recreated,\
-        \ 'Runtime recreated after second deletion; no further mutation permitted'\n            if not set(before).intersection(rows):\n\
+        \ + '\\n')\n            return classified\n\n    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None):\n\
+        \        until = time.monotonic() + remaining(210)\n        attempt = 0\n        while True:\n            rows = observe(name\
+        \ + '-' + str(attempt))\n            for key, row in rows.items():\n                if key in before:\n          \
+        \          assert all(row.get(k) == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build',\
+        \ 'version'))\n                    assert row.get('state') == 'Deleting', 'Old registration did not enter Deleting'\n\
+        \                else:\n                    if not allow_recreated:\n                        assert recreated_catalog\
+        \ is not None, 'Runtime recreated after final deletion; no further mutation permitted'\n                        validate_original_rows({key:\
+        \ row}, recreated_catalog, pending=True)\n            if recreated_catalog is not None:\n                assert len(set(rows)\
+        \ - set(before)) <= 1, 'Asset recovery exposed more than one registration'\n            if not set(before).intersection(rows):\n\
         \                return rows\n            assert time.monotonic() < until, 'Original deletion did not retire within\
         \ 210 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            attempt\
         \ += 1\n\n    def all_ready(rows):\n        validate_original_rows(rows, catalog)\n        return all(r.get('state')\
@@ -143,52 +159,70 @@ jobs:
         \ == p for r in rows.values()) for p in surviving):\n                    return False\n        return True\n\n   \
         \ try:\n        save()\n        disk_state('disks-before-removal')\n        command('delete-all-dry-run', ['xcrun',\
         \ 'simctl', 'runtime', 'delete', 'all', '--dry-run'])\n        first = observe('delete-all-current')\n        validate_original_rows(first,\
-        \ catalog)\n        assert first, 'Runtime inventory disappeared before command'\n        command('delete-all', ['xcrun',\
-        \ 'simctl', 'runtime', 'delete', 'all'], before=first)\n        wait_retired(first, 'all-removal-wait', allow_recreated=True)\n\
-        \        command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n        until = time.monotonic()\
-        \ + remaining(120)\n        count = 0\n        while True:\n            rows = observe('recovery-settle-' + str(count))\n\
-        \            assert not set(first).intersection(rows), 'Original UUID returned after retirement'\n            # Pending\
-        \ identities are observable but can never authorize deletion.\n            known = all(all(r.get(k) for k in ('runtimeIdentifier',\
-        \ 'build', 'version')) for r in rows.values())\n            if known and all_ready(rows) and payloads_registered(rows):\n\
-        \                break\n            assert time.monotonic() < until, 'Recovery scan did not settle within 120 seconds'\n\
-        \            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            count += 1\n        if\
-        \ rows:\n            second = observe('delete-recreated-current')\n            assert second, 'Recreated inventory\
-        \ disappeared before second deletion'\n            assert not set(first).intersection(second)\n            assert\
-        \ all_ready(second) and payloads_registered(second), 'Recovery changed before second deletion'\n            command('delete-recreated-originals',\
-        \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=second)\n            wait_retired(second, 'recreated-removal-wait',\
-        \ allow_recreated=False)\n        assert not observe('all-before-confirmation'), 'Runtime remains before confirmation'\n\
-        \        command('confirm-removal-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n        receipt['stage']\
-        \ = 'sustained-absence'; save()\n        until = time.monotonic() + 60\n        count = 0\n        while True:\n \
-        \           assert not observe('all-absence-' + str(count)), 'Runtime registration reappeared'\n            physical_absence('disks-absence-'\
-        \ + str(count))\n            if time.monotonic() >= until:\n                break\n            time.sleep(max(0, min(5,\
-        \ until - time.monotonic(), remaining(5))))\n            count += 1\n        receipt.update(outcome='success', absenceObservations=count\
-        \ + 1, oldMounts=sorted(old_mounts))\n        save()\n        return old_mounts, count + 1\n    except BaseException\
-        \ as error:\n        receipt.update(outcome='failure', error=str(error))\n        # A diagnostic failure must never\
-        \ replace the cleanup exception.\n        try:\n            save()\n        except BaseException:\n            pass\n\
-        \        try:\n            collect_cleanup_failure(catalog)\n        except BaseException:\n            pass\n   \
-        \     raise\n\n\ndef prepare():\n    before = capture('before.json')\n    assert any(r.get('state') == 'Ready' for\
-        \ r in targets(before))\n    export = Path('.build/runtime-export')\n    export.mkdir()\n    with (evidence / 'export.log').open('w')\
-        \ as log:\n        result = subprocess.run(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', build,\n  \
-        \                               '-exportPath', str(export.resolve()), '-architectureVariant', 'arm64'],\n        \
-        \                        stdout=log, stderr=subprocess.STDOUT)\n    (evidence / 'export-exit.json').write_text(json.dumps({'exit':\
-        \ result.returncode}) + '\\n')\n    # The documented exporter may return 70 even when its exported bundle exists.\n\
-        \    # A real import and exact registration check below remain mandatory.\n    assert result.returncode in (0, 70)\n\
-        \    bundles = list(export.glob('*.exportedBundle'))\n    assert len(bundles) == 1 and bundles[0].is_dir(), 'Expected\
-        \ one exported platform bundle'\n    assert any(f.is_file() and f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n\
-        \    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle': str(bundles[0]),\n        'files': [{'name':\
-        \ str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n                  for f in bundles[0].rglob('*') if\
-        \ f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY') == 'palatis3/room-in-the-cart'\n\
-        \    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n    assert os.getuid()\
-        \ != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]\n    assert\
-        \ len(payloads) == 1\n    import hashlib, plistlib\n    saved_image = payloads[0].resolve()\n    assert str(saved_image).startswith(str(export.resolve())\
-        \ + '/')\n    def sha256(path):\n        digest = hashlib.sha256()\n        with path.open('rb') as source:\n    \
-        \        for chunk in iter(lambda: source.read(1024 * 1024), b''):\n                digest.update(chunk)\n       \
-        \ return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence / 'saved-payload.json').write_text(json.dumps({'path':\
-        \ str(saved_image), 'sha256': digest}) + '\\n')\n    devices = json.loads(subprocess.check_output(['xcrun', 'simctl',\
-        \ 'list', 'devices', '-j'], text=True, timeout=30))\n    assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values()\
-        \ for d in rows)\n    current = capture('all-before-removal.json')\n    assert current, 'No preloaded runtimes to\
-        \ isolate'\n    old_mounts, absence_observations = cleanup_original_images(current)\n    assert saved_image.is_file()\
-        \ and sha256(saved_image) == digest\n    (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations':\
+        \ catalog)\n        assert first, 'Runtime inventory disappeared before command'\n        first_errors = command('delete-all',\
+        \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=first)\n        wait_retired(first, 'all-removal-wait',\
+        \ allow_recreated=True)\n        command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n\
+        \        until = time.monotonic() + remaining(120)\n        count = 0\n        while True:\n            rows = observe('recovery-settle-'\
+        \ + str(count))\n            assert not set(first).intersection(rows), 'Original UUID returned after retirement'\n\
+        \            # Pending identities are observable but can never authorize deletion.\n            known = all(all(r.get(k)\
+        \ for k in ('runtimeIdentifier', 'build', 'version')) for r in rows.values())\n            if known and all_ready(rows)\
+        \ and payloads_registered(rows):\n                break\n            assert time.monotonic() < until, 'Recovery scan\
+        \ did not settle within 120 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
+        \            count += 1\n        second_errors = []\n        asset_recovery_root = None\n        if rows:\n      \
+        \      second = observe('delete-recreated-current')\n            assert second, 'Recreated inventory disappeared before\
+        \ second deletion'\n            assert not set(first).intersection(second)\n            assert all_ready(second) and\
+        \ payloads_registered(second), 'Recovery changed before second deletion'\n            second_errors = command('delete-recreated-originals',\
+        \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=second)\n            if any(e['classification'] == 'mobileasset-not-reclaimed'\
+        \ for e in second_errors):\n                asset_recovery_root = eligible_asset_recovery(first_errors, second_errors,\
+        \ catalog)\n                receipt['assetRecoveryRoot'] = asset_recovery_root\n                save()\n         \
+        \   wait_retired(second, 'recreated-removal-wait', allow_recreated=False,\n                         recreated_catalog={asset_recovery_root:\
+        \ catalog[asset_recovery_root]} if asset_recovery_root else None)\n        if asset_recovery_root is not None:\n \
+        \           root = asset_recovery_root\n            scoped_catalog = {root: catalog[root]}\n            command('asset-recovery-scan',\
+        \ ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n            until = time.monotonic() + remaining(120)\n     \
+        \       count = 0\n            while True:\n                recovered = observe('asset-recovery-settle-' + str(count))\n\
+        \                assert len(recovered) <= 1, 'Asset recovery exposed more than one registration'\n               \
+        \ validate_original_rows(recovered, scoped_catalog, pending=True)\n                known = all(all(r.get(k) for k\
+        \ in ('runtimeIdentifier', 'build', 'version')) for r in recovered.values())\n                if recovered and known\
+        \ and all_ready(recovered):\n                    break\n                assert time.monotonic() < until, 'Asset recovery\
+        \ did not settle within 120 seconds'\n                time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
+        \                count += 1\n            exact = observe('delete-recovered-asset-current')\n            assert len(exact)\
+        \ == 1 and set(exact) == set(recovered), 'Recovered UUID changed before deletion'\n            validate_original_rows(exact,\
+        \ scoped_catalog)\n            assert all_ready(exact)\n            for key, row in exact.items():\n             \
+        \   assert all(row.get(k) == recovered[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n\
+        \            command('delete-recovered-asset', ['xcrun', 'simctl', 'runtime', 'delete', next(iter(exact))], before=exact)\n\
+        \            wait_retired(exact, 'asset-recovery-removal-wait', allow_recreated=False)\n        assert not observe('all-before-confirmation'),\
+        \ 'Runtime remains before confirmation'\n        command('confirm-removal-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n\
+        \        receipt['stage'] = 'sustained-absence'; save()\n        until = time.monotonic() + 60\n        count = 0\n\
+        \        while True:\n            assert not observe('all-absence-' + str(count)), 'Runtime registration reappeared'\n\
+        \            physical_absence('disks-absence-' + str(count))\n            if time.monotonic() >= until:\n        \
+        \        break\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            count\
+        \ += 1\n        receipt.update(outcome='success', absenceObservations=count + 1, oldMounts=sorted(old_mounts))\n \
+        \       save()\n        return old_mounts, count + 1\n    except BaseException as error:\n        receipt.update(outcome='failure',\
+        \ error=str(error))\n        # A diagnostic failure must never replace the cleanup exception.\n        try:\n    \
+        \        save()\n        except BaseException:\n            pass\n        try:\n            collect_cleanup_failure(catalog)\n\
+        \        except BaseException:\n            pass\n        raise\n\n\ndef prepare():\n    before = capture('before.json')\n\
+        \    assert any(r.get('state') == 'Ready' for r in targets(before))\n    export = Path('.build/runtime-export')\n\
+        \    export.mkdir()\n    with (evidence / 'export.log').open('w') as log:\n        result = subprocess.run(['xcodebuild',\
+        \ '-downloadPlatform', 'iOS', '-buildVersion', build,\n                                 '-exportPath', str(export.resolve()),\
+        \ '-architectureVariant', 'arm64'],\n                                stdout=log, stderr=subprocess.STDOUT)\n    (evidence\
+        \ / 'export-exit.json').write_text(json.dumps({'exit': result.returncode}) + '\\n')\n    # The documented exporter\
+        \ may return 70 even when its exported bundle exists.\n    # A real import and exact registration check below remain\
+        \ mandatory.\n    assert result.returncode in (0, 70)\n    bundles = list(export.glob('*.exportedBundle'))\n    assert\
+        \ len(bundles) == 1 and bundles[0].is_dir(), 'Expected one exported platform bundle'\n    assert any(f.is_file() and\
+        \ f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle':\
+        \ str(bundles[0]),\n        'files': [{'name': str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n      \
+        \            for f in bundles[0].rglob('*') if f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY')\
+        \ == 'palatis3/room-in-the-cart'\n    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n\
+        \    assert os.getuid() != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size\
+        \ > 0]\n    assert len(payloads) == 1\n    import hashlib, plistlib\n    saved_image = payloads[0].resolve()\n   \
+        \ assert str(saved_image).startswith(str(export.resolve()) + '/')\n    def sha256(path):\n        digest = hashlib.sha256()\n\
+        \        with path.open('rb') as source:\n            for chunk in iter(lambda: source.read(1024 * 1024), b''):\n\
+        \                digest.update(chunk)\n        return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence\
+        \ / 'saved-payload.json').write_text(json.dumps({'path': str(saved_image), 'sha256': digest}) + '\\n')\n    devices\
+        \ = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j'], text=True, timeout=30))\n   \
+        \ assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values() for d in rows)\n    current = capture('all-before-removal.json')\n\
+        \    assert current, 'No preloaded runtimes to isolate'\n    old_mounts, absence_observations = cleanup_original_images(current)\n\
+        \    assert saved_image.is_file() and sha256(saved_image) == digest\n    (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations':\
         \ 0, 'oldMounts': sorted(old_mounts),\n        'absenceObservations': absence_observations, 'savedPayloadSha256':\
         \ digest}) + '\\n')\n    def original_rows(rows):\n        # No other preloaded runtime is allowed to return during\
         \ this experiment.\n        return [r for r in rows.values() if r.get('runtimeIdentifier') != runtime or r.get('build')\
@@ -226,7 +260,7 @@ jobs:
         \ == 'arm64'\n    assert os.environ.get('CI_IPHONE_RUNTIME') == runtime\n    assert os.environ.get('DEVELOPER_DIR')\
         \ == '/Applications/Xcode_27.1.app/Contents/Developer'\n    evidence.mkdir(parents=True, exist_ok=True)\n    if args.operation\
         \ == 'prepare':\n        prepare()\n    else:\n        verify()\n\n\nif __name__ == '__main__':\n    main()\nRITC_RUNTIME_HELPER\n\
-        printf '%s  %s\\n' '4c3b0dce907f46dcf8bb03b941aa39489887f299b8df61aa7612f40a11eeff36' '.build/prepare_github_ios_runtime.py'\
+        printf '%s  %s\\n' '21bd40fbd59e5f2769ad0798d9dc3e8dc9b102af9e833987654bb076fd40bed0' '.build/prepare_github_ios_runtime.py'\
         \ | shasum -a 256 -c -\npython3 .build/prepare_github_ios_runtime.py prepare\n"
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
