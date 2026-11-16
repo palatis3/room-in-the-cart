@@ -12,9 +12,20 @@ native commands, model-result handling, existing deadlines and Bitrise behavior.
 The correction still needs hosted producer qualification; original failure evidence
 is retained in `.build/PR7-b17cb89b/ios-build-original/`.
 
-GitHub UI consumers now export and hash the pinned iOS 27.0/24A434 image, remove
-preloaded simulator runtimes on the disposable hosted runner, verify sustained
-physical and registry absence, and import the exact standalone DMG. All devices
+GitHub producers and UI consumers preserve a copy of the preloaded iOS
+27.0/24A434 arm64 DMG before cleanup. The copy must match the qualified
+8,067,000,161-byte payload and SHA256
+`5136453f500b73dc3518f262d8a51e4be0c136e38a550998febf7759de6ba0fd`;
+source and saved-copy identities must remain unchanged before deletion. This
+replaces Xcode’s download/export command, which returned success but installed
+another registration without exporting a bundle in run43855275206. Equivalent
+asset descendants and standalone image files are supported; ambiguous or
+mismatched inputs fail before cleanup. See
+`.build/RuntimePayloadPreserveNov16/verification.json` for the 1,152-test local
+preflight and the [current handoff](CURRENT-HANDOFF.md#current-checkpoint) for
+hosted qualification. The helper removes preloaded simulator runtimes on the
+disposable hosted runner, verifies sustained
+physical and registry absence, and imports the exact standalone DMG. All devices
 must be shut down. The bounded cleanup recognizes only the observed deletion and
 asset-purge errors; unknown identities or remaining assets fail preparation.
 One current-user simulator-service refresh runs before creating an owned iPhone.
