@@ -47,20 +47,22 @@ jobs:
         \ a generic error parser.\n            if row.get('kind') != 'Patchable Cryptex Disk Image':\n                continue\n\
         \            platform_name = row['runtimeIdentifier'].split('.SimRuntime.', 1)[1].split('-', 1)[0]\n            prefix\
         \ = f\"Error deleting P: {identifier} {platform_name} ({row['version']} - {row['build']}) \"\n            deleting\
-        \ = (prefix + '(Deleting): Attempting to delete image: ' + identifier +\n                        ' (Please retry in\
-        \ 180s, if the image is not removed)')\n            purging = (prefix + '(Ready): Removed the runtime, but did not\
-        \ reclaim its MobileAsset: ' +\n                       row['path'].rstrip('/') + '/')\n            if line == deleting:\n\
-        \                matches.append('already-deleting')\n            elif (line == purging and row.get('state') == 'Ready'\
-        \ and\n                  row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_') and\n         \
-        \         row['path'].endswith('.asset/AssetData')):\n                matches.append('mobileasset-not-reclaimed')\n\
+        \ = re.fullmatch(\n                re.escape(prefix + '(Deleting): Attempting to delete image: ' + identifier +\n\
+        \                          ' (Please retry in ') + r'(0|[1-9][0-9]{0,2})' +\n                re.escape('s, if the\
+        \ image is not removed)'), line)\n            purging = (prefix + '(Ready): Removed the runtime, but did not reclaim\
+        \ its MobileAsset: ' +\n                       row['path'].rstrip('/') + '/')\n            if deleting and int(deleting[1])\
+        \ <= 180:\n                matches.append('already-deleting')\n            elif (line == purging and row.get('state')\
+        \ == 'Ready' and\n                  row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_') and\n\
+        \                  row['path'].endswith('.asset/AssetData')):\n                matches.append('mobileasset-not-reclaimed')\n\
         \            else:\n                continue\n            assert identifier not in seen, 'Repeated error for one runtime'\n\
         \            seen.add(identifier)\n            classified.append({'identifier': identifier, 'classification': matches[-1],\n\
         \                               'runtimeIdentifier': row['runtimeIdentifier'], 'build': row['build'],\n          \
-        \                     'version': row['version'], 'path': row['path'], 'line': line})\n        assert len(matches)\
-        \ == 1, 'Unknown or ambiguous aggregate-delete line: ' + line\n    assert classified\n    return classified\n\n\n\
-        def original_catalog(rows):\n    \"\"\"Capture allowed disk-image descendants while the original payloads still exist.\"\
-        \"\"\n    catalog = {}\n    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier')\
-        \ == key and row.get('deletable') is True\n        root = row['path']\n        assert root.startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\n\
+        \                     'version': row['version'], 'path': row['path'], 'line': line})\n            if deleting:\n \
+        \               classified[-1]['retrySeconds'] = int(deleting[1])\n        assert len(matches) == 1, 'Unknown or ambiguous\
+        \ aggregate-delete line: ' + line\n    assert classified\n    return classified\n\n\ndef original_catalog(rows):\n\
+        \    \"\"\"Capture allowed disk-image descendants while the original payloads still exist.\"\"\"\n    catalog = {}\n\
+        \    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier') == key and row.get('deletable')\
+        \ is True\n        root = row['path']\n        assert root.startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\n\
         \                                '/Library/Developer/CoreSimulator/'))\n        assert '..' not in Path(root).parts\n\
         \        identity = {k: row[k] for k in ('runtimeIdentifier', 'build', 'version')}\n        assert all(isinstance(v,\
         \ str) and v for v in identity.values())\n        if root in catalog:\n            assert catalog[root]['identity']\
@@ -200,7 +202,7 @@ jobs:
         \ == 'arm64'\n    assert os.environ.get('CI_IPHONE_RUNTIME') == runtime\n    assert os.environ.get('DEVELOPER_DIR')\
         \ == '/Applications/Xcode_27.1.app/Contents/Developer'\n    evidence.mkdir(parents=True, exist_ok=True)\n    if args.operation\
         \ == 'prepare':\n        prepare()\n    else:\n        verify()\n\n\nif __name__ == '__main__':\n    main()\nRITC_RUNTIME_HELPER\n\
-        printf '%s  %s\\n' 'e9124478682fa9128f94272022274d5eed7de0fedc861dadbe4ed81cf40d9992' '.build/prepare_github_ios_runtime.py'\
+        printf '%s  %s\\n' '241210bbfff5ee0200a8fd7792883c5426283a5beeb31db6720e6a049aff0454' '.build/prepare_github_ios_runtime.py'\
         \ | shasum -a 256 -c -\npython3 .build/prepare_github_ios_runtime.py prepare\n"
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
