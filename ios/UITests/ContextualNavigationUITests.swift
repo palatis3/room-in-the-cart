@@ -132,11 +132,23 @@ import UIKit
         reveal(amount)
         let value = amount.value as? String
         XCTAssertTrue(value == "" || (value != nil && value == amount.placeholderValue))
-        fill("1/0", into: "ledgerImportAmount-1")
+        // Validate and correct the same amount without ending its input session.
+        revealContent(amount, above: app.buttons["Done"])
+        amount.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        app.typeText("1/0")
+        XCTAssertEqual(amount.value as? String, "1/0")
         XCTAssertFalse(element("ledgerCommitImport").isEnabled)
         XCTAssertTrue(element("ledgerImportAmountError-1").exists)
-        fill("14", into: "ledgerImportAmount-1", replacing: true)
-        tap(element("ledgerCommitImport"))
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3))
+        app.typeText("14")
+        XCTAssertEqual(amount.value as? String, "14")
+        let commit = app.buttons["ledgerCommitImport"]
+        revealContent(commit, above: app.buttons["Done"])
+        XCTAssertTrue(commit.isEnabled)
+        commit.tap()
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         let food = app.buttons["Inspect wraps"]
         reveal(food)
         let id = food.identifier

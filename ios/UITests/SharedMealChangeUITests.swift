@@ -173,9 +173,14 @@ import XCTest
     }
 
     private func assertDeadline(contains expected: String) {
-        // Both original and proposed SharedMealFacts use the current fact ID.
-        // Match the distinct reviewed value rather than obsolete legacy IDs.
-        let row = app.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
+        // The editor behind the sheet also exposes deadline facts. Limit the
+        // lookup to the form containing this review's Before and After values.
+        // Reviewing packs ends at the bottom; the lazy section header must be
+        // visible again before it can identify the review's collection.
+        reveal(app.staticTexts["Reviewed meal change"], fullyVisible: true, searchTowardEndFirst: false)
+        let forms = app.collectionViews.containing(.staticText, identifier: "Reviewed meal change")
+        XCTAssertEqual(forms.count, 1, "The active meal review must have one form")
+        let row = forms.firstMatch.staticTexts.matching(identifier: "sharedMeal.deadlineFact")
             .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", expected, expected)).firstMatch
         reveal(row, fullyVisible: true, searchTowardEndFirst: false)
         XCTAssertTrue((row.label + " " + (row.value as? String ?? "")).contains(expected), row.debugDescription)

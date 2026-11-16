@@ -50,10 +50,14 @@ import XCTest
         for (name, value) in checkoutFacts {
             let field = app.textFields[name]
             reveal(field)
-            let entered = app.textFields.matching(identifier: name)
-                .matching(NSPredicate(format: "value == %@", value)).firstMatch
-            XCTAssertTrue(entered.waitForExistence(timeout: 5),
-                          "The single typed value should finish appearing in \(name)")
+            // Read the retained value from a captured field instead of asking
+            // XCTest to resolve a second query filtered by a changing value.
+            let entered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let snapshot = try? field.snapshot() else { return false }
+                return snapshot.value as? String == value
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
+                           "The single typed value should finish appearing in \(name)")
             XCTAssertEqual(field.value as? String, value, name)
         }
         enableSwitch("Retailer total already includes all charges")
