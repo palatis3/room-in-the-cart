@@ -166,6 +166,43 @@ jobs:
         artifact-ids: 14196353082
         path: .build/download
         merge-multiple: true
+    - name: Refresh only the current-user simulator service before device creation
+      timeout-minutes: 6
+      shell: bash
+      run: "set -euo pipefail\ncat > .build/refresh_simulator_service.py <<'RITC_REFRESH'\n\"\"\"One user-owned service refresh\
+        \ on a disposable GitHub diagnostic runner only.\"\"\"\nimport json, os, platform, re, subprocess, time\nfrom pathlib\
+        \ import Path\nassert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'\nassert os.environ.get('GITHUB_ACTIONS')\
+        \ == 'true'\nassert platform.system() == 'Darwin' and platform.machine() == 'arm64'\nassert os.environ.get('DEVELOPER_DIR')\
+        \ == '/Applications/Xcode_27.1.app/Contents/Developer'\nuid = os.getuid()\nassert uid != 0\np = Path('.build/github-ios-runtime')\n\
+        expected = json.loads((p / 'target.json').read_text())\npattern = r'com\\.apple\\.CoreSimulator\\.CoreSimulatorService'\n\
+        receipt = {'uid': uid, 'signal': 'TERM', 'scope': 'one pre-create diagnostic refresh, no sudo or escalation'}\ndef\
+        \ save():\n    (p / 'service-refresh.json').write_text(json.dumps(receipt, indent=2) + '\\n')\ndef pids():\n    r\
+        \ = subprocess.run(['/usr/bin/pgrep', '-u', str(uid), '-x', pattern], capture_output=True, text=True, timeout=10)\n\
+        \    assert r.returncode in (0, 1), r.stderr\n    return [int(s) for s in r.stdout.split()]\ndef inventory(name):\n\
+        \    raw = subprocess.check_output(['xcrun', 'simctl', 'list', '-j'], text=True, timeout=60)\n    (p / name).write_text(raw)\n\
+        \    d = json.loads(raw)\n    assert all(v['state'] == 'Shutdown' for rows in d['devices'].values() for v in rows),\
+        \ 'A simulator is active; do not refresh its service'\n    targets = [r for r in d['runtimes'] if r['identifier']\
+        \ == expected['runtimeIdentifier']]\n    assert len(targets) == 1 and targets[0].get('isAvailable') is True\n    r\
+        \ = targets[0]\n    assert r['buildversion'] == expected['build'] and r['bundlePath'] == expected['runtimeBundlePath']\n\
+        \    assert Path(r['runtimeRoot']).is_dir(), 'RuntimeRoot is unavailable'\n    raw = subprocess.check_output(['xcrun',\
+        \ 'simctl', 'runtime', 'list', '-j'], text=True, timeout=30)\n    (p / (name + '.images.json')).write_text(raw)\n\
+        \    rows = json.loads(raw)\n    targets = [r for r in rows.values() if r.get('runtimeIdentifier') == expected['runtimeIdentifier']\
+        \ and r.get('build') == expected['build']]\n    assert len(targets) == 1\n    r = targets[0]\n    for key in ('identifier',\
+        \ 'build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath', 'state', 'kind'):\n        assert r.get(key)\
+        \ == expected.get(key), key\n    assert r['kind'] == 'Disk Image' and r['state'] == 'Ready'\n    assert not r.get('parentMountPath')\
+        \ and not r.get('parentIdentifier')\n    assert Path(r['path']).is_file() and Path(r['mountPath']).is_dir() and Path(r['runtimeBundlePath']).is_dir()\n\
+        try:\n    inventory('service-before.json')\n    old = pids(); assert len(old) == 1, old\n    detail = subprocess.check_output(['/bin/ps',\
+        \ '-p', str(old[0]), '-o', 'uid=', '-o', 'comm='], text=True, timeout=10).strip()\n    owner, command = detail.split(None,\
+        \ 1)\n    assert int(owner) == uid and Path(command).name == 'com.apple.CoreSimulator.CoreSimulatorService', detail\n\
+        \    receipt.update(oldPids=old, oldProcess=detail, beforeVerified=True, signalSent=False); save()\n    result = subprocess.run(['/usr/bin/pkill',\
+        \ '-TERM', '-u', str(uid), '-x', pattern], capture_output=True, text=True, timeout=10)\n    receipt.update(signalSent=True,\
+        \ signalExit=result.returncode, signalStderr=result.stderr); save()\n    result.check_returncode()\n    deadline =\
+        \ time.monotonic() + 60\n    while set(old).intersection(pids()):\n        assert time.monotonic() < deadline, 'Original\
+        \ service did not exit; no escalation permitted'\n        time.sleep(1)\n    receipt['oldExited'] = True; save()\n\
+        \    inventory('service-after.json')\n    new = pids(); assert len(new) == 1 and not set(old).intersection(new), new\n\
+        \    receipt.update(newPids=new, afterVerified=True, outcome='success'); save()\nexcept BaseException as error:\n\
+        \    receipt.update(outcome='failure', error=str(error)); save(); raise\nRITC_REFRESH\nprintf '%s  %s\\n' '69d2dcf80b0276c2578a70556eabe78fe061fd5d3e769c90fb64b801ff9139f1'\
+        \ '.build/refresh_simulator_service.py' | shasum -a 256 -c -\npython3 .build/refresh_simulator_service.py\n"
     - name: Verify a746 products and select original failed produce journey
       run: "set -euo pipefail\ntest \"$(git rev-parse HEAD)\" = a746ff60d13cfae205a743a481ed9248ef559d54\ntest \"$(git rev-parse\
         \ 'HEAD^{tree}')\" = 1c579cedc8c604634f73ed0a06a0660f0c595461\nprintf '%s  %s\\n' 'f3247a85f5e9497f9b87591c2337725160ca43f96bdac8156dd84567ea4098ba'\
@@ -307,7 +344,7 @@ jobs:
 
         xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
 
-        /usr/bin/log show --style compact --last 2h --predicate ''process == "simdiskimaged" OR process == "CoreSimulatorService"''
+        /usr/bin/log show --style compact --last 2h --predicate ''process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"''
         > .build/github-ios-runtime/runtime-events.log 2>&1 || true
 
         xcrun simctl list -j > .build/test-final-inventory.json || true
@@ -335,6 +372,9 @@ jobs:
 
 
           .build/select_ci_iphone.py
+
+
+          .build/refresh_simulator_service.py
 
           '
 'on':
