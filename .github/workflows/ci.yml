@@ -80,6 +80,7 @@ jobs:
           import os
           import platform
           import subprocess
+          import time
           import uuid
           from pathlib import Path
           
@@ -95,16 +96,16 @@ jobs:
           asset_prefix = "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/"
           
           
-          def capture(name, *args):
-              result = subprocess.run(["xcrun", "simctl", *args], text=True, capture_output=True)
+          def capture(name, *args, timeout=None):
+              result = subprocess.run(["xcrun", "simctl", *args], text=True, capture_output=True, timeout=timeout)
               (evidence / name).write_text(result.stdout)
               (evidence / (name + ".stderr.log")).write_text(result.stderr)
               result.check_returncode()
               return json.loads(result.stdout)
           
           
-          def images(name):
-              rows = capture(name, "runtime", "list", "-j")
+          def images(name, timeout=None):
+              rows = capture(name, "runtime", "list", "-j", timeout=timeout)
               assert isinstance(rows, dict)
               return rows
           
@@ -146,22 +147,90 @@ jobs:
               assert row.get("deletable") is True, row
               assert row.get("path", "").startswith(asset_prefix), row
           asset_paths = {row["path"] for row in replacement}
+          payload_names = [f["name"] for f in files if f["name"].endswith(".dmg") and f["bytes"] > 0]
+          assert len(payload_names) == 1, "Expected one exact disk-image payload in exported 23C54 bundle"
+          payload_name = Path(payload_names[0])
+          assert not payload_name.is_absolute() and ".." not in payload_name.parts
+          payload_paths = {str(Path(root) / payload_name) for root in asset_paths}
+          allowed_paths = asset_paths | payload_paths
+          (evidence / "original-asset-paths.json").write_text(json.dumps({
+              "roots": sorted(asset_paths), "payloads": sorted(payload_paths)}, indent=2) + "\n")
+          
+          
+          def original_rows(rows):
+              # Include identity-less pending children; exact-build filters alone miss them.
+              return [row for row in rows.values() if any(
+                  row.get("path", "") == root or row.get("path", "").startswith(root + "/") or
+                  row.get("parentMountPath") == root for root in asset_paths)]
+          
+          
+          def validate_original(row, require_identity=True):
+              uuid.UUID(row["identifier"])
+              assert row.get("path") in allowed_paths, "Unexpected original-asset descendant: " + repr(row)
+              if row["path"] in payload_paths:
+                  assert row.get("parentMountPath") in asset_paths
+                  assert row["path"] == str(Path(row["parentMountPath"]) / payload_name)
+              assert row.get("deletable") is True
+              for key, expected in (("runtimeIdentifier", runtime), ("build", build)):
+                  assert row.get(key) in (None, expected), "Wrong runtime identity: " + repr(row)
+                  if require_identity:
+                      assert row.get(key) == expected, "Runtime identity still unknown: " + repr(row)
+          
+          
+          def wait_for_scan_identity(timeout_seconds=120):
+              deadline = time.monotonic() + timeout_seconds
+              observations = []
+              while True:
+                  remaining = deadline - time.monotonic()
+                  assert remaining > 0, "Recovery scan did not settle to exact 26.2/23C54 identity"
+                  current = images(f"recovery-wait-{len(observations):03d}.json", timeout=min(30, remaining))
+                  related = original_rows(current)
+                  for row in related:
+                      validate_original(row, require_identity=False)
+                  assert all(row in related for row in targets(current)), "Unexpected exact-build asset after scan"
+                  observations.append({"time": time.time(), "rows": related})
+                  (evidence / "recovery-wait.json").write_text(json.dumps(observations, indent=2) + "\n")
+                  if related and all(row.get("runtimeIdentifier") == runtime and row.get("build") == build
+                                     and row.get("state") in ("Ready", "Unusable") for row in related):
+                      return related
+                  assert all(row.get("state") in ("Copying", "Verifying", "Mounting", "Ready", "Unusable")
+                             for row in related), "Unexpected scan state"
+                  time.sleep(min(5, max(0, deadline - time.monotonic())))
+          
+          
+          def require_no_original(rows):
+              assert not targets(rows), "Exact runtime was re-registered before import"
+              assert not original_rows(rows), "Original asset still has a known or pending registration"
+          
+          
+          def confirm_absence(timeout_seconds=45):
+              # Scan completion can precede registration. Observe the entire settling window;
+              # any exact-build OR original-path pending row fails, even without identity.
+              deadline = time.monotonic() + timeout_seconds
+              observations = []
+              while True:
+                  current = images(f"removal-confirm-{len(observations):03d}.json", timeout=30)
+                  observations.append({"time": time.time(), "imageCount": len(current), "originalRows": original_rows(current)})
+                  (evidence / "removal-confirm.json").write_text(json.dumps(observations, indent=2) + "\n")
+                  require_no_original(current)
+                  assert not any(Path(path).exists() for path in payload_paths), "Original payload reappeared"
+                  if time.monotonic() >= deadline:
+                      return
+                  time.sleep(min(5, max(0, deadline - time.monotonic())))
           
           
           def delete_exact(rows, prefix, allow_known_purge_failure=False):
               # A rescan can change UUIDs; never expand deletion to another build or asset.
               for row in rows:
-                  uuid.UUID(row["identifier"])
-                  assert row.get("runtimeIdentifier") == runtime and row.get("build") == build
-                  assert row.get("deletable") is True and row.get("path") in asset_paths
+                  validate_original(row)
               for row in rows:
                   identifier = row["identifier"]
                   remaining = images(prefix + "-before-" + identifier + ".json")
                   if identifier not in remaining:
                       continue  # Removing one shared MobileAsset may already retire its twin.
                   live = remaining[identifier]
-                  assert live in targets(remaining) and live.get("deletable") is True
-                  assert live.get("path") == row["path"] and live["path"].startswith(asset_prefix)
+                  validate_original(live)
+                  assert live in targets(remaining) and live.get("path") == row["path"]
                   name = prefix + "-" + identifier
                   result = operation(name, ["xcrun", "simctl", "runtime", "delete", identifier])
                   if result.returncode:
@@ -185,20 +254,21 @@ jobs:
               # simctl exposes no target-specific scan. Only this one documented recovery
               # scan is allowed; every subsequent deletion is revalidated to original assets.
               operation("purge-recovery-scan", ["xcrun", "simctl", "runtime", "scan-and-mount"]).check_returncode()
-              retry_rows = targets(images("after-purge-recovery-scan.json"))
-              assert retry_rows, "Recovery scan did not register the known unpurged asset"
+              retry_rows = wait_for_scan_identity()
               assert delete_exact(retry_rows, "purge-retry"), "Purge retry did not complete"
-          assert not targets(images("after-removal.json"))
-          # Missing registration alone is insufficient: an orphaned MobileAsset could be
-          # re-registered later and recreate the duplicate. Require actual asset reclamation.
-          asset_state = {path: Path(path).exists() for path in sorted(asset_paths)}
-          (evidence / "after-removal-assets.json").write_text(json.dumps(asset_state, indent=2) + "\n")
-          assert not any(asset_state.values()), "Deleted MobileAsset data remains available for re-registration"
+          require_no_original(images("after-removal.json"))
+          # A catalog-only AssetData directory is allowed; the exact exported payload must
+          # be gone, and neither known nor pending original-path rows may survive the scan.
+          asset_state = {path: Path(path).exists() for path in sorted(payload_paths)}
+          (evidence / "after-removal-payloads.json").write_text(json.dumps(asset_state, indent=2) + "\n")
+          assert not any(asset_state.values()), "Original disk-image payload remains available for re-registration"
           operation("confirm-removal-scan", ["xcrun", "simctl", "runtime", "scan-and-mount"]).check_returncode()
-          assert not targets(images("after-removal-scan.json")), "MobileAsset was re-registered before import"
+          confirm_absence()
           operation("import", ["sudo", "-n", "/usr/bin/env", "DEVELOPER_DIR=" + developer,
                                "/usr/bin/xcodebuild", "-importPlatform", str(bundles[0].resolve())]).check_returncode()
-          installed = targets(images("after-import.json"))
+          after_import = images("after-import.json")
+          assert not original_rows(after_import), "Original asset reappeared during import"
+          installed = targets(after_import)
           assert len(installed) == 1 and installed[0].get("state") == "Ready", installed
           target = installed[0]
           uuid.UUID(target["identifier"])
@@ -315,6 +385,8 @@ jobs:
           raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'], text=True)
           (p / 'after-tests.json').write_text(raw)
           current = json.loads(raw)
+          roots = json.loads((p / 'original-asset-paths.json').read_text())['roots']
+          assert not any(row.get('path', '') == root or row.get('path', '').startswith(root + '/') or row.get('parentMountPath') == root for row in current.values() for root in roots), 'Original asset reappeared after tests'
           before = json.loads((p / 'target.json').read_text())
           selected = [r for r in current.values() if r.get('runtimeIdentifier') == before['runtimeIdentifier'] and r.get('build') == before['build']]
           assert len(selected) == 1 and selected[0]['identifier'] == before['identifier']
@@ -334,6 +406,36 @@ jobs:
           mkdir -p .build/storekit-import-canary
           xcrun simctl runtime list -j > .build/storekit-import-canary/final.json || true
           xcrun simctl list -j > .build/storekit-import-canary/final-simctl.json || true
+          python3 - <<'PYCODE'
+          import json, os, plistlib, subprocess
+          from pathlib import Path
+          p = Path('.build/storekit-import-canary')
+          definition = p / 'original-asset-paths.json'
+          paths = json.loads(definition.read_text()) if definition.exists() else {'roots': [], 'payloads': []}
+          inventory = {'paths': {}, 'attachedImages': []}
+          for name in sorted(set(paths['roots'] + paths['payloads'] + [str(Path(root) / 'Restore') for root in paths['roots']])):
+              path = Path(name)
+              try:
+                  stat = path.lstat()
+                  value = {'mode': stat.st_mode, 'bytes': stat.st_size, 'symlink': path.is_symlink()}
+                  if path.is_dir():
+                      value['children'] = sorted(child.name for child in path.iterdir())[:40]
+                  inventory['paths'][name] = value
+              except OSError as error:
+                  inventory['paths'][name] = {'error': str(error), 'errno': error.errno}
+          try:
+              result = subprocess.run(['hdiutil', 'info', '-plist'], capture_output=True, timeout=30)
+              inventory['hdiutilExit'] = result.returncode
+              inventory['hdiutilStderr'] = result.stderr.decode(errors='replace')
+              if result.returncode == 0:
+                  images = plistlib.loads(result.stdout).get('images', [])
+                  inventory['attachedImages'] = [
+                      {key: row[key] for key in ('image-path', 'system-entities', 'image-type') if key in row}
+                      for row in images if any(row.get('image-path', '') == root or row.get('image-path', '').startswith(root + '/') for root in paths['roots'])]
+          except (OSError, ValueError, subprocess.SubprocessError) as error:
+              inventory['hdiutilError'] = str(error)
+          (p / 'final-asset-inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
+          PYCODE
           /usr/bin/log show --style compact --last 1h --predicate 'process == "simdiskimaged" OR process == "CoreSimulatorService"' > .build/storekit-import-canary/runtime-events.log 2>&1 || true
       - name: Remove only the simulator created by this diagnostic
         if: ${{ always() && env.STOREKIT_CREATED_SIMULATOR != '' }}
