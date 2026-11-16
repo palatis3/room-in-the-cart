@@ -10,7 +10,7 @@ jobs:
   runtime:
     runs-on: xcode-27
     concurrency:
-      group: ritc-macos-slot-3
+      group: ritc-macos-slot-2
       cancel-in-progress: false
       queue: max
     timeout-minutes: 75
