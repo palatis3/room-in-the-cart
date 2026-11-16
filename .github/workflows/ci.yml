@@ -145,16 +145,57 @@ jobs:
               uuid.UUID(row["identifier"])
               assert row.get("deletable") is True, row
               assert row.get("path", "").startswith(asset_prefix), row
-          for row in replacement:
-              identifier = row["identifier"]
-              remaining = images("before-delete-" + identifier + ".json")
-              if identifier not in remaining:
-                  continue  # Removing one shared MobileAsset may already retire its twin.
-              live = remaining[identifier]
-              assert live in targets(remaining) and live.get("deletable") is True
-              assert live.get("path", "").startswith(asset_prefix)
-              operation("delete-" + identifier, ["xcrun", "simctl", "runtime", "delete", identifier]).check_returncode()
+          asset_paths = {row["path"] for row in replacement}
+          
+          
+          def delete_exact(rows, prefix, allow_known_purge_failure=False):
+              # A rescan can change UUIDs; never expand deletion to another build or asset.
+              for row in rows:
+                  uuid.UUID(row["identifier"])
+                  assert row.get("runtimeIdentifier") == runtime and row.get("build") == build
+                  assert row.get("deletable") is True and row.get("path") in asset_paths
+              for row in rows:
+                  identifier = row["identifier"]
+                  remaining = images(prefix + "-before-" + identifier + ".json")
+                  if identifier not in remaining:
+                      continue  # Removing one shared MobileAsset may already retire its twin.
+                  live = remaining[identifier]
+                  assert live in targets(remaining) and live.get("deletable") is True
+                  assert live.get("path") == row["path"] and live["path"].startswith(asset_prefix)
+                  name = prefix + "-" + identifier
+                  result = operation(name, ["xcrun", "simctl", "runtime", "delete", identifier])
+                  if result.returncode:
+                      detail = (evidence / (name + ".log")).read_text()
+                      expected = "Removed the runtime, but did not reclaim its MobileAsset: " + live["path"].rstrip("/") + "/"
+                      known = (result.returncode == 30 and
+                               "domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=30" in detail and
+                               expected in detail and
+                               "Run 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again." in detail)
+                      after_failure = images(name + "-after-failure.json")
+                      if allow_known_purge_failure and known and identifier not in after_failure:
+                          (evidence / "known-purge-recovery.json").write_text(json.dumps({
+                              "identifier": identifier, "path": live["path"], "exit": 30,
+                              "reason": "Explicit simctl recovery instruction; one bounded scan/delete retry"}) + "\n")
+                          return False
+                      result.check_returncode()
+              return True
+          
+          
+          if not delete_exact(replacement, "delete", allow_known_purge_failure=True):
+              # simctl exposes no target-specific scan. Only this one documented recovery
+              # scan is allowed; every subsequent deletion is revalidated to original assets.
+              operation("purge-recovery-scan", ["xcrun", "simctl", "runtime", "scan-and-mount"]).check_returncode()
+              retry_rows = targets(images("after-purge-recovery-scan.json"))
+              assert retry_rows, "Recovery scan did not register the known unpurged asset"
+              assert delete_exact(retry_rows, "purge-retry"), "Purge retry did not complete"
           assert not targets(images("after-removal.json"))
+          # Missing registration alone is insufficient: an orphaned MobileAsset could be
+          # re-registered later and recreate the duplicate. Require actual asset reclamation.
+          asset_state = {path: Path(path).exists() for path in sorted(asset_paths)}
+          (evidence / "after-removal-assets.json").write_text(json.dumps(asset_state, indent=2) + "\n")
+          assert not any(asset_state.values()), "Deleted MobileAsset data remains available for re-registration"
+          operation("confirm-removal-scan", ["xcrun", "simctl", "runtime", "scan-and-mount"]).check_returncode()
+          assert not targets(images("after-removal-scan.json")), "MobileAsset was re-registered before import"
           operation("import", ["sudo", "-n", "/usr/bin/env", "DEVELOPER_DIR=" + developer,
                                "/usr/bin/xcodebuild", "-importPlatform", str(bundles[0].resolve())]).check_returncode()
           installed = targets(images("after-import.json"))
