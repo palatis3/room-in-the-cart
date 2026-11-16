@@ -329,12 +329,21 @@ def cleanup_original_images(current):
             for key, row in rows.items():
                 if key in before:
                     assert all(row.get(k) == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))
-                    if key in deleting_errors and row.get('state') == 'Unusable':
+                    if (key in deleting_errors or before[key].get('state') == 'Copying') and row.get('state') == 'Unusable':
                         original = before[key]
-                        assert original.get('state') == 'Deleting' and original.get('kind') == 'Patchable Cryptex Disk Image'
+                        assert original.get('state') in ('Deleting', 'Copying') and original.get('kind') == 'Patchable Cryptex Disk Image'
+                        if original.get('state') == 'Copying':
+                            assert original.get('runtimeBundlePath'), 'Original Copying row lacks a recorded bundle'
                         assert re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\.asset/AssetData', original['path'])
                         assert original.get('parentMountPath') == original['path']
-                        assert all(row.get(k) == original.get(k) for k in ('kind', 'parentMountPath', 'mountPath'))
+                        assert all(row.get(k) == original.get(k) for k in ('kind', 'parentMountPath', 'runtimeBundlePath'))
+                        if row.get('mountPath') != original.get('mountPath'):
+                            # An asynchronous registration can publish its mount later.
+                            # Bind it to the original bundle; it is still not retired.
+                            mount = row.get('mountPath')
+                            assert not original.get('mountPath') and isinstance(mount, str)
+                            assert re.fullmatch(r'/Library/Developer/CoreSimulator/Volumes/[A-Za-z0-9]+_' + re.escape(original['build']), mount)
+                            assert original.get('runtimeBundlePath', '').startswith(mount + '/Library/Developer/CoreSimulator/Profiles/Runtimes/')
                         assert row.get('unusableSubstate') == row.get('unusableErrorMessage') == 'Cryptex Mount Preferred'
                         # Still outstanding: this observation never authorizes another deletion.
                         receipt.setdefault('pendingPreferredRetirements', {})[key] = attempt
