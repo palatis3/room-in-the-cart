@@ -321,7 +321,7 @@ import UIKit
         XCTAssertTrue(editor.value as? String == fixture, "Editing and Done must preserve the original paste after undoing the edit")
         capture("S02-500-line-native-paste-at-largest-text")
 
-        let review = element("ledgerReviewImport")
+        let review = app.buttons["ledgerReviewImport"]
         let form = app.collectionViews.firstMatch
         func visibleReviewPoint() -> CGPoint? {
             guard review.exists && review.isHittable && review.isEnabled else { return nil }
