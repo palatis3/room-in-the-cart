@@ -16,6 +16,7 @@ from unittest.mock import Mock, call, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads((Path(__file__).parent / 'fixtures/github-runtime-cleanup.json').read_text())
+UNUSABLE_PURGE = json.loads((Path(__file__).parent / 'fixtures/github-runtime-unusable-purge.json').read_text())
 ORIGINAL = FIXTURE['original']
 DETAIL = FIXTURE['originalError']
 SINGLE_BEFORE = FIXTURE['singleBefore']
@@ -147,6 +148,52 @@ class PreferredTwinTests(unittest.TestCase):
 
 
 class ClassifierTests(unittest.TestCase):
+    def test_captured_preferred_unusable_purges_bind_to_both_original_rows(self):
+        results = subject.classify_bulk_result(1, UNUSABLE_PURGE['detail'], UNUSABLE_PURGE['before'])
+        self.assertEqual([r['line'] for r in results], UNUSABLE_PURGE['detail'].splitlines())
+        self.assertEqual([r['identifier'] for r in results], list(UNUSABLE_PURGE['before']))
+        self.assertEqual([r['classification'] for r in results], ['mobileasset-not-reclaimed'] * 2)
+        for result in results:
+            for field in ('runtimeIdentifier', 'build', 'version', 'path'):
+                self.assertEqual(result[field], UNUSABLE_PURGE['before'][result['identifier']][field])
+
+    def test_verbose_purge_requires_exact_original_identity_and_preferred_metadata(self):
+        key = next(iter(UNUSABLE_PURGE['before']))
+        for field, value in [('identifier', NEW_IOS), ('runtimeIdentifier', 'com.apple.CoreSimulator.SimRuntime.xrOS-27-0'),
+                             ('platformIdentifier', 'com.apple.platform.xrsimulator'), ('build', 'wrong'),
+                             ('version', '27.1'), ('path', '/other/AssetData'), ('parentMountPath', '/other/AssetData'),
+                             ('kind', 'Disk Image'), ('state', 'Ready'), ('deletable', False),
+                             ('unusableSubstate', None), ('unusableErrorMessage', 'Mount Failed'),
+                             ('unusableErrorDetail', None)]:
+            with self.subTest(field=field):
+                before = copy.deepcopy(UNUSABLE_PURGE['before'])
+                before[key][field] = value
+                with self.assertRaises(AssertionError):
+                    subject.classify_bulk_result(1, UNUSABLE_PURGE['detail'], before)
+
+    def test_verbose_purge_rejects_changed_error_text_foreign_rows_and_unknown_status(self):
+        detail = UNUSABLE_PURGE['detail']
+        key = next(iter(UNUSABLE_PURGE['before']))
+        for old, new in [(key, NEW_IOS), (' iOS ', ' tvOS '), ('24A434', 'wrong'),
+                         ('Code=7', 'Code=8'), ('unusableErrorDetail=}', 'unusableErrorDetail=other}'),
+                         ('Cryptex Mount Preferred:', 'Cryptex Mount Preferred :'),
+                         ('3e800c38767f9f2c5fc86acdad7adf44565e051a.asset', 'foreign.asset')]:
+            with self.subTest(old=old), self.assertRaises(AssertionError):
+                subject.classify_bulk_result(1, detail.replace(old, new), UNUSABLE_PURGE['before'])
+        for status in (0, 30, 70):
+            with self.subTest(status=status), self.assertRaises(AssertionError):
+                subject.classify_bulk_result(status, detail, UNUSABLE_PURGE['before'])
+        before = copy.deepcopy(UNUSABLE_PURGE['before'])
+        before.pop(key)
+        with self.assertRaises(AssertionError): subject.classify_bulk_result(1, detail, before)
+        with self.assertRaises(AssertionError): subject.classify_bulk_result(1, detail + detail.splitlines()[0], UNUSABLE_PURGE['before'])
+
+    def test_matching_changed_metadata_cannot_authorize_unknown_preferred_error(self):
+        before = copy.deepcopy(UNUSABLE_PURGE['before'])
+        for row in before.values(): row['unusableErrorDetail'] = row['unusableErrorDetail'].replace('Code=7', 'Code=8')
+        with self.assertRaises(AssertionError):
+            subject.classify_bulk_result(1, UNUSABLE_PURGE['detail'].replace('Code=7', 'Code=8'), before)
+
     def test_actual_second_pass_purge_authorizes_only_its_original_recorded_asset(self):
         first = FIXTURE['recoveryFirstErrors']
         self.assertEqual(first, [])

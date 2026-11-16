@@ -77,6 +77,8 @@ def classify_bulk_result(status, detail, before):
         assert not detail.strip(), 'Unexpected successful bulk-delete output'
         return []
     assert status == 1 and detail.strip(), 'Unknown aggregate-delete exit'
+    preferred_detail = ('Error Domain=SimDiskImageErrorDomain Code=7 "Cryptex Mount Preferred" '
+                        'UserInfo={NSLocalizedDescription=Cryptex Mount Preferred, unusableErrorDetail=}')
     classified = []
     seen = set()
     for line in detail.splitlines():
@@ -96,11 +98,22 @@ def classify_bulk_result(status, detail, before):
                 re.escape('s, if the image is not removed)'), line)
             purging = (prefix + '(Ready): Removed the runtime, but did not reclaim its MobileAsset: ' +
                        row['path'].rstrip('/') + '/')
+            preferred_purging = (prefix + '(Unusable - Cryptex Mount Preferred: ' + preferred_detail +
+                                 '): Removed the runtime, but did not reclaim its MobileAsset: ' + row['path'] + '/')
             if deleting and int(deleting[1]) <= 180:
                 matches.append('already-deleting')
             elif (line == purging and row.get('state') == 'Ready' and
                   row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_') and
                   row['path'].endswith('.asset/AssetData')):
+                matches.append('mobileasset-not-reclaimed')
+            elif (line == preferred_purging and row.get('state') == 'Unusable' and row.get('deletable') is True and
+                  row.get('unusableSubstate') == row.get('unusableErrorMessage') == 'Cryptex Mount Preferred' and
+                  row.get('unusableErrorDetail') == preferred_detail and row.get('parentMountPath') == row['path'] and
+                  platform_name in ('iOS', 'xrOS', 'tvOS', 'watchOS') and
+                  row.get('platformIdentifier') == {'iOS': 'com.apple.platform.iphonesimulator',
+                      'xrOS': 'com.apple.platform.xrsimulator', 'tvOS': 'com.apple.platform.appletvsimulator',
+                      'watchOS': 'com.apple.platform.watchsimulator'}.get(platform_name, '') and
+                  re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\.asset/AssetData', row['path'])):
                 matches.append('mobileasset-not-reclaimed')
             else:
                 continue
