@@ -271,7 +271,9 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         isolated = [('ci.yml', 'ios-tests', ('ui-01', 'ui-05')),
                     ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests'))]
-        with tempfile.TemporaryDirectory() as directory:
+        # Reproduce hosted source-check inheritance even when this module runs locally.
+        with patch.dict(os.environ, RUNNER_ENVIRONMENT='github-hosted', GITHUB_ACTIONS='true'), \
+             tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             # Run the actual workflow shell with inert CLI replacements only.
             for name, source in {
@@ -283,27 +285,35 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
             for workflow_name, job, owned_shards in isolated:
                 workflow, _, _ = parse_workflow(root / '.github/workflows' / workflow_name)
                 shell = next(s['run'] for s in workflow['jobs'][job]['steps'] if '--create-owned' in s.get('run', ''))
-                for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 11)],
-                              *[f'contributor-balanced-{i:02d}' for i in range(1, 11)],
-                              'RecordsMediaUITests', 'SharedDeliveryUITests-recovery-cook-and-closeout',
-                              'SharedFallbackUITests', *[shard + '-extra' for shard in owned_shards], '']:
-                    with self.subTest(workflow=workflow_name, shard=shard):
-                        capture = folder / 'arguments'; capture.write_text('')
-                        env = dict(os.environ, PATH=str(folder) + ':/usr/bin:/bin', CAPTURE=str(capture),
-                                   TEST_SHARD=shard, SELECTOR_EXIT='0')
-                        result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
-                                                capture_output=True, text=True, timeout=10)
-                        self.assertEqual(result.returncode, 0, result.stderr)
-                        expected = ['scripts/select_ci_iphone.py']
-                        if shard in owned_shards: expected += ['--create-owned', '.build/test-simulator-ownership.json']
-                        self.assertEqual(capture.read_text().splitlines(), expected)
-                for shard in owned_shards:
-                    capture.write_text(''); env.update(TEST_SHARD=shard, SELECTOR_EXIT='17')
-                    result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
-                                            capture_output=True, text=True, timeout=10)
-                    self.assertEqual(result.returncode, 17)
-                    self.assertEqual(capture.read_text().splitlines(),
-                                     ['scripts/select_ci_iphone.py', '--create-owned', '.build/test-simulator-ownership.json'])
+                for provider in (None, 'self-hosted', 'github-hosted'):
+                    for shard in ['models', *[f'ui-{i:02d}' for i in range(1, 11)],
+                                  *[f'contributor-balanced-{i:02d}' for i in range(1, 11)],
+                                  'RecordsMediaUITests', 'SharedDeliveryUITests-recovery-cook-and-closeout',
+                                  'SharedFallbackUITests', *[shard + '-extra' for shard in owned_shards], '']:
+                        with self.subTest(workflow=workflow_name, provider=provider, shard=shard):
+                            capture = folder / 'arguments'; capture.write_text('')
+                            env = dict(os.environ, PATH=str(folder) + ':/usr/bin:/bin', CAPTURE=str(capture),
+                                       TEST_SHARD=shard, SELECTOR_EXIT='0')
+                            if provider is None:
+                                env.pop('RUNNER_ENVIRONMENT', None)
+                            else:
+                                env['RUNNER_ENVIRONMENT'] = provider
+                            result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
+                                                    capture_output=True, text=True, timeout=10)
+                            self.assertEqual(result.returncode, 0, result.stderr)
+                            expected = ['scripts/select_ci_iphone.py']
+                            if provider == 'github-hosted' or shard in owned_shards:
+                                expected += ['--create-owned', '.build/test-simulator-ownership.json']
+                            self.assertEqual(capture.read_text().splitlines(), expected)
+                    failure_shards = (*owned_shards, 'models') if provider == 'github-hosted' else owned_shards
+                    for shard in failure_shards:
+                        with self.subTest(workflow=workflow_name, provider=provider, failure=shard):
+                            capture.write_text(''); env.update(TEST_SHARD=shard, SELECTOR_EXIT='17')
+                            result = subprocess.run(['/bin/bash', '-eo', 'pipefail', '-c', shell], env=env,
+                                                    capture_output=True, text=True, timeout=10)
+                            self.assertEqual(result.returncode, 17)
+                            self.assertEqual(capture.read_text().splitlines(),
+                                             ['scripts/select_ci_iphone.py', '--create-owned', '.build/test-simulator-ownership.json'])
 
     def test_only_execution_shards_opt_in_and_cleanup_precedes_receipt_upload(self):
         from check_ci_workflows import parse_workflow

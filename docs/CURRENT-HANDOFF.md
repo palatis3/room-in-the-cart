@@ -1,10 +1,12 @@
 # Room in the Cart — current handoff
 
-Updated November 16, 2026, 08:56 UTC. Active goal: **finish the complete Foundation 2.1 first release**, including all 52 requirements, 27 screen contracts and B11. Not complete, paused or blocked. A scoped passing component is not one qualified release candidate.
+Updated November 16, 2026, 08:58 UTC. Active goal: **finish the complete Foundation 2.1 first release**, including all 52 requirements, 27 screen contracts and B11. Not complete, paused or blocked. A scoped passing component is not one qualified release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), the requirement/screen maps in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), and [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Historical dated component checkpoints in those documents do not supersede the current revision and results below.
 
 ## Current checkpoint
+
+**Combined source-check correction:**02d6's hosted source check failed50 subcases of one provider-selection test because it inherited `RUNNER_ENVIRONMENT=github-hosted` while expecting the default/self-hosted branch. Original log and failure receipt are in `.build/PR7-02d6b828/`. The test now explicitly covers absent/self-hosted/github-hosted settings, including inherited-host regression and no-fallback failure propagation. All1,119 tests pass in31.667s with `RUNNER_ENVIRONMENT=github-hosted GITHUB_ACTIONS=true`. No app, workflow or runtime behavior changed. Root superseded the queued fixtures and active deep run after this validation; both fixture producers were still pending. Core failed, wire and security passed. Correction publication is next; preserve original evidence.
 
 The frozen a746 cohort is terminal. Core, fixtures and deep failed; wire and security passed. The app compiled, all 1,045 model tests passed, and the unsigned iPhone Release archive passed. The remaining qualification gap is predominantly hosted simulator setup/stability, plus one locally corrected shared-meal XCTest query failure. Do not label the candidate green or merge yet.
 
@@ -20,7 +22,7 @@ Original logs, hashes, inventories and receipts are retained in `.build/PR7-a746
 
 ### Qualified local successor changes
 
-The combined successor is locally qualified and ready for publication; the remote PR remains a746 until the next push. The handoff consolidation is `9d5e6d47`. The successor contains no production app/service/web change:
+The combined successor `02d6b828ee9b48fd1149686063573ec03dda20cf` is published to development and PR7. Tree `4c11495acfdb28619d436ca716bb466bf3ff74cb`; local preflight/review passed. All five normal PR workflows are active; no duplicate manual dispatch. The handoff consolidation is `9d5e6d47`. The successor contains no production app/service/web change:
 
 - `31179bcb`: exact iOS27 runtime deletion handling, including bounded observation of an already-Deleting registration and one validated recovery for explicit MobileAsset purge error30. Native assertions/deadlines unchanged.
 - `86dab6a5`: physical image/mount/bundle observations before unchanged strict runtime checks. Missing registry metadata is still a failure.
@@ -32,7 +34,7 @@ The combined successor is locally qualified and ready for publication; the remot
 - `f72e5cff`: five phase messages around native timing, summary/detail export and strict validation. `bash -n` passes. No test, deadline or acceptance changes; no push yet.
 - `e5544bd8`: cap each summary/tests and per-case XCTest JSON export at300seconds. Timeout remains a failure, with no retry; raw result bundles remain available to always-run cleanup/upload steps.64focused checks pass, including a real sleeping exporter being killed and unavailable warning evidence failing the gate. Both exports from the retained original produce bundle match prior JSON (0.105/0.068seconds). Astra reviewed with no issues. Evidence `.build/BoundedXCTestExportNov16/verification.json`. Hosted result-reader qualification passed in43832196302; this bounds evidence processing and does not change price-entry behavior.
 
-Full combined hosted qualification remains pending. Do not push status-only changes or repeat passing focused work unchanged.
+Full combined hosted qualification is running: core43835522160, fixtures43835522354, deep43835522123, wire43835522196, security43835522135. Sol pr7_watch owns receipts and original downloads under `.build/PR7-02d6b828/`. Do not push status-only changes or repeat passing focused work unchanged.
 
 ### Runtime diagnostics and active execution
 
@@ -44,7 +46,7 @@ Full combined hosted qualification remains pending. Do not push status-only chan
 
 The asset-recovery preparation used in both diagnostics adds at most one exact asset-specific retry after two bulk deletions, scoped to the sole known second-pass purge failure that has not previously received recovery. The fixed 600-second cleanup, final 60-second physical/registry absence, standalone import and reviewed current-user service refresh remain. Forty offline tests passed; setup/import/refresh/create/boot succeeded in 43821346449, but cancelled postchecks do not prove runtime stability.
 
-**Normal runtime integration installed locally:** exact reviewed patch `.build/IOS27DirectDMGNov16/normal-adoption-draft/integration.patch`, SHA `d0c93759a0e8f0ff70fb6c1d9ee5f37974ce8a68d138e9b1de04fc1d8744e9f6`, is now applied after the successful diagnostic. Astra rechecked runtime body and reader identity against c02be. Existing offline checks covered83 cases and18 queue policies. Combined pre-push validation is under `.build/CombinedRuntimeSuccessorNov16/`: initial full Python run found a renamed-step lookup, stale reviewed checker pin and a space-containing Python shebang in a timeout test. These test/contract corrections retain all assertions. The combined rerun passed all1,119 tests,18 queue policies/workflow lint, theme, localization, generated project, shell syntax and Node security-floor checks. Astra reviewed the final corrections with no blocker. No production app/service/web changes; publication is next.
+**Normal runtime integration installed locally:** exact reviewed patch `.build/IOS27DirectDMGNov16/normal-adoption-draft/integration.patch`, SHA `d0c93759a0e8f0ff70fb6c1d9ee5f37974ce8a68d138e9b1de04fc1d8744e9f6`, is now applied after the successful diagnostic. Astra rechecked runtime body and reader identity against c02be. Existing offline checks covered83 cases and18 queue policies. Combined pre-push validation is under `.build/CombinedRuntimeSuccessorNov16/`: initial full Python run found a renamed-step lookup, stale reviewed checker pin and a space-containing Python shebang in a timeout test. These test/contract corrections retain all assertions. The combined rerun passed all1,119 tests,18 queue policies/workflow lint, theme, localization, generated project, shell syntax and Node security-floor checks. Astra reviewed the final corrections with no blocker. No production app/service/web changes. Published as02d6b828; full qualification pending.
 
 **Terminal diagnostic:** `43819335110` / `133138544809`, commit `05f956a5d0813513028e5269b287a3ffa92d3bd9`, failed before import. Countdown handling worked: first bulk delete exit1 classified two170second Deleting messages and the known iOS purge error. Original registrations retired, recovery scan completed, and only one exact original tvOS27/24J360 asset reappeared. The second bulk delete returned the single-runtime top-level code30 form, which the aggregate-only parser rejected. Final registry was empty but physical cleanup/confirmation was not reached, so this is not a pass. Original artifact14204205415 and logs are retained in `.build/IOS27DirectDMGNov16/aggregate-countdown/`. Its later aggregate-single successor also failed; neither supplies normal iOS27 adoption evidence.
 
@@ -78,7 +80,7 @@ The SharedMealChange failure was different: its original screenshot/hierarchy al
 
 Canonical checkout: `/Users/palatis/Room in the Cart`; development branch `codex/records-import-undo`. Ambient Spanish worktree is not the authoritative checkout. Stage explicit paths; preserve unrelated `.srl`, profiling output and historical untracked evidence.
 
-Frozen remote development and [PR7](https://github.com/palatis3/room-in-the-cart/pull/7) branch `codex/printed-list-footer`: `a746ff60d13cfae205a743a481ed9248ef559d54`. Tested merge `042d1d97f182f7f5437ac158626cede2f07cd3b8` has the same tree `1c579cedc8c604634f73ed0a06a0660f0c595461`. Last verified main is `a5d9c773f470ceebf49b703eb568736b10f0d516`. Recheck before publication/merge.
+Frozen remote development and [PR7](https://github.com/palatis3/room-in-the-cart/pull/7) branch `codex/printed-list-footer`: `02d6b828ee9b48fd1149686063573ec03dda20cf`. Current PR merge `adf070a1fddaaf28d9793e9e6cec25404a75f73e` must retain the exact candidate tree. Last verified main is `a5d9c773f470ceebf49b703eb568736b10f0d516`. Recheck before publication/merge.
 
 Protection requires CI gate, CodeQL JS/TS, CodeQL actions and Dependency review; strict branch freshness, admin enforcement and conversation resolution are enabled. Last review audit found no unresolved conversations. Plan-required fixtures/deep/wire qualification also remains necessary; a narrow required-check list is not complete release acceptance.
 
@@ -100,7 +102,7 @@ The November16 scheduled-maintenance observation is complete. The actual schedul
 
 1. Combined source preflight and review passed for the installed, qualified runtime correction. Keep the original failed run evidence; do not repeat the unchanged green diagnostic or make speculative price-field changes.
 2. Keep exact owned-device creation for GitHub core/fixture consumers, Bitrise behavior, existing deadlines, routing and privacy exclusions. Native and runtime gates remain strict.
-3. Freeze and publish one combined candidate after local checks pass, then collect the complete planned qualification. Do not mix results from different revisions into a green claim.
+3. Collect the complete planned qualification for published02d6b828; preserve this candidate while it runs. Do not mix results from different revisions into a green claim.
 4. Merge only after exact-candidate requirements and protection pass. The November16 scheduled-maintenance observation is complete; retain its correlated proof.
 5. Advance the release checklist with actual signed/device/provider/human evidence. CI completion does not authorize public release.
 

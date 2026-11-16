@@ -619,8 +619,9 @@ without an independent task or measured capacity benefit.
 Before publishing the next grouped candidate, review the pending diff, finish the
 affected checks and confirm the current hosted batch has yielded its useful results.
 Run the existing cheap source-validation step once on that combined revision,
-including the complete Python suite (`.build/ci-yaml/bin/python -m unittest
-discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization.
+including the complete Python suite (`RUNNER_ENVIRONMENT=github-hosted GITHUB_ACTIONS=true .build/ci-yaml/bin/python -m unittest discover -s scripts -p 'test_*.py'` locally), generated-file checks and localization. Provider-specific
+tests must explicitly choose or remove their runner setting: November16's hosted
+source check caught inherited GitHub settings that the ordinary local run lacked.
 Focused checks did not catch a stale diagnostic hash and removed-trigger expectation
 on November11; the complete Python suite takes seconds locally and catches dependencies
 outside the edited test module. This is a pre-push source check, not another native
