@@ -52,7 +52,7 @@ import XCTest
         assertText("Entered soup packs")
         assertText("Unresolved quantities or restrictions accepted for this item")
         capture("S17-actual-shared-pack-and-checkout-review")
-        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
+        acknowledgeFoodReview()
         tap(app.buttons["sharedFood.apply"])
         let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: element("fixture.s17.applications"))
         XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 10), .completed)
@@ -131,7 +131,7 @@ import XCTest
         reviewFoodAmounts()
         assertDeadline(contains: "America/New_York (UTC−04:00)")
         assertDeadline(contains: "America/New_York (UTC−05:00)")
-        enableSwitch("I reviewed these sources, relationships, unknowns and whole packs")
+        acknowledgeFoodReview()
         tap(app.buttons["sharedFood.apply"])
         let count = element("fixture.s17.applications")
         let published = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: count)
@@ -196,6 +196,30 @@ import XCTest
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    }
+    private func acknowledgeFoodReview() {
+        let id = "sharedFood.acknowledged"
+        let control = app.switches[id]
+        reveal(control, fullyVisible: true)
+        XCTAssertEqual(control.value as? String, "0")
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        // The hosted failure's hierarchy already showed value 1 while XCTest
+        // repeatedly stalled resolving the live switch after the tap. Read
+        // its stable identifier from a fresh tree, keeping the state assertion.
+        func value() -> String? {
+            guard let snapshot = try? app.snapshot() else { return nil }
+            var nodes = [snapshot]
+            while let node = nodes.popLast() {
+                if node.elementType == .switch && node.identifier == id {
+                    return node.value as? String
+                }
+                nodes.append(contentsOf: node.children)
+            }
+            return nil
+        }
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in value() == "1" }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
+        XCTAssertEqual(value(), "1", "The reviewed switch must be on")
     }
     private func enterReasonAndPrepare(_ reason: String) {
         let field = element("meal-change-reason")
