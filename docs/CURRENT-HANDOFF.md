@@ -1,10 +1,13 @@
 # Room in the Cart — current handoff
 
-Updated November 16, 2026, 19:49 UTC. Goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Full native qualification currently requires external runner recovery. Component passes do not qualify one release candidate.
+Updated November 16, 2026, 20:23 UTC. Goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Full native qualification currently requires external runner recovery. Component passes do not qualify one release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical specification handoff statements that the app is unbuilt are superseded by inspected code and results.
 
 ## Active work and ownership
+
+**Dinner editor Done fixed; full Free pickup passes:** the original ordinary run atca3c7232 failed when bottom Done left the ingredient keyboard open with exact “Wraps” intact. DinnerTemplateEditor now uses the existing independently placed DinnerFocusedDoneBar for manual/reusable editors too, preserving action identifiers. No test/assertion/limit changes. After a15.812s incremental build, the original complete Free pickup passed282.151s on iPhone17/iOS27.0, including dinner/protected lunch, handoff, short fill, repair/cook copy, settlement, next shop and saved record after restarts. The same binaries passed the original Spanish manual meal-week/list/grid/lunch journey104.050s on iPhoneSE3/iOS17.0. Both native/strict1/1, zero skips/recorded warnings/restarts. Original failure, app patch, results and inspected title/Done placement are retained in `.build/CurrentFreePickupNov16/`. Both owned simulators were deleted and verified absent; no local native run remains active. Full combined cloud and physical-device acceptance remain open.
+
 
 **Local food and stock batch completed:** six original cases pass at93f6b092 using unchanged current contributor products: shared-food expired quote/Cancel/Apply/relaunch/exact retry in English and Spanish; stale meal revision blocks stock Apply; Done works at center/four margins; corrected stock preserves protected lunch and fresh cook instructions after restart; away-night carryover keeps the original purchase. Strict6/6, zero recorded warnings/restarts, no code changes or rebuild. `.build/CurrentFoodStockNov16/` retains originals, scoped README and verified deletion of owned simulatorD6FD0CB7-CFD0-4BBC-8C7C-3FA07162BD7B. No local native test remains active. The20:07UTC API still showed all four75b6 native producers pending with no assigned runner; existing jobs remain intact. This local fixture evidence does not establish deployed or physical-device acceptance.
 

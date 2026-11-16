@@ -72,15 +72,13 @@ struct DinnerTemplateEditor: View {
         }
     }
     private var editor: some View {
-        Group {
-            if purpose == .idea {
-                VStack(spacing: 0) {
-                    if inputFocus != nil { DinnerFocusedDoneBar { inputFocus = nil } }
-                    editorForm
+        VStack(spacing: 0) {
+            if inputFocus != nil {
+                DinnerFocusedDoneBar(identifier: purpose == .idea ? "dinnerFocusedKeyboardDone" : dinnerText("Done")) {
+                    inputFocus = nil
                 }
-            } else {
-                editorForm
             }
+            editorForm
         }
         .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
         .toolbar {
@@ -92,7 +90,6 @@ struct DinnerTemplateEditor: View {
             }
         }
         .dinnerAccess(model)
-        .keyboardDoneAction(visible: purpose != .idea && inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
         .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private var editorForm: some View {
@@ -420,6 +417,7 @@ struct DinnerIdeasView: View {
 
 /// A form sibling gives Done its own rectangular target, clear of navigation and keyboard chrome.
 struct DinnerFocusedDoneBar: View {
+    var identifier = "dinnerFocusedKeyboardDone"
     let dismissKeyboard: () -> Void
 
     var body: some View {
@@ -433,7 +431,7 @@ struct DinnerFocusedDoneBar: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Theme.action)
-            .accessibilityIdentifier("dinnerFocusedKeyboardDone")
+            .accessibilityIdentifier(identifier)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
