@@ -270,13 +270,17 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
         isolated = [('ci.yml', 'ios-tests', ('ui-01', 'ui-05')),
-                    ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests'))]
+                    ('ios-fixtures.yml', 'contributor-tests', ('contributor-balanced-01', 'SharedFallbackUITests')),
+                    ('ci.yml', 'ios-build', ()),
+                    ('ios-fixtures.yml', 'build-contributor', ()),
+                    ('ios-fixtures.yml', 'build-dinner', ())]
         # Reproduce hosted source-check inheritance even when this module runs locally.
         with patch.dict(os.environ, RUNNER_ENVIRONMENT='github-hosted', GITHUB_ACTIONS='true'), \
              tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             # Run the actual workflow shell with inert CLI replacements only.
             for name, source in {
+                'swift': '#!/bin/sh\nexit 0\n',
                 'xcrun': '#!/bin/sh\nprintf \'{"devices":{}}\\n\'\n',
                 'python3': '#!/bin/sh\ncat >/dev/null\nprintf "%s\\n" "$@" >> "$CAPTURE"\nexit "${SELECTOR_EXIT:-0}"\n',
             }.items():
@@ -315,10 +319,12 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                             self.assertEqual(capture.read_text().splitlines(),
                                              ['scripts/select_ci_iphone.py', '--create-owned', '.build/test-simulator-ownership.json'])
 
-    def test_only_execution_shards_opt_in_and_cleanup_precedes_receipt_upload(self):
+    def test_simulator_jobs_opt_in_and_cleanup_precedes_receipt_upload(self):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
-        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+        producers = {('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
+                     ('ios-fixtures.yml', 'build-dinner')}
+        expected = producers | {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
                     ('ios-fixtures.yml', 'dinner-tests'), ('ios-performance.yml', 'performance-tests')}
         observed = set()
         default_callers = set()
@@ -340,6 +346,16 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 observed.add(key)
                 self.assertEqual(len(create), 1); self.assertEqual(len(clean), 1)
                 self.assertEqual(steps[create[0]]['timeout-minutes'], 8)
+                if key in producers:
+                    build = next(i for i, s in enumerate(steps) if s.get('id') == 'build')
+                    self.assertLess(create[0], build)
+                    self.assertLess(build, clean[0])
+                    self.assertEqual(steps[clean[0]]['if'], "always() && runner.environment == 'github-hosted'")
+                    self.assertEqual(steps[clean[0]]['timeout-minutes'], 2)
+                    evidence = next(i for i, s in enumerate(steps) if s.get('name') == 'Upload GitHub runtime evidence')
+                    self.assertLess(clean[0], evidence)
+                    self.assertIn('.build/test-simulator-ownership.json', steps[evidence]['with']['path'].splitlines())
+                    continue
                 performance = key == ('ios-performance.yml', 'performance-tests')
                 boot_command = 'scripts/prepare_ios_performance_simulator.py' if performance else 'scripts/prepare_ios_simulator.sh wait'
                 test_command = 'test-without-building' if performance else 'bash scripts/run_ios_test_shard.sh'
@@ -361,8 +377,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                         self.assertTrue({'.build/test-simulator-ownership.json', '.build/test-*.json'}.intersection(paths),
                                         f'{key}: upload must include the simulator ownership receipt')
         self.assertEqual(observed, expected)
-        self.assertTrue({('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
-                         ('ios-fixtures.yml', 'build-dinner'), ('ios-performance.yml', 'performance-build')}.issubset(default_callers))
+        self.assertIn(('ios-performance.yml', 'performance-build'), default_callers)
 
 
 if __name__ == '__main__':

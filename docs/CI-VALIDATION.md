@@ -2,6 +2,16 @@
 
 ## November 16 GitHub runtime replacement
 
+The `b17cb89b` core producer selected iOS27.0/24A434, then both Xcode and simctl
+reported its preloaded Cryptex bundle as malformed. The destination disappeared
+before compilation (job133193864967, exit70). The producer had not used the new
+preparation. Core and fixture producers now use the same helper before selection,
+keep one owned-device identity through build/discovery/model execution, and require
+runtime verification and cleanup before uploading test products. This preserves
+native commands, model-result handling, existing deadlines and Bitrise behavior.
+The correction still needs hosted producer qualification; original failure evidence
+is retained in `.build/PR7-b17cb89b/ios-build-original/`.
+
 GitHub UI consumers now export and hash the pinned iOS 27.0/24A434 image, remove
 preloaded simulator runtimes on the disposable hosted runner, verify sustained
 physical and registry absence, and import the exact standalone DMG. All devices

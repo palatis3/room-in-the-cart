@@ -72,6 +72,7 @@ jobs:
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: contributor
+      TEST_SHARD: fixture-build
     outputs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
       workspace: ${{ github.workspace }}
@@ -100,8 +101,20 @@ jobs:
               raise SystemExit(f"Unexpected fixture runtime: {runtime}")
           print(f"Fixture runtime: {runtime['version']}/{runtime['buildversion']}")
           PYCODE
+      - name: Import the GitHub iOS runtime before boot
+        id: imported-runtime
+        if: runner.environment == 'github-hosted'
+        timeout-minutes: 20
+        run: python3 scripts/prepare_github_ios_runtime.py prepare
       - name: Select an iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+        timeout-minutes: 8
+        run: |
+          if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
@@ -180,6 +193,21 @@ jobs:
             2>&1 | tee .build/test-planning.log
           cp .build/test-enumeration.json .build/test-plan/
           bash scripts/package_ios_simulator_tests.sh "$RUNNER_TEMP/iphone-fixture-products.tar.lzfse"
+      - name: Verify the imported runtime after producer execution
+        if: always() && steps.imported-runtime.outcome == 'success'
+        timeout-minutes: 2
+        run: python3 scripts/prepare_github_ios_runtime.py verify
+      - name: Retain GitHub runtime diagnostics
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        timeout-minutes: 3
+        run: |
+          mkdir -p .build/github-ios-runtime
+          xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
+          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+      - name: Clean up only the owned simulator after result export
+        if: always() && runner.environment == 'github-hosted'
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:
@@ -212,6 +240,18 @@ jobs:
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
+      - name: Upload GitHub runtime evidence
+        continue-on-error: true
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: github-runtime-fixture-producer-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          path: |
+            .build/github-ios-runtime
+            .build/test-simulator-ownership.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
 
   build-dinner:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
@@ -225,6 +265,7 @@ jobs:
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: dinner
+      TEST_SHARD: fixture-build
     outputs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
     steps: *fixture-build-steps

@@ -503,6 +503,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
       CI_IPHONE_NAME: iPhone 17
+      TEST_SHARD: models
     outputs:
       test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
       test_matrix: ${{ steps.plan.outputs.matrix }}
@@ -537,10 +538,21 @@ jobs:
         run: python3 scripts/check_swift_syntax.py
       - name: Check supported keyboard automation before simulator setup
         run: python3 scripts/test_ui_automation_contract.py
+      - name: Import the GitHub iOS runtime before boot
+        id: imported-runtime
+        if: runner.environment == 'github-hosted'
+        timeout-minutes: 20
+        run: python3 scripts/prepare_github_ios_runtime.py prepare
       - name: Record Swift version and select iPhone
+        timeout-minutes: 8
         run: |
           swift --version
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Select the weekly GitHub compiler cache
         id: github-cache-key
         continue-on-error: true
@@ -624,14 +636,6 @@ jobs:
       - name: Package test products and exact selection
         run: |
           bash scripts/package_ios_simulator_tests.sh "$RUNNER_TEMP/iphone-test-products.tar.lzfse"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        id: upload
-        with:
-          name: iphone-test-products-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/iphone-test-products.tar.lzfse
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: error
       - name: Run model tests on the prepared producer and verify every result
         id: models
         timeout-minutes: 40
@@ -642,6 +646,29 @@ jobs:
           TEST_SHARD: models
           EXPECTED_TEST_COUNT: ${{ steps.plan.outputs.model_count }}
         run: bash scripts/run_ios_test_shard.sh
+      - name: Verify the imported runtime after producer execution
+        if: always() && steps.imported-runtime.outcome == 'success'
+        timeout-minutes: 2
+        run: python3 scripts/prepare_github_ios_runtime.py verify
+      - name: Retain GitHub runtime diagnostics
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        timeout-minutes: 3
+        run: |
+          mkdir -p .build/github-ios-runtime
+          xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
+          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+      - name: Clean up only the owned simulator after result export
+        if: always() && runner.environment == 'github-hosted'
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
+        with:
+          name: iphone-test-products-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-test-products.tar.lzfse
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
       - name: Retain model results from the prepared producer
         if: always() && steps.models.outcome != 'skipped'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -667,6 +694,19 @@ jobs:
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
+      - name: Upload GitHub runtime evidence
+        continue-on-error: true
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: github-runtime-core-producer-${{ github.run_attempt }}
+          path: |
+            .build/github-ios-runtime
+            .build/test-simulator-ownership.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
   ios-tests:
     name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
     concurrency:

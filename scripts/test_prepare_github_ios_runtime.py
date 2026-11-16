@@ -905,7 +905,7 @@ class RuntimeWorkflowTests(unittest.TestCase):
                             env={**os.environ, 'RUNNER_ENVIRONMENT': provider, 'TEST_SHARD': shard})
                         self.assertEqual('--create-owned' in output, provider == 'github-hosted' or shard in pilots)
 
-    def test_only_github_ui_consumers_prepare_before_selection_and_always_check_after_tests(self):
+    def test_github_simulator_jobs_prepare_before_selection_and_always_check_after_execution(self):
         seen = set()
         for path in (ROOT / ".github/workflows").glob("*.yml"):
             for name, job in parse_workflow(path)[0]["jobs"].items():
@@ -916,7 +916,10 @@ class RuntimeWorkflowTests(unittest.TestCase):
                 seen.add((path.name, name))
                 prepare, = prepares
                 verify, = [s for s in steps if s.get("run") == "python3 scripts/prepare_github_ios_runtime.py verify"]
-                native = next(s for s in steps if "bash scripts/run_ios_test_shard.sh" in s.get("run", ""))
+                fixture_build = path.name == "ios-fixtures.yml" and name.startswith("build-")
+                producer = fixture_build or (path.name, name) == ("ci.yml", "ios-build")
+                native = next(s for s in steps if (
+                    "-enumerate-tests" if fixture_build else "bash scripts/run_ios_test_shard.sh") in s.get("run", ""))
                 selection = next(s for s in steps if "scripts/select_ci_iphone.py" in s.get("run", ""))
                 cleanup = next(s for s in steps if "--cleanup-owned" in s.get("run", ""))
                 self.assertEqual(prepare["if"], "runner.environment == 'github-hosted'")
@@ -926,16 +929,32 @@ class RuntimeWorkflowTests(unittest.TestCase):
                 self.assertLess(steps.index(prepare), steps.index(selection))
                 self.assertLess(steps.index(native), steps.index(verify))
                 self.assertLess(steps.index(verify), steps.index(cleanup))
-                self.assertEqual(native["timeout-minutes"], 40)
-                self.assertEqual(job["timeout-minutes"], 75)
+                if not fixture_build:
+                    self.assertEqual(native["timeout-minutes"], 40)
+                self.assertEqual(job["timeout-minutes"], 35 if fixture_build else 75)
+                if producer:
+                    product_upload = next(s for s in steps if s.get("id") == "upload")
+                    self.assertLess(steps.index(cleanup), steps.index(product_upload))
+                    # Default success() gates artifact acceptance on strict verification/cleanup.
+                    self.assertNotIn("if", product_upload)
+                    self.assertNotIn("continue-on-error", product_upload)
+                    self.assertNotIn("continue-on-error", cleanup)
+                    self.assertEqual(cleanup["if"], "always() && runner.environment == 'github-hosted'")
+                    self.assertEqual(job["env"]["TEST_SHARD"], "fixture-build" if fixture_build else "models")
+                    for step in steps:
+                        self.assertEqual(step.get("env", {}).get("TEST_SHARD", job["env"]["TEST_SHARD"]),
+                                         job["env"]["TEST_SHARD"])
                 upload = next(s for s in steps if s.get("name") == "Upload GitHub runtime evidence")
                 self.assertEqual(upload["with"]["path"].splitlines(),
                                  [".build/github-ios-runtime", ".build/test-simulator-ownership.json"])
                 self.assertLess(steps.index(cleanup), steps.index(upload))
                 self.assertIn("always() && steps.imported-runtime.outcome != 'skipped'", upload["if"])
                 self.assertIs(upload["continue-on-error"], True)
-        self.assertEqual(seen, {("ci.yml", "ios-tests"), ("ios-fixtures.yml", "contributor-tests"),
-                                ("ios-fixtures.yml", "dinner-tests")})
+                diagnostic = next(s for s in steps if s.get("name") == "Retain GitHub runtime diagnostics")
+                self.assertIn("always() && steps.imported-runtime.outcome != 'skipped'", diagnostic["if"])
+        self.assertEqual(seen, {("ci.yml", "ios-build"), ("ci.yml", "ios-tests"),
+                                ("ios-fixtures.yml", "build-contributor"), ("ios-fixtures.yml", "build-dinner"),
+                                ("ios-fixtures.yml", "contributor-tests"), ("ios-fixtures.yml", "dinner-tests")})
 
     def test_private_records_never_collect_or_upload_raw_runtime_logs(self):
         workflow = parse_workflow(ROOT / ".github/workflows/ios-fixtures.yml")[0]
