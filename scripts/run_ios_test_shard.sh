@@ -79,9 +79,9 @@ fi
 # Readable failed bundles are useful too. The raw result and logs are uploaded
 # even if Xcode cannot export JSON after an infrastructure failure.
 echo 'XCTest phase: exporting summary'
-xcrun xcresulttool get test-results summary --path "$result" --compact > .build/test-summary.json
+python3 scripts/export_ios_test_results.py summary --path "$result" > .build/test-summary.json
 echo 'XCTest phase: exporting test details'
-xcrun xcresulttool get test-results tests --path "$result" --compact > .build/test-details.json
+python3 scripts/export_ios_test_results.py tests --path "$result" > .build/test-details.json
 echo 'XCTest phase: validating results and runtime warnings'
 python3 scripts/check_ios_test_results.py --selectors "$selection" --expected-count "$EXPECTED_TEST_COUNT" \
     --summary .build/test-summary.json --tests .build/test-details.json --result-bundle "$result" --test-log "$log"

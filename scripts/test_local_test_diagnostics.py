@@ -35,6 +35,7 @@ class LocalDiagnosticsTests(unittest.TestCase):
                               'printf "%s\\n" "${NATIVE_MESSAGE:-}"\nexit "${NATIVE_EXIT:-0}"',
                 'xcrun': 'printf "%s\\n" "$@" >> "$TRACE"\necho "{}"',
                 'python3': 'printf "%s\\n" "$@" >> "$TRACE"\n'
+                           'if [[ "$1" = scripts/export_ios_test_results.py ]]; then exit "${EXPORT_EXIT:-0}"; fi\n'
                            'if [[ "$1" = scripts/report_ios_test_timing.py ]]; then exit "${TIMING_EXIT:-0}"; fi\n'
                            'if [[ "$1" = scripts/check_ios_test_results.py ]]; then exit "${STRICT_EXIT:-0}"; fi',
             }.items():
@@ -98,6 +99,13 @@ class LocalDiagnosticsTests(unittest.TestCase):
             self.assertEqual(status, expected)
             self.assertIn('scripts/check_ios_test_results.py', args)
             self.assertEqual(args.count('test-without-building'), 1)
+
+    def test_export_timeout_fails_without_native_retry_or_false_validation(self):
+        status, args = self.run_shard(EXPORT_EXIT='124')
+        self.assertEqual(status, 124)
+        self.assertEqual(args.count('test-without-building'), 1)
+        self.assertEqual(args.count('scripts/export_ios_test_results.py'), 1)
+        self.assertNotIn('scripts/check_ios_test_results.py', args)
 
     def test_infrastructure_retry_retains_distinct_timing_for_both_attempts(self):
         status, args = self.run_shard(

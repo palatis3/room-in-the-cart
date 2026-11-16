@@ -321,6 +321,18 @@ class ActivityRetentionTests(unittest.TestCase):
             append_runtime_warning_report(args, {}, [], [], report, failures)
         return report, failures, exporter
 
+    def test_export_timeout_is_unavailable_evidence_and_a_failed_gate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, failures, _ = self.run_report(
+                root, [], subprocess.TimeoutExpired('xcrun xcresulttool', 300))
+            evidence = json.loads((root / 'test-runtime-warnings.json').read_text())
+            self.assertEqual(evidence['status'], 'unavailable')
+            self.assertNotIn('runtimeWarningCount', evidence)
+            self.assertEqual(len(failures), 1)
+            self.assertIn('timed out after 300 seconds', failures[0])
+            self.assertTrue((root / 'test-runtime-warning-activities.json').is_file())
+
     def test_missing_attachment_retains_exact_per_case_stdout_without_logging_payload(self):
         raw = (b'{\r\n "activities": [{"title": "Fixture private text", "isAssociatedWithFailure": false},'
                b'{"title":"QoS warning", "isAssociatedWithFailure":false}]\r\n}\r\n')
