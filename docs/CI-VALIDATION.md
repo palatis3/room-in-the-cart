@@ -328,6 +328,15 @@ this switch use the five GitHub macOS queues with the same tests, Xcode and
 artifact checks. Already assigned jobs keep their runner labels. Clear the
 variable to restore the usual routing for subsequent runs.
 
+Before dispatching a one-off native diagnostic, inspect active jobs across the
+repository and the five shared groups (`ritc-macos-slot-0` through `-4`). Use an
+idle group when available; a pending job on an occupied group cannot use spare
+capacity elsewhere. If moving an already pending diagnostic, first verify it has
+no runner or executed steps, cancel it and confirm the run is terminal, then
+dispatch one replacement with identical source, products, selectors and limits.
+Record the scheduling-only change. Do not restart executing jobs or add a sixth
+GitHub group to bypass the shared capacity limit.
+
 During the November 14 outage run, GitHub slots 3 and 4 had finished their last native jobs by 14:53 UTC. At 16:01 UTC, the bilingual StoreKit retry, UI07 and the Spanish large-text store quote were waiting on slot 2. On the GitHub-only fallback, contributor group 05 and known-trip quote adoption now use slot 4. The lost-reply quote and Spanish large-text quote use slot 3. Compare the last required result and StoreKit wait on the next full batch. [Fixture job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663919) · [Core job timings](https://github.com/palatis3/room-in-the-cart/actions/runs/43596663924)
 
 On November 15, GitHub slot 4 finished its last fixture at 07:20 UTC. UI01 was still waiting on slot 1 when UI04 started there at 07:24 UTC. Full runs now send UI01 to GitHub slot 4 when using GitHub runners. Its preferred Bitrise runner remains M4 slot 0. [Fixture jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744700) · [Core jobs](https://github.com/palatis3/room-in-the-cart/actions/runs/43678744701)
