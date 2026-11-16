@@ -53,11 +53,11 @@ import XCTest
         fill("6", into: "bQuantity"); fill("2", into: "bPrice")
         tap(element("compare")); tap(element("saveComparison"))
         tap(app.tabBars.buttons["Records"]); tap(element("savedComparison"))
-        XCTAssertTrue(element("editComparison").waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8))
         capture("Records detail before process termination")
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Records"].isSelected)
-        XCTAssertTrue(element("editComparison").waitForExistence(timeout: 10), "The same saved comparison should reopen without selecting its row again")
+        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 10), "The same saved comparison should reopen without selecting its row again")
         XCTAssertTrue(app.staticTexts["Restoration family wraps"].exists)
         capture("Records detail restored after process relaunch")
         // Open the independent shop route, then kill there too.
@@ -70,7 +70,7 @@ import XCTest
         XCTAssertTrue(app.tabBars.buttons["Shop"].isSelected)
         XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 10))
         tap(app.tabBars.buttons["Records"])
-        XCTAssertTrue(element("editComparison").waitForExistence(timeout: 8), "Both explicit stacks survive the second process death")
+        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8), "Both explicit stacks survive the second process death")
         capture("Independent Shop and Records stacks restored")
     }
     func testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison() {
