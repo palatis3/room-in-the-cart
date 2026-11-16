@@ -207,6 +207,19 @@ def prepare():
 def verify():
     current = capture('after-tests.json')
     before = json.loads((evidence / 'target.json').read_text())
+    # Preserve physical availability even when registry mount metadata vanishes.
+    # This is diagnostic evidence only: the identity/mount assertions below stay strict.
+    filesystem = {'observedAt': time.time(), 'paths': {}}
+    for key in ('path', 'mountPath', 'runtimeBundlePath'):
+        value = before.get(key)
+        filesystem['paths'][key] = {
+            'path': value,
+            'exists': Path(value).exists() if value else None,
+            'isDirectory': Path(value).is_dir() if value else None,
+        }
+        if key == 'mountPath':
+            filesystem['paths'][key]['isMount'] = os.path.ismount(value) if value else None
+    (evidence / 'verification-filesystem.json').write_text(json.dumps(filesystem, indent=2) + '\n')
     installed = targets(current)
     assert len(installed) == 1, 'Expected exactly one target registration'
     after = installed[0]

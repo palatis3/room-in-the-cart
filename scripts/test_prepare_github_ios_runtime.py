@@ -210,6 +210,19 @@ class RuntimeReplacementTests(unittest.TestCase):
             subject.verify()
         self.assertTrue((subject.evidence / "after-tests.json").is_file())
 
+    def test_postcheck_records_filesystem_before_rejecting_missing_mount_metadata(self):
+        subject.prepare()
+        self.rows[NEW].pop("mountPath")
+        with patch.object(subject.os.path, "ismount", return_value=True) as ismount:
+            with self.assertRaisesRegex(AssertionError, "Runtime changed during tests: mountPath"):
+                subject.verify()
+        ismount.assert_called_once_with("/test-mount")
+        paths = json.loads((subject.evidence / "verification-filesystem.json").read_text())["paths"]
+        self.assertEqual(paths["mountPath"]["path"], "/test-mount")
+        self.assertTrue(paths["mountPath"]["isMount"])
+        self.assertTrue(paths["path"]["exists"])
+        self.assertTrue(paths["runtimeBundlePath"]["isDirectory"])
+
     def test_cli_guard_rejects_local_bitrise_and_other_runtime_before_native_calls(self):
         env = {"RUNNER_ENVIRONMENT": "github-hosted", "GITHUB_ACTIONS": "true",
                "CI_IPHONE_RUNTIME": subject.runtime,
