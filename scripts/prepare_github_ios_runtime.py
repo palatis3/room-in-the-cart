@@ -160,6 +160,28 @@ def eligible_asset_recovery(first_errors, second_errors, catalog):
     return root
 
 
+def preferred_cryptex_twin(identifier, before, rows, catalog):
+    """Bind the observed Ready-to-preferred-Unusable transition to one new asset twin."""
+    original, row = before[identifier], rows[identifier]
+    root = original['path']
+    assert re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\.asset/AssetData', root)
+    assert catalog[root]['payloads'], 'Preferred twin lacks a recorded original payload'
+    assert original.get('state') == 'Ready' and original.get('kind') == 'Patchable Cryptex Disk Image'
+    fields = ('identifier', 'path', 'runtimeIdentifier', 'build', 'version', 'kind', 'parentMountPath', 'mountPath')
+    assert all(row.get(k) == original.get(k) for k in fields), 'Preferred original identity changed'
+    assert row.get('parentMountPath') == root
+    assert row.get('state') == 'Unusable'
+    assert row.get('unusableSubstate') == row.get('unusableErrorMessage') == 'Cryptex Mount Preferred'
+    twins = {key: other for key, other in rows.items() if other.get('path') == root and key != identifier}
+    assert len(twins) == 1, 'Preferred original requires exactly one same-asset twin'
+    key, twin = next(iter(twins.items()))
+    assert key not in before and twin.get('state') == 'Ready', 'Preferred twin is not a new Ready registration'
+    validate_original_rows({identifier: row, key: twin}, catalog)
+    assert all(twin.get(k) == original.get(k) for k in ('path', 'runtimeIdentifier', 'build', 'version', 'kind', 'parentMountPath'))
+    assert twin.get('mountPath', '').startswith('/private/var/run/com.apple.security.cryptexd/mnt/')
+    assert twin['mountPath'] != row.get('mountPath'), 'Preferred twin lacks a distinct Cryptex mount'
+    return key
+
 def cleanup_original_images(current):
     """Two bulk deletions and at most one documented, asset-specific UUID recovery."""
     import plistlib
@@ -233,7 +255,14 @@ def cleanup_original_images(current):
                 'exit': result.returncode, 'requiresVerification': True, 'recognizedErrors': classified}, indent=2) + '\n')
             return classified
 
-    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None):
+    retained_preferred = {}
+
+    def validate_retained(rows, before):
+        for key in set(before).intersection(rows):
+            assert key in retained_preferred, 'Original UUID returned after retirement'
+            assert preferred_cryptex_twin(key, before, rows, catalog) == retained_preferred[key], 'Preferred twin changed'
+
+    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None, allow_preferred=False):
         until = time.monotonic() + remaining(210)
         attempt = 0
         while True:
@@ -241,14 +270,24 @@ def cleanup_original_images(current):
             for key, row in rows.items():
                 if key in before:
                     assert all(row.get(k) == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))
-                    assert row.get('state') == 'Deleting', 'Old registration did not enter Deleting'
+                    if row.get('state') != 'Deleting':
+                        assert allow_preferred, 'Old registration did not enter Deleting'
+                        twin = preferred_cryptex_twin(key, before, rows, catalog)
+                        assert retained_preferred.get(key, twin) == twin, 'Preferred twin changed'
+                        assert key in retained_preferred or not retained_preferred, 'More than one preferred original/twin pair'
+                        retained_preferred[key] = twin
+                        receipt['retainedPreferredTwins'] = dict(retained_preferred)
+                        save()
                 else:
                     if not allow_recreated:
                         assert recreated_catalog is not None, 'Runtime recreated after final deletion; no further mutation permitted'
                         validate_original_rows({key: row}, recreated_catalog, pending=True)
             if recreated_catalog is not None:
                 assert len(set(rows) - set(before)) <= 1, 'Asset recovery exposed more than one registration'
-            if not set(before).intersection(rows):
+            remaining_originals = set(before).intersection(rows)
+            if allow_preferred:
+                remaining_originals -= {key for key in retained_preferred if rows.get(key, {}).get('state') == 'Unusable'}
+            if not remaining_originals:
                 return rows
             assert time.monotonic() < until, 'Original deletion did not retire within 210 seconds'
             time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))
@@ -274,13 +313,13 @@ def cleanup_original_images(current):
         validate_original_rows(first, catalog)
         assert first, 'Runtime inventory disappeared before command'
         first_errors = command('delete-all', ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=first)
-        wait_retired(first, 'all-removal-wait', allow_recreated=True)
+        wait_retired(first, 'all-removal-wait', allow_recreated=True, allow_preferred=not first_errors)
         command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])
         until = time.monotonic() + remaining(120)
         count = 0
         while True:
             rows = observe('recovery-settle-' + str(count))
-            assert not set(first).intersection(rows), 'Original UUID returned after retirement'
+            validate_retained(rows, first)
             # Pending identities are observable but can never authorize deletion.
             known = all(all(r.get(k) for k in ('runtimeIdentifier', 'build', 'version')) for r in rows.values())
             if known and all_ready(rows) and payloads_registered(rows):
@@ -293,7 +332,7 @@ def cleanup_original_images(current):
         if rows:
             second = observe('delete-recreated-current')
             assert second, 'Recreated inventory disappeared before second deletion'
-            assert not set(first).intersection(second)
+            validate_retained(second, first)
             assert all_ready(second) and payloads_registered(second), 'Recovery changed before second deletion'
             second_errors = command('delete-recreated-originals', ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=second)
             if any(e['classification'] == 'mobileasset-not-reclaimed' for e in second_errors):

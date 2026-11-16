@@ -20,6 +20,15 @@ asset-purge errors; unknown identities or remaining assets fail preparation.
 One current-user simulator-service refresh runs before creating an owned iPhone.
 Bitrise keeps its existing preparation and routing.
 
+The first normal batch also exposed one retained tvOS registration marked
+`Cryptex Mount Preferred`, beside a new Ready registration for the same asset
+(job133201539104). Cleanup now permits at most one such exact pair after a
+successful first deletion, revalidates both identities, and uses the existing
+second deletion. It adds no mutation or time allowance. Both registrations must
+then retire and pass the full absence checks. Any unresolved identity, including
+the observed watchOS row, still fails preparation. This correction has local
+regression coverage; hosted recovery remains unproven.
+
 [Diagnostic 43832196302](https://github.com/palatis3/room-in-the-cart/actions/runs/43832196302)
 passed the unchanged original produce journey in 393.932 seconds, with no recorded
 runtime warnings or native restarts. It exercised the exact asset-recovery path,
@@ -496,8 +505,10 @@ queues, with five native jobs executing. Admission behavior is now verified;
 an elapsed-time or overall-utilization improvement has not yet been measured.
 
 The next grouped candidate removes two repeated simulator setups. Core models
-run on the existing build producer after enumeration and product upload; the
-consumer matrix retains all ten UI rows and their original slots. The complete
+run on the existing build producer after enumeration and product packaging.
+As of the November 16 producer correction, upload follows model execution,
+runtime verification and owned-device cleanup. The consumer matrix retains
+all ten UI rows and their original slots. The complete
 compiled plan and model selectors remain unchanged. A failed model step allows
 UI consumers to proceed, but the required CI gate checks its raw outcome and
 rejects failed, skipped, cancelled or missing model results. The producer's outer

@@ -30,6 +30,52 @@ NEW_TV = '2F11B40E-98FB-47CC-8A06-A0F4806A5347'
 NEW_IOS = '11111111-1111-4111-8111-111111111111'
 
 
+def preferred_pair():
+    # Sanitized original 133201539104 transition: same UUID/asset, new Cryptex twin.
+    original = copy.deepcopy(ORIGINAL[TV])
+    unusable = {**original, 'state': 'Unusable',
+                'unusableSubstate': 'Cryptex Mount Preferred',
+                'unusableErrorMessage': 'Cryptex Mount Preferred'}
+    twin = {**original, 'identifier': NEW_TV,
+            'mountPath': '/private/var/run/com.apple.security.cryptexd/mnt/tvOS_24J360'}
+    catalog = {original['path']: {'identity': {k: original[k] for k in ('runtimeIdentifier', 'build', 'version')},
+                                 'payloads': [original['path'] + '/Restore/043-16887-522.dmg']}}
+    return {TV: original}, {TV: unusable, NEW_TV: twin}, catalog
+
+
+class PreferredTwinTests(unittest.TestCase):
+    def test_observed_preferred_transition_is_bound_to_the_original_asset(self):
+        before, rows, catalog = preferred_pair()
+        self.assertEqual(subject.preferred_cryptex_twin(TV, before, rows, catalog), NEW_TV)
+
+    def test_missing_ambiguous_preexisting_or_pending_twin_is_rejected(self):
+        for variant in ('missing', 'multiple', 'preexisting', 'pending', 'wrong-mount'):
+            with self.subTest(variant=variant):
+                before, rows, catalog = preferred_pair()
+                if variant == 'missing': rows.pop(NEW_TV)
+                if variant == 'multiple': rows[NEW_IOS] = {**rows[NEW_TV], 'identifier': NEW_IOS}
+                if variant == 'preexisting': before[NEW_TV] = rows[NEW_TV]
+                if variant == 'pending': rows[NEW_TV].update(state='Verifying', build=None)
+                if variant == 'wrong-mount': rows[NEW_TV]['mountPath'] = rows[TV]['mountPath']
+                with self.assertRaises(AssertionError):
+                    subject.preferred_cryptex_twin(TV, before, rows, catalog)
+
+    def test_changed_identity_state_error_kind_path_or_payload_cannot_authorize_retention(self):
+        for key in (TV, NEW_TV):
+            for field, value in [('build', 'wrong'), ('version', None), ('runtimeIdentifier', 'wrong'),
+                                 ('path', '/foreign'), ('parentMountPath', '/foreign'),
+                                 ('kind', 'Disk Image'), ('deletable', False), ('identifier', NEW_IOS)]:
+                with self.subTest(key=key, field=field):
+                    before, rows, catalog = preferred_pair(); rows[key][field] = value
+                    with self.assertRaises(AssertionError):
+                        subject.preferred_cryptex_twin(TV, before, rows, catalog)
+        for change in ({'state': 'Ready'}, {'unusableSubstate': 'Mount Failed'}, {'unusableErrorMessage': ''}):
+            before, rows, catalog = preferred_pair(); rows[TV].update(change)
+            with self.assertRaises(AssertionError): subject.preferred_cryptex_twin(TV, before, rows, catalog)
+        before, rows, catalog = preferred_pair(); catalog[before[TV]['path']]['payloads'] = []
+        with self.assertRaises(AssertionError): subject.preferred_cryptex_twin(TV, before, rows, catalog)
+
+
 class ClassifierTests(unittest.TestCase):
     def test_actual_second_pass_purge_authorizes_only_its_original_recorded_asset(self):
         first = FIXTURE['recoveryFirstErrors']
@@ -193,6 +239,13 @@ class CleanupTests(unittest.TestCase):
         self.third_failure = False
         self.third_residual = False
         self.early_asset_pending = False
+        self.preferred_first = False
+        self.preferred_first_error = False
+        self.preferred_pending_watch = False
+        self.preferred_twin_drift = False
+        self.preferred_second_survivor = False
+        self.preferred_multiple = False
+        self.third_preferred_survivor = False
         original_is_file = Path.is_file
         original_rglob = Path.rglob
         original_exists = Path.exists
@@ -234,7 +287,10 @@ class CleanupTests(unittest.TestCase):
                 self.rows[IOS_OLD]['version'] = '26.2'
             if self.elapsed >= 5 and not self.stuck_deleting:
                 for identifier in self.initial:
-                    self.rows.pop(identifier, None)
+                    if not (self.preferred_first and identifier == TV):
+                        self.rows.pop(identifier, None)
+            if self.preferred_twin_drift and self.scans == 1:
+                self.rows[NEW_TV]['state'] = 'Unusable'
             if self.scans == 1 and NEW_IOS in self.rows and self.elapsed >= self.scan_time + 5 and not self.pending_forever:
                 self.rows[NEW_IOS].update({k: ORIGINAL[IOS][k] for k in ('runtimeIdentifier', 'build', 'version')})
                 self.rows[NEW_IOS]['state'] = 'Ready'
@@ -283,6 +339,13 @@ class CleanupTests(unittest.TestCase):
             if self.third_failure:
                 kwargs['stdout'].write('Unqualified exact-delete failure')
                 return subprocess.CompletedProcess(command, 30)
+            if self.third_preferred_survivor:
+                original = self.rows[RECOVERY_ID]
+                self.rows = {RECOVERY_ID: {**original, 'state': 'Unusable',
+                    'unusableSubstate': 'Cryptex Mount Preferred', 'unusableErrorMessage': 'Cryptex Mount Preferred'},
+                    NEW_TV: {**original, 'identifier': NEW_TV,
+                             'mountPath': '/private/var/run/com.apple.security.cryptexd/mnt/tvOS_24J360'}}
+                return subprocess.CompletedProcess(command, 0)
             self.rows.clear()
             if not self.third_residual:
                 self.payloads.clear()
@@ -306,6 +369,22 @@ class CleanupTests(unittest.TestCase):
             self.payloads.discard(self.payload_for[ORIGINAL[WATCH]['path']])
             if self.single_purge:
                 self.payloads.discard(self.payload_for[ORIGINAL[IOS]['path']])
+            if self.preferred_first:
+                _, pair, _ = preferred_pair()
+                self.rows.update(pair)
+                if self.preferred_multiple:
+                    self.rows.pop(IOS_OLD, None)
+                    original = ORIGINAL[IOS]
+                    self.rows[IOS] = {**original, 'state': 'Unusable',
+                        'unusableSubstate': 'Cryptex Mount Preferred', 'unusableErrorMessage': 'Cryptex Mount Preferred'}
+                    self.rows[NEW_IOS] = {**original, 'identifier': NEW_IOS,
+                        'mountPath': '/private/var/run/com.apple.security.cryptexd/mnt/iOS_24A434'}
+                if self.preferred_pending_watch:
+                    self.rows[RECOVERY_ID] = {**ORIGINAL[WATCH], 'identifier': RECOVERY_ID,
+                        'state': 'Unusable', 'unusableSubstate': 'Mount Failed',
+                        'runtimeIdentifier': None, 'build': None, 'version': None}
+                if not self.preferred_first_error:
+                    return subprocess.CompletedProcess(command, 0)
             kwargs['stdout'].write(DETAIL + ('Unknown error\n' if self.first_unknown else ''))
             if self.total_timeout:
                 self.elapsed += 600
@@ -313,6 +392,9 @@ class CleanupTests(unittest.TestCase):
         if self.second_unknown:
             kwargs['stdout'].write('Unknown second delete failure\n')
             return subprocess.CompletedProcess(command, 1)
+        if self.preferred_second_survivor:
+            self.rows = preferred_pair()[1]
+            return subprocess.CompletedProcess(command, 0)
         self.rows.clear()
         if not self.residual_payload:
             self.payloads.clear()
@@ -362,6 +444,61 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual(self.receipt()['outcome'], 'success')
         result = json.loads((self.evidence / 'delete-all-classification.json').read_text())
         self.assertEqual(len(result['recognizedErrors']), 3)
+
+    def test_preferred_original_and_twin_use_existing_second_delete_then_full_absence(self):
+        self.preferred_first = True
+        _, observations = subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (2, 2))
+        self.assertGreaterEqual(observations, 13)
+        self.assertEqual(self.receipt()['retainedPreferredTwins'], {TV: NEW_TV})
+        second = json.loads((self.evidence / 'delete-recreated-originals-before.json').read_text())
+        self.assertEqual(second[TV]['state'], 'Unusable')
+        self.assertEqual(second[NEW_TV]['state'], 'Ready')
+        self.assertEqual(self.receipt()['outcome'], 'success')
+        self.assertEqual(self.receipt()['mutations'], 2)
+        self.assertEqual(self.elapsed, 70)  # Five seconds each for retirement/settling, then 60 absent.
+
+    def test_multiple_otherwise_valid_preferred_pairs_fail_before_scan_or_second_delete(self):
+        self.preferred_first = self.preferred_multiple = True
+        with self.assertRaisesRegex(AssertionError, 'More than one'):
+            subject.cleanup_original_images(self.initial)
+        catalog = json.loads((self.evidence / 'original-payload-catalog.json').read_text())
+        self.assertEqual(subject.preferred_cryptex_twin(TV, self.initial, self.rows, catalog), NEW_TV)
+        self.assertEqual(subject.preferred_cryptex_twin(IOS, self.initial, self.rows, catalog), NEW_IOS)
+        self.assertEqual((self.deletes, self.scans), (1, 0))
+
+    def test_preferred_transition_after_nonzero_first_delete_is_not_authorized(self):
+        self.preferred_first = self.preferred_first_error = True
+        with self.assertRaisesRegex(AssertionError, 'Deleting'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (1, 0))
+
+    def test_identityless_mount_failed_watch_row_still_times_out_without_second_delete(self):
+        self.preferred_first = self.preferred_pending_watch = True
+        with self.assertRaisesRegex(AssertionError, '120 seconds'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (1, 1))
+        self.assertEqual(self.elapsed, 125)
+
+    def test_preferred_twin_is_revalidated_after_scan(self):
+        self.preferred_first = self.preferred_twin_drift = True
+        with self.assertRaisesRegex(AssertionError, 'new Ready'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (1, 1))
+
+    def test_preferred_survivor_after_final_exact_deletion_never_authorizes_a_fourth(self):
+        self.configure_asset_recovery()
+        self.third_preferred_survivor = True
+        with self.assertRaisesRegex(AssertionError, 'Deleting'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (3, 2))
+        self.assertEqual(self.receipt()['outcome'], 'failure')
+
+    def test_preferred_pair_cannot_survive_second_delete_or_authorize_a_third(self):
+        self.preferred_first = self.preferred_second_survivor = True
+        with self.assertRaisesRegex(AssertionError, 'Deleting'):
+            subject.cleanup_original_images(self.initial)
+        self.assertEqual((self.deletes, self.scans), (2, 1))
 
     def test_clean_first_deletion_does_not_make_second_mutation(self):
         self.clean_first = True
