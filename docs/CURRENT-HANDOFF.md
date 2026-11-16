@@ -1,6 +1,6 @@
 # Room in the Cart — current handoff
 
-Updated November 16, 2026, 17:16 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
+Updated November 16, 2026, 17:28 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical specification handoff statements that the app is unbuilt are superseded by inspected code and results.
 
@@ -17,6 +17,12 @@ Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](produc
 **Local validation completed:** immutable1a12 contributor products passed14selected UI journeys and all1,046enabled model cases with exact selection, zero recorded warnings/restarts/skips. The15StoreKit cases remain in their dedicated plan. `.build/LocalFocused1a12Nov16/{README.md,summary.json}` and per-group originals retain proof. Three additional privacy/device baseline journeys passed with app logging muted; those establish behavior only and are not part of the14 warning-checked cases.
 
 **Runtime-logging fix qualified locally:** canonicalbc7408a90d9404abac5e0d0ef1dd12937fd6606d and diagnostic0fb1997d4409d4a7d6cb161e64c19666f8b5945c restrict five UI logging workarounds to iOS17 and remove one unnecessary test `try`. Actual build-for-testing passed140.129s; all6selected privacy/guardian/device/media/records journeys passed with0recorded runtime warnings/restarts. No app code/assertions changed. `.build/CurrentIOSLogging0fbNov16/` retains the immutable build, native results and cleanup receipts. Prior1a12 results remain attached to their original source. Root owns cleanup of the exact disposable simulatorAF8F5E95-0FC9-40FC-9D89-A8B4B2B80856; check `focused-ui/cleanup.json`. No local native test is running.
+
+**Three previously unfinished journeys now pass locally:** the immutable0fb products passed child pickup/request review56.881s, library preview/Cancel/corrupt preservation/Apply/whole Undo354.287s, and store-quote lost-reply/relaunch/exact-retry119.800s. Strict3/3,0recorded warnings/restarts; original logs/results and owned-device cleanup are in `.build/CurrentIOSLogging0fbNov16/unfinished-journeys/`. Together with the earlier6cases, these are9local UI passes on0fb; `git diff 0fb1997d 75b6288d -- ios` is empty. No native run is active. Six original screenshots from the earlier group were inspected; no blocking layout defect in those captured states. One nonblocking “1 packs” copy observation is retained in `screenshots/REVIEW.md` for the next planned app edit, without changing the running combined candidate.
+
+**Normal75b6 batch:** all4Linux jobs and Swift packages passed. SwiftCodeQL is running; core/Release and both fixture producers await native admission. Four earlier current-head Dependabot M4 UI consumers passed, establishing actual M4 test execution; no obsolete-run cancellation was justified. Fresh Build Hub still showed M2zero/36vCPU and no machines despite configured3/up-to-date, with a partial-outage banner. Do not treat configured14slots as14online. Sol retains active status/originals in `.build/BitriseNormalUncachedNov16/`.
+
+**Documentation cleanup:** the acceptance map now leads directly to scoped evidence and unchanged52requirement/27route tables.928stale checkpoint lines were removed from the current file, with an immutable75b6Git history link preserving them. Commits after75b6 so far change documentation only; they do not change the running CI source or justify a new full batch.
 
 Earlier diagnostics8b13/29e/a14 and their failed-host evidence remain below and in Git history. Their completed states are historical, not instructions to dispatch again.
 
