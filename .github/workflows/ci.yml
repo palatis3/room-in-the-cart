@@ -1,15 +1,15 @@
-name: Bitrise recovery canary
-run-name: Bitrise recovery · one M4 runner and cache
+name: Bitrise M2 environment probe
+run-name: Bitrise recovery · one M2 environment probe
 on:
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: ritc-bitrise-recovery-canary
+  group: ritc-bitrise-m2-environment-probe
   cancel-in-progress: false
 jobs:
   recovery:
-    runs-on: 'bitrise-runner-ci 2'
+    runs-on: 'bitrise-runner-room in cart'
     timeout-minutes: 10
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
@@ -18,7 +18,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: scripts
-      - name: Verify the recovered M4 environment
+      - name: Verify the M2 environment without cache activation
         run: |
           set -euo pipefail
           test "$RUNNER_ENVIRONMENT" = self-hosted
@@ -31,30 +31,13 @@ jobs:
             sudo ln -s /Applications/Xcode-27.1.0.app /Applications/Xcode_27.1.app
           fi
           bash scripts/check_ci_xcode27.sh
-      - name: Activate the existing pinned Xcode cache integration
-        timeout-minutes: 3
-        run: bash scripts/activate_bitrise_xcode_cache.sh
-      - name: Create a non-sensitive cache marker
-        run: |
-          mkdir -p "$RUNNER_TEMP/ritc-cache-canary"
-          printf '%s\n' 'room-in-the-cart-recovery-check' > "$RUNNER_TEMP/ritc-cache-canary/marker.txt"
-      - name: Save through the configured cache backend
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+          mkdir -p .build/bitrise-environment
+          xcrun simctl list runtimes -j > .build/bitrise-environment/runtimes.json
+          xcrun simctl runtime list -j > .build/bitrise-environment/runtime-images.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
-          path: ${{ runner.temp }}/ritc-cache-canary
-          key: ritc-bitrise-recovery-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Remove only the disposable local marker
-        run: rm "$RUNNER_TEMP/ritc-cache-canary/marker.txt"
-      - name: Restore the same cache entry
-        id: restored
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: ${{ runner.temp }}/ritc-cache-canary
-          key: ritc-bitrise-recovery-${{ github.run_id }}-${{ github.run_attempt }}
-          fail-on-cache-miss: true
-      - name: Verify cache readback
-        env:
-          CACHE_HIT: ${{ steps.restored.outputs.cache-hit }}
-        run: |
-          test "$CACHE_HIT" = true
-          test "$(cat "$RUNNER_TEMP/ritc-cache-canary/marker.txt")" = room-in-the-cart-recovery-check
+          name: bitrise-m2-environment-${{ github.run_attempt }}
+          include-hidden-files: true
+          retention-days: 7
+          path: .build/bitrise-environment
