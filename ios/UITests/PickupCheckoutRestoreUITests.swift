@@ -35,6 +35,9 @@ import XCTest
                                ("Spending cap", "10.00")] {
             enter(value, field: app.textFields[label], replacing: true)
         }
+        // Finish the text-entry group before reaching a different control. XCTest
+        // can briefly report the switch as hittable while the keypad covers it.
+        finishEditing()
         let inclusive = app.switches["Retailer total already includes all charges"]
         let thumb = inclusive.switches.firstMatch
         reveal(thumb, reserveKeyboardSpace: false)
