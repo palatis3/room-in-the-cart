@@ -232,7 +232,9 @@ class RuntimeWorkflowTests(unittest.TestCase):
                 self.assertEqual(native["timeout-minutes"], 40)
                 self.assertEqual(job["timeout-minutes"], 75)
                 upload = next(s for s in steps if s.get("name") == "Upload GitHub runtime evidence")
-                self.assertEqual(upload["with"]["path"], ".build/github-ios-runtime")
+                self.assertEqual(upload["with"]["path"].splitlines(),
+                                 [".build/github-ios-runtime", ".build/test-simulator-ownership.json"])
+                self.assertLess(steps.index(cleanup), steps.index(upload))
                 self.assertIn("always() && steps.imported-runtime.outcome != 'skipped'", upload["if"])
                 self.assertIs(upload["continue-on-error"], True)
         self.assertEqual(seen, {("ci.yml", "ios-tests"), ("ios-fixtures.yml", "contributor-tests"),

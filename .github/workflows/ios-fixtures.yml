@@ -352,16 +352,6 @@ jobs:
           mkdir -p .build/github-ios-runtime
           xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
           /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
-      - name: Upload GitHub runtime evidence
-        continue-on-error: true
-        if: always() && steps.imported-runtime.outcome != 'skipped' && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: github-runtime-fixture-${{ matrix.shard }}-${{ github.run_attempt }}
-          path: .build/github-ios-runtime
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: ignore
       - name: Retain speech runtime diagnostics
         if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
         timeout-minutes: 2
@@ -430,6 +420,18 @@ jobs:
             .build/records-test-report.md
             .build/test-simulator-ownership.json
             .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload GitHub runtime evidence
+        continue-on-error: true
+        if: always() && steps.imported-runtime.outcome != 'skipped' && matrix.shard != 'RecordsMediaUITests' && matrix.shard != 'SharedRecordsUITests'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: github-runtime-fixture-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: |
+            .build/github-ios-runtime
+            .build/test-simulator-ownership.json
+          include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore
 

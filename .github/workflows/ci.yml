@@ -775,16 +775,6 @@ jobs:
           mkdir -p .build/github-ios-runtime
           xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
           /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
-      - name: Upload GitHub runtime evidence
-        continue-on-error: true
-        if: always() && steps.imported-runtime.outcome != 'skipped'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: github-runtime-core-${{ matrix.shard }}-${{ github.run_attempt }}
-          path: .build/github-ios-runtime
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: ignore
       - name: Clean up only the owned simulator after result export
         if: always()
         timeout-minutes: 2
@@ -803,6 +793,19 @@ jobs:
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
+      - name: Upload GitHub runtime evidence
+        continue-on-error: true
+        if: always() && steps.imported-runtime.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: github-runtime-core-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: |
+            .build/github-ios-runtime
+            .build/test-simulator-ownership.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
   ci-gate:
     name: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic gate' || inputs.ios_provider == 'circleci' && 'CircleCI-assisted CI gate' || 'CI gate' }}
     needs: [typescript, service-postgres, source-checks, swift-packages, ios-release, ios-swift-codeql, ios-build, ios-tests]
