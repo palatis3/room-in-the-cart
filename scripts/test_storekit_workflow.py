@@ -113,7 +113,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
         download = next(step for step in tests['steps'] if step.get('uses', '').startswith('actions/download-artifact@'))
         self.assertEqual(download['with']['artifact-ids'], '${{ needs.storekit-build.outputs.artifact }}')
         self.assertNotIn('run-id', download['with'])
-        self.assertEqual(tests['timeout-minutes'], 55)
+        self.assertEqual(tests['timeout-minutes'], 65)
         self.assertEqual(sum(step.get('id') == 'storekit-runtime' for step in tests['steps']), 1)
         self.assertEqual(sum(step.get('id') == 'storekit-restore' for step in tests['steps']), 1)
         native = self.step('storekit', identifier='storekit-native')
@@ -320,14 +320,14 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
         self.assertEqual(self.jobs['storekit-build']['env']['CI_IPHONE_RUNTIME'],
                          'com.apple.CoreSimulator.SimRuntime.iOS-27-0')
         self.assertNotIn('-downloadPlatform', '\n'.join(s.get('run', '') for s in self.jobs['storekit-build']['steps']))
-        self.assertLessEqual(self.step('storekit', identifier='storekit-runtime')['timeout-minutes'], 15)
+        self.assertEqual(self.step('storekit', identifier='storekit-runtime')['timeout-minutes'], 20)
 
     def runtime_fixture(self, version, build):
         return {'identifier': 'com.apple.CoreSimulator.SimRuntime.iOS-' + version.replace('.', '-'),
                 'version': version, 'buildversion': build, 'isAvailable': True}
 
     def prepare_runtime(self, request, event, runtimes, *, after_download=None, existing_device=True, download_error=None,
-                        locale='en', created='22222222-3333-4444-8555-666666666666'):
+                        locale='en', created='22222222-3333-4444-8555-666666666666', provider='self-hosted'):
         """Execute the actual workflow block with only native subprocesses replaced."""
         code = self.python_block(self.step('storekit', identifier='storekit-runtime'))
         simulator = '11111111-2222-4333-8444-555555555555'
@@ -351,7 +351,8 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
             with patch('subprocess.check_output', side_effect=fake_simctl) as native, \
                     patch('subprocess.run', side_effect=download_error) as download:
                 self.execute(code, root, REQUIRE_CURRENT_STOREKIT=request, GITHUB_EVENT_NAME=event,
-                             CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment), STOREKIT_LOCALE=locale)
+                             CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment), STOREKIT_LOCALE=locale,
+                             RUNNER_ENVIRONMENT=provider, STOREKIT_IMPORTED_RUNTIME='')
             return dict(line.split('=', 1) for line in environment.read_text().splitlines()), native, download
 
     def test_storekit_mount_distinguishes_replacement_from_healthy_images(self):
@@ -421,6 +422,89 @@ if [ "$RETRY" = 1 ]; then exit 65; fi
                 self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
                 self.assertEqual(environment['STOREKIT_OS_BUILD'], build)
                 download.assert_not_called()
+
+    def test_github_compatibility_imports_once_before_creating_each_locale_device(self):
+        runtime = self.runtime_fixture('26.2', '23C54')
+        for locale in ('en', 'es'):
+            with self.subTest(locale=locale):
+                environment, native, preparation = self.prepare_runtime(
+                    '', 'pull_request', [runtime], existing_device=False,
+                    locale=locale, provider='github-hosted')
+                preparation.assert_called_once_with(
+                    ['python3', 'scripts/prepare_github_storekit_runtime.py'], check=True)
+                self.assertEqual(environment['STOREKIT_IMPORTED_RUNTIME'], '23C54')
+                self.assertEqual(sum(call.args[0][2:3] == ['create'] for call in native.call_args_list), 1)
+                self.assertEqual(environment['STOREKIT_CREATED_SIMULATOR'], environment['SIMULATOR_ID'])
+        for inventory in ([], [{**runtime, 'buildversion': 'wrong'}]):
+            with self.subTest(inventory=inventory), self.assertRaises(AssertionError):
+                self.prepare_runtime('', 'pull_request', inventory, provider='github-hosted')
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.prepare_runtime('', 'pull_request', [runtime], provider='github-hosted',
+                                 download_error=subprocess.CalledProcessError(1, 'import'))
+
+    def test_github_current_policy_does_not_invoke_compatibility_import(self):
+        runtime = self.runtime_fixture('27.0', '24A434')
+        for request, event in [('true', 'pull_request'), ('true', 'workflow_dispatch'), ('', 'workflow_dispatch')]:
+            with self.subTest(request=request, event=event):
+                environment, _, preparation = self.prepare_runtime(request, event, [runtime], provider='github-hosted')
+                preparation.assert_not_called()
+                self.assertNotIn('STOREKIT_IMPORTED_RUNTIME', environment)
+
+    def test_import_stability_runs_after_native_failure_and_is_required_only_when_imported(self):
+        stability = self.step('storekit', identifier='storekit-import-stability')
+        self.assertEqual(stability['if'], "${{ !cancelled() && env.STOREKIT_IMPORTED_RUNTIME == '23C54' }}")
+        gate = self.python_block(self.step('storekit', identifier='storekit-locale-gate'))
+        successful = {f'storekit-{phase}': {'outcome': 'success'} for phase in ('native', 'results', 'verify')}
+        self.execute(gate, ROOT, STOREKIT_STEP_RESULTS=json.dumps(successful), STOREKIT_IMPORTED_RUNTIME='')
+        for outcome in ('failure', 'skipped', 'cancelled', None):
+            results = copy.deepcopy(successful)
+            if outcome is not None:
+                results['storekit-import-stability'] = {'outcome': outcome}
+            with self.subTest(outcome=outcome), self.assertRaises(SystemExit):
+                self.execute(gate, ROOT, STOREKIT_STEP_RESULTS=json.dumps(results), STOREKIT_IMPORTED_RUNTIME='23C54')
+        successful['storekit-import-stability'] = {'outcome': 'success'}
+        self.execute(gate, ROOT, STOREKIT_STEP_RESULTS=json.dumps(successful), STOREKIT_IMPORTED_RUNTIME='23C54')
+
+    def test_import_stability_rejects_runtime_changes_pending_assets_and_recovery(self):
+        code = self.step('storekit', identifier='storekit-import-stability')['run']
+        for locale in ('en', 'es'):
+            for change in ('none', 'uuid', 'mount', 'pending', 'recovery', 'restart'):
+                with self.subTest(locale=locale, change=change), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    evidence = root / '.build/storekit-runtime-import'
+                    evidence.mkdir(parents=True)
+                    mount = root / 'imported-mount'
+                    mount.mkdir()
+                    bundle = mount / 'iOS 26.2.simruntime'
+                    bundle.mkdir()
+                    target = {'identifier': 'imported-id', 'state': 'Ready', 'build': '23C54',
+                              'runtimeIdentifier': 'com.apple.CoreSimulator.SimRuntime.iOS-26-2',
+                              'path': '/Library/Developer/CoreSimulator/Images/imported.dmg',
+                              'mountPath': str(mount), 'runtimeBundlePath': str(bundle)}
+                    (evidence / 'target.json').write_text(json.dumps(target))
+                    (evidence / 'original-asset-paths.json').write_text(json.dumps({'roots': ['/original/AssetData']}))
+                    output = root / ('.build/storekit-' + locale)
+                    output.mkdir()
+                    (output / 'StoreKit.log').write_text('Restarting after unexpected exit' if change == 'restart' else 'Native log')
+                    if change == 'recovery':
+                        (output / 'launch-failure').mkdir()
+                    after = dict(target)
+                    if change == 'uuid':
+                        after['identifier'] = 'changed-id'
+                    if change == 'mount':
+                        after['mountPath'] = '/changed-mount'
+                    snapshot = {after['identifier']: after}
+                    if change == 'pending':
+                        snapshot['pending'] = {'path': '/original/AssetData/Restore/runtime.dmg', 'state': 'Verifying'}
+                    with patch('subprocess.check_output', return_value=json.dumps(snapshot)):
+                        if change == 'none':
+                            self.execute(code, root, STOREKIT_LOCALE=locale)
+                            receipt = json.loads((evidence / 'stability-passed.json').read_text())
+                            self.assertEqual(receipt['identifier'], target['identifier'])
+                        else:
+                            with self.assertRaises(AssertionError):
+                                self.execute(code, root, STOREKIT_LOCALE=locale)
+                    self.assertTrue((evidence / 'after-tests.json').is_file())
 
     def test_shared_identifier_creates_owned_device_from_the_exact_runtime_bundle(self):
         exact = {**self.runtime_fixture('26.2', '23C54'),

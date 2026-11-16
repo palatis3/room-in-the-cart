@@ -21,6 +21,8 @@ on:
       - 'scripts/select_ci_iphone.py'
       - 'scripts/boot_ios_simulator.py'
       - 'scripts/check_storekit_runtime_mount.py'
+      - 'scripts/prepare_github_storekit_runtime.py'
+      - 'scripts/test_prepare_github_storekit_runtime.py'
       - 'scripts/is_storekit_launch_failure.py'
       - 'scripts/test_storekit_workflow.py'
       - 'scripts/ci_yaml_requirements.txt'
@@ -115,6 +117,7 @@ jobs:
           python3 -m venv .build/storekit-workflow-venv
           .build/storekit-workflow-venv/bin/pip install --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
           .build/storekit-workflow-venv/bin/python scripts/test_storekit_workflow.py
+          .build/storekit-workflow-venv/bin/python scripts/test_prepare_github_storekit_runtime.py
   storekit-build:
     name: Build shared LocalStoreKit test products
     needs: storekit-plan
@@ -231,14 +234,15 @@ jobs:
       queue: max
       cancel-in-progress: false
     runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && 'bitrise-runner-room in cart' || 'xcode-27' }}
-    # Allow the 15-minute runtime setup, the 35-minute native step, and artifact handling.
-    timeout-minutes: 55
+    # Allow the 20-minute runtime setup, the 35-minute native step, and evidence handling.
+    timeout-minutes: 65
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       CI_IPHONE_NAME: iPhone 17
       STOREKIT_LOCALE: ${{ matrix.locale }}
       STOREKIT_CONFIGURATION: ${{ matrix.locale == 'en' && 'US English — local StoreKit' || 'US Spanish app · Spanish (Mexico) offer · USA storefront' }}
       REQUIRE_CURRENT_STOREKIT: ${{ inputs.require_current_storekit }}
+      STOREKIT_IMPORTED_RUNTIME: ''
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
@@ -283,7 +287,7 @@ jobs:
           PYCODE
       - name: Prepare and verify the selected StoreKit runtime
         id: storekit-runtime
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: bash
         run: |
           set -o pipefail
@@ -306,8 +310,13 @@ jobs:
               snapshot = json.loads(simctl("list", "-j"))
               return ([r for r in snapshot["runtimes"] if r["identifier"] == runtime],
                       snapshot["devices"].get(runtime, []))
+          hosted_compatibility = not current and os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted"
+          if hosted_compatibility:
+              subprocess.run(["python3", "scripts/prepare_github_storekit_runtime.py"], check=True)
+              with Path(os.environ["GITHUB_ENV"]).open("a") as output:
+                  output.write("STOREKIT_IMPORTED_RUNTIME=23C54\n")
           matches, devices = inventory()
-          if not matches and not current:
+          if not matches and not current and not hosted_compatibility:
               subprocess.run(["xcodebuild", "-downloadPlatform", "iOS", "-buildVersion", build,
                               "-architectureVariant", "arm64"], check=True, timeout=600)
               matches, devices = inventory()
@@ -415,6 +424,69 @@ jobs:
           python3 scripts/check_ios_test_results.py --selectors scripts/ios_storekit_test_selectors.txt --expected-count 15 \
             --summary ".build/storekit-$STOREKIT_LOCALE/storekit-summary.json" --tests ".build/storekit-$STOREKIT_LOCALE/storekit-tests.json" \
             --result-bundle ".build/storekit-$STOREKIT_LOCALE/StoreKit.xcresult" --test-log ".build/storekit-$STOREKIT_LOCALE/StoreKit.log" 2>&1 | tee ".build/storekit-$STOREKIT_LOCALE/storekit-verification.txt"
+      - name: Require stable imported image and no recovery or runner restart
+        id: storekit-import-stability
+        if: ${{ !cancelled() && env.STOREKIT_IMPORTED_RUNTIME == '23C54' }}
+        shell: python
+        run: |
+          import json, os, subprocess
+          from pathlib import Path
+          p = Path('.build/storekit-runtime-import')
+          raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'], text=True)
+          (p / 'after-tests.json').write_text(raw)
+          current = json.loads(raw)
+          roots = json.loads((p / 'original-asset-paths.json').read_text())['roots']
+          assert not any(row.get('path', '') == root or row.get('path', '').startswith(root + '/') or row.get('parentMountPath') == root for row in current.values() for root in roots), 'Original asset reappeared after tests'
+          before = json.loads((p / 'target.json').read_text())
+          selected = [r for r in current.values() if r.get('runtimeIdentifier') == before['runtimeIdentifier'] and r.get('build') == before['build']]
+          assert len(selected) == 1 and selected[0]['identifier'] == before['identifier']
+          after = selected[0]
+          assert after['state'] == 'Ready'
+          for key in ('build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath'):
+              assert before.get(key) == after.get(key), key
+          assert Path(after['runtimeBundlePath']).is_dir() and Path(after['mountPath']).is_dir()
+          output = Path('.build') / ('storekit-' + os.environ['STOREKIT_LOCALE'])
+          assert not (output / 'launch-failure').exists(), 'Imported StoreKit runtime required recovery'
+          assert 'Restarting after unexpected exit' not in (output / 'StoreKit.log').read_text()
+          (p / 'stability-passed.json').write_text(json.dumps({'identifier': after['identifier'], 'mountPath': after['mountPath'], 'recovery': False}) + '\n')
+      - name: Retain imported StoreKit runtime state and cleanup trace
+        if: always()
+        timeout-minutes: 3
+        run: |
+          test -d .build/storekit-runtime-import || exit 0
+          xcrun simctl runtime list -j > .build/storekit-runtime-import/final.json || true
+          xcrun simctl list -j > .build/storekit-runtime-import/final-simctl.json || true
+          python3 - <<'PYCODE'
+          import json, os, plistlib, subprocess
+          from pathlib import Path
+          p = Path('.build/storekit-runtime-import')
+          definition = p / 'original-asset-paths.json'
+          paths = json.loads(definition.read_text()) if definition.exists() else {'roots': [], 'payloads': []}
+          inventory = {'paths': {}, 'attachedImages': []}
+          for name in sorted(set(paths['roots'] + paths['payloads'] + [str(Path(root) / 'Restore') for root in paths['roots']])):
+              path = Path(name)
+              try:
+                  stat = path.lstat()
+                  value = {'mode': stat.st_mode, 'bytes': stat.st_size, 'symlink': path.is_symlink()}
+                  if path.is_dir():
+                      value['children'] = sorted(child.name for child in path.iterdir())[:40]
+                  inventory['paths'][name] = value
+              except OSError as error:
+                  inventory['paths'][name] = {'error': str(error), 'errno': error.errno}
+          try:
+              result = subprocess.run(['hdiutil', 'info', '-plist'], capture_output=True, timeout=30)
+              inventory['hdiutilExit'] = result.returncode
+              inventory['hdiutilStderr'] = result.stderr.decode(errors='replace')
+              if result.returncode == 0:
+                  images = plistlib.loads(result.stdout).get('images', [])
+                  inventory['attachedImages'] = [
+                      {key: row[key] for key in ('image-path', 'system-entities', 'image-type') if key in row}
+                      for row in images if any(row.get('image-path', '') == root or row.get('image-path', '').startswith(root + '/') for root in paths['roots'])]
+          except (OSError, ValueError, subprocess.SubprocessError) as error:
+              inventory['hdiutilError'] = str(error)
+          (p / 'final-asset-inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
+          PYCODE
+          /usr/bin/log show --style compact --last 1h --predicate 'process == "simdiskimaged" OR process == "CoreSimulatorService"' > .build/storekit-runtime-import/runtime-events.log 2>&1 || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -422,6 +494,7 @@ jobs:
           include-hidden-files: true
           path: |
             .build/storekit-${{ matrix.locale }}/
+            .build/storekit-runtime-import/
             .build/StoreKitRuntime.log
             .build/storekit-product-inventory.json
           retention-days: 7
@@ -438,6 +511,8 @@ jobs:
           import json, os
           steps = json.loads(os.environ["STOREKIT_STEP_RESULTS"])
           required = ["storekit-native", "storekit-results", "storekit-verify"]
+          if os.environ.get("STOREKIT_IMPORTED_RUNTIME") == "23C54":
+              required.append("storekit-import-stability")
           failures = {name: steps.get(name, {}).get("outcome", "missing") for name in required
                       if steps.get(name, {}).get("outcome") != "success"}
           if failures:
