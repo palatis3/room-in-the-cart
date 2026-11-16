@@ -351,7 +351,7 @@ jobs:
         run: |
           mkdir -p .build/github-ios-runtime
           xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
-          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+          /usr/bin/log show --style compact --last 2h --predicate 'process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
       - name: Retain speech runtime diagnostics
         if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
         timeout-minutes: 2
