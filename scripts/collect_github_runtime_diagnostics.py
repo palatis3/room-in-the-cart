@@ -24,10 +24,23 @@ def collect(directory):
         result = {"file": name, "timeoutSeconds": timeout}
         with (directory / name).open("wb") as output, (directory / (name + ".stderr")).open("wb") as errors:
             try:
-                completed = subprocess.run(command, stdout=output, stderr=errors, timeout=timeout)
-                result.update(status="completed", exitCode=completed.returncode)
-            except subprocess.TimeoutExpired:
-                result["status"] = "timed-out"
+                # run(timeout=...) and Popen's context manager both perform an
+                # unbounded wait after killing. A stuck child must not prevent
+                # the independent daemon-log capture below.
+                process = subprocess.Popen(command, stdout=output, stderr=errors)
+                try:
+                    result.update(status="completed", exitCode=process.wait(timeout=timeout))
+                except subprocess.TimeoutExpired:
+                    result["status"] = "timed-out"
+                    try:
+                        process.kill()
+                    except OSError as error:
+                        result.update(termination="kill-failed", terminationError=str(error))
+                    else:
+                        try:
+                            result.update(termination="reaped", exitCode=process.wait(timeout=5))
+                        except subprocess.TimeoutExpired:
+                            result["termination"] = "unreaped"
             except OSError as error:
                 result.update(status="unavailable", error=str(error))
         result["elapsedSeconds"] = round(time.monotonic() - started, 3)
