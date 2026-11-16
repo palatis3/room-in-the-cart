@@ -126,6 +126,8 @@ def provision(devices, path):
     except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:
         receipt["creationStatus"] = "failed"
         receipt["creationError"] = str(error)
+        if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+            receipt["creationStderr"] = error.stderr[-16384:]
         save_receipt(path, receipt)
         raise
 

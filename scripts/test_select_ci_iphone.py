@@ -135,10 +135,13 @@ class OwnedSimulatorTests(unittest.TestCase):
                 self.assertFalse(any(c[0] == 'create' for c in self.calls))
 
     def test_creation_failure_or_returned_image_uuid_never_falls_back(self):
-        self.create_error = subprocess.CalledProcessError(1, ['xcrun', 'simctl', 'create'])
+        self.create_error = subprocess.CalledProcessError(1, ['xcrun', 'simctl', 'create'],
+                                                        stderr='Simulator creation failed: exact cause')
         with self.assertRaises(subprocess.CalledProcessError): self.create()
         self.assertFalse(self.env_file.exists())
         self.assertIsNone(json.loads(self.receipt.read_text())['createdUDID'])
+        self.assertEqual(json.loads(self.receipt.read_text())['creationStderr'],
+                         'Simulator creation failed: exact cause')
         cleanup(self.receipt)
         self.assertFalse(any(c[0] in ('shutdown', 'delete') for c in self.calls))
         self.receipt.unlink(); self.create_error = None; self.created_id = SOURCE
