@@ -270,7 +270,7 @@ def export_test_details(bundle, identifier_url):
     result = subprocess.run(
         ["xcrun", "xcresulttool", "get", "test-results", "test-details",
          "--path", str(bundle), "--test-id", identifier_url, "--compact"],
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, timeout=300,
     )
     return json.loads(result.stdout)
 
@@ -279,7 +279,7 @@ def export_test_activities(bundle, identifier_url, capture=None):
     result = subprocess.run(
         ["xcrun", "xcresulttool", "get", "test-results", "activities",
          "--path", str(bundle), "--test-id", identifier_url, "--compact"],
-        check=True, capture_output=True,
+        check=True, capture_output=True, timeout=300,
     )
     if capture is not None:
         capture(identifier_url, result.stdout)
@@ -501,7 +501,8 @@ def append_runtime_warning_report(args, summary, nodes, cases, report, failures)
             lambda url: export_test_details(args.result_bundle, url),
             lambda url: export_test_activities(args.result_bundle, url, capture_activities),
         )
-    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
+    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError,
+            subprocess.TimeoutExpired) as error:
         evidence = {"status": "unavailable", "error": str(error)}
         failures.append(f"XCTest runtime warning evidence is unavailable. {error}")
     args.tests.with_name("test-runtime-warnings.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")

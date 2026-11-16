@@ -1,5 +1,5 @@
 name: iOS 27 direct DMG diagnostic
-run-name: "iOS 27 direct DMG \xB7 unchanged produce-focus journey"
+run-name: "iOS 27 bounded exports \xB7 unchanged produce-focus journey"
 permissions:
   contents: read
   actions: read
@@ -25,242 +25,295 @@ jobs:
       with:
         ref: a746ff60d13cfae205a743a481ed9248ef559d54
         persist-credentials: false
+    - name: Load the reviewed result readers only
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        ref: ${{ github.sha }}
+        path: .build/result-readers
+        sparse-checkout: 'scripts/run_ios_test_shard.sh
+
+          scripts/check_ios_test_results.py
+
+          scripts/export_ios_test_results.py'
+        sparse-checkout-cone-mode: false
+        persist-credentials: false
+    - name: Verify and install only the reviewed result readers
+      shell: python
+      run: "import hashlib\nfrom pathlib import Path\nexpected = {'scripts/run_ios_test_shard.sh': '15f35c6dab03eca0bb36b37e829b72c49a339e8a2bc8ba4a2bed77168414aa1c',\
+        \ 'scripts/check_ios_test_results.py': 'a69b6a17f898a7319911525b2603561ec2019ad73a3c6a5ed7fd32587d55f50c',\
+        \ 'scripts/export_ios_test_results.py': 'ed1536828b0ebdab8678261b96ff4223ffbfb38445ae63701ef81db6cfc5456d'}\n\
+        for relative, digest in expected.items():\n    data = (Path('.build/result-readers') / relative).read_bytes()\n\
+        \    assert hashlib.sha256(data).hexdigest() == digest, relative\nfor relative in expected:\n    Path(relative).write_bytes((Path('.build/result-readers')\
+        \ / relative).read_bytes())\nprint('Three reviewed bounded result readers installed; app and test\
+        \ sources remain pinned to a746.')\n"
     - name: Verify exact toolchain
       run: bash scripts/check_ci_xcode27.sh
     - name: Export exact iOS 27 and isolate all preloaded runtime images
       id: imported-runtime
       timeout-minutes: 20
       shell: bash
-      run: "set -euo pipefail\nmkdir -p .build\ncat > .build/prepare_github_ios_runtime.py <<'RITC_RUNTIME_HELPER'\n\"\"\"\
-        Prepare the pinned GitHub iOS 27 runtime and verify its stability after tests.\"\"\"\nimport argparse\nimport json\n\
-        import os\nimport platform\nimport subprocess\nimport re\nimport time\nimport uuid\nfrom pathlib import Path\n\nevidence\
-        \ = Path('.build/github-ios-runtime')\nruntime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'\nbuild = '24A434'\n\
-        \ndef capture(name, timeout=30):\n    raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'],\
-        \ text=True, timeout=timeout)\n    (evidence / name).write_text(raw)\n    value = json.loads(raw)\n    assert isinstance(value,\
-        \ dict)\n    return value\n\ndef targets(rows):\n    return [r for r in rows.values() if r.get('runtimeIdentifier')\
-        \ == runtime and r.get('build') == build]\n\ndef classify_bulk_result(status, detail, before):\n    \"\"\"Recognize\
-        \ only the two observed aggregate-error forms, bound to this command.\"\"\"\n    if status == 30:\n        assert\
+      run: "set -euo pipefail\nmkdir -p .build\ncat > .build/prepare_github_ios_runtime.py <<'RITC_RUNTIME_HELPER'\n\
+        \"\"\"Prepare the pinned GitHub iOS 27 runtime and verify its stability after tests.\"\"\"\nimport\
+        \ argparse\nimport json\nimport os\nimport platform\nimport subprocess\nimport re\nimport time\nimport\
+        \ uuid\nfrom pathlib import Path\n\nevidence = Path('.build/github-ios-runtime')\nruntime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'\n\
+        build = '24A434'\n\ndef capture(name, timeout=30):\n    raw = subprocess.check_output(['xcrun', 'simctl',\
+        \ 'runtime', 'list', '-j'], text=True, timeout=timeout)\n    (evidence / name).write_text(raw)\n \
+        \   value = json.loads(raw)\n    assert isinstance(value, dict)\n    return value\n\ndef targets(rows):\n\
+        \    return [r for r in rows.values() if r.get('runtimeIdentifier') == runtime and r.get('build')\
+        \ == build]\n\ndef classify_bulk_result(status, detail, before):\n    \"\"\"Recognize only the two\
+        \ observed aggregate-error forms, bound to this command.\"\"\"\n    if status == 30:\n        assert\
         \ len(before) == 1, 'Ambiguous single-runtime purge error'\n        identifier, row = next(iter(before.items()))\n\
-        \        uuid.UUID(identifier)\n        assert row.get('identifier') == identifier and row.get('deletable') is True\n\
-        \        assert row.get('state') == 'Ready' and row.get('kind') == 'Patchable Cryptex Disk Image'\n        path =\
-        \ row.get('path', '')\n        assert re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\\\
+        \        uuid.UUID(identifier)\n        assert row.get('identifier') == identifier and row.get('deletable')\
+        \ is True\n        assert row.get('state') == 'Ready' and row.get('kind') == 'Patchable Cryptex Disk\
+        \ Image'\n        path = row.get('path', '')\n        assert re.fullmatch(r'/System/Library/AssetsV2/com_apple_MobileAsset_[A-Za-z0-9_]+SimulatorRuntime/[A-Za-z0-9]+\\\
         .asset/AssetData', path)\n        assert all(isinstance(row.get(k), str) and row[k] for k in ('runtimeIdentifier',\
-        \ 'build', 'version'))\n        expected = [\n            'An error was encountered processing the command (domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError,\
-        \ code=30):',\n            'Removed the runtime, but did not reclaim its MobileAsset: ' + path + '/',\n          \
-        \  \"Run 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again.\",\n        ]\n \
-        \       assert detail.splitlines() == expected, 'Unknown single-runtime purge text or path'\n        return [{'identifier':\
-        \ identifier, 'classification': 'mobileasset-not-reclaimed',\n                 'form': 'single-runtime-code30', 'runtimeIdentifier':\
-        \ row['runtimeIdentifier'],\n                 'build': row['build'], 'version': row['version'], 'path': path, 'lines':\
-        \ expected}]\n    if status == 0:\n        assert not detail.strip(), 'Unexpected successful bulk-delete output'\n\
-        \        return []\n    assert status == 1 and detail.strip(), 'Unknown aggregate-delete exit'\n    classified = []\n\
-        \    seen = set()\n    for line in detail.splitlines():\n        if not line:\n            continue\n        matches\
-        \ = []\n        for identifier, row in before.items():\n            assert row['identifier'] == identifier\n     \
-        \       # P is the observed Patchable Cryptex prefix, not a generic error parser.\n            if row.get('kind')\
-        \ != 'Patchable Cryptex Disk Image':\n                continue\n            platform_name = row['runtimeIdentifier'].split('.SimRuntime.',\
+        \ 'build', 'version'))\n        expected = [\n            'An error was encountered processing the\
+        \ command (domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=30):',\n         \
+        \   'Removed the runtime, but did not reclaim its MobileAsset: ' + path + '/',\n            \"Run\
+        \ 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again.\",\n   \
+        \     ]\n        assert detail.splitlines() == expected, 'Unknown single-runtime purge text or path'\n\
+        \        return [{'identifier': identifier, 'classification': 'mobileasset-not-reclaimed',\n     \
+        \            'form': 'single-runtime-code30', 'runtimeIdentifier': row['runtimeIdentifier'],\n   \
+        \              'build': row['build'], 'version': row['version'], 'path': path, 'lines': expected}]\n\
+        \    if status == 0:\n        assert not detail.strip(), 'Unexpected successful bulk-delete output'\n\
+        \        return []\n    assert status == 1 and detail.strip(), 'Unknown aggregate-delete exit'\n \
+        \   classified = []\n    seen = set()\n    for line in detail.splitlines():\n        if not line:\n\
+        \            continue\n        matches = []\n        for identifier, row in before.items():\n    \
+        \        assert row['identifier'] == identifier\n            # P is the observed Patchable Cryptex\
+        \ prefix, not a generic error parser.\n            if row.get('kind') != 'Patchable Cryptex Disk Image':\n\
+        \                continue\n            platform_name = row['runtimeIdentifier'].split('.SimRuntime.',\
         \ 1)[1].split('-', 1)[0]\n            prefix = f\"Error deleting P: {identifier} {platform_name} ({row['version']}\
-        \ - {row['build']}) \"\n            deleting = re.fullmatch(\n                re.escape(prefix + '(Deleting): Attempting\
-        \ to delete image: ' + identifier +\n                          ' (Please retry in ') + r'(0|[1-9][0-9]{0,2})' +\n\
-        \                re.escape('s, if the image is not removed)'), line)\n            purging = (prefix + '(Ready): Removed\
-        \ the runtime, but did not reclaim its MobileAsset: ' +\n                       row['path'].rstrip('/') + '/')\n \
-        \           if deleting and int(deleting[1]) <= 180:\n                matches.append('already-deleting')\n       \
-        \     elif (line == purging and row.get('state') == 'Ready' and\n                  row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_')\
+        \ - {row['build']}) \"\n            deleting = re.fullmatch(\n                re.escape(prefix + '(Deleting):\
+        \ Attempting to delete image: ' + identifier +\n                          ' (Please retry in ') +\
+        \ r'(0|[1-9][0-9]{0,2})' +\n                re.escape('s, if the image is not removed)'), line)\n\
+        \            purging = (prefix + '(Ready): Removed the runtime, but did not reclaim its MobileAsset:\
+        \ ' +\n                       row['path'].rstrip('/') + '/')\n            if deleting and int(deleting[1])\
+        \ <= 180:\n                matches.append('already-deleting')\n            elif (line == purging and\
+        \ row.get('state') == 'Ready' and\n                  row['path'].startswith('/System/Library/AssetsV2/com_apple_MobileAsset_')\
         \ and\n                  row['path'].endswith('.asset/AssetData')):\n                matches.append('mobileasset-not-reclaimed')\n\
-        \            else:\n                continue\n            assert identifier not in seen, 'Repeated error for one runtime'\n\
-        \            seen.add(identifier)\n            classified.append({'identifier': identifier, 'classification': matches[-1],\n\
-        \                               'runtimeIdentifier': row['runtimeIdentifier'], 'build': row['build'],\n          \
-        \                     'version': row['version'], 'path': row['path'], 'line': line})\n            if deleting:\n \
-        \               classified[-1]['retrySeconds'] = int(deleting[1])\n        assert len(matches) == 1, 'Unknown or ambiguous\
-        \ aggregate-delete line: ' + line\n    assert classified\n    return classified\n\n\ndef original_catalog(rows):\n\
-        \    \"\"\"Capture allowed disk-image descendants while the original payloads still exist.\"\"\"\n    catalog = {}\n\
-        \    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier') == key and row.get('deletable')\
-        \ is True\n        root = row['path']\n        assert root.startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\n\
-        \                                '/Library/Developer/CoreSimulator/'))\n        assert '..' not in Path(root).parts\n\
-        \        identity = {k: row[k] for k in ('runtimeIdentifier', 'build', 'version')}\n        assert all(isinstance(v,\
-        \ str) and v for v in identity.values())\n        if root in catalog:\n            assert catalog[root]['identity']\
-        \ == identity, 'Shared path has conflicting identity'\n            continue\n        path = Path(root)\n        payloads\
-        \ = ([root] if path.is_file() else\n                    [str(p) for p in path.rglob('*.dmg') if p.is_file()])\n  \
-        \      assert all(str(Path(p).resolve()) == p for p in payloads), 'Unexpected payload symlink'\n        catalog[root]\
-        \ = {'identity': identity, 'payloads': sorted(payloads)}\n    assert catalog\n    return catalog\n\n\ndef validate_original_rows(rows,\
-        \ catalog, *, pending=False):\n    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier')\
-        \ == key and row.get('deletable') is True\n        path = row.get('path')\n        roots = [root for root, entry in\
-        \ catalog.items()\n                 if path == root or (path in entry['payloads'] and row.get('parentMountPath') ==\
-        \ root)]\n        assert len(roots) == 1, 'Foreign or unrecorded original-asset path'\n        for field, value in\
-        \ catalog[roots[0]]['identity'].items():\n            assert row.get(field) == value or (pending and row.get(field)\
-        \ is None), 'Original identity changed: ' + field\n        allowed = ('Copying', 'Verifying', 'Mounting', 'Ready',\
-        \ 'Unusable', 'Deleting')\n        assert row.get('state') in allowed, 'Unexpected original runtime state'\n\n\ndef\
-        \ collect_cleanup_failure(catalog):\n    \"\"\"Read-only best effort: each disk command has its own ten-second ceiling.\"\
-        \"\"\n    observations = {'observedAt': time.time(), 'roots': {}, 'commands': {}}\n    for root, entry in catalog.items():\n\
-        \        paths = {}\n        for value in [root, *entry['payloads']]:\n            try:\n                path = Path(value)\n\
-        \                paths[value] = {'exists': path.exists(), 'isFile': path.is_file(), 'isDirectory': path.is_dir()}\n\
-        \            except Exception as error:\n                paths[value] = {'error': str(error)}\n        observations['roots'][root]\
-        \ = paths\n    for name, args in [('failure-disks.plist', ['hdiutil', 'info', '-plist']),\n                      \
-        \ ('failure-mounts.txt', ['/sbin/mount'])]:\n        try:\n            raw = subprocess.check_output(args, timeout=10)\n\
-        \            (evidence / name).write_bytes(raw)\n            observations['commands'][name] = {'outcome': 'success'}\n\
-        \        except Exception as error:\n            observations['commands'][name] = {'outcome': 'failure', 'error':\
-        \ str(error)}\n    (evidence / 'failure-filesystem.json').write_text(json.dumps(observations, indent=2) + '\\n')\n\
-        \n\ndef eligible_asset_recovery(first_errors, second_errors, catalog):\n    \"\"\"Authorize one previously unretried\
-        \ asset, never another bulk cleanup pass.\"\"\"\n    assert len(second_errors) == 1, 'Asset recovery requires exactly\
-        \ one second-pass error'\n    error = second_errors[0]\n    assert error['classification'] == 'mobileasset-not-reclaimed'\n\
-        \    root = error['path']\n    prior_purges = {e['path'] for e in first_errors if e['classification'] == 'mobileasset-not-reclaimed'}\n\
-        \    assert root not in prior_purges, 'This asset already received its purge retry'\n    assert root in catalog and\
-        \ catalog[root]['payloads'], 'No original payload recorded for this asset'\n    assert all(error.get(k) == value for\
-        \ k, value in catalog[root]['identity'].items())\n    return root\n\n\ndef cleanup_original_images(current):\n   \
-        \ \"\"\"Two bulk deletions and at most one documented, asset-specific UUID recovery.\"\"\"\n    import plistlib\n\
-        \    catalog = original_catalog(current)\n    (evidence / 'original-payload-catalog.json').write_text(json.dumps(catalog,\
-        \ indent=2) + '\\n')\n    old_mounts = {r['mountPath'] for r in current.values() if r.get('mountPath')}\n    receipt\
-        \ = {'mutationLimit': 3, 'bulkMutationLimit': 2, 'mutations': 0, 'totalDeadlineSeconds': 600, 'stage': 'preflight'}\n\
-        \    deadline = time.monotonic() + 600\n\n    def save():\n        (evidence / 'aggregate-cleanup.json').write_text(json.dumps(receipt,\
-        \ indent=2) + '\\n')\n\n    def remaining(limit):\n        value = min(limit, deadline - time.monotonic())\n     \
-        \   assert value > 0, 'Aggregate cleanup exceeded 600 seconds'\n        return value\n\n    def observe(name):\n \
-        \       rows = capture(name + '.json', timeout=remaining(30))\n        validate_original_rows(rows, catalog, pending=True)\n\
-        \        old_mounts.update(r['mountPath'] for r in rows.values() if r.get('mountPath'))\n        return rows\n\n \
-        \   def disk_state(name):\n        raw = subprocess.check_output(['hdiutil', 'info', '-plist'], timeout=remaining(30))\n\
-        \        (evidence / (name + '.plist')).write_bytes(raw)\n        mounts = subprocess.check_output(['/sbin/mount'],\
-        \ text=True, timeout=remaining(30))\n        (evidence / (name + '.mounts.txt')).write_text(mounts)\n        return\
-        \ plistlib.loads(raw), mounts\n\n    def missing_payloads():\n        return [p for entry in catalog.values() for\
-        \ p in entry['payloads'] if Path(p).exists()]\n\n    def physical_absence(name):\n        assert not missing_payloads(),\
-        \ 'Original payload remains'\n        for root in catalog:\n            path = Path(root)\n            assert not\
-        \ path.is_file(), 'Original runtime image remains'\n            assert not any(p.is_file() for p in path.rglob('*.dmg')),\
-        \ 'Unrecorded original payload remains'\n        assert not any(os.path.ismount(m) for m in old_mounts), 'Old runtime\
-        \ volume is still mounted'\n        disks, mounts = disk_state(name)\n        assert not any(' on ' + m + ' (' in\
-        \ mounts for m in old_mounts), 'Old runtime mount remains'\n        for image in disks.get('images', []):\n      \
-        \      attached_path = image.get('image-path', '')\n            assert not any(attached_path == root or attached_path.startswith(root.rstrip('/')\
-        \ + '/')\n                           for root in catalog), 'Old runtime image remains attached without a mount'\n\
-        \            assert not old_mounts.intersection(e.get('mount-point') for e in image.get('system-entities', [])), 'Old\
-        \ image remains mounted'\n\n    def command(name, args, *, before=None):\n        receipt['stage'] = name\n      \
-        \  if before is not None:\n            if args == ['xcrun', 'simctl', 'runtime', 'delete', 'all']:\n             \
-        \   assert receipt['mutations'] < 2, 'No third bulk deletion permitted'\n            else:\n                assert\
-        \ name == 'delete-recovered-asset' and receipt['mutations'] == 2\n                assert len(before) == 1 and args\
-        \ == ['xcrun', 'simctl', 'runtime', 'delete', next(iter(before))]\n                assert receipt.get('assetRecoveryRoot'),\
-        \ 'Exact deletion lacks recovery authorization'\n            receipt['mutations'] += 1\n            (evidence / (name\
-        \ + '-before.json')).write_text(json.dumps(before, indent=2) + '\\n')\n        save()\n        with (evidence / (name\
-        \ + '.log')).open('w') as output:\n            result = subprocess.run(args, stdout=output, stderr=subprocess.STDOUT,\
-        \ timeout=remaining(300 if before is not None else 60))\n        (evidence / (name + '-exit.json')).write_text(json.dumps({'exit':\
-        \ result.returncode}) + '\\n')\n        if before is None:\n            result.check_returncode()\n        else:\n\
-        \            if name == 'delete-recovered-asset':\n                result.check_returncode()  # No fourth mutation\
-        \ or further recovery on any error.\n            classified = classify_bulk_result(result.returncode, (evidence /\
-        \ (name + '.log')).read_text(), before)\n            (evidence / (name + '-classification.json')).write_text(json.dumps({\n\
-        \                'exit': result.returncode, 'requiresVerification': True, 'recognizedErrors': classified}, indent=2)\
-        \ + '\\n')\n            return classified\n\n    def wait_retired(before, name, *, allow_recreated, recreated_catalog=None):\n\
-        \        until = time.monotonic() + remaining(210)\n        attempt = 0\n        while True:\n            rows = observe(name\
-        \ + '-' + str(attempt))\n            for key, row in rows.items():\n                if key in before:\n          \
-        \          assert all(row.get(k) == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build',\
-        \ 'version'))\n                    assert row.get('state') == 'Deleting', 'Old registration did not enter Deleting'\n\
-        \                else:\n                    if not allow_recreated:\n                        assert recreated_catalog\
-        \ is not None, 'Runtime recreated after final deletion; no further mutation permitted'\n                        validate_original_rows({key:\
-        \ row}, recreated_catalog, pending=True)\n            if recreated_catalog is not None:\n                assert len(set(rows)\
-        \ - set(before)) <= 1, 'Asset recovery exposed more than one registration'\n            if not set(before).intersection(rows):\n\
-        \                return rows\n            assert time.monotonic() < until, 'Original deletion did not retire within\
-        \ 210 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            attempt\
-        \ += 1\n\n    def all_ready(rows):\n        validate_original_rows(rows, catalog)\n        return all(r.get('state')\
-        \ in ('Ready', 'Unusable') for r in rows.values())\n\n    def payloads_registered(rows):\n        for root, entry\
-        \ in catalog.items():\n            surviving = [p for p in entry['payloads'] if Path(p).exists()]\n            if\
-        \ surviving and not any(r.get('path') == root for r in rows.values()):\n                if not all(any(r.get('path')\
-        \ == p for r in rows.values()) for p in surviving):\n                    return False\n        return True\n\n   \
-        \ try:\n        save()\n        disk_state('disks-before-removal')\n        command('delete-all-dry-run', ['xcrun',\
-        \ 'simctl', 'runtime', 'delete', 'all', '--dry-run'])\n        first = observe('delete-all-current')\n        validate_original_rows(first,\
-        \ catalog)\n        assert first, 'Runtime inventory disappeared before command'\n        first_errors = command('delete-all',\
+        \            else:\n                continue\n            assert identifier not in seen, 'Repeated\
+        \ error for one runtime'\n            seen.add(identifier)\n            classified.append({'identifier':\
+        \ identifier, 'classification': matches[-1],\n                               'runtimeIdentifier':\
+        \ row['runtimeIdentifier'], 'build': row['build'],\n                               'version': row['version'],\
+        \ 'path': row['path'], 'line': line})\n            if deleting:\n                classified[-1]['retrySeconds']\
+        \ = int(deleting[1])\n        assert len(matches) == 1, 'Unknown or ambiguous aggregate-delete line:\
+        \ ' + line\n    assert classified\n    return classified\n\n\ndef original_catalog(rows):\n    \"\"\
+        \"Capture allowed disk-image descendants while the original payloads still exist.\"\"\"\n    catalog\
+        \ = {}\n    for key, row in rows.items():\n        uuid.UUID(key)\n        assert row.get('identifier')\
+        \ == key and row.get('deletable') is True\n        root = row['path']\n        assert root.startswith(('/System/Library/AssetsV2/com_apple_MobileAsset_',\n\
+        \                                '/Library/Developer/CoreSimulator/'))\n        assert '..' not in\
+        \ Path(root).parts\n        identity = {k: row[k] for k in ('runtimeIdentifier', 'build', 'version')}\n\
+        \        assert all(isinstance(v, str) and v for v in identity.values())\n        if root in catalog:\n\
+        \            assert catalog[root]['identity'] == identity, 'Shared path has conflicting identity'\n\
+        \            continue\n        path = Path(root)\n        payloads = ([root] if path.is_file() else\n\
+        \                    [str(p) for p in path.rglob('*.dmg') if p.is_file()])\n        assert all(str(Path(p).resolve())\
+        \ == p for p in payloads), 'Unexpected payload symlink'\n        catalog[root] = {'identity': identity,\
+        \ 'payloads': sorted(payloads)}\n    assert catalog\n    return catalog\n\n\ndef validate_original_rows(rows,\
+        \ catalog, *, pending=False):\n    for key, row in rows.items():\n        uuid.UUID(key)\n       \
+        \ assert row.get('identifier') == key and row.get('deletable') is True\n        path = row.get('path')\n\
+        \        roots = [root for root, entry in catalog.items()\n                 if path == root or (path\
+        \ in entry['payloads'] and row.get('parentMountPath') == root)]\n        assert len(roots) == 1, 'Foreign\
+        \ or unrecorded original-asset path'\n        for field, value in catalog[roots[0]]['identity'].items():\n\
+        \            assert row.get(field) == value or (pending and row.get(field) is None), 'Original identity\
+        \ changed: ' + field\n        allowed = ('Copying', 'Verifying', 'Mounting', 'Ready', 'Unusable',\
+        \ 'Deleting')\n        assert row.get('state') in allowed, 'Unexpected original runtime state'\n\n\
+        \ndef collect_cleanup_failure(catalog):\n    \"\"\"Read-only best effort: each disk command has its\
+        \ own ten-second ceiling.\"\"\"\n    observations = {'observedAt': time.time(), 'roots': {}, 'commands':\
+        \ {}}\n    for root, entry in catalog.items():\n        paths = {}\n        for value in [root, *entry['payloads']]:\n\
+        \            try:\n                path = Path(value)\n                paths[value] = {'exists': path.exists(),\
+        \ 'isFile': path.is_file(), 'isDirectory': path.is_dir()}\n            except Exception as error:\n\
+        \                paths[value] = {'error': str(error)}\n        observations['roots'][root] = paths\n\
+        \    for name, args in [('failure-disks.plist', ['hdiutil', 'info', '-plist']),\n                \
+        \       ('failure-mounts.txt', ['/sbin/mount'])]:\n        try:\n            raw = subprocess.check_output(args,\
+        \ timeout=10)\n            (evidence / name).write_bytes(raw)\n            observations['commands'][name]\
+        \ = {'outcome': 'success'}\n        except Exception as error:\n            observations['commands'][name]\
+        \ = {'outcome': 'failure', 'error': str(error)}\n    (evidence / 'failure-filesystem.json').write_text(json.dumps(observations,\
+        \ indent=2) + '\\n')\n\n\ndef eligible_asset_recovery(first_errors, second_errors, catalog):\n   \
+        \ \"\"\"Authorize one previously unretried asset, never another bulk cleanup pass.\"\"\"\n    assert\
+        \ len(second_errors) == 1, 'Asset recovery requires exactly one second-pass error'\n    error = second_errors[0]\n\
+        \    assert error['classification'] == 'mobileasset-not-reclaimed'\n    root = error['path']\n   \
+        \ prior_purges = {e['path'] for e in first_errors if e['classification'] == 'mobileasset-not-reclaimed'}\n\
+        \    assert root not in prior_purges, 'This asset already received its purge retry'\n    assert root\
+        \ in catalog and catalog[root]['payloads'], 'No original payload recorded for this asset'\n    assert\
+        \ all(error.get(k) == value for k, value in catalog[root]['identity'].items())\n    return root\n\n\
+        \ndef cleanup_original_images(current):\n    \"\"\"Two bulk deletions and at most one documented,\
+        \ asset-specific UUID recovery.\"\"\"\n    import plistlib\n    catalog = original_catalog(current)\n\
+        \    (evidence / 'original-payload-catalog.json').write_text(json.dumps(catalog, indent=2) + '\\n')\n\
+        \    old_mounts = {r['mountPath'] for r in current.values() if r.get('mountPath')}\n    receipt =\
+        \ {'mutationLimit': 3, 'bulkMutationLimit': 2, 'mutations': 0, 'totalDeadlineSeconds': 600, 'stage':\
+        \ 'preflight'}\n    deadline = time.monotonic() + 600\n\n    def save():\n        (evidence / 'aggregate-cleanup.json').write_text(json.dumps(receipt,\
+        \ indent=2) + '\\n')\n\n    def remaining(limit):\n        value = min(limit, deadline - time.monotonic())\n\
+        \        assert value > 0, 'Aggregate cleanup exceeded 600 seconds'\n        return value\n\n    def\
+        \ observe(name):\n        rows = capture(name + '.json', timeout=remaining(30))\n        validate_original_rows(rows,\
+        \ catalog, pending=True)\n        old_mounts.update(r['mountPath'] for r in rows.values() if r.get('mountPath'))\n\
+        \        return rows\n\n    def disk_state(name):\n        raw = subprocess.check_output(['hdiutil',\
+        \ 'info', '-plist'], timeout=remaining(30))\n        (evidence / (name + '.plist')).write_bytes(raw)\n\
+        \        mounts = subprocess.check_output(['/sbin/mount'], text=True, timeout=remaining(30))\n   \
+        \     (evidence / (name + '.mounts.txt')).write_text(mounts)\n        return plistlib.loads(raw),\
+        \ mounts\n\n    def missing_payloads():\n        return [p for entry in catalog.values() for p in\
+        \ entry['payloads'] if Path(p).exists()]\n\n    def physical_absence(name):\n        assert not missing_payloads(),\
+        \ 'Original payload remains'\n        for root in catalog:\n            path = Path(root)\n      \
+        \      assert not path.is_file(), 'Original runtime image remains'\n            assert not any(p.is_file()\
+        \ for p in path.rglob('*.dmg')), 'Unrecorded original payload remains'\n        assert not any(os.path.ismount(m)\
+        \ for m in old_mounts), 'Old runtime volume is still mounted'\n        disks, mounts = disk_state(name)\n\
+        \        assert not any(' on ' + m + ' (' in mounts for m in old_mounts), 'Old runtime mount remains'\n\
+        \        for image in disks.get('images', []):\n            attached_path = image.get('image-path',\
+        \ '')\n            assert not any(attached_path == root or attached_path.startswith(root.rstrip('/')\
+        \ + '/')\n                           for root in catalog), 'Old runtime image remains attached without\
+        \ a mount'\n            assert not old_mounts.intersection(e.get('mount-point') for e in image.get('system-entities',\
+        \ [])), 'Old image remains mounted'\n\n    def command(name, args, *, before=None):\n        receipt['stage']\
+        \ = name\n        if before is not None:\n            if args == ['xcrun', 'simctl', 'runtime', 'delete',\
+        \ 'all']:\n                assert receipt['mutations'] < 2, 'No third bulk deletion permitted'\n \
+        \           else:\n                assert name == 'delete-recovered-asset' and receipt['mutations']\
+        \ == 2\n                assert len(before) == 1 and args == ['xcrun', 'simctl', 'runtime', 'delete',\
+        \ next(iter(before))]\n                assert receipt.get('assetRecoveryRoot'), 'Exact deletion lacks\
+        \ recovery authorization'\n            receipt['mutations'] += 1\n            (evidence / (name +\
+        \ '-before.json')).write_text(json.dumps(before, indent=2) + '\\n')\n        save()\n        with\
+        \ (evidence / (name + '.log')).open('w') as output:\n            result = subprocess.run(args, stdout=output,\
+        \ stderr=subprocess.STDOUT, timeout=remaining(300 if before is not None else 60))\n        (evidence\
+        \ / (name + '-exit.json')).write_text(json.dumps({'exit': result.returncode}) + '\\n')\n        if\
+        \ before is None:\n            result.check_returncode()\n        else:\n            if name == 'delete-recovered-asset':\n\
+        \                result.check_returncode()  # No fourth mutation or further recovery on any error.\n\
+        \            classified = classify_bulk_result(result.returncode, (evidence / (name + '.log')).read_text(),\
+        \ before)\n            (evidence / (name + '-classification.json')).write_text(json.dumps({\n    \
+        \            'exit': result.returncode, 'requiresVerification': True, 'recognizedErrors': classified},\
+        \ indent=2) + '\\n')\n            return classified\n\n    def wait_retired(before, name, *, allow_recreated,\
+        \ recreated_catalog=None):\n        until = time.monotonic() + remaining(210)\n        attempt = 0\n\
+        \        while True:\n            rows = observe(name + '-' + str(attempt))\n            for key,\
+        \ row in rows.items():\n                if key in before:\n                    assert all(row.get(k)\
+        \ == before[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n\
+        \                    assert row.get('state') == 'Deleting', 'Old registration did not enter Deleting'\n\
+        \                else:\n                    if not allow_recreated:\n                        assert\
+        \ recreated_catalog is not None, 'Runtime recreated after final deletion; no further mutation permitted'\n\
+        \                        validate_original_rows({key: row}, recreated_catalog, pending=True)\n   \
+        \         if recreated_catalog is not None:\n                assert len(set(rows) - set(before)) <=\
+        \ 1, 'Asset recovery exposed more than one registration'\n            if not set(before).intersection(rows):\n\
+        \                return rows\n            assert time.monotonic() < until, 'Original deletion did\
+        \ not retire within 210 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
+        \            attempt += 1\n\n    def all_ready(rows):\n        validate_original_rows(rows, catalog)\n\
+        \        return all(r.get('state') in ('Ready', 'Unusable') for r in rows.values())\n\n    def payloads_registered(rows):\n\
+        \        for root, entry in catalog.items():\n            surviving = [p for p in entry['payloads']\
+        \ if Path(p).exists()]\n            if surviving and not any(r.get('path') == root for r in rows.values()):\n\
+        \                if not all(any(r.get('path') == p for r in rows.values()) for p in surviving):\n\
+        \                    return False\n        return True\n\n    try:\n        save()\n        disk_state('disks-before-removal')\n\
+        \        command('delete-all-dry-run', ['xcrun', 'simctl', 'runtime', 'delete', 'all', '--dry-run'])\n\
+        \        first = observe('delete-all-current')\n        validate_original_rows(first, catalog)\n \
+        \       assert first, 'Runtime inventory disappeared before command'\n        first_errors = command('delete-all',\
         \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=first)\n        wait_retired(first, 'all-removal-wait',\
         \ allow_recreated=True)\n        command('purge-recovery-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n\
-        \        until = time.monotonic() + remaining(120)\n        count = 0\n        while True:\n            rows = observe('recovery-settle-'\
-        \ + str(count))\n            assert not set(first).intersection(rows), 'Original UUID returned after retirement'\n\
-        \            # Pending identities are observable but can never authorize deletion.\n            known = all(all(r.get(k)\
-        \ for k in ('runtimeIdentifier', 'build', 'version')) for r in rows.values())\n            if known and all_ready(rows)\
-        \ and payloads_registered(rows):\n                break\n            assert time.monotonic() < until, 'Recovery scan\
-        \ did not settle within 120 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
-        \            count += 1\n        second_errors = []\n        asset_recovery_root = None\n        if rows:\n      \
-        \      second = observe('delete-recreated-current')\n            assert second, 'Recreated inventory disappeared before\
-        \ second deletion'\n            assert not set(first).intersection(second)\n            assert all_ready(second) and\
-        \ payloads_registered(second), 'Recovery changed before second deletion'\n            second_errors = command('delete-recreated-originals',\
-        \ ['xcrun', 'simctl', 'runtime', 'delete', 'all'], before=second)\n            if any(e['classification'] == 'mobileasset-not-reclaimed'\
-        \ for e in second_errors):\n                asset_recovery_root = eligible_asset_recovery(first_errors, second_errors,\
-        \ catalog)\n                receipt['assetRecoveryRoot'] = asset_recovery_root\n                save()\n         \
-        \   wait_retired(second, 'recreated-removal-wait', allow_recreated=False,\n                         recreated_catalog={asset_recovery_root:\
-        \ catalog[asset_recovery_root]} if asset_recovery_root else None)\n        if asset_recovery_root is not None:\n \
-        \           root = asset_recovery_root\n            scoped_catalog = {root: catalog[root]}\n            command('asset-recovery-scan',\
-        \ ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n            until = time.monotonic() + remaining(120)\n     \
-        \       count = 0\n            while True:\n                recovered = observe('asset-recovery-settle-' + str(count))\n\
-        \                assert len(recovered) <= 1, 'Asset recovery exposed more than one registration'\n               \
-        \ validate_original_rows(recovered, scoped_catalog, pending=True)\n                known = all(all(r.get(k) for k\
-        \ in ('runtimeIdentifier', 'build', 'version')) for r in recovered.values())\n                if recovered and known\
-        \ and all_ready(recovered):\n                    break\n                assert time.monotonic() < until, 'Asset recovery\
-        \ did not settle within 120 seconds'\n                time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
-        \                count += 1\n            exact = observe('delete-recovered-asset-current')\n            assert len(exact)\
-        \ == 1 and set(exact) == set(recovered), 'Recovered UUID changed before deletion'\n            validate_original_rows(exact,\
-        \ scoped_catalog)\n            assert all_ready(exact)\n            for key, row in exact.items():\n             \
-        \   assert all(row.get(k) == recovered[key].get(k) for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n\
-        \            command('delete-recovered-asset', ['xcrun', 'simctl', 'runtime', 'delete', next(iter(exact))], before=exact)\n\
-        \            wait_retired(exact, 'asset-recovery-removal-wait', allow_recreated=False)\n        assert not observe('all-before-confirmation'),\
-        \ 'Runtime remains before confirmation'\n        command('confirm-removal-scan', ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n\
-        \        receipt['stage'] = 'sustained-absence'; save()\n        until = time.monotonic() + 60\n        count = 0\n\
-        \        while True:\n            assert not observe('all-absence-' + str(count)), 'Runtime registration reappeared'\n\
-        \            physical_absence('disks-absence-' + str(count))\n            if time.monotonic() >= until:\n        \
-        \        break\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n            count\
-        \ += 1\n        receipt.update(outcome='success', absenceObservations=count + 1, oldMounts=sorted(old_mounts))\n \
-        \       save()\n        return old_mounts, count + 1\n    except BaseException as error:\n        receipt.update(outcome='failure',\
-        \ error=str(error))\n        # A diagnostic failure must never replace the cleanup exception.\n        try:\n    \
-        \        save()\n        except BaseException:\n            pass\n        try:\n            collect_cleanup_failure(catalog)\n\
-        \        except BaseException:\n            pass\n        raise\n\n\ndef prepare():\n    before = capture('before.json')\n\
-        \    assert any(r.get('state') == 'Ready' for r in targets(before))\n    export = Path('.build/runtime-export')\n\
-        \    export.mkdir()\n    with (evidence / 'export.log').open('w') as log:\n        result = subprocess.run(['xcodebuild',\
-        \ '-downloadPlatform', 'iOS', '-buildVersion', build,\n                                 '-exportPath', str(export.resolve()),\
-        \ '-architectureVariant', 'arm64'],\n                                stdout=log, stderr=subprocess.STDOUT)\n    (evidence\
-        \ / 'export-exit.json').write_text(json.dumps({'exit': result.returncode}) + '\\n')\n    # The documented exporter\
-        \ may return 70 even when its exported bundle exists.\n    # A real import and exact registration check below remain\
-        \ mandatory.\n    assert result.returncode in (0, 70)\n    bundles = list(export.glob('*.exportedBundle'))\n    assert\
-        \ len(bundles) == 1 and bundles[0].is_dir(), 'Expected one exported platform bundle'\n    assert any(f.is_file() and\
-        \ f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle':\
-        \ str(bundles[0]),\n        'files': [{'name': str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n      \
-        \            for f in bundles[0].rglob('*') if f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY')\
-        \ == 'palatis3/room-in-the-cart'\n    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n\
-        \    assert os.getuid() != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size\
-        \ > 0]\n    assert len(payloads) == 1\n    import hashlib, plistlib\n    saved_image = payloads[0].resolve()\n   \
-        \ assert str(saved_image).startswith(str(export.resolve()) + '/')\n    def sha256(path):\n        digest = hashlib.sha256()\n\
-        \        with path.open('rb') as source:\n            for chunk in iter(lambda: source.read(1024 * 1024), b''):\n\
-        \                digest.update(chunk)\n        return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence\
-        \ / 'saved-payload.json').write_text(json.dumps({'path': str(saved_image), 'sha256': digest}) + '\\n')\n    devices\
-        \ = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j'], text=True, timeout=30))\n   \
-        \ assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values() for d in rows)\n    current = capture('all-before-removal.json')\n\
+        \        until = time.monotonic() + remaining(120)\n        count = 0\n        while True:\n     \
+        \       rows = observe('recovery-settle-' + str(count))\n            assert not set(first).intersection(rows),\
+        \ 'Original UUID returned after retirement'\n            # Pending identities are observable but can\
+        \ never authorize deletion.\n            known = all(all(r.get(k) for k in ('runtimeIdentifier', 'build',\
+        \ 'version')) for r in rows.values())\n            if known and all_ready(rows) and payloads_registered(rows):\n\
+        \                break\n            assert time.monotonic() < until, 'Recovery scan did not settle\
+        \ within 120 seconds'\n            time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
+        \            count += 1\n        second_errors = []\n        asset_recovery_root = None\n        if\
+        \ rows:\n            second = observe('delete-recreated-current')\n            assert second, 'Recreated\
+        \ inventory disappeared before second deletion'\n            assert not set(first).intersection(second)\n\
+        \            assert all_ready(second) and payloads_registered(second), 'Recovery changed before second\
+        \ deletion'\n            second_errors = command('delete-recreated-originals', ['xcrun', 'simctl',\
+        \ 'runtime', 'delete', 'all'], before=second)\n            if any(e['classification'] == 'mobileasset-not-reclaimed'\
+        \ for e in second_errors):\n                asset_recovery_root = eligible_asset_recovery(first_errors,\
+        \ second_errors, catalog)\n                receipt['assetRecoveryRoot'] = asset_recovery_root\n  \
+        \              save()\n            wait_retired(second, 'recreated-removal-wait', allow_recreated=False,\n\
+        \                         recreated_catalog={asset_recovery_root: catalog[asset_recovery_root]} if\
+        \ asset_recovery_root else None)\n        if asset_recovery_root is not None:\n            root =\
+        \ asset_recovery_root\n            scoped_catalog = {root: catalog[root]}\n            command('asset-recovery-scan',\
+        \ ['xcrun', 'simctl', 'runtime', 'scan-and-mount'])\n            until = time.monotonic() + remaining(120)\n\
+        \            count = 0\n            while True:\n                recovered = observe('asset-recovery-settle-'\
+        \ + str(count))\n                assert len(recovered) <= 1, 'Asset recovery exposed more than one\
+        \ registration'\n                validate_original_rows(recovered, scoped_catalog, pending=True)\n\
+        \                known = all(all(r.get(k) for k in ('runtimeIdentifier', 'build', 'version')) for\
+        \ r in recovered.values())\n                if recovered and known and all_ready(recovered):\n   \
+        \                 break\n                assert time.monotonic() < until, 'Asset recovery did not\
+        \ settle within 120 seconds'\n                time.sleep(max(0, min(5, until - time.monotonic(), remaining(5))))\n\
+        \                count += 1\n            exact = observe('delete-recovered-asset-current')\n     \
+        \       assert len(exact) == 1 and set(exact) == set(recovered), 'Recovered UUID changed before deletion'\n\
+        \            validate_original_rows(exact, scoped_catalog)\n            assert all_ready(exact)\n\
+        \            for key, row in exact.items():\n                assert all(row.get(k) == recovered[key].get(k)\
+        \ for k in ('identifier', 'path', 'runtimeIdentifier', 'build', 'version'))\n            command('delete-recovered-asset',\
+        \ ['xcrun', 'simctl', 'runtime', 'delete', next(iter(exact))], before=exact)\n            wait_retired(exact,\
+        \ 'asset-recovery-removal-wait', allow_recreated=False)\n        assert not observe('all-before-confirmation'),\
+        \ 'Runtime remains before confirmation'\n        command('confirm-removal-scan', ['xcrun', 'simctl',\
+        \ 'runtime', 'scan-and-mount'])\n        receipt['stage'] = 'sustained-absence'; save()\n        until\
+        \ = time.monotonic() + 60\n        count = 0\n        while True:\n            assert not observe('all-absence-'\
+        \ + str(count)), 'Runtime registration reappeared'\n            physical_absence('disks-absence-'\
+        \ + str(count))\n            if time.monotonic() >= until:\n                break\n            time.sleep(max(0,\
+        \ min(5, until - time.monotonic(), remaining(5))))\n            count += 1\n        receipt.update(outcome='success',\
+        \ absenceObservations=count + 1, oldMounts=sorted(old_mounts))\n        save()\n        return old_mounts,\
+        \ count + 1\n    except BaseException as error:\n        receipt.update(outcome='failure', error=str(error))\n\
+        \        # A diagnostic failure must never replace the cleanup exception.\n        try:\n        \
+        \    save()\n        except BaseException:\n            pass\n        try:\n            collect_cleanup_failure(catalog)\n\
+        \        except BaseException:\n            pass\n        raise\n\n\ndef prepare():\n    before =\
+        \ capture('before.json')\n    assert any(r.get('state') == 'Ready' for r in targets(before))\n   \
+        \ export = Path('.build/runtime-export')\n    export.mkdir()\n    with (evidence / 'export.log').open('w')\
+        \ as log:\n        result = subprocess.run(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion',\
+        \ build,\n                                 '-exportPath', str(export.resolve()), '-architectureVariant',\
+        \ 'arm64'],\n                                stdout=log, stderr=subprocess.STDOUT)\n    (evidence\
+        \ / 'export-exit.json').write_text(json.dumps({'exit': result.returncode}) + '\\n')\n    # The documented\
+        \ exporter may return 70 even when its exported bundle exists.\n    # A real import and exact registration\
+        \ check below remain mandatory.\n    assert result.returncode in (0, 70)\n    bundles = list(export.glob('*.exportedBundle'))\n\
+        \    assert len(bundles) == 1 and bundles[0].is_dir(), 'Expected one exported platform bundle'\n \
+        \   assert any(f.is_file() and f.stat().st_size > 0 for f in bundles[0].rglob('*'))\n    (evidence\
+        \ / 'export-bundle.json').write_text(json.dumps({'bundle': str(bundles[0]),\n        'files': [{'name':\
+        \ str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}\n                  for f in bundles[0].rglob('*')\
+        \ if f.is_file()]}, indent=2) + '\\n')\n    assert os.environ.get('GITHUB_REPOSITORY') == 'palatis3/room-in-the-cart'\n\
+        \    assert os.environ.get('GITHUB_REF') == 'refs/heads/codex/ios27-direct-dmg-canary-nov16'\n   \
+        \ assert os.getuid() != 0\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and\
+        \ f.stat().st_size > 0]\n    assert len(payloads) == 1\n    import hashlib, plistlib\n    saved_image\
+        \ = payloads[0].resolve()\n    assert str(saved_image).startswith(str(export.resolve()) + '/')\n \
+        \   def sha256(path):\n        digest = hashlib.sha256()\n        with path.open('rb') as source:\n\
+        \            for chunk in iter(lambda: source.read(1024 * 1024), b''):\n                digest.update(chunk)\n\
+        \        return digest.hexdigest()\n    digest = sha256(saved_image)\n    (evidence / 'saved-payload.json').write_text(json.dumps({'path':\
+        \ str(saved_image), 'sha256': digest}) + '\\n')\n    devices = json.loads(subprocess.check_output(['xcrun',\
+        \ 'simctl', 'list', 'devices', '-j'], text=True, timeout=30))\n    assert all(d['state'] == 'Shutdown'\
+        \ for rows in devices['devices'].values() for d in rows)\n    current = capture('all-before-removal.json')\n\
         \    assert current, 'No preloaded runtimes to isolate'\n    old_mounts, absence_observations = cleanup_original_images(current)\n\
         \    assert saved_image.is_file() and sha256(saved_image) == digest\n    (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations':\
         \ 0, 'oldMounts': sorted(old_mounts),\n        'absenceObservations': absence_observations, 'savedPayloadSha256':\
-        \ digest}) + '\\n')\n    def original_rows(rows):\n        # No other preloaded runtime is allowed to return during\
-        \ this experiment.\n        return [r for r in rows.values() if r.get('runtimeIdentifier') != runtime or r.get('build')\
-        \ != build]\n    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]\n    assert\
-        \ len(payloads) == 1, 'Expected one exact exported disk-image payload'\n    disk_image = payloads[0]\n    (evidence\
-        \ / 'import-input.json').write_text(json.dumps({\n        'mode': 'direct-dmg', 'path': str(disk_image.resolve()),\n\
-        \        'relativePayload': str(disk_image.relative_to(bundles[0]))}) + '\\n')\n    with (evidence / 'import.log').open('w')\
-        \ as log:\n        subprocess.run(['sudo', '-n', '/usr/bin/env',\n                        'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',\n\
-        \                        '/usr/bin/xcodebuild', '-importPlatform', str(disk_image.resolve())],\n                 \
-        \      stdout=log, stderr=subprocess.STDOUT, check=True)\n    after = capture('after-import.json')\n    assert not\
-        \ original_rows(after), 'Original asset reappeared during import'\n    installed = targets(after)\n    assert len(installed)\
-        \ == 1 and installed[0].get('state') == 'Ready'\n    target = installed[0]\n    assert target.get('kind') == 'Disk\
-        \ Image', target\n    assert not target.get('parentMountPath') and not target.get('parentIdentifier'), target\n  \
-        \  assert target.get('mountPath') and Path(target['mountPath']).is_dir()\n    path = target.get('path', '')\n    assert\
-        \ path.startswith('/Library/Developer/CoreSimulator/') and '/Images/' in path, path\n    assert Path(path).exists()\
-        \ and Path(target['runtimeBundlePath']).is_dir()\n    assert 'arm64' in target.get('supportedArchitectures', [])\n\
-        \    (evidence / 'target.json').write_text(json.dumps(target, indent=2) + '\\n')\n    print('Imported iOS 27.0/24A434\
-        \ runtime verified.')\n\n\ndef verify():\n    current = capture('after-tests.json')\n    before = json.loads((evidence\
-        \ / 'target.json').read_text())\n    # Preserve physical availability even when registry mount metadata vanishes.\n\
-        \    # This is diagnostic evidence only: the identity/mount assertions below stay strict.\n    filesystem = {'observedAt':\
-        \ time.time(), 'paths': {}}\n    for key in ('path', 'mountPath', 'runtimeBundlePath'):\n        value = before.get(key)\n\
-        \        filesystem['paths'][key] = {\n            'path': value,\n            'exists': Path(value).exists() if value\
-        \ else None,\n            'isDirectory': Path(value).is_dir() if value else None,\n        }\n        if key == 'mountPath':\n\
-        \            filesystem['paths'][key]['isMount'] = os.path.ismount(value) if value else None\n    (evidence / 'verification-filesystem.json').write_text(json.dumps(filesystem,\
-        \ indent=2) + '\\n')\n    installed = targets(current)\n    assert len(current) == 1, 'An unused runtime reappeared'\n\
-        \    assert len(installed) == 1, 'Expected exactly one target registration'\n    after = installed[0]\n    assert\
-        \ after['state'] == 'Ready'\n    assert after.get('kind') == 'Disk Image', after\n    assert not after.get('parentMountPath')\
-        \ and not after.get('parentIdentifier'), after\n    assert after.get('mountPath') and Path(after['mountPath']).is_dir()\n\
-        \    for key in ('identifier', 'build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath'):\n        assert\
-        \ before.get(key) == after.get(key), 'Runtime changed during tests: ' + key\n    assert Path(after['path']).exists()\
-        \ and Path(after['runtimeBundlePath']).is_dir()\n    print('Imported runtime identity, mount and bundle retained.')\n\
-        \n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    parser.add_argument('operation', choices=('prepare',\
-        \ 'verify'))\n    args = parser.parse_args()\n    assert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'\n\
-        \    assert os.environ.get('GITHUB_ACTIONS') == 'true'\n    assert platform.system() == 'Darwin' and platform.machine()\
-        \ == 'arm64'\n    assert os.environ.get('CI_IPHONE_RUNTIME') == runtime\n    assert os.environ.get('DEVELOPER_DIR')\
-        \ == '/Applications/Xcode_27.1.app/Contents/Developer'\n    evidence.mkdir(parents=True, exist_ok=True)\n    if args.operation\
-        \ == 'prepare':\n        prepare()\n    else:\n        verify()\n\n\nif __name__ == '__main__':\n    main()\nRITC_RUNTIME_HELPER\n\
-        printf '%s  %s\\n' '21bd40fbd59e5f2769ad0798d9dc3e8dc9b102af9e833987654bb076fd40bed0' '.build/prepare_github_ios_runtime.py'\
+        \ digest}) + '\\n')\n    def original_rows(rows):\n        # No other preloaded runtime is allowed\
+        \ to return during this experiment.\n        return [r for r in rows.values() if r.get('runtimeIdentifier')\
+        \ != runtime or r.get('build') != build]\n    payloads = [f for f in bundles[0].rglob('*.dmg') if\
+        \ f.is_file() and f.stat().st_size > 0]\n    assert len(payloads) == 1, 'Expected one exact exported\
+        \ disk-image payload'\n    disk_image = payloads[0]\n    (evidence / 'import-input.json').write_text(json.dumps({\n\
+        \        'mode': 'direct-dmg', 'path': str(disk_image.resolve()),\n        'relativePayload': str(disk_image.relative_to(bundles[0]))})\
+        \ + '\\n')\n    with (evidence / 'import.log').open('w') as log:\n        subprocess.run(['sudo',\
+        \ '-n', '/usr/bin/env',\n                        'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',\n\
+        \                        '/usr/bin/xcodebuild', '-importPlatform', str(disk_image.resolve())],\n \
+        \                      stdout=log, stderr=subprocess.STDOUT, check=True)\n    after = capture('after-import.json')\n\
+        \    assert not original_rows(after), 'Original asset reappeared during import'\n    installed = targets(after)\n\
+        \    assert len(installed) == 1 and installed[0].get('state') == 'Ready'\n    target = installed[0]\n\
+        \    assert target.get('kind') == 'Disk Image', target\n    assert not target.get('parentMountPath')\
+        \ and not target.get('parentIdentifier'), target\n    assert target.get('mountPath') and Path(target['mountPath']).is_dir()\n\
+        \    path = target.get('path', '')\n    assert path.startswith('/Library/Developer/CoreSimulator/')\
+        \ and '/Images/' in path, path\n    assert Path(path).exists() and Path(target['runtimeBundlePath']).is_dir()\n\
+        \    assert 'arm64' in target.get('supportedArchitectures', [])\n    (evidence / 'target.json').write_text(json.dumps(target,\
+        \ indent=2) + '\\n')\n    print('Imported iOS 27.0/24A434 runtime verified.')\n\n\ndef verify():\n\
+        \    current = capture('after-tests.json')\n    before = json.loads((evidence / 'target.json').read_text())\n\
+        \    # Preserve physical availability even when registry mount metadata vanishes.\n    # This is diagnostic\
+        \ evidence only: the identity/mount assertions below stay strict.\n    filesystem = {'observedAt':\
+        \ time.time(), 'paths': {}}\n    for key in ('path', 'mountPath', 'runtimeBundlePath'):\n        value\
+        \ = before.get(key)\n        filesystem['paths'][key] = {\n            'path': value,\n          \
+        \  'exists': Path(value).exists() if value else None,\n            'isDirectory': Path(value).is_dir()\
+        \ if value else None,\n        }\n        if key == 'mountPath':\n            filesystem['paths'][key]['isMount']\
+        \ = os.path.ismount(value) if value else None\n    (evidence / 'verification-filesystem.json').write_text(json.dumps(filesystem,\
+        \ indent=2) + '\\n')\n    installed = targets(current)\n    assert len(current) == 1, 'An unused runtime\
+        \ reappeared'\n    assert len(installed) == 1, 'Expected exactly one target registration'\n    after\
+        \ = installed[0]\n    assert after['state'] == 'Ready'\n    assert after.get('kind') == 'Disk Image',\
+        \ after\n    assert not after.get('parentMountPath') and not after.get('parentIdentifier'), after\n\
+        \    assert after.get('mountPath') and Path(after['mountPath']).is_dir()\n    for key in ('identifier',\
+        \ 'build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath'):\n        assert before.get(key)\
+        \ == after.get(key), 'Runtime changed during tests: ' + key\n    assert Path(after['path']).exists()\
+        \ and Path(after['runtimeBundlePath']).is_dir()\n    print('Imported runtime identity, mount and bundle\
+        \ retained.')\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    parser.add_argument('operation',\
+        \ choices=('prepare', 'verify'))\n    args = parser.parse_args()\n    assert os.environ.get('RUNNER_ENVIRONMENT')\
+        \ == 'github-hosted'\n    assert os.environ.get('GITHUB_ACTIONS') == 'true'\n    assert platform.system()\
+        \ == 'Darwin' and platform.machine() == 'arm64'\n    assert os.environ.get('CI_IPHONE_RUNTIME') ==\
+        \ runtime\n    assert os.environ.get('DEVELOPER_DIR') == '/Applications/Xcode_27.1.app/Contents/Developer'\n\
+        \    evidence.mkdir(parents=True, exist_ok=True)\n    if args.operation == 'prepare':\n        prepare()\n\
+        \    else:\n        verify()\n\n\nif __name__ == '__main__':\n    main()\nRITC_RUNTIME_HELPER\nprintf\
+        \ '%s  %s\\n' '21bd40fbd59e5f2769ad0798d9dc3e8dc9b102af9e833987654bb076fd40bed0' '.build/prepare_github_ios_runtime.py'\
         \ | shasum -a 256 -c -\npython3 .build/prepare_github_ios_runtime.py prepare\n"
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
@@ -272,150 +325,172 @@ jobs:
     - name: Refresh only the current-user simulator service before device creation
       timeout-minutes: 6
       shell: bash
-      run: "set -euo pipefail\ncat > .build/refresh_simulator_service.py <<'RITC_REFRESH'\n\"\"\"One user-owned service refresh\
-        \ on a disposable GitHub diagnostic runner only.\"\"\"\nimport json, os, platform, re, subprocess, time\nfrom pathlib\
-        \ import Path\nassert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'\nassert os.environ.get('GITHUB_ACTIONS')\
-        \ == 'true'\nassert platform.system() == 'Darwin' and platform.machine() == 'arm64'\nassert os.environ.get('DEVELOPER_DIR')\
-        \ == '/Applications/Xcode_27.1.app/Contents/Developer'\nuid = os.getuid()\nassert uid != 0\np = Path('.build/github-ios-runtime')\n\
-        expected = json.loads((p / 'target.json').read_text())\npattern = r'com\\.apple\\.CoreSimulator\\.CoreSimulatorService'\n\
-        receipt = {'uid': uid, 'signal': 'TERM', 'scope': 'one pre-create diagnostic refresh, no sudo or escalation'}\ndef\
-        \ save():\n    (p / 'service-refresh.json').write_text(json.dumps(receipt, indent=2) + '\\n')\ndef pids():\n    r\
-        \ = subprocess.run(['/usr/bin/pgrep', '-u', str(uid), '-x', pattern], capture_output=True, text=True, timeout=10)\n\
-        \    assert r.returncode in (0, 1), r.stderr\n    return [int(s) for s in r.stdout.split()]\ndef inventory(name):\n\
-        \    raw = subprocess.check_output(['xcrun', 'simctl', 'list', '-j'], text=True, timeout=60)\n    (p / name).write_text(raw)\n\
-        \    d = json.loads(raw)\n    assert all(v['state'] == 'Shutdown' for rows in d['devices'].values() for v in rows),\
-        \ 'A simulator is active; do not refresh its service'\n    targets = [r for r in d['runtimes'] if r['identifier']\
-        \ == expected['runtimeIdentifier']]\n    assert len(targets) == 1 and targets[0].get('isAvailable') is True\n    r\
-        \ = targets[0]\n    assert r['buildversion'] == expected['build'] and r['bundlePath'] == expected['runtimeBundlePath']\n\
-        \    assert Path(r['runtimeRoot']).is_dir(), 'RuntimeRoot is unavailable'\n    raw = subprocess.check_output(['xcrun',\
+      run: "set -euo pipefail\ncat > .build/refresh_simulator_service.py <<'RITC_REFRESH'\n\"\"\"One user-owned\
+        \ service refresh on a disposable GitHub diagnostic runner only.\"\"\"\nimport json, os, platform,\
+        \ re, subprocess, time\nfrom pathlib import Path\nassert os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'\n\
+        assert os.environ.get('GITHUB_ACTIONS') == 'true'\nassert platform.system() == 'Darwin' and platform.machine()\
+        \ == 'arm64'\nassert os.environ.get('DEVELOPER_DIR') == '/Applications/Xcode_27.1.app/Contents/Developer'\n\
+        uid = os.getuid()\nassert uid != 0\np = Path('.build/github-ios-runtime')\nexpected = json.loads((p\
+        \ / 'target.json').read_text())\npattern = r'com\\.apple\\.CoreSimulator\\.CoreSimulatorService'\n\
+        receipt = {'uid': uid, 'signal': 'TERM', 'scope': 'one pre-create diagnostic refresh, no sudo or escalation'}\n\
+        def save():\n    (p / 'service-refresh.json').write_text(json.dumps(receipt, indent=2) + '\\n')\n\
+        def pids():\n    r = subprocess.run(['/usr/bin/pgrep', '-u', str(uid), '-x', pattern], capture_output=True,\
+        \ text=True, timeout=10)\n    assert r.returncode in (0, 1), r.stderr\n    return [int(s) for s in\
+        \ r.stdout.split()]\ndef inventory(name):\n    raw = subprocess.check_output(['xcrun', 'simctl', 'list',\
+        \ '-j'], text=True, timeout=60)\n    (p / name).write_text(raw)\n    d = json.loads(raw)\n    assert\
+        \ all(v['state'] == 'Shutdown' for rows in d['devices'].values() for v in rows), 'A simulator is active;\
+        \ do not refresh its service'\n    targets = [r for r in d['runtimes'] if r['identifier'] == expected['runtimeIdentifier']]\n\
+        \    assert len(targets) == 1 and targets[0].get('isAvailable') is True\n    r = targets[0]\n    assert\
+        \ r['buildversion'] == expected['build'] and r['bundlePath'] == expected['runtimeBundlePath']\n  \
+        \  assert Path(r['runtimeRoot']).is_dir(), 'RuntimeRoot is unavailable'\n    raw = subprocess.check_output(['xcrun',\
         \ 'simctl', 'runtime', 'list', '-j'], text=True, timeout=30)\n    (p / (name + '.images.json')).write_text(raw)\n\
-        \    rows = json.loads(raw)\n    targets = [r for r in rows.values() if r.get('runtimeIdentifier') == expected['runtimeIdentifier']\
-        \ and r.get('build') == expected['build']]\n    assert len(targets) == 1\n    r = targets[0]\n    for key in ('identifier',\
-        \ 'build', 'runtimeIdentifier', 'path', 'mountPath', 'runtimeBundlePath', 'state', 'kind'):\n        assert r.get(key)\
-        \ == expected.get(key), key\n    assert r['kind'] == 'Disk Image' and r['state'] == 'Ready'\n    assert not r.get('parentMountPath')\
-        \ and not r.get('parentIdentifier')\n    assert Path(r['path']).is_file() and Path(r['mountPath']).is_dir() and Path(r['runtimeBundlePath']).is_dir()\n\
-        try:\n    inventory('service-before.json')\n    old = pids(); assert len(old) == 1, old\n    detail = subprocess.check_output(['/bin/ps',\
-        \ '-p', str(old[0]), '-o', 'uid=', '-o', 'comm='], text=True, timeout=10).strip()\n    owner, command = detail.split(None,\
-        \ 1)\n    assert int(owner) == uid and Path(command).name == 'com.apple.CoreSimulator.CoreSimulatorService', detail\n\
-        \    receipt.update(oldPids=old, oldProcess=detail, beforeVerified=True, signalSent=False); save()\n    result = subprocess.run(['/usr/bin/pkill',\
-        \ '-TERM', '-u', str(uid), '-x', pattern], capture_output=True, text=True, timeout=10)\n    receipt.update(signalSent=True,\
-        \ signalExit=result.returncode, signalStderr=result.stderr); save()\n    result.check_returncode()\n    deadline =\
-        \ time.monotonic() + 60\n    while set(old).intersection(pids()):\n        assert time.monotonic() < deadline, 'Original\
-        \ service did not exit; no escalation permitted'\n        time.sleep(1)\n    receipt['oldExited'] = True; save()\n\
-        \    inventory('service-after.json')\n    new = pids(); assert len(new) == 1 and not set(old).intersection(new), new\n\
-        \    receipt.update(newPids=new, afterVerified=True, outcome='success'); save()\nexcept BaseException as error:\n\
-        \    receipt.update(outcome='failure', error=str(error)); save(); raise\nRITC_REFRESH\nprintf '%s  %s\\n' '69d2dcf80b0276c2578a70556eabe78fe061fd5d3e769c90fb64b801ff9139f1'\
+        \    rows = json.loads(raw)\n    targets = [r for r in rows.values() if r.get('runtimeIdentifier')\
+        \ == expected['runtimeIdentifier'] and r.get('build') == expected['build']]\n    assert len(targets)\
+        \ == 1\n    r = targets[0]\n    for key in ('identifier', 'build', 'runtimeIdentifier', 'path', 'mountPath',\
+        \ 'runtimeBundlePath', 'state', 'kind'):\n        assert r.get(key) == expected.get(key), key\n  \
+        \  assert r['kind'] == 'Disk Image' and r['state'] == 'Ready'\n    assert not r.get('parentMountPath')\
+        \ and not r.get('parentIdentifier')\n    assert Path(r['path']).is_file() and Path(r['mountPath']).is_dir()\
+        \ and Path(r['runtimeBundlePath']).is_dir()\ntry:\n    inventory('service-before.json')\n    old =\
+        \ pids(); assert len(old) == 1, old\n    detail = subprocess.check_output(['/bin/ps', '-p', str(old[0]),\
+        \ '-o', 'uid=', '-o', 'comm='], text=True, timeout=10).strip()\n    owner, command = detail.split(None,\
+        \ 1)\n    assert int(owner) == uid and Path(command).name == 'com.apple.CoreSimulator.CoreSimulatorService',\
+        \ detail\n    receipt.update(oldPids=old, oldProcess=detail, beforeVerified=True, signalSent=False);\
+        \ save()\n    result = subprocess.run(['/usr/bin/pkill', '-TERM', '-u', str(uid), '-x', pattern],\
+        \ capture_output=True, text=True, timeout=10)\n    receipt.update(signalSent=True, signalExit=result.returncode,\
+        \ signalStderr=result.stderr); save()\n    result.check_returncode()\n    deadline = time.monotonic()\
+        \ + 60\n    while set(old).intersection(pids()):\n        assert time.monotonic() < deadline, 'Original\
+        \ service did not exit; no escalation permitted'\n        time.sleep(1)\n    receipt['oldExited']\
+        \ = True; save()\n    inventory('service-after.json')\n    new = pids(); assert len(new) == 1 and\
+        \ not set(old).intersection(new), new\n    receipt.update(newPids=new, afterVerified=True, outcome='success');\
+        \ save()\nexcept BaseException as error:\n    receipt.update(outcome='failure', error=str(error));\
+        \ save(); raise\nRITC_REFRESH\nprintf '%s  %s\\n' '69d2dcf80b0276c2578a70556eabe78fe061fd5d3e769c90fb64b801ff9139f1'\
         \ '.build/refresh_simulator_service.py' | shasum -a 256 -c -\npython3 .build/refresh_simulator_service.py\n"
     - name: Verify a746 products and select original failed produce journey
-      run: "set -euo pipefail\ntest \"$(git rev-parse HEAD)\" = a746ff60d13cfae205a743a481ed9248ef559d54\ntest \"$(git rev-parse\
-        \ 'HEAD^{tree}')\" = 1c579cedc8c604634f73ed0a06a0660f0c595461\nprintf '%s  %s\\n' 'f3247a85f5e9497f9b87591c2337725160ca43f96bdac8156dd84567ea4098ba'\
-        \ '.build/download/iphone-test-products.tar.lzfse' | shasum -a 256 -c -\nmkdir -p .build/DerivedData/Build\n/usr/bin/compression_tool\
-        \ -decode -A lzfse -t 2 -i .build/download/iphone-test-products.tar.lzfse | tar -xf - -C .build/DerivedData/Build\n\
+      run: "set -euo pipefail\ntest \"$(git rev-parse HEAD)\" = a746ff60d13cfae205a743a481ed9248ef559d54\n\
+        test \"$(git rev-parse 'HEAD^{tree}')\" = 1c579cedc8c604634f73ed0a06a0660f0c595461\nprintf '%s  %s\\\
+        n' 'f3247a85f5e9497f9b87591c2337725160ca43f96bdac8156dd84567ea4098ba' '.build/download/iphone-test-products.tar.lzfse'\
+        \ | shasum -a 256 -c -\nmkdir -p .build/DerivedData/Build\n/usr/bin/compression_tool -decode -A lzfse\
+        \ -t 2 -i .build/download/iphone-test-products.tar.lzfse | tar -xf - -C .build/DerivedData/Build\n\
         mv .build/DerivedData/Build/test-plan .build/test-plan\nprintf '%s  %s\\n' '1dfe6eb9293b1c42d0f3df7d9ee888580d54d527f5a10738df3e55f44a92713d'\
         \ '.build/test-plan/ui-09.txt' | shasum -a 256 -c -\ngrep -Fx 'RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement'\
         \ .build/test-plan/ui-03.txt > .build/test-plan/produce-focus.txt\ntest \"$(wc -l < .build/test-plan/produce-focus.txt\
-        \ | tr -d ' ')\" = 1\ncat > .build/select_ci_iphone.py <<'RITC_OWNERSHIP_HELPER'\n#!/usr/bin/env python3\n\"\"\"Select\
-        \ an image iPhone, or opt in to a job-owned device with identical type/runtime.\"\"\"\nimport argparse\nimport json\n\
-        import os\nfrom pathlib import Path\nimport re\nimport subprocess\nimport sys\nfrom uuid import UUID, uuid4\n\n\n\
-        def select_iphone(devices_by_runtime, required_runtime=None, required_name=None):\n    if bool(required_runtime) !=\
-        \ bool(required_name):\n        raise ValueError('Pin both CI_IPHONE_RUNTIME and CI_IPHONE_NAME, or neither')\n  \
-        \  candidates = []\n    for runtime, devices in devices_by_runtime.items():\n        if \".iOS-\" not in runtime:\n\
-        \            continue\n        if required_runtime and runtime != required_runtime:\n            continue\n      \
-        \  version = tuple(map(int, runtime.split(\".iOS-\", 1)[1].split(\"-\")))\n        for device in devices:\n      \
-        \      if required_name and device['name'] != required_name:\n                continue\n            if device[\"name\"\
-        ].startswith(\"iPhone\") and device.get(\"isAvailable\"):\n                candidates.append((version, runtime, device))\n\
-        \    if not candidates:\n        raise ValueError(\"No available iPhone simulator matching the requested runtime/device\"\
-        )\n    _, runtime, device = max(candidates, key=lambda item: (item[0], item[2][\"name\"] == \"iPhone 17\"))\n    return\
-        \ runtime, device\n\n\ndef simctl(*args):\n    # The workflow setup/cleanup deadlines own this bound. On a slow hosted\n\
-        \    # image, even listing devices has taken over three minutes; do not impose\n    # a second, shorter per-command\
-        \ timeout or retry the operation.\n    return subprocess.run([\"xcrun\", \"simctl\", *args], check=True, capture_output=True,\n\
-        \                          text=True).stdout\n\n\ndef owner_identity():\n    owner = {key: os.environ[key] for key\
-        \ in\n             (\"GITHUB_REPOSITORY\", \"GITHUB_RUN_ID\", \"GITHUB_RUN_ATTEMPT\", \"GITHUB_JOB\", \"TEST_SHARD\"\
-        , \"DEVELOPER_DIR\")}\n    if (not re.fullmatch(r\"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\", owner[\"GITHUB_REPOSITORY\"\
-        ])\n            or any(not re.fullmatch(r\"[0-9]+\", owner[key]) for key in (\"GITHUB_RUN_ID\", \"GITHUB_RUN_ATTEMPT\"\
-        ))\n            or any(not re.fullmatch(r\"[A-Za-z0-9_-]+\", owner[key]) for key in (\"GITHUB_JOB\", \"TEST_SHARD\"\
-        ))\n            or not Path(owner[\"DEVELOPER_DIR\"]).is_absolute() or \"\\n\" in owner[\"DEVELOPER_DIR\"]):\n   \
-        \     raise ValueError(\"Invalid CI owner identity\")\n    return owner\n\n\ndef runtime_identity(identifier):\n \
-        \   matches = [r for r in json.loads(simctl(\"list\", \"runtimes\", \"-j\"))[\"runtimes\"]\n               if r.get(\"\
-        identifier\") == identifier]\n    # Do not let an identical runtime identifier conceal different installed builds.\n\
-        \    if len(matches) != 1 or matches[0].get(\"isAvailable\") is not True:\n        raise ValueError(\"Chosen runtime\
-        \ is unavailable or ambiguously resolves to installed builds\")\n    row = matches[0]\n    keys = (\"identifier\"\
-        , \"version\", \"buildversion\", \"bundlePath\")\n    if any(not isinstance(row.get(key), str) or not row[key].strip()\
-        \ for key in keys):\n        raise ValueError(\"Chosen runtime lacks exact version/build/bundle identity\")\n    return\
-        \ {key: row[key] for key in keys}\n\n\ndef owned_name(owner, nonce):\n    UUID(nonce)\n    return f\"RITC-CI-{owner['GITHUB_RUN_ID']}-{owner['GITHUB_RUN_ATTEMPT']}-{owner['GITHUB_JOB']}-{owner['TEST_SHARD']}-{nonce}\"\
-        \n\n\ndef save_receipt(path, receipt):\n    # Replace our receipt atomically; never follow a receipt symlink on writes.\n\
-        \    temporary = path.with_name(path.name + \".tmp\")\n    with temporary.open(\"x\", encoding=\"utf-8\") as output:\n\
-        \        json.dump(receipt, output, indent=2)\n        output.write(\"\\n\")\n    temporary.replace(path)\n\n\ndef\
-        \ current_owned_device(receipt):\n    if runtime_identity(receipt[\"runtime\"][\"identifier\"]) != receipt[\"runtime\"\
-        ]:\n        raise ValueError(\"Chosen runtime identity changed\")\n    matches = [(runtime, device) for runtime, devices\
-        \ in json.loads(simctl(\"list\", \"devices\", \"-j\"))[\"devices\"].items()\n               for device in devices\
-        \ if device.get(\"udid\") == receipt[\"createdUDID\"]]\n    if not matches:\n        return None\n    if len(matches)\
-        \ != 1:\n        raise ValueError(\"Created device UUID is ambiguous\")\n    runtime, device = matches[0]\n    if\
-        \ (runtime != receipt[\"runtime\"][\"identifier\"] or device.get(\"name\") != receipt[\"createdName\"]\n         \
-        \   or device.get(\"deviceTypeIdentifier\") != receipt[\"deviceTypeIdentifier\"]\n            or device.get(\"isAvailable\"\
-        ) is not True):\n        raise ValueError(\"Current device does not match the owned name/type/runtime\")\n    return\
-        \ device\n\n\ndef provision(devices, path):\n    if path.exists() or path.is_symlink():\n        raise ValueError(\"\
-        Refusing to replace an existing simulator ownership receipt\")\n    runtime, source = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'),\
-        \ os.environ.get('CI_IPHONE_NAME'))\n    owner = owner_identity()\n    source_id = str(UUID(source[\"udid\"])).upper()\n\
-        \    device_type = source.get(\"deviceTypeIdentifier\")\n    if not isinstance(device_type, str) or not re.fullmatch(r\"\
-        com\\.apple\\.CoreSimulator\\.SimDeviceType\\.[A-Za-z0-9-]+\", device_type):\n        raise ValueError(\"Selected\
-        \ image device lacks an exact device type identifier\")\n    nonce = str(uuid4())\n    receipt = {\"schema\": 1, \"\
-        owner\": owner, \"sourceUDID\": source_id, \"sourceName\": source[\"name\"],\n               \"deviceTypeIdentifier\"\
-        : device_type, \"runtime\": runtime_identity(runtime), \"nonce\": nonce,\n               \"createdName\": owned_name(owner,\
-        \ nonce), \"createdUDID\": None,\n               \"creationStatus\": \"pending\", \"cleanup\": {\"status\": \"not-run\"\
-        }}\n    path.parent.mkdir(parents=True, exist_ok=True)\n    save_receipt(path, receipt)\n    try:\n        bundle\
-        \ = Path(receipt[\"runtime\"][\"bundlePath\"])\n        root = bundle / \"Contents/Resources/RuntimeRoot\"\n     \
-        \   receipt[\"runtimeFilesystem\"] = {\"bundle\": str(bundle), \"bundleExists\": bundle.is_dir(),\n              \
-        \                          \"runtimeRoot\": str(root), \"runtimeRootExists\": root.is_dir(),\n                   \
-        \                     \"rootSymlink\": root.is_symlink()}\n        receipt[\"creationRuntimeArgument\"] = str(bundle)\n\
-        \        save_receipt(path, receipt)\n        if not (bundle.is_dir() and root.is_dir()):\n            raise ValueError(\"\
-        Exact imported runtime bundle/root unavailable\")\n        created = str(UUID(simctl(\"create\", receipt[\"createdName\"\
-        ], device_type, str(bundle)).strip())).upper()\n        if any(device.get(\"udid\", \"\").upper() == created for rows\
-        \ in devices.values() for device in rows):\n            raise ValueError(\"Creation returned a device already present\
-        \ in the input inventory\")\n        receipt.update(createdUDID=created, creationStatus=\"created\")\n        save_receipt(path,\
-        \ receipt)\n        device = current_owned_device(receipt)\n        if device is None or device.get(\"state\") !=\
-        \ \"Shutdown\":\n            raise ValueError(\"Fresh device was not found in Shutdown state\")\n        receipt[\"\
-        creationStatus\"] = \"verified\"\n        save_receipt(path, receipt)\n        publish(created, receipt[\"createdName\"\
-        ])\n        return receipt\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:\n   \
-        \     receipt[\"creationStatus\"] = \"failed\"\n        receipt[\"creationError\"] = str(error)\n        if isinstance(error,\
-        \ subprocess.CalledProcessError) and error.stderr:\n            receipt[\"creationStderr\"] = error.stderr[-16384:]\n\
-        \        save_receipt(path, receipt)\n        raise\n\n\ndef cleanup(path):\n    if not path.exists() and not path.is_symlink():\n\
-        \        print(\"No simulator ownership receipt; no device cleanup attempted.\")\n        return\n    if path.is_symlink()\
-        \ or not path.is_file() or path.stat().st_size > 65536:\n        raise ValueError(\"Refusing an invalid simulator\
-        \ ownership receipt\")\n    receipt = json.loads(path.read_text(encoding=\"utf-8\"))\n    # Verify ownership before\
-        \ recording anything or issuing a simulator mutation.\n    if receipt.get(\"schema\") != 1 or receipt.get(\"owner\"\
-        ) != owner_identity():\n        raise ValueError(\"Simulator receipt belongs to another CI owner or toolchain\")\n\
-        \    if receipt.get(\"createdName\") != owned_name(receipt[\"owner\"], receipt[\"nonce\"]):\n        raise ValueError(\"\
-        Simulator receipt has an invalid owned device name\")\n    created = receipt.get(\"createdUDID\")\n    if created\
-        \ is None:\n        receipt[\"cleanup\"] = {\"status\": \"no-created-device\", \"note\": \"No verified creation UUID;\
-        \ no device mutation attempted.\"}\n        save_receipt(path, receipt)\n        return\n    if str(UUID(created)).upper()\
-        \ != created or created == str(UUID(receipt[\"sourceUDID\"])).upper():\n        raise ValueError(\"Refusing to clean\
-        \ up the source image device or invalid UUID\")\n    if os.environ.get(\"SIMULATOR_ID\", created) != created:\n  \
-        \      raise ValueError(\"Current simulator environment does not match the owned UUID\")\n    receipt[\"cleanup\"\
-        ] = {\"status\": \"checking\"}\n    save_receipt(path, receipt)\n    try:\n        device = current_owned_device(receipt)\n\
-        \        if device is not None:\n            if device.get(\"state\") == \"Booted\":\n                receipt[\"cleanup\"\
-        ][\"status\"] = \"shutting-down\"\n                save_receipt(path, receipt)\n                simctl(\"shutdown\"\
-        , created)\n                device = current_owned_device(receipt)\n            if device is None or device.get(\"\
-        state\") != \"Shutdown\":\n                raise ValueError(\"Owned device is not safely shut down; refusing deletion\"\
-        )\n            receipt[\"cleanup\"][\"status\"] = \"deleting\"\n            save_receipt(path, receipt)\n        \
-        \    simctl(\"delete\", created)\n            if current_owned_device(receipt) is not None:\n                raise\
-        \ ValueError(\"Owned device remains after deletion\")\n            receipt[\"cleanup\"] = {\"status\": \"deleted\"\
-        }\n        else:\n            receipt[\"cleanup\"] = {\"status\": \"already-absent\"}\n        save_receipt(path,\
-        \ receipt)\n        print(\"Owned CI simulator cleanup: \" + receipt[\"cleanup\"][\"status\"])\n    except (KeyError,\
-        \ ValueError, OSError, subprocess.SubprocessError) as error:\n        receipt[\"cleanup\"] = {\"status\": \"failed\"\
-        , \"error\": str(error)}\n        save_receipt(path, receipt)\n        raise\n\n\ndef publish(udid, name):\n    print(f\"\
-        Using {name} simulator ({udid})\")\n    with open(os.environ[\"GITHUB_ENV\"], \"a\") as output:\n        output.write(f\"\
-        SIMULATOR_ID={udid}\\n\")\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    mode =\
-        \ parser.add_mutually_exclusive_group()\n    mode.add_argument(\"--create-owned\", type=Path, metavar=\"RECEIPT\"\
-        )\n    mode.add_argument(\"--cleanup-owned\", type=Path, metavar=\"RECEIPT\")\n    args = parser.parse_args()\n  \
-        \  try:\n        if args.cleanup_owned:\n            cleanup(args.cleanup_owned)\n        else:\n            devices\
-        \ = json.load(sys.stdin)[\"devices\"]\n            if args.create_owned:\n                provision(devices, args.create_owned)\n\
-        \            else:\n                _, device = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'), os.environ.get('CI_IPHONE_NAME'))\n\
-        \                publish(device[\"udid\"], device[\"name\"])\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError)\
-        \ as error:\n        parser.exit(1, f\"Simulator selection/ownership failed: {error}\\n\")\n\n\nif __name__ == \"\
-        __main__\":\n    main()\nRITC_OWNERSHIP_HELPER\nprintf '%s  %s\\n' 'e6123dd7149ad9aadf60603f77d7817b563c5bcffae9fb77b89875b6876a1737'\
-        \ '.build/select_ci_iphone.py' | shasum -a 256 -c -\nxcrun simctl list -j > .build/test-before-create.json\nxcrun\
-        \ simctl list devices available -j | python3 .build/select_ci_iphone.py --create-owned .build/test-simulator-ownership.json\n"
+        \ | tr -d ' ')\" = 1\ncat > .build/select_ci_iphone.py <<'RITC_OWNERSHIP_HELPER'\n#!/usr/bin/env python3\n\
+        \"\"\"Select an image iPhone, or opt in to a job-owned device with identical type/runtime.\"\"\"\n\
+        import argparse\nimport json\nimport os\nfrom pathlib import Path\nimport re\nimport subprocess\n\
+        import sys\nfrom uuid import UUID, uuid4\n\n\ndef select_iphone(devices_by_runtime, required_runtime=None,\
+        \ required_name=None):\n    if bool(required_runtime) != bool(required_name):\n        raise ValueError('Pin\
+        \ both CI_IPHONE_RUNTIME and CI_IPHONE_NAME, or neither')\n    candidates = []\n    for runtime, devices\
+        \ in devices_by_runtime.items():\n        if \".iOS-\" not in runtime:\n            continue\n   \
+        \     if required_runtime and runtime != required_runtime:\n            continue\n        version\
+        \ = tuple(map(int, runtime.split(\".iOS-\", 1)[1].split(\"-\")))\n        for device in devices:\n\
+        \            if required_name and device['name'] != required_name:\n                continue\n   \
+        \         if device[\"name\"].startswith(\"iPhone\") and device.get(\"isAvailable\"):\n          \
+        \      candidates.append((version, runtime, device))\n    if not candidates:\n        raise ValueError(\"\
+        No available iPhone simulator matching the requested runtime/device\")\n    _, runtime, device = max(candidates,\
+        \ key=lambda item: (item[0], item[2][\"name\"] == \"iPhone 17\"))\n    return runtime, device\n\n\n\
+        def simctl(*args):\n    # The workflow setup/cleanup deadlines own this bound. On a slow hosted\n\
+        \    # image, even listing devices has taken over three minutes; do not impose\n    # a second, shorter\
+        \ per-command timeout or retry the operation.\n    return subprocess.run([\"xcrun\", \"simctl\", *args],\
+        \ check=True, capture_output=True,\n                          text=True).stdout\n\n\ndef owner_identity():\n\
+        \    owner = {key: os.environ[key] for key in\n             (\"GITHUB_REPOSITORY\", \"GITHUB_RUN_ID\"\
+        , \"GITHUB_RUN_ATTEMPT\", \"GITHUB_JOB\", \"TEST_SHARD\", \"DEVELOPER_DIR\")}\n    if (not re.fullmatch(r\"\
+        [A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\", owner[\"GITHUB_REPOSITORY\"])\n            or any(not re.fullmatch(r\"\
+        [0-9]+\", owner[key]) for key in (\"GITHUB_RUN_ID\", \"GITHUB_RUN_ATTEMPT\"))\n            or any(not\
+        \ re.fullmatch(r\"[A-Za-z0-9_-]+\", owner[key]) for key in (\"GITHUB_JOB\", \"TEST_SHARD\"))\n   \
+        \         or not Path(owner[\"DEVELOPER_DIR\"]).is_absolute() or \"\\n\" in owner[\"DEVELOPER_DIR\"\
+        ]):\n        raise ValueError(\"Invalid CI owner identity\")\n    return owner\n\n\ndef runtime_identity(identifier):\n\
+        \    matches = [r for r in json.loads(simctl(\"list\", \"runtimes\", \"-j\"))[\"runtimes\"]\n    \
+        \           if r.get(\"identifier\") == identifier]\n    # Do not let an identical runtime identifier\
+        \ conceal different installed builds.\n    if len(matches) != 1 or matches[0].get(\"isAvailable\"\
+        ) is not True:\n        raise ValueError(\"Chosen runtime is unavailable or ambiguously resolves to\
+        \ installed builds\")\n    row = matches[0]\n    keys = (\"identifier\", \"version\", \"buildversion\"\
+        , \"bundlePath\")\n    if any(not isinstance(row.get(key), str) or not row[key].strip() for key in\
+        \ keys):\n        raise ValueError(\"Chosen runtime lacks exact version/build/bundle identity\")\n\
+        \    return {key: row[key] for key in keys}\n\n\ndef owned_name(owner, nonce):\n    UUID(nonce)\n\
+        \    return f\"RITC-CI-{owner['GITHUB_RUN_ID']}-{owner['GITHUB_RUN_ATTEMPT']}-{owner['GITHUB_JOB']}-{owner['TEST_SHARD']}-{nonce}\"\
+        \n\n\ndef save_receipt(path, receipt):\n    # Replace our receipt atomically; never follow a receipt\
+        \ symlink on writes.\n    temporary = path.with_name(path.name + \".tmp\")\n    with temporary.open(\"\
+        x\", encoding=\"utf-8\") as output:\n        json.dump(receipt, output, indent=2)\n        output.write(\"\
+        \\n\")\n    temporary.replace(path)\n\n\ndef current_owned_device(receipt):\n    if runtime_identity(receipt[\"\
+        runtime\"][\"identifier\"]) != receipt[\"runtime\"]:\n        raise ValueError(\"Chosen runtime identity\
+        \ changed\")\n    matches = [(runtime, device) for runtime, devices in json.loads(simctl(\"list\"\
+        , \"devices\", \"-j\"))[\"devices\"].items()\n               for device in devices if device.get(\"\
+        udid\") == receipt[\"createdUDID\"]]\n    if not matches:\n        return None\n    if len(matches)\
+        \ != 1:\n        raise ValueError(\"Created device UUID is ambiguous\")\n    runtime, device = matches[0]\n\
+        \    if (runtime != receipt[\"runtime\"][\"identifier\"] or device.get(\"name\") != receipt[\"createdName\"\
+        ]\n            or device.get(\"deviceTypeIdentifier\") != receipt[\"deviceTypeIdentifier\"]\n    \
+        \        or device.get(\"isAvailable\") is not True):\n        raise ValueError(\"Current device does\
+        \ not match the owned name/type/runtime\")\n    return device\n\n\ndef provision(devices, path):\n\
+        \    if path.exists() or path.is_symlink():\n        raise ValueError(\"Refusing to replace an existing\
+        \ simulator ownership receipt\")\n    runtime, source = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'),\
+        \ os.environ.get('CI_IPHONE_NAME'))\n    owner = owner_identity()\n    source_id = str(UUID(source[\"\
+        udid\"])).upper()\n    device_type = source.get(\"deviceTypeIdentifier\")\n    if not isinstance(device_type,\
+        \ str) or not re.fullmatch(r\"com\\.apple\\.CoreSimulator\\.SimDeviceType\\.[A-Za-z0-9-]+\", device_type):\n\
+        \        raise ValueError(\"Selected image device lacks an exact device type identifier\")\n    nonce\
+        \ = str(uuid4())\n    receipt = {\"schema\": 1, \"owner\": owner, \"sourceUDID\": source_id, \"sourceName\"\
+        : source[\"name\"],\n               \"deviceTypeIdentifier\": device_type, \"runtime\": runtime_identity(runtime),\
+        \ \"nonce\": nonce,\n               \"createdName\": owned_name(owner, nonce), \"createdUDID\": None,\n\
+        \               \"creationStatus\": \"pending\", \"cleanup\": {\"status\": \"not-run\"}}\n    path.parent.mkdir(parents=True,\
+        \ exist_ok=True)\n    save_receipt(path, receipt)\n    try:\n        bundle = Path(receipt[\"runtime\"\
+        ][\"bundlePath\"])\n        root = bundle / \"Contents/Resources/RuntimeRoot\"\n        receipt[\"\
+        runtimeFilesystem\"] = {\"bundle\": str(bundle), \"bundleExists\": bundle.is_dir(),\n            \
+        \                            \"runtimeRoot\": str(root), \"runtimeRootExists\": root.is_dir(),\n \
+        \                                       \"rootSymlink\": root.is_symlink()}\n        receipt[\"creationRuntimeArgument\"\
+        ] = str(bundle)\n        save_receipt(path, receipt)\n        if not (bundle.is_dir() and root.is_dir()):\n\
+        \            raise ValueError(\"Exact imported runtime bundle/root unavailable\")\n        created\
+        \ = str(UUID(simctl(\"create\", receipt[\"createdName\"], device_type, str(bundle)).strip())).upper()\n\
+        \        if any(device.get(\"udid\", \"\").upper() == created for rows in devices.values() for device\
+        \ in rows):\n            raise ValueError(\"Creation returned a device already present in the input\
+        \ inventory\")\n        receipt.update(createdUDID=created, creationStatus=\"created\")\n        save_receipt(path,\
+        \ receipt)\n        device = current_owned_device(receipt)\n        if device is None or device.get(\"\
+        state\") != \"Shutdown\":\n            raise ValueError(\"Fresh device was not found in Shutdown state\"\
+        )\n        receipt[\"creationStatus\"] = \"verified\"\n        save_receipt(path, receipt)\n     \
+        \   publish(created, receipt[\"createdName\"])\n        return receipt\n    except (KeyError, ValueError,\
+        \ OSError, subprocess.SubprocessError) as error:\n        receipt[\"creationStatus\"] = \"failed\"\
+        \n        receipt[\"creationError\"] = str(error)\n        if isinstance(error, subprocess.CalledProcessError)\
+        \ and error.stderr:\n            receipt[\"creationStderr\"] = error.stderr[-16384:]\n        save_receipt(path,\
+        \ receipt)\n        raise\n\n\ndef cleanup(path):\n    if not path.exists() and not path.is_symlink():\n\
+        \        print(\"No simulator ownership receipt; no device cleanup attempted.\")\n        return\n\
+        \    if path.is_symlink() or not path.is_file() or path.stat().st_size > 65536:\n        raise ValueError(\"\
+        Refusing an invalid simulator ownership receipt\")\n    receipt = json.loads(path.read_text(encoding=\"\
+        utf-8\"))\n    # Verify ownership before recording anything or issuing a simulator mutation.\n   \
+        \ if receipt.get(\"schema\") != 1 or receipt.get(\"owner\") != owner_identity():\n        raise ValueError(\"\
+        Simulator receipt belongs to another CI owner or toolchain\")\n    if receipt.get(\"createdName\"\
+        ) != owned_name(receipt[\"owner\"], receipt[\"nonce\"]):\n        raise ValueError(\"Simulator receipt\
+        \ has an invalid owned device name\")\n    created = receipt.get(\"createdUDID\")\n    if created\
+        \ is None:\n        receipt[\"cleanup\"] = {\"status\": \"no-created-device\", \"note\": \"No verified\
+        \ creation UUID; no device mutation attempted.\"}\n        save_receipt(path, receipt)\n        return\n\
+        \    if str(UUID(created)).upper() != created or created == str(UUID(receipt[\"sourceUDID\"])).upper():\n\
+        \        raise ValueError(\"Refusing to clean up the source image device or invalid UUID\")\n    if\
+        \ os.environ.get(\"SIMULATOR_ID\", created) != created:\n        raise ValueError(\"Current simulator\
+        \ environment does not match the owned UUID\")\n    receipt[\"cleanup\"] = {\"status\": \"checking\"\
+        }\n    save_receipt(path, receipt)\n    try:\n        device = current_owned_device(receipt)\n   \
+        \     if device is not None:\n            if device.get(\"state\") == \"Booted\":\n              \
+        \  receipt[\"cleanup\"][\"status\"] = \"shutting-down\"\n                save_receipt(path, receipt)\n\
+        \                simctl(\"shutdown\", created)\n                device = current_owned_device(receipt)\n\
+        \            if device is None or device.get(\"state\") != \"Shutdown\":\n                raise ValueError(\"\
+        Owned device is not safely shut down; refusing deletion\")\n            receipt[\"cleanup\"][\"status\"\
+        ] = \"deleting\"\n            save_receipt(path, receipt)\n            simctl(\"delete\", created)\n\
+        \            if current_owned_device(receipt) is not None:\n                raise ValueError(\"Owned\
+        \ device remains after deletion\")\n            receipt[\"cleanup\"] = {\"status\": \"deleted\"}\n\
+        \        else:\n            receipt[\"cleanup\"] = {\"status\": \"already-absent\"}\n        save_receipt(path,\
+        \ receipt)\n        print(\"Owned CI simulator cleanup: \" + receipt[\"cleanup\"][\"status\"])\n \
+        \   except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:\n        receipt[\"\
+        cleanup\"] = {\"status\": \"failed\", \"error\": str(error)}\n        save_receipt(path, receipt)\n\
+        \        raise\n\n\ndef publish(udid, name):\n    print(f\"Using {name} simulator ({udid})\")\n  \
+        \  with open(os.environ[\"GITHUB_ENV\"], \"a\") as output:\n        output.write(f\"SIMULATOR_ID={udid}\\\
+        n\")\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    mode = parser.add_mutually_exclusive_group()\n\
+        \    mode.add_argument(\"--create-owned\", type=Path, metavar=\"RECEIPT\")\n    mode.add_argument(\"\
+        --cleanup-owned\", type=Path, metavar=\"RECEIPT\")\n    args = parser.parse_args()\n    try:\n   \
+        \     if args.cleanup_owned:\n            cleanup(args.cleanup_owned)\n        else:\n           \
+        \ devices = json.load(sys.stdin)[\"devices\"]\n            if args.create_owned:\n               \
+        \ provision(devices, args.create_owned)\n            else:\n                _, device = select_iphone(devices,\
+        \ os.environ.get('CI_IPHONE_RUNTIME'), os.environ.get('CI_IPHONE_NAME'))\n                publish(device[\"\
+        udid\"], device[\"name\"])\n    except (KeyError, ValueError, OSError, subprocess.SubprocessError)\
+        \ as error:\n        parser.exit(1, f\"Simulator selection/ownership failed: {error}\\n\")\n\n\nif\
+        \ __name__ == \"__main__\":\n    main()\nRITC_OWNERSHIP_HELPER\nprintf '%s  %s\\n' 'e6123dd7149ad9aadf60603f77d7817b563c5bcffae9fb77b89875b6876a1737'\
+        \ '.build/select_ci_iphone.py' | shasum -a 256 -c -\nxcrun simctl list -j > .build/test-before-create.json\n\
+        xcrun simctl list devices available -j | python3 .build/select_ci_iphone.py --create-owned .build/test-simulator-ownership.json\n"
     - name: Boot the owned iPhone
       timeout-minutes: 8
       run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
@@ -447,8 +522,8 @@ jobs:
 
         xcrun simctl runtime list -j > .build/github-ios-runtime/final.json || true
 
-        /usr/bin/log show --style compact --last 2h --predicate ''process == "simdiskimaged" OR process CONTAINS "CoreSimulatorService"''
-        > .build/github-ios-runtime/runtime-events.log 2>&1 || true
+        /usr/bin/log show --style compact --last 2h --predicate ''process == "simdiskimaged" OR process CONTAINS
+        "CoreSimulatorService"'' > .build/github-ios-runtime/runtime-events.log 2>&1 || true
 
         xcrun simctl list -j > .build/test-final-inventory.json || true
 
