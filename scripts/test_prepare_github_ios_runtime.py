@@ -1,5 +1,7 @@
 """Offline aggregate-delete classifier and bounded state-machine checks."""
 import copy
+import hashlib
+import shutil
 import os
 import sys
 import prepare_github_ios_runtime as subject
@@ -952,8 +954,14 @@ class PreparationTests(unittest.TestCase):
         self.before = {IOS: copy.deepcopy(ORIGINAL[IOS])}
         self.imported = registration(NEW)
         self.commands = []
-        self.export_status = 0
-        self.payload_count = 1
+        self.asset = Path(temporary.name).resolve() / 'original.asset/AssetData'
+        self.payload = self.asset / 'Restore/043-70362-657.dmg'
+        self.payload.parent.mkdir(parents=True)
+        self.payload.write_bytes(b'payload')
+        self.before[IOS].update(path=str(self.asset), platformIdentifier='com.apple.platform.iphonesimulator',
+                                supportedArchitectures=['arm64'])
+        self.catalog = {str(self.asset): {'identity': {k: self.before[IOS][k]
+                        for k in ('runtimeIdentifier', 'build', 'version')}, 'payloads': [str(self.payload)]}}
         self.import_status = 0
         self.device_state = 'Shutdown'
         self.missing_path = None
@@ -973,6 +981,9 @@ class PreparationTests(unittest.TestCase):
             return original_dir(path)
 
         for patcher in [patch.dict(os.environ, self.env, clear=True),
+                        patch.object(subject, 'PAYLOAD_BYTES', len(b'payload')),
+                        patch.object(subject, 'PAYLOAD_SHA256', hashlib.sha256(b'payload').hexdigest()),
+                        patch.object(subject, 'original_catalog', return_value=self.catalog),
                         patch.object(subject.os, 'getuid', return_value=501),
                         patch.object(subject.subprocess, 'run', side_effect=self.run_command),
                         patch.object(subject.subprocess, 'check_output', side_effect=self.read_command),
@@ -995,18 +1006,10 @@ class PreparationTests(unittest.TestCase):
 
     def run_command(self, command, **kwargs):
         self.commands.append(command)
-        if command[0] == 'xcodebuild':
-            self.assertEqual(command[:5], ['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', '24A434'])
-            bundle = Path(command[6]) / 'iOS.exportedBundle'
-            bundle.mkdir()
-            (bundle / 'metadata.plist').write_text('metadata')
-            for n in range(self.payload_count):
-                (bundle / f'payload-{n}.dmg').write_bytes(b'payload')
-            return subprocess.CompletedProcess(command, self.export_status)
         self.assertEqual(command[:6], ['sudo', '-n', '/usr/bin/env',
                          'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',
                          '/usr/bin/xcodebuild', '-importPlatform'])
-        self.assertEqual(Path(command[-1]).name, 'payload-0.dmg')
+        self.assertEqual(Path(command[-1]).name, self.payload.name)
         self.assertTrue(Path(command[-1]).is_file())
         if self.import_status:
             raise subprocess.CalledProcessError(self.import_status, command)
@@ -1019,27 +1022,120 @@ class PreparationTests(unittest.TestCase):
         self.assertEqual(json.loads((subject.evidence / 'target.json').read_text()), self.imported)
         self.assertEqual(json.loads((subject.evidence / 'import-input.json').read_text())['mode'], 'direct-dmg')
 
-    def test_export70_requires_real_payload_and_successful_import(self):
-        self.export_status = 70
+    def test_preserved_copy_matches_and_never_calls_exporter(self):
         subject.prepare()
-        self.refresh_user_service.assert_called_once()
-
-    def test_export_failure_never_cleans_or_imports(self):
-        self.export_status = 1
-        with self.assertRaises(AssertionError): subject.prepare()
-        self.cleanup_original_images.assert_not_called()
-        self.refresh_user_service.assert_not_called()
+        receipt = json.loads((subject.evidence / 'saved-payload.json').read_text())
+        self.assertEqual(receipt['mode'], 'copy-original')
+        self.assertEqual(Path(receipt['path']).read_bytes(), b'payload')
+        self.assertEqual(receipt['source'], str(self.payload))
+        self.assertFalse(any('-downloadPlatform' in c for c in self.commands))
 
     def test_missing_or_ambiguous_payload_never_deletes(self):
-        import shutil
-        for count in (0, 2):
-            with self.subTest(count=count):
-                self.payload_count = count
+        for payloads in ([], [str(self.payload), str(self.payload.with_name('other.dmg'))]):
+            with self.subTest(payloads=payloads):
+                self.catalog[str(self.asset)]['payloads'] = payloads
                 with self.assertRaises(AssertionError): subject.prepare()
                 self.cleanup_original_images.assert_not_called()
-                shutil.rmtree('.build/runtime-export')
 
-    def test_wrong_initial_build_prevents_export(self):
+    def test_renamed_qualified_payload_is_preserved(self):
+        renamed = self.payload.with_name('qualified-renamed.dmg')
+        self.payload.rename(renamed)
+        self.payload = renamed
+        self.catalog[str(self.asset)]['payloads'] = [str(renamed)]
+        subject.prepare()
+        receipt = json.loads((subject.evidence / 'saved-payload.json').read_text())
+        self.assertEqual(receipt['relativePayload'], 'Restore/qualified-renamed.dmg')
+        self.assertEqual(Path(receipt['path']).read_bytes(), b'payload')
+        self.cleanup_original_images.assert_called_once()
+
+    def test_direct_disk_image_root_is_preserved(self):
+        entry = self.catalog.pop(str(self.asset))
+        self.catalog[str(self.payload)] = entry
+        self.before[IOS].update(path=str(self.payload), kind='Disk Image')
+        subject.prepare()
+        receipt = json.loads((subject.evidence / 'saved-payload.json').read_text())
+        self.assertEqual(receipt['sourceRoot'], str(self.payload))
+        self.assertEqual(receipt['relativePayload'], '.')
+        self.assertEqual(json.loads((subject.evidence / 'import-input.json').read_text())['relativePayload'], '.')
+        self.assertEqual(Path(receipt['path']).read_bytes(), b'payload')
+        self.cleanup_original_images.assert_called_once()
+
+    def test_payload_outside_catalog_root_never_deletes(self):
+        outside = self.asset.parent / 'outside.dmg'
+        outside.write_bytes(b'payload')
+        self.catalog[str(self.asset)]['payloads'] = [str(outside)]
+        with self.assertRaises(ValueError): subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_payload_size_and_hash_mismatch_never_deletes(self):
+        for data in (b'short', b'changed'):
+            with self.subTest(data=data):
+                self.payload.write_bytes(data)
+                with self.assertRaises(AssertionError): subject.prepare()
+                self.cleanup_original_images.assert_not_called()
+                shutil.rmtree('.build/runtime-export', ignore_errors=True)
+
+    def test_symlink_payload_never_deletes(self):
+        other = self.payload.with_name('other.dmg')
+        self.payload.rename(other)
+        self.payload.symlink_to(other)
+        with self.assertRaises(AssertionError): subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_missing_payload_file_never_deletes(self):
+        self.payload.unlink()
+        with self.assertRaises(FileNotFoundError): subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_saved_copy_changed_before_cleanup_never_deletes(self):
+        capture = self.capture
+        def change(name, timeout=30):
+            if name == 'all-before-removal.json':
+                Path('.build/runtime-export/043-70362-657.dmg').write_bytes(b'changed')
+            return capture(name, timeout)
+        with patch.object(subject, 'capture', side_effect=change), self.assertRaisesRegex(AssertionError, 'Saved payload changed'):
+            subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_second_target_asset_and_wrong_identity_never_deletes(self):
+        original = copy.deepcopy(self.before)
+        for change in ({'version': '27.1'}, {'supportedArchitectures': ['x86_64']},
+                       {'platformIdentifier': 'wrong'}, {'kind': 'Unknown Image'}, {'state': 'Unusable'}):
+            with self.subTest(change=change):
+                self.before = {IOS: {**original[IOS], **change}}
+                with self.assertRaises(AssertionError): subject.prepare()
+                self.cleanup_original_images.assert_not_called()
+        self.before = {**original, NEW_IOS: {**original[IOS], 'identifier': NEW_IOS, 'path': '/other/asset'}}
+        with self.assertRaises(AssertionError): subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_same_asset_preferred_twin_does_not_make_payload_ambiguous(self):
+        self.before[NEW_IOS] = {**self.before[IOS], 'identifier': NEW_IOS, 'state': 'Unusable'}
+        subject.prepare()
+        self.cleanup_original_images.assert_called_once()
+
+    def test_replaced_source_during_copy_never_deletes(self):
+        copy_file = shutil.copyfileobj
+        def replace(source, destination, length):
+            copy_file(source, destination, length)
+            self.payload.unlink()
+            self.payload.write_bytes(b'payload')
+        with patch.object(subject.shutil, 'copyfileobj', side_effect=replace), self.assertRaises(AssertionError):
+            subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_replaced_source_after_copy_never_deletes(self):
+        capture = self.capture
+        def replace(name, timeout=30):
+            if name == 'all-before-removal.json':
+                self.payload.unlink()
+                self.payload.write_bytes(b'payload')
+            return capture(name, timeout)
+        with patch.object(subject, 'capture', side_effect=replace), self.assertRaises(AssertionError):
+            subject.prepare()
+        self.cleanup_original_images.assert_not_called()
+
+    def test_wrong_initial_build_prevents_copy(self):
         self.before[IOS]['build'] = 'wrong'
         with self.assertRaises(AssertionError): subject.prepare()
         self.assertEqual(self.commands, [])
@@ -1069,11 +1165,11 @@ class PreparationTests(unittest.TestCase):
                  patch.object(subject.os, 'getuid', return_value=uid), self.assertRaises(AssertionError):
                 subject.prepare()
             self.cleanup_original_images.assert_not_called()
-            shutil.rmtree('.build/runtime-export')
+            self.assertFalse(Path('.build/runtime-export').exists())
 
-    def test_changed_export_hash_blocks_import(self):
+    def test_changed_saved_hash_blocks_import(self):
         def cleanup(rows):
-            Path('.build/runtime-export/iOS.exportedBundle/payload-0.dmg').write_bytes(b'changed')
+            Path('.build/runtime-export/043-70362-657.dmg').write_bytes(b'changed')
             return set(), 13
         self.cleanup_original_images.side_effect = cleanup
         with self.assertRaises(AssertionError): subject.prepare()

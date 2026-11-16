@@ -7,11 +7,18 @@ import subprocess
 import re
 import time
 import uuid
+import hashlib
+import shutil
+import stat
 from pathlib import Path
 
 evidence = Path('.build/github-ios-runtime')
 runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 build = '24A434'
+# The successful standalone import and read-only installed-payload hash agree
+# on these exact iOS 27.0/24A434 arm64 bytes.
+PAYLOAD_BYTES = 8067000161
+PAYLOAD_SHA256 = '5136453f500b73dc3518f262d8a51e4be0c136e38a550998febf7759de6ba0fd'
 
 def capture(name, timeout=30):
     raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'], text=True, timeout=timeout)
@@ -491,57 +498,77 @@ def refresh_user_service(expected):
         receipt.update(outcome='failure', error=str(error)); save(); raise
 
 
-def prepare():
-    before = capture('before.json')
-    assert any(r.get('state') == 'Ready' for r in targets(before))
+def sha256(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def payload_identity(info):
+    assert stat.S_ISREG(info.st_mode), 'Payload must be a regular file'
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+def preserve_original_payload(before):
+    selected = targets(before)
+    assert any(r.get('state') == 'Ready' for r in selected)
+    assert len({r['path'] for r in selected}) == 1, 'Ambiguous original target asset'
+    assert all(r.get('version') == '27.0' and
+               r.get('platformIdentifier') == 'com.apple.platform.iphonesimulator' and
+               r.get('kind') in ('Patchable Cryptex Disk Image', 'Disk Image') and
+               r.get('supportedArchitectures') == ['arm64'] for r in selected)
+    root = selected[0]['path']
+    catalog = original_catalog(before)
+    payloads = catalog[root]['payloads']
+    assert len(payloads) == 1, 'Expected one original disk-image payload'
+    source = Path(payloads[0])
+    assert source.resolve() == source
+    relative_payload = str(source.relative_to(root))
+    identity = payload_identity(source.lstat())
+    assert identity[2] == PAYLOAD_BYTES, 'Original payload size differs from qualified image'
     export = Path('.build/runtime-export')
     export.mkdir()
-    with (evidence / 'export.log').open('w') as log:
-        result = subprocess.run(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', build,
-                                 '-exportPath', str(export.resolve()), '-architectureVariant', 'arm64'],
-                                stdout=log, stderr=subprocess.STDOUT)
-    (evidence / 'export-exit.json').write_text(json.dumps({'exit': result.returncode}) + '\n')
-    # The documented exporter may return 70 even when its exported bundle exists.
-    # A real import and exact registration check below remain mandatory.
-    assert result.returncode in (0, 70)
-    bundles = list(export.glob('*.exportedBundle'))
-    assert len(bundles) == 1 and bundles[0].is_dir(), 'Expected one exported platform bundle'
-    assert any(f.is_file() and f.stat().st_size > 0 for f in bundles[0].rglob('*'))
-    (evidence / 'export-bundle.json').write_text(json.dumps({'bundle': str(bundles[0]),
-        'files': [{'name': str(f.relative_to(bundles[0])), 'bytes': f.stat().st_size}
-                  for f in bundles[0].rglob('*') if f.is_file()]}, indent=2) + '\n')
+    saved_image = export.resolve() / source.name
+    assert not str(saved_image).startswith(('/System/Library/AssetsV2/', '/Library/Developer/CoreSimulator/'))
+    with os.fdopen(os.open(source, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as original, saved_image.open('xb') as saved:
+        assert payload_identity(os.fstat(original.fileno())) == identity, 'Original payload was replaced'
+        shutil.copyfileobj(original, saved, 1024 * 1024)
+        assert payload_identity(os.fstat(original.fileno())) == identity, 'Original payload changed during copy'
+    assert payload_identity(source.lstat()) == identity, 'Original payload was replaced during copy'
+    assert saved_image.stat().st_size == PAYLOAD_BYTES and sha256(saved_image) == PAYLOAD_SHA256, 'Saved payload differs from qualified image'
+    (evidence / 'saved-payload.json').write_text(json.dumps({
+        'mode': 'copy-original', 'source': str(source), 'sourceRoot': root,
+        'relativePayload': relative_payload, 'sourceIdentity': identity,
+        'path': str(saved_image), 'bytes': PAYLOAD_BYTES, 'sha256': PAYLOAD_SHA256}) + '\n')
+    return saved_image, source, identity, catalog
+
+
+def prepare():
     assert os.environ.get('GITHUB_REPOSITORY') == 'palatis3/room-in-the-cart'
     assert os.getuid() != 0
-    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]
-    assert len(payloads) == 1
-    import hashlib, plistlib
-    saved_image = payloads[0].resolve()
-    assert str(saved_image).startswith(str(export.resolve()) + '/')
-    def sha256(path):
-        digest = hashlib.sha256()
-        with path.open('rb') as source:
-            for chunk in iter(lambda: source.read(1024 * 1024), b''):
-                digest.update(chunk)
-        return digest.hexdigest()
-    digest = sha256(saved_image)
-    (evidence / 'saved-payload.json').write_text(json.dumps({'path': str(saved_image), 'sha256': digest}) + '\n')
+    before = capture('before.json')
+    saved_image, source, identity, catalog = preserve_original_payload(before)
+    saved_identity = payload_identity(saved_image.lstat())
     devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j'], text=True, timeout=30))
     assert all(d['state'] == 'Shutdown' for rows in devices['devices'].values() for d in rows)
     current = capture('all-before-removal.json')
     assert current, 'No preloaded runtimes to isolate'
+    validate_original_rows(current, catalog)
+    assert payload_identity(source.lstat()) == identity, 'Original payload changed before cleanup'
+    assert payload_identity(saved_image.lstat()) == saved_identity, 'Saved payload changed before cleanup'
     old_mounts, absence_observations = cleanup_original_images(current)
-    assert saved_image.is_file() and sha256(saved_image) == digest
+    assert saved_image.is_file() and sha256(saved_image) == PAYLOAD_SHA256
     (evidence / 'all-removal-verified.json').write_text(json.dumps({'registrations': 0, 'oldMounts': sorted(old_mounts),
-        'absenceObservations': absence_observations, 'savedPayloadSha256': digest}) + '\n')
+        'absenceObservations': absence_observations, 'savedPayloadSha256': PAYLOAD_SHA256}) + '\n')
     def original_rows(rows):
         # No other preloaded runtime is allowed to return during this experiment.
         return [r for r in rows.values() if r.get('runtimeIdentifier') != runtime or r.get('build') != build]
-    payloads = [f for f in bundles[0].rglob('*.dmg') if f.is_file() and f.stat().st_size > 0]
-    assert len(payloads) == 1, 'Expected one exact exported disk-image payload'
-    disk_image = payloads[0]
+    disk_image = saved_image
     (evidence / 'import-input.json').write_text(json.dumps({
         'mode': 'direct-dmg', 'path': str(disk_image.resolve()),
-        'relativePayload': str(disk_image.relative_to(bundles[0]))}) + '\n')
+        'relativePayload': str(source.relative_to(targets(before)[0]['path']))}) + '\n')
     with (evidence / 'import.log').open('w') as log:
         subprocess.run(['sudo', '-n', '/usr/bin/env',
                         'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',
