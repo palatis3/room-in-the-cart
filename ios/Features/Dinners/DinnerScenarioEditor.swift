@@ -5,6 +5,7 @@ struct DinnerScenarioEditor: View {
     @ObservedObject var model: DinnerFeatureModel
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.pickupLedger) private var linkedLedger
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var draft: DinnerScenarioDraft
     @State private var reviewed: DinnerReviewedScenarios?
     @State private var leftoverChoices: [UUID:UUID] = [:]
@@ -51,6 +52,12 @@ struct DinnerScenarioEditor: View {
     var body: some View {
         Form {
             Section {
+                if dynamicTypeSize.isAccessibilitySize {
+                    Text(dinnerText("Scenario evidence"))
+                        .font(.title2.bold())
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                }
                 Text(dinnerText("Compare complete dinner plans using evidence you review here. Names alone never match ingredients, pantry food or packs."))
                 Text(dinnerText("Manual dinner entry stays available without paid tools or price evidence."))
                 NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
@@ -181,7 +188,9 @@ struct DinnerScenarioEditor: View {
                 }
             }
             DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Scenario evidence")).dinnerAccess(model, budget: true)
+        }.navigationTitle(dynamicTypeSize.isAccessibilitySize ? "" : dinnerText("Scenario evidence"))
+            .navigationBarTitleDisplayMode(dynamicTypeSize.isAccessibilitySize ? .inline : .automatic)
+            .dinnerAccess(model, budget: true)
              .toolbar {
                 if let library, !library.candidates.isEmpty {
                     ToolbarItem(placement: .primaryAction) {
