@@ -164,6 +164,19 @@ jobs:
         wait "$boot_pid" || boot_status=$?
         if (( build_status != 0 )); then exit "$build_status"; fi
         exit "$boot_status"
+    - name: Upload observer and build evidence before runtime verification
+      if: always()
+      continue-on-error: true
+      timeout-minutes: 2
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: producer-observer-build-${{ github.run_attempt }}
+        path: |-
+          .build/producer-wait
+          .build/ios-build-evidence
+        include-hidden-files: true
+        retention-days: 7
+        if-no-files-found: warn
     - name: Verify the imported runtime after producer execution
       if: always() && steps.imported-runtime.outcome == 'success'
       timeout-minutes: 2
@@ -176,16 +189,14 @@ jobs:
       if: always() && runner.environment == 'github-hosted'
       timeout-minutes: 2
       run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
-    - name: Upload producer wait and final runtime evidence
+    - name: Upload final runtime evidence
       if: always()
       continue-on-error: true
       timeout-minutes: 2
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: producer-wait-${{ github.run_attempt }}
+        name: producer-final-runtime-${{ github.run_attempt }}
         path: |-
-          .build/producer-wait
-          .build/ios-build-evidence
           .build/github-ios-runtime
           .build/test-simulator-ownership.json
         include-hidden-files: true

@@ -30,6 +30,17 @@ class ObserverTests(unittest.TestCase):
         self.build.poll.return_value = None
         (subject.DIRECTORY / 'build-identity.txt').write_text(
             f'123 {os.getpid()} {os.getuid()} {subject.DEVELOPER}/usr/bin/xcodebuild\n')
+        for name in ('dump_traceback_later', 'cancel_dump_traceback_later'):
+            patcher = patch.object(subject.faulthandler, name)
+            setattr(self, name, patcher.start())
+            self.addCleanup(patcher.stop)
+
+    def test_checkpoint_has_utc_timestamp_and_flushes(self):
+        with patch('builtins.print') as output:
+            subject.checkpoint('observation-entered')
+        output.assert_called_once()
+        self.assertRegex(output.call_args.args[0], r'^Producer observer \d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ: observation-entered$')
+        self.assertEqual(output.call_args.kwargs, {'flush': True})
 
     def test_sample_excerpt_is_bounded_and_marks_truncation_without_changing_file(self):
         path = subject.DIRECTORY / 'build.sample.txt'
@@ -112,7 +123,14 @@ class ObserverTests(unittest.TestCase):
 
     def test_run_preserves_arguments_status_and_only_observes_once_at_five_minutes(self):
         command = ['xcodebuild', '-project', 'same.xcodeproj', 'build-for-testing']
-        self.build.wait.side_effect = [subprocess.TimeoutExpired('build', 300), 7]
+        def wait(timeout=None):
+            self.dump_traceback_later.assert_called_once_with(360, repeat=False)
+            if timeout == 300:
+                self.cancel_dump_traceback_later.assert_not_called()
+                raise subprocess.TimeoutExpired('build', 300)
+            self.cancel_dump_traceback_later.assert_called_once_with()
+            return 7
+        self.build.wait.side_effect = wait
         env = {'RUNNER_ENVIRONMENT':'github-hosted','GITHUB_REPOSITORY':'palatis3/room-in-the-cart','DEVELOPER_DIR':subject.DEVELOPER}
         with patch.dict(os.environ, env), patch.object(subject.os, 'getuid', return_value=501), \
                 patch.object(subject.subprocess, 'Popen', return_value=self.build) as start, \
@@ -130,6 +148,18 @@ class ObserverTests(unittest.TestCase):
                 patch.object(subject.subprocess, 'Popen', return_value=self.build), patch.object(subject, 'observe') as observe:
             self.assertEqual(subject.run(['xcodebuild','build-for-testing']), 0)
         observe.assert_not_called()
+        self.build.kill.assert_not_called()
+        self.dump_traceback_later.assert_called_once_with(360, repeat=False)
+        self.cancel_dump_traceback_later.assert_called_once_with()
+
+    def test_interrupted_initial_wait_cancels_watchdog_without_signaling_build(self):
+        self.build.wait.side_effect = KeyboardInterrupt()
+        env = {'RUNNER_ENVIRONMENT':'github-hosted','GITHUB_REPOSITORY':'palatis3/room-in-the-cart','DEVELOPER_DIR':subject.DEVELOPER}
+        with patch.dict(os.environ, env), patch.object(subject.os, 'getuid', return_value=501), \
+                patch.object(subject.subprocess, 'Popen', return_value=self.build), self.assertRaises(KeyboardInterrupt):
+            subject.run(['xcodebuild','build-for-testing'])
+        self.dump_traceback_later.assert_called_once_with(360, repeat=False)
+        self.cancel_dump_traceback_later.assert_called_once_with()
         self.build.kill.assert_not_called()
 
 
@@ -151,6 +181,15 @@ class DiagnosticWorkflowTests(unittest.TestCase):
         expected = copy.deepcopy(next(s for s in original['steps'] if s.get('id') == 'build'))
         expected['run'] = expected['run'].replace('\nxcodebuild -project', '\npython3 scripts/diagnose_producer_wait.py -- xcodebuild -project')
         self.assertEqual(build, expected)
+        upload = job['steps'][job['steps'].index(build) + 1]
+        self.assertEqual(upload['name'], 'Upload observer and build evidence before runtime verification')
+        self.assertEqual(upload['if'], 'always()')
+        self.assertTrue(upload['continue-on-error'])
+        self.assertEqual(upload['timeout-minutes'], 2)
+        self.assertEqual(set(upload['with']['path'].splitlines()), {'.build/producer-wait', '.build/ios-build-evidence'})
+        self.assertEqual(job['steps'][job['steps'].index(build) + 2]['name'], 'Verify the imported runtime after producer execution')
+        final = next(s for s in job['steps'] if s.get('name') == 'Upload final runtime evidence')
+        self.assertEqual(set(final['with']['path'].splitlines()), {'.build/github-ios-runtime', '.build/test-simulator-ownership.json'})
         before = job['steps'][:job['steps'].index(build)]
         self.assertTrue(any(s.get('name') == 'Upload setup evidence before native build' and s['timeout-minutes'] == 2 for s in before))
         setup = next(s for s in before if s.get('name') == 'Print setup evidence outcome')
