@@ -398,6 +398,14 @@ recovers, stop pushing candidates to the CircleCI branches.
 
 ### GitHub and Bitrise capacity
 
+Bitrise compilation caching is off by default. Only repository variable
+`RITC_BITRISE_CACHE_ENABLED=true` activates the pinned cache helper for Release,
+core and fixture producers. With the variable unset or any other value, these
+self-hosted builds invoke the reviewed Xcode executable directly with
+`COMPILATION_CACHE_ENABLE_CACHING=NO`. GitHub's existing compiler cache is
+unchanged. Re-enable Bitrise caching only after its recovery has been verified;
+cache activation alone does not establish successful cache reuse.
+
 If Bitrise is unavailable, set the repository Actions variable
 `RITC_GITHUB_MAC_ONLY` to `true` before starting a candidate. Workflows containing
 this switch use the five GitHub macOS queues with the same tests, Xcode and

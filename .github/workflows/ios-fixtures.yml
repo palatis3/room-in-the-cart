@@ -138,7 +138,7 @@ jobs:
           key: ritc-xcode-cas-v1-arm64-27A9275-24A434-Debug-${{ env.FIXTURE_PROFILE }}-${{ steps.github-cache-key.outputs.week }}
       - name: Activate Bitrise Xcode compilation cache
         id: compilation-cache
-        if: runner.environment == 'self-hosted'
+        if: runner.environment == 'self-hosted' && vars.RITC_BITRISE_CACHE_ENABLED == 'true'
         continue-on-error: true
         timeout-minutes: 3
         run: bash scripts/activate_bitrise_xcode_cache.sh
@@ -149,12 +149,17 @@ jobs:
         id: build
         shell: bash
         env:
+          RITC_BITRISE_CACHE_ENABLED: ${{ vars.RITC_BITRISE_CACHE_ENABLED }}
           RITC_CAS_OUTCOME: ${{ steps.github-cas.outcome }}
           RITC_CAS_HIT: ${{ steps.github-cas.outputs.cache-hit }}
         run: |
           set -o pipefail
+          xcodebuild_command=xcodebuild
           cache_settings=()
-          if [[ "$RITC_CAS_OUTCOME" == success ]]; then
+          if [[ "${RUNNER_ENVIRONMENT:-}" == self-hosted && "${RITC_BITRISE_CACHE_ENABLED:-}" != true ]]; then
+            xcodebuild_command="$DEVELOPER_DIR/usr/bin/xcodebuild"
+            cache_settings=(COMPILATION_CACHE_ENABLE_CACHING=NO)
+          elif [[ "$RITC_CAS_OUTCOME" == success ]]; then
             # A failed download can leave an incomplete archive extraction.
             if [[ "$RITC_CAS_HIT" != true ]]; then rm -rf .build/github-xcode-cas; fi
             cache_settings=(COMPILATION_CACHE_ENABLE_CACHING=YES COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES
@@ -163,17 +168,24 @@ jobs:
           configuration=Debug
           bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
           conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
-          # Discovery needs a ready simulator, but compilation can run during boot.
-          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
-          boot_pid=$!
+          # GitHub compiles with the owned device shut down; self-hosted boot stays parallel.
+          boot_pid=
+          if [[ "${RUNNER_ENVIRONMENT:-}" != github-hosted ]]; then
+            python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" &
+            boot_pid=$!
+          fi
           build_status=0
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+          "$xcodebuild_command" -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
             "${cache_settings[@]}" CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
             2>&1 | tee .build/ios-build-evidence/build.log || build_status=$?
           boot_status=0
-          wait "$boot_pid" || boot_status=$?
+          if [[ -n "$boot_pid" ]]; then
+            wait "$boot_pid" || boot_status=$?
+          elif (( build_status == 0 )); then
+            python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID" || boot_status=$?
+          fi
           if (( build_status != 0 )); then exit "$build_status"; fi
           exit "$boot_status"
       - name: Enumerate compiled tests and package fixture products

@@ -71,7 +71,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                 steps = producer['steps']
                 cache = next(s for s in steps if s.get('id') == 'compilation-cache')
                 self.assertEqual(cache['run'], 'bash scripts/activate_bitrise_xcode_cache.sh')
-                self.assertEqual(cache['if'], "runner.environment == 'self-hosted'")
+                self.assertEqual(cache['if'], "runner.environment == 'self-hosted' && vars.RITC_BITRISE_CACHE_ENABLED == 'true'")
                 self.assertIs(cache['continue-on-error'], True)
                 self.assertEqual(cache['timeout-minutes'], 3)
                 warning = next(s for s in steps if s.get('name') == 'Report unavailable optional compilation cache')
