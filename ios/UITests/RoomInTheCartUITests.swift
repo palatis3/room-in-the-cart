@@ -231,9 +231,13 @@ final class RoomInTheCartUITests: XCTestCase {
         launch(language: "es")
         XCTAssertEqual(app.buttons["newComparison"].label, "Comparar paquetes")
         openEmptyComparison()
-        type([("itemName", "Abuela’s tortillas"), ("needed", "12"), ("stock", "1 1/2"),
-              ("aQuantity", "8"), ("aPrice", "3"),
-              ("bQuantity", "6"), ("bPrice", "2")])
+        // Use the existing displayed-key path for each whole-number input.
+        // Grouped typeText followed by Done stalled XCTest's animation wait here.
+        for entry in [("itemName", "Abuela’s tortillas"), ("needed", "12"), ("stock", "1 1/2"),
+                      ("aQuantity", "8"), ("aPrice", "3"),
+                      ("bQuantity", "6"), ("bPrice", "2")] {
+            type([entry])
+        }
         compare()
         assertScope("Comparación de un solo artículo")
         assertContains("Abuela’s tortillas")
