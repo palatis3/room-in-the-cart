@@ -155,7 +155,7 @@ import XCTest
         let control = app.segmentedControls.buttons[label]
         // Like tapWeekRow, require a visible action center: a clipped segment can
         // report hittable while XCTest's activation point lies under the header.
-        for attempt in 0..<24 {
+        for _ in 0..<24 {
             let area = historyContentArea().insetBy(dx: 0, dy: 8)
             guard area.width > 0, area.height > 44 else {
                 XCTFail("No unobscured content area for records tab"); return
@@ -172,7 +172,10 @@ import XCTest
                 }
             }
             let frame = exists ? control.frame : .zero
-            let upward = !frame.isEmpty ? frame.midY > area.midY : attempt < 12
+            // The section picker precedes the records in this form. When a lazy
+            // row has left the accessibility tree, return toward the top instead
+            // of spending twelve gestures searching farther down the records.
+            let upward = !frame.isEmpty ? frame.midY > area.midY : false
             let bounds = app.frame, high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
             let origin = app.coordinate(withNormalizedOffset: .zero)
             origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
