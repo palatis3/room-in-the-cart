@@ -38,6 +38,8 @@ class OwnedSimulatorTests(unittest.TestCase):
                           'bundlePath': '/Runtime/iOS26.2.simruntime', 'isAvailable': True}]
         self.calls = []
         self.created_id = CREATED
+        self.runtime = RUNTIME
+        self.creation_argument = RUNTIME
         self.create_error = None
         self.after_create = lambda device: None
         self.mock = patch('select_ci_iphone.subprocess.run', side_effect=self.run_simctl)
@@ -53,16 +55,16 @@ class OwnedSimulatorTests(unittest.TestCase):
             result = json.dumps({'devices': self.inventory})
         elif args[0] == 'create':
             if self.create_error: raise self.create_error
-            self.assertEqual(args[2:], [TYPE, RUNTIME])
+            self.assertEqual(args[2:], [TYPE, self.creation_argument])
             if self.created_id != SOURCE:
                 device = {'name': args[1], 'udid': self.created_id, 'isAvailable': True,
                           'deviceTypeIdentifier': TYPE, 'state': 'Shutdown'}
-                self.inventory[RUNTIME].append(device); self.after_create(device)
+                self.inventory[self.runtime].append(device); self.after_create(device)
             result = self.created_id + '\n'
         elif args[0] in ('shutdown', 'delete'):
             self.assertEqual(args[1:], [CREATED], 'Only the created UUID may be mutated')
-            if args[0] == 'shutdown': self.inventory[RUNTIME][1]['state'] = 'Shutdown'
-            else: self.inventory[RUNTIME] = [d for d in self.inventory[RUNTIME] if d['udid'] != CREATED]
+            if args[0] == 'shutdown': self.inventory[self.runtime][1]['state'] = 'Shutdown'
+            else: self.inventory[self.runtime] = [d for d in self.inventory[self.runtime] if d['udid'] != CREATED]
             result = ''
         else:
             self.fail(f'Unexpected simulator command: {args}')
@@ -70,6 +72,53 @@ class OwnedSimulatorTests(unittest.TestCase):
 
     def create(self):
         return provision(copy.deepcopy(self.original), self.receipt)
+
+    def configure_ios27(self, provider):
+        self.runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+        self.original = {self.runtime: copy.deepcopy(self.original[RUNTIME])}
+        self.inventory = copy.deepcopy(self.original)
+        bundle = self.root / 'iOS27.simruntime'
+        (bundle / 'Contents/Resources/RuntimeRoot').mkdir(parents=True)
+        self.runtimes = [{'identifier': self.runtime, 'version': '27.0', 'buildversion': '24A434',
+                          'bundlePath': str(bundle), 'isAvailable': True}]
+        self.creation_argument = str(bundle) if provider == 'github-hosted' else self.runtime
+        os.environ['RUNNER_ENVIRONMENT'] = provider
+        return bundle
+
+    def test_github27_owned_device_uses_exact_existing_bundle_and_retains_cleanup_ownership(self):
+        bundle = self.configure_ios27('github-hosted')
+        receipt = self.create()
+        self.assertEqual(receipt['creationRuntimeArgument'], str(bundle))
+        self.assertTrue(receipt['runtimeFilesystem']['runtimeRootExists'])
+        self.assertEqual(receipt['runtime']['buildversion'], '24A434')
+        cleanup(self.receipt)
+        self.assertEqual(self.inventory, self.original)
+        self.assertEqual([c for c in self.calls if c[0] in ('shutdown', 'delete')], [['delete', CREATED]])
+
+    def test_bitrise27_owned_device_keeps_runtime_identifier_argument(self):
+        self.configure_ios27('self-hosted')
+        receipt = self.create()
+        self.assertNotIn('creationRuntimeArgument', receipt)
+        self.assertEqual(next(c[-1] for c in self.calls if c[0] == 'create'), self.runtime)
+
+    def test_github26_owned_device_keeps_existing_identifier_path(self):
+        os.environ['RUNNER_ENVIRONMENT'] = 'github-hosted'
+        receipt = self.create()
+        self.assertNotIn('creationRuntimeArgument', receipt)
+        self.assertEqual(next(c[-1] for c in self.calls if c[0] == 'create'), RUNTIME)
+
+    def test_missing_github27_runtime_root_records_failure_without_creation_or_fallback(self):
+        bundle = self.configure_ios27('github-hosted')
+        (bundle / 'Contents/Resources/RuntimeRoot').rmdir()
+        with self.assertRaisesRegex(ValueError, 'bundle/root unavailable'):
+            self.create()
+        receipt = json.loads(self.receipt.read_text())
+        self.assertEqual(receipt['creationStatus'], 'failed')
+        self.assertFalse(receipt['runtimeFilesystem']['runtimeRootExists'])
+        self.assertIsNone(receipt['createdUDID'])
+        self.assertFalse(any(c[0] == 'create' for c in self.calls))
+        cleanup(self.receipt)
+        self.assertFalse(any(c[0] in ('shutdown', 'delete') for c in self.calls))
 
     def test_legacy_selection_and_environment_output_make_no_simctl_calls(self):
         older = 'com.apple.CoreSimulator.SimRuntime.iOS-18-5'

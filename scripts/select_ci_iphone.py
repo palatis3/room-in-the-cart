@@ -111,7 +111,19 @@ def provision(devices, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     save_receipt(path, receipt)
     try:
-        created = str(UUID(simctl("create", receipt["createdName"], device_type, runtime).strip())).upper()
+        runtime_argument = runtime
+        if os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted" and runtime == "com.apple.CoreSimulator.SimRuntime.iOS-27-0":
+            bundle = Path(receipt["runtime"]["bundlePath"])
+            root = bundle / "Contents/Resources/RuntimeRoot"
+            receipt["runtimeFilesystem"] = {"bundle": str(bundle), "bundleExists": bundle.is_dir(),
+                                            "runtimeRoot": str(root), "runtimeRootExists": root.is_dir(),
+                                            "rootSymlink": root.is_symlink()}
+            receipt["creationRuntimeArgument"] = str(bundle)
+            save_receipt(path, receipt)
+            if not (bundle.is_dir() and root.is_dir()):
+                raise ValueError("Exact imported runtime bundle/root unavailable")
+            runtime_argument = str(bundle)
+        created = str(UUID(simctl("create", receipt["createdName"], device_type, runtime_argument).strip())).upper()
         if any(device.get("udid", "").upper() == created for rows in devices.values() for device in rows):
             raise ValueError("Creation returned a device already present in the input inventory")
         receipt.update(createdUDID=created, creationStatus="created")

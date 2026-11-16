@@ -2,11 +2,33 @@
 
 ## November 16 GitHub runtime replacement
 
-The GitHub UI consumers export and import the pinned iOS 27.0/24A434 runtime before simulator selection. This addresses the MobileAsset unmounts observed in the frozen f4 batch. The isolated import took 17 seconds; all eight original UI09 cases executed and final inventory retained the same Ready image, mount and bundle, with zero recorded runtime warnings or runner restarts. Seven cases passed. The remaining broad Review lookup in the 500-line paste test is corrected and passes its original local case in 36.739 seconds. This evidence supports the next combined qualification, not a claim that the diagnostic workflow passed.
+GitHub UI consumers now export and hash the pinned iOS 27.0/24A434 image, remove
+preloaded simulator runtimes on the disposable hosted runner, verify sustained
+physical and registry absence, and import the exact standalone DMG. All devices
+must be shut down. The bounded cleanup recognizes only the observed deletion and
+asset-purge errors; unknown identities or remaining assets fail preparation.
+One current-user simulator-service refresh runs before creating an owned iPhone.
+Bitrise keeps its existing preparation and routing.
 
-Preparation validates every target before deleting any registration, preserves other platforms and requires a real exported bundle before removal. An independent post-test runtime check runs even after native failure. Only the three GitHub UI consumer jobs use this path; their native 40-minute limits and case allowances are unchanged. Private Records fixtures retain their restricted reporting boundary. Evidence: `.build/RuntimeImportCanaryNov16/` and `.build/GitHubRuntimeImportNov16/validation.json`.
+[Diagnostic 43832196302](https://github.com/palatis3/room-in-the-cart/actions/runs/43832196302)
+passed the unchanged original produce journey in 393.932 seconds, with no recorded
+runtime warnings or native restarts. It exercised the exact asset-recovery path,
+verified 13 absence observations, retained the same standalone runtime through
+native execution, and deleted only its owned simulator. The original result
+artifact and hash are recorded in [the receipt](evidence/ci/github-runtime-recovery-20261116/receipt.json).
+This supports the combined candidate; the full regression remains required.
 
-GitHub compatibility StoreKit jobs also import exact iOS 26.2/23C54 before creating the existing locale device. Diagnostic `43794186963` passed all 15 Spanish scenarios, zero skips/warnings/restarts and the independent stability check. The helper handles only the observed asset-purge error, waits for the asynchronously registered exact image, and fails on unknown identity or remaining source payload. Current-OS and self-hosted policy are preserved. The full offline suite passes 1,057 tests; evidence is in `.build/StoreKitImportCanaryNov16/async-artifact/` and `.build/CombinedRuntimeNov16/`.
+The shared XCTest readers now bound each JSON export at 300 seconds. An export
+timeout fails qualification without retry and retains the original bundle. The
+passing diagnostic completed all export and validation phases. Native assertions,
+case deadlines, runtime postchecks and restricted Records reporting are unchanged.
+The diagnostic-only performance contract admits the reviewed checker hash; its
+metric requirements, baselines and release status are unchanged.
+
+GitHub compatibility StoreKit jobs import the exact iOS 26.2/23C54 standalone DMG.
+Diagnostic 43809785943 passed all 15 English scenarios with stable runtime identity,
+zero warnings/restarts and genuine asset-purge recovery. Prior Spanish coverage is
+retained in its original run. Combined qualification must cover both locales.
 
 ## November 13 meal Undo scheduling and sanitizer feedback
 

@@ -723,10 +723,10 @@ jobs:
         if: runner.environment == 'github-hosted'
         timeout-minutes: 20
         run: python3 scripts/prepare_github_ios_runtime.py prepare
-      - name: Select isolated iPhone simulator for ui-01 and ui-05
+      - name: Select an iPhone simulator
         timeout-minutes: 8
         run: |
-          if [[ "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
+          if [[ "${RUNNER_ENVIRONMENT:-}" == github-hosted || "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
             xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
               --create-owned .build/test-simulator-ownership.json
           else

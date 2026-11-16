@@ -1,0 +1,142 @@
+{
+  "note": "Sanitized captured CoreSimulator error forms and public runtime identities; readiness transitions are mocked, not hosted qualification.",
+  "original": {
+    "4E2A8325-62E2-427F-A198-FFEE1E5EF15A": {
+      "build": "24R362",
+      "deletable": true,
+      "identifier": "4E2A8325-62E2-427F-A198-FFEE1E5EF15A",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/Library/Developer/CoreSimulator/Volumes/watchOS_24R362",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/sample3f39f4.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/sample3f39f4.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.watchOS-27-0",
+      "state": "Unusable",
+      "version": "27.0"
+    },
+    "CCB02CE5-F3D8-4937-AEA4-C56E0C73443F": {
+      "build": "24A434",
+      "deletable": true,
+      "identifier": "CCB02CE5-F3D8-4937-AEA4-C56E0C73443F",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.S531Hf",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "state": "Unusable",
+      "version": "27.0"
+    },
+    "D6FBE28E-42A8-4F9E-B67A-58140EBB3670": {
+      "build": "24A434",
+      "deletable": true,
+      "identifier": "D6FBE28E-42A8-4F9E-B67A-58140EBB3670",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.ccrrdR",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "state": "Ready",
+      "version": "27.0"
+    },
+    "54D35026-7325-4069-BF3A-FDFEA26D5885": {
+      "build": "24J360",
+      "deletable": true,
+      "identifier": "54D35026-7325-4069-BF3A-FDFEA26D5885",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/Library/Developer/CoreSimulator/Volumes/tvOS_24J360",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.tvOS-27-0",
+      "state": "Ready",
+      "version": "27.0"
+    }
+  },
+  "originalError": "Error deleting P: 4E2A8325-62E2-427F-A198-FFEE1E5EF15A watchOS (27.0 - 24R362) (Deleting): Attempting to delete image: 4E2A8325-62E2-427F-A198-FFEE1E5EF15A (Please retry in 180s, if the image is not removed)\nError deleting P: CCB02CE5-F3D8-4937-AEA4-C56E0C73443F iOS (27.0 - 24A434) (Deleting): Attempting to delete image: CCB02CE5-F3D8-4937-AEA4-C56E0C73443F (Please retry in 180s, if the image is not removed)\nError deleting P: D6FBE28E-42A8-4F9E-B67A-58140EBB3670 iOS (27.0 - 24A434) (Ready): Removed the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData/\n",
+  "countdownBefore": {
+    "4E2A8325-62E2-427F-A198-FFEE1E5EF15A": {
+      "build": "24R362",
+      "deletable": true,
+      "identifier": "4E2A8325-62E2-427F-A198-FFEE1E5EF15A",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/Library/Developer/CoreSimulator/Volumes/watchOS_24R362",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/sample3f39f4.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/sample3f39f4.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.watchOS-27-0",
+      "state": "Deleting",
+      "version": "27.0"
+    },
+    "CCB02CE5-F3D8-4937-AEA4-C56E0C73443F": {
+      "build": "24A434",
+      "deletable": true,
+      "identifier": "CCB02CE5-F3D8-4937-AEA4-C56E0C73443F",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XwxC5g",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "state": "Deleting",
+      "version": "27.0"
+    },
+    "4E95D1D5-20C1-4238-85AF-22D6253E41A7": {
+      "build": "24A434",
+      "deletable": true,
+      "identifier": "4E95D1D5-20C1-4238-85AF-22D6253E41A7",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.AW0dDW",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "state": "Ready",
+      "version": "27.0"
+    }
+  },
+  "countdownError": "Error deleting P: 4E2A8325-62E2-427F-A198-FFEE1E5EF15A watchOS (27.0 - 24R362) (Deleting): Attempting to delete image: 4E2A8325-62E2-427F-A198-FFEE1E5EF15A (Please retry in 175s, if the image is not removed)\nError deleting P: CCB02CE5-F3D8-4937-AEA4-C56E0C73443F iOS (27.0 - 24A434) (Deleting): Attempting to delete image: CCB02CE5-F3D8-4937-AEA4-C56E0C73443F (Please retry in 175s, if the image is not removed)\nError deleting P: 4E95D1D5-20C1-4238-85AF-22D6253E41A7 iOS (27.0 - 24A434) (Ready): Removed the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/sample3e800c.asset/AssetData/\n",
+  "singleBefore": {
+    "9EA8A7AF-BAB8-4145-86DA-70846821B1FB": {
+      "build": "24J360",
+      "deletable": true,
+      "identifier": "9EA8A7AF-BAB8-4145-86DA-70846821B1FB",
+      "kind": "Patchable Cryptex Disk Image",
+      "mountPath": "/private/var/run/com.apple.security.cryptexd/mnt/tvOS_24J360",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.tvOS-27-0",
+      "state": "Ready",
+      "version": "27.0"
+    }
+  },
+  "singleError": "An error was encountered processing the command (domain=com.apple.CoreSimulator.simdiskimaged.SimDiskImageError, code=30):\nRemoved the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData/\nRun 'xcrun simctl runtime scan-and-mount' to re-register the runtime, then delete it again.\n",
+  "recoveryCatalog": {
+    "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData": {
+      "identity": {
+        "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.tvOS-27-0",
+        "build": "24J360",
+        "version": "27.0"
+      },
+      "payloads": [
+        "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData/Restore/043-16887-522.dmg"
+      ]
+    }
+  },
+  "recoveryPending": {
+    "DEC4064B-B277-479B-A72E-446032E52C00": {
+      "deletable": true,
+      "identifier": "DEC4064B-B277-479B-A72E-446032E52C00",
+      "kind": "Patchable Cryptex Disk Image",
+      "parentMountPath": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData/Restore/043-16887-522.dmg",
+      "state": "Verifying"
+    }
+  },
+  "recoveryErrors": [
+    {
+      "identifier": "FC86BF12-5DCA-436B-9299-D866FE60E39C",
+      "classification": "mobileasset-not-reclaimed",
+      "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.tvOS-27-0",
+      "build": "24J360",
+      "version": "27.0",
+      "path": "/System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData",
+      "line": "Error deleting P: FC86BF12-5DCA-436B-9299-D866FE60E39C tvOS (27.0 - 24J360) (Ready): Removed the runtime, but did not reclaim its MobileAsset: /System/Library/AssetsV2/com_apple_MobileAsset_appleTVOSSimulatorRuntime/samplef6a3a9.asset/AssetData/"
+    }
+  ],
+  "recoveryFirstErrors": []
+}

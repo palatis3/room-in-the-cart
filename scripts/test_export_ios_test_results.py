@@ -2,6 +2,7 @@ import contextlib
 import io
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -41,10 +42,15 @@ class ExportTests(unittest.TestCase):
             bundle.mkdir()
             original = bundle / "Info.plist"
             original.write_bytes(b"retained original evidence")
+            sleeper = root / "stall.py"
+            sleeper.write_text("import os, time\n"
+                               f"open({str(root / 'pid')!r}, 'w').write(str(os.getpid()))\n"
+                               "time.sleep(60)\n")
             executable = root / "xcrun"
-            executable.write_text(f"#!{sys.executable}\nimport os, time\n"
-                                  f"open({str(root / 'pid')!r}, 'w').write(str(os.getpid()))\n"
-                                  "time.sleep(60)\n")
+            # A shebang cannot quote the spaces in this checkout's Python path.
+            # exec preserves the PID so the real timeout/reaping assertion holds.
+            executable.write_text("#!/bin/sh\nexec " +
+                                  shlex.join([sys.executable, str(sleeper)]) + "\n")
             executable.chmod(0o755)
             with patch.dict(os.environ, PATH=str(root) + os.pathsep + os.environ['PATH']), \
                  patch.object(exporter, "EXPORT_TIMEOUT_SECONDS", 1):
