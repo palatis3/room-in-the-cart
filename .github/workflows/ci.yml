@@ -91,7 +91,9 @@ jobs:
                                  stdout=log, stderr=subprocess.STDOUT, check=True)
           assert not targets(capture('after-removal.json'))
           with (evidence / 'import.log').open('w') as log:
-              subprocess.run(['xcodebuild', '-importPlatform', str(bundles[0].resolve())],
+              subprocess.run(['sudo', '-n', '/usr/bin/env',
+                              'DEVELOPER_DIR=/Applications/Xcode_27.1.app/Contents/Developer',
+                              '/usr/bin/xcodebuild', '-importPlatform', str(bundles[0].resolve())],
                              stdout=log, stderr=subprocess.STDOUT, check=True)
           after = capture('after-import.json')
           installed = targets(after)
