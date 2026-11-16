@@ -21,9 +21,32 @@ PAYLOAD_BYTES = 8067000161
 PAYLOAD_SHA256 = '5136453f500b73dc3518f262d8a51e4be0c136e38a550998febf7759de6ba0fd'
 
 def capture(name, timeout=30):
-    raw = subprocess.check_output(['xcrun', 'simctl', 'runtime', 'list', '-j'], text=True, timeout=timeout)
-    (evidence / name).write_text(raw)
-    value = json.loads(raw)
+    command = ['xcrun', 'simctl', 'runtime', 'list', '-j']
+    output_path = evidence / name
+    with output_path.open('wb') as output, (evidence / (name + '.stderr')).open('wb') as errors:
+        # check_output and Popen's context manager can wait indefinitely after
+        # killing. Retain partial evidence, but never accept a timed-out capture.
+        process = subprocess.Popen(command, stdout=output, stderr=errors)
+        try:
+            status = process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            failure = {'timeoutSeconds': timeout}
+            try:
+                process.kill()
+            except OSError as error:
+                failure.update(termination='kill-failed', error=str(error))
+            else:
+                try:
+                    failure.update(termination='reaped', exitCode=process.wait(timeout=5))
+                except subprocess.TimeoutExpired:
+                    failure['termination'] = 'unreaped'
+                except OSError as error:
+                    failure.update(termination='reap-failed', error=str(error))
+            (evidence / (name + '.timeout.json')).write_text(json.dumps(failure) + '\n')
+            raise
+        if status:
+            raise subprocess.CalledProcessError(status, command)
+    value = json.loads(output_path.read_text())
     assert isinstance(value, dict)
     return value
 

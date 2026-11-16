@@ -12,7 +12,7 @@ import plistlib
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads((Path(__file__).parent / 'fixtures/github-runtime-cleanup.json').read_text())
@@ -30,6 +30,74 @@ IOS = 'D6FBE28E-42A8-4F9E-B67A-58140EBB3670'
 TV = '54D35026-7325-4069-BF3A-FDFEA26D5885'
 NEW_TV = '2F11B40E-98FB-47CC-8A06-A0F4806A5347'
 NEW_IOS = '11111111-1111-4111-8111-111111111111'
+
+
+class StrictCaptureTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        patcher = patch.object(subject, 'evidence', Path(temporary.name))
+        patcher.start(); self.addCleanup(patcher.stop)
+
+    def run_python_capture(self, code, timeout=5):
+        popen = subprocess.Popen
+        def start(command, **kwargs):
+            self.assertEqual(command, ['xcrun', 'simctl', 'runtime', 'list', '-j'])
+            return popen([sys.executable, '-c', code], **kwargs)
+        with patch.object(subject.subprocess, 'Popen', side_effect=start):
+            return subject.capture('test.json', timeout=timeout)
+
+    def test_complete_success_returns_inventory(self):
+        self.assertEqual(self.run_python_capture("print('{\"runtime\": {\"state\": \"Ready\"}}')"),
+                         {'runtime': {'state': 'Ready'}})
+
+    def test_nonzero_even_with_valid_json_fails_and_retains_output(self):
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            self.run_python_capture("import sys; print('{}'); print('failed', file=sys.stderr); sys.exit(7)")
+        self.assertEqual(caught.exception.returncode, 7)
+        self.assertEqual((subject.evidence / 'test.json').read_text(), '{}\n')
+        self.assertEqual((subject.evidence / 'test.json.stderr').read_text(), 'failed\n')
+
+    def test_incomplete_or_nonobject_output_is_never_inventory(self):
+        for code, error in [("print('{')", json.JSONDecodeError), ("print('[]')", AssertionError)]:
+            with self.subTest(code=code), self.assertRaises(error):
+                self.run_python_capture(code)
+
+    def test_real_timed_out_child_is_reaped_and_partial_output_retained(self):
+        with self.assertRaises(subprocess.TimeoutExpired):
+            self.run_python_capture("import time; print('{', flush=True); time.sleep(30)", timeout=3)
+        self.assertEqual((subject.evidence / 'test.json').read_text(), '{\n')
+        receipt = json.loads((subject.evidence / 'test.json.timeout.json').read_text())
+        self.assertEqual(receipt['termination'], 'reaped')
+        self.assertLess(receipt['exitCode'], 0)
+
+    def test_unreapable_child_still_raises_original_timeout_without_unbounded_wait(self):
+        process = Mock()
+        original = subprocess.TimeoutExpired('inventory', 30)
+        process.wait.side_effect = [original, subprocess.TimeoutExpired('inventory', 5)]
+        with patch.object(subject.subprocess, 'Popen', return_value=process), \
+                self.assertRaises(subprocess.TimeoutExpired) as caught:
+            subject.capture('test.json')
+        self.assertIs(caught.exception, original)
+        self.assertEqual(process.wait.call_args_list, [call(timeout=30), call(timeout=5)])
+        process.kill.assert_called_once_with()
+        self.assertEqual(json.loads((subject.evidence / 'test.json.timeout.json').read_text())['termination'], 'unreaped')
+
+    def test_kill_or_reap_error_preserves_original_timeout(self):
+        for failure in ('kill', 'reap'):
+            with self.subTest(failure=failure):
+                process = Mock()
+                original = subprocess.TimeoutExpired('inventory', 30)
+                process.wait.side_effect = [original, OSError('reap unavailable')]
+                if failure == 'kill': process.kill.side_effect = OSError('kill unavailable')
+                with patch.object(subject.subprocess, 'Popen', return_value=process), \
+                        self.assertRaises(subprocess.TimeoutExpired) as caught:
+                    subject.capture('test.json')
+                self.assertIs(caught.exception, original)
+                process.kill.assert_called_once_with()
+                expected = [call(timeout=30)] + ([call(timeout=5)] if failure == 'reap' else [])
+                self.assertEqual(process.wait.call_args_list, expected)
+                self.assertEqual(json.loads((subject.evidence / 'test.json.timeout.json').read_text())['termination'], failure + '-failed')
 
 
 def preferred_pair():

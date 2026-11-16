@@ -31,6 +31,14 @@ asset-purge errors; unknown identities or remaining assets fail preparation.
 One current-user simulator-service refresh runs before creating an owned iPhone.
 Bitrise keeps its existing preparation and routing.
 
+Strict runtime inventory captures keep partial stdout/stderr and fail on any
+command timeout, nonzero exit or incomplete JSON. After timeout they kill only
+the retained direct child and wait at most five seconds to reap it; they do not
+use `check_output`'s unbounded post-kill wait. This preserves the failed gate
+while allowing subsequent diagnostics to run. The correction passed all 1,158
+offline checks; it does not establish why the focused producer stalled at package
+resolution after its runtime preparation passed.
+
 The first normal batch also exposed one retained tvOS registration marked
 `Cryptex Mount Preferred`, beside a new Ready registration for the same asset
 (job133201539104). Cleanup now permits at most one such exact pair after a
