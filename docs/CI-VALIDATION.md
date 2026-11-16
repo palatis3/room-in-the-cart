@@ -22,7 +22,7 @@ another registration without exporting a bundle in run43855275206. Equivalent
 asset descendants and standalone image files are supported; ambiguous or
 mismatched inputs fail before cleanup. See
 `.build/RuntimePayloadPreserveNov16/verification.json` for the 1,152-test local
-preflight and the [current handoff](CURRENT-HANDOFF.md#current-checkpoint) for
+preflight and the [current handoff](CURRENT-HANDOFF.md#active-work-and-ownership) for
 hosted qualification. The helper removes preloaded simulator runtimes on the
 disposable hosted runner, verifies sustained
 physical and registry absence, and imports the exact standalone DMG. All devices
