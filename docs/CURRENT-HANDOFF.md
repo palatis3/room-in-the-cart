@@ -1,6 +1,6 @@
 # Room in the Cart — current handoff
 
-Updated November 16, 2026, 14:49 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
+Updated November 16, 2026, 15:03 UTC. Active goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Not complete, paused or blocked. Component passes do not qualify one release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical specification handoff statements that the app is unbuilt are superseded by inspected code and results.
 
@@ -12,6 +12,8 @@ The saved inventory showed two original tvOS registrations changing asynchronous
 The experiment finishes simulator boot before starting the **same** observer-wrapped xcodebuild. It retains the exact owned device, destination, configuration, contributor conditions, cache settings, assertions, runtime verification and35-minute job cap. Boot failure explicitly prevents compilation; build status propagates unchanged. All13focused checks passed, including execution of the actual shell body with native entry points stubbed, plus actionlint, AST, all13inline shell bodies and root diff review. Log: `/tmp/ritc-serial-observer-tests.log`. Only diagnostic ci.yml and its test changed. No normal workflow adoption yet.
 
 **Changed successor is live:** [43889721377](https://github.com/palatis3/room-in-the-cart/actions/runs/43889721377), job133377333184, exact `8b1307de83700a6d0a4b2a87f73519fd5b73ffdf`, admitted14:49:00UTC. Evidence owner Sol uses `.build/ProducerSerial8b13Nov16/`. Read authoritative state and preserve originals; observation timeout is not job completion. Expected artifacts: `producer-setup-1`, `producer-observer-build-1` (before runtime verification), `producer-final-runtime-1`. If the new ordering succeeds, qualify the original focused fixture groups before publishing a full candidate. A successful experiment is not proof of the cause or a full app pass.
+
+**8b13 live observation:** preparation passed in2m23s with1mutation and13absence observations. Root verified setup ZIP SHA `df2ec428c0219208e22348292494c6645a86c686fbc8b963d09a983a83010293`; exact saved payload and standalone Ready24A434 remain verified. Boot reported Finished14:52:28, native child/observer started14:53:23. At15:01:18 the capture returned: no graph marker, process tree and sample timed out, no sample file. Its Python watchdog caught collector startup in CPython3.15.2 `_fork_exec` (subprocess.py2086), which uses fork on macOS; this precedes the wait timeout and later error-pipe read. It establishes slow process creation, not the kernel cause or Xcode's blocking operation. Serial boot has not eliminated that delay. Keep the bounded run; inspect partial files/terminal originals before another change. Exact timestamps and source links: `.build/ProducerSerial8b13Nov16/live-observation.json`.
 
 ## Checkout and candidate identity
 
