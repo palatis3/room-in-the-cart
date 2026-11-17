@@ -1,5 +1,6 @@
 #if DEBUG && targetEnvironment(simulator)
 import DeviceSurfaces
+import Photos
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -10,6 +11,7 @@ struct ReceiptFileSourceFixture: View {
     @State private var shareToken: String?
     @State private var pdfURL: URL?
     @State private var photo: UIImage?
+    @State private var photoResult = ""
     static let name = "Room Market Fixture Receipt"
 
     var body: some View {
@@ -19,9 +21,11 @@ struct ReceiptFileSourceFixture: View {
                 Button { exporting = true } label: { Text(verbatim: "Export sample receipt PDF") }
             }
             if let photo {
-                let image = Image(uiImage: photo)
-                ShareLink(item: image, preview: SharePreview("Sample receipt", image: image)) {
-                    Text(verbatim: "Share sample receipt photo")
+                Button { Task { await saveFixturePhoto(photo) } } label: {
+                    Text(verbatim: "Add sample receipt to simulator Photos")
+                }
+                if !photoResult.isEmpty {
+                    Text(verbatim: photoResult).accessibilityIdentifier("fixture.receipt.photoResult")
                 }
             }
             if let shareToken { Text(verbatim: shareToken).accessibilityIdentifier("fixture.receipt.shareToken") }
@@ -49,6 +53,24 @@ struct ReceiptFileSourceFixture: View {
         .fileExporter(isPresented: $exporting, document: pdfURL.flatMap { try? Data(contentsOf: $0) }.map(SamplePDF.init),
                       contentType: .pdf, defaultFilename: Self.name) { result in
             if case .success = result { saved = true }
+        }
+    }
+
+    @MainActor private func saveFixturePhoto(_ photo: UIImage) async {
+        guard await PHPhotoLibrary.requestAuthorization(for: .addOnly) == .authorized,
+              let png = photo.pngData() else {
+            photoResult = "Test photo unavailable"
+            return
+        }
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                let options = PHAssetResourceCreationOptions()
+                options.originalFilename = "Room Market Fixture Receipt.png"
+                PHAssetCreationRequest.forAsset().addResource(with: .photo, data: png, options: options)
+            }
+            photoResult = "Test photo saved"
+        } catch {
+            photoResult = "Test photo unavailable"
         }
     }
 

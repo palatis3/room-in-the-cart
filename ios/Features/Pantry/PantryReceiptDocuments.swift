@@ -118,7 +118,12 @@ struct PantryReceiptDocuments: View {
         }
         .privacySensitive()
         .navigationTitle(pantryText("Read a receipt file"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Close")) { cancel(); dismiss() } } }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(pantryText("Close")) { cancel(); dismiss() }
+                    .accessibilityIdentifier("receipt.document.close")
+            }
+        }
         .keyboardDoneAction(visible: merchantFocused, title: pantryText("Done"), identifier: "receipt.document.keyboardDone") { merchantFocused = false }
         .fileImporter(isPresented: $picking, allowedContentTypes: [.pdf, .jpeg, .png, .heic, .heif, .plainText]) { result in
             switch result {
