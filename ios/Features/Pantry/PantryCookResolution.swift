@@ -37,6 +37,12 @@ enum PantryCookResolution {
         let count: InventoryCount
     }
 
+    struct Reconstruction: Equatable {
+        let original: Quantity
+        let previouslyAccounted: Rational
+        let otherUnmeasured: Int
+    }
+
     struct Receipt: Codable, Equatable {
         let eventID: UUID
         let operationID: UUID
@@ -51,6 +57,7 @@ enum PantryCookResolution {
     struct Context {
         let record: PantryCookRecord
         let lots: [InventoryLot]
+        let reservations: [InventoryReservation]
         let inventoryRevision: Int64
         let ledgerRevision: Int64
         let journeyRevision: Int64
@@ -68,7 +75,12 @@ enum PantryCookResolution {
             guard let lotID, let lot = lots.first(where: { $0.id == lotID }),
                   !record.draft.leftovers.contains(where: { $0.id == lotID }) else { return result }
             result.insert(.recount)
-            guard lot.count.quantity != nil else { return result }
+            if lot.count.quantity == nil {
+                if record.originalCount(lotID: lotID, observationID: lot.observationID)?.unit == lot.unit {
+                    result.insert(.deduct)
+                }
+                return result
+            }
             let prior = record.resolutions?.first { $0.resultObservationID == lot.observationID }
             if let action = record.countAction(lotID: lotID, observationID: lot.observationID, confirmedAt: lot.confirmedAt, prior: prior) {
                 result.insert(action)
@@ -88,6 +100,8 @@ enum PantryCookResolution {
         let receipt: Receipt
         let affectedHolds: [InventoryReservationCoverage]
         let otherUnresolvedEventsForLot: [UUID]
+        let reconstruction: Reconstruction?
+        var reconstructionBasis: Quantity? { reconstruction?.original }
         var eventID: UUID { receipt.eventID }
         var decision: Decision { receipt.decision }
         var before: InventoryCount? { receipt.basis?.count }
@@ -101,21 +115,22 @@ enum PantryCookResolution {
     }
 
     /// Both the live transaction and the recovered record use the same count arithmetic.
-    static func result(_ decision: Decision, basis: Basis?) throws -> InventoryCount? {
+    static func result(_ decision: Decision, basis: Basis?, reconstruction: Reconstruction?) throws -> InventoryCount? {
         guard let basis else {
             guard case .outsidePantry = decision else { throw PantryCookPort.Failure.changed }
             return nil
         }
+        let conversion = basis.count.quantity?.confirmedConversion ?? reconstruction?.original.confirmedConversion
         func normalized(_ amount: Quantity, allowZero: Bool = false) throws -> Rational {
             try amount.validate()
             guard amount.amount > .zero || (allowZero && amount.amount == .zero),
-                  let converted = try amount.converted(to: basis.unit, using: amount.confirmedConversion ?? basis.count.quantity?.confirmedConversion)
+                  let converted = try amount.converted(to: basis.unit, using: amount.confirmedConversion ?? conversion)
             else { throw InventoryError.invalid("cookResolutionAmount") }
             return converted
         }
         func quantity(_ amount: Rational) -> InventoryCount {
             .exact(.init(amount: amount, unit: basis.unit, originalLiteral: amount.description,
-                         confirmedConversion: basis.count.quantity?.confirmedConversion))
+                         confirmedConversion: conversion))
         }
         switch decision {
         case .outsidePantry: throw PantryCookPort.Failure.changed
@@ -125,8 +140,17 @@ enum PantryCookResolution {
             return basis.count
         case .deduct(_, let used):
             let value = try normalized(used)
-            guard let before = basis.count.quantity?.amount, before >= value else { throw InventoryError.invalid("cookUseExceedsAvailable") }
-            return try quantity(before.subtracting(value))
+            let available: Rational
+            if let reconstruction {
+                available = try reconstruction.original.amount.subtracting(reconstruction.previouslyAccounted)
+            } else if let current = basis.count.quantity {
+                available = current.amount
+            } else {
+                throw PantryCookPort.Failure.changed
+            }
+            guard value <= available else { throw InventoryError.invalid("cookUseExceedsAvailable") }
+            if let reconstruction, reconstruction.otherUnmeasured > 0 { return .unknown }
+            return try quantity(available.subtracting(value))
         case .recount(_, let remaining, let used):
             if let used { _ = try normalized(used) }
             return try quantity(normalized(remaining, allowZero: true))
@@ -138,6 +162,42 @@ extension PantryCookRecord {
     var remainingUnresolvedUseIDs: [UUID] {
         let closed = Set((resolutions ?? []).map(\.eventID))
         return draft.unresolvedUseIDs.filter { !closed.contains($0) }
+    }
+
+    fileprivate func originalCount(lotID: UUID, observationID: UUID) -> Quantity? {
+        guard resultingObservations[lotID] == observationID else { return nil }
+        return priorCounts.first { $0.lotID == lotID }?.count.quantity
+    }
+
+    /// Only the original unknown head can be reconstructed. A subsequent count or another
+    /// cook's unknown head breaks the chain and must be reviewed on its own basis.
+    fileprivate func reconstruction(for decision: PantryCookResolution.Decision, eventID: UUID,
+                                    basis: PantryCookResolution.Basis?, priorRows: ArraySlice<PantryCookResolution.Receipt>) throws
+        -> PantryCookResolution.Reconstruction? {
+        guard case .deduct(let lotID, _) = decision, let basis, basis.count.quantity == nil else { return nil }
+        guard let original = originalCount(lotID: lotID, observationID: basis.observationID),
+              original.unit == basis.unit else { throw PantryCookPort.Failure.changed }
+        var accounted = Rational.zero
+        var unknown = Set<UUID>()
+        func add(_ used: Quantity) throws {
+            try used.validate()
+            guard used.amount > .zero, let amount = try used.converted(to: original.unit, using: used.confirmedConversion ?? original.confirmedConversion)
+            else { throw PantryCookPort.Failure.changed }
+            accounted = try accounted.adding(amount)
+        }
+        for part in draft.parts {
+            guard case .lot(let id, _, let used) = part.use, id == lotID else { continue }
+            if let used { try add(used) } else { unknown.insert(part.id) }
+        }
+        for prior in priorRows where prior.decision.lotID == lotID {
+            // A recount or external observation can never be the predecessor of this original head.
+            guard case .deduct(_, let used) = prior.decision, prior.basis?.observationID == basis.observationID,
+                  prior.resultObservationID == nil else { throw PantryCookPort.Failure.changed }
+            try add(used)
+            unknown.remove(prior.eventID)
+        }
+        unknown.remove(eventID)
+        return .init(original: original, previouslyAccounted: accounted, otherUnmeasured: unknown.count)
     }
 
     fileprivate func countAction(lotID: UUID, observationID: UUID, confirmedAt: Date,
@@ -159,7 +219,7 @@ extension PantryCookRecord {
               Set(resolutions.map(\.eventID)).count == resolutions.count else { throw PantryCookPort.Failure.changed }
         var priorByObservation = [UUID: PantryCookResolution.Receipt]()
         var previousRevision = draft.inventoryRevision
-        for row in resolutions {
+        for (index, row) in resolutions.enumerated() {
             guard unresolved.contains(row.eventID), row.inventoryRevision > previousRevision,
                   row.confirmedAt.timeIntervalSinceReferenceDate.isFinite, row.confirmedAt >= draft.cookedAt,
                   row.operationID == PantryCookResolution.identity("operation", draft: draft, eventID: row.eventID),
@@ -180,11 +240,12 @@ extension PantryCookRecord {
                       basis.confirmedAt <= row.confirmedAt, basis.count.quantity.map({ $0.unit == basis.unit }) ?? true
                 else { throw PantryCookPort.Failure.changed }
             }
-            let writes = row.decision.action == .deduct || row.decision.action == .recount
+            let reconstruction = try reconstruction(for: row.decision, eventID: row.eventID, basis: row.basis, priorRows: resolutions[..<index])
+            let after = try PantryCookResolution.result(row.decision, basis: row.basis, reconstruction: reconstruction)
+            let writes = row.decision.action == .recount || (row.decision.action == .deduct && after?.quantity != nil)
             let expectedID = writes ? PantryCookResolution.identity("observation", draft: draft, eventID: row.eventID) : nil
             if let expectedID { priorByObservation[expectedID] = row }
-            guard row.resultObservationID == expectedID,
-                  row.after == (try PantryCookResolution.result(row.decision, basis: row.basis)) else { throw PantryCookPort.Failure.changed }
+            guard row.resultObservationID == expectedID, row.after == after else { throw PantryCookPort.Failure.changed }
         }
     }
 }
@@ -210,7 +271,8 @@ extension PantryCookPort {
         guard let record = read.context.completedRecord,
               record.draft.meal == read.context.meal, record.draft.ledgerID == read.context.ledgerID,
               record.draft.inventoryID == read.context.inventory.state.workspaceID else { throw Failure.changed }
-        return .init(record: record, lots: read.context.inventory.lots, inventoryRevision: read.context.inventory.state.revision,
+        return .init(record: record, lots: read.context.inventory.lots, reservations: read.context.inventory.reservations,
+                     inventoryRevision: read.context.inventory.state.revision,
                      ledgerRevision: read.ledgerRevision, journeyRevision: read.journey.revision)
     }
 
@@ -230,14 +292,16 @@ extension PantryCookPort {
         let lot = context.lots.first { $0.id == decision.lotID }
         let basis = lot.map { Resolution.Basis(revision: $0.revision, observationID: $0.observationID,
                                               confirmedAt: $0.confirmedAt, unit: $0.unit, count: $0.count) }
-        let after = try Resolution.result(decision, basis: basis)
+        let priorRows = context.record.resolutions ?? []
+        let reconstruction = try context.record.reconstruction(for: decision, eventID: eventID, basis: basis, priorRows: priorRows[...])
+        let after = try Resolution.result(decision, basis: basis, reconstruction: reconstruction)
         let operationID = Resolution.identity("operation", draft: draft, eventID: eventID)
         var observationID: UUID?
         var writes = [InventoryWrite]()
         var affected = [InventoryReservationCoverage]()
-        if decision.action == .recount || decision.action == .deduct {
+        if decision.action == .recount || (decision.action == .deduct && after?.quantity != nil) {
             guard let lot, let after else { throw Failure.changed }
-            if decision.action == .deduct {
+            if decision.action == .deduct && reconstruction == nil {
                 guard let free = inventory.availability.lots.first(where: { $0.id == lot.id })?.free,
                       let beforeAmount = lot.count.quantity?.amount, let afterAmount = after.quantity?.amount,
                       try beforeAmount.subtracting(afterAmount) <= free.amount else { throw InventoryError.invalid("cookUseExceedsAvailable") }
@@ -264,7 +328,7 @@ extension PantryCookPort {
         }
         let review = Resolution.Review(cookID: draft.id, inventoryID: draft.inventoryID, ledgerID: draft.ledgerID,
             shopID: draft.shopID, mealID: draft.meal.id, journeyRevision: context.journeyRevision, ledgerRevision: context.ledgerRevision,
-            receipt: receipt, affectedHolds: affected, otherUnresolvedEventsForLot: siblings)
+            receipt: receipt, affectedHolds: affected, otherUnresolvedEventsForLot: siblings, reconstruction: reconstruction)
         return (review, writes)
     }
 
