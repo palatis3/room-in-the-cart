@@ -593,10 +593,15 @@ private struct RecordsRecoveredPantryView: View {
                         return PantryErasureCoordinator(inventory: stores.inventory, ledger: config.ledger,
                             gate: config.gate, pendingDirectory: config.pendingStore.fileURL.deletingLastPathComponent(),
                             registry: registry, worker: worker, journalDirectory: config.erasureJournalDirectory,
-                            recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
+                            claimedReceiptFiles: { origin, date in
+                                try await IOSSurfaceContainers.sharedCaptures().claimedReceipts(origin: origin, now: date)
+                            }, recoveredDirectory: directory.appendingPathComponent("Recoveries", isDirectory: true),
                             initiatingPresentation: self, cleanup: { [weak self] cleanup, receipt in
                                 guard let self, authorize(), cleanup.originID == receipt.workspaceID else { throw ArchiveError.unavailable }
                                 self.pantryErasureChangedRecords = true
+                                if let clips = cleanup.sharedReceipts {
+                                    try await IOSSurfaceContainers.sharedCaptures().retireReceipts(clips, origin: cleanup.originID, now: Date())
+                                }
                                 try await worker.reconcilePreparedImports(registry: registry, requireIdle: true)
                                 for id in cleanup.pickupIDs {
                                     try await self.erasureCleanup.erasePickupRecord(cleanup.originID, id)

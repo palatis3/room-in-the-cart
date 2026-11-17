@@ -28,6 +28,7 @@ import Foundation
     struct Review: Identifiable {
         let id: UUID
         let selection: Selection
+        var sharedReceiptCount: Int = 0
         var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
         let foodNames: [String]
@@ -81,7 +82,7 @@ import Foundation
                       value.collateralPickupIDs.count == value.collateralPickupTitles.count else {
                     throw PantryErasureCoordinator.Failure.invalid
                 }
-                return Review(id: value.id, selection: value.selection, aliasCount: value.aliasCount, receiptRevisionCount: value.receiptRevisionCount, foodNames: value.foodNames,
+                return Review(id: value.id, selection: value.selection, sharedReceiptCount: value.sharedReceiptCount, aliasCount: value.aliasCount, receiptRevisionCount: value.receiptRevisionCount, foodNames: value.foodNames,
                     pickups: zip(value.pickupIDs, value.pickupTitles).map(Pickup.init),
                     collateralPickups: zip(value.collateralPickupIDs, value.collateralPickupTitles).map(Pickup.init),
                     retainedReceiptFoodNames: value.retainedReceiptFoodNames, affectedReservationNames: value.affectedReservationNames,

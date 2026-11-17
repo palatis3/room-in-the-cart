@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 /// A handoff contains source material only. The app chooses the destination and
 /// obtains its authorization when the person opens the review.
 public struct SharedCaptureEnvelope: Codable, Equatable, Sendable {
-    public enum Kind: String, Codable, Sendable { case recipeURL }
+    public enum Kind: String, Codable, Sendable { case recipeURL, receiptFile }
     public let version: Int
     public let kind: Kind
     public let value: String
@@ -18,6 +18,12 @@ public struct SharedCaptureEnvelope: Codable, Equatable, Sendable {
         version = 1
         kind = .recipeURL
         value = url.absoluteString
+    }
+
+    init(receipt: SharedReceiptDescriptor) throws {
+        version = 1
+        kind = .receiptFile
+        value = String(decoding: try canonical(receipt), as: UTF8.self)
     }
 
     public static func loadRecipeURL(from provider: NSItemProvider,
@@ -39,11 +45,12 @@ public struct SharedCaptureEntry: Sendable, Equatable, Identifiable {
 /// Reuse the selected-text store's protected transactions, replay receipts,
 /// capacity and expiration. A separate file keeps typed envelopes out of Shop.
 public struct SharedCaptureInbox: Sendable {
-    private let storage: SelectedTextInbox
+    let storage: SelectedTextInbox
     public init(url: URL) throws {
         storage = try SelectedTextInbox(url: url, kind: "shared-capture-inbox")
     }
     public func stage(_ envelope: SharedCaptureEnvelope, id: UUID, now: Date) async throws -> InboxReceipt {
+        guard envelope.kind == .recipeURL else { throw SurfaceError.invalid }
         try validate(envelope)
         let text = String(decoding: try canonical(envelope), as: UTF8.self)
         return try await storage.stage(operationID: id, originalText: text, now: now)
@@ -61,6 +68,7 @@ public struct SharedCaptureInbox: Sendable {
         }
     }
     public func discard(_ entry: SharedCaptureEntry, now: Date) async throws {
+        guard entry.envelope.kind == .recipeURL else { throw SurfaceError.invalid }
         _ = try await storage.discard(operationID: entry.id, digest: entry.receipt.digest, now: now)
     }
     private func validate(_ envelope: SharedCaptureEnvelope) throws {

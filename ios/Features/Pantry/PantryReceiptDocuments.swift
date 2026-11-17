@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import CoreDomain
 import PhotosUI
 import SwiftUI
@@ -22,10 +23,14 @@ private func receiptStage(_ stage: ReceiptAcquisition.DocumentLine.Stage) -> Str
 }
 
 struct PantryReceiptDocuments: View {
+    @ObservedObject var model: PantryModel
     let target: CaptureTarget
     let authorize: @MainActor () -> Bool
     var initialInput: ReceiptDocumentBytes? = nil
-    let onReview: (SourceMediaRecord) -> Void
+    let onReview: (SourceMediaRecord, SharedReceiptItem?) -> Void
+    @State private var inbox: [SharedReceiptItem] = []
+    @State private var openedShare: SharedReceiptItem?
+    @State private var discard: SharedReceiptItem?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var merchantFocused: Bool
@@ -70,13 +75,16 @@ struct PantryReceiptDocuments: View {
                     }
                 }
                 Section {
+                    if openedShare != nil {
+                        Text(pantryText("Saving selected food removes this staged file. Keep the original for any other lines."))
+                    }
                     Toggle(pantryText("I checked these printed lines and physically received food from this purchase."), isOn: $confirmed)
                     Button(pantryText("Review received food")) {
                         guard authorize(), confirmed else { return }
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
                                 stage: stage, selection: selection, at: Date())
-                            onReview(source)
+                            onReview(source, openedShare)
                             dismiss()
                         } catch { show(error) }
                     }.disabled(!authorize() || !confirmed || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -84,6 +92,21 @@ struct PantryReceiptDocuments: View {
                     Button(pantryText("Choose another document")) { cancel() }
                 }
             } else {
+                if !inbox.isEmpty {
+                    Section(pantryText("Shared receipt files")) {
+                        ForEach(inbox) { item in
+                            VStack(alignment: .leading) {
+                                Text(item.receipt.createdAt, format: .dateTime.year().month().day().hour().minute())
+                                Text(ByteCountFormatter.string(fromByteCount: Int64(item.descriptor.size), countStyle: .file))
+                                Button(pantryText("Open shared receipt")) {
+                                    start(shared: item) { try await model.openSharedReceipt(item) }
+                                }.buttonStyle(.borderless)
+                                Button(pantryText("Discard shared receipt"), role: .destructive) { discard = item }
+                                    .buttonStyle(.borderless)
+                            }
+                        }
+                    }
+                }
                 Button(pantryText("Choose a receipt from Files")) { picking = true }
                 PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                     Text(pantryText("Choose a receipt from Photos"))
@@ -112,14 +135,37 @@ struct PantryReceiptDocuments: View {
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: stage) { _, _ in confirmed = false }
         .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
-        .onDisappear { cancel() }
+        .alert(item: $discard) { item in
+            Alert(title: Text(pantryText("Discard this shared receipt?")),
+                  message: Text(pantryText("This removes the staged file from this device.")),
+                  primaryButton: .destructive(Text(pantryText("Discard"))) {
+                    Task {
+                        do { try await model.finishSharedReceipt(item, committed: false); await loadInbox() }
+                        catch { show(error) }
+                    }
+                  }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
+        }
+        .onDisappear { cancel(); inbox = [] }
+        .task { await loadInbox() }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
 
-    private func start(_ read: @escaping () async throws -> ReceiptDocumentBytes) {
+    private func loadInbox() async {
+        guard model.supportsReceiptAliases, authorize() else { inbox = []; return }
+        do {
+            let rows = try await model.pendingSharedReceipts()
+            guard !Task.isCancelled, authorize() else { return }
+            inbox = rows
+        } catch {
+            if authorize() { self.error = pantryText("Shared files are unavailable. You can still choose a receipt from Files or Photos.") }
+        }
+    }
+
+    private func start(shared: SharedReceiptItem? = nil, _ read: @escaping () async throws -> ReceiptDocumentBytes) {
         cancel()
         guard authorize() else { return }
         let token = generation
+        openedShare = shared
         job = Task {
             defer { if generation == token { job = nil } }
             do {
@@ -136,7 +182,7 @@ struct PantryReceiptDocuments: View {
     private func cancel() {
         generation = UUID()
         job?.cancel(); job = nil
-        selection = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
+        openedShare = nil; selection = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
 
     private func show(_ failure: Error) {

@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import XCTest
 import CoreDomain
 import LocalStore
@@ -196,6 +197,49 @@ import RecordArchive
         XCTAssertNotEqual(separate.facts.first?.foodID, confirmed.foodID)
         let history = try await repository.acquisitionHistory()
         XCTAssertEqual(history, [confirmed])
+    }
+
+    func testClaimedDocumentSurvivesRestartUntilExactRecordsErasureAndOtherSourcesStayPending() async throws {
+        let f = try await fixture()
+        let repo = PantryRepository(store: f.store, authorize: { true })
+        let origin = f.store.workspaceID, scope = SharedReceiptScope(origin: f.store.workspaceID, persona: UUID())
+        let url = f.directory.appendingPathComponent("staging/inbox.sqlite")
+        let writer = try SharedCaptureInbox(url: url), first = UUID(), other = UUID()
+        let bytes = Data("BEANS\nFEE".utf8)
+        _ = try await writer.stageReceipt(bytes, kind: .text, id: first, now: now)
+        _ = try await writer.stageReceipt(Data("MILK".utf8), kind: .text, id: other, now: now)
+        let inbox = try SharedCaptureInbox(url: url)
+        let pending = try await inbox.pendingReceiptFiles(scope: scope, now: now)
+        let selected = try XCTUnwrap(pending.first(where: { $0.id == first }))
+        let raw = try await inbox.openReceipt(selected, scope: scope, now: now)
+        let document = try await ReceiptDocumentReader().extract(.init(data: raw, kind: .text))
+        let source = try document.source(target: .init(workspaceID: origin, containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence),
+            merchant: "Market", stage: .finalInvoice, selection: [.init(page: 1, line: 1)], at: now)
+        var draft = try ReceiptImportDraft(source: source)
+        draft.dateConfirmed = true; draft.purchaseDate = now
+        draft.lines[0].treatment = .add; draft.lines[0].received = "2"; draft.lines[0].usable = "1"
+        let review = try await repo.reviewReceipt(draft, expected: f.store.inventoryState(), at: now)
+        try await repo.applyReceipt(review, at: now)
+        let fact = try XCTUnwrap(review.facts.first)
+        let corrected = try fact.correctingPaidTotal(Money(decimal: "1.15"))
+        XCTAssertEqual(corrected.documentLine, fact.documentLine)
+        XCTAssertEqual(fact.documentLine?.method, .textFile)
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
+        let coordinator = PantryErasureCoordinator(inventory: f.store, ledger: f.ledger, gate: f.gate,
+            pendingDirectory: f.pending.fileURL.deletingLastPathComponent(), registry: registry, worker: f.worker,
+            journalDirectory: f.directory.appendingPathComponent("erasure"), claimedReceiptFiles: { origin, date in
+                try await inbox.claimedReceipts(origin: origin, now: date)
+            }, cleanup: { impact, _ in
+                try await inbox.retireReceipts(impact.sharedReceipts ?? [], origin: impact.originID, now: self.now)
+            }, authorize: { true }, clock: { self.now })
+        let erase = try await coordinator.prepare(.lot(fact.lotID, revision: 1))
+        XCTAssertEqual(erase.sharedReceiptCount, 1)
+        XCTAssertEqual(erase.receiptRevisionCount, 1)
+        _ = try await coordinator.commit(erase)
+        let surviving = try await inbox.pendingReceiptFiles(scope: scope, now: now)
+        XCTAssertEqual(surviving.map(\.id), [other])
+        do { _ = try await inbox.openReceipt(selected, scope: scope, now: now); XCTFail("Erased attachment must be gone") }
+        catch SurfaceError.stale {}
     }
 
     func testReceiptLinkedEvidenceKeepsDeliveredStockAndRejectsChangedDuplicate() async throws {

@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import CoreDomain
 import LocalStore
 import SwiftUI
@@ -15,6 +16,7 @@ struct PantryReceiptEntry: View {
     private var aliasScope: AliasScope {
         .init(merchant: draft?.merchant, language: draft?.language, state: model.snapshot?.state)
     }
+    @State private var sharedSource: SharedReceiptItem?
     @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
@@ -139,7 +141,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false }
+            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false; sharedSource = nil }
         }
         .task(id: aliasScope) {
             let scope = aliasScope
@@ -152,10 +154,10 @@ struct PantryReceiptEntry: View {
         .sheet(isPresented: $fileSource) {
             if let state = model.snapshot?.state {
                 NavigationStack {
-                    PantryReceiptDocuments(target: .init(workspaceID: state.workspaceID, containerID: targetID,
+                    PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
                         objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                    }) { accept($0) }
+                    }) { source, share in accept(source); sharedSource = share }
                 }
             }
         }
@@ -187,6 +189,11 @@ struct PantryReceiptEntry: View {
                 try await model.saveReceipt(value)
                 review = nil; draft = nil; finished = true
                 message = value.batch == nil ? pantryText("These lines were already saved.") : pantryText("Reviewed receipt lines saved.")
+                if let sharedSource {
+                    do { try await model.finishSharedReceipt(sharedSource, committed: true) }
+                    catch { message = pantryText("Food saved. Reopen shared receipt files to discard the staged copy.") }
+                    self.sharedSource = nil
+                }
             } catch {
                 message = receiptError(error)
                 if error is PantryReceiptError || (error as? ComparisonStoreError) == .staleInventory {

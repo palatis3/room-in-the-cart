@@ -15,6 +15,19 @@ ENVIRONMENT_SUFFIXES = {"Debug": ".debug", "Staging": ".staging", "Release": ""}
 IPHONE_PLATFORMS = (["iPhoneOS"], ["iPhoneSimulator"])
 
 
+SHARE_ACTIVATION_RULE = (
+    'extensionItems.@count == 1 AND SUBQUERY(extensionItems, $item, ($item.attachments.@count == 1 AND '
+    'SUBQUERY($item.attachments, $p, ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf" '
+    'OR ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY '
+    '$p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text" OR (ANY '
+    '$p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" AND NOT ANY $p.registeredTypeIdentifiers '
+    'UTI-CONFORMS-TO "public.file-url")).@count == 1) OR ($item.attachments.@count == 2 AND '
+    'SUBQUERY($item.attachments, $p, ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" AND '
+    'NOT ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url").@count == 1 AND '
+    'SUBQUERY($item.attachments, $p, ANY $p.registeredTypeIdentifiers UTI-CONFORMS-TO '
+    '"public.plain-text").@count >= 1)).@count == 1'
+)
+
 def require(condition, message):
     if not condition:
         raise ValueError(message)
@@ -135,11 +148,8 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
             require(extension_info.get("RITCSurfaceURLScheme") == scheme, "Wrong Widget extension URL scheme")
         else:
             activation_rule = extension_metadata.get("NSExtensionAttributes", {}).get("NSExtensionActivationRule")
-            require(isinstance(activation_rule, dict) and set(activation_rule) == {"NSExtensionActivationSupportsText", "NSExtensionActivationSupportsWebURLWithMaxCount"}
-                    and activation_rule["NSExtensionActivationSupportsText"] is True
-                    and type(activation_rule["NSExtensionActivationSupportsWebURLWithMaxCount"]) is int
-                    and activation_rule["NSExtensionActivationSupportsWebURLWithMaxCount"] == 1,
-                    "Share extension must accept text and one web URL")
+            require(activation_rule == SHARE_ACTIVATION_RULE,
+                    "Share extension must accept supported receipt files, selected text and one web URL")
 
 
 def dwarf_uuids(path):

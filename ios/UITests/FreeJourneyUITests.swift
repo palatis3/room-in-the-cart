@@ -96,6 +96,51 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
+    func testFilesShareSheetStagesReceiptForExplicitPrivateReview() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let export = app.buttons["Export sample receipt PDF"]
+        XCTAssertTrue(export.waitForExistence(timeout: 10)); export.tap()
+        let save = app.buttons["Save"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription); save.tap()
+        if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
+        XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 12))
+        let files = XCUIApplication(bundleIdentifier: "com.apple.DocumentsApp")
+        files.launch()
+        let recents = files.buttons["Recents"].firstMatch
+        if recents.waitForExistence(timeout: 3) { recents.tap() }
+        let file = files.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Room Market Fixture Receipt")).firstMatch
+        XCTAssertTrue(file.waitForExistence(timeout: 10), files.debugDescription)
+        file.press(forDuration: 1.2)
+        let share = files.buttons["Share"].firstMatch
+        XCTAssertTrue(share.waitForExistence(timeout: 8), files.debugDescription); share.tap()
+        let destination = files.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Room in the Cart")).firstMatch
+        if !destination.waitForExistence(timeout: 2) {
+            let more = files.buttons["More"].firstMatch
+            XCTAssertTrue(more.waitForExistence(timeout: 8), files.debugDescription); more.tap()
+        }
+        XCTAssertTrue(destination.waitForExistence(timeout: 8), files.debugDescription); destination.tap()
+        let stage = files.buttons["Save receipt file for review"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 12), files.debugDescription); stage.tap()
+        XCTAssertTrue(stage.waitForNonExistence(timeout: 8))
+        files.terminate()
+        app.terminate()
+        launch(reset: true)
+        tap(app.buttons["shop.myPantry"]); tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.receipt"]); tap(app.buttons["receipt.document"])
+        let open = app.buttons["Open shared receipt"].firstMatch
+        XCTAssertTrue(open.waitForExistence(timeout: 12), app.debugDescription); open.tap()
+        let oats = app.switches["receipt.document.line.1.1"]
+        XCTAssertTrue(oats.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(oats.label.contains("OATS"))
+        XCTAssertEqual(oats.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        tap(app.buttons["Close"]); tap(app.buttons["receipt.document"])
+        tap(app.buttons["Discard shared receipt"].firstMatch)
+        tap(app.alerts.buttons["Discard"])
+        XCTAssertTrue(open.waitForNonExistence(timeout: 8))
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         func receiptTap(_ control: XCUIElement) {
             for _ in 0..<4 {

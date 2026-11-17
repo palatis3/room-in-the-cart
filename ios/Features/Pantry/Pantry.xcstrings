@@ -4065,6 +4065,166 @@
           }
         }
       }
+    },
+    "Pending shared receipt files to delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending shared receipt files to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de recibos compartidos pendientes que se eliminarán"
+          }
+        }
+      }
+    },
+    "Shared receipt files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared receipt files"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de recibos compartidos"
+          }
+        }
+      }
+    },
+    "Open shared receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shared receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir recibo compartido"
+          }
+        }
+      }
+    },
+    "Discard shared receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard shared receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar recibo compartido"
+          }
+        }
+      }
+    },
+    "Discard this shared receipt?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this shared receipt?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar este recibo compartido?"
+          }
+        }
+      }
+    },
+    "Discard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar"
+          }
+        }
+      }
+    },
+    "This removes the staged file from this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the staged file from this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminará de este dispositivo el archivo pendiente de revisión."
+          }
+        }
+      }
+    },
+    "Shared files are unavailable. You can still choose a receipt from Files or Photos.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared files are unavailable. You can still choose a receipt from Files or Photos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos compartidos no están disponibles. Aún puedes elegir un recibo de Archivos o Fotos."
+          }
+        }
+      }
+    },
+    "Saving selected food removes this staged file. Keep the original for any other lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving selected food removes this staged file. Keep the original for any other lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar los alimentos seleccionados elimina este archivo pendiente. Conserva el original para revisar otras líneas."
+          }
+        }
+      }
+    },
+    "Food saved. Reopen shared receipt files to discard the staged copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food saved. Reopen shared receipt files to discard the staged copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos guardados. Vuelve a abrir los recibos compartidos para descartar la copia pendiente."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

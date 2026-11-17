@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import CryptoKit
 import Foundation
 import CoreDomain
@@ -530,6 +531,19 @@ final class PantryRepository {
     }
 
     var permitsReceiptSource: Bool { authorize() }
+
+    func withSharedReceiptScope<T>(_ operation: (SharedCaptureInbox, SharedReceiptScope) async throws -> T) async throws -> T {
+        try requireAccess()
+        guard let aliasPersonaID, let gate = mutationGate else { throw Failure.unauthorized }
+        let lease = try gate.beginExclusiveWrite()
+        defer { gate.endExclusiveWrite(lease) }
+        guard try await store.inventoryOriginRetirement() == nil, try await store.inventoryState().active else { throw Failure.inactive }
+        try requireAccess()
+        let inbox = try IOSSurfaceContainers.sharedCaptures()
+        let result = try await operation(inbox, .init(origin: originID, persona: aliasPersonaID))
+        try requireAccess()
+        return result
+    }
 
     private func requireAccess() throws {
         guard authorize() else { throw Failure.unauthorized }

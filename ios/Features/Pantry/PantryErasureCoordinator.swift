@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import Foundation
 import CryptoKit
 import Darwin
@@ -22,6 +23,7 @@ import RecordArchive
         let copyIDs: [UUID]
         let bundleIDs: [UUID]
         let files: [FileMark]
+        var sharedReceipts: [SharedReceiptRetirement]? = nil
     }
     struct Basis: Codable, Equatable {
         let revision: Int64
@@ -31,10 +33,12 @@ import RecordArchive
         let ledgerDigest: Data?
         let registryGeneration: UUID
         let pending: [FileMark]
+        var sharedReceipts: [SharedReceiptRetirement]? = nil
     }
     struct Review {
         let id: UUID
         let selection: Selection
+        var sharedReceiptCount: Int = 0
         var aliasCount: Int = 0
         var receiptRevisionCount: Int = 0
         let foodNames: [String]
@@ -71,6 +75,7 @@ import RecordArchive
     let journalDirectory: URL
     let recoveredDirectory: URL?
     private weak var initiatingPresentation: (any PantryErasureObserver)?
+    let claimedReceiptFiles: @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement]
     let cleanupHandler: CleanupHandler
     let authorize: @MainActor () -> Bool
     let clock: () -> Date
@@ -78,11 +83,13 @@ import RecordArchive
 
     init(inventory: ComparisonStore, ledger: LedgerStore, gate: PantryMutationGate, pendingDirectory: URL,
          registry: RecoveryRegistry, worker: PantryArchiveWorker, journalDirectory: URL,
+         claimedReceiptFiles: @escaping @MainActor (UUID, Date) async throws -> [SharedReceiptRetirement] = { _, _ in [] },
          recoveredDirectory: URL? = nil, initiatingPresentation: (any PantryErasureObserver)? = nil, cleanup: @escaping CleanupHandler, authorize: @escaping @MainActor () -> Bool,
          clock: @escaping () -> Date = Date.init) {
         self.inventory = inventory; self.ledger = ledger; self.gate = gate; self.pendingDirectory = pendingDirectory
         self.registry = registry; self.worker = worker; self.journalDirectory = journalDirectory
         self.recoveredDirectory = recoveredDirectory
+        self.claimedReceiptFiles = claimedReceiptFiles
         self.initiatingPresentation = initiatingPresentation
         cleanupHandler = cleanup; self.authorize = authorize; self.clock = clock
     }
@@ -166,18 +173,21 @@ import RecordArchive
         let chain = try chunks.reduce(InventoryErasureManifest.initialDigest) { try InventoryErasureManifest.appending($1, to: $0) }
         let inspection = try await external(rules: impact.rules, links: impact.links, expectedLedgers: impact.ledgerOrigins, at: date)
         let blockers = impact.blockers.union(inspection.blockers)
+        let claimed = try await claimedReceiptFiles(inventory.workspaceID, date)
+        try access()
+        let affected = claimed.filter { whole || impact.documentDigests.contains($0.fileDigest) }
         let cleanup = Cleanup(originID: inventory.workspaceID, wholeOrigin: whole, pickupIDs: impact.pickups.map(\.id),
-            copyIDs: inspection.copies.map(\.id), bundleIDs: inspection.copies.map(\.bundleID), files: inspection.files)
+            copyIDs: inspection.copies.map(\.id), bundleIDs: inspection.copies.map(\.bundleID), files: inspection.files, sharedReceipts: affected.isEmpty ? nil : affected)
         let basis = Basis(revision: impact.revision, token: impact.token, ledgerOrigin: ledger.workspaceID,
             ledgerRevision: inspection.ledgerRevision, ledgerDigest: inspection.ledgerDigest, registryGeneration: inspection.registryGeneration,
-            pending: inspection.allFiles)
+            pending: inspection.allFiles, sharedReceipts: claimed.isEmpty ? nil : claimed)
         let reviewDigest = try Self.reviewDigest(selection: selection, basis: basis)
         let operation = try Self.operationID(nonce: id, reviewDigest: reviewDigest, cleanup: cleanup, chain: chain)
         let manifest = InventoryErasureManifest(workspaceID: inventory.workspaceID, operationID: operation, expectedRevision: impact.revision,
             sourceToken: impact.token, scope: whole ? .origin : .sourceGraph, chunkCount: Int64(chunks.count),
             entryCount: Int64(impact.entries.count), manifestDigest: chain)
         try await verify(basis)
-        return Review(id: id, selection: selection, aliasCount: impact.aliasCount, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
+        return Review(id: id, selection: selection, sharedReceiptCount: affected.count, aliasCount: impact.aliasCount, receiptRevisionCount: impact.receiptRevisionCount, foodNames: impact.foodNames,
             pickupIDs: cleanup.pickupIDs, pickupTitles: impact.pickups.map(\.title), collateralPickupIDs: impact.collateral.map(\.id),
             collateralPickupTitles: impact.collateral.map(\.title), retainedReceiptFoodNames: impact.retainedReceiptNames,
             affectedReservationNames: impact.affectedReservationNames,
@@ -186,6 +196,7 @@ import RecordArchive
     }
 
     private struct SQLImpact {
+        var documentDigests: Set<String> = []
         let revision: Int64
         let token: InventorySourceToken
         let rules: PantryArchivePrivacyValidator.LocalRules
@@ -247,21 +258,24 @@ import RecordArchive
         func names(_ ids: Set<UUID>) -> [(UUID, String)] {
             ids.sorted { $0.uuidString < $1.uuidString }.map { ($0, titles[$0] ?? $0.uuidString) }
         }
-        return SQLImpact(revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
+        return SQLImpact(documentDigests: receipts.digests, revision: context.inventoryRevision, token: context.sourceToken, rules: rules,
             links: context.mapping.sourceLinks, ledgerOrigins: scan.ledgerOrigins, entries: graph.entries, blockers: blockers,
             aliasCount: try await inventory.receiptAliasCount(lotIDs: lots), receiptRevisionCount: receipts.count, foodNames: context.lots.filter { lots.contains($0.id) }.map(\.name), pickups: names(pickups), collateral: names(scan.collateralPickupIDs),
             retainedReceiptNames: context.lots.filter { scan.retainedReceiptLotIDsInCollateralPickups.contains($0.id) || receipts.retainedLots.contains($0.id) }.map(\.name),
             affectedReservationNames: context.claims.filter { graph.reservations.contains($0.id) }.map(\.name))
     }
 
-    private func receiptImpact(lots: Set<UUID>?, pickups: Set<UUID>) async throws -> (count: Int, retainedLots: Set<UUID>) {
-        var cursor: UUID?, count = 0, retainedLots = Set<UUID>()
+    private func receiptImpact(lots: Set<UUID>?, pickups: Set<UUID>) async throws -> (count: Int, retainedLots: Set<UUID>, digests: Set<String>) {
+        var cursor: UUID?, count = 0, retainedLots = Set<UUID>(), digests = Set<String>()
         while true {
             let page = try await inventory.acquisitionRows(after: cursor)
             try access()
             for row in page {
                 let fact = try PantryAcquisitionCodec.record(row)
-                if lots?.contains(fact.lotID) ?? true { count += 1 }
+                if lots?.contains(fact.lotID) ?? true {
+                    count += 1
+                    if let digest = fact.imageDigest { digests.insert(digest.map { String(format: "%02x", $0) }.joined()) }
+                }
                 else if let source = fact.savedPickup, source.originID == inventory.workspaceID, pickups.contains(source.id) {
                     retainedLots.insert(fact.lotID)
                 }
@@ -269,7 +283,7 @@ import RecordArchive
             guard let last = page.last else { break }
             cursor = last.id
         }
-        return (count, retainedLots)
+        return (count, retainedLots, digests)
     }
 
     private func sourceBasis(at date: Date) async throws -> (context: PantryErasureDependencies.Context, heads: [SavedComparison]) {

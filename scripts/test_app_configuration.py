@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
-from check_built_app import verify_built_app
+from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app
 
 
 class AppConfigurationTests(unittest.TestCase):
@@ -264,8 +264,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 "CFBundleIdentifier": bundle_id + ".share", "CFBundleDisplayName": "Share",
                 "RITCShareInboxAppGroup": share_group,
                 "NSExtension": {"NSExtensionPointIdentifier": "com.apple.share-services",
-                                "NSExtensionAttributes": {"NSExtensionActivationRule": {
-                                    "NSExtensionActivationSupportsText": True, "NSExtensionActivationSupportsWebURLWithMaxCount": 1}}},
+                                "NSExtensionAttributes": {"NSExtensionActivationRule": SHARE_ACTIVATION_RULE}},
             },
         }
         for bundle, metadata in bundles.items():
@@ -381,7 +380,7 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 self.expect_plist_rejected(self.share, {"NSExtension": {
                     "NSExtensionPointIdentifier": "com.apple.share-services",
                     "NSExtensionAttributes": {"NSExtensionActivationRule": rule},
-                }}, "Share extension must accept text and one web URL")
+                }}, "Share extension must accept supported receipt files, selected text and one web URL")
 
     def test_rejects_test_bundles_in_release_including_the_known_debug_unit_bundle(self):
         for bundle in (self.app / "PlugIns/RoomInTheCartTests.xctest", self.share / "LeakedFixture.xctest"):

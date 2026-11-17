@@ -1,3 +1,4 @@
+import DeviceSurfaces
 import Combine
 import Foundation
 import CoreDomain
@@ -99,6 +100,29 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         let latest = try await repository.latestReceiptRevision(selected)
         guard token == generation, canEdit else { throw PantryReceiptError.stale }
         return latest
+    }
+
+    func pendingSharedReceipts() async throws -> [SharedReceiptItem] {
+        guard permitsReceiptSource else { throw PantryReceiptError.stale }
+        let current = generation
+        let rows = try await repository.withSharedReceiptScope { try await $0.pendingReceiptFiles(scope: $1, now: clock()) }
+        guard current == generation, permitsReceiptSource else { throw PantryReceiptError.stale }
+        return rows
+    }
+
+    func openSharedReceipt(_ item: SharedReceiptItem) async throws -> ReceiptDocumentBytes {
+        guard permitsReceiptSource else { throw PantryReceiptError.stale }
+        let current = generation
+        let bytes = try await repository.withSharedReceiptScope { try await $0.openReceipt(item, scope: $1, now: clock()) }
+        guard current == generation, permitsReceiptSource else { throw PantryReceiptError.stale }
+        let kind: ReceiptDocumentKind
+        switch item.descriptor.kind { case .pdf: kind = .pdf; case .image: kind = .image; case .text: kind = .text }
+        return .init(data: bytes, kind: kind)
+    }
+
+    func finishSharedReceipt(_ item: SharedReceiptItem, committed: Bool) async throws {
+        guard permitsReceiptSource else { throw PantryReceiptError.stale }
+        try await repository.withSharedReceiptScope { try await $0.finishReceipt(item, scope: $1, committed: committed, now: clock()) }
     }
 
     var permitsReceiptSource: Bool { canEdit && repository.permitsReceiptSource }

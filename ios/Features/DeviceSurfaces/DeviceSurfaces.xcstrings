@@ -1703,6 +1703,102 @@
           }
         }
       }
+    },
+    "Choose one readable receipt file up to 10 MB.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one readable receipt file up to 10 MB."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un archivo de recibo legible de hasta 10 MB."
+          }
+        }
+      }
+    },
+    "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not stage this receipt. Open the private pantry to remove an older shared file, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar este recibo. Abre la despensa privada, elimina un archivo compartido anterior y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Leer un archivo de recibo en Mi despensa para revisarlo en un plazo de siete días. El archivo se conserva en este dispositivo hasta que se revise, se descarte o venza."
+          }
+        }
+      }
+    },
+    "Save receipt file for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save receipt file for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar archivo de recibo para revisar"
+          }
+        }
+      }
+    },
+    "Save original text as a receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save original text as a receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el texto original como recibo"
+          }
+        }
+      }
+    },
+    "Receipt file": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo de recibo"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
