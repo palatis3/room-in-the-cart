@@ -122,6 +122,7 @@ private enum LedgerDeletionJournal {
         let base: Int64
         let operationID: UUID
         let savedAt: Date
+        let reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     }
     private var pending: PendingSave?
 
@@ -229,7 +230,14 @@ private enum LedgerDeletionJournal {
         await change(key: key, onShopSelected: nil, edit)
     }
 
-    private func change(key: String, onShopSelected: ((UUID) -> Void)?, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+    func change(key: String, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?,
+                _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, reviewedPantryBasis: reviewedPantryBasis, edit)
+    }
+
+    private func change(key: String, onShopSelected: ((UUID) -> Void)?,
+                        reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                        _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         guard !saving, ready, !hasPendingLedgerDeletion, !hasPendingPantryProjection, pendingPantryPack == nil else { return false }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
@@ -251,8 +259,9 @@ private enum LedgerDeletionJournal {
                 error = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
                 return false
             }
+            if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
             let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
-                                     operationID: UUID(), savedAt: clock())
+                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis)
             pending = change
             hasPendingSave = true
             return await commit(change, to: store)
@@ -272,6 +281,7 @@ private enum LedgerDeletionJournal {
             error = ledgerText("These items or units do not match, or the existing amount cannot supply this need.")
             return false
         } catch {
+            if reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess == false { clearRetiredState() }
             self.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
             return false
         }
@@ -338,13 +348,33 @@ private enum LedgerDeletionJournal {
         return try encoder.encode(LedgerDocument(formatVersion: 1, workspace: workspace))
     }
 
+    private func verifyPantryBasis(_ basis: LedgerCanonicalPackStockEvidence.Basis) async throws {
+        guard let port = pantryPackPort else { throw LedgerModelError.notReady }
+        try requirePantryPackPort(port)
+        try await port.assertCurrentLedgerBasis(basis)
+    }
+
     private func commit(_ pending: PendingSave, to store: LedgerStore) async -> Bool {
         do {
+            if let basis = pending.reviewedPantryBasis {
+                guard let port = pantryPackPort, port.hasReadAccess else { throw LedgerModelError.notReady }
+                try requirePantryPackPort(port)
+                // Existing exact receipts remain readable after food changes. The
+                // store's save validates the original payload/base/operation tuple.
+                if try await store.savedOperation(id: pending.operationID) == nil {
+                    try await verifyPantryBasis(basis)
+                }
+                guard port.hasReadAccess else { throw LedgerModelError.notReady }
+            }
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
             // No other mutation can start while saving, including during actor suspension.
             // Another store instance may have advanced after this operation's receipt.
             let current = try await store.load() ?? record
+            if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess != true {
+                clearRetiredState()
+                throw LedgerModelError.notReady
+            }
             // The pending value was fully validated before these exact bytes were
             // encoded. Reuse it only when the durable head is byte-for-byte equal;
             // another writer's payload still passes the complete decode/validation.
@@ -370,6 +400,7 @@ private enum LedgerDeletionJournal {
             self.error = ledgerText("A newer pickup is saved. Discard the pending save to reload it, then review your entries again.")
             return false
         } catch {
+            if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess == false { clearRetiredState() }
             self.error = ledgerText("Could not save on this iPhone. Your entries are still here. Retry the same change.")
             return false
         }

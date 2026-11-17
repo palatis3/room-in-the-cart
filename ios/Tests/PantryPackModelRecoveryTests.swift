@@ -103,6 +103,33 @@ import LocalStore
             reviewedInventoryRevision: before.state.revision, at: now)
     }
 
+    func testOrdinaryDinnerEditRejectsStalePantryBasisBeforePendingThenAcceptsFreshReview() async throws {
+        let f = try await fixture()
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let basis = try XCTUnwrap(review(f).canonicalStockEvidence?.basis)
+        let original = f.ledger.workspace, revision = f.ledger.revision
+        try await recount(f)
+        let rejected = await f.ledger.change(key: "reviewed-dinner", reviewedPantryBasis: basis) {
+            $0.shops.append(ShoppingLedger(title: "Stale leftovers"))
+        }
+        XCTAssertFalse(rejected); XCTAssertFalse(f.ledger.hasPendingSave)
+        XCTAssertEqual(f.ledger.workspace, original); XCTAssertEqual(f.ledger.revision, revision)
+        let refreshed = await f.pickup.refreshPantryStock(); XCTAssertTrue(refreshed)
+        let fresh = try XCTUnwrap(review(f).canonicalStockEvidence?.basis)
+        XCTAssertNotEqual(fresh, basis)
+        let saved = await f.ledger.change(key: "fresh-dinner", reviewedPantryBasis: fresh) {
+            $0.shops.append(ShoppingLedger(title: "Reviewed leftovers"))
+        }
+        XCTAssertTrue(saved, f.ledger.error ?? "")
+        XCTAssertEqual(f.ledger.revision, revision + 1)
+        XCTAssertEqual(f.ledger.workspace.shops.last?.title, "Reviewed leftovers")
+        f.state.allowed = false
+        let denied = await f.ledger.change(key: "revoked-dinner", reviewedPantryBasis: fresh) {
+            $0.shops.append(ShoppingLedger(title: "Denied"))
+        }
+        XCTAssertFalse(denied); XCTAssertFalse(f.ledger.ready); XCTAssertTrue(f.ledger.workspace.shops.isEmpty)
+    }
+
     func testRealPackReviewSavesCanonicalChoiceAndExactRetryDoesNotWriteAgain() async throws {
         let f = try await fixture(), reviewed = try review(f)
         XCTAssertEqual(reviewed.request.confirmedAtHome?.amount, try Rational(4))

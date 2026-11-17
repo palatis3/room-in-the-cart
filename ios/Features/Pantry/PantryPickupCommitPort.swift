@@ -17,6 +17,7 @@ import LocalStore
     struct Review {
         let submission: Submission
         let affectedReservations: [InventoryReservationCoverage]
+        let resultingReservations: [InventoryReservation]
         let sourceRevisions: [UUID: Int64]
     }
     struct Result {
@@ -90,7 +91,7 @@ import LocalStore
         try await requireLedger(planning)
         try await requireCurrent(current)
         return Review(submission: submission, affectedReservations: delta.affectedReservations,
-            sourceRevisions: Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) }))
+            resultingReservations: delta.reservations, sourceRevisions: Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) }))
     }
 
     func loadCurrent() async throws -> CurrentSnapshot {

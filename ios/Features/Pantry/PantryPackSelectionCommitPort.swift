@@ -72,6 +72,19 @@ import LocalStore
             pendingStore.inventoryWorkspaceID == inventoryWorkspaceID && pendingStore.ledgerWorkspaceID == ledgerWorkspaceID
     }
     func matchesGate(_ other: PantryMutationGate) -> Bool { gate === other }
+    /// Read guard for an ordinary ledger edit using reviewed pantry supply. The
+    /// caller holds this same gate's write lease for the whole ledger operation.
+    func assertCurrentLedgerBasis(_ basis: LedgerCanonicalPackStockEvidence.Basis) async throws {
+        try access()
+        guard basis.originID == inventoryWorkspaceID else { throw Failure.wrongOrigin }
+        let read = try await reader.load(at: clock()); try access()
+        let actual = LedgerCanonicalPackStockEvidence.Basis(originID: read.snapshot.state.workspaceID,
+            inventoryRevision: read.snapshot.state.revision,
+            sourceHeads: read.sources.map { .init(journeyID: $0.id, revision: $0.revision) }
+                .sorted { $0.journeyID.uuidString < $1.journeyID.uuidString })
+        guard actual == basis else { throw Failure.staleReview }
+        try await reader.assertCurrent(read); try access()
+    }
     func readPending() throws -> Entry? { try access(); return try pendingStore.read() }
 
     /// Fixture/crash-boundary primitive. Production must call prepare so a changed

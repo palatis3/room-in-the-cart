@@ -166,6 +166,12 @@ struct DinnerLibraryPairings {
 
 extension DinnerLibraryPairings {
     /// Keep the real lot's identity and label. Only the currently unallocated balance can be reviewed.
+    /// Canonical input is already free across all shops. Do not rerun old needs
+    /// or pins against it, and never release the meal being compared implicitly.
+    static func unreservedLots(canonical: DinnerPantrySupply.Snapshot) -> [ConfirmedStockLot] {
+        canonical.globallyFreeLots
+    }
+
     static func unreservedLots(_ journey: PickupJourney, at now: Date) throws -> [ConfirmedStockLot] {
         let stock = PickupFallbackOptions.lots(journey, at: now)
         // Honor exact carryover pins without broadening this comparison's eligible receipt set.

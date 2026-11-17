@@ -18,7 +18,7 @@ struct PantryLiveStockProjection {
     struct Basis: Equatable {
         let originID: UUID
         let inventoryRevision: Int64
-        let journeyID: UUID
+        let journeyID: UUID?
         let sourceHeads: [HeadRevision]
     }
     struct Lot: Identifiable {
@@ -141,6 +141,18 @@ struct PantryLiveStockProjection {
 
     static func build(snapshot: PantryRepository.Snapshot, mapping: PantryLegacyMigration.Plan,
                       journeyID: UUID, at now: Date) throws -> Self {
+        try build(snapshot: snapshot, mapping: mapping, scope: journeyID, at: now)
+    }
+
+    /// A genuine all-shop view, including a pantry with no saved pickup. Physical
+    /// lot IDs stay canonical; no arbitrary journey supplies aliases or demands.
+    static func buildGlobal(snapshot: PantryRepository.Snapshot, mapping: PantryLegacyMigration.Plan,
+                            at now: Date) throws -> Self {
+        try build(snapshot: snapshot, mapping: mapping, scope: nil, at: now)
+    }
+
+    private static func build(snapshot: PantryRepository.Snapshot, mapping: PantryLegacyMigration.Plan,
+                              scope journeyID: UUID?, at now: Date) throws -> Self {
         guard now.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidClock }
         guard snapshot.state.active else { throw Failure.inactive }
         guard snapshot.state.workspaceID == mapping.originID else { throw Failure.wrongOrigin }
@@ -151,10 +163,11 @@ struct PantryLiveStockProjection {
             guard journey.id == head.id, head.revision > 0, journey.savedAt == head.savedAt else { throw Failure.invalidMapping }
             journeys[head.id] = journey
         }
-        guard let selected = journeys[journeyID] else { throw Failure.missingJourney }
+        let selected = journeyID.flatMap { journeys[$0] }
+        if journeyID != nil && selected == nil { throw Failure.missingJourney }
         let receiptEvidence = Self.receiptEvidence(in: Array(journeys.values))
         var selectedLatest: [ReceiptKey: UsableObservation] = [:]
-        for observation in selected.pickup?.usableObservations ?? [] { selectedLatest[observation.receipt] = observation }
+        for observation in selected?.pickup?.usableObservations ?? [] { selectedLatest[observation.receipt] = observation }
         let edgesByClaim = Dictionary(grouping: snapshot.availability.allocations, by: \.needID)
         let canonicalLots = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.id, $0) })
         let canonicalBySource = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.source, $0.id) })
@@ -218,12 +231,12 @@ struct PantryLiveStockProjection {
         let indexedRows = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
         let claims = Dictionary(uniqueKeysWithValues: snapshot.reservations.map { ($0.id, $0) })
         let coverage = Dictionary(uniqueKeysWithValues: snapshot.availability.reservations.map { ($0.id, $0) })
-        let scopedLinks = mapping.claimLinks.filter { $0.journeyIDs.contains(journeyID) }
+        let scopedLinks = mapping.claimLinks.filter { link in journeyID.map { link.journeyIDs.contains($0) } ?? false }
         guard Set(scopedLinks.map(\.reservationID)).count == scopedLinks.count,
               Set(scopedLinks.map(\.legacyNeedID)).count == scopedLinks.count else { throw Failure.ambiguousNeedMapping }
         let mappedNeedIDs = Set(scopedLinks.map(\.legacyNeedID))
-        let legacyNeeds = Dictionary(uniqueKeysWithValues: selected.physicalStockNeeds.map { ($0.id, $0) })
-        guard selected.physicalStockNeeds.filter({ $0.amount.amount > .zero }).allSatisfy({ mappedNeedIDs.contains($0.id) }) else {
+        let legacyNeeds = Dictionary(uniqueKeysWithValues: (selected?.physicalStockNeeds ?? []).map { ($0.id, $0) })
+        guard (selected?.physicalStockNeeds ?? []).filter({ $0.amount.amount > .zero }).allSatisfy({ mappedNeedIDs.contains($0.id) }) else {
             throw Failure.invalidMapping
         }
         var demandRows: [Demand] = []
@@ -235,7 +248,7 @@ struct PantryLiveStockProjection {
                     throw Failure.invalidMapping
                 }
             }
-            let pendingUnit = selected.awayCarryovers.first { $0.intent.plan.link.reservationID == link.legacyNeedID }?.intent.plan.link.quantity.unit
+            let pendingUnit = selected?.awayCarryovers.first { $0.intent.plan.link.reservationID == link.legacyNeedID }?.intent.plan.link.quantity.unit
             guard let unit = legacyNeeds[link.legacyNeedID]?.amount.unit ?? claim.amount?.unit ?? pendingUnit else {
                 throw Failure.invalidMapping
             }
@@ -267,7 +280,7 @@ struct PantryLiveStockProjection {
             sourceHeads: mapping.sourceHeads.map { HeadRevision(journeyID: $0.id, storeRevision: $0.revision) }
                 .sorted { $0.journeyID.uuidString < $1.journeyID.uuidString }),
             asOf: now, lots: rows, demands: demandRows,
-            zeroNeeds: selected.physicalStockNeeds.filter { $0.amount.amount == .zero && !mappedNeedIDs.contains($0.id) }, allocations: edges)
+            zeroNeeds: (selected?.physicalStockNeeds ?? []).filter { $0.amount.amount == .zero && !mappedNeedIDs.contains($0.id) }, allocations: edges)
     }
 
     private struct ReceiptEvidence {

@@ -48,8 +48,22 @@ struct DinnerScenarioEditor: View {
         guard let ledger = linkedLedger, ledger.sourceWorkspaceID == model.store.sourceWorkspaceID else { return nil }
         return pickup.journeys.first { $0.id == draft.shopID }
     }
-    private var leftoversCurrent: Bool { draft.leftoverRevision == nil || draft.leftoverRevision == currentPickup?.revision }
+    private var canonicalSupply: DinnerPantrySupply.Snapshot? {
+        try? DinnerPantrySupply.read(pickup: pickup, workspaceID: model.localIdeaWorkspaceID,
+            linkedWorkspaceID: linkedLedger?.sourceWorkspaceID, shopID: draft.shopID)
+    }
+    private var leftoversCurrent: Bool {
+        guard !draft.reviewedLeftovers.isEmpty else { return true }
+        if pickup.pantryIsActive {
+            guard let reviewed = draft.leftoverPantryBasis else { return false }
+            return canonicalSupply?.basis == reviewed
+        }
+        return draft.leftoverPantryBasis == nil && draft.leftoverRevision == currentPickup?.revision
+    }
     var body: some View {
+        let canonical = canonicalSupply
+        let lots = canonical.map { DinnerLibraryPairings.unreservedLots(canonical: $0) }
+            ?? (pickup.pantryIsActive ? [] : currentPickup.flatMap { try? DinnerLibraryPairings.unreservedLots($0, at: Date()) } ?? [])
         Form {
             Section {
                 if dynamicTypeSize.isAccessibilitySize {
@@ -141,7 +155,12 @@ struct DinnerScenarioEditor: View {
                     }
                     Button(dinnerText("Add a reviewed food identity")) { draft.foods.append(DinnerFoodEvidenceDraft()) }.disabled(draft.foods.count >= 100)
                 }
-                if let journey = currentPickup, let lots = try? DinnerLibraryPairings.unreservedLots(journey, at: Date()), !lots.isEmpty {
+                if pickup.pantryIsActive && canonical == nil {
+                    Section(dinnerText("Confirmed unreserved leftovers")) {
+                        Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                    }
+                }
+                if !lots.isEmpty {
                     Section(dinnerText("Confirmed unreserved leftovers")) {
                         ForEach(lots) { lot in
                             Text("\(lot.name) · \(dinnerQuantity(lot.usable)) · \(lot.confirmedAt.formatted())")
@@ -151,16 +170,20 @@ struct DinnerScenarioEditor: View {
                             }
                         }
                         Button(dinnerText("Use only the reviewed leftover balances")) {
+                            guard !pickup.pantryIsActive || (canonical != nil && canonicalSupply?.basis == canonical?.basis) else {
+                                model.report(DinnerPlanningError.stalePreview); return
+                            }
                             draft.reviewedLeftovers = lots.compactMap { lot in
                                 guard let food = leftoverChoices[lot.id] else { return nil }
                                 return .init(id: lot.id,foodID: food,name: lot.name,usable: lot.usable,confirmedAt: lot.confirmedAt,source: lot.source)
                             }
-                            draft.leftoverRevision = draft.reviewedLeftovers.isEmpty ? nil : journey.revision
+                            draft.leftoverRevision = draft.reviewedLeftovers.isEmpty || canonical != nil ? nil : currentPickup?.revision
+                            draft.leftoverPantryBasis = draft.reviewedLeftovers.isEmpty ? nil : canonical?.basis
                         }
                     }
                 }
                 if !draft.reviewedLeftovers.isEmpty {
-                    Button(dinnerText("Remove linked leftovers from this comparison")) { draft.reviewedLeftovers = []; draft.leftoverRevision = nil; leftoverChoices = [:] }
+                    Button(dinnerText("Remove linked leftovers from this comparison")) { draft.reviewedLeftovers = []; draft.leftoverRevision = nil; draft.leftoverPantryBasis = nil; leftoverChoices = [:] }
                 }
                 DinnerScenarioBasketFields(draft: $draft)
                 DinnerScenarioContextFields(draft: $draft)
@@ -202,7 +225,7 @@ struct DinnerScenarioEditor: View {
                 if leftoversCurrent, let reviewed, let shop = model.shop, reviewed.shopID == shop.id, reviewed.baseRevision == shop.revisionID,
                    reviewed.planningRevision == model.state.revisionID {
                     DinnerScenarioReviewView(model: model, current: reviewed.current, alternatives: libraryAlternatives.isEmpty ? [reviewed.candidate] : libraryAlternatives,
-                        selectedAcceptedDinnerIDs: DinnerLibraryPairings.chosen(in: shop, state: model.state).union(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap, excludedByRules: conflicts, library: library)
+                        selectedAcceptedDinnerIDs: DinnerLibraryPairings.chosen(in: shop, state: model.state).union(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap, excludedByRules: conflicts, library: library, reviewedPantryBasis: draft.leftoverPantryBasis)
                 } else { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             }
     }

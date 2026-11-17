@@ -53,15 +53,16 @@ struct DinnerDecisionButton<Decision: View>: View {
     var preservePending = true
     @ViewBuilder let decision: () -> Decision
     @State private var previous: DinnerPreview?
+    @State private var previousPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     @State private var presented = false
     @AccessibilityFocusState private var focused: Bool
     var body: some View {
-        Button(title) { previous = preservePending ? model.preview : nil; presented = true }
+        Button(title) { previous = preservePending ? model.preview : nil; previousPantryBasis = preservePending ? model.reviewedPantryBasis : nil; presented = true }
             .accessibilityIdentifier(identifier)
             .accessibilityFocused($focused)
             .sheet(isPresented: $presented, onDismiss: {
-                model.endDecision(restoring: previous)
-                previous = nil
+                model.endDecision(restoring: previous, pantryBasis: previousPantryBasis)
+                previous = nil; previousPantryBasis = nil
                 focused = true
             }) {
                 DinnerDecisionContent(model: model, close: { presented = false }, decision: decision)

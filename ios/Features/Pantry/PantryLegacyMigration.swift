@@ -271,7 +271,7 @@ import LocalStore
                     }
                 }
                 pending.append(.init(journeyID: journey.id, record: record, lotID: lotID,
-                    reservationID: try identity("claim", [key(originID), key(oldClaim), key(intent.supply.foodID)]),
+                    reservationID: try claimIdentity(originID: originID, needID: oldClaim, foodID: intent.supply.foodID),
                     ledgerDisposition: disposition))
             }
         }
@@ -282,7 +282,7 @@ import LocalStore
             for food in foods.sorted(by: { key($0) < key($1) }) {
                 let group = rows.filter { $0.need.foodID == food }, first = group[0]
                 let pins = Set(group.compactMap(\.pin))
-                let id = try identity("claim", [key(originID), key(oldID), key(food)])
+                let id = try claimIdentity(originID: originID, needID: oldID, foodID: food)
                 let pinFoodConflict = pins.contains { pin in lots.first { $0.id == pin }?.foodID != food }
                 let conflicting = foods.count > 1 || !linear(group.map(\.journey)) ||
                     group.contains { $0.need != first.need } || pins.count > 1 || pinFoodConflict
@@ -327,6 +327,12 @@ import LocalStore
     private static func digest<T: Encodable>(_ value: T) throws -> String {
         SHA256.hash(data: try bytes(value)).map { String(format: "%02x", $0) }.joined()
     }
+    /// The same stable claim identity is used by migration, live deltas and
+    /// hypothetical recovery. Planning never invents a second claim namespace.
+    static func claimIdentity(originID: UUID, needID: UUID, foodID: UUID) throws -> UUID {
+        try identity("claim", [key(originID), key(needID), key(foodID)])
+    }
+
     private static func identity<T: Encodable>(_ kind: String, _ value: T) throws -> UUID {
         let payload = try bytes(value)
         var input = Data("room-in-the-cart/pantry-legacy/v1/\(kind)/".utf8); input.append(payload)

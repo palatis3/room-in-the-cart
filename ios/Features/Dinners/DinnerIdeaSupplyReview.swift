@@ -10,7 +10,7 @@ struct IdeaSupplyFood: Identifiable {
 struct IdeaSupplyReservation: Identifiable {
     let id: UUID
     let name: String
-    let quantity: Quantity
+    let quantity: Quantity?
     let protected: Bool
 }
 
@@ -41,11 +41,14 @@ enum DinnerIdeaSupplyReview {
         let date: Date
     }
 
-    static func foods(shop: ShoppingLedger, journey: PickupJourney?, at now: Date) -> [IdeaSupplyFood] {
+    static func foods(shop: ShoppingLedger, journey: PickupJourney?, canonical: DinnerPantrySupply.Snapshot? = nil, at now: Date) -> [IdeaSupplyFood] {
         var seen = Set<UUID>()
         let lines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
         var choices = lines.enumerated().map { index, line in
             IdeaSupplyFood(id: line.id, name: line.name, detail: dinnerFormat("Shopping list item %@", String(index + 1)))
+        }
+        if let canonical {
+            return (canonical.foods + choices).filter { seen.insert($0.id).inserted }
         }
         let lots = journey.flatMap { $0.id == shop.id ? $0 : nil }.map { PickupFallbackOptions.lots($0, at: now) } ?? []
         for lot in lots {
@@ -62,11 +65,11 @@ enum DinnerIdeaSupplyReview {
     }
 
     static func rows(idea: DinnerIdeaDraft, shop: ShoppingLedger, workspace: LedgerWorkspace,
-                     workspaceID: UUID, journey: PickupJourney?, at now: Date) throws -> [IdeaSupplyRow] {
+                     workspaceID: UUID, journey: PickupJourney?, canonical: DinnerPantrySupply.Snapshot? = nil, at now: Date) throws -> [IdeaSupplyRow] {
         let current = journey.flatMap { $0.id == shop.id && $0.closedAt == nil ? $0 : nil }
-        let lots = current.map { PickupFallbackOptions.lots($0, at: now) } ?? []
-        var needs = current?.stockNeeds ?? []
-        var unresolvedFoods = Set<UUID>()
+        let lots = canonical?.globallyFreeLots ?? (current.map { PickupFallbackOptions.lots($0, at: now) } ?? [])
+        var needs = canonical == nil ? (current?.stockNeeds ?? []) : []
+        var unresolvedFoods = canonical?.unresolvedFoodIDs ?? Set<UUID>()
         let placed = current?.basket?.phase == .reportedPlaced
         var named: [AllocationNeed] = []
         if let current, current.pickup != nil || placed {
@@ -84,13 +87,13 @@ enum DinnerIdeaSupplyReview {
                 named += reservations.needs
             }
         }
-        let separateNeedIDs = Set(needs.map(\.id))
+        let separateNeedIDs = Set(needs.map(\.id)).union(canonical?.representedNeedIDs ?? [])
         needs += named.filter { !separateNeedIDs.contains($0.id) }.map {
             StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority)
         }
         let allocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: needs,
-                                                                   reservations: current?.carryoverStockReservations ?? [])
-        let availableFoods = foods(shop: shop, journey: current, at: now)
+                                                                   reservations: canonical == nil ? (current?.carryoverStockReservations ?? []) : [])
+        let availableFoods = foods(shop: shop, journey: current, canonical: canonical, at: now)
         let foodIDs = Set(availableFoods.map(\.id))
         let scoped = (idea.supplyEvidence ?? []).filter { $0.workspaceID == workspaceID && $0.shopID == shop.id }
         var groups: [GroupID: [MealIngredient]] = [:]
@@ -108,13 +111,15 @@ enum DinnerIdeaSupplyReview {
             let unit = first.quantity?.unit
             let demand = try total(ingredients.map(\.quantity), unit: unit)
             let coverage = allocation.demands.filter { $0.foodID == foodID }
-            let reservations = coverage.compactMap { entry -> IdeaSupplyReservation? in
+            let projectedReservations = coverage.compactMap { entry -> IdeaSupplyReservation? in
                 guard let amount = entry.allocated, amount > .zero, let need = needs.first(where: { $0.id == entry.id }) else { return nil }
                 return IdeaSupplyReservation(id: need.id, name: need.name, quantity: quantity(amount, entry.unit), protected: need.priority == .protected)
             }
+            let reservations = (foodID.flatMap { canonical?.reservations[$0] } ?? []) + projectedReservations
             let balances = allocation.remainingLots.filter { $0.foodID == foodID }
             let matched = availableFoods.first { $0.id == foodID }
-            let labels = ([matched?.name].compactMap { $0 } + lots.filter { $0.foodID == foodID }.map(\.name))
+            let labels = ([matched?.name].compactMap { $0 } + lots.filter { $0.foodID == foodID }.map(\.name)
+                + (canonical?.foods.filter { $0.id == foodID }.map(\.name) ?? []))
             let excludedMatch = !allows(labels, for: ingredients, in: idea)
             let valid = foodID.map { !unresolvedFoods.contains($0) } ?? true
             let resolvedBalances = valid && !excludedMatch && balances.allSatisfy { $0.issues.isEmpty } && coverage.allSatisfy { $0.issues.isEmpty }

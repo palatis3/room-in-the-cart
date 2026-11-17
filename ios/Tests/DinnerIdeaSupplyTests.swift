@@ -25,7 +25,7 @@ final class DinnerIdeaSupplyTests: XCTestCase {
         }
         let row = try XCTUnwrap(preview(idea).first)
         XCTAssertEqual(row.reservations.first?.name, "Tomorrow’s lunch")
-        XCTAssertEqual(row.reservations.first?.quantity.amount, q(2).amount)
+        XCTAssertEqual(row.reservations.first?.quantity?.amount, q(2).amount)
         XCTAssertEqual(row.credited?.amount, .one)
         XCTAssertEqual(row.uncovered?.amount, q(3).amount)
         XCTAssertEqual(row.packs, 2)

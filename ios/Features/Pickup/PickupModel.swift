@@ -362,6 +362,24 @@ struct PickupPersistenceLocation {
             request.ledgerOriginID == originID && request.ledgerRevision == revision && request.ledgerDigest == digest
         }
     }
+    /// Exact inventory and ledger basis shown by a canonical recovery preview.
+    /// The prepared source delta must produce these same claims before journaling.
+    struct PantryWriteReview {
+        let inventory: LedgerCanonicalPackStockEvidence.Basis
+        let ledger: CheckoutLedgerBasis
+        let resultingReservations: [InventoryReservation]
+        func matches(_ review: PantryPickupCommitPort.Review) -> Bool {
+            let actualHeads = review.sourceRevisions.map {
+                LedgerCanonicalPackStockEvidence.SourceHead(journeyID: $0.key, revision: $0.value)
+            }.sorted { $0.journeyID.uuidString < $1.journeyID.uuidString }
+            return review.submission.request.originID == inventory.originID &&
+                review.submission.request.inventoryRevision == inventory.inventoryRevision &&
+                actualHeads == inventory.sourceHeads.sorted { $0.journeyID.uuidString < $1.journeyID.uuidString } &&
+                ledger.matches(review.submission.request) &&
+                review.resultingReservations.sorted { $0.id.uuidString < $1.id.uuidString } ==
+                    resultingReservations.sorted { $0.id.uuidString < $1.id.uuidString }
+        }
+    }
     struct PantryConfiguration {
         let ledger: LedgerStore
         let pendingStore: PantryPickupPendingStore
@@ -424,8 +442,10 @@ struct PickupPersistenceLocation {
     var sourceWorkspaceID: UUID? { store?.workspaceID }
     var recoveryLedger: LedgerModel? { cookLedger }
     func saveRecoveryCandidate(_ value: PickupJourney, operationID: UUID,
+                               reviewedPantry: PantryWriteReview? = nil,
                                authorize: @escaping @MainActor () -> Bool) async -> Bool {
-        await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize)
+        await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize,
+            reviewedPantry: reviewedPantry)
     }
     func retryRecoveryCandidate(operationID: UUID, authorize: (@MainActor () -> Bool)? = nil,
                                 matches: (PickupJourney) -> Bool) async -> Bool {
@@ -529,10 +549,11 @@ struct PickupPersistenceLocation {
         guard journeys.contains(where: { $0.id == journeyID }) else { throw PickupModelError.missing }
         return context
     }
-    func pantryReviewContext() throws -> PantryPackStockReview.Context? {
+    func pantryReviewContext(forRecoveryOperationID operationID: UUID? = nil) throws -> PantryPackStockReview.Context? {
         guard pantryIsActive else { return nil }
-        guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent,
-              !saving, !hasPendingSave, let snapshot = pantrySnapshot,
+        let validatingRecovery = operationID.map(isValidatingRecoverySave) ?? false
+        guard ready, pantryConfiguration?.authorize() == true, pantryReadIsCurrent,
+              validatingRecovery || (!saving && !hasPendingSave), let snapshot = pantrySnapshot,
               let mapping = pantryReaderMapping else {
             throw PickupModelError.missing
         }
@@ -745,7 +766,8 @@ struct PickupPersistenceLocation {
     }
     @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
         recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil,
-        reviewedLedger: CheckoutLedgerBasis? = nil) async -> Bool {
+        reviewedLedger: CheckoutLedgerBasis? = nil, reviewedPantry: PantryWriteReview? = nil) async -> Bool {
+        guard reviewedPantry == nil || pantryIsActive else { return false }
         guard ready, !saving, pending == nil, evaluateAuthorization(authorize, operationID: recoveryOperationID) else { return false }
         do {
             saving = true
@@ -784,6 +806,7 @@ struct PickupPersistenceLocation {
                 let review = try await pantryPort(configuration: configuration, store: store)
                     .prepare(operationID: UUID(), changedHeads: [head], preparedAt: instant)
                 guard reviewedLedger?.matches(review.submission.request) ?? true else { throw LedgerCheckoutError.staleSource }
+                guard reviewedPantry?.matches(review) ?? true else { throw ComparisonStoreError.staleInventory }
                 guard review.submission.request.inventoryRevision == pantrySnapshot.state.revision,
                       revisions.allSatisfy({ (review.sourceRevisions[$0.key] ?? 0) == $0.value }),
                       configuration.authorize(), evaluateAuthorization(authorize, operationID: recoveryOperationID) else { throw ComparisonStoreError.staleInventory }

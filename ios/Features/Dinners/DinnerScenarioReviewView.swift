@@ -13,6 +13,7 @@ struct DinnerScenarioReviewView: View {
     let cap: CheckoutCap?
     var excludedByRules: [String] = []
     var library: DinnerLibraryPairings?
+    var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     @State private var showReplacement = false
     @State private var pairing: DinnerPairingResult?
     @State private var recovery: DinnerRecoveryResult?
@@ -46,7 +47,7 @@ struct DinnerScenarioReviewView: View {
                                 Button(dinnerText("Preview this exact dinner replacement")) {
                                     do {
                                         let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
-                                        showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision)
+                                        showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision, reviewedPantryBasis: reviewedPantryBasis)
                                     } catch { model.report(error) }
                                 }
                                 .accessibilityLabel(dinnerFormat("Preview %@ for %@",library.candidates.first(where: { $0.id == candidate.id })?.title ?? dinnerText("Candidate plan"),

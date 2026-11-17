@@ -36,8 +36,21 @@ import CoreDomain
             guard let demand = demands[need.id] else { throw LedgerPackError.invalidEvidence }
             return .init(need: need, reservationID: demand.canonicalReservationID)
         }
+        let eligibility = try lotEligibility(live: live, context: context)
+        return try LedgerCanonicalPackStockEvidence.review(
+            scope: .init(journeyID: journey.id, journeyRevision: journey.revision, basketRevisionID: basket.current.id,
+                shopRevisionID: shop.revisionID, lineID: lineID),
+            basis: .init(originID: live.basis.originID, inventoryRevision: live.basis.inventoryRevision,
+                sourceHeads: live.basis.sourceHeads.map { .init(journeyID: $0.journeyID, revision: $0.storeRevision) }),
+            requirement: requirement, claimBindings: claimBindings, canonicalLots: context.snapshot.lots,
+            canonicalReservations: context.snapshot.reservations, projection: context.snapshot.availability, eligibility: eligibility)
+    }
+
+    /// Receipt provenance is shared by pack and meal-recovery projections. The
+    /// canonical count remains authoritative; historical receipts only qualify it.
+    static func lotEligibility(live: PantryLiveStockProjection, context: Context) throws -> [LedgerCanonicalPackStockEvidence.LotEligibility] {
         let receiptDigests = try receiptMaterial(context.mapping)
-        let eligibility = try live.lots.map { lot -> LedgerCanonicalPackStockEvidence.LotEligibility in
+        return try live.lots.map { lot -> LedgerCanonicalPackStockEvidence.LotEligibility in
             let digest: Data?
             if case .receipt(_, let key) = lot.current.source {
                 // Even missing receipt evidence has a deterministic explicit proof;
@@ -52,13 +65,6 @@ import CoreDomain
             return .init(lotID: lot.id, source: lot.current.source, observationID: lot.currentObservationID,
                 status: status, receiptEvidenceDigest: digest)
         }
-        return try LedgerCanonicalPackStockEvidence.review(
-            scope: .init(journeyID: journey.id, journeyRevision: journey.revision, basketRevisionID: basket.current.id,
-                shopRevisionID: shop.revisionID, lineID: lineID),
-            basis: .init(originID: live.basis.originID, inventoryRevision: live.basis.inventoryRevision,
-                sourceHeads: live.basis.sourceHeads.map { .init(journeyID: $0.journeyID, revision: $0.storeRevision) }),
-            requirement: requirement, claimBindings: claimBindings, canonicalLots: context.snapshot.lots,
-            canonicalReservations: context.snapshot.reservations, projection: context.snapshot.availability, eligibility: eligibility)
     }
 
     static func currentEvidence(for selection: LedgerPackSelection, shop: ShoppingLedger,
