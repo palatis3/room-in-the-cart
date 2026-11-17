@@ -50,6 +50,8 @@ final class RoomInTheCartUITests: XCTestCase {
             app.terminate()
             launch(language: language, reset: false, largeDark: language == "es")
             tap(app.buttons["shop.addFirstList"])
+            XCTAssertTrue(form.waitForExistence(timeout: 5))
+            reveal(field)
             XCTAssertEqual(field.value as? String, wording)
             tap(app.buttons["ledgerReviewImport"])
             tap(app.buttons["ledgerCommitImport"])
