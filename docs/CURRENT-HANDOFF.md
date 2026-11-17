@@ -1,6 +1,6 @@
 # Room in the Cart — current handoff
 
-Updated November 17, 2026, 02:21 UTC. Goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Component passes do not qualify one release candidate.
+Updated November 17, 2026, 03:38 UTC. Goal: **finish the complete Foundation 2.1 first release: all 52 requirements, 27 screen contracts and B11**. Component passes do not qualify one release candidate.
 
 Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md), [RELEASE-EXECUTION](RELEASE-EXECUTION.md) and [CI-VALIDATION](CI-VALIDATION.md). Historical specification handoff statements that the app is unbuilt are superseded by inspected code and results.
 
@@ -11,6 +11,8 @@ Read [APP-BASELINE](product/APP-BASELINE.md) first, then [Foundation 2.1](produc
 The next candidate combines a verified pantry-save retry fix with reviewed CI admission changes. A successful top-level Retry now clears only the published new-batch draft and rotates its ID; pending controls preserve submitted values. The real SQLite lock regression reproduced the stale draft before the fix and passed afterward, including two distinct batches (3 and 7 units) after restart: strict 1/1, zero recorded warnings/restarts, owned simulator deleted. Evidence: `.build/StockEntryRetryNov17/{baseline-profile,fixed-entry}`. An earlier baseline harness omitted contributor compilation conditions, and the first fixed run hit keyboard viewport timing; neither is misreported as a product result.
 
 GitHub native jobs now use the shared hosted pool instead of five manually pinned queues. Bitrise retains six M4 and three M2 admission slots, with cache enabled; GitHub contributes up to five standard macOS jobs. Two fixture groups blocked by GitHub runtime setup move to M4 slots 0 and 2 with the same iOS version and selectors. M2 cache downloads are demonstrated; M4 upload/warming is demonstrated, but an M4 download hit is not yet established. Actual 14-job overlap occurred in the prior run, not continuously. After each major run compare queue delay, execution, cache transfer and final-job timing before changing routing; do not generate duplicate tests merely to occupy idle machines. The added regression increases full fixture inventory from 93 to 94 cases. Hosted savings from the new admission/routing remain unmeasured. No new staging update is required.
+
+Final combined local qualification: all 1,171 offline script checks pass, generated project and localization checks pass, and strict workflow lint passes. The same retry regression also passed on iPhone SE3/iOS17.0 in114.54s, zero recorded warnings/restarts, owned device deleted. The current iOS27.0 run passed172.44s; these are scoped functional results, not performance baselines. The committed native diff matches the retained passing patch byte-for-byte.
 
 These entries supersede the historical live-run/cache/observer statements below. Keep the next combined revision frozen for qualification; current release limitations remain in CURRENT-ACCEPTANCE.md.
 
