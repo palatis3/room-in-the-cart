@@ -171,8 +171,12 @@ import LocalStore
         XCTAssertTrue(retried)
         XCTAssertEqual(resumed.records.first?.phase, .completed)
         try assertFreeLot(XCTUnwrap(pickup.journey))
-        await f.pickup.load()
-        try assertFreeLot(XCTUnwrap(f.pickup.journey))
+        let completedPickup = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(completedPickup)
+        await completedPickup.load()
+        let completedJourney = try XCTUnwrap(completedPickup.journey)
+        XCTAssertEqual(completedJourney.awayCarryovers.first?.phase, .completed)
+        try assertFreeLot(completedJourney)
         XCTAssertEqual(f.dinner.shop?.mealOccurrences.filter { $0.id == intent.plan.occurrenceID }.count, 1)
     }
 
