@@ -296,6 +296,10 @@ struct PickupNewStockSection: View {
             Button(pTr("Confirm this separate stock lot")) { addStock() }.disabled(!stockConfirmed)
             Text(pTr("Only confirmed matching food enters allocation. Do not enter the same batch twice."))
         }
+            .disabled(model.saving || model.hasPendingSave)
+            .onChange(of: savedDraft) { _, saved in
+                if saved != nil { finishSavedStock() }
+            }
             .onChange(of: [stockName, stockAmount, stockUnit.rawValue, stockSource.rawValue]) { _, _ in stockConfirmed = false }
             .onChange(of: stockFoodID) { _, _ in stockConfirmed = false }
             .onChange(of: stockObservedAt) { _, _ in stockConfirmed = false }
@@ -308,13 +312,23 @@ struct PickupNewStockSection: View {
             let startsWorkspace = model.journey == nil
             let lot = ConfirmedStockLot(id: stockID, foodID: ingredientID ?? stockFoodID ?? stockID, name: stockName, usable: quantity,
                                         confirmedAt: stockObservedAt, source: stockSource, useFirst: useFirst)
+            field.wrappedValue = nil
             Task {
                 if await model.saveStockLot(lot, in: journeyID, createIfEmpty: startsWorkspace) {
-                    stockID = UUID(); stockName = ""; stockAmount = ""; stockConfirmed = false
-                    useFirst = false; stockObservedAt = Date()
+                    finishSavedStock()
                 }
             }
         } catch { model.error = pTr("Check the confirmed food amounts and matching units.") }
+    }
+    private var savedDraft: ConfirmedStockLot? {
+        model.journey?.stockLots.first { $0.id == stockID }
+    }
+    private func finishSavedStock() {
+        // A successful retry publishes the same lot without returning through addStock.
+        // Another operation's retry must never clear this form's unsaved batch.
+        guard savedDraft != nil else { return }
+        stockID = UUID(); stockName = ""; stockAmount = ""; stockConfirmed = false
+        useFirst = false; stockObservedAt = Date()
     }
 }
 
