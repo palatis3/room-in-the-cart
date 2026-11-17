@@ -188,6 +188,64 @@ import LocalStore
         XCTAssertEqual(f.model.journey?.physicalStockNeeds.first { $0.id == row.need.id }?.amount, row.need.amount)
     }
 
+    func testRepeatWeekUsesRecoveredWednesdayAndRejectsChangedStockBeforeApplyingOnce() async throws {
+        let f = try await fixture(canonical: true)
+        let replacement = try review(f)
+        let changed = await f.model.applyMealRecovery(replacement, currentAuthority: { f.authority })
+        XCTAssertTrue(changed, f.model.error ?? "")
+        let prior = try XCTUnwrap(f.ledger.shop)
+        let target = ShoppingLedger(title: "Next pickup", basis: prior.basis)
+        let opened = await f.ledger.change(key: "next-week") { workspace in
+            workspace.shops.append(target)
+            workspace.selectedShopID = target.id
+        }
+        XCTAssertTrue(opened)
+        let port = try f.model.makePantryPackSelectionPort()
+        try await f.ledger.configurePantryPackRecovery(port)
+        let workspaceID = try XCTUnwrap(f.ledger.sourceWorkspaceID)
+        let instant = now
+        var readableShops = Set([prior.id, target.id])
+        let dinners = DinnerFeatureModel(store: f.ledger, access: { id in
+            guard readableShops.contains(id) else { return nil }
+            return DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: id,
+                assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: false,
+                roleRevision: 0, verifiedAt: instant, validUntil: instant.addingTimeInterval(300))
+        }, phase: { _ in .draft }, clock: { instant })
+        let start = try MealDay(year: 2026, month: 11, day: 16, timeZoneIdentifier: prior.basis.timeZoneIdentifier)
+        func prepare() throws -> DinnerPreview {
+            let page = try dinners.repeatWeekReview(start: start, pickup: f.model)
+            let beans = try XCTUnwrap(page.meals.first { $0.id.occurrenceID == f.wednesday })
+            XCTAssertEqual(beans.title, "Wednesday beans")
+            XCTAssertEqual(beans.candidate.template.ingredients.first?.exclusions, ["garlic"])
+            XCTAssertTrue(page.stock.contains { $0.id == f.beans })
+            XCTAssertTrue(dinners.prepareRepeatWeek(page, choices: [beans], staples: [:], pickup: f.model), dinners.error ?? "")
+            return try XCTUnwrap(dinners.preview)
+        }
+        _ = try prepare()
+        readableShops.remove(prior.id)
+        let revoked = await dinners.applyPreview()
+        XCTAssertFalse(revoked)
+        XCTAssertTrue(f.ledger.shop?.mealOccurrences.isEmpty == true)
+        readableShops.insert(prior.id)
+        _ = try prepare()
+        try await recountCanonicalBeans(f, count: .someLeft)
+        let refreshed = await f.model.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let stale = await dinners.applyPreview()
+        XCTAssertFalse(stale)
+        XCTAssertTrue(f.ledger.shop?.mealOccurrences.isEmpty == true)
+        let final = try prepare()
+        let saved = await dinners.applyPreview()
+        XCTAssertTrue(saved, dinners.error ?? "")
+        let copy = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first)
+        XCTAssertEqual(copy.title, "Wednesday beans")
+        XCTAssertEqual(copy.scheduledDay?.iso8601, "2026-11-18")
+        XCTAssertNotEqual(copy.id, f.wednesday)
+        XCTAssertEqual(f.ledger.workspace.shops.first { $0.id == prior.id }, prior)
+        XCTAssertEqual(f.ledger.workspace.dinnerPlanning.applyReceipts.last?.id, final.proposal.id)
+        XCTAssertEqual(f.ledger.shop?.mealOccurrences.count, 1)
+    }
+
     func testCanonicalRecountRejectsOldRecoveryPreviewAndFreshUnknownStaysUnresolved() async throws {
         let f = try await fixture(canonical: true), reviewed = try review(f)
         let original = try XCTUnwrap(f.model.journey)

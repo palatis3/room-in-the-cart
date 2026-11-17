@@ -39,7 +39,8 @@ extension DinnerWorkspaceStore {
     let accessProvider: AccessProvider
     let phaseProvider: (UUID) -> BasketPhase
     let ideaCatalog: [MealTemplate]
-    private let clock: () -> Date
+    let clock: () -> Date
+    private(set) weak var repeatWeekPickup: PickupModel?
     private var observation: AnyCancellable?
     private var runtimeObservation: AnyCancellable?
 
@@ -92,7 +93,7 @@ extension DinnerWorkspaceStore {
         guard let id = preview?.proposal.shopID, let access = try? access(for: id) else { return false }
         if case .household = access.scope { return true }; return false
     }
-    private func access(for shopID: UUID) throws -> DinnerAccessContext {
+    func access(for shopID: UUID) throws -> DinnerAccessContext {
         guard let access = accessProvider(shopID) else { throw DinnerPlanningError.forbidden }
         try access.validate(shopID: shopID, at: clock())
         if case .local(let id) = access.scope {
@@ -115,6 +116,13 @@ extension DinnerWorkspaceStore {
             error = nil; notice = nil; return true
         } catch { preview = nil; fail(error); return false }
     }
+    func installRepeatWeek(_ value: DinnerPreview, pantryBasis: DinnerPantrySupply.Basis?, pickup: PickupModel) {
+        repeatWeekPickup = pickup
+        preview = value
+        pantryPreviewReview = pantryBasis.map { (value.proposal.id, $0) }
+        error = nil
+        notice = nil
+    }
     func cancelPreview() { preview = nil; pantryPreviewReview = nil; error = nil }
     func endDecision(restoring previous: DinnerPreview?, pantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) {
         cancelPreview()
@@ -127,10 +135,15 @@ extension DinnerWorkspaceStore {
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
         let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID,
-            reviewedPantryBasis: reviewedPantryBasis) { workspace, index, access, now in
+            reviewedPantryBasis: reviewedPantryBasis,
+            reauthorize: repeatWeekAuthorization(for: reviewed.proposal)) { workspace, index, access, now in
             // The local adapter has no server commit binding. Even a caller-supplied
             // sharedCommitAuthorized bit cannot enable a shared authoritative write.
             guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
+            if reviewed.proposal.repeatWeek != nil {
+                try self.applyRepeatWeek(reviewed.proposal, workspace: &workspace, access: access, at: now)
+                return
+            }
             _ = try DinnerPlanningEngine.apply(reviewed.proposal, ledger: &workspace.shops[index],
                 state: &workspace.dinnerPlanning, access: access, phase: self.phaseProvider(reviewed.proposal.shopID), at: now)
         }
@@ -301,16 +314,24 @@ extension DinnerWorkspaceStore {
         } catch { preview = nil; fail(error); return false }
     }
     private func mutate(key: String, shopID: UUID, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                        reauthorize: (@MainActor () -> Bool)? = nil,
                         edit: (inout LedgerWorkspace, Int, DinnerAccessContext, Date) throws -> Void) async -> Bool {
         guard editable else { return false }
         busy = true; defer { busy = false }
         var failure: Error?
-        let saved = await store.change(key: key, reviewedPantryBasis: reviewedPantryBasis) { workspace in
+        func update(_ workspace: inout LedgerWorkspace) throws {
             do {
                 let current = try self.access(for: shopID)
                 guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw DinnerPlanningError.notFound(shopID) }
                 try edit(&workspace, index, current, self.clock())
             } catch { failure = error; throw error }
+        }
+        let saved: Bool
+        if let reauthorize {
+            guard let ledger = store as? LedgerModel else { fail(DinnerPlanningError.forbidden); return false }
+            saved = await ledger.change(key: key, reviewedPantryBasis: reviewedPantryBasis, authorize: reauthorize, update)
+        } else {
+            saved = await store.change(key: key, reviewedPantryBasis: reviewedPantryBasis, update)
         }
         if saved { error = nil; objectWillChange.send() }
         else if let failure { fail(failure) }
