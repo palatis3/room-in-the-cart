@@ -120,6 +120,43 @@ import CoreDomain
         XCTAssertFalse(requests.pending)
         XCTAssertNil(f.composition.destination)
     }
+    func testAdultHomeConsentAndColdRouteRequireCurrentOwnerAndFreshPrivateReceipt() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let group = root.appendingPathComponent("group")
+        let directory = root.appendingPathComponent("private")
+        func makeStore() -> AdultHomeSummaryStore {
+            AdultHomeSummaryStore(directory: directory, widgetDirectory: { group }, reload: { _ in })
+        }
+        let store = makeStore()
+        let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: identity)
+        var unlocked = true
+        let access = PantryDigestAccess(scope: scope, authorized: { unlocked })
+        let file = try AdultFoodSummaryFile(directory: group, kind: .useSoon)
+        try store.update(.useSoon, access: access, count: 2)
+        XCTAssertThrowsError(try file.read())
+        try store.setEnabled(true, kind: .useSoon, access: access)
+        try store.update(.useSoon, access: access, count: 2)
+        let value = try file.read()
+        XCTAssertEqual(value.count, 2)
+        let cold = makeStore()
+        XCTAssertTrue(cold.permits(value.route, kind: .useSoon, access: access))
+        unlocked = false
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: access))
+        unlocked = true
+        let other = PantryDigestAccess(scope: PantryDigestScope(origin: UUID(), identity: identity), authorized: { true })
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: other))
+        XCTAssertNil(cold.publishedKind(for: value.route, now: value.expiresAt))
+        try cold.invalidate(.useSoon, origin: scope.origin, forget: false)
+        XCTAssertThrowsError(try file.read())
+        XCTAssertFalse(cold.permits(value.route, kind: .useSoon, access: access))
+        try cold.update(.useSoon, access: access, count: 1)
+        XCTAssertNotEqual(try file.read().route, value.route)
+        try cold.invalidate(.useSoon, origin: scope.origin, forget: true)
+        XCTAssertFalse(cold.enabled(.useSoon, scope: scope))
+        XCTAssertThrowsError(try file.read())
+    }
     func testShoppingShortcutsOpenDistinctReviewedDestinationsWithoutWriting() async throws {
         let requests = SurfaceCaptureRequests()
         let f = try await coldURLFixture(captureRequests: requests)

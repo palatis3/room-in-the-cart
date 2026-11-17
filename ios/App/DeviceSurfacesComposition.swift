@@ -443,6 +443,9 @@ import DeviceSurfaces
     func open(_ handle: RouteHandle) async {
         guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingHandle = handle; return }
         guard privateAuthorized else { destination = .unavailable(UUID()); return }
+        if let kind = AdultHomeSummaryStore.shared.publishedKind(for: handle, now: clock()) {
+            destination = .adultSummary(UUID(), kind, handle); return
+        }
         await sourceDidChange()
         let start = nonce
         let resolved = try? await resolve(handle, reminderOnly: false)
@@ -649,7 +652,7 @@ struct ShoppingIntentReview: Identifiable {
     let generation: UUID
 }
 enum SurfacePresentedDestination: Identifiable {
-    case shopping(ShoppingIntentReview)
+    case shopping(ShoppingIntentReview), adultSummary(UUID, AdultFoodSummaryKind, RouteHandle)
     case capture(UUID), ownRequest(UUID), shop(UUID), offer(UUID, UUID), deferral(UUID, UUID), unavailable(UUID)
-    var id: UUID { switch self { case .shopping(let review): return review.id; case .capture(let id), .ownRequest(let id), .shop(let id), .unavailable(let id): return id; case .offer(_, let id), .deferral(_, let id): return id } }
+    var id: UUID { switch self { case .shopping(let review): return review.id; case .adultSummary(let id, _, _): return id; case .capture(let id), .ownRequest(let id), .shop(let id), .unavailable(let id): return id; case .offer(_, let id), .deferral(_, let id): return id } }
 }

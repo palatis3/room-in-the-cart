@@ -20,6 +20,16 @@ private extension EnvironmentValues {
         #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
         RITCAppCaptureProbe.install()
         #endif
+        #if DEBUG && targetEnvironment(simulator)
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--ui-testing"), args.contains("--test-shopping-add-intent") {
+            Task { @MainActor in
+                let intent = AddGroceryItemIntent()
+                intent.wording = "2 kg rice"
+                _ = try? await intent.perform()
+            }
+        }
+        #endif
         // Keep inactive navigation labels legible against both system bar appearances.
         UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
     }
@@ -112,6 +122,7 @@ private struct GroceryWindow: View {
                     DeviceSurfacesDestination(composition: surfaces, destination: destination,
                                               ledger: ledger, pickup: pickup, household: household)
                 }.environment(\.pickupLedger, ledger)
+                    .environment(\.guardianChildCoordinator, guardianChild)
                     .environmentObject(ledger).environmentObject(pickup)
                     .environmentObject(household).environmentObject(access)
                     .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)

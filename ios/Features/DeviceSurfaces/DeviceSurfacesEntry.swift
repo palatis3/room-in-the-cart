@@ -165,6 +165,8 @@ struct DeviceSurfacesDestination: View {
             case .ownRequest:
                 if household.projection?.role == "contributor", !household.locked { HouseholdSettingsView(model: household) } else { SurfaceUnavailableView() }
             case .unavailable: SurfaceUnavailableView()
+            case .adultSummary(_, let kind, let handle):
+                AdultHomeSummaryDestination(kind: kind, handle: handle, pickup: pickup, household: household)
             case .shopping(let review):
                 if composition.allows(review) {
                     switch review.request.action {

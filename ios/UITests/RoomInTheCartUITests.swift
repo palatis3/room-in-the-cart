@@ -16,6 +16,24 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let editor = app.textViews["ledgerImportText"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 30))
+        XCTAssertEqual(editor.value as? String, "2 kg rice")
+        tap(editor)
+        editor.typeText(" noodles")
+        let done = app.buttons["Done"]
+        if done.exists, done.isHittable { done.tap() }
+        tap(app.buttons["Close"])
+        XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
+        tap(app.buttons["shop.resumeFirstList"])
+        XCTAssertTrue(editor.waitForExistence(timeout: 10))
+        XCTAssertEqual(editor.value as? String, "2 kg rice noodles")
+    }
+
     func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
         for language in ["en", "es"] {
             launch(language: language, largeDark: language == "es")
