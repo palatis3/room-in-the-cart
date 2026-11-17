@@ -1,7 +1,7 @@
 import Foundation
 import CoreDomain
 
-enum StructuredCaptureFailure: Error, Equatable { case invalidAmount, invalidPackCount, reviewRequired, destinationMismatch, guestReviewRequired }
+enum StructuredCaptureFailure: Error, Equatable { case invalidAmount, invalidPackCount, reviewRequired, destinationMismatch, guestReviewRequired, timingReviewRequired }
 enum CaptureInterpretationWarning: String, Equatable, Sendable { case quantityUnknown, packUnknown, negation, destination, ambiguous }
 
 struct CaptureLineDraft: Identifiable, Equatable, Sendable {
@@ -84,6 +84,7 @@ enum StructuredCaptureParser {
         try CaptureLimits.validate(text)
         guard explicitlyTreatAsItems || !isGuestProposal(text) else { throw StructuredCaptureFailure.guestReviewRequired }
         let proposal = try NaturalListSegmenter.propose(text, maximumItems: CaptureLimits.lines)
+        guard !proposal.requiresTimingReview, !proposal.items.isEmpty else { throw StructuredCaptureFailure.timingReviewRequired }
         let drafts = proposal.items.map { item in
             var draft = parse(String(item.wording), destination: destination)
             if item.needsBoundaryReview && !draft.warnings.contains(.ambiguous) { draft.warnings.append(.ambiguous) }

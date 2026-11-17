@@ -40,7 +40,14 @@ final class NaturalListSegmenterTests: XCTestCase {
         let unclear = try NaturalListSegmenter.propose("mango and sticky rice")
         XCTAssertEqual(unclear.items.map(\.wording), ["mango and sticky rice"])
         XCTAssertTrue(unclear.items[0].needsBoundaryReview)
-        XCTAssertNil(try NaturalListSegmenter.propose("tea for this week and coffee for next week").timing)
+        let mixed = try NaturalListSegmenter.propose("tea for this week and coffee for next week")
+        XCTAssertNil(mixed.timing)
+        XCTAssertTrue(mixed.requiresTimingReview)
+        let prefix = try NaturalListSegmenter.propose("Para la próxima semana, pan y leche")
+        XCTAssertFalse(prefix.requiresTimingReview)
+        XCTAssertEqual(prefix.timing, "Para la próxima semana")
+        XCTAssertEqual(prefix.items.map(\.wording), ["pan", "leche"])
+        XCTAssertFalse(try NaturalListSegmenter.propose("tea, “cake for next week”").requiresTimingReview)
     }
 
     func testExpansionLimitCountsItemsInsideOneUtterance() throws {

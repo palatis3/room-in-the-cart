@@ -11,6 +11,7 @@ public enum NaturalListSegmenter {
     public struct Proposal: Equatable, Sendable {
         public let items: [Item]
         public let timing: Substring?
+        public let requiresTimingReview: Bool
     }
 
     private struct Token {
@@ -55,11 +56,20 @@ public enum NaturalListSegmenter {
             guard let range = Range(match.range, in: transcript) else { return nil }
             return Token(text: transcript[range].lowercased(), range: range)
         }
-        let timings = timingPhrase.matches(in: transcript, range: whole)
-        var timingRange: Range<String.Index>?
-        if timings.count == 1, let range = Range(timings[0].range, in: transcript),
-           transcript[range.upperBound...].allSatisfy({ $0.isWhitespace || $0 == "." }) {
-            timingRange = range
+        let timings = timingPhrase.matches(in: transcript, range: whole).compactMap { Range($0.range, in: transcript) }
+        let timingStarts = Set(timings.map(\.lowerBound))
+        var leadingTimingEnd: String.Index?
+        var trailingTiming: Range<String.Index>?
+        var batchTiming: Substring?
+        if timings.count == 1, let range = timings.first {
+            let tail = transcript[range.upperBound...]
+            if tail.allSatisfy({ $0.isWhitespace || $0 == "." }) {
+                trailingTiming = range
+            } else if transcript[..<range.lowerBound].allSatisfy(\.isWhitespace),
+                      let comma = tail.firstIndex(where: { !$0.isWhitespace }), transcript[comma] == "," {
+                leadingTimingEnd = transcript.index(after: comma)
+                batchTiming = transcript[range]
+            }
         }
 
         var items: [Item] = []
@@ -70,7 +80,7 @@ public enum NaturalListSegmenter {
         var sizeLabelEndsAt = -1
         var inField = false
         var quotes: [String] = []
-        var batchTiming: Substring?
+        var requiresTimingReview = false
 
         func finish() throws {
             if let first, let last {
@@ -84,6 +94,7 @@ public enum NaturalListSegmenter {
         }
 
         for (index, token) in words.enumerated() {
+            if let leadingTimingEnd, token.range.lowerBound < leadingTimingEnd { continue }
             let word = token.text
             let previous = index > 0 ? words[index - 1].text : ""
             let next = index + 1 < words.count ? words[index + 1].text : ""
@@ -95,10 +106,12 @@ public enum NaturalListSegmenter {
                 quotes.removeAll()
                 continue
             }
-            if let timingRange, token.range.lowerBound == timingRange.lowerBound,
-               quotes.isEmpty, !inField, first != nil {
-                batchTiming = transcript[timingRange]
-                break
+            if quotes.isEmpty, timingStarts.contains(token.range.lowerBound) {
+                if let trailingTiming, token.range.lowerBound == trailingTiming.lowerBound, !inField, first != nil {
+                    batchTiming = transcript[trailingTiming]
+                    break
+                }
+                requiresTimingReview = true
             }
             if !quotes.isEmpty, quotes.last == word {
                 quotes.removeLast()
@@ -137,7 +150,7 @@ public enum NaturalListSegmenter {
             last = token.range.upperBound
         }
         try finish()
-        return Proposal(items: items, timing: batchTiming)
+        return Proposal(items: items, timing: batchTiming, requiresTimingReview: requiresTimingReview)
     }
 
     private static func leadingQuantityEnd(in words: [Token], at index: Int) -> Int {

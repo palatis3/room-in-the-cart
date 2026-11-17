@@ -26,6 +26,9 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(list.importBatches.first?.preview.originalText, text)
         XCTAssertEqual(list.contributions.compactMap { $0.quantity?.amount }, [try Rational(2)])
         XCTAssertThrowsError(try StructuredCaptureParser.naturalList("two guests and eggs", destination: destination))
+        XCTAssertThrowsError(try StructuredCaptureParser.naturalList("milk for this week, bread for next week", destination: destination)) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .timingReviewRequired)
+        }
         XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
     }
 
