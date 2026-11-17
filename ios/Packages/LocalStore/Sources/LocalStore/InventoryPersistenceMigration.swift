@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import CSQLite
 
 public struct InventoryMigrationChunk: Codable, Equatable, Sendable {
     public let index: Int
@@ -105,6 +106,28 @@ extension ComparisonStore {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
         return try database.transaction(immediate: false) {
             guard let header = try database.migrationHeader(id) else { return nil }
+            return try migrationProgress(header)
+        }
+    }
+
+    /// Discovers the durable reviewed plan after restart, including stale plans that may need cancellation.
+    /// Staged records remain hidden from physical inventory until verified activation.
+    public func inventoryPendingMigration() throws -> InventoryMigrationProgress? {
+        guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        return try database.transaction(immediate: false) {
+            let row = try database.statement("SELECT id FROM inventory_migrations WHERE status = 'staging' LIMIT 2")
+            defer { sqlite3_finalize(row) }
+            let first = sqlite3_step(row)
+            if first == SQLITE_DONE { return nil }
+            guard first == SQLITE_ROW else { throw ComparisonStoreError.database(first) }
+            let rawID = try database.text(row, column: 0)
+            guard let id = UUID(uuidString: rawID), id.uuidString == rawID else { throw ComparisonStoreError.corruptRecord }
+            let next = sqlite3_step(row)
+            guard next != SQLITE_ROW else { throw ComparisonStoreError.corruptRecord }
+            guard next == SQLITE_DONE else { throw ComparisonStoreError.database(next) }
+            guard let header = try database.migrationHeader(id), header.status == .staging, header.plan != nil else {
+                throw ComparisonStoreError.corruptRecord
+            }
             return try migrationProgress(header)
         }
     }

@@ -28,6 +28,7 @@ final class InventoryMigrationTests: XCTestCase {
 
     func testMoreThan256RecordsStageAcrossRestartAndActivateOnceWithoutChangingSources() async throws {
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let initiallyPending = try await store.inventoryPendingMigration(); XCTAssertNil(initiallyPending)
         let saved = try await store.save(id: UUID(), title: "Original source", payload: Data([7, 8, 9]), savedAt: Date())
         let lots = (0..<300).map { _ in lot() }
         // The linked observation arrives before its parent lot's later chunk; it must remain hidden until complete.
@@ -48,6 +49,7 @@ final class InventoryMigrationTests: XCTestCase {
         let progress = try await reopened.inventoryMigrationProgress(id: reviewed.migrationID)
         XCTAssertEqual(progress?.nextChunk, 1); XCTAssertEqual(progress?.stagedRecordCount, 200)
         XCTAssertEqual(progress?.plan, reviewed)
+        let pending = try await reopened.inventoryPendingMigration(); XCTAssertEqual(pending, progress)
         _ = try await reopened.stageInventoryMigration(id: reviewed.migrationID, chunk: values[0])
         _ = try await reopened.stageInventoryMigration(id: reviewed.migrationID, chunk: values[1])
         let receipt = try await reopened.finishInventoryMigration(id: reviewed.migrationID, at: Date(timeIntervalSince1970: 12))
@@ -62,6 +64,7 @@ final class InventoryMigrationTests: XCTestCase {
         let source = try await reopened.load(id: saved.id); XCTAssertEqual(source, saved)
         try await reopened.close()
         let final = try ComparisonStore(url: url, inventoryEnabled: true)
+        let finishedPending = try await final.inventoryPendingMigration(); XCTAssertNil(finishedPending)
         let retry = try await final.finishInventoryMigration(id: reviewed.migrationID, at: Date(timeIntervalSince1970: 99))
         XCTAssertEqual(retry, receipt)
         let chunkRetry = try await final.stageInventoryMigration(id: reviewed.migrationID, chunk: values[0])
@@ -83,21 +86,26 @@ final class InventoryMigrationTests: XCTestCase {
         catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
         do { _ = try await store.finishInventoryMigration(id: reviewed.migrationID); XCTFail("stale complete token") }
         catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+        let stalePending = try await store.inventoryPendingMigration(); XCTAssertEqual(stalePending?.plan, reviewed)
         let cancelled = try await store.cancelInventoryMigration(id: reviewed.migrationID)
         XCTAssertEqual(cancelled.status, .cancelled); XCTAssertNil(cancelled.plan)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let cancelledPending = try await reopened.inventoryPendingMigration(); XCTAssertNil(cancelledPending)
         XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_staged_records"), 0)
         XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_heads"), 0)
-        let originalAfter = try await store.load(id: original.id); XCTAssertEqual(originalAfter, original)
-        let oldBegin = try await store.beginInventoryMigration(reviewed); XCTAssertEqual(oldBegin.status, .cancelled)
-        let replacement = try await plan(store, chunks: values)
-        _ = try await store.beginInventoryMigration(replacement)
-        do { _ = try await store.stageInventoryMigration(id: reviewed.migrationID, chunk: values[0]); XCTFail("retired migration cannot target replacement") }
+        let originalAfter = try await reopened.load(id: original.id); XCTAssertEqual(originalAfter, original)
+        let oldBegin = try await reopened.beginInventoryMigration(reviewed); XCTAssertEqual(oldBegin.status, .cancelled)
+        let replacement = try await plan(reopened, chunks: values)
+        _ = try await reopened.beginInventoryMigration(replacement)
+        let replacementPending = try await reopened.inventoryPendingMigration(); XCTAssertEqual(replacementPending?.plan, replacement)
+        do { _ = try await reopened.stageInventoryMigration(id: reviewed.migrationID, chunk: values[0]); XCTFail("retired migration cannot target replacement") }
         catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
-        for chunk in values { _ = try await store.stageInventoryMigration(id: replacement.migrationID, chunk: chunk) }
-        _ = try await store.finishInventoryMigration(id: replacement.migrationID)
+        for chunk in values { _ = try await reopened.stageInventoryMigration(id: replacement.migrationID, chunk: chunk) }
+        _ = try await reopened.finishInventoryMigration(id: replacement.migrationID)
         XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_heads"), 280)
-        let stillOriginal = try await store.load(id: original.id); XCTAssertEqual(stillOriginal, original)
-        try await writer.close(); try await store.close()
+        let stillOriginal = try await reopened.load(id: original.id); XCTAssertEqual(stillOriginal, original)
+        try await writer.close(); try await reopened.close()
     }
 
     func testChunkIdentityOrderAndDuplicateKeysCannotChangeReviewedManifest() async throws {
@@ -210,6 +218,21 @@ final class InventoryMigrationTests: XCTestCase {
         _ = try await store.save(id: UUID(), title: "Inserted", payload: Data([1]), savedAt: Date())
         do { _ = try await store.inventorySourcePage(token: token, after: first.last?.id, limit: 2); XCTFail("stale source page") }
         catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+        try await store.close()
+    }
+
+    func testPendingDiscoveryRequiresOptInAndRefusesMultipleStagingHeaders() async throws {
+        let ordinary = try ComparisonStore(url: url)
+        do { _ = try await ordinary.inventoryPendingMigration(); XCTFail("inventory opt-in required") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
+        try await ordinary.close()
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let reviewed = try await plan(store, chunks: chunks([lot()]))
+        _ = try await store.beginInventoryMigration(reviewed)
+        try sql("DROP INDEX inventory_one_staging; INSERT INTO inventory_migrations SELECT '\(UUID().uuidString)',digest,plan,status,next_chunk,record_count,chain_digest FROM inventory_migrations")
+        do { _ = try await store.inventoryPendingMigration(); XCTFail("ambiguous pending migration") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .corruptRecord) }
+        XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_migrations WHERE status = 'staging'"), 2)
         try await store.close()
     }
 

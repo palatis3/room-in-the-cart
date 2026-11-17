@@ -9,6 +9,7 @@ import LocalStore
 
     private struct Fixture {
         let cleanup: SQLiteFixtureDirectory
+        let databaseURL: URL
         let store: ComparisonStore
         let pickup: PickupModel
         let ledger: LedgerModel
@@ -56,7 +57,7 @@ import LocalStore
         let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(8), disposition: .received, receivedAt: now)
         let observation = UsableObservation(id: UUID(), receipt: key, usable: q(8), confirmedAt: now, confirmedMatchToOrderLine: true)
         let received = await pickup.receive(receipt, usable: observation); XCTAssertTrue(received)
-        return Fixture(cleanup: cleanup, store: store, pickup: pickup, ledger: ledger, food: food, meal: meal, receipt: receipt, observation: observation)
+        return Fixture(cleanup: cleanup, databaseURL: directory.appendingPathComponent("pickup.sqlite"), store: store, pickup: pickup, ledger: ledger, food: food, meal: meal, receipt: receipt, observation: observation)
     }
 
     private func context(_ fixture: Fixture) throws -> PantryLegacyMigration.LedgerContext {
@@ -270,4 +271,55 @@ import LocalStore
         }
     }
 
+
+    func testCapturedPreparationContextRebuildsIdenticalPackageAfterSourceReopen() async throws {
+        let f = try await fixture()
+        let observation = UsableObservation(id: UUID(), receipt: f.receipt.key, usable: q(3), confirmedAt: now,
+            supersedesID: f.observation.id, confirmedMatchToOrderLine: false)
+        let saved = await f.pickup.confirmUsable(observation); XCTAssertTrue(saved)
+        let snapshot = try await f.store.inventoryCutoverSnapshot()
+        let ledger = try context(f), preparedAt = now, migrationID = UUID()
+        let original = try PantryLegacyMigration.map(originID: snapshot.token.workspaceID,
+            heads: snapshot.sources.map(PantryLegacyMigration.SourceHead.init), ledger: ledger, at: preparedAt)
+        XCTAssertEqual(original.lots.first?.count, .unknown)
+        let first = try PantryMigrationPackage.build(original, migrationID: migrationID,
+            sourceToken: snapshot.token, inventoryRevision: 0, at: preparedAt)
+        XCTAssertThrowsError(try PantryMigrationPackage.build(original, migrationID: migrationID,
+            sourceToken: snapshot.token, inventoryRevision: 0, at: preparedAt.addingTimeInterval(60))) {
+            XCTAssertEqual($0 as? PantryMigrationPackage.Failure, .invalidPlan)
+        }
+        let storedContext = try JSONDecoder().decode(PantryMigrationPackage.Context.self, from: first.plan.reviewContext)
+        XCTAssertEqual(storedContext.preparedAt, preparedAt)
+        XCTAssertEqual(storedContext.sourceToken, snapshot.token)
+        XCTAssertEqual(storedContext.ledgerOriginID, original.ledgerOriginID)
+        XCTAssertEqual(storedContext.ledgerRevision, original.ledgerRevision)
+        let archivedContexts = try first.chunks.flatMap(\.records).filter { $0.key.kind == .intent }.compactMap { record -> PantryMigrationPackage.Context? in
+            let envelope = try PantryMigrationPackage.provenance(record, migrationID: migrationID, originID: original.originID)
+            if case .context(let value) = envelope.body { return value }; return nil
+        }
+        XCTAssertEqual(archivedContexts, [storedContext])
+        _ = try await f.store.beginInventoryMigration(first.plan)
+        try await f.store.close()
+        let reopened = try ComparisonStore(url: f.databaseURL, inventoryEnabled: true)
+        f.cleanup.track(reopened)
+        let progress = try await reopened.inventoryMigrationProgress(id: migrationID)
+        let persistedPlan = try XCTUnwrap(progress?.plan)
+        let recoveredContext = try JSONDecoder().decode(PantryMigrationPackage.Context.self, from: persistedPlan.reviewContext)
+        // Use the persisted enumeration token, never a new token for the previously mapped plan.
+        let heads = try await reopened.inventorySourcePage(token: recoveredContext.sourceToken)
+        XCTAssertEqual(heads.map(\.payload), snapshot.sources.map(\.payload))
+        let remapped = try PantryLegacyMigration.map(originID: snapshot.token.workspaceID,
+            heads: heads.map(PantryLegacyMigration.SourceHead.init), ledger: ledger, at: recoveredContext.preparedAt)
+        let rebuilt = try PantryMigrationPackage.build(remapped, migrationID: persistedPlan.migrationID,
+            sourceToken: recoveredContext.sourceToken, inventoryRevision: persistedPlan.expectedRevision, at: recoveredContext.preparedAt)
+        XCTAssertEqual(remapped, original)
+        XCTAssertEqual(rebuilt, first)
+        let newClockMapping = try PantryLegacyMigration.map(originID: snapshot.token.workspaceID,
+            heads: heads.map(PantryLegacyMigration.SourceHead.init), ledger: ledger, at: preparedAt.addingTimeInterval(60))
+        XCTAssertNotEqual(newClockMapping, original, "A restart clock must not replace the captured preparation time.")
+        _ = try await activate(rebuilt, in: reopened)
+        let current = try await PantryRepository(store: reopened, authorize: { true }).load(at: preparedAt.addingTimeInterval(60))
+        XCTAssertEqual(current.lots.first?.count, .unknown)
+        try await reopened.close()
+    }
 }

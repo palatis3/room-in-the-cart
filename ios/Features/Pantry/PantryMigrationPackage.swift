@@ -9,6 +9,7 @@ import LocalStore
 
     struct Context: Codable, Equatable {
         let mapperVersion: Int
+        let preparedAt: Date
         let sourceToken: InventorySourceToken
         let ledgerOriginID: UUID?
         let ledgerRevision: Int64?
@@ -48,6 +49,7 @@ import LocalStore
     /// The coordinator must retain the token used to enumerate these exact source heads.
     /// Never fetch a newer token for an older mapped plan: tombstones are not present in
     /// Plan, so this converter cannot recompute LocalStore's complete source-token digest.
+    /// Capture `at` once before mapping and reuse Context.preparedAt when rebuilding after restart.
     static func build(_ mapped: PantryLegacyMigration.Plan, migrationID: UUID,
                       sourceToken: InventorySourceToken, inventoryRevision: Int64, at now: Date,
                       readLimits: PantryRepository.ReadLimits = .standard) throws -> Package {
@@ -64,7 +66,7 @@ import LocalStore
                 originID: mapped.originID, body: body)
             records.append(.init(key: .init(.intent, id), revision: 1, payload: try bounded(value)))
         }
-        let context = Context(mapperVersion: 1, sourceToken: sourceToken,
+        let context = Context(mapperVersion: 1, preparedAt: now, sourceToken: sourceToken,
             ledgerOriginID: mapped.ledgerOriginID, ledgerRevision: mapped.ledgerRevision)
         try archive(.context(context))
         for head in mapped.sourceHeads {
@@ -151,7 +153,8 @@ import LocalStore
         }
         switch envelope.body {
         case .context(let value):
-            guard value.mapperVersion == 1, value.sourceToken.workspaceID == originID,
+            guard value.mapperVersion == 1, value.preparedAt.timeIntervalSinceReferenceDate.isFinite,
+                  value.sourceToken.workspaceID == originID,
                   value.sourceToken.generation >= 0, value.sourceToken.digest.count == 32,
                   (value.ledgerOriginID == nil) == (value.ledgerRevision == nil),
                   value.ledgerRevision.map({ $0 >= 0 }) ?? true else { throw Failure.invalidRecord }
@@ -203,7 +206,7 @@ import LocalStore
         guard Set(lots.keys) == Set(sources.keys), Set(claims.keys) == Set(claimLinks.keys) else { throw Failure.invalidPlan }
         for lot in plan.lots {
             try lot.validate()
-            guard lot.source.originID == plan.originID, lot.updatedAt <= now,
+            guard lot.source.originID == plan.originID, lot.updatedAt == now,
                   let current = observations[lot.observationID], current.lotID == lot.id,
                   current.revision == lot.revision, current.count == lot.count,
                   current.observedAt == lot.confirmedAt, sources[lot.id]?.source == lot.source else { throw Failure.invalidPlan }

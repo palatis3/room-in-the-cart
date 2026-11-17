@@ -1,0 +1,306 @@
+import CoreDomain
+import SwiftUI
+
+private enum PantrySheet: Identifiable {
+    case add, recount(UUID), review
+    var id: String {
+        switch self { case .add: return "add"; case .recount(let id): return "recount-\(id)"; case .review: return "review" }
+    }
+}
+private enum PantryDestination: Hashable { case lot(UUID) }
+
+/// Composition owns authorization and migration. This surface never activates a database.
+struct PantryHomeView: View {
+    @ObservedObject var model: PantryModel
+    let accessAllowed: Bool
+    @State private var sheet: PantrySheet?
+    @AccessibilityFocusState private var resultFocused: Bool
+
+    var body: some View {
+        Group {
+            if accessAllowed {
+                List {
+                    if let notice = model.notice {
+                        Section {
+                            Text(pantryNotice(notice)).accessibilityIdentifier("pantry.status")
+                                .accessibilityFocused($resultFocused)
+                        }
+                    }
+                    if model.phase == .ready, let snapshot = model.snapshot {
+                        Section {
+                            Button(pantryText("Add food")) { sheet = .add }
+                                .frame(minHeight: 44).disabled(!model.canEdit)
+                                .accessibilityIdentifier("pantry.add")
+                            Text(pantryText("Start with food you recently brought home. You do not need to list your whole kitchen."))
+                        }
+                        ForEach(InventoryLocation.allCases, id: \.self) { location in
+                            Section(pantryLocationName(location)) {
+                                let lots = snapshot.lots.filter { $0.location == location }.sorted {
+                                    $0.name == $1.name ? $0.id.uuidString < $1.id.uuidString : $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                                }
+                                if lots.isEmpty { Text(pantryText("No food recorded here.")) }
+                                ForEach(lots) { lot in
+                                    NavigationLink(value: PantryDestination.lot(lot.id)) {
+                                        PantryLotSummary(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
+                                    }.accessibilityIdentifier("pantry.lot.\(lot.id)")
+                                }
+                            }
+                        }
+                    } else {
+                        Section { Text(pantryPhase(model.phase)) }
+                    }
+                    if model.pending != nil {
+                        Section {
+                            Button(pantryText("Review pending save")) { sheet = .review }.frame(minHeight: 44)
+                        }
+                    }
+                    if model.phase != .accessDenied {
+                        Section {
+                            Button(pantryText("Refresh pantry")) { Task { await model.load() } }
+                                .frame(minHeight: 44).disabled(model.busy).accessibilityIdentifier("pantry.refresh")
+                        }
+                    }
+                    if model.busy { ProgressView(pantryText("Working…")) }
+                }
+            } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
+        }
+        .navigationTitle(pantryText("My Pantry"))
+        .privacySensitive()
+        .task(id: accessAllowed) {
+            if accessAllowed { await model.load() } else { sheet = nil; model.accessLost() }
+        }
+        .onChange(of: accessAllowed) { _, allowed in
+            if !allowed { sheet = nil; model.accessLost() }
+        }
+        .onChange(of: model.review?.command.id) { _, id in
+            if id != nil && accessAllowed { sheet = .review }
+        }
+        .onChange(of: model.savedLotID) { _, id in
+            if id != nil { sheet = nil; resultFocused = true }
+        }
+        .onChange(of: model.phase) { _, phase in
+            if phase == .accessDenied { sheet = nil }
+        }
+        .navigationDestination(for: PantryDestination.self) { destination in
+            switch destination {
+            case .lot(let id):
+                PantryLotView(model: model, lotID: id, accessAllowed: accessAllowed) { sheet = .recount(id) }
+            }
+        }
+        .sheet(item: Binding(get: { accessAllowed && model.phase != .accessDenied ? sheet : nil }, set: { sheet = $0 })) { value in
+            NavigationStack {
+                switch value {
+                case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
+                case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
+                case .review: PantryReviewView(model: model, accessAllowed: accessAllowed)
+                }
+            }
+        }
+    }
+}
+
+private struct PantryLotSummary: View {
+    let lot: InventoryLot
+    let availability: InventoryLotAvailability?
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(lot.name).font(.headline)
+            Text(pantryCount(lot.count))
+            Text(pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8))))
+                .font(.caption)
+            LabeledContent(pantryText("Reserved"), value: pantryQuantity(availability?.held))
+            LabeledContent(pantryText("Available for other meals"), value: pantryQuantity(availability?.free))
+            if availability == nil || availability?.issues.isEmpty == false {
+                Text(pantryText("Availability needs review. Unknown food is not counted as free."))
+            }
+            LabeledContent(pantryText("Last quantity confirmation"), value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
+        }.accessibilityElement(children: .combine)
+    }
+}
+
+private struct PantryLotView: View {
+    @ObservedObject var model: PantryModel
+    let lotID: UUID
+    let accessAllowed: Bool
+    let recount: () -> Void
+    @AccessibilityFocusState private var resultFocused: Bool
+    private var lot: InventoryLot? { accessAllowed ? model.snapshot?.lots.first { $0.id == lotID } : nil }
+    var body: some View {
+        Form {
+            if let lot {
+                Section {
+                    PantryLotSummary(lot: lot, availability: model.snapshot?.availability.lots.first { $0.id == lotID })
+                    LabeledContent(pantryText("Storage location"), value: pantryLocationName(lot.location))
+                    if let opened = lot.openedAt {
+                        LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
+                    }
+                }
+                Section {
+                    action("Have enough", .haveEnough)
+                    action("Some left", .someLeft)
+                    Button(pantryText("Recount food"), action: recount).frame(minHeight: 44)
+                        .accessibilityIdentifier("pantry.recount")
+                    action("Opened now", .opened)
+                    ForEach(InventoryLocation.allCases.filter { $0 != lot.location }, id: \.self) { location in
+                        Button(pantryFormat("Move to %@", pantryLocationName(location))) {
+                            Task { await model.prepare(lotID: lotID, action: .move(location)) }
+                        }.frame(minHeight: 44)
+                    }
+                    action("Used up", .usedUp)
+                } footer: {
+                    Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
+                }.disabled(!model.canEdit)
+                if let notice = model.notice { Text(pantryNotice(notice)).accessibilityFocused($resultFocused) }
+            } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
+        }
+        .navigationTitle(lot?.name ?? pantryText("Pantry food"))
+        .onChange(of: model.notice) { _, notice in if notice == .saved { resultFocused = true } }
+        .privacySensitive()
+    }
+    private func action(_ title: String, _ action: PantryModel.Action) -> some View {
+        Button(pantryText(title)) { Task { await model.prepare(lotID: lotID, action: action) } }
+            .frame(minHeight: 44)
+    }
+}
+
+private struct PantryFoodEditor: View {
+    @ObservedObject var model: PantryModel
+    let lotID: UUID?
+    let accessAllowed: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var existingFoodID: UUID?
+    @State private var name = ""
+    @State private var amount = ""
+    @State private var unit = UnitOfMeasure.count
+    @State private var location = InventoryLocation.cupboard
+    @FocusState private var editing: Bool
+    private var lot: InventoryLot? { lotID.flatMap { id in model.snapshot?.lots.first { $0.id == id } } }
+    private var foods: [InventoryLot] {
+        var seen = Set<UUID>()
+        return (model.snapshot?.lots ?? []).sorted { $0.id.uuidString < $1.id.uuidString }.filter { seen.insert($0.foodID).inserted }
+    }
+    var body: some View {
+        Form {
+            if accessAllowed && model.phase == .ready {
+                if lotID == nil {
+                    Section {
+                        Picker(pantryText("Food identity"), selection: $existingFoodID) {
+                            Text(pantryText("New food identity")).tag(nil as UUID?)
+                            ForEach(foods) { food in
+                                Text(food.name + " · " + food.foodID.uuidString.suffix(8)).tag(Optional(food.foodID))
+                            }
+                        }
+                        if existingFoodID == nil {
+                            TextField(pantryText("Food name"), text: $name).focused($editing)
+                                .accessibilityIdentifier("pantry.foodName")
+                        }
+                        Picker(pantryText("Storage location"), selection: $location) {
+                            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                        }
+                    } footer: {
+                        Text(pantryText("Choose an existing food only when it is the same product. This adds a separate physical batch; matching names are never merged automatically."))
+                    }
+                }
+                Section {
+                    TextField(pantryText("Confirmed amount"), text: $amount).focused($editing)
+                        .accessibilityIdentifier("pantry.amount")
+                    Picker(pantryText("Unit"), selection: $unit) {
+                        ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
+                    }
+                } footer: {
+                    Text(pantryText("Leave blank if unknown. Enter 0 only for confirmed none. Count means individual units, not an assumed package size."))
+                }
+                if let notice = model.notice { Text(pantryNotice(notice)) }
+            } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
+        }
+        .navigationTitle(pantryText(lotID == nil ? "Add food" : "Recount food"))
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(pantryText("Cancel")) { dismiss() }.disabled(model.busy)
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Review")) {
+                    editing = false
+                    Task {
+                        if let lotID { await model.prepare(lotID: lotID, action: .recount(amount, unit)) }
+                        else { await model.prepareNewFood(name: name, existingFoodID: existingFoodID, location: location, amount: amount, unit: unit) }
+                    }
+                }.disabled(!accessAllowed || !model.canEdit || (lotID == nil && existingFoodID == nil && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                    .accessibilityIdentifier("pantry.review")
+            }
+        }
+        .onAppear { if let lot { amount = lot.count.quantity?.amount.description ?? ""; unit = lot.unit } }
+        .interactiveDismissDisabled(model.busy)
+        .privacySensitive()
+    }
+}
+
+private struct PantryReviewView: View {
+    @ObservedObject var model: PantryModel
+    let accessAllowed: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var acknowledged = false
+    var body: some View {
+        Form {
+            if accessAllowed, let review = model.review {
+                Section(pantryText("Proposed food record")) {
+                    PantryLotSummary(lot: review.proposedLot,
+                        availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID })
+                    LabeledContent(pantryText("Storage location"), value: pantryLocationName(review.proposedLot.location))
+                    if let opened = review.proposedLot.openedAt {
+                        LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
+                    }
+                    if let before = review.before.lots.first(where: { $0.id == review.command.lotID }) {
+                        LabeledContent(pantryText("Previously recorded"), value: pantryCount(before.count))
+                        LabeledContent(pantryText("Previous location"), value: pantryLocationName(before.location))
+                    }
+                }
+                if !review.affectedReservations.isEmpty {
+                    Section(pantryText("Affected reservations")) {
+                        ForEach(review.affectedReservations) { coverage in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(review.before.reservations.first { $0.id == coverage.id }?.name ?? pantryText("Reservation")).font(.headline)
+                                LabeledContent(pantryText("Reserved need"), value: pantryQuantity(coverage.requested))
+                                LabeledContent(pantryText("Covered before"), value: pantryQuantity(review.before.availability.reservations.first { $0.id == coverage.id }?.backed))
+                                LabeledContent(pantryText("Covered after"), value: pantryQuantity(coverage.backed))
+                                LabeledContent(pantryText("Still missing"), value: pantryQuantity(coverage.shortfall))
+                                if coverage.unresolved { Text(pantryText("This reservation needs review. Its promise is not released.")) }
+                            }.accessibilityElement(children: .combine)
+                        }
+                        Toggle(pantryText("I reviewed the affected reservations."), isOn: $acknowledged)
+                            .accessibilityIdentifier("pantry.acknowledgeReservations")
+                    }
+                }
+                if let notice = model.notice { Text(pantryNotice(notice)).accessibilityIdentifier("pantry.reviewStatus") }
+                if model.pending != nil {
+                    Section {
+                        if model.requiresFreshReview {
+                            Button(pantryText("Discard stale review and refresh")) {
+                                Task { await model.discardStaleReview(); dismiss() }
+                            }.frame(minHeight: 44).disabled(model.busy)
+                        } else {
+                            Button(pantryText("Retry exact save")) { Task { await model.retryPending() } }
+                                .frame(minHeight: 44).disabled(model.busy).accessibilityIdentifier("pantry.retrySave")
+                            Text(pantryText("The save result is uncertain. Retry the same reviewed change before starting another."))
+                        }
+                    }
+                }
+            } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
+        }
+        .navigationTitle(pantryText("Review pantry change"))
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(pantryText("Cancel")) { model.cancelReview(); dismiss() }
+                    .disabled(model.busy || model.pending != nil)
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Confirm")) { Task { await model.confirmReview(acknowledgingReservations: acknowledged) } }
+                    .disabled(!accessAllowed || model.busy || model.pending != nil || model.review == nil || (!acknowledged && model.review?.affectedReservations.isEmpty == false))
+                    .accessibilityIdentifier("pantry.confirm")
+            }
+        }
+        .interactiveDismissDisabled(model.busy || model.pending != nil)
+        .onDisappear { if model.pending == nil { model.cancelReview() } }
+        .privacySensitive()
+    }
+}
