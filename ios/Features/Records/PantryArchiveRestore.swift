@@ -59,6 +59,8 @@ import CoreDomain
                 result.insert(value.submission.request.originID)
                 if let ledger = value.submission.request.ledgerOriginID { result.insert(ledger) }
             case .foodPending(let value): result.insert(value.command.originID)
+            case .packPending(let value):
+                result.insert(value.request.inventoryWorkspaceID); result.insert(value.request.ledgerWorkspaceID)
             case .projection(let value):
                 result.insert(value.binding.binding.inventoryWorkspaceID); result.insert(value.binding.binding.ledgerWorkspaceID)
             case .originalLot(let value): result.insert(value.source.originID)

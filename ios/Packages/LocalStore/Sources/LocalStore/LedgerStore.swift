@@ -104,6 +104,23 @@ public actor LedgerStore {
         try database.current(workspaceID: workspaceID)
     }
 
+    /// Read-only recognition of an ordinary save, including a historical save
+    /// followed by newer edits. The caller must validate its expected body and
+    /// base (record.revision - 1), then reload the current head for presentation.
+    /// This never recognizes projection/erasure IDs as ordinary save receipts,
+    /// and never interprets a retired operation or workspace as missing work.
+    public func savedOperation(id: UUID) throws -> LedgerRecord? {
+        try database.transaction(immediate: false) {
+            _ = try database.current(workspaceID: workspaceID)
+            guard try !database.isRetiredOperation(id) else { throw LedgerStoreError.erased }
+            guard try !database.hasInventoryProjectionOperation(id),
+                  try database.tombstones("WHERE operation_id = ?", values: [.text(id.uuidString)]).isEmpty else {
+                throw LedgerStoreError.operationConflict
+            }
+            return try database.record(operationID: id, workspaceID: workspaceID)
+        }
+    }
+
     /// Initial writes expect revision zero. Every new operation requires the current
     /// revision and appends a snapshot, including when its payload equals the current one.
     /// Replaying an operation with identical bytes and base returns its original record,

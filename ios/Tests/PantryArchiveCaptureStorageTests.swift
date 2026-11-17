@@ -52,6 +52,113 @@ import RecordArchive
             writes: [.init(record: row, expectedRevision: 0)]), at: now)
     }
 
+    /// Structurally valid archived review evidence. It is intentionally never
+    /// submitted to a live port: archive import does not authorize its replay.
+    private func packRequest(inventory: UUID, ledger: UUID) throws -> PantryPackSelectionCommitPort.Request {
+        let amount = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2")
+        var shop = ShoppingLedger()
+        let line = try shop.addManualLine(name: "Wraps", quantity: amount)
+        let need = StockNeed(id: UUID(), foodID: line, name: "Dinner", amount: amount, priority: .required)
+        let claim = InventoryReservation(id: UUID(), originID: inventory, revision: 1,
+            foodID: line, lotID: nil, name: need.name, amount: amount)
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: line)
+        let proof = try LedgerCanonicalPackStockEvidence.review(
+            scope: .init(journeyID: shop.id, journeyRevision: 1, basketRevisionID: UUID(), shopRevisionID: shop.revisionID, lineID: line),
+            basis: .init(originID: inventory, inventoryRevision: 1, sourceHeads: [.init(journeyID: shop.id, revision: 1)]),
+            requirement: requirement, claimBindings: [.init(need: need, reservationID: claim.id)],
+            canonicalLots: [], canonicalReservations: [claim],
+            projection: InventoryProjection.build(originID: inventory, lots: [], reservations: [claim], at: now), eligibility: [])
+        let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
+            confirmedAtHome: try proof.confirmedQuantity(for: requirement), protectedAmount: requirement.protectedQuantity,
+            offerA: .init(id: "a", label: "Two", usableQuantity: amount, price: .init(minorUnits: 100)),
+            offerB: .init(id: "b", label: "Two alternative", usableQuantity: amount, price: .init(minorUnits: 120)))
+        let selection = try LedgerPackSelection(workspaceID: ledger, shop: shop, lineID: line, request: request,
+            selectedOfferID: "a", at: now, source: "Archived review", canonicalStockEvidence: proof)
+        return .init(inventoryWorkspaceID: inventory, ledgerWorkspaceID: ledger, selection: selection, reviewedLedgerRevision: 0)
+    }
+    private func packJournal(_ f: Fixture, ledgerOrigin: UUID? = nil) throws -> PantryPackSelectionPendingStore {
+        try .init(directory: f.pending.fileURL.deletingLastPathComponent(), inventoryWorkspaceID: f.inventory.workspaceID,
+                  ledgerWorkspaceID: ledgerOrigin ?? f.ledger.workspaceID)
+    }
+
+    func testPackPendingRoundTripPreservesExactEvidenceAndBothOriginsStayInert() async throws {
+        let f = try await fixture(), before = try await f.capture.capture(at: now)
+        let journal = try packJournal(f)
+        let entry = try journal.save(packRequest(inventory: f.inventory.workspaceID, ledger: f.ledger.workspaceID))
+        let captured = try await f.capture.capture(at: now)
+        XCTAssertNotEqual(captured.scope.packPendingDigest, before.scope.packPendingDigest)
+        XCTAssertTrue(captured.snapshot.history.contains(.packPending(entry)))
+        XCTAssertEqual(captured.snapshot.lots, before.snapshot.lots)
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("pack-archives"))
+        let bundle = try await f.capture.publish(captured, to: storage)
+        let reopened = try storage.open(bundle.reference)
+        XCTAssertEqual(reopened.captured.scope, captured.scope)
+        XCTAssertTrue(reopened.captured.snapshot.history.contains(.packPending(entry)))
+        let restored = try PantryArchiveRestore.prepare(reopened.captured.snapshot, newOriginID: UUID(), restorationID: UUID(), at: now)
+        XCTAssertTrue(restored.history.contains(.packPending(entry)))
+        XCTAssertTrue(restored.events.isEmpty)
+        for origin in [entry.request.inventoryWorkspaceID, entry.request.ledgerWorkspaceID] {
+            XCTAssertThrowsError(try PantryArchiveRestore.prepare(restored, newOriginID: origin, restorationID: UUID(), at: now))
+        }
+        XCTAssertEqual(try journal.read(), entry)
+        let receipt = try await f.ledger.savedOperation(id: entry.operationID)
+        XCTAssertNil(receipt)
+    }
+
+    func testRetiredAndCurrentPackPairsAreBothCapturedAndEachBlocksStalePublication() async throws {
+        let f = try await fixture(), oldJournal = try packJournal(f)
+        let old = try oldJournal.save(packRequest(inventory: f.inventory.workspaceID, ledger: f.ledger.workspaceID))
+        _ = try await f.ledger.eraseWorkspace(workspaceID: f.ledger.workspaceID, expectedRevision: 0, operationID: UUID(), at: now)
+        let reopened = try LedgerStore(url: f.directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+        f.cleanup.track(reopened)
+        let currentJournal = try packJournal(f, ledgerOrigin: reopened.workspaceID)
+        let current = try currentJournal.save(packRequest(inventory: f.inventory.workspaceID, ledger: reopened.workspaceID))
+        let capture = PantryArchiveCapture(inventory: f.inventory, ledger: reopened, pending: f.pending, gate: f.gate, authorize: { _, _ in true })
+        let captured = try await capture.capture(at: now)
+        XCTAssertTrue(captured.snapshot.history.contains(.packPending(old)))
+        XCTAssertTrue(captured.snapshot.history.contains(.packPending(current)))
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("retired-pack-archives"))
+        _ = try await capture.publish(captured, to: storage)
+        // Simulates the independently reviewed retirement cleanup of the old pair.
+        try FileManager.default.removeItem(at: oldJournal.fileURL)
+        do { _ = try await capture.publish(captured, to: storage); XCTFail("Retired-pair pending evidence changed") }
+        catch { XCTAssertEqual(error as? PantryArchiveCapture.Failure, .stale) }
+    }
+
+    func testUnknownOrCorruptPackPairCannotDisappearFromCompleteCapture() async throws {
+        let f = try await fixture(), original = try await f.capture.capture(at: now)
+        let unknown = try packJournal(f, ledgerOrigin: UUID())
+        _ = try unknown.save(packRequest(inventory: f.inventory.workspaceID, ledger: unknown.ledgerWorkspaceID))
+        do { _ = try await f.capture.capture(at: now); XCTFail("Unknown matching pair cannot be omitted") }
+        catch { XCTAssertEqual(error as? PantryArchiveCapture.Failure, .unknownHistory) }
+        try FileManager.default.removeItem(at: unknown.fileURL)
+        let current = try packJournal(f)
+        _ = try current.read()
+        try Data("corrupt".utf8).write(to: current.fileURL)
+        do { _ = try await f.capture.capture(at: now); XCTFail("Corrupt pack journal cannot be omitted") }
+        catch { XCTAssertEqual(error as? PantryPackSelectionPendingStore.Failure, .corrupt) }
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("corrupt-pack-archives"))
+        do { _ = try await f.capture.publish(original, to: storage); XCTFail("Earlier capture cannot conceal corrupt pending evidence") }
+        catch { XCTAssertEqual(error as? PantryPackSelectionPendingStore.Failure, .corrupt) }
+    }
+
+    func testOlderScopeWithoutPackDigestDecodesButCannotHideLivePackEvidence() async throws {
+        let f = try await fixture(), captured = try await f.capture.capture(at: now)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: ArchiveCodec.canonical(captured.scope)) as? [String: Any])
+        object.removeValue(forKey: "packPendingDigest")
+        object.removeValue(forKey: "foodPendingDigest")
+        let older = try JSONDecoder().decode(PantryArchiveCapture.Scope.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertNil(older.packPendingDigest)
+        XCTAssertNil(older.foodPendingDigest)
+        let oldCapture = PantryArchiveCapture.Captured(snapshot: captured.snapshot, scope: older, evidence: captured.evidence)
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("old-scope-archives"))
+        _ = try await f.capture.publish(oldCapture, to: storage)
+        let journal = try packJournal(f)
+        _ = try journal.save(packRequest(inventory: f.inventory.workspaceID, ledger: f.ledger.workspaceID))
+        do { _ = try await f.capture.publish(oldCapture, to: storage); XCTFail("An old scope must not ignore new pending evidence") }
+        catch { XCTAssertEqual(error as? PantryArchiveCapture.Failure, .stale) }
+    }
+
     func testAllSQLitePagesPublishProtectedFilesAndReopenCompleteGraph() async throws {
         let f = try await fixture(lots: 205)
         let captured = try await f.capture.capture(at: now)

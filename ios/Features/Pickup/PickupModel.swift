@@ -350,10 +350,13 @@ struct PickupPersistenceLocation {
         let gate: PantryMutationGate
         let authorize: () -> Bool
         let foodPendingStore: PantryPendingStore?
+        let packSelectionPort: PantryPackSelectionCommitPort?
         init(ledger: LedgerStore, pendingStore: PantryPickupPendingStore, gate: PantryMutationGate,
-             authorize: @escaping () -> Bool, foodPendingStore: PantryPendingStore? = nil) {
+             authorize: @escaping () -> Bool, foodPendingStore: PantryPendingStore? = nil,
+             packSelectionPort: PantryPackSelectionCommitPort? = nil) {
             self.ledger = ledger; self.pendingStore = pendingStore; self.gate = gate
             self.authorize = authorize; self.foodPendingStore = foodPendingStore
+            self.packSelectionPort = packSelectionPort
         }
     }
     @Published private(set) var journeys: [PickupJourney] = []
@@ -374,6 +377,7 @@ struct PickupPersistenceLocation {
     private let mutationGate: PantryMutationGate?
     private let pantryConfiguration: PantryConfiguration?
     private var pantryReaderMapping: PantryLegacyMigration.Plan?
+    private var pantryPackSelectionPort: PantryPackSelectionCommitPort?
     private var pendingPantry: PantryPickupPendingStore.Entry?
     private var validatingRecoveryOperationID: UUID?
     var hasPendingPantrySave: Bool { pendingPantry != nil }
@@ -470,6 +474,23 @@ struct PickupPersistenceLocation {
             throw PickupModelError.missing
         }
         return .init(snapshot: snapshot, mapping: mapping, asOf: clock())
+    }
+    func makePantryPackSelectionPort() throws -> PantryPackSelectionCommitPort {
+        guard pantryIsActive, let configuration = pantryConfiguration, configuration.authorize(), let store,
+              store.workspaceID == configuration.pendingStore.inventoryWorkspaceID else { throw PickupModelError.missing }
+        if let pantryPackSelectionPort { return pantryPackSelectionPort }
+        if let port = configuration.packSelectionPort {
+            guard port.inventoryWorkspaceID == store.workspaceID, port.ledgerWorkspaceID == configuration.ledger.workspaceID,
+                  port.matchesGate(configuration.gate) else { throw PickupModelError.missing }
+            pantryPackSelectionPort = port
+            return port
+        }
+        let pending = try PantryPackSelectionPendingStore(directory: configuration.pendingStore.fileURL.deletingLastPathComponent(),
+            inventoryWorkspaceID: store.workspaceID, ledgerWorkspaceID: configuration.ledger.workspaceID)
+        let port = PantryPackSelectionCommitPort(store: store, ledger: configuration.ledger, pendingStore: pending,
+            gate: configuration.gate, authorize: { _, _ in configuration.authorize() }, clock: clock)
+        pantryPackSelectionPort = port
+        return port
     }
     /// All private pantry entry points use this factory so an independent count
     /// updates the pickup/cook read basis after the repository releases its lease.

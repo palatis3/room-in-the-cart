@@ -25,6 +25,7 @@ import RecordArchive
         let ledgerPayloadDigest: Data?
         let pendingDigest: Data?
         let foodPendingDigest: Data?
+        let packPendingDigest: Data?
         let capturedAt: Date
     }
     /// Payload-free archival evidence. Importing these never authorizes root erasure.
@@ -71,7 +72,9 @@ import RecordArchive
         let pendingEntry = try pending.read()
         let foodPending = try pending.makeFoodPendingStore()
         let foodPendingEntry = try foodPending.read()
-        var budget = 0
+        let packOrigins = Set(ledgerRetirements.map(\.workspaceID)).union([ledger.workspaceID])
+        let packEntries = try readPackPending(ledgerOrigins: packOrigins)
+        var budget = try packEntries.reduce(0) { $0 + (try ArchiveCodec.canonical($1).count) }
         func account(_ bytes: Int) throws {
             let sum = budget.addingReportingOverflow(bytes)
             guard !sum.overflow, sum.partialValue <= limits.materializedBytes else { throw Failure.tooLarge }
@@ -211,12 +214,14 @@ import RecordArchive
             try account(ArchiveCodec.canonical(entry).count)
             history.append(.foodPending(entry))
         }
+        for entry in packEntries { history.append(.packPending(entry)) }
         let finalState = try await inventory.inventoryState(); try access()
         let finalToken = try await inventory.inventorySourceToken(); try access()
         let finalLedger = try await ledger.load(); try access()
         let finalRetired = try await ledger.tombstones(); try access()
         guard finalState == initial, finalToken == token, finalLedger == ledgerHead, finalRetired == ledgerRetirements,
-              try pending.read() == pendingEntry, try foodPending.read() == foodPendingEntry else { throw Failure.stale }
+              try pending.read() == pendingEntry, try foodPending.read() == foodPendingEntry,
+              try readPackPending(ledgerOrigins: packOrigins) == packEntries else { throw Failure.stale }
         let snapshot = PantryArchiveCodec.Snapshot(descriptor: .init(originID: inventory.workspaceID,
             inventoryRevision: initial.revision, capturedAt: date), lots: lots, observations: observations, events: events,
             reservations: claims, sourceLinks: links, history: history)
@@ -225,7 +230,9 @@ import RecordArchive
             sourceToken: token, ledgerOriginID: ledger.workspaceID, ledgerRevision: ledgerHead?.revision ?? 0,
             ledgerOperationID: ledgerHead?.operationID, ledgerPayloadDigest: ledgerHead.map { Self.digest($0.payload) },
             pendingDigest: try pendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) },
-            foodPendingDigest: try foodPendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) }, capturedAt: date)
+            foodPendingDigest: try foodPendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) },
+            packPendingDigest: try Self.packDigest(inventoryOriginID: inventory.workspaceID, ledgerOrigins: packOrigins, entries: packEntries),
+            capturedAt: date)
         let result = Captured(snapshot: snapshot, scope: scope, evidence: evidence)
         try Self.validate(result); try access()
         return result
@@ -239,6 +246,9 @@ import RecordArchive
         let state = try await inventory.inventoryState(); try access()
         let token = try await inventory.inventorySourceToken(); try access()
         let head = try await ledger.load(); try access()
+        let retired = try await ledger.tombstones(); try access()
+        let packOrigins = Set(retired.map(\.workspaceID)).union([ledger.workspaceID])
+        let packEntries = try readPackPending(ledgerOrigins: packOrigins)
         let scope = captured.scope
         guard state.active, state.workspaceID == scope.inventoryOriginID, state.revision == scope.inventoryRevision,
               token == scope.sourceToken, ledger.workspaceID == scope.ledgerOriginID,
@@ -246,7 +256,65 @@ import RecordArchive
               head.map({ Self.digest($0.payload) }) == scope.ledgerPayloadDigest,
               try pending.read().map({ Self.digest(try ArchiveCodec.canonical($0)) }) == scope.pendingDigest,
               try pending.makeFoodPendingStore().read().map({ Self.digest(try ArchiveCodec.canonical($0)) }) == scope.foodPendingDigest else { throw Failure.stale }
+        if let expected = scope.packPendingDigest {
+            guard try Self.packDigest(inventoryOriginID: inventory.workspaceID, ledgerOrigins: packOrigins, entries: packEntries) == expected else { throw Failure.stale }
+        } else {
+            guard packEntries.isEmpty else { throw Failure.stale }
+        }
         return try storage.publish(captured, bundleID: bundleID)
+    }
+
+    /// Read only bounded, known origin pairs. A matching unknown filename is
+    /// evidence we cannot account for, never permission to silently omit it.
+    private func readPackPending(ledgerOrigins: Set<UUID>) throws -> [PantryPackSelectionPendingStore.Entry] {
+        try access()
+        guard ledgerOrigins.count <= 4_096 else { throw Failure.tooLarge }
+        let directory = pending.fileURL.deletingLastPathComponent()
+        let origins = ledgerOrigins.sorted { $0.uuidString < $1.uuidString }
+        let stores = try origins.map {
+            try PantryPackSelectionPendingStore(directory: directory, inventoryWorkspaceID: inventory.workspaceID, ledgerWorkspaceID: $0)
+        }
+        let expected = Set(stores.map { $0.fileURL.lastPathComponent })
+        let prefix = inventory.workspaceID.uuidString.lowercased() + "."
+        var enumerationFailed = false
+        guard let files = FileManager.default.enumerator(at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey], options: [.skipsSubdirectoryDescendants],
+            errorHandler: { _, _ in enumerationFailed = true; return false }) else { throw Failure.invalidEvidence }
+        var count = 0
+        while let url = files.nextObject() as? URL {
+            count += 1
+            guard count <= 16_384 else { throw Failure.tooLarge }
+            let name = url.lastPathComponent
+            guard name.lowercased().hasPrefix(prefix), name.lowercased().hasSuffix(".pack.json") else { continue }
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            guard expected.contains(name), values.isRegularFile == true, values.isSymbolicLink != true else { throw Failure.unknownHistory }
+        }
+        guard !enumerationFailed else { throw Failure.invalidEvidence }
+        var entries: [PantryPackSelectionPendingStore.Entry] = []
+        var bytes = 0
+        for store in stores {
+            guard let entry = try store.read() else { continue }
+            let next = bytes.addingReportingOverflow(try ArchiveCodec.canonical(entry).count)
+            guard !next.overflow, next.partialValue <= limits.materializedBytes else { throw Failure.tooLarge }
+            bytes = next.partialValue; entries.append(entry)
+        }
+        return entries
+    }
+
+    private struct PackPairDigest: Encodable { let ledgerOriginID: UUID; let entryDigest: Data? }
+    private struct PackJournalDigest: Encodable { let inventoryOriginID: UUID; let pairs: [PackPairDigest] }
+    private static func packDigest(inventoryOriginID: UUID, ledgerOrigins: Set<UUID>,
+                                   entries: [PantryPackSelectionPendingStore.Entry]) throws -> Data {
+        var indexed: [UUID: PantryPackSelectionPendingStore.Entry] = [:]
+        for entry in entries {
+            guard entry.request.inventoryWorkspaceID == inventoryOriginID,
+                  ledgerOrigins.contains(entry.request.ledgerWorkspaceID),
+                  indexed.updateValue(entry, forKey: entry.request.ledgerWorkspaceID) == nil else { throw Failure.invalidEvidence }
+        }
+        let pairs = try ledgerOrigins.sorted { $0.uuidString < $1.uuidString }.map { origin in
+            PackPairDigest(ledgerOriginID: origin, entryDigest: try indexed[origin].map { digest(try ArchiveCodec.canonical($0)) })
+        }
+        return digest(try ArchiveCodec.canonical(PackJournalDigest(inventoryOriginID: inventoryOriginID, pairs: pairs)))
     }
 
     private func access() throws {
@@ -293,6 +361,19 @@ import RecordArchive
             case let .projection(id, status):
                 guard statuses.updateValue(status, forKey: id) == nil else { throw Failure.invalidEvidence }
             }
+        }
+        let packEntries = captured.snapshot.history.compactMap { value -> PantryPackSelectionPendingStore.Entry? in
+            if case .packPending(let entry) = value, entry.request.inventoryWorkspaceID == scope.inventoryOriginID { return entry }
+            return nil
+        }
+        if let expected = scope.packPendingDigest {
+            guard expected.count == 32,
+                  try packDigest(inventoryOriginID: scope.inventoryOriginID,
+                      ledgerOrigins: retiredLedgers.union([scope.ledgerOriginID]), entries: packEntries) == expected else { throw Failure.invalidEvidence }
+        } else {
+            // Older optional scopes remain readable only when they contain no
+            // live pack journal that their original capture could not bind.
+            guard packEntries.isEmpty else { throw Failure.invalidEvidence }
         }
         let projections = captured.snapshot.history.compactMap { value -> PantryArchiveCodec.ProjectionEvidence? in
             if case .projection(let evidence) = value { return evidence }; return nil

@@ -1,6 +1,6 @@
 # Room in the Cart — feature expansion implementation plan
 
-Audited implementation plan, November 17, 2026. **All three independent judges approved v2 after corrections.** The later user-requested [support supplement](FEATURE-SUPPORT-PLAN.md) adds explicit optional provider implementation and tracks future connections; its review is separate from the original approval. Slice A merged through PR #11 into main at `815d7a298edf1dde79ae98f34cecd42989f66310`. Its postmerge checks are tracked separately. Slice B is in local implementation with production activation still off; later slices remain planned.
+Audited implementation plan, November 17, 2026. **All three independent judges approved v2 after corrections.** The later user-requested [support supplement](FEATURE-SUPPORT-PLAN.md) adds explicit optional provider implementation and tracks future connections; its review is separate from the original approval. Slice A merged through PR #11 into main at `815d7a298edf1dde79ae98f34cecd42989f66310`. Its [postmerge CI qualification](https://github.com/palatis3/room-in-the-cart/actions/runs/44103266221/attempts/2) passed 1,048 model tests and 74 UI cases, retaining successful jobs and retrying only UI07/UI08 against the original producer. Slice B is in local implementation with production activation still off; later slices remain planned.
 
 ## Scope and baseline
 

@@ -18,6 +18,58 @@ final class LedgerStoreTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
+    func testSavedOperationLookupAfterRestartReturnsHistoricalBytesWithoutChangingCurrentHead() async throws {
+        let store = try LedgerStore(url: url), operation = UUID()
+        let original = try await store.save(payload: Data([1, 4]), expectedRevision: 0,
+            operationID: operation, savedAt: originalDate)
+        let latest = try await store.save(payload: Data([2, 8]), expectedRevision: 1,
+            operationID: UUID(), savedAt: originalDate.addingTimeInterval(30))
+        try await store.close()
+        let reopened = try LedgerStore(url: url)
+        let bytes = try Data(contentsOf: url)
+        let found = try await reopened.savedOperation(id: operation)
+        let missing = try await reopened.savedOperation(id: UUID())
+        let current = try await reopened.load()
+        XCTAssertEqual(found, original); XCTAssertNil(missing); XCTAssertEqual(current, latest)
+        XCTAssertEqual(try Data(contentsOf: url), bytes, "Receipt lookup must not mutate or upgrade the database.")
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 2)
+        try await reopened.close()
+        do { _ = try await reopened.savedOperation(id: operation); XCTFail("Closed database") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .closed) }
+    }
+
+    func testSavedOperationLookupDistinguishesRetirementErasureAndAbsence() async throws {
+        let store = try LedgerStore(url: url), operation = UUID(), erasure = UUID()
+        _ = try await store.save(payload: Data([1]), expectedRevision: 0, operationID: operation, savedAt: originalDate)
+        _ = try await store.eraseWorkspace(workspaceID: store.workspaceID, expectedRevision: 1,
+            operationID: erasure, at: originalDate)
+        do { _ = try await store.savedOperation(id: UUID()); XCTFail("Old origin cannot report absence") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .erased) }
+        let replacement = try LedgerStore(url: url)
+        do { _ = try await replacement.savedOperation(id: operation); XCTFail("Retired work cannot look unapplied") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .erased) }
+        do { _ = try await replacement.savedOperation(id: erasure); XCTFail("Deletion is not an ordinary save") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .operationConflict) }
+        let missing = try await replacement.savedOperation(id: UUID())
+        XCTAssertNil(missing)
+        try await store.close(); try await replacement.close()
+    }
+
+    func testSavedOperationLookupRejectsProjectionIdentityButReadsOrdinaryVersionThreeSave() async throws {
+        let store = try LedgerStore(url: url, inventoryProjectionsEnabled: true)
+        let binding = LedgerInventoryProjectionBinding(ledgerWorkspaceID: store.workspaceID, projectionID: UUID(),
+            inventoryWorkspaceID: UUID(), inventoryOperationID: UUID(), kind: "pantry-test", targetID: UUID())
+        _ = try await store.applyInventoryProjection(binding: binding, request: Data([7]), payload: Data([1]),
+            expectedRevision: 0, savedAt: originalDate)
+        do { _ = try await store.savedOperation(id: binding.projectionID); XCTFail("Projection requires its binding-specific lookup") }
+        catch { XCTAssertEqual(error as? LedgerStoreError, .operationConflict) }
+        let ordinary = try await store.save(payload: Data([2]), expectedRevision: 1, operationID: UUID(), savedAt: originalDate)
+        let found = try await store.savedOperation(id: ordinary.operationID)
+        XCTAssertEqual(found, ordinary)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 3)
+        try await store.close()
+    }
+
     func testEmptyMigrationAndIndependentWorkspace() async throws {
         try sql("PRAGMA user_version = 0")
         let store = try LedgerStore(url: url)

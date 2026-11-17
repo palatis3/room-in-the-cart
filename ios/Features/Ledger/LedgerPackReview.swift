@@ -44,6 +44,12 @@ struct LedgerPackReview {
     @MainActor func save(offerID: String, ledger: LedgerModel, pickup: PickupModel? = nil) async throws -> Bool {
         let selection = try LedgerPackSelection(id: operationID, workspaceID: sourceWorkspaceID,
             shop: sourceShop, lineID: lineID, request: request, selectedOfferID: offerID, at: reviewedAt, source: source, bindings: bindings, stockEvidence: stockEvidence, canonicalStockEvidence: canonicalStockEvidence)
+        if let evidence = canonicalStockEvidence {
+            guard let pickup else { throw LedgerPackError.staleSource }
+            let port = try pickup.makePantryPackSelectionPort()
+            return try await ledger.savePantryPack(.init(inventoryWorkspaceID: evidence.basis.originID,
+                ledgerWorkspaceID: sourceWorkspaceID, selection: selection, reviewedLedgerRevision: workspaceRevision), using: port)
+        }
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, ledger.sourceWorkspaceID == sourceWorkspaceID else { throw LedgerPackError.staleSource }
         // Exact retained body is a completed operation, even if current stock has
         // since changed. A different offer/body under this ID remains a conflict.
@@ -52,16 +58,6 @@ struct LedgerPackReview {
             return true
         }
         if let pickup { guard pickup.ready, !pickup.saving, !pickup.hasPendingSave else { throw LedgerPackError.staleSource } }
-        if canonicalStockEvidence != nil {
-            guard let context = try pickup?.canonicalPackContext(for: sourceShop.id),
-                  try PantryPackStockReview.currentEvidence(for: selection, shop: sourceShop, bindings: bindings, context: context) == canonicalStockEvidence else {
-                throw LedgerPackError.staleSource
-            }
-            // Integration boundary: the generic ledger writer cannot hold the
-            // paired-store exclusive lease across this read and its eventual write.
-            // Keep canonical saves closed until composition supplies that bridge.
-            throw LedgerPackError.staleSource
-        }
         guard pickup?.pantryIsActive != true else { throw LedgerPackError.staleSource }
         if stockEvidence != nil {
             _ = try LedgerPackStockReview.currentEvidence(for: selection, shop: sourceShop,
