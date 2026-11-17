@@ -1,3 +1,4 @@
+import {checkIngredientChange} from './meal-preferences.js';
 import type {TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 import {assertTrackingV1,assertTrackingPriceReset,applyTracking,trackingOperation,assertTrackingReplay,stageV1Tracking} from './shared-demand-tracking-repository.js';
 import {deriveSharedFoodUndo,assertSharedFoodUndoReplay,foodUndoFailure,type FoodUndoEvidence,type FoodUndoStoreBasis} from './shared-food-operation-undo.js';
@@ -69,13 +70,14 @@ function quantityMatches(actual:DemandContribution['quantity'],expected:any){
  if(expected===null)return actual===null;if(!actual)return false;
  return actual.unit===expected.unit&&BigInt(actual.amount.numerator)*BigInt(expected.amount.denominator)===BigInt(expected.amount.numerator)*BigInt(actual.amount.denominator);
 }
-export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Pick<Input,'action'>,protectMeal?:TrackingMealProtection){
+export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Pick<Input,'action'>,protectMeal?:TrackingMealProtection, derivedInverse=false){
  const meals=await repo.meals(ctx,shop.shop_id);let request:any=null;let body:any,lines:any[],quote=shop.quote;
  if(input.action.kind==='shop.patch'){
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['shop.patch'].parse(input.action.body);lines=body.lines;quote=body.quote;
   if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');if(protectMeal)protectMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.occurrenceId);else preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    assert(old||e.meal,'stale_meal');assert(old||meals.length<100,'meal_limit');
    if(e.changeProposalId)await requireSharedMealChange(ctx,shop,e.changeProposalId,e.occurrenceId,e.baseMealRevision,e.meal);
+   else if(!derivedInverse)await checkIngredientChange(ctx,old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.preferenceReview);
    if(e.proposalId)await requireMealMove(ctx,shop,e.proposalId,e.occurrenceId,old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    const index=meals.findIndex(m=>m.occurrenceId===e.occurrenceId);if(index>=0)meals.splice(index,1);if(e.meal)meals.push({occurrenceId:e.occurrenceId,revision:shop.revision+1,meal:e.meal});}
  }else{
@@ -144,7 +146,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Inp
  }else if(input.mode==='review'){
   assert(noChanges(input.change)&&!input.undoOperationId,'invalid_demand_review');result={graph:validateDemandGraph({...before,revision:before.revision+1}),receipt:{schemaVersion:1,operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.revision,resultRevision:before.revision+1,lines:[],contributions:[],edges:[]}};
  }else {assert(!input.undoOperationId,'invalid_demand_change');result=applyDemandChange(before,command);}
- const facts=await actionFacts(repo,ctx,shop,input);await verifySources(repo,ctx,shop,result.graph,facts);verifyPacks(result.graph,facts,input.packs);
+ const facts=await actionFacts(repo,ctx,shop,input,undefined,input.mode==='operationUndo');await verifySources(repo,ctx,shop,result.graph,facts);verifyPacks(result.graph,facts,input.packs);
  return {before,result,facts,baseDigest:current?.fingerprint??digest(before),acceptedDigest:digest({input,operationId,at,graph:result.graph,receipt:result.receipt,lines:facts.lines,quote:facts.quote,meals:facts.meals,requestRevision:facts.request?.revision??null})};
 }
 /** Informational, read-only facts. Existing preview/apply revalidate all authority and source rules. */
@@ -287,7 +289,7 @@ export async function readFoodOperationUndoCandidate(repo:HouseholdRepository,ct
  const current=await loadDemand(ctx,shop);assert(current&&!shop.demand_review_required,'demand_enabled_required');
  assert(current.graph.revision===input.base.graphRevision&&current.fingerprint===input.base.graphDigest,'stale_demand');
  const inverse=await operationInverse(repo,ctx,shop,input.targetOperationId,current.graph,randomUUID(),ctx.now.toISOString());
- const facts=await actionFacts(repo,ctx,shop,{action:inverse.action});await verifySources(repo,ctx,shop,inverse.result.graph,facts);
+ const facts=await actionFacts(repo,ctx,shop,{action:inverse.action},undefined,true);await verifySources(repo,ctx,shop,inverse.result.graph,facts);
  return {schemaVersion:1,shopId:shop.shop_id,base:input.base,targetOperationId:input.targetOperationId,effectDigest:inverse.effectDigest,
   scope:inverse.scope,action:inverse.action,before:current.graph,after:inverse.result.graph,
   beforeTotals:demandLineTotals(current.graph),afterTotals:demandLineTotals(inverse.result.graph),

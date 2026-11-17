@@ -98,10 +98,20 @@ extension SharedMeal {
         try planning?.validate()
     }
 }
+public struct SharedRecipeReview: Codable, Equatable, Sendable {
+    public let revision: UUID
+    public let evidence: SharedMealPreferenceEvidence?
+    public init(revision: UUID, evidence: SharedMealPreferenceEvidence?) {
+        self.revision = revision
+        self.evidence = evidence
+    }
+}
+
 public struct SharedMealChangeRequest: Codable, Equatable, Sendable {
     public let proposalId: UUID; public let occurrenceId: UUID; public let baseMealRevision: Int?
     public let shopRevision: Int; public let authorityEpoch: Int; public let grantRevision: Int
     public let meal: SharedMeal; public let reason: String
+    public var preferenceReview: SharedRecipeReview? = nil
     public let approvedIdeaId: UUID?; public let approvedIdeaRevision: Int?
     public init(proposalId: UUID = UUID(), occurrenceId: UUID, baseMealRevision: Int?, shopRevision: Int, authorityEpoch: Int, grantRevision: Int, meal: SharedMeal, reason: String, approvedIdeaId: UUID? = nil, approvedIdeaRevision: Int? = nil) {
         self.proposalId = proposalId; self.occurrenceId = occurrenceId; self.baseMealRevision = baseMealRevision
@@ -113,6 +123,7 @@ public struct SharedMealChangeRequest: Codable, Equatable, Sendable {
         try c.encode(baseMealRevision, forKey: .baseMealRevision); try c.encode(shopRevision, forKey: .shopRevision)
         try c.encode(authorityEpoch, forKey: .authorityEpoch); try c.encode(grantRevision, forKey: .grantRevision)
         try c.encode(meal, forKey: .meal); try c.encode(reason, forKey: .reason)
+        try c.encodeIfPresent(preferenceReview, forKey: .preferenceReview)
         try c.encodeIfPresent(approvedIdeaId, forKey: .approvedIdeaId); try c.encodeIfPresent(approvedIdeaRevision, forKey: .approvedIdeaRevision)
     }
     public func validate() throws {
@@ -128,10 +139,11 @@ public struct SharedMealChangePage: Codable, Equatable, Sendable {
         public let proposalId: UUID; public let request: SharedMealChangeRequest; public let original: SharedMeal?; public let state: String
         public var id: UUID { proposalId }
         public func isCurrent(in page: SharedMealChangePage) -> Bool {
-            state == "pending" && page.phase == "draft" && request.shopRevision == page.shopRevision && request.authorityEpoch == page.authorityEpoch && request.grantRevision == page.grantRevision && (request.baseMealRevision == nil ? (original == nil && !page.meals.contains { $0.id == request.occurrenceId }) : page.meals.contains { $0.id == request.occurrenceId && $0.revision == request.baseMealRevision && $0.meal == original })
+            (request.preferenceReview == nil || request.preferenceReview?.revision == page.preferenceRevision) && state == "pending" && page.phase == "draft" && request.shopRevision == page.shopRevision && request.authorityEpoch == page.authorityEpoch && request.grantRevision == page.grantRevision && (request.baseMealRevision == nil ? (original == nil && !page.meals.contains { $0.id == request.occurrenceId }) : page.meals.contains { $0.id == request.occurrenceId && $0.revision == request.baseMealRevision && $0.meal == original })
         }
     }
     public let shopId: UUID; public let shopRevision: Int; public let authorityEpoch: Int; public let grantRevision: Int
+    public var preferenceRevision: UUID? = nil
     public let phase: String; public let shopper: Bool; public let meals: [SharedMealOccurrence]; public let proposals: [Proposal]
     public func validate() throws {
         guard shopRevision > 0, authorityEpoch > 0, grantRevision >= 0,

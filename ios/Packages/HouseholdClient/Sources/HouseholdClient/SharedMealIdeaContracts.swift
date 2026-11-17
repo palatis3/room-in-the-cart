@@ -52,6 +52,14 @@ public struct SharedMealPreferenceCheck: Codable, Equatable, Sendable {
     public let blocked: [String]
     public let unresolved: [String]
     public let soft: [String]
+
+    func validate() throws {
+        let categories: Set<String> = ["ingredient", "dislike", "appliance", "brand", "effort"]
+        for values in [blocked, unresolved, soft] {
+            guard Set(values).count == values.count, Set(values).isSubset(of: categories) else { throw ClientError.invalidResponse }
+        }
+        guard eligible == (blocked.isEmpty && unresolved.isEmpty) else { throw ClientError.invalidResponse }
+    }
 }
 
 public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
@@ -159,6 +167,8 @@ public struct SharedMealIdeaPage: Codable, Equatable, Sendable {
         guard shopRevision > 0, authorityEpoch > 0, grantRevision >= 0, ideas.count <= 100, Set(ideas.map(\.id)).count == ideas.count else { throw ClientError.invalidResponse }
         for idea in ideas {
             try idea.draft.validate()
+            try idea.preview.preferenceCheck?.validate()
+            if idea.preview.preferenceCheck?.eligible == false && idea.preview.canApprove { throw ClientError.invalidResponse }
             guard idea.revision > 0, ["draft","approved"].contains(idea.state), idea.preview.ingredients.map(\.id) == idea.draft.ingredients.map(\.id),
                   idea.preview.ingredients.allSatisfy({ ($0.reserved == nil || ($0.reserved!.numerator >= 0 && $0.reserved!.denominator > 0)) && $0.unresolvedPrice && ($0.wholePacks == nil || $0.wholePacks! >= 0) }) else { throw ClientError.invalidResponse }
         }

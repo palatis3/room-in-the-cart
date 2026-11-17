@@ -1,3 +1,4 @@
+import {checkIngredientChange} from './meal-preferences.js';
 import {captureAcceptanceBefore,finishAcceptanceCapture} from './shared-request-acceptance-lineage.js';
 import {requestUndoOperation,applyRequestUndo,assertRequestAcceptanceReplay} from './shared-request-acceptance-repository.js';
 import {captureTrackingSnapshot,prepareTrackingFreeze,takeTrackingSeal,assertTrackingPlacement} from './shared-demand-tracking-repository.js';
@@ -535,6 +536,7 @@ export class HouseholdRepository {
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
+        else if(!b.demandReview)await checkIngredientChange(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);
         if(b.mealEdit.proposalId) {
           await requireMealMove(ctx,shop,b.mealEdit.proposalId,occurrenceId,original?sharedMealSchema.parse(original.meal):undefined,meal);
           await ctx.db.query("UPDATE ritc.meal_move SET state='applied' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3",

@@ -213,7 +213,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
      {lines:lines(before),quote:shop.quote},ctx.now);
     const meal=evidence.component.kind==='meal'?await deriveCompoundMealAction(ctx,shop,evidence):null;
     commandAction={kind:'shop.patch',body:{lines:monetary.lines,quote:monetary.quote,...(meal?{mealEdit:meal.mealEdit}:{})}};
-    const restoredFacts=await actionFacts(repo,ctx,shop,{action:commandAction});
+    const restoredFacts=await actionFacts(repo,ctx,shop,{action:commandAction},undefined,true);
     const restoredCatalog=await trackingCatalog(repo,ctx,shop,restoredFacts,catalogGraph(before));
     const result=inverseCompoundAdoptionPartition(evidence,before,{operationId,targetOperationId:input.targetOperationId,evidenceDigest:old.evidence_digest,
      householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:before.privacyRevision,at},shop.quote,restoredCatalog,ctx.now);
@@ -257,7 +257,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
   }
  }
  state={...state,basket:[...state.basket].sort((a,b)=>a.id.localeCompare(b.id))};
- const facts=await actionFacts(repo,ctx,shop,{action:commandAction},input.mode==='change'&&before&&commandAction.kind==='shop.patch'&&commandAction.body.mealEdit?reviewedTrackingMealProtection(before,state):inverseProtection);const catalog=await trackingCatalog(repo,ctx,shop,facts,catalogGraph(state),input.mode==='mealOperationUndo'?state.catalog:undefined);validateState(state,catalog);
+ const facts=await actionFacts(repo,ctx,shop,{action:commandAction},input.mode==='change'&&before&&commandAction.kind==='shop.patch'&&commandAction.body.mealEdit?reviewedTrackingMealProtection(before,state):inverseProtection,input.mode==='mealOperationUndo'||input.mode==='firstAdoptionUndo');const catalog=await trackingCatalog(repo,ctx,shop,facts,catalogGraph(state),input.mode==='mealOperationUndo'?state.catalog:undefined);validateState(state,catalog);
  check(same(basket(facts.lines),state.basket)&&storeDigest(facts.quote)===state.quoteDigest,'tracking_action_changed');
  verifyPacks(state.graph,{...facts,lines:facts.lines.filter(l=>!state.legacyLineIds.includes(l.lineId))},state.packReviews);
  if((input.mode==='change'||input.mode==='adopt')&&facts.body.mealEdit)disclosure={kind:'mealActionChange',mealChange:await reviewedMealChange(repo,ctx,shop,facts),transferredChanges};

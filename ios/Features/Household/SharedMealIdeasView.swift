@@ -93,22 +93,8 @@ private struct SharedMealIdeaEditor: View {
             }.disabled(!own || model.pending != nil)
             if model.page?.preferenceRevision != nil {
                 Section(dinnerText("Meal preference details")) {
-                    MealEvidenceFields(draft: Binding(get: {
-                        let shared = draft.preferenceEvidence
-                        var value = MealEligibilityEvidence()
-                        value.reviewedIngredientDetails = shared?.reviewedIngredientDetails
-                        value.requiredAppliances = shared?.requiredAppliances
-                        value.brands = shared?.brands
-                        value.effort = shared?.effort.flatMap(MealEffort.init(rawValue:))
-                        return value
-                    }, set: { value in
-                        var shared = SharedMealPreferenceEvidence()
-                        shared.reviewedIngredientDetails = value.reviewedIngredientDetails
-                        shared.requiredAppliances = value.requiredAppliances
-                        shared.brands = value.brands
-                        shared.effort = value.effort?.rawValue
-                        draft.preferenceEvidence = shared
-                    }))
+                    MealEvidenceFields(draft: Binding(get: { MealEligibilityEvidence(shared: draft.preferenceEvidence) },
+                        set: { draft.preferenceEvidence = $0.shared }))
                 }.disabled(!own || model.pending != nil)
             }
             ForEach(draft.ingredients) { snapshot in
@@ -116,7 +102,9 @@ private struct SharedMealIdeaEditor: View {
                 let id = snapshot.id
                 let prefix = "ingredient.\(id)."
                 Section {
-                    TextField(ht("Ingredient name"), text: ingredient.name).focused($inputFocus, equals: prefix + "name")
+                    TextField(ht("Ingredient name"), text: Binding(get: { ingredient.wrappedValue.name }, set: { value in
+                        ingredient.wrappedValue.name = value; draft.preferenceEvidence = nil; reviewed = false
+                    })).focused($inputFocus, equals: prefix + "name")
                     Picker(ht("Ingredient unit"), selection: ingredient.unit) {
                         Text(ht("Count")).tag("count"); Text(ht("Grams")).tag("gram"); Text(ht("Kilograms")).tag("kilogram")
                         Text(ht("Ounces")).tag("ounce"); Text(ht("Pounds")).tag("pound")
@@ -147,11 +135,11 @@ private struct SharedMealIdeaEditor: View {
                         .focused($inputFocus, equals: prefix + "evidence")
                         .accessibilityLabel(ht("Household stock and package evidence"))
                         .accessibilityIdentifier("household-idea-evidence")
-                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id } }.disabled(draft.ingredients.count == 1)
+                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id }; draft.preferenceEvidence = nil; reviewed = false }.disabled(draft.ingredients.count == 1)
                 }.disabled(!own || model.pending != nil)
             }
             if own {
-                Button(ht("Add ingredient")) { draft.ingredients.append(.init()) }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
+                Button(ht("Add ingredient")) { draft.ingredients.append(.init()); draft.preferenceEvidence = nil; reviewed = false }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
                 Button(ht("Save household draft for review")) {
                     let reviewedDraft = draft.normalizedForSave(), selectedID = ideaID
                     draft = reviewedDraft
@@ -270,5 +258,23 @@ private struct SharedIdeaAmountField: View {
             .onChange(of: entered) { _, text in value = SharedMealIdeaAmount.parse(text) }
             .onChange(of: value) { _, amount in if focus.wrappedValue != fieldID { entered = amount?.text ?? "" } }
             .accessibilityHint(ht("Enter a whole number or an exact fraction, such as 1/2. Blank means unknown."))
+    }
+}
+
+extension MealEligibilityEvidence {
+    init(shared: SharedMealPreferenceEvidence?) {
+        self.init()
+        reviewedIngredientDetails = shared?.reviewedIngredientDetails
+        requiredAppliances = shared?.requiredAppliances
+        brands = shared?.brands
+        effort = shared?.effort.flatMap(MealEffort.init(rawValue:))
+    }
+    var shared: SharedMealPreferenceEvidence {
+        var result = SharedMealPreferenceEvidence()
+        result.reviewedIngredientDetails = reviewedIngredientDetails
+        result.requiredAppliances = requiredAppliances
+        result.brands = brands
+        result.effort = effort?.rawValue
+        return result
     }
 }

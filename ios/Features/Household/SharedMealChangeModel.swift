@@ -17,7 +17,7 @@ struct SharedMealChangeScope: Hashable {
 protocol SharedMealChangesServing: Sendable {
     func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent
     func sharedMealChanges(shopID: UUID) async throws -> SharedMealChangePage
-    func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent
+    func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String, evidence: SharedMealPreferenceEvidence?) async throws -> SharedMealChangeIntent
     func authorizeSharedMealChange(_ intent: SharedMealChangeIntent) async throws
     func executeSharedMealChange(_ intent: SharedMealChangeIntent) async throws
     func dismissSharedMealChange(_ proposal: SharedMealChangePage.Proposal, page: SharedMealChangePage) async throws
@@ -66,13 +66,13 @@ extension HouseholdService: SharedMealChangesServing {}
             }
         } catch { fail(error, start: start) }
     }
-    func prepare(occurrenceID: UUID, meal: SharedMeal, reason: String) async {
+    func prepare(occurrenceID: UUID, meal: SharedMeal, reason: String, evidence: SharedMealPreferenceEvidence? = nil) async {
         guard canPropose, let page else { return }
         let start = generation; busy = true; review = nil; notice = nil
         defer { if current(start) { busy = false } }
         do {
             try SharedMealGroupAmounts.validate(meal)
-            let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: occurrenceID, meal: meal, reason: reason)
+            let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: occurrenceID, meal: meal, reason: reason, evidence: evidence)
             guard current(start), scope.matches(intent) else { return }; review = intent
         } catch { fail(error, start: start) }
     }
@@ -141,7 +141,7 @@ extension HouseholdService: SharedMealChangesServing {}
         } catch { fail(error, start: start); return nil }
     }
     /// The assigned shopper reviews their own local evidence directly; no planner impersonation or proposal POST.
-    func reviewedShopperSeed(occurrenceID: UUID, meal: SharedMeal) async -> SharedMealEdit? {
+    func reviewedShopperSeed(occurrenceID: UUID, meal: SharedMeal, evidence: SharedMealPreferenceEvidence? = nil) async -> SharedMealEdit? {
         guard live, !busy, !hasPending, let page, page.shopper, page.phase == "draft",
               let original = page.meals.first(where: { $0.id == occurrenceID }), meal.day == original.meal.day else { return nil }
         let start = generation; busy = true; notice = nil
@@ -150,9 +150,10 @@ extension HouseholdService: SharedMealChangesServing {}
             try SharedMealGroupAmounts.validate(meal)
             let latest = try await service.sharedMealChanges(shopID: scope.shopID)
             guard current(start), latest.shopper, latest.phase == "draft", latest.shopRevision == page.shopRevision,
-                  latest.authorityEpoch == page.authorityEpoch, latest.meals.contains(original) else { throw ClientError.configuration }
+                  latest.authorityEpoch == page.authorityEpoch, latest.preferenceRevision == page.preferenceRevision, latest.meals.contains(original) else { throw ClientError.configuration }
             self.page = latest
             var edit = SharedMealEdit(occurrenceID: occurrenceID, meal: meal)
+            edit.preferenceReview = page.preferenceRevision.map { .init(revision: $0, evidence: evidence) }
             edit.baseMealRevision = original.revision
             return edit
         } catch { fail(error, start: start); return nil }

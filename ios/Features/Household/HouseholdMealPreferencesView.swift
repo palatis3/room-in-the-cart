@@ -17,7 +17,7 @@ struct HouseholdMealPreferencesLink: View {
     var body: some View {
         if let scope = household.mealPreferenceScope, let service = household.service {
             NavigationLink(dinnerText(source == nil ? "Household meal preferences" : "Review a household preference from this note")) {
-                HouseholdMealPreferencesView(household: household, scope: scope, service: service, source: source)
+                HouseholdMealPreferencesView(household: household, scope: scope, service: service, source: source, sourceAccess: household.decisionAccess)
             }.accessibilityIdentifier("household.mealPreferences")
         }
     }
@@ -28,6 +28,7 @@ private struct HouseholdMealPreferencesView: View {
     let scope: HouseholdPreferenceScope
     let service: HouseholdService
     let source: FamilyDecisionRecord?
+    let sourceAccess: FamilyDecisionAccess?
     @Environment(\.scenePhase) private var scenePhase
     @State private var session: HouseholdDeviceSession?
     @State private var page: HouseholdPreferencePage<MealPreferenceSettings>?
@@ -36,7 +37,11 @@ private struct HouseholdMealPreferencesView: View {
     @State private var busy = false
     @State private var editing = false
     @State private var request = UUID()
-    private var active: Bool { scenePhase == .active && household.mealPreferenceScope == scope }
+    @State private var saveIssue: String?
+    private var active: Bool {
+        scenePhase == .active && household.mealPreferenceScope == scope &&
+            (source == nil || (sourceAccess != nil && household.decisionAccess == sourceAccess))
+    }
     var body: some View {
         Group {
             if active {
@@ -64,6 +69,7 @@ private struct HouseholdMealPreferencesView: View {
                         }
                     }
                     if busy { ProgressView() }
+                    if let saveIssue { Text(saveIssue) }
                     if failed { Text(dinnerText("Household preferences are unavailable. Refresh to check current access.")) }
                     Button(dinnerText("Refresh household preferences")) { Task { await load() } }
                 }.disabled(busy)
@@ -103,14 +109,22 @@ private struct HouseholdMealPreferencesView: View {
             return true
         } catch {
             // Read authoritative state after a lost response or stale source.
-            if current == request { await load() }
+            if current == request {
+                await load()
+                guard active else { return false }
+                if case ClientError.service(403, "membership_inactive", _, _) = error {
+                    saveIssue = dinnerText("A current household seat is required to promote a saved note.")
+                } else {
+                    saveIssue = dinnerText("Check the current profile before reviewing this change again.")
+                }
+            }
             return false
         }
     }
     private func revoke() {
         request = UUID()
         editing = false
-        page = nil; grants = nil; session = nil; busy = false; failed = false
+        page = nil; grants = nil; session = nil; busy = false; failed = false; saveIssue = nil
     }
     private func load() async {
         revoke()
@@ -122,6 +136,10 @@ private struct HouseholdMealPreferencesView: View {
             let session = try await service.preferenceSession(for: projection)
             let page = try await service.preferencePage(MealPreferenceSettings.self, session: session)
             try page.settings?.validate()
+            if let source {
+                let latest = try await service.familyDecision(shopID: source.shopId, id: source.id)
+                guard source == latest else { throw ClientError.accessEnded }
+            }
             let grants = scope.administer && page.canWrite ? try await service.preferenceGrants(session: session) : nil
             guard current == request, active, !Task.isCancelled else { return }
             self.session = session; self.page = page; self.grants = grants

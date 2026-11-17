@@ -361,21 +361,22 @@ public actor HouseholdService {
         guard page.shopId == shopID else { throw ClientError.invalidResponse }
         return page
     }
-    public func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent {
+    public func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String, evidence: SharedMealPreferenceEvidence? = nil) async throws -> SharedMealChangeIntent {
         let start = generation
         let live = try await sharedMealChanges(shopID: page.shopId)
         guard start == generation, !live.shopper, live.shopRevision == page.shopRevision, live.authorityEpoch == page.authorityEpoch,
-              live.grantRevision == page.grantRevision, let original = page.meals.first(where: { $0.id == occurrenceID }),
+              live.grantRevision == page.grantRevision, live.preferenceRevision == page.preferenceRevision, let original = page.meals.first(where: { $0.id == occurrenceID }),
               live.meals.contains(original), meal.day == original.meal.day, meal != original.meal,
               let subject, let householdID, let memberID, let enrollment else { throw ClientError.configuration }
-        let request = SharedMealChangeRequest(occurrenceId: occurrenceID, baseMealRevision: original.revision, shopRevision: page.shopRevision,
+        var request = SharedMealChangeRequest(occurrenceId: occurrenceID, baseMealRevision: original.revision, shopRevision: page.shopRevision,
             authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: meal, reason: reason)
+        request.preferenceReview = page.preferenceRevision.map { .init(revision: $0, evidence: evidence) }
         return try SharedMealChangeIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, shopID: page.shopId, request: request)
     }
     public func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent {
         let start = generation
         let ideas = try await sharedMealIdeas(shopID: shopID)
-        guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.canApprove,
+        guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.requiresPreferenceReview != true, idea.preview.canApprove,
               idea.actorId.uuidString.lowercased() == memberID?.lowercased() else { throw ClientError.configuration }
         let page = try await sharedMealChanges(shopID: shopID)
         guard start == generation, page.shopRevision == ideas.shopRevision, page.authorityEpoch == ideas.authorityEpoch,

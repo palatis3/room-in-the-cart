@@ -792,13 +792,13 @@ struct SharedShopTransfer: Equatable {
                 if tracking.status == .enabled, tracking.state?.unbound.isEmpty == false || tracking.state?.legacyLineIds.isEmpty == false {
                     let meal = entered.mealEdit.map { edit in
                         SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
-                            proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                            proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview)
                     }
                     trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
                 }
                 if tracking.status == .legacy, let edit = entered.mealEdit {
                     let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
-                        proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                        proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview)
                     trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
                 }
                 if tracking.status == .reviewRequired {
@@ -821,7 +821,7 @@ struct SharedShopTransfer: Equatable {
             var mealContext: SharedMealFoodContext?
             if let edit = entered.mealEdit {
                 let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision,
-                    meal: edit.meal, proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                    meal: edit.meal, proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview)
                 let request = try SharedDemandActionSourceRequest(page: page, patch: .init(quote: candidate.quote, lines: candidate.lines,
                     mealEdit: meal, reviewedStoreBasisRevision: candidate.reviewedStoreBasisRevision))
                 let catalog = try await service.sharedDemandActionSources(shopID: id, page: page, request: request)

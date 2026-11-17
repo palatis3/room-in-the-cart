@@ -9525,6 +9525,38 @@
           }
         }
       }
+    },
+    "A current household seat is required to promote a saved note.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A current household seat is required to promote a saved note."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para convertir una nota guardada en una preferencia necesitas una plaza activa del hogar."
+          }
+        }
+      }
+    },
+    "Check the current profile before reviewing this change again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the current profile before reviewing this change again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba el perfil actual antes de volver a revisar este cambio."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { digest } from './database.js';
-import { DecisionHistory } from './decision-history.js';
+import type { SharedMealValue } from './shared-meal-planning.js';
+import type { DecisionHistory } from './decision-history.js';
 import { refresh, unavailable } from './errors.js';
 import type { Context } from './repository.js';
 
@@ -135,7 +136,7 @@ export function mealEligibility(value: Settings | null, ingredients: string[], e
     if (value.preferredBrands.length) {
       const preferred = new Set(value.preferredBrands.map(normalized));
       if (evidence?.brands == null) (value.strictBrands ? unresolved : soft).push('brand');
-      else if (evidence.brands.some(v => !preferred.has(normalized(v)))) (value.strictBrands ? blocked : soft).push('brand');
+      else if (!evidence.brands.length || evidence.brands.some(v => !preferred.has(normalized(v)))) (value.strictBrands ? blocked : soft).push('brand');
     }
     if (value.maximumEffort) {
       const order = ['low','medium','high'];
@@ -144,6 +145,20 @@ export function mealEligibility(value: Settings | null, ingredients: string[], e
     }
   }
   return {eligible: !blocked.length && !unresolved.length, blocked, unresolved, soft};
+}
+
+export const recipeReview = z.object({revision:id, evidence:mealEvidence.optional()}).strict();
+
+export async function checkIngredientChange(ctx: Context, original: SharedMealValue | undefined,
+    next: SharedMealValue | null, review?: z.infer<typeof recipeReview>) {
+  if (!original || !next) return;
+  const identities = (meal: SharedMealValue) => (meal.planning?.ingredients ?? []).map(i => ({id:i.id,name:i.name})).sort((a,b)=>a.id.localeCompare(b.id));
+  if (digest(identities(original)) === digest(identities(next))) return;
+  const current = await mealConstraints(ctx);
+  if (!review && !current.settings) return;
+  if (review?.revision !== current.revision) throw refresh();
+  const result = mealEligibility(current.settings,(next.planning?.ingredients ?? []).map(i=>i.name),review?.evidence);
+  if (!result.eligible) throw refresh();
 }
 
 export async function preferenceGrants(ctx: Context) {

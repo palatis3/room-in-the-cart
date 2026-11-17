@@ -1,5 +1,6 @@
 import {demandReviewSchema} from './shared-demand-contracts.js';
 import { recoveryPreviewSchema, pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
+import { recipeReview } from './meal-preferences.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
@@ -33,7 +34,7 @@ export const envelopeSchema = z.object({
   body: z.record(z.string(),z.unknown()),
 }).strict();
 const empty = z.object({}).strict();
-const mealEdit = z.object({ occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: sharedMealSchema.nullable(), proposalId: uuid.optional(), changeProposalId: uuid.optional() }).strict()
+const mealEdit = z.object({ preferenceReview:recipeReview.optional(), occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: sharedMealSchema.nullable(), proposalId: uuid.optional(), changeProposalId: uuid.optional() }).strict()
   .refine(value => !(value.proposalId && value.changeProposalId), 'Review one proposal at a time');
 const copyId = uuid.toLowerCase();
 const copyRevision = z.number().int().min(1).max(2_147_483_647);
