@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreDomain
 
-private struct InvalidImportAmount {
+struct InvalidImportAmount: Codable, Equatable {
     let text: String
     let unit: UnitOfMeasure
 }
@@ -34,12 +34,34 @@ struct LedgerImportView: View {
     @FocusState private var inputFocus: LedgerImportField?
     private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
-    private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
+    let firstDraft: FirstListEditor?
+    let onFirstSave: ((UUID) -> Void)?
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, onFirstSave: ((UUID) -> Void)? = nil) {
+        self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onFirstSave = onFirstSave
+        if let content = firstDraft?.content {
+            _original = State(initialValue: content.original); _source = State(initialValue: content.source)
+            _importID = State(initialValue: content.importID); _preview = State(initialValue: content.preview)
+            _choices = State(initialValue: content.choices); _invalidAmounts = State(initialValue: content.invalidAmounts)
+            _explicitSeparate = State(initialValue: content.explicitSeparate); _matchesAreCurrent = State(initialValue: content.matchesAreCurrent)
+        }
+    }
+    private var firstContents: FirstListContents {
+        .init(shopID: shopID, importID: importID, original: original, source: source,
+              preview: preview, choices: choices, invalidAmounts: invalidAmounts, explicitSeparate: explicitSeparate,
+              matchesAreCurrent: matchesAreCurrent)
+    }
+    private var shop: ShoppingLedger? {
+        if let firstDraft { return firstDraft.authorize() ? ShoppingLedger(id: shopID, title: ledgerText("Pickup")) : nil }
+        return model.workspace.shops.first { $0.id == shopID }
+    }
 
     var body: some View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
         return ScrollViewReader { scroll in
             Form {
+                if let firstDraft {
+                    FirstListDraftStatus(editor: firstDraft, contents: firstContents, blocked: model.saving || model.hasPendingSave)
+                }
                 if showingImportStatus {
                     Section { importSaveStatus }
                         .id("ledgerImportSaveStatus")
@@ -88,7 +110,7 @@ struct LedgerImportView: View {
                         }.accessibilityLabel(ledgerText("Paste list"))
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
-                        Button(captureText("Capture and review fields")) { beginCapture() }
+                        Button(firstDraft == nil ? captureText("Capture and review fields") : ledgerText("Add by photo or voice")) { beginCapture() }
                             .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
                             .accessibilityIdentifier("ledger.capture")
                         Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
@@ -119,7 +141,7 @@ struct LedgerImportView: View {
                         }
                     }
                 }
-                if !showingImportStatus {
+                if firstDraft == nil && !showingImportStatus {
                     Section { importSaveStatus }
                 }
             }.accessibilityIdentifier("ledgerImportForm")
@@ -132,8 +154,12 @@ struct LedgerImportView: View {
                     }
                 }
                 .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
-                .interactiveDismissDisabled(model.saving)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
+                    if let firstDraft, !original.isEmpty || firstDraft.version != nil {
+                        Task { if await firstDraft.flush(firstContents) != nil { dismiss() } }
+                    } else { dismiss() }
+                }.disabled(model.saving) } }
+                .interactiveDismissDisabled(model.saving || firstDraft != nil)
                 .sheet(item: $capturePresentation) { presentation in
                     let binding = presentation.binding
                     NavigationStack {
@@ -143,6 +169,7 @@ struct LedgerImportView: View {
                             authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                     }
                 }
+                .onChange(of: firstDraft == nil ? nil : firstContents) { _, next in if let next { firstDraft?.update(next) } }
                 .onChange(of: original) { _, _ in inputLimit = nil }
                 .onChange(of: liveCaptureBinding) { _, current in
                     if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
@@ -172,7 +199,7 @@ struct LedgerImportView: View {
     }
 
     private var importSaveStatus: some View {
-        LedgerSaveStatus(model: model, onRetried: { dismiss() })
+        LedgerSaveStatus(model: model, onRetried: { onFirstSave?(shopID); dismiss() })
             .accessibilityFocused($focus, equals: .status)
     }
 
@@ -185,18 +212,26 @@ struct LedgerImportView: View {
                     focus = .status; return
                 }
                 let decisions = review.choices
-                if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
+                if let firstDraft {
+                    guard firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
+                    if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
+                        onFirstSave?(shopID); dismiss()
+                    } else if !model.hasPendingSave {
+                        firstDraft.failedToApply()
+                        focus = .status
+                    }
+                } else if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
                     dismiss()
                 } else { focus = .status }
             }
-        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection)
+        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection || (firstDraft != nil && !review.choices.values.contains(where: { $0 != .skip })))
             .accessibilityIdentifier("ledgerCommitImport")
     }
 
     private var liveCaptureBinding: LedgerCaptureBinding? {
         guard access.unlocked, !household.locked, model.ready,
               !model.hasPendingLedgerDeletion, let workspaceID = model.sourceWorkspaceID,
-              let shop, model.workspace.selectedShopID == shopID else { return nil }
+              let shop, firstDraft?.authorize() ?? (model.workspace.selectedShopID == shopID) else { return nil }
         if let projection = household.projection {
             guard household.identity != nil, projection.enrolled, ["shopper", "organizer"].contains(projection.role) else { return nil }
         } else if household.identity != nil { return nil }
@@ -233,6 +268,7 @@ struct LedgerImportView: View {
     private func invalidateCapture() {
         guard capturePresentation != nil || captureBinding != nil else { return }
         capturePresentation = nil; captured = nil; captureBinding = nil
+        if firstDraft != nil { return } // Only reviewed text/fields survive; captured media is dropped above.
         invalidAmounts = [:]
         preview = nil; choices = [:]; original = ""; importID = UUID()
     }

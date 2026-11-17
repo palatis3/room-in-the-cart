@@ -16,6 +16,37 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
+        for language in ["en", "es"] {
+            launch(language: language, largeDark: language == "es")
+            let add = app.buttons["shop.addFirstList"]
+            tap(add)
+            let close = app.buttons[language == "en" ? "Close" : "Cerrar"]
+            tap(close)
+            XCTAssertTrue(add.waitForExistence(timeout: 5))
+            tap(add)
+            let field = app.textViews["ledgerImportText"]
+            let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
+            tap(field)
+            field.typeText(wording)
+            let saved = element("firstList.draftStatus")
+            let label = language == "en" ? "Private draft saved on this device. It expires 7 days after your last edit." :
+                "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
+            expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
+            waitForExpectations(timeout: 10)
+            app.terminate()
+            launch(language: language, reset: false, largeDark: language == "es")
+            tap(app.buttons["shop.addFirstList"])
+            XCTAssertEqual(field.value as? String, wording)
+            tap(app.buttons["ledgerReviewImport"])
+            tap(app.buttons["ledgerCommitImport"])
+            let undo = app.buttons["ledgerUndoImport"]
+            tap(undo)
+            XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
+            app.terminate()
+        }
+    }
+
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
         for language in ["en", "es"] {
             launch(language: language)

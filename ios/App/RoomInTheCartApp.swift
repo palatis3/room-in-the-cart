@@ -274,6 +274,9 @@ struct ShopView: View {
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var showingFirstList = false
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
         GeometryReader { viewport in
@@ -290,6 +293,15 @@ struct ShopView: View {
             .fittingViewport(viewport.size)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
+            .sheet(isPresented: $showingFirstList) {
+                NavigationStack {
+                    FirstListEntry(model: ledger) { id in
+                        guard access.unlocked, ledger.shop?.id == id, let workspace = ledger.sourceWorkspaceID else { return }
+                        showingFirstList = false
+                        navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: id)], for: .shop)
+                    }
+                }
+            }
     }
     private func pickupDestination<Content: View>(_ id: UUID, @ViewBuilder content: () -> Content) -> some View {
         Group {
@@ -345,6 +357,10 @@ struct ShopView: View {
                         }
                     } else {
                         comparePacks.buttonStyle(PrimaryAction())
+                        Button { showingFirstList = true } label: {
+                            Label(ledgerText("Add a list"), systemImage: "list.bullet")
+                                .font(.headline).frame(minHeight: 44)
+                        }.disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("shop.addFirstList")
                         Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     RestorableShoppingListLink {
@@ -397,6 +413,7 @@ struct ShopView: View {
                         }.foregroundStyle(Theme.action).accessibilityIdentifier("shop.checkOneChange")
                     }
                     if ledger.shop != nil {
+                        FirstListResumeButton(model: ledger, showingEditor: showingFirstList) { showingFirstList = true }
                         comparePacks.foregroundStyle(Theme.action)
                     }
                     NavigationLink {
