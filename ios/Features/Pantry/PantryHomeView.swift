@@ -58,7 +58,7 @@ struct PantryHomeView: View {
                                 if lots.isEmpty { Text(pantryText("No food recorded here.")) }
                                 ForEach(lots) { lot in
                                     NavigationLink {
-                                        PantryLotView(model: model, lotID: lot.id, accessAllowed: accessAllowed) { sheet = .recount(lot.id) }
+                                        PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed)
                                     } label: {
                                         PantryLotSummary(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
                                     }.accessibilityIdentifier("pantry.lot.\(lot.id)")
@@ -86,7 +86,8 @@ struct PantryHomeView: View {
         .navigationTitle(pantryText("My Pantry"))
         .privacySensitive()
 
-        .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet) {
+        .modifier(PantryEntryPresentation(model: model, accessAllowed: accessAllowed, sheet: $sheet,
+                                          handlesReview: sheet != nil) {
             resultFocused = true
         })
     }
@@ -170,6 +171,8 @@ private struct PantryEntryPresentation: ViewModifier {
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
     @Binding var sheet: PantrySheet?
+    // The list owns its add and purchase sheets. A pushed lot owns its own actions.
+    var handlesReview = true
     var availabilityNeedsReview = false
     var didSave: () -> Void = {}
 
@@ -182,10 +185,10 @@ private struct PantryEntryPresentation: ViewModifier {
             if !allowed { sheet = nil; model.accessLost() }
         }
         .onChange(of: model.review?.command.id) { _, id in
-            if id != nil && accessAllowed { sheet = .review }
+            if id != nil && accessAllowed && handlesReview { sheet = .review }
         }
         .onChange(of: model.savedLotID) { _, id in
-            if id != nil { sheet = nil; didSave() }
+            if id != nil && handlesReview { sheet = nil; didSave() }
         }
         .onChange(of: model.phase) { _, phase in
             if phase == .accessDenied { sheet = nil }
