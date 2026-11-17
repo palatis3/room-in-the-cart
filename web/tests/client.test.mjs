@@ -392,7 +392,7 @@ test('a command refusal hides private content even if the saved outbox cannot be
    authState:async()=>{duringRecovery=root.textContent;return {authenticated:false,available:true};}
   });
   const {root,dom}=await setup(api,'en',outbox);
-  outbox.clear=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
+  outbox.clearScope=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
   root.querySelector('input[type=checkbox]').click();
   type(dom,'item','Private test wording');submit(root,dom);submit(root,dom);await waitForIdle(root);
   assert.equal(puts,1);
@@ -432,11 +432,14 @@ test('authorized Refresh clears an old mutation access denial without discarding
   connected=false;submit(root,dom);await waitForIdle(root);
   assert.equal((await outbox.list(scopeFor(original))).length,1);
   current={...original,memberId:'member-b'};connected=true;
+  const otherTab={id:'stable-key',scope:scopeFor(current),command:command(),createdAt:'2026-01-01T12:00:00Z'};
+  await outbox.put(otherTab,current,true);
   if(storageClearFails)outbox.clearScope=async()=>{throw new DOMException('Storage denied','SecurityError');};
   click(root,'Retry');await waitForIdle(root);
   assert.match(root.textContent,/Access has ended/);
   assert.doesNotMatch(root.textContent,/Previous actor private request|Ask the shopper/);
   if(!storageClearFails)assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+  assert.deepEqual(await outbox.list(scopeFor(current)),[otherTab]);
 
   current=null;click(root,'Refresh');await waitForIdle(root);
   assert.match(root.textContent,/Access has ended/,'Anonymous refresh must not dismiss the denial');
@@ -705,9 +708,9 @@ for(const scenario of ['live replay window','expired replay window','changed mem
   const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
   let current=original,posts=0,removals=0;
   const remove=outbox.remove.bind(outbox);
-  outbox.remove=async id=>{
+  outbox.remove=async (...args)=>{
    if(++removals===1)throw new DOMException('Storage denied','SecurityError');
-   await remove(id);
+   await remove(...args);
   };
   const api=fakeAPI({session:async()=>current,command:async()=>{posts++;}});
   const {dom,root}=await setup(api,'en',outbox);
