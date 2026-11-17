@@ -29,7 +29,7 @@ final class RoomInTheCartUITests: XCTestCase {
         if done.exists, done.isHittable { done.tap() }
         tap(app.buttons["Close"])
         XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
-        tap(app.buttons["shop.resumeFirstList"])
+        tap(app.buttons["shop.addFirstList"])
         XCTAssertTrue(editor.waitForExistence(timeout: 10))
         XCTAssertEqual(editor.value as? String, "2 kg rice noodles")
     }
