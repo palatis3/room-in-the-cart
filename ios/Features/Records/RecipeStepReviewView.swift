@@ -53,6 +53,7 @@ private struct RecipeStepDetail: View {
     let save: ((RecipeStep) -> Void)?
     @State private var selected: Set<Int>
     @State private var minutes: String
+    @FocusState private var editingMinutes: Bool
 
     init(step: RecipeStep, ingredients: [String], save: ((RecipeStep) -> Void)?) {
         self.step = step
@@ -75,7 +76,7 @@ private struct RecipeStepDetail: View {
                     }
                 }
                 TextField(recordsText("Suggested timer in minutes (optional)"), text: $minutes)
-                    .keyboardType(.numberPad)
+                    .keyboardType(.numberPad).focused($editingMinutes)
                 if !minutes.isEmpty && !validMinutes {
                     Text(recordsText("Enter a whole number from 1 to 1440 minutes."))
                 }
@@ -99,7 +100,10 @@ private struct RecipeStepDetail: View {
                     Text(String(format: recordsText("Suggested timer: %lld min"), Int64(minutes)))
                 }
             }
-        }.navigationTitle(recordsText("Cooking step"))
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneAction(visible: editingMinutes, title: ledgerText("Done")) { editingMinutes = false }
+        .navigationTitle(recordsText("Cooking step"))
     }
 
     private var validMinutes: Bool {
