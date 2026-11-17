@@ -98,10 +98,24 @@ import CoreDomain
               let receipt = try? consent(.tonight) else { return false }
         return receipt.tonightBasis == basis
     }
+    func reconcileOwner(_ access: PantryDigestAccess) throws {
+        guard access.authorized() else { return }
+        for kind in AdultFoodSummaryKind.allCases {
+            if let receipt = try consent(kind), !receipt.belongs(to: access.scope) { try revoke(kind) }
+        }
+    }
     func checkTonightSource(ledger: LedgerModel, pickup: PickupModel) throws {
         guard let receipt = try consent(.tonight), let expected = receipt.tonightBasis else { return }
-        guard let current = try? TonightHomeBasis.current(ledger: ledger, pickup: pickup), current == expected else {
+        // Startup publishes ledger readiness before opening the protected inventory.
+        // A cold tap must wait for that read before comparing the pantry basis.
+        guard ledger.ready else { return }
+        if ledger.sourceWorkspaceID != expected.ledger || ledger.revision != expected.ledgerRevision ||
+            ledger.hasPendingLedgerDeletion || receipt.projection?.isFresh(at: Date(), zone: .current) != true {
             try invalidate(.tonight, origin: receipt.origin, forget: false); return
+        }
+        guard pickup.ready, pickup.pantryReadIsCurrent else { return }
+        if (try? TonightHomeBasis.current(ledger: ledger, pickup: pickup)) != expected {
+            try invalidate(.tonight, origin: receipt.origin, forget: false)
         }
     }
     func eraseLedger(_ ledgerID: UUID) throws {

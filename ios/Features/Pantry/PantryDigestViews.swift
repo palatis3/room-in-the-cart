@@ -49,7 +49,9 @@ extension PantryDigestAccess {
     }
     private func refreshHome(_ current: PantryDigestAccess?) {
         guard let current, current.authorized(), let snapshot = pickup.pantrySnapshot else { return }
+        try? home.checkTonightSource(ledger: ledger, pickup: pickup)
         do {
+            try home.reconcileOwner(current)
             let now = Date(), zone = TimeZone.current
             let doc = try store.document(current.scope)
             let count = try doc.homeSummaryCount(lots: snapshot.lots, now: now, zone: zone)
@@ -87,6 +89,8 @@ extension PantryDigestAccess {
             .onChange(of: store.generation) { _, _ in refreshHome(current) }
             .onChange(of: home.generation) { _, _ in refreshHome(current) }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in refreshHome(current) }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshHome(current) }
             .onChange(of: store.tapped) { _, _ in if let current { acceptTap(current) } }
             .sheet(isPresented: Binding(get: { openScope != nil && current?.scope == openScope && !suspended },
                                        set: { if !$0 { openScope = nil; shownModel = nil } })) {

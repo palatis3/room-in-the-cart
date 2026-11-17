@@ -156,6 +156,11 @@ import CoreDomain
         try cold.invalidate(.useSoon, origin: scope.origin, forget: true)
         XCTAssertFalse(cold.enabled(.useSoon, scope: scope))
         XCTAssertThrowsError(try file.read())
+        try cold.setEnabled(true, kind: .useSoon, access: access)
+        try cold.update(.useSoon, access: access, count: 1)
+        try cold.reconcileOwner(other)
+        XCTAssertThrowsError(try file.read())
+        XCTAssertFalse(cold.enabled(.useSoon, scope: scope))
     }
     func testShoppingShortcutsOpenDistinctReviewedDestinationsWithoutWriting() async throws {
         let requests = SurfaceCaptureRequests()
