@@ -96,6 +96,7 @@ const es: Record<string, string> = {
   'Received by the shopper.':'Recibida por quien hace la compra.',
   'Saved on this browser. Receipt unconfirmed.':'Guardada en este navegador. Recepción sin confirmar.',
   'Checked on server':'Consultada en el servidor','Saved on this browser':'Guardada en este navegador',
+  'Receipt unconfirmed':'Recepción sin confirmar',
   'Correction receipt unconfirmed':'Recepción de la corrección sin confirmar',
   'Saved correction on this browser':'Corrección guardada en este navegador','Correction needs review':'La corrección requiere revisión',
   'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'No se guardó en este navegador. La recepción no está confirmada. Tu texto sigue aquí. Reintenta para comprobarlo.',

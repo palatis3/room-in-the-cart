@@ -283,6 +283,11 @@ struct DeviceReminderPersona: Equatable {
                 } else {
                     cancelEdit()
                 }
+                if prior.memberId != fresh.memberId || prior.household.id != fresh.household.id ||
+                    fresh.grantId != nil || !fresh.capabilities.contains("own_requests") {
+                    pending = nil
+                    delivery = .localDraft
+                }
                 requests = []
                 requestReadTimes = RequestReadTimes()
                 nextRequestCursor = nil

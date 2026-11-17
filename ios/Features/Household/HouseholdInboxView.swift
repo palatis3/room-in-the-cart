@@ -410,8 +410,8 @@ func householdMoney(_ amount: Int?, currency: String) -> String {
 struct RequestReadTimeLabel: View {
     let asOf: String?
     var body: some View {
-        if let asOf {
-            LabeledContent(ht("Checked on server"), value: householdTime(asOf))
+        if let asOf, let date = serviceDate(asOf) {
+            LabeledContent(ht("Checked on server"), value: date.formatted(date: .abbreviated, time: .standard))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

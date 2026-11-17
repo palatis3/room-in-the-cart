@@ -917,10 +917,30 @@ test('request page clocks come from the scoped read and leave exact command repl
   assert.equal(own.data.requests[0].authorAlias,undefined);
   assert.equal(inbox.data.requests[0].authorAlias,'Sam');
   assert.equal((await f.http('Jo','GET','/requests/mine?cursor='+sent.request.requestId)).status,404);
-  const replay=await f.http('Sam','POST','/commands',sent.envelope);
-  assert.deepEqual(replay.data.request,sent.request);
-  assert.equal(replay.data.operationId,sent.operationId);
+  for(let i=0;i<50;i++)await f.send('Sam',{originalItem:'Request '+i});
+  const first=(await f.http('Sam','GET','/requests/mine')).data;
+  assert.equal(first.requests.length,50);
+  assert.equal(first.requests[0].requestId,sent.request.requestId);
+  const edit=f.envelope('Sam','request.edit',{requestId:sent.request.requestId,originalItem:'Plain cereal',ownQuantity:'2 boxes'},
+    {shopRevision:0,authorityEpoch:0,requestRevision:1});
+  const changed=await f.http('Sam','POST','/commands',edit);
+  assert.equal(changed.status,200);
+  const preview=await f.preview(changed.data.request,{choice:'defer'});
+  const applied=await f.command('Mia','request.apply',{requestId:sent.request.requestId,previewId:preview.data.previewId,acceptOverage:false,acceptUnknown:false},
+    {shopRevision:1,authorityEpoch:1,requestRevision:2});
+  assert.equal(applied.status,200);
+  const more=(await f.http('Sam','GET','/requests/mine?cursor='+first.nextCursor)).data;
+  assert.equal(more.requests.length,1);
+  assert.ok(Date.parse(more.asOf)>Date.parse(first.asOf));
+  assert.equal(first.requests[0].status,'pending');
+  assert.equal((await f.http('Jo','GET','/requests/mine?cursor='+first.nextCursor)).status,404);
+  const replay=await f.http('Sam','POST','/commands',edit);
+  assert.deepEqual(replay.data,changed.data);
   assert.equal(replay.data.asOf,undefined);
+  const current=(await f.http('Sam','GET','/requests/mine')).data;
+  assert.equal(current.requests[0].revision,3);
+  assert.equal(current.requests[0].status,'deferred');
+  assert.ok(Date.parse(current.asOf)>=Date.parse(more.asOf));
 });
 
 test('two contributor web sessions see only their own purchase receipt through shopper corrections',

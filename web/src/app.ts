@@ -417,8 +417,8 @@ export class WebApp {
     // The server's decision remains authoritative if deleting a rejected copy fails.
     if(rejectedPending)await this.outbox.remove(rejectedPending.id,rejectedPending.scope).catch(()=>{});
   }
-  private date(value:string):string {
-    const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(this.language==='es'?'es-US':'en-US',{dateStyle:'full',timeStyle:'short'}).format(d):value;
+  private date(value:string, timeStyle: Intl.DateTimeFormatOptions['timeStyle'] = 'short'):string {
+    const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(this.language==='es'?'es-US':'en-US',{dateStyle:'full',timeStyle}).format(d):value;
   }
   render():void {
     this.root.replaceChildren();this.root.ownerDocument.documentElement.lang=this.language;
@@ -616,7 +616,7 @@ export class WebApp {
           card.append(move);
           if(this.hasRequestDraft())card.append(this.el('p',this.t('Finish or discard your current draft first.')));
         } else {
-          card.append(this.el('p',this.t(this.confirmedOperations.has(p.id)?'Received; local cleanup pending':'Saved on this browser. Receipt unconfirmed.')),
+          card.append(this.el('p',this.t(this.confirmedOperations.has(p.id)?'Received; local cleanup pending':'Receipt unconfirmed')),
             this.button('Retry',()=>void this.run(()=>this.retry(p))));
         }
         card.append(this.button('Remove pending request',()=>void this.run(async()=>{
@@ -628,16 +628,17 @@ export class WebApp {
     const own=this.el('section');own.append(this.el('h2',this.t('Your requests')));
     if(!this.requests.length) {
       own.append(this.el('p',this.t('No requests yet.')));
-      if(this.firstRequestPageAsOf)own.append(this.el('p',this.t('Checked on server')+' · '+this.date(this.firstRequestPageAsOf)));
+      if(this.firstRequestPageAsOf)own.append(this.el('p',this.t('Checked on server')+' · '+this.date(this.firstRequestPageAsOf,'medium')));
     }
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
       card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
-      if(r.serverReadAt)card.append(this.el('p',this.t('Checked on server')+' · '+this.date(r.serverReadAt)));
+      if(r.serverReadAt)card.append(this.el('p',this.t('Checked on server')+' · '+this.date(r.serverReadAt,'medium')));
       const localEdit=this.pending.find(p=>p.command.kind==='request.edit'&&p.command.shopId===r.shopId&&p.command.body.requestId===r.requestId);
       const correction=localEdit?.command ?? (this.uncertainSend && this.retryCommand?.kind==='request.edit' &&
         this.retryCommand.shopId===r.shopId && this.retryCommand.body.requestId===r.requestId ? this.retryCommand : null);
       if(correction) {
-        const label=localEdit?.needsReview?'Correction needs review':localEdit?'Saved correction on this browser':'Correction receipt unconfirmed';
+        const label=localEdit && this.confirmedOperations.has(localEdit.id) ? 'Received; local cleanup pending' :
+          localEdit?.needsReview ? 'Correction needs review' : localEdit ? 'Saved correction on this browser' : 'Correction receipt unconfirmed';
         const wording=[correction.body.originalItem,correction.body.ownQuantity].filter(Boolean).join(' · ');
         card.append(this.el('p',this.t(label)+' · '+wording));
       }
