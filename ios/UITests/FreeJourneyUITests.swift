@@ -89,6 +89,36 @@ import XCTest
         receipt.name = "F02-source-removal-persistence-binding"; receipt.lifetime = .keepAlways; add(receipt)
     }
 
+    func testIngredientContributionActionsHaveSeparateAccessibleTargets() {
+        launch(reset: true, sourceRemoval: true)
+        openShoppingList()
+        tap(app.buttons["Inspect Wraps"])
+        let edit = app.buttons["Edit contribution: Wednesday quesadillas"]
+        reveal(edit)
+        let geometry = XCTAttachment(string: "Edit target: \(edit.frame)")
+        geometry.name = "ingredient-contribution-action-geometry"
+        geometry.lifetime = .keepAlways
+        add(geometry)
+        capture("ingredient-contribution-actions")
+        // CoreGraphics subtraction can report 43.99999999999994 for a 44-point frame.
+        let coordinateTolerance: CGFloat = 1e-9
+        XCTAssertGreaterThanOrEqual(edit.frame.height + coordinateTolerance, 44, "A contribution action needs a 44-point tap target")
+        edit.tap()
+        XCTAssertTrue(app.navigationBars["Edit contribution"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Link existing quantity"].exists)
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 5))
+        let row = app.cells.containing(.button, identifier: "Edit contribution: Wednesday quesadillas").firstMatch
+        let link = row.buttons["Link within an existing amount"]
+        reveal(link)
+        XCTAssertGreaterThanOrEqual(link.frame.height + coordinateTolerance, 44, "Linking needs its own 44-point tap target")
+        link.tap()
+        XCTAssertTrue(app.navigationBars["Link existing quantity"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Edit contribution"].exists)
+        tap(app.buttons["Cancel"])
+        capture("ingredient-contribution-actions-after-cancelling")
+    }
+
     func testReceiptUsableCorrectionShowsProtectedMealEffectsBeforeSaving() {
         launch(reset: true, privateRecovery: true)
         func arrivals() {

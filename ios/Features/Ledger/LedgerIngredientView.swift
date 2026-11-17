@@ -101,10 +101,20 @@ struct LedgerIngredientView: View {
                                 Text(ledgerFormat("Linked within existing quantity: %@", ledgerQuantity(link.quantity)))
                                     .font(.footnote)
                             }
-                            Button(ledgerText("Edit this contribution")) { sheet = .contribution(contribution.id) }
-                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
+                            Button { sheet = .contribution(contribution.id) } label: {
+                                Text(ledgerText("Edit this contribution"))
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
                             if contribution.source.isMeal || contribution.source.isProtected {
-                                Button(ledgerText("Link within an existing amount")) { sheet = .link(contribution.id) }
+                                Button { sheet = .link(contribution.id) } label: {
+                                    Text(ledgerText("Link within an existing amount"))
+                                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.borderless)
                             }
                         }.padding(.vertical, 6).disabled(model.saving || model.hasPendingSave)
                     }
