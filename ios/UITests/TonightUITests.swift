@@ -39,7 +39,9 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 10))
         let recipe = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "No-shop rice dinner")).firstMatch
         tap(recipe)
-        XCTAssertTrue(app.staticTexts["Some amounts or package prices still need review."].waitForExistence(timeout: 8))
+        let unresolvedPrice = app.staticTexts.matching(NSPredicate(format: "label == %@", "Some amounts or package prices still need review.")).firstMatch
+        revealText(unresolvedPrice)
+        XCTAssertTrue(unresolvedPrice.exists, app.debugDescription)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tonight.choose.")).firstMatch.isEnabled,
                        "No stock match cannot be offered as a pantry-based dinner")
         tap(app.tabBars.buttons["Dinners"])
@@ -49,6 +51,15 @@ import XCTest
         tap(app.navigationBars["Tonight"].buttons.firstMatch)
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8), "Browse and canceled recipe review must leave the workspace without a pickup")
         XCTAssertFalse(app.buttons["tonight.apply"].exists)
+    }
+    private func revealText(_ element: XCUIElement) {
+        for _ in 0..<12 {
+            let top = app.navigationBars.firstMatch.frame.maxY
+            let bottom = app.tabBars.firstMatch.frame.minY
+            if element.exists, element.frame.midY > top, element.frame.midY < bottom { return }
+            app.swipeUp()
+        }
+        XCTFail("Expected readable cost evidence after scrolling: " + app.debugDescription)
     }
     private func fill(_ element: XCUIElement, _ value: String) {
         tap(element); element.typeText(value)
