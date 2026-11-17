@@ -65,16 +65,15 @@ import XCTest
             control.tap()
         }
         func check(_ title: String) {
-            let toggle = app.switches[title]
-            for _ in 0..<6 {
-                if toggle.exists, toggle.isHittable { break }
-                app.collectionViews.firstMatch.swipeUp()
-            }
-            XCTAssertTrue(toggle.isHittable, app.debugDescription)
-            if toggle.value as? String == "0" {
-                toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-            }
-            XCTAssertEqual(toggle.value as? String, "1")
+            enableSwitch(title, position: { toggle in
+                let form = app.collectionViews.firstMatch
+                for _ in 0..<6 {
+                    if toggle.exists, toggle.isHittable, scrollableArea().contains(CGPoint(x: toggle.frame.midX, y: toggle.frame.midY)) { return }
+                    if toggle.exists, toggle.frame.midY < scrollableArea().minY { form.swipeDown() }
+                    else { form.swipeUp() }
+                }
+                XCTAssertTrue(toggle.isHittable, app.debugDescription)
+            })
         }
         launch(reset: true)
         receiptTap(app.buttons["shop.myPantry"])
@@ -2517,19 +2516,23 @@ import XCTest
     }
 
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
-    private func enableSwitch(_ label: String, diagnosticName: String? = nil) {
+    private func enableSwitch(_ label: String, diagnosticName: String? = nil, position: ((XCUIElement) -> Void)? = nil) {
         let control = app.switches[label]
-        reveal(control)
-        let area = scrollableArea()
-        if control.frame.midY > area.maxY { scrollContent(upward: true) }
-        else if control.frame.midY < area.minY { scrollContent(upward: false) }
+        if let position { position(control) }
+        else {
+            reveal(control)
+            let area = scrollableArea()
+            if control.frame.midY > area.maxY { scrollContent(upward: true) }
+            else if control.frame.midY < area.minY { scrollContent(upward: false) }
+        }
         if let diagnosticName { captureSwitchState(control, name: diagnosticName + "-before") }
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
         if let diagnosticName { captureSwitchState(control, name: diagnosticName + "-after") }
-        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+        let confirmed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: control)
+        XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 4), .completed, "The reviewed switch must be on: \(label)")
     }
     private func captureSwitchState(_ control: XCUIElement, name: String) {
         // Retain evidence for the hosted one-tap/animation-wait failure. These
