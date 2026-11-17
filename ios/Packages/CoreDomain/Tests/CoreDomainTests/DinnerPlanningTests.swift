@@ -68,6 +68,38 @@ final class DinnerPlanningTests: XCTestCase {
                        [.ingredientsUnknown, .brandsUnknown, .effortUnknown])
     }
 
+    func testReviewedTimeLimitUsesOnlyThisRecipesElapsedMinutesAndInvalidatesProposals() throws {
+        var settings = MealPreferenceSettings()
+        settings.timeLimit = .init(maximumMinutes: 20)
+        var recipe = try meal()
+        var evidence = MealEligibilityEvidence()
+        evidence.effort = .low
+        recipe.eligibilityEvidence = evidence
+        recipe.leadTimeMinutes = nil
+        func check() -> MealEligibilityPolicy.Result { MealEligibilityPolicy.evaluate(profile: .init(settings: settings), template: recipe) }
+        XCTAssertEqual(check().softDifferences, [.durationUnknown])
+        recipe.leadTimeMinutes = 25
+        XCTAssertEqual(check().softDifferences, [.durationAboveLimit])
+        settings.timeLimit?.strict = true
+        XCTAssertEqual(check().blocked, [.durationAboveLimit])
+        recipe.leadTimeMinutes = nil
+        XCTAssertEqual(check().unresolved, [.durationUnknown])
+        recipe.leadTimeMinutes = 20
+        XCTAssertTrue(check().eligible)
+        let food = MealEligibilityPolicy.evaluateFood(profile: .init(settings: settings), labels: ["rice"], evidence: nil)
+        XCTAssertTrue(food.eligible)
+        var state = DinnerPlanningState(), ledger = ShoppingLedger(title: "Time review")
+        let context = access(ledger)
+        try state.updateMealPreferences(settings, expectedRevision: nil)
+        let preview = try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: recipe))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now)
+        settings.timeLimit?.maximumMinutes = 15
+        try state.updateMealPreferences(settings, expectedRevision: preview.proposal.preferenceRevision)
+        XCTAssertThrowsError(try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: context, phase: .draft, at: now))
+        XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.choose(PlannedDinner(template: recipe))], tool: .manual,
+            ledger: ledger, state: state, access: context, phase: .draft, at: now))
+    }
+
     func testPreviewCancelHasZeroMutationAndAtomicApplyUsesReviewedIDs() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         _ = try ledger.addManualLine(name: "soap", quantity: q(1), at: now)
