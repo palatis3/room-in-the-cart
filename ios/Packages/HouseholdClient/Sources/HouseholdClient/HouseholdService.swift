@@ -57,6 +57,22 @@ public actor HouseholdService {
               bootstrap.grantId == selectedGrantID else { throw ClientError.accessEnded }
         return enrollment.deviceId
     }
+    /// Stable across an ordinary shop selection. Enrollment, actor or helper
+    /// changes make an earlier household-wide pantry review unusable.
+    public func householdPantrySession(for bootstrap: HouseholdBootstrap) throws -> HouseholdPantrySession {
+        guard bootstrap.enrolled, bootstrap.grantId == nil, bootstrap.capabilities.contains("household_pantry"),
+              bootstrap.household.id == householdID, bootstrap.memberId == memberID else { throw ClientError.accessEnded }
+        return try currentHouseholdPantrySession()
+    }
+
+    func currentHouseholdPantrySession() throws -> HouseholdPantrySession {
+        guard selectedGrantID == nil, childAdoptionBinding == nil, let subject, !subject.isEmpty,
+              let householdID, let memberID, let enrollment,
+              let household = UUID(uuidString: householdID), let member = UUID(uuidString: memberID),
+              let device = UUID(uuidString: enrollment.deviceId) else { throw ClientError.accessEnded }
+        return HouseholdPantrySession(householdID: household, memberID: member, deviceID: device)
+    }
+
     /// The overview can show the household's sole open shop without putting a shop header on requests.
     public func pendingOwnRequest(in operations: [PendingOperation], bootstrap: HouseholdBootstrap) -> PendingOperation? {
         guard let householdID, bootstrap.household.id == householdID, bootstrap.memberId == memberID,
@@ -701,7 +717,7 @@ public actor HouseholdService {
         }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, omitSelectedShop: envelope.kind == "shop.create")
         if envelope.kind == "amendment.recordResponse" { try receipt.validateAmendment(envelope) }
         if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
         if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
@@ -1201,7 +1217,7 @@ public actor HouseholdService {
         return generation
     }
     func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, omitSelectedShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -1231,7 +1247,7 @@ public actor HouseholdService {
         if let selectedGrantID { req.setValue(selectedGrantID, forHTTPHeaderField: "X-View-Grant-ID") }
         if let requestQueueGrant { req.setValue(requestQueueGrant.uuidString.lowercased(), forHTTPHeaderField: "X-Request-Queue-Grant") }
         if let reportingShopID { req.setValue(reportingShopID, forHTTPHeaderField: "X-Shop-ID") }
-        else if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
+        else if let selectedShopID, !omitSelectedShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
         if !query.isEmpty {
             var components = URLComponents(url: req.url!, resolvingAgainstBaseURL: false)!
             components.queryItems = query; req.url = components.url

@@ -1,14 +1,6 @@
 import XCTest
 @testable import HouseholdClient
 
-private func trackingBody(_ request: URLRequest) -> Data {
-    if let bytes = request.httpBody { return bytes }
-    guard let stream = request.httpBodyStream else { return Data() }
-    stream.open(); defer { stream.close() }; var result = Data(), buffer = [UInt8](repeating: 0, count: 4096)
-    while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; result.append(contentsOf: buffer.prefix(n)) }
-    return result
-}
-
 extension HouseholdClientTests {
     func testTrackingWriteHTTPAllModesCancelAcknowledgementAndDurableLostReply() async throws {
         typealias F = TrackingWriteFixture
@@ -26,18 +18,18 @@ extension HouseholdClientTests {
                 if path.hasSuffix("/demand/tracking") { reads += 1; return (200, try F.bytes(f["page"]!)) }
                 if path.hasSuffix("/demand/tracking/operations") { return (200, try F.bytes(["schemaVersion": 2, "shopId": page.shopId.string, "shopRevision": page.shopRevision, "items": []])) }
                 if path.hasSuffix("/demand/tracking/candidates") {
-                    XCTAssertEqual(try F.decode(JSONSerialization.jsonObject(with: trackingBody(request)), as: JSONValue.self), try JSONDecoder().decode(JSONValue.self, from: encoded(intent)))
+                    XCTAssertEqual(try F.decode(JSONSerialization.jsonObject(with: mockRequestBody(request)), as: JSONValue.self), try JSONDecoder().decode(JSONValue.self, from: encoded(intent)))
                     return (200, try F.bytes(f["candidate"]!))
                 }
                 if path.hasSuffix("/demand/tracking/previews") {
                     previews += 1
-                    let sent = try JSONSerialization.jsonObject(with: trackingBody(request)) as! [String: Any]
+                    let sent = try JSONSerialization.jsonObject(with: mockRequestBody(request)) as! [String: Any]
                     XCTAssertEqual(Set(sent.keys), ["candidateId", "candidateDigest", "acknowledgedDisclosure", "acceptOverage", "acceptUnknown"])
                     XCTAssertEqual(try F.decode(sent["acknowledgedDisclosure"]!, as: JSONValue.self), try F.decode((f["candidate"] as! [String: Any])["disclosure"]!, as: JSONValue.self))
                     return (200, try F.bytes(f["preview"]!))
                 }
                 guard path.hasSuffix("/commands") else { throw ClientError.configuration }
-                commands.append(trackingBody(request))
+                commands.append(mockRequestBody(request))
                 if commands.count == 1 { commits += 1; throw URLError(.networkConnectionLost) }
                 var receipt: [String: Any] = ["operationId": F.id(95), "kind": mode == "request" ? "request.apply" : "shop.patch", "shopId": page.shopId.string, "shopRevision": page.shopRevision + 1, "authorityEpoch": page.authorityEpoch, "disposition": mode == "request" ? "added" : "patched"]
                 if mode == "request" { receipt["requestId"] = F.id(90); receipt["requestRevision"] = 7 }
@@ -85,7 +77,7 @@ extension HouseholdClientTests {
             if path.hasSuffix("/demand/tracking") { return (200, try F.bytes(F.fixture())) }
             if path.hasSuffix("/replay-windows") { return (200, try F.bytes(["id": F.id(80), "expiresAt": "2099-01-01T00:00:00Z"])) }
             guard path.hasSuffix("/commands") else { throw ClientError.configuration }
-            commands.append(trackingBody(request))
+            commands.append(mockRequestBody(request))
             return (200, try F.bytes(["operationId": F.id(95), "kind": "shop.freeze", "shopId": p.shopId.string, "shopRevision": 9, "authorityEpoch": 3, "disposition": "frozen"]))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
