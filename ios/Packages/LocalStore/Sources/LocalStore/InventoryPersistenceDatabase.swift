@@ -3,6 +3,7 @@ import CSQLite
 
 extension ComparisonDatabase {
     func requireLegacyWritesAllowed() throws {
+        try requireInventoryOriginLive()
         // Read database state, not an actor's initialization-time flag: another instance may have activated it.
         if try integer("PRAGMA user_version") >= 3 {
             guard try integer("SELECT active FROM inventory_state WHERE singleton = 1") == 0 else {
@@ -14,7 +15,7 @@ extension ComparisonDatabase {
     func migrateInventory() throws {
         try transaction {
             let version = try integer("PRAGMA user_version")
-            if version == 3 { try validateInventory(); return }
+            if version == 3 || version == 4 { try validateInventory(); return }
             guard version == 2 else { throw ComparisonStoreError.unsupportedSchema(version) }
             try validate(version: 2, beforeMigration: true)
             try execute(Self.inventorySchema)
@@ -146,9 +147,10 @@ extension ComparisonDatabase {
                 }
             }
         }
+        let redactionFloorSQL = try integer("PRAGMA user_version") >= 4 ? "CASE WHEN h.kind='reservation' THEN COALESCE((SELECT max(through_revision) FROM inventory_reservation_redactions d WHERE d.id=h.id),0) ELSE 0 END" : "0"
         guard try integer("SELECT count(*) FROM inventory_state") == 1,
               try integer("SELECT count(*) FROM inventory_state WHERE singleton = 1 AND typeof(revision) = 'integer' AND revision >= 0 AND typeof(source_generation) = 'integer' AND source_generation >= 0 AND active IN (0,1)") == 1,
-              try integer("SELECT count(*) FROM inventory_heads h WHERE h.revision != (SELECT count(*) FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id) OR h.revision != (SELECT max(revision) FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id) OR h.lot_id IS NOT (SELECT lot_id FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id AND r.revision = h.revision)") == 0,
+              try integer("SELECT count(*) FROM inventory_heads h WHERE h.revision != (SELECT count(*) FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id) + " + redactionFloorSQL + " OR h.revision != (SELECT max(revision) FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id) OR h.lot_id IS NOT (SELECT lot_id FROM inventory_revisions r WHERE r.kind = h.kind AND r.id = h.id AND r.revision = h.revision)") == 0,
               try integer("SELECT count(*) FROM inventory_tombstones t JOIN inventory_heads h ON h.kind = t.kind AND h.id = t.id") == 0 else {
             throw ComparisonStoreError.corruptRecord
         }

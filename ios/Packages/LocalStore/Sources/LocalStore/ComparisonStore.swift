@@ -71,7 +71,7 @@ public actor ComparisonStore {
             // metadata, journal mode, or schema version.
             let version = try database.transaction(immediate: false) {
                 let version = try database.integer("PRAGMA user_version")
-                guard version <= (inventoryEnabled ? 3 : 2) else { throw ComparisonStoreError.unsupportedSchema(version) }
+                guard version <= (inventoryEnabled ? 4 : 2) else { throw ComparisonStoreError.unsupportedSchema(version) }
                 guard version >= 0 else { throw ComparisonStoreError.unrecognizedSchema }
                 if version == 0 {
                     guard try database.integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -79,7 +79,8 @@ public actor ComparisonStore {
                     try database.checkIntegrity()
                 } else {
                     try database.validate(version: version, beforeMigration: version == 1)
-                    if version == 3 { try database.validateInventory() }
+                    if version >= 3 { try database.validateInventory() }
+                    if version == 4 { try database.validateInventoryErasure() }
                 }
                 return version
             }
@@ -89,9 +90,9 @@ public actor ComparisonStore {
             try database.execute("PRAGMA secure_delete = ON")
             try database.execute("PRAGMA journal_size_limit = 0")
             if version < 2 { try database.migrate() }
-            if inventoryEnabled { try database.migrateInventory() }
+            if inventoryEnabled { try database.migrateInventory(); try database.migrateInventoryErasure() }
             let finalVersion = try database.integer("PRAGMA user_version")
-            guard finalVersion <= (inventoryEnabled ? 3 : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }
+            guard finalVersion <= (inventoryEnabled ? 4 : 2) else { throw ComparisonStoreError.unsupportedSchema(finalVersion) }
             guard try database.integer("SELECT count(*) FROM workspace") == 1,
                   let id = UUID(uuidString: try database.string("SELECT id FROM workspace WHERE singleton = 1"))
             else { throw ComparisonStoreError.corruptRecord }
@@ -156,18 +157,21 @@ public actor ComparisonStore {
     }
 
     public func list() throws -> [SavedComparison] {
-        try database.records(Self.select + " ORDER BY r.saved_at DESC, c.id ASC", values: [])
+        try database.requireInventoryOriginLive()
+        return try database.records(Self.select + " ORDER BY r.saved_at DESC, c.id ASC", values: [])
     }
 
     /// Use for interactive browsing. Individual envelope failures are explicit;
     /// database/identity failures still throw rather than return a partial result.
     /// `list()` remains strict for callers that require a complete snapshot.
     public func listing() throws -> ComparisonListing {
-        try database.listing(Self.select + " ORDER BY r.saved_at DESC, c.id ASC")
+        try database.requireInventoryOriginLive()
+        return try database.listing(Self.select + " ORDER BY r.saved_at DESC, c.id ASC")
     }
 
     public func load(id: UUID) throws -> SavedComparison? {
-        try database.records(Self.select + " WHERE c.id = ?", values: [.text(id.uuidString)]).first
+        try database.requireInventoryOriginLive()
+        return try database.records(Self.select + " WHERE c.id = ?", values: [.text(id.uuidString)]).first
     }
 
     /// Permanently deletes every title and payload revision for this source. There is no

@@ -191,6 +191,8 @@ extension ComparisonDatabase {
         guard receipt.operationID == id, let header = try migrationHeader(id), header.status == .active,
               receipt.heads.isEmpty, receipt.comparisonHeads.isEmpty,
               try integer("SELECT count(*) FROM inventory_migration_keys WHERE migration_id = '\(id.uuidString)'") == Int64(header.recordCount) else { throw ComparisonStoreError.corruptRecord }
+        if try integer("PRAGMA user_version") >= 4,
+           try integer("SELECT count(*) FROM inventory_migration_keys k JOIN inventory_reservation_redactions d ON k.kind='reservation' AND k.id=d.id WHERE k.migration_id='\(id.uuidString)'") > 0 { throw ComparisonStoreError.erased }
         let rows = try statement("""
             SELECT EXISTS(SELECT 1 FROM inventory_migration_keys k JOIN inventory_tombstones t ON t.kind = k.kind AND t.id = k.id WHERE k.migration_id = ?),
                    EXISTS(SELECT 1 FROM inventory_migration_sources s JOIN comparison_tombstones t ON t.comparison_id = s.comparison_id WHERE s.migration_id = ?)

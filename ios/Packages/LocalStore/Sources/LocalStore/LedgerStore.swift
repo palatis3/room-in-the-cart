@@ -238,6 +238,26 @@ public actor LedgerStore {
         try database.tombstones("ORDER BY erased_at, workspace_id", values: [])
     }
 
+    /// A bounded SQL page at the actual physical file's current origin and head.
+    /// A retirement through another actor changes the origin and invalidates the scan.
+    public func tombstonePage(expectedWorkspaceID: UUID, expectedRevision: Int64,
+                              after: UUID? = nil, limit: Int = 100) throws -> [LedgerWorkspaceTombstone] {
+        guard expectedWorkspaceID == workspaceID, expectedRevision >= 0, (1...200).contains(limit) else {
+            throw LedgerStoreError.invalidInput
+        }
+        return try database.transaction(immediate: false) {
+            let current = try database.workspace()
+            guard current.id == expectedWorkspaceID else { throw LedgerStoreError.erased }
+            guard current.revision == expectedRevision else {
+                throw LedgerStoreError.staleRevision(expected: expectedRevision, actual: current.revision)
+            }
+            var suffix = "", values: [LedgerValue] = []
+            if let after { suffix = "WHERE workspace_id > ? "; values.append(.text(after.uuidString)) }
+            suffix += "ORDER BY workspace_id LIMIT ?"; values.append(.integer(Int64(limit)))
+            return try database.tombstones(suffix, values: values)
+        }
+    }
+
     public func retiredWorkspaceIDs() throws -> [UUID] { try tombstones().map(\.workspaceID) }
 
     /// Idempotent. Releasing the actor also closes its connection.

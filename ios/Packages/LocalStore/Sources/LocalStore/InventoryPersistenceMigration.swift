@@ -75,6 +75,7 @@ extension ComparisonStore {
     /// This does not authorize reading or restoring any imported record.
     public func inventoryMigrationActivation(_ expected: InventoryMigrationPlan) throws -> InventoryOperationReceipt? {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard expected.version == 1, expected.workspaceID == workspaceID,
               expected.expectedRevision >= 0, expected.expectedRevision < Int64.max,
               expected.sourceToken.workspaceID == workspaceID,
@@ -107,6 +108,7 @@ extension ComparisonStore {
     @discardableResult
     public func beginInventoryMigration(_ plan: InventoryMigrationPlan) throws -> InventoryMigrationProgress {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard plan.version == 1, plan.workspaceID == workspaceID, plan.expectedRevision >= 0,
               plan.sourceToken.workspaceID == workspaceID, plan.sourceToken.generation >= 0, plan.sourceToken.digest.count == 32,
               !plan.reviewContext.isEmpty, plan.reviewContext.count <= InventoryPersistenceLimits.requestBytes,
@@ -121,7 +123,8 @@ extension ComparisonStore {
                 // A retired ID remains retired even if source conditions later become similar.
                 return try migrationProgress(previous)
             }
-            guard try database.inventoryReceipt(plan.migrationID) == nil,
+            guard try database.erasureProgress(plan.migrationID) == nil,
+                  try database.inventoryReceipt(plan.migrationID) == nil,
                   try database.tombstones("WHERE operation_id = ?", values: [.text(plan.migrationID.uuidString)]).isEmpty else { throw ComparisonStoreError.operationConflict }
             let state = try database.inventoryState(workspaceID: workspaceID)
             guard !state.active, state.revision == plan.expectedRevision, try !database.hasStagingMigration(),
@@ -138,6 +141,7 @@ extension ComparisonStore {
 
     public func inventoryMigrationProgress(id: UUID) throws -> InventoryMigrationProgress? {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         return try database.transaction(immediate: false) {
             guard let header = try database.migrationHeader(id) else { return nil }
             return try migrationProgress(header)
@@ -148,6 +152,7 @@ extension ComparisonStore {
     /// Staged records remain hidden from physical inventory until verified activation.
     public func inventoryPendingMigration() throws -> InventoryMigrationProgress? {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         return try database.transaction(immediate: false) {
             let row = try database.statement("SELECT id FROM inventory_migrations WHERE status = 'staging' LIMIT 2")
             defer { sqlite3_finalize(row) }
@@ -169,6 +174,7 @@ extension ComparisonStore {
     @discardableResult
     public func stageInventoryMigration(id: UUID, chunk: InventoryMigrationChunk) throws -> InventoryMigrationProgress {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         try validateInventoryMigrationChunk(chunk)
         let digest = inventoryDigest(try inventoryCanonical(chunk))
         return try database.transaction {
@@ -203,6 +209,7 @@ extension ComparisonStore {
     @discardableResult
     public func finishInventoryMigration(id: UUID, at date: Date = Date()) throws -> InventoryOperationReceipt {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard date.timeIntervalSinceReferenceDate.isFinite else { throw ComparisonStoreError.invalidInput }
         return try database.transaction {
             guard let header = try database.migrationHeader(id) else { throw ComparisonStoreError.notFound }
@@ -246,6 +253,7 @@ extension ComparisonStore {
     @discardableResult
     public func cancelInventoryMigration(id: UUID) throws -> InventoryMigrationProgress {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         let result = try database.transaction {
             guard let header = try database.migrationHeader(id) else { throw ComparisonStoreError.notFound }
             guard header.status != .active else { throw ComparisonStoreError.inventoryRequired }

@@ -138,17 +138,20 @@ func inventoryDigest(_ bytes: Data) -> Data { Data(SHA256.hash(data: bytes)) }
 extension ComparisonStore {
     public func inventoryState() throws -> InventoryState {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         return try database.inventoryState(workspaceID: workspaceID)
     }
 
     public func inventorySourceToken() throws -> InventorySourceToken {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         return try database.transaction(immediate: false) { try database.inventorySourceToken(workspaceID: workspaceID) }
     }
 
     /// Payload pages for a reviewed token. A changed source generation invalidates the entire read.
     public func inventorySourcePage(token: InventorySourceToken, after: UUID? = nil, limit: Int = 100) throws -> [SavedComparison] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard (1...InventoryPersistenceLimits.pageItems).contains(limit) else { throw ComparisonStoreError.invalidInput }
         return try database.transaction(immediate: false) {
             guard token == (try database.inventorySourceToken(workspaceID: workspaceID)) else { throw ComparisonStoreError.staleInventory }
@@ -162,6 +165,7 @@ extension ComparisonStore {
 
     public func inventoryCutoverSnapshot() throws -> InventoryCutoverSnapshot {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         return try database.transaction(immediate: false) { try cutoverSnapshot() }
     }
 
@@ -174,6 +178,7 @@ extension ComparisonStore {
 
     public func inventoryRecord(_ key: InventoryRecordKey) throws -> InventoryRecord? {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         try requireInventoryReadable(key.kind)
         return try database.inventoryRecords(kind: key.kind, id: key.id).first
     }
@@ -181,6 +186,7 @@ extension ComparisonStore {
     /// Stable UUID pagination. Callers must check inventory revision again when combining pages.
     public func inventoryRecords(kind: InventoryRecordKind, after: UUID? = nil, limit: Int = 100) throws -> [InventoryRecord] {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard (1...InventoryPersistenceLimits.pageItems).contains(limit) else { throw ComparisonStoreError.invalidInput }
         try requireInventoryReadable(kind)
         return try database.inventoryRecords(kind: kind, after: after, limit: limit)
@@ -194,8 +200,11 @@ extension ComparisonStore {
     /// The app must reauthorize its private workspace before calling; no payload is returned.
     public func inventoryCommittedOperation(id: UUID, request: Data) throws -> InventoryOperationReceipt? {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         guard !request.isEmpty, request.count <= InventoryPersistenceLimits.requestBytes else { throw ComparisonStoreError.invalidInput }
         return try database.transaction(immediate: false) {
+            try database.requireInventoryOriginLive()
+            guard try database.erasureProgress(id) == nil else { throw ComparisonStoreError.operationConflict }
             guard let prior = try database.inventoryReceipt(id) else { return nil }
             guard prior.requestDigest == inventoryDigest(request) else { throw ComparisonStoreError.operationConflict }
             try validateInventoryReceiptAccess(prior.receipt)
@@ -205,9 +214,11 @@ extension ComparisonStore {
 
     func validateInventoryReceiptAccess(_ receipt: InventoryOperationReceipt) throws {
         guard receipt.workspaceID == workspaceID else { throw ComparisonStoreError.corruptRecord }
+        try database.requireInventoryOriginLive()
         if let migration = receipt.migrationID { try database.validateMigrationReceiptAccess(migration, receipt: receipt) }
         for head in receipt.heads {
             let retiredBy = try database.inventoryRetirementOperation(head.key)
+            if head.key.kind == .reservation, head.revision > 0, try database.reservationRedactionFloor(head.key.id) >= head.revision { throw ComparisonStoreError.erased }
             if head.revision == 0 {
                 guard retiredBy == receipt.operationID else { throw ComparisonStoreError.erased }
             } else if retiredBy != nil { throw ComparisonStoreError.erased }
@@ -223,10 +234,13 @@ extension ComparisonStore {
     @discardableResult
     public func commitInventory(_ batch: InventoryBatch, at date: Date = Date()) throws -> InventoryOperationReceipt {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        try database.requireInventoryOriginLive()
         try validateInventoryBatch(batch, date: date)
         let digest = inventoryDigest(try inventoryCanonical(batch))
         let requestDigest = inventoryDigest(batch.request)
         let receipt = try database.transaction {
+            try database.requireInventoryOriginLive()
+            guard try database.erasureProgress(batch.operationID) == nil else { throw ComparisonStoreError.operationConflict }
             // Retired identities win over old success receipts: an old operation cannot resurrect or reveal food.
             for write in batch.writes where try database.inventoryErased(write.record.key) { throw ComparisonStoreError.erased }
             for effect in batch.comparisons where effect.action == .save {
@@ -332,7 +346,7 @@ extension ComparisonStore {
     }
 }
 
-private func inventoryComparisonErasureID(operation: UUID, source: UUID) -> UUID {
+func inventoryComparisonErasureID(operation: UUID, source: UUID) -> UUID {
     let bytes = [UInt8](inventoryDigest(Data(("inventory-comparison-erasure:" + operation.uuidString + ":" + source.uuidString).utf8)).prefix(16))
     return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
                        bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
