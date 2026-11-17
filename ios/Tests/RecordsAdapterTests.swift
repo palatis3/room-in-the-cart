@@ -2,6 +2,7 @@ import XCTest
 import Combine
 import CoreDomain
 import LocalStore
+import DeviceSurfaces
 import RecordArchive
 @testable import RoomInTheCart
 
@@ -847,11 +848,18 @@ final class RecordsAdapterTests: XCTestCase {
     @MainActor func testRecipeLinkStagesEditableDraftAndRejectsDismissedReader() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let inbox = try SharedCaptureInbox(url: directory.appendingPathComponent("links.sqlite"))
+        let source = try SharedCaptureEnvelope(recipeURL: XCTUnwrap(URL(string: "https://www.example.org/sopa")))
+        _ = try await inbox.stage(source, id: UUID(), now: Date())
         let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
-            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in }, captureInbox: { inbox })
         let link = try XCTUnwrap(model.beginImport(.recipePage))
+        let pending = try await model.sharedRecipeLinks(from: link)
+        let shared = try XCTUnwrap(pending.first)
+        XCTAssertEqual(shared.envelope, source)
+        XCTAssertNil(model.review)
         let data = Data(#"{"@type":"Recipe","name":"Sopa","url":"https://www.example.org/sopa"}"#.utf8)
-        try await model.importRecipePage("https://www.example.org/sopa", from: link) { _ in data }
+        try await model.importRecipePage(shared.envelope.value, from: link) { _ in data }
         let row = try XCTUnwrap(model.review?.rows.first)
         XCTAssertEqual(row.record.title, "Sopa")
         model.dismissImport(link)
@@ -869,6 +877,16 @@ final class RecordsAdapterTests: XCTestCase {
             XCTFail("A dismissed reader cannot open a recipe review")
         } catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
         XCTAssertNil(model.review)
+        do {
+            try await model.removeSharedRecipeLink(shared, from: stale)
+            XCTFail("A dismissed recipe reader cannot discard a shared source")
+        } catch { XCTAssertEqual(error as? ArchiveError, .unavailable) }
+        let reopened = try XCTUnwrap(model.beginImport(.recipePage))
+        let remaining = try await model.sharedRecipeLinks(from: reopened)
+        XCTAssertEqual(remaining, [shared])
+        try await model.removeSharedRecipeLink(shared, from: reopened)
+        let removed = try await model.sharedRecipeLinks(from: reopened)
+        XCTAssertTrue(removed.isEmpty)
         let saved = try await registry.refreshList()
         XCTAssertTrue(saved.isEmpty)
     }

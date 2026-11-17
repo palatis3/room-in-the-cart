@@ -18,8 +18,8 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
     public var textForReview: String { editedText ?? originalText }
 }
 
-/// Only selected text and bounded deduplication receipts belong in this database.
-/// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
+/// Stores bounded text with deduplication receipts. The shopping-list inbox and
+/// the typed capture inbox have distinct database kinds and files.
 public actor SelectedTextInbox {
     public enum ReviewLimit: Error { case tooManyItems, receiptLimitReached }
     public static let maximumEntryBytes = 65_536
@@ -30,7 +30,10 @@ public actor SelectedTextInbox {
     public static let lifetime: TimeInterval = 7 * 24 * 60 * 60
     private let database: SurfaceDatabase
     public init(url: URL) throws {
-        database = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: """
+        try self.init(url: url, kind: "selected-text-inbox")
+    }
+    init(url: URL, kind: String) throws {
+        database = try SurfaceDatabase(url: url, kind: kind, schema: """
         CREATE TABLE inbox (id TEXT PRIMARY KEY NOT NULL, digest TEXT NOT NULL, original TEXT, edited TEXT,
         bytes INTEGER NOT NULL CHECK(bytes >= 0), created REAL NOT NULL, expires REAL NOT NULL,
         disposition TEXT NOT NULL CHECK(disposition IN ('pending','consumed','discarded','expired')));

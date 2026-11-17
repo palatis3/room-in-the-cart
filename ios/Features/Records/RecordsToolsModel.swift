@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import RecordArchive
 import CoreDomain
+import DeviceSurfaces
 
 struct RecordsSelectionID: Hashable {
     let origin: String
@@ -123,6 +124,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
     private var retiredHistories: Set<ArchiveSourceIdentity> = []
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
+    private let captureInbox: () throws -> SharedCaptureInbox
     private let beginAuthorization: () -> Authorization?
     @Published private(set) var canUndoSourceDeletion = false
     private var selectedSnapshot: [ArchiveRecord] { currentRecords.filter { selectedIDs.contains(Self.selectionID($0)) } }
@@ -152,9 +154,10 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         return attachments
     }
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, captureInbox: @escaping () throws -> SharedCaptureInbox = { throw SurfaceError.unconfigured }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
         self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
+        self.captureInbox = captureInbox
         self.beginAuthorization = beginAuthorization
         self.willRemoveRecovered = willRemoveRecovered
     }
@@ -419,6 +422,17 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
         } catch { fail(error, reveal: true) }
     }
+    func sharedRecipeLinks(from presentation: ImportPresentation) async throws -> [SharedCaptureEntry] {
+        guard presentation.entry == .recipePage, accepts(presentation) else { throw ArchiveError.unavailable }
+        let links = try await captureInbox().pendingRecipes(now: Date())
+        guard accepts(presentation) else { throw ArchiveError.unavailable }
+        return links
+    }
+    func removeSharedRecipeLink(_ link: SharedCaptureEntry, from presentation: ImportPresentation) async throws {
+        guard presentation.entry == .recipePage, accepts(presentation) else { throw ArchiveError.unavailable }
+        try await captureInbox().discard(link, now: Date())
+    }
+
     func importRecipePage(_ address: String, from presentation: ImportPresentation,
                           read: (String) async throws -> Data = RecipePageReader.document(at:)) async throws {
         guard !busy, presentation.entry == .recipePage, accepts(presentation) else { throw ArchiveError.unavailable }

@@ -103,6 +103,15 @@ import XCTest
         address.typeText("https://example.org/soup")
         app.buttons["Read recipe"].tap()
         assertText("Missing servings or yield")
+        tap(button("records.cancelImport"))
+        assertSavedRecipes(1)
+
+        tap(button("records.recipeLink"))
+        tap(app.buttons["Choose a shared recipe link"])
+        tap(app.buttons["https://example.org/soup"])
+        XCTAssertEqual(address.value as? String, "https://example.org/soup")
+        app.buttons["Read recipe"].tap()
+        assertText("Missing servings or yield")
         assertSavedRecipes(1)
         tap(app.buttons["Edit recipe, Weeknight soup"])
         let yield = app.textFields["Servings or yield, in your words"]

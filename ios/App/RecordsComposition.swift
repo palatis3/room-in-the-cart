@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import CoreDomain
 import LocalStore
+import DeviceSurfaces
 import RecordArchive
 import HouseholdClient
 
@@ -432,6 +433,17 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
+            }, captureInbox: {
+                #if DEBUG
+                if SurfaceRuntimeIsolation.usesUITestWorkspace(launchArguments: ProcessInfo.processInfo.arguments) {
+                    return try SharedCaptureInbox(url: directory.appendingPathComponent("test-shared-captures.sqlite"))
+                }
+                #endif
+                let bundle = Bundle.main
+                _ = try SurfaceConfiguration(inboxGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.inboxGroupKey) as? String,
+                    widgetGroup: bundle.object(forInfoDictionaryKey: SurfaceInfo.widgetGroupKey) as? String,
+                    urlScheme: bundle.object(forInfoDictionaryKey: SurfaceInfo.schemeKey) as? String)
+                return try IOSSurfaceContainers.sharedCaptures(bundle: bundle)
             }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }

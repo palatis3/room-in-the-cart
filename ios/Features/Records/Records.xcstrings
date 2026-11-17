@@ -1,6 +1,125 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose a shared recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shared recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un enlace de receta compartido"
+          }
+        }
+      }
+    },
+    "No shared recipe links. Share a page from your browser or paste its address above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shared recipe links. Share a page from your browser or paste its address above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay enlaces de recetas compartidos. Comparte una página desde el navegador o pega su dirección arriba."
+          }
+        }
+      }
+    },
+    "Remove saved link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar enlace guardado"
+          }
+        }
+      }
+    },
+    "Shared links stay on this device for seven days. Choose one, then tap Read recipe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared links stay on this device for seven days. Choose one, then tap Read recipe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los enlaces compartidos se guardan en este dispositivo durante siete días. Elige uno y toca Leer receta."
+          }
+        }
+      }
+    },
+    "Remove this shared link?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this shared link?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar este enlace compartido?"
+          }
+        }
+      }
+    },
+    "Could not remove this link. Open the shared links again and retry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not remove this link. Open the shared links again and retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo eliminar este enlace. Vuelve a abrir los enlaces compartidos e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Shared links are unavailable. Paste an HTTPS address or choose a recipe file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared links are unavailable. Paste an HTTPS address or choose a recipe file."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los enlaces compartidos no están disponibles. Pega una dirección HTTPS o elige un archivo de receta."
+          }
+        }
+      }
+    },
     "Import a recipe link": {
       "extractionState": "manual",
       "localizations": {

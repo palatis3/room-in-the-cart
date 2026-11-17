@@ -9,6 +9,7 @@
         <key>NSExtensionAttributes</key><dict>
             <key>NSExtensionActivationRule</key><dict>
                 <key>NSExtensionActivationSupportsText</key><true/>
+                <key>NSExtensionActivationSupportsWebURLWithMaxCount</key><integer>1</integer>
             </dict>
         </dict>
     </dict>
