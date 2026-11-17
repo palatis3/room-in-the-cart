@@ -58,14 +58,14 @@ struct PantryReceiptDocuments: View {
                 ForEach(document.pages) { page in
                     Section(pantryFormat("Page %@", page.id.formatted())) {
                         if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
-                        ForEach(page.lines.indices, id: \.self) { index in
-                            let position = ExtractedReceiptDocument.Selection(page: page.id, line: index + 1)
+                        ForEach(page.lines) { line in
+                            let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
                             Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
                                 if include { selection.insert(position) } else { selection.remove(position) }
                                 confirmed = false
-                            })) { Text(page.lines[index]) }
+                            })) { Text(line.text) }
                             .disabled(!selection.contains(position) && selection.count >= 200)
-                            .accessibilityIdentifier("receipt.document.line.\(page.id).\(index + 1)")
+                            .accessibilityIdentifier("receipt.document.line.\(page.id).\(line.id)")
                         }
                     }
                 }

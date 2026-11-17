@@ -26,8 +26,8 @@ import XCTest
         let input = ReceiptDocumentBytes(data: pdf(pages: 2, scannedLast: true), kind: .pdf)
         let extracted = try await ReceiptDocumentReader().extract(input)
         XCTAssertEqual(extracted.pages.map(\.method), [.pdfText, .pdfOCR])
-        XCTAssertEqual(extracted.pages.first?.lines.first, "OATS")
-        let scanned = try XCTUnwrap(extracted.pages.last?.lines.first)
+        XCTAssertEqual(extracted.pages.first?.lines.first?.text, "OATS")
+        let scanned = try XCTUnwrap(extracted.pages.last?.lines.first?.text)
         XCTAssertTrue(scanned.uppercased().contains("BEANS"))
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
         let single = try extracted.source(target: target, merchant: "Market", stage: .finalInvoice, selection: [.init(page: 2, line: 1)], at: Date())
@@ -47,10 +47,11 @@ import XCTest
     func testFileLimitsAndLockedOrUnreadableInputsHaveRecoverableOutcomes() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".txt")
         defer { try? FileManager.default.removeItem(at: url) }
-        try Data("BEANS\nFEE".utf8).write(to: url)
+        try Data("BEANS\r\n\r\n   \nFEE".utf8).write(to: url)
         let input = try await ReceiptDocumentBytes.picked(url)
         let document = try await ReceiptDocumentReader().extract(input)
-        XCTAssertEqual(document.pages.first?.lines, ["BEANS", "FEE"])
+        XCTAssertEqual(document.pages.first?.lines.map(\.text), ["BEANS", "FEE"])
+        XCTAssertEqual(document.pages.first?.lines.map(\.id), [1, 4])
         let reader = ReceiptDocumentReader()
         for (item, failure) in [
             (ReceiptDocumentBytes(data: Data(repeating: 65, count: 10_000_001), kind: .text), ReceiptDocumentFailure.size),
