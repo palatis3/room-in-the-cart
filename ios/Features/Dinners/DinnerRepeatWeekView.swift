@@ -54,6 +54,7 @@ struct DinnerRepeatWeekView: View {
                 if let review {
                     meals
                     calendarNotes(review)
+                    if !selected.isEmpty { shoppingEstimate(review) }
                     if model.paid {
                         if !review.staples.isEmpty { stapleSection(review) }
                         if !review.evidence.stapleChecks.isEmpty { stapleHistory(review) }
@@ -225,6 +226,37 @@ struct DinnerRepeatWeekView: View {
         }
     }
 
+    private func shoppingEstimate(_ review: DinnerRepeatReview) -> some View {
+        let result = Result {
+            try review.evidence.shoppingNeeds(for: editedMeals().map(\.selection), candidates: review.meals.map(\.candidate))
+        }
+        return Section {
+            switch result {
+            case .success(let rows):
+                ForEach(rows) { row in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(row.name).font(.headline)
+                        if !row.needed.isEmpty {
+                            LabeledContent(dinnerText("Selected dinners need"), value: row.needed.map { dinnerQuantity($0) }.joined(separator: ", "))
+                        }
+                        if !row.free.isEmpty {
+                            LabeledContent(dinnerText("Available in the pantry"), value: row.free.map { dinnerQuantity($0) }.joined(separator: ", "))
+                        }
+                        if !row.toObtain.isEmpty {
+                            LabeledContent(dinnerText("Still to obtain"), value: row.toObtain.map { dinnerQuantity($0) }.joined(separator: ", "))
+                        } else if !row.unresolved {
+                            Text(dinnerText("Current available stock covers the selected dinners."))
+                        }
+                        if row.unresolved { Text(dinnerText("The remaining amount needs review.")) }
+                    }.accessibilityElement(children: .combine)
+                }
+            case .failure:
+                Text(dinnerText("Review the selected servings and ingredient amounts to update the estimate."))
+            }
+        } header: { Text(dinnerText("Shopping estimate")) }
+          footer: { Text(dinnerText("Meals keep their full ingredient amounts. This estimate uses available pantry quantities.")) }
+    }
+
     private func stockSection(_ review: DinnerRepeatReview) -> some View {
         Section(dinnerText("Current pantry stock")) {
             ForEach(review.stock) { row in
@@ -288,25 +320,29 @@ struct DinnerRepeatWeekView: View {
         return count != meal.candidate.template.servings && meal.candidate.template.servingGroups.contains(where: \.isProtected)
     }
 
+    private func editedMeals() throws -> [DinnerRepeatChoice] {
+        try choices.filter { selected.contains($0.id) }.map { original in
+            var row = original
+            if let entered = portions[row.id] {
+                row.servings = try DinnerEntry.rational(entered)
+                guard row.servings > .zero else { throw DinnerPlanningError.invalid("servings") }
+            }
+            if needsIngredientReview(row) {
+                guard confirmedAmounts.contains(row.id) else {
+                    throw DinnerPlanningError.reviewRequired("protectedIngredientAmounts")
+                }
+                row.ingredientEdits = try row.candidate.template.ingredients.map { ingredient in
+                    let amount = ingredientAmounts[row.id]?[ingredient.id] ?? Amount(ingredient.quantity)
+                    return DinnerQuantityEdit(contributionID: ingredient.id, quantity: try amount.quantity(preserving: ingredient.quantity))
+                }
+            }
+            return row
+        }
+    }
+
     private func prepare(_ review: DinnerRepeatReview) {
         do {
-            let rows = try choices.filter { selected.contains($0.id) }.map { original in
-                var row = original
-                if let entered = portions[row.id] {
-                    row.servings = try DinnerEntry.rational(entered)
-                    guard row.servings > .zero else { throw DinnerPlanningError.invalid("servings") }
-                }
-                if needsIngredientReview(row) {
-                    guard confirmedAmounts.contains(row.id) else {
-                        throw DinnerPlanningError.reviewRequired("protectedIngredientAmounts")
-                    }
-                    row.ingredientEdits = try row.candidate.template.ingredients.map { ingredient in
-                        let amount = ingredientAmounts[row.id]?[ingredient.id] ?? Amount(ingredient.quantity)
-                        return DinnerQuantityEdit(contributionID: ingredient.id, quantity: try amount.quantity(preserving: ingredient.quantity))
-                    }
-                }
-                return row
-            }
+            let rows = try editedMeals()
             let quantities = try stapleAmounts.filter { staples[$0.key] == .needed }.compactMapValues { try $0.quantity() }
             if model.prepareRepeatWeek(review, choices: rows, staples: staples, stapleQuantities: quantities, pickup: pickup) { advance?() }
         } catch { model.report(error) }

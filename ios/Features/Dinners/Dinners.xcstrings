@@ -9736,6 +9736,134 @@
           }
         }
       }
+    },
+    "Selected dinners need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected dinners need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita para las cenas seleccionadas"
+          }
+        }
+      }
+    },
+    "Available in the pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available in the pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible en la despensa"
+          }
+        }
+      }
+    },
+    "Still to obtain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still to obtain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta conseguir"
+          }
+        }
+      }
+    },
+    "Current available stock covers the selected dinners.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current available stock covers the selected dinners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo disponible alcanza para las cenas seleccionadas."
+          }
+        }
+      }
+    },
+    "The remaining amount needs review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The remaining amount needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que revisar la cantidad que falta."
+          }
+        }
+      }
+    },
+    "Review the selected servings and ingredient amounts to update the estimate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the selected servings and ingredient amounts to update the estimate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las porciones seleccionadas y las cantidades de los ingredientes para actualizar la estimación."
+          }
+        }
+      }
+    },
+    "Shopping estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación de compras"
+          }
+        }
+      }
+    },
+    "Meals keep their full ingredient amounts. This estimate uses available pantry quantities.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meals keep their full ingredient amounts. This estimate uses available pantry quantities."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas conservan las cantidades completas de sus ingredientes. Esta estimación usa las cantidades disponibles en la despensa."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
