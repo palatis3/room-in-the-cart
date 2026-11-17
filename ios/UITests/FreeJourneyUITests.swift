@@ -54,6 +54,38 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
     }
 
+    func testOfflineFoodKeeperSearchAndReviewedQualityRangeInEnglishAndSpanish() {
+        for spanish in [false, true] {
+            launch(reset: true, spanish: spanish)
+            shopRoot()
+            tap(app.buttons["settings"])
+            tap(app.buttons["settings.help"])
+            tap(app.buttons["help.foodKeeper"])
+            let search = app.searchFields.firstMatch
+            if !search.waitForExistence(timeout: 3) { app.swipeDown() }
+            tap(search)
+            search.typeText(spanish ? "pollo enlatado" : "canned chicken")
+            let food = app.buttons["foodKeeper.product.142"]
+            XCTAssertTrue(food.waitForExistence(timeout: 8))
+            tap(food)
+            let missing = spanish ? "No hay recomendaciones correspondientes a esta condición de almacenamiento." : "No matching guidance for this storage condition."
+            XCTAssertTrue(app.staticTexts[missing].firstMatch.waitForExistence(timeout: 8))
+            let period = spanish ? "3 - 4 Días" : "3 - 4 Days"
+            reveal(app.staticTexts[period])
+            capture(spanish ? "FoodKeeper pollo refrigerado después de abrir" : "FoodKeeper refrigerated canned chicken after opening")
+            tap(app.buttons[spanish ? "Revisar un intervalo de fechas" : "Review a date range"])
+            let range = element("foodKeeper.rangeStart")
+            XCTAssertFalse(range.exists)
+            let confirmation = app.switches["foodKeeper.confirmStorage"]
+            reveal(confirmation)
+            confirmation.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            XCTAssertTrue(range.waitForExistence(timeout: 8))
+            XCTAssertTrue(element("foodKeeper.rangeEnd").exists)
+            capture(spanish ? "FoodKeeper intervalo de calidad confirmado" : "FoodKeeper confirmed quality range")
+            app.terminate()
+        }
+    }
+
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
     func testPrivateMealPreferencesReviewAndRelaunchWithoutStartingPickup() {
         launch(reset: true)
