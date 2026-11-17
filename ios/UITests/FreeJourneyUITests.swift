@@ -73,6 +73,7 @@ import XCTest
     #if PANTRY_DIGEST_LIVE_ACCEPTANCE
     /// Run only on a fresh, dedicated simulator. The ordinary app asks iOS for notification consent.
     func testSystemDeliversPrivatePantryDigestAndReopensCurrentCheckList() {
+        let lotName = "Digest lentils " + String(UUID().uuidString.prefix(6))
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         tap(app.tabBars.buttons["Shop"])
@@ -81,13 +82,13 @@ import XCTest
         if setup.waitForExistence(timeout: 3) { tap(setup) }
         tap(app.buttons["pantry.add"])
         tap(app.textFields["pantry.foodName"])
-        app.textFields["pantry.foodName"].typeText("Digest acceptance lentils")
+        app.textFields["pantry.foodName"].typeText(lotName)
         tap(app.textFields["pantry.amount"])
         app.textFields["pantry.amount"].typeText("2")
         if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
         tap(app.buttons["pantry.review"])
         tap(app.buttons["pantry.confirm"])
-        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Digest acceptance lentils")).firstMatch
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", lotName)).firstMatch
         tap(lot)
         tap(app.buttons["pantry.digest.checkDate"])
         tap(app.buttons["pantry.digest.saveDate"])
@@ -124,7 +125,7 @@ import XCTest
         notification.tap()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 12))
         XCTAssertTrue(app.navigationBars["Use soon"].waitForExistence(timeout: 12))
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Digest acceptance lentils")).firstMatch.exists)
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", lotName)).firstMatch.exists)
         capture("Notification opens the current authorized food checks")
     }
     #endif
