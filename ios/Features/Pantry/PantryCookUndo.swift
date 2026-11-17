@@ -61,9 +61,7 @@ extension PantryCookPort {
             $0.isActive && $0.draft.meal.id == context.meal.id
         }) else { throw Failure.changed }
         let record = records[index]
-        guard record.draft.meal == context.meal, record.draft.recoveredMeal == context.recovery?.meal,
-              record.draft.ledgerID == context.ledgerID,
-              record.draft.inventoryID == inventory.state.workspaceID else { throw Failure.changed }
+        guard !record.hasResolvedUses, context.matches(record.draft) else { throw Failure.changed }
         let lots = Dictionary(uniqueKeysWithValues: inventory.lots.map { ($0.id, $0) })
         let claims = Dictionary(uniqueKeysWithValues: inventory.reservations.map { ($0.id, $0) })
         var changes: [InventoryPreparedChange] = []

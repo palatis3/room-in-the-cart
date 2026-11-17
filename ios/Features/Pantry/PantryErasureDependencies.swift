@@ -210,6 +210,9 @@ import RecordArchive
                 for part in record.draft.parts {
                     if case .lot(let id, _, _) = part.use { add(.lot(id), .incidentalCopy) }
                 }
+                for amendment in record.resolutions ?? [] {
+                    if let id = amendment.decision.lotID { add(.lot(id), .incidentalCopy) }
+                }
                 for output in record.draft.leftovers {
                     add(.lot(output.id), .sourceFact)
                     sourceFacts.insert(output.id)

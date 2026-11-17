@@ -19,6 +19,8 @@ struct PantryCookRecord: Codable, Equatable {
     let fulfilledNeeds: [StockNeed]
     let resultingObservations: [UUID: UUID]
 
+    var resolutions: [PantryCookResolution.Receipt]? = nil
+    var hasResolvedUses: Bool { resolutions?.isEmpty == false }
     var undo: PantryCookUndoReceipt? = nil
     var isActive: Bool { undo == nil }
 
@@ -40,6 +42,7 @@ struct PantryCookRecord: Codable, Equatable {
               Set(priorClaims.map(\.id)).count == priorClaims.count else { throw PantryCookPort.Failure.changed }
         guard fulfilledNeeds.count == priorClaims.count, Set(fulfilledNeeds.map(\.id)).count == fulfilledNeeds.count,
               fulfilledNeeds.allSatisfy({ $0.amount.amount > .zero }) else { throw PantryCookPort.Failure.changed }
+        try validateResolutions()
         if let undo {
             guard undo.id != draft.id, undo.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
                   undo.confirmedAt >= draft.cookedAt, Set(undo.observations.keys) == inputs.union(outputs),
@@ -58,11 +61,17 @@ struct PantryCookRecord: Codable, Equatable {
         let ledgerID: UUID
         let shop: ShoppingLedger
         let meal: MealOccurrence
-        let completed: CookCompletionDraft?
+        let completedRecord: PantryCookRecord?
+        var completed: CookCompletionDraft? { completedRecord?.draft }
+        var remainingUnresolvedUseIDs: [UUID] { completedRecord?.remainingUnresolvedUseIDs ?? [] }
         let asOf: Date
         let preferences: MealPreferenceProfile?
         let recovery: PickupRecoveryMealDefinition?
 
+        func matches(_ draft: CookCompletionDraft) -> Bool {
+            draft.meal == meal && draft.recoveredMeal == recovery?.meal &&
+                draft.ledgerID == ledgerID && draft.inventoryID == inventory.state.workspaceID
+        }
         var title: String { recovery?.meal.title ?? meal.title }
         var servings: Rational { recovery?.meal.servings ?? meal.servings }
         var exclusions: [String] { recovery?.meal.exclusions ?? meal.exclusions }
@@ -138,9 +147,9 @@ struct PantryCookRecord: Codable, Equatable {
             guard compared == sealed else { throw Failure.changed }
             recovery = current
         } else { recovery = nil }
-        let completed = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }?.draft
+        let completedRecord = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }
         let context = PantryCookSession.Context(inventory: inventory, ledgerID: ledger.workspaceID, shop: shop, meal: meal,
-            completed: completed, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences, recovery: recovery)
+            completedRecord: completedRecord, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences, recovery: recovery)
         var owned: [UUID: Set<UUID>] = [:]
         var sourceNeeds: [UUID: StockNeed] = [:]
         if recovery != nil || (journey.mealSource?.ledgerWorkspaceID == ledger.workspaceID && journey.mealSource?.shop.mealOccurrences.contains(meal) == true) {
