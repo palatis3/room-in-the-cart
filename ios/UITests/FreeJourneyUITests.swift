@@ -1261,9 +1261,11 @@ import XCTest
         XCTAssertFalse(app.buttons["Review correction"].isEnabled)
         fill("Ana", into: "handoffRecipient", useVisibleCenter: true)
         tap(app.buttons["I sent this version to this recipient"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "Recording a sent copy must finish recipient entry")
         assertText("Acknowledgment unknown")
         tap(app.buttons["The recipient acknowledged this version"])
         assertText("Recipient acknowledgment reported")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "Keep the recorded acknowledgment unobscured")
         capture("P06-Free-cook-acknowledged-version")
     }
 

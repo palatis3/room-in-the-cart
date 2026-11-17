@@ -195,6 +195,7 @@ struct PickupRecipientSection: View {
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var recipient = ""
+    @FocusState private var recipientFocused: Bool
     @State private var destinationConfirmed = false
     @State private var privateWordingConfirmed = false
     @State private var reviewRevision: Int64?
@@ -217,6 +218,8 @@ struct PickupRecipientSection: View {
             Section(pTr("Recipient and version")) {
                 TextField(pTr("Recipient (for explicit sent history)"), text: $recipient)
                     .accessibilityIdentifier("handoffRecipient")
+                    .focused($recipientFocused)
+                    .onSubmit { recipientFocused = false }
                     .textInputAutocapitalization(.words).autocorrectionDisabled().submitLabel(.done)
                 let savedRecipients = Set((journey.recipientSends ?? []).filter { $0.channel == channel }.map(\.recipient)).sorted()
                 if !savedRecipients.isEmpty {
@@ -238,11 +241,13 @@ struct PickupRecipientSection: View {
                     else {
                         Text(pTr("Acknowledgment unknown"))
                         Button(pTr("The recipient acknowledged this version")) {
+                            recipientFocused = false
                             Task { if allowed { await model.markRecipient(copy, recipient: name, acknowledge: true, reviewedRevision: journey.revision) } }
                         }
                     }
                 } else if current {
                     Button(pTr("I sent this version to this recipient")) {
+                        recipientFocused = false
                         Task { if allowed { await model.markRecipient(copy, recipient: name, acknowledge: false, reviewedRevision: journey.revision) } }
                     }.disabled(name.isEmpty || name.utf8.count > 160)
                 }
