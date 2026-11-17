@@ -65,7 +65,7 @@ import XCTest
             control.tap()
         }
         func check(_ title: String) {
-            enableSwitch(title, position: { toggle in
+            enableSwitch(title, position: { [self] toggle in
                 let form = app.collectionViews.firstMatch
                 for _ in 0..<6 {
                     if toggle.exists, toggle.isHittable, scrollableArea().contains(CGPoint(x: toggle.frame.midX, y: toggle.frame.midY)) { return }
