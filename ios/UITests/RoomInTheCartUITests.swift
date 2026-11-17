@@ -409,13 +409,13 @@ final class RoomInTheCartUITests: XCTestCase {
         launch()
         captureShopFrames("Initial-Shop-before-audit")
         screenshot("Initial-Shop-before-audit")
-        XCTAssertNoThrow(try auditAccessibility())
+        XCTAssertNoThrow(try auditAccessibility("Initial Shop"))
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
         revealFullyInShop(element("urgentRepairShortcut"))
         captureShopFrames("Complete-repair-shortcut-before-audit")
         screenshot("Complete-repair-shortcut-before-audit")
-        XCTAssertNoThrow(try auditAccessibility())
+        XCTAssertNoThrow(try auditAccessibility("Complete repair shortcut"))
         openEmptyComparison()
         enterComparison(item: "Audit wraps", firstQuantity: "8", cap: "30", groupPackFields: true)
         compare()
@@ -424,18 +424,18 @@ final class RoomInTheCartUITests: XCTestCase {
         captureComparisonFrames("Initial-result-before-audit")
         // Keep audit failures separate from persistence so every functional
         // restart check still runs. No issue categories/elements are filtered.
-        XCTAssertNoThrow(try auditAccessibility())
+        XCTAssertNoThrow(try auditAccessibility("Initial comparison results"))
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
         screenshot("Scrolled-result-before-audit")
         captureComparisonFrames("Scrolled-result-before-audit")
-        XCTAssertNoThrow(try auditAccessibility())
+        XCTAssertNoThrow(try auditAccessibility("Scrolled comparison results"))
         // Additional coverage: retain both earlier audits, then audit the complete
         // Save control in the visible content area. No issue is suppressed.
         revealFullyInComparison(element("saveComparison"))
         captureComparisonFrames("Complete-Save-before-audit")
         screenshot("Complete-Save-before-audit")
-        XCTAssertNoThrow(try auditAccessibility())
+        XCTAssertNoThrow(try auditAccessibility("Complete Save control"))
     }
 
     private var shopViewport: CGRect {
@@ -537,21 +537,24 @@ final class RoomInTheCartUITests: XCTestCase {
         attachment.name = name + " — exact frames"; attachment.lifetime = .keepAlways; add(attachment)
     }
 
-    private func auditAccessibility() throws {
-        try app.performAccessibilityAudit { issue in
-            let element = issue.element
-            if let element {
-                print("Accessibility audit: \(issue.detailedDescription), id=\(element.identifier), label=\(element.label), frame=\(element.frame)")
-            } else {
-                print("Accessibility audit: \(issue.detailedDescription), no element supplied")
+    private func auditAccessibility(_ viewport: String) throws {
+        try XCTContext.runActivity(named: "Accessibility audit — " + viewport) { _ in
+            try app.performAccessibilityAudit { issue in
+                let context = "\(viewport); category=\(issue.auditType.rawValue); \(issue.compactDescription)"
+                let element = issue.element
+                if let element {
+                    print("Accessibility audit [\(context)]: \(issue.detailedDescription), id=\(element.identifier), label=\(element.label), frame=\(element.frame)")
+                } else {
+                    print("Accessibility audit [\(context)]: \(issue.detailedDescription), no element supplied")
+                }
+                // XCTest can supply only a screenshot. Keep the hierarchy and public audit category.
+                let hierarchy = element?.debugDescription ?? self.app.debugDescription
+                let details = XCTAttachment(string: "\(context)\n\(issue.detailedDescription)\n\(hierarchy)")
+                details.name = "Accessibility issue — " + context
+                details.lifetime = .keepAlways
+                self.add(details)
+                return false // Record every issue as a failure; never suppress it.
             }
-            // XCTest can supply only a screenshot. Keep the app hierarchy at the time of the finding.
-            let hierarchy = element?.debugDescription ?? self.app.debugDescription
-            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(hierarchy)")
-            details.name = "Accessibility issue details"
-            details.lifetime = .keepAlways
-            self.add(details)
-            return false // Record every issue as a failure; never suppress it.
         }
     }
 
