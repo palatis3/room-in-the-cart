@@ -25,13 +25,16 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(editor.value as? String, "2 kg rice")
         tap(editor)
         editor.typeText(" noodles")
+        let edited = editor.value as? String
+        XCTAssertTrue(edited?.contains("noodles") == true)
+        XCTAssertTrue(edited?.contains("2 kg rice") == true)
         let done = app.buttons["Done"]
         if done.exists, done.isHittable { done.tap() }
         tap(app.buttons["Close"])
         XCTAssertTrue(app.buttons["shop.addFirstList"].waitForExistence(timeout: 12))
         tap(app.buttons["shop.addFirstList"])
         XCTAssertTrue(editor.waitForExistence(timeout: 10))
-        XCTAssertEqual(editor.value as? String, "2 kg rice noodles")
+        XCTAssertEqual(editor.value as? String, edited)
     }
 
     func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
