@@ -407,6 +407,11 @@ import RecordArchive
                 if let undo = record.undo {
                     for id in undo.observations.values { try key(.observation, id, record.draft.inventoryID) }
                 }
+                for amendment in record.resolutions ?? [] {
+                    try key(.lot, amendment.decision.lotID, record.draft.inventoryID)
+                    try key(.observation, amendment.basis?.observationID, record.draft.inventoryID)
+                    try key(.observation, amendment.resultObservationID, record.draft.inventoryID)
+                }
                 for claim in record.priorClaims { try key(.reservation, claim.id, record.draft.inventoryID) }
             }
             for row in value.stockLots { try legacyLot(row.id, ns) }
