@@ -7,6 +7,28 @@ import LocalStore
 @MainActor final class PantryPackSelectionCommitPort {
     enum Failure: Error, Equatable { case unauthorized, actionUnauthorized, invalidRequest, wrongOrigin, operationConflict, staleReview, missingHead, missingJournal }
     static let maximumRequestBytes = 512 * 1_024
+    /// Admission for a first gross-only save, not food availability evidence.
+    /// It binds a complete authorized read and the absence of this shop's source.
+    struct GrossBasis: Codable, Equatable {
+        let originID: UUID
+        let inventoryRevision: Int64
+        let sourceHeads: [LedgerCanonicalPackStockEvidence.SourceHead]
+
+        @MainActor static func review(context: PantryPackStockReview.Context, absentJourneyID: UUID) throws -> Self {
+            guard context.snapshot.state.active, context.snapshot.state.workspaceID == context.mapping.originID else { throw Failure.staleReview }
+            let result = Self(originID: context.snapshot.state.workspaceID, inventoryRevision: context.snapshot.state.revision,
+                sourceHeads: context.mapping.sourceHeads.map { .init(journeyID: $0.id, revision: $0.revision) }
+                    .sorted { $0.journeyID.uuidString < $1.journeyID.uuidString })
+            try result.validate(absentJourneyID: absentJourneyID)
+            return result
+        }
+        @MainActor func validate(absentJourneyID: UUID) throws {
+            guard inventoryRevision >= 0, sourceHeads.count <= PantryLegacyMigration.maximumHeads,
+                  Set(sourceHeads.map(\.journeyID)).count == sourceHeads.count,
+                  sourceHeads.allSatisfy({ $0.revision > 0 && $0.journeyID != absentJourneyID }),
+                  sourceHeads == sourceHeads.sorted(by: { $0.journeyID.uuidString < $1.journeyID.uuidString }) else { throw Failure.invalidRequest }
+        }
+    }
     struct Request: Codable, Equatable {
         let version: Int
         let inventoryWorkspaceID: UUID
@@ -14,11 +36,12 @@ import LocalStore
         let selection: LedgerPackSelection
         let reviewedLedgerRevision: Int64
         let requiresActionAuthorization: Bool
+        let grossBasis: GrossBasis?
         init(version: Int = 1, inventoryWorkspaceID: UUID, ledgerWorkspaceID: UUID, selection: LedgerPackSelection,
-             reviewedLedgerRevision: Int64, requiresActionAuthorization: Bool = false) {
+             reviewedLedgerRevision: Int64, requiresActionAuthorization: Bool = false, grossBasis: GrossBasis? = nil) {
             self.version = version; self.inventoryWorkspaceID = inventoryWorkspaceID; self.ledgerWorkspaceID = ledgerWorkspaceID
             self.selection = selection; self.reviewedLedgerRevision = reviewedLedgerRevision
-            self.requiresActionAuthorization = requiresActionAuthorization
+            self.requiresActionAuthorization = requiresActionAuthorization; self.grossBasis = grossBasis
         }
     }
     typealias Entry = PantryPackSelectionPendingStore.Entry
@@ -133,14 +156,26 @@ import LocalStore
         guard (actual.record?.revision ?? 0) == request.reviewedLedgerRevision,
               let shop = actual.workspace.shops.first(where: { $0.id == selection.shopID }) else { throw Failure.staleReview }
         let read = try await reader.load(at: now); try requireApplicable(entry)
-        let mapping = try PantryLegacyMigration.map(originID: inventoryWorkspaceID, heads: read.sources, ledger: .unavailable, at: now)
-        let proof = try PantryPackStockReview.currentEvidence(for: selection, shop: shop,
-            bindings: actual.workspace.dinnerPlanning.portionBindings,
-            context: .init(snapshot: read.snapshot, mapping: mapping, asOf: now))
-        guard proof == selection.canonicalStockEvidence else { throw Failure.staleReview }
         var candidate = actual.workspace
-        guard try candidate.recordPackSelection(selection, workspaceID: ledgerWorkspaceID,
-            currentCanonicalEvidence: proof) else { throw Failure.operationConflict }
+        if let gross = request.grossBasis {
+            // No synthetic journey or allocation is needed. Exact absence and
+            // reviewed revisions admit only the original gross-only save.
+            let currentGross = GrossBasis(originID: read.snapshot.state.workspaceID,
+                inventoryRevision: read.snapshot.state.revision,
+                sourceHeads: read.sources.map { .init(journeyID: $0.id, revision: $0.revision) }
+                    .sorted { $0.journeyID.uuidString < $1.journeyID.uuidString })
+            guard currentGross == gross, selection.isGrossOnlyPurchase else { throw Failure.staleReview }
+            try currentGross.validate(absentJourneyID: selection.shopID)
+            guard try candidate.recordPackSelection(selection, workspaceID: ledgerWorkspaceID) else { throw Failure.operationConflict }
+        } else {
+            let mapping = try PantryLegacyMigration.map(originID: inventoryWorkspaceID, heads: read.sources, ledger: .unavailable, at: now)
+            let proof = try PantryPackStockReview.currentEvidence(for: selection, shop: shop,
+                bindings: actual.workspace.dinnerPlanning.portionBindings,
+                context: .init(snapshot: read.snapshot, mapping: mapping, asOf: now))
+            guard proof == selection.canonicalStockEvidence else { throw Failure.staleReview }
+            guard try candidate.recordPackSelection(selection, workspaceID: ledgerWorkspaceID,
+                currentCanonicalEvidence: proof) else { throw Failure.operationConflict }
+        }
         let payload = try await Self.encodeCandidate(candidate); try requireApplicable(entry)
         guard payload.count <= LedgerStore.maximumPayloadBytes else { throw LedgerStoreError.payloadTooLarge }
         try await reader.assertCurrent(read); try requireApplicable(entry)
@@ -186,13 +221,22 @@ import LocalStore
     }
     static func validate(_ request: Request) throws {
         try request.selection.validate()
-        guard request.version == 1, request.selection.formatVersion == 3,
+        guard request.version == 1,
               request.selection.sourceWorkspaceID == request.ledgerWorkspaceID,
-              request.selection.canonicalStockEvidence?.basis.originID == request.inventoryWorkspaceID,
               request.reviewedLedgerRevision >= 0, request.reviewedLedgerRevision < Int64.max,
               request.selection.reviewedAt.timeIntervalSinceReferenceDate.isFinite,
               try encoded(request).count <= maximumRequestBytes else { throw Failure.invalidRequest }
+        if request.selection.isGrossOnlyPurchase {
+            guard let gross = request.grossBasis, gross.originID == request.inventoryWorkspaceID else { throw Failure.invalidRequest }
+            try gross.validate(absentJourneyID: request.selection.shopID)
+        } else {
+            guard request.selection.formatVersion == 3, request.grossBasis == nil,
+                  request.selection.canonicalStockEvidence?.basis.originID == request.inventoryWorkspaceID else { throw Failure.invalidRequest }
+        }
     }
+    /// Gross selections have ledger-scoped mutation identity. Their absence basis
+    /// admits the first write only; a later exact receipt wins over new pantry or
+    /// journey state. The current ordered origin pair still requires live access.
     static func validateReceipt(_ record: LedgerRecord, request: Request) throws {
         try validate(request)
         guard record.workspaceID == request.ledgerWorkspaceID, record.operationID == request.selection.id,

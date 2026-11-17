@@ -364,6 +364,35 @@ import SQLite3
         XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3))
     }
 
+    func testCheckoutSaveCannotAdoptAnIndependentNewLedgerAsItsReviewedBase() async throws {
+        let f = try await fixture(), pickup = await model(f), instant = now
+        let originalLedger = LedgerModel(databaseURL: f.directory.appendingPathComponent("ledger.sqlite"), clock: { instant },
+            inventoryProjectionsEnabled: true, mutationGate: f.gate)
+        let otherLedger = LedgerModel(databaseURL: f.directory.appendingPathComponent("ledger.sqlite"), clock: { instant },
+            inventoryProjectionsEnabled: true, mutationGate: f.gate)
+        f.cleanup.track(originalLedger, otherLedger)
+        await originalLedger.open(); await otherLedger.open()
+        let originalBasis = try PickupModel.CheckoutLedgerBasis(ledger: originalLedger)
+        let changed = await otherLedger.change(key: "independent ledger") { $0.shops.append(ShoppingLedger(title: "New plan")) }
+        XCTAssertTrue(changed)
+        let before = try await f.inventory.inventoryState()
+        let sources = try await f.inventory.list()
+        let saved = await pickup.change(reviewedLedger: originalBasis) { value in
+            value.notes.append(.init(id: UUID(), text: "Stale checkout", language: "en", createdAt: instant, revision: value.revision))
+        }
+        XCTAssertFalse(saved); XCTAssertFalse(pickup.hasPendingSave)
+        XCTAssertNil(try f.pendingStore.read(), "The stale ledger review must fail before staging a submission.")
+        let after = try await f.inventory.inventoryState(), afterSources = try await f.inventory.list()
+        XCTAssertEqual(after, before); XCTAssertEqual(afterSources, sources)
+        XCTAssertEqual(originalLedger.revision, originalBasis.revision, "The independent writer did not refresh this cached model.")
+        let freshBasis = try PickupModel.CheckoutLedgerBasis(ledger: otherLedger)
+        let current = await pickup.change(reviewedLedger: freshBasis) { value in
+            value.notes.append(.init(id: UUID(), text: "Current checkout", language: "en", createdAt: instant, revision: value.revision))
+        }
+        XCTAssertTrue(current, pickup.error ?? "")
+        XCTAssertEqual(pickup.journey?.notes.last?.text, "Current checkout")
+    }
+
     func testBusyRefreshWithholdsOldCoverageUntilFreshSnapshotCanBeRead() async throws {
         let f = try await fixture(), pickup = await model(f)
         XCTAssertNotNil(pickup.allocation)

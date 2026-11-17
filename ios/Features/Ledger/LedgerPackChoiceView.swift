@@ -131,7 +131,10 @@ struct LedgerPackChoiceView: View {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
             }
             .keyboardDoneAction(visible: field != nil, title: ledgerText("Done")) { field = nil }
-            .task { await pickup.load() }
+            .task {
+                await pickup.load()
+                if pickup.pantryIsActive { _ = await pickup.refreshPantryStock() }
+            }
             .onChange(of: ingredient, initial: true) { previous, current in
                 guard let current else { draft.aConversion = nil; draft.bConversion = nil; return }
                 if !initialized || previous?.shopID != current.shopID || previous?.lineID != current.lineID {
@@ -169,12 +172,8 @@ struct LedgerPackChoiceView: View {
         }
     }
     private var liveStock: Quantity? {
-        guard let shop = model.workspace.shops.first(where: { $0.id == shopID }),
-              let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings),
-              let evidence = try? LedgerPackStockReview.evidence(shop: shop, lineID: lineID, requirement: requirement,
-                journey: pickup.journeys.first { $0.id == shopID }, pickupWorkspaceID: pickup.sourceWorkspaceID,
-                bindings: model.workspace.dinnerPlanning.portionBindings) else { return nil }
-        return try? evidence.confirmedQuantity(for: requirement)
+        guard let shop = model.workspace.shops.first(where: { $0.id == shopID }) else { return nil }
+        return try? pickup.confirmedPackStock(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings)
     }
     private var fullyCovered: Bool {
         guard let stock = liveStock, let shop = model.workspace.shops.first(where: { $0.id == shopID }),
@@ -219,14 +218,15 @@ struct LedgerPackChoiceView: View {
 struct LedgerAtHomePlanView: View {
     @ObservedObject var model: PickupModel
     @Environment(\.pickupLedger) private var ledger
+    private var coverageIsCurrent: Bool { model.hasCurrentBasketStockBasis && model.allocation?.confirmedCoverageComplete == true }
     var body: some View {
         List {
             PickupSaveStatus(model: model)
             Section {
-                Text(ledgerText(model.allocation?.confirmedCoverageComplete == true
+                Text(ledgerText(coverageIsCurrent
                     ? "Use confirmed food at home · no purchase needed" : "Review ingredient and purchase needs")).font(.headline)
                 Text(ledgerText("No retailer order was created. Meal needs and protected portions stay recorded."))
-                if model.allocation?.confirmedCoverageComplete != true {
+                if !coverageIsCurrent {
                     Text(ledgerText("Confirmed food no longer covers every need. Review the current allocation and purchase needs again."))
                         .foregroundStyle(Theme.warning)
                 }

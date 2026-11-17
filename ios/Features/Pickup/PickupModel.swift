@@ -344,6 +344,24 @@ struct PickupPersistenceLocation {
 /// One durable document per journey. Candidate data is published only after SQLite
 /// commits; retry writes the identical encoded candidate and original event IDs.
 @MainActor final class PickupModel: ObservableObject {
+    /// Captures the actual reviewed ledger, before asynchronous pantry refresh or
+    /// save preparation. A fresh store read cannot silently replace this base.
+    struct CheckoutLedgerBasis: Equatable {
+        let originID: UUID
+        let revision: Int64
+        let digest: Data
+        @MainActor init(ledger: LedgerModel) throws {
+            guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, let origin = ledger.sourceWorkspaceID else {
+                throw LedgerCheckoutError.staleSource
+            }
+            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+            originID = origin; revision = ledger.revision
+            digest = Data(SHA256.hash(data: try encoder.encode(ledger.workspace)))
+        }
+        func matches(_ request: PantryPickupDelta.Request) -> Bool {
+            request.ledgerOriginID == originID && request.ledgerRevision == revision && request.ledgerDigest == digest
+        }
+    }
     struct PantryConfiguration {
         let ledger: LedgerStore
         let pendingStore: PantryPickupPendingStore
@@ -442,7 +460,47 @@ struct PickupPersistenceLocation {
     }
     var hasCurrentBasketStockBasis: Bool {
         guard let value = journey else { return true }
+        if pantryIsActive {
+            // An actual placed order remains an immutable historical fact.
+            if value.basket?.phase == .reportedPlaced { return true }
+            guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent else { return false }
+            if value.ledgerPackSelections.isEmpty { return true } // No pantry credit in a gross basket.
+            guard let ledger = cookLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
+                  let workspaceID = ledger.sourceWorkspaceID,
+                  let shop = ledger.workspace.shops.first(where: { $0.id == value.id }),
+                  let context = try? canonicalPackContext(for: value.id) else { return false }
+            return PantryPackStockReview.basketBasisIsCurrent(value, shop: shop, workspaceID: workspaceID,
+                bindings: ledger.workspace.dinnerPlanning.portionBindings, context: context)
+        }
         return LedgerPackStockReview.basketBasisIsCurrent(value, pickupWorkspaceID: sourceWorkspaceID)
+    }
+    func confirmedPackStock(shop: ShoppingLedger, lineID: UUID, bindings: [DinnerPortionBinding]) throws -> Quantity? {
+        guard ready, !saving, !hasPendingSave else { throw LedgerPackError.staleSource }
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: bindings)
+        if pantryIsActive {
+            guard let context = try pantryReviewContext() else { throw LedgerPackError.staleSource }
+            guard context.mapping.sourceHeads.contains(where: { $0.id == shop.id }) else { return nil }
+            return try PantryPackStockReview.evidence(shop: shop, lineID: lineID, requirement: requirement,
+                bindings: bindings, context: context).confirmedQuantity(for: requirement)
+        }
+        return try LedgerPackStockReview.evidence(shop: shop, lineID: lineID, requirement: requirement,
+            journey: journeys.first { $0.id == shop.id }, pickupWorkspaceID: sourceWorkspaceID,
+            bindings: bindings)?.confirmedQuantity(for: requirement)
+    }
+    func isPackSelectionCurrent(_ selection: LedgerPackSelection, shop: ShoppingLedger,
+                                workspaceID: UUID, bindings: [DinnerPortionBinding]) -> Bool {
+        guard ready, !saving, !hasPendingSave else { return false }
+        do {
+            if pantryIsActive, selection.isGrossOnlyPurchase {
+                guard try pantryReviewContext() != nil else { return false }
+                return try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings)
+            }
+            let context = try canonicalPackContext(for: shop.id)
+            let evidence = try context.map { try PantryPackStockReview.currentEvidence(for: selection, shop: shop, bindings: bindings, context: $0) }
+            return try LedgerPackStockReview.isCurrent(selection, shop: shop, workspaceID: workspaceID,
+                journey: journeys.first { $0.id == shop.id }, pickupWorkspaceID: sourceWorkspaceID,
+                bindings: bindings, currentCanonicalEvidence: evidence, pantryIsActive: pantryIsActive)
+        } catch { return false }
     }
     var result: CheckoutResult? {
         guard hasCurrentBasketStockBasis, let value = journey, let basket = value.basket,
@@ -467,10 +525,15 @@ struct PickupPersistenceLocation {
         return try PantryLiveStockProjection.build(snapshot: snapshot, mapping: mapping, journeyID: journeyID, at: clock())
     }
     func canonicalPackContext(for journeyID: UUID) throws -> PantryPackStockReview.Context? {
+        guard let context = try pantryReviewContext() else { return nil }
+        guard journeys.contains(where: { $0.id == journeyID }) else { throw PickupModelError.missing }
+        return context
+    }
+    func pantryReviewContext() throws -> PantryPackStockReview.Context? {
         guard pantryIsActive else { return nil }
         guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent,
               !saving, !hasPendingSave, let snapshot = pantrySnapshot,
-              let mapping = pantryReaderMapping, journeys.contains(where: { $0.id == journeyID }) else {
+              let mapping = pantryReaderMapping else {
             throw PickupModelError.missing
         }
         return .init(snapshot: snapshot, mapping: mapping, asOf: clock())
@@ -665,7 +728,8 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func start(from lines: [BasketLine], shopID: UUID, context: CheckoutContext, cap: CheckoutCap? = nil, plannedNeeds: [AllocationNeed] = [], ledgerBasis: ShopBasis? = nil,
-                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = [], mealSource: PickupCheckoutMealSource? = nil) async -> Bool {
+                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = [], mealSource: PickupCheckoutMealSource? = nil,
+                                  reviewedLedger: CheckoutLedgerBasis? = nil) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
         if journeys.contains(where: { $0.id == shopID }) { selectedID = shopID; return true }
@@ -676,11 +740,12 @@ struct PickupPersistenceLocation {
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
             value.ledgerPackSelections = ledgerPackSelections; value.mealSource = mealSource
-            return await save(value)
+            return await save(value, reviewedLedger: reviewedLedger)
         } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
     @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
-        recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil) async -> Bool {
+        recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil,
+        reviewedLedger: CheckoutLedgerBasis? = nil) async -> Bool {
         guard ready, !saving, pending == nil, evaluateAuthorization(authorize, operationID: recoveryOperationID) else { return false }
         do {
             saving = true
@@ -718,6 +783,7 @@ struct PickupPersistenceLocation {
                     revision: sourceRevision + 1, payload: payload, savedAt: instant)
                 let review = try await pantryPort(configuration: configuration, store: store)
                     .prepare(operationID: UUID(), changedHeads: [head], preparedAt: instant)
+                guard reviewedLedger?.matches(review.submission.request) ?? true else { throw LedgerCheckoutError.staleSource }
                 guard review.submission.request.inventoryRevision == pantrySnapshot.state.revision,
                       revisions.allSatisfy({ (review.sourceRevisions[$0.key] ?? 0) == $0.value }),
                       configuration.authorize(), evaluateAuthorization(authorize, operationID: recoveryOperationID) else { throw ComparisonStoreError.staleInventory }
@@ -837,9 +903,9 @@ struct PickupPersistenceLocation {
         return await save(current, selecting: false, authorize: authorized)
     }
 
-    @discardableResult func change(_ edit: (inout PickupJourney) throws -> Void) async -> Bool {
+    @discardableResult func change(reviewedLedger: CheckoutLedgerBasis? = nil, _ edit: (inout PickupJourney) throws -> Void) async -> Bool {
         guard var value = journey, !saving, pending == nil else { return false }
-        do { try edit(&value); return await save(value) }
+        do { try edit(&value); return await save(value, reviewedLedger: reviewedLedger) }
         catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
     @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?, reviewed draft: PickupCheckoutDraft? = nil) async -> Bool {

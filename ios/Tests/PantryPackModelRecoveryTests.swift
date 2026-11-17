@@ -106,13 +106,22 @@ import LocalStore
     func testRealPackReviewSavesCanonicalChoiceAndExactRetryDoesNotWriteAgain() async throws {
         let f = try await fixture(), reviewed = try review(f)
         XCTAssertEqual(reviewed.request.confirmedAtHome?.amount, try Rational(4))
+        XCTAssertEqual(try f.pickup.confirmedPackStock(shop: reviewed.sourceShop, lineID: f.food, bindings: [])?.amount, try Rational(4))
         let before = try await f.inventory.inventoryState()
         let saved = try await reviewed.save(offerID: "a", ledger: f.ledger, pickup: f.pickup)
         XCTAssertTrue(saved); XCTAssertFalse(f.ledger.hasPendingSave)
         XCTAssertEqual(f.ledger.workspace.packSelections.first?.formatVersion, 3)
+        let selected = try XCTUnwrap(f.ledger.workspace.packSelections.first)
+        XCTAssertTrue(f.pickup.isPackSelectionCurrent(selected, shop: reviewed.sourceShop,
+            workspaceID: f.ledgerStore.workspaceID, bindings: []))
         XCTAssertNil(try f.journal.read())
         let revision = f.ledger.revision
         try await recount(f)
+        let refreshed = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        XCTAssertNil(try f.pickup.confirmedPackStock(shop: reviewed.sourceShop, lineID: f.food, bindings: []))
+        XCTAssertFalse(f.pickup.isPackSelectionCurrent(selected, shop: reviewed.sourceShop,
+            workspaceID: f.ledgerStore.workspaceID, bindings: []))
         let replayed = try await reviewed.save(offerID: "a", ledger: f.ledger, pickup: f.pickup)
         XCTAssertTrue(replayed); XCTAssertEqual(f.ledger.revision, revision)
         do { _ = try await reviewed.save(offerID: "b", ledger: f.ledger, pickup: f.pickup); XCTFail("Different offer under completed ID") }

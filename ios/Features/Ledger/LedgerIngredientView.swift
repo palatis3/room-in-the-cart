@@ -155,13 +155,16 @@ struct LedgerIngredientView: View {
             .onChange(of: model.error) { _, value in if value != nil { focus = .status } }
             .onChange(of: shopID) { _, _ in showProtectedNeeds = true }
             .onChange(of: lineID) { _, _ in showProtectedNeeds = true }
+            .task {
+                await pickup.load()
+                if pickup.pantryIsActive { _ = await pickup.refreshPantryStock() }
+            }
     }
     private func currentSelection(shop: ShoppingLedger, workspaceID: UUID) -> LedgerPackSelection? {
         model.workspace.packSelections.reversed().first { selection in
             selection.shopID == shopID && selection.lineID == lineID &&
-            (try? LedgerPackStockReview.isCurrent(selection, shop: shop, workspaceID: workspaceID,
-                journey: pickup.journeys.first { $0.id == shopID }, pickupWorkspaceID: pickup.sourceWorkspaceID,
-                bindings: model.workspace.dinnerPlanning.portionBindings)) == true
+            pickup.isPackSelectionCurrent(selection, shop: shop, workspaceID: workspaceID,
+                bindings: model.workspace.dinnerPlanning.portionBindings)
         }
     }
 

@@ -78,6 +78,13 @@ import CoreDomain
         guard let head = context.mapping.sourceHeads.first(where: { $0.id == journey.id }),
               (try? JSONDecoder().decode(PickupJourney.self, from: head.payload)) == journey else { return false }
         for selection in journey.ledgerPackSelections {
+            if selection.isGrossOnlyPurchase {
+                guard (try? selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings)) == true,
+                      let line = basket.current.lines.first(where: { $0.id == selection.lineID }),
+                      line.quantity == selection.purchasedQuantity,
+                      line.expectedCost == selection.selectedResult.totalCost.map(CostEvidence.exact) else { return false }
+                continue
+            }
             guard selection.canonicalStockEvidence != nil,
                   let current = try? currentEvidence(for: selection, shop: shop, bindings: bindings, context: context),
                   (try? selection.isCurrentForAppliedBasket(in: shop, workspaceID: workspaceID, bindings: bindings,
