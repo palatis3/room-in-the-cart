@@ -41,7 +41,7 @@ import RecordArchive
         let home = AdultHomeSummaryStore(directory: root.appendingPathComponent("private"), widgetDirectory: { directory }, reload: { _ in })
         let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
         let access = PantryDigestAccess(scope: .init(origin: reviewed.basis.originID, identity: identity), authorized: { true })
-        try home.setEnabled(true, kind: .tonight, access: access)
+        try home.setEnabled(true, kind: .tonight, access: access, ledgerID: origin)
         try home.update(.tonight, access: access, count: 1, reviewedTitle: recipe.title, tonightBasis: basis)
         let projection = try AdultFoodSummaryFile(directory: directory, kind: .tonight).read()
         XCTAssertEqual(projection.reviewedTitle, "Dinner wraps")

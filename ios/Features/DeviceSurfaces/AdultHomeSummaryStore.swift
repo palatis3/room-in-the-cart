@@ -56,13 +56,15 @@ import CoreDomain
     func enabled(_ kind: AdultFoodSummaryKind, scope: PantryDigestScope) -> Bool {
         (try? consent(kind)?.belongs(to: scope)) == true
     }
-    func setEnabled(_ enabled: Bool, kind: AdultFoodSummaryKind, access: PantryDigestAccess) throws {
+    func setEnabled(_ enabled: Bool, kind: AdultFoodSummaryKind, access: PantryDigestAccess, ledgerID: UUID? = nil) throws {
         guard access.authorized(), UIApplication.shared.isProtectedDataAvailable else { throw SurfaceError.unavailable }
         if !enabled { try revoke(kind); return }
         _ = try file(kind)
-        if self.enabled(kind, scope: access.scope) { return }
+        guard kind != .tonight || ledgerID != nil else { throw SurfaceError.unavailable }
+        if let existing = try consent(kind), existing.belongs(to: access.scope),
+           kind != .tonight || existing.reviewedLedger == ledgerID { return }
         try revoke(kind)
-        try persist(Consent(origin: access.scope.origin, owner: access.scope.owner, token: UUID()), kind)
+        try persist(Consent(origin: access.scope.origin, owner: access.scope.owner, token: UUID(), reviewedLedger: ledgerID), kind)
         generation = UUID()
     }
     func update(_ kind: AdultFoodSummaryKind, access: PantryDigestAccess, count: Int,
@@ -71,6 +73,7 @@ import CoreDomain
               var receipt = try consent(kind) else { return }
         guard receipt.belongs(to: access.scope) else { try revoke(kind); return }
         guard (kind == .tonight) == (tonightBasis != nil) else { throw SurfaceError.invalid }
+        if kind == .tonight, receipt.reviewedLedger != tonightBasis?.ledger { try revoke(kind); return }
         let projected = try file(kind)
         if let old = receipt.projection, old.count == count, old.reviewedTitle == reviewedTitle, receipt.tonightBasis == tonightBasis,
            old.isFresh(at: now, zone: zone),
@@ -107,10 +110,13 @@ import CoreDomain
         }
     }
     func checkTonightSource(ledger: LedgerModel, pickup: PickupModel) throws {
-        guard let receipt = try consent(.tonight), let expected = receipt.tonightBasis else { return }
+        guard let receipt = try consent(.tonight), ledger.ready else { return }
+        if let reviewedLedger = receipt.reviewedLedger, ledger.sourceWorkspaceID != reviewedLedger {
+            try revoke(.tonight); return
+        }
+        guard let expected = receipt.tonightBasis else { return }
         // Startup publishes ledger readiness before opening the protected inventory.
         // A cold tap must wait for that read before comparing the pantry basis.
-        guard ledger.ready else { return }
         if ledger.sourceWorkspaceID != expected.ledger || ledger.revision != expected.ledgerRevision ||
             ledger.hasPendingLedgerDeletion || receipt.projection?.isFresh(at: Date(), zone: .current) != true {
             try invalidate(.tonight, origin: receipt.origin, forget: false); return
@@ -164,11 +170,12 @@ extension PantryDigestDocument {
 struct AdultHomeSummaryPreference: View {
     let kind: AdultFoodSummaryKind
     let access: PantryDigestAccess
+    var ledgerID: UUID? = nil
     @ObservedObject private var home = AdultHomeSummaryStore.shared
     @State private var error = false
     private var enabled: Binding<Bool> {
         Binding(get: { access.authorized() && home.enabled(kind, scope: access.scope) }, set: { value in
-            do { try home.setEnabled(value, kind: kind, access: access); error = false }
+            do { try home.setEnabled(value, kind: kind, access: access, ledgerID: ledgerID); error = false }
             catch { self.error = true }
         })
     }

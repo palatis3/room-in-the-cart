@@ -106,7 +106,7 @@ struct TonightEntry: View {
     }
     private var content: some View {
         List {
-            if let current = homeAccess { AdultHomeSummaryPreference(kind: .tonight, access: current) }
+            if let current = homeAccess { AdultHomeSummaryPreference(kind: .tonight, access: current, ledgerID: ledger.sourceWorkspaceID) }
             Section {
                 NavigationLink(tonightText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: ledger) }
                     .accessibilityIdentifier("tonight.preferences")
