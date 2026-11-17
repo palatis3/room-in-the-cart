@@ -23,6 +23,55 @@ struct ReviewedCapture: Equatable, Identifiable, Sendable {
     var previewImageData: Data? = nil
     var lines: [CaptureImportLine]? = nil
     var fieldDrafts: [CaptureLineDraft]? = nil
+    var naturalBatch: NaturalCaptureBatch? = nil
+}
+
+/// A pickup offered by the authorized private workspace, identified independently of its display name.
+struct CapturePickup: Identifiable, Hashable, Sendable {
+    let id: UUID
+    let title: String
+    let revision: Int
+
+    init(_ shop: ShoppingLedger) {
+        id = shop.id
+        title = shop.title
+        revision = shop.revision
+    }
+}
+
+extension CaptureLineDraft {
+    var needsNaturalClarification: Bool {
+        warnings.contains(.ambiguous) || warnings.contains(.negation) || warnings.contains(.packUnknown)
+    }
+}
+
+struct NaturalCaptureBatch: Equatable, Sendable {
+    let timing: String?
+    var pickup: CapturePickup?
+
+    init(timing: String?, lines: [CaptureLineDraft], currentPickup: CapturePickup?) {
+        self.timing = timing
+        pickup = timing == nil && !lines.contains { $0.warnings.contains(.destination) } ? currentPickup : nil
+    }
+
+    mutating func refreshPickups(_ available: [CapturePickup]) {
+        if let pickup, !available.contains(pickup) { self.pickup = nil }
+    }
+
+    func reviewed(_ drafts: [CaptureLineDraft], availablePickups: [CapturePickup]) throws -> [CaptureImportLine] {
+        guard let pickup, availablePickups.contains(pickup) else { throw StructuredCaptureFailure.destinationMismatch }
+        let rows: [CaptureImportLine] = try drafts.compactMap { draft in
+            guard draft.skip || !draft.needsNaturalClarification || draft.confirmed else {
+                throw StructuredCaptureFailure.reviewRequired
+            }
+            var line = draft
+            line.destination = pickup.title
+            line.confirmed = true
+            return try line.reviewed(expectedDestination: pickup.title)
+        }
+        guard !rows.isEmpty else { throw StructuredCaptureFailure.reviewRequired }
+        return rows
+    }
 }
 
 struct SpeechCaptureUpdate: Sendable {

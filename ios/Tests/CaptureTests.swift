@@ -1,4 +1,5 @@
 import XCTest
+import CoreDomain
 import CoreGraphics
 import CoreText
 import ImageIO
@@ -38,6 +39,127 @@ import UniformTypeIdentifiers
         XCTAssertTrue(model.containsExclusion)
         model.confirmed = true
         XCTAssertEqual(model.reviewed()?.source, .paste)
+    }
+    func testAcceptedSpeechOffersNaturalListOnlyToShopperAndCanUseOneLineInstead() async throws {
+        let speech = FakeSpeech()
+        let model = make(speech)
+        model.startSpeech()
+        await settle { model.listening }
+        let words = "Two milks, bread and cereal for next week"
+        speech.yield(.init(text: words, isFinal: true, uncertain: false))
+        await settle { !model.busy && model.candidate != nil }
+        XCTAssertFalse(model.naturalListMode)
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        let proposal = try model.fields(forList: true, destination: "Friday")
+        XCTAssertEqual(proposal.lines.map(\.name), ["milks", "bread", "cereal"])
+        XCTAssertEqual(proposal.timing, "for next week")
+        XCTAssertEqual(try model.fields(forList: false, destination: "Family").lines.count, 1)
+        model.naturalListMode = false
+        XCTAssertEqual(try model.fields(forList: true, destination: "Friday").lines.count, 1)
+        XCTAssertEqual(model.acceptedEvidence?.text, words)
+    }
+
+    func testInterruptedSpeechRetainsBothPartialCandidateAndTypedFallback() async throws {
+        let speech = FakeSpeech()
+        let model = make(speech)
+        model.startSpeech()
+        await settle { model.listening }
+        speech.yield(.init(text: "pan y leche", isFinal: false, uncertain: true))
+        await settle { model.candidate != nil }
+        speech.interrupt()
+        await settle { model.failure == .audioUnavailable && !model.busy }
+        XCTAssertEqual(model.text, "12 wraps")
+        XCTAssertFalse(speech.active)
+        model.acceptCandidate()
+        XCTAssertEqual(try model.fields(forList: true, destination: "Compra").lines.map(\.name), ["pan", "leche"])
+        XCTAssertNil(model.reviewed())
+    }
+
+    func testExplicitPasteChoosesOneRealPickupBeforeStagingAndExactReplay() throws {
+        let current = ShoppingLedger(title: "Weekend")
+        let next = ShoppingLedger(title: "Weekend")
+        let pickups = [current, next].map(CapturePickup.init)
+        var workspace = LedgerWorkspace(shops: [current, next], selectedShopID: current.id)
+        let model = make()
+        let words = "2,5 litros de leche y pan para la próxima compra"
+        XCTAssertFalse(model.naturalListMode)
+        model.naturalListMode = true
+        model.stagePaste([words])
+        model.acceptCandidate()
+        XCTAssertTrue(model.naturalListMode)
+        let proposal = try model.fields(forList: true, destination: current.title)
+        XCTAssertEqual(proposal.lines.count, 2)
+        XCTAssertEqual(proposal.lines[0].unit, .liter)
+        var batch = NaturalCaptureBatch(timing: proposal.timing, lines: proposal.lines, currentPickup: pickups[0])
+        XCTAssertNil(batch.pickup)
+        XCTAssertThrowsError(try batch.reviewed(proposal.lines, availablePickups: pickups))
+        batch.pickup = pickups[1]
+        XCTAssertThrowsError(try batch.reviewed(proposal.lines, availablePickups: [pickups[0]]))
+        let rows = try batch.reviewed(proposal.lines, availablePickups: pickups)
+        XCTAssertFalse(model.confirmed)
+        XCTAssertNil(model.reviewed())
+        var capture = try XCTUnwrap(model.reviewed(lines: rows, fieldDrafts: proposal.lines, naturalBatch: batch))
+        let staged = try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id)
+        XCTAssertEqual(staged.preview.shopID, next.id)
+        XCTAssertEqual(staged.preview.originalText, words)
+        XCTAssertEqual(staged.preview.source, .paste)
+        XCTAssertEqual(staged.preview.lines.map(\.id), proposal.lines.map(\.id))
+        XCTAssertEqual(staged.preview.lines.map(\.proposedLineID), proposal.lines.map(\.proposedLineID))
+        XCTAssertTrue(workspace.shops.allSatisfy { $0.lines.isEmpty })
+        XCTAssertThrowsError(try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: next.id))
+        try workspace.shops[1].commitImport(staged.preview)
+        let replay = try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id)
+        XCTAssertTrue(replay.alreadyApplied)
+        XCTAssertEqual(replay.preview, staged.preview)
+        batch.pickup = pickups[0]
+        capture.naturalBatch = batch
+        XCTAssertThrowsError(try CaptureLedgerImport.stage(capture, in: workspace, currentShopID: current.id))
+        XCTAssertTrue(workspace.shops[0].lines.isEmpty)
+        XCTAssertEqual(workspace.shops[1].lines.count, 2)
+    }
+
+    func testMixedTimingKeepsEditableWordsAndGroupedGuestWordingRequiresAnOverride() throws {
+        let model = make()
+        model.naturalListMode = true
+        model.text = "milk for this week, bread for next week"
+        XCTAssertThrowsError(try model.fields(forList: true, destination: "Today")) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .timingReviewRequired)
+        }
+        XCTAssertEqual(model.text, "milk for this week, bread for next week")
+        model.text = "tea; two more guests"
+        XCTAssertThrowsError(try model.fields(forList: true, destination: "Today")) {
+            XCTAssertEqual($0 as? StructuredCaptureFailure, .guestReviewRequired)
+        }
+        XCTAssertEqual(try model.fields(forList: true, destination: "Today", explicitlyTreatAsItems: true).lines.count, 2)
+    }
+
+    func testUnknownDestinationAndAmbiguousProductNeedReviewOnce() throws {
+        let current = ShoppingLedger(title: "Friday")
+        let pickup = CapturePickup(current)
+        let proposal = try StructuredCaptureParser.naturalList("mango and sticky rice; eggs to Mars", destination: current.title)
+        var drafts = proposal.lines
+        XCTAssertTrue(drafts[0].needsNaturalClarification)
+        var batch = NaturalCaptureBatch(timing: proposal.timing, lines: drafts, currentPickup: pickup)
+        XCTAssertNil(batch.pickup)
+        batch.pickup = pickup
+        XCTAssertThrowsError(try batch.reviewed(drafts, availablePickups: [pickup]))
+        drafts[0].name = "mango sticky rice"
+        drafts[0].confirmed = true
+        let rows = try batch.reviewed(drafts, availablePickups: [pickup])
+        XCTAssertEqual(rows.map(\.name), ["mango sticky rice", "eggs"])
+        XCTAssertEqual(rows.map(\.destination), ["Friday", "Friday"])
+        var changed = current
+        changed.title = "Monday"
+        let renamedPickup = CapturePickup(changed)
+        XCTAssertThrowsError(try batch.reviewed(drafts, availablePickups: [renamedPickup]))
+        batch.refreshPickups([renamedPickup])
+        XCTAssertNil(batch.pickup)
+        batch.pickup = renamedPickup
+        let refreshed = try batch.reviewed(drafts, availablePickups: [renamedPickup])
+        XCTAssertEqual(refreshed.map(\.id), rows.map(\.id))
+        XCTAssertEqual(refreshed.map(\.name), rows.map(\.name))
+        XCTAssertEqual(refreshed.map(\.destination), ["Monday", "Monday"])
     }
     func testDiscardCapturePreservesTypedDraft() {
         let model = make(); model.stagePaste(["cereal"]); model.discardCandidate()
@@ -196,6 +318,7 @@ import UniformTypeIdentifiers
         active = true
         return AsyncThrowingStream { stream = $0 }
     }
+    func interrupt() { stream?.finish(throwing: CaptureFailure.audioUnavailable) }
     func yield(_ update: SpeechCaptureUpdate) { stream?.yield(update) }
     func stop() { stops += 1; active = false; stream?.finish(); stream = nil }
 }

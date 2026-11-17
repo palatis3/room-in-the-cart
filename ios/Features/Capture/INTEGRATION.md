@@ -10,6 +10,8 @@
 
 `CaptureSource.photoOCR` maps to `ImportSource.photoOCR`. Other mappings are typed → typed, paste → paste, speech → voice. The original selected photo and a bounded preview survive capture and duplicate review in memory, then leave with the view. They are not persisted as attachments or uploaded. Original wording and typed metadata persist through the domain import receipt and contribution evidence.
 
+Accepted list dictation defaults to natural-list review. A shopper can change that setting or enable it for typed or pasted wording. The review shows each proposed item with its amount, qualifications and an editor. Unclear product or pack wording requires confirmation or a skip. Timing and unrecognized destination wording require one explicit choice among existing pickups in the unlocked private workspace. Mixed timing leaves the words editable. A change to the chosen pickup clears its selection and preserves edits while the originating scope remains valid. Duplicate review names the chosen pickup and commit uses that pickup’s ID and revision. Contributor requests and recipe ingredients retain their existing review.
+
 ## Optional spelling corrections and erasure
 
 `CaptureCorrectionScope(profileID:localeIdentifier:)` is a nonthrowing initializer. The actor validates opaque profile IDs and English/Spanish locale scopes. Private Ledger supplies `"local:" + sourceWorkspaceID.uuidString`; this is its device-owner-gated local workspace, not a shared-account fallback. A shared request host must supply its verified profile scope explicitly. Missing scope hides correction memory controls while typing still works.
