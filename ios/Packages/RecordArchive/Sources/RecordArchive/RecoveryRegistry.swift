@@ -176,6 +176,13 @@ public actor RecoveryRegistry {
         }
     }
     public static let maximumRegistryBytes = 64 * 1_048_576
+    /// Cleanup must retain every copy kind from the same locked registry read.
+    /// In particular, a pantry is not an orphan merely because it has no ordinary record row.
+    public func retainedRecoveryCopyIDs() throws -> Set<String> {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        return Set(manifest.records.map(\.id)).union((manifest.pantryCopies ?? []).map { $0.id.uuidString })
+    }
     public func listPantry() throws -> [RecoveredPantryCopy] {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()

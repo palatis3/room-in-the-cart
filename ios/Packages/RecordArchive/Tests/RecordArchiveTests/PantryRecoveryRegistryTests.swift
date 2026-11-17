@@ -16,6 +16,23 @@ final class PantryRecoveryRegistryTests: XCTestCase {
         let review = try await registry.reviewPantry(reference)
         return try await registry.applyPantry(review)
     }
+    func testCleanupRetainsBothCopyKindsAndRefreshesAcrossRegistryInstances() async throws {
+        let (url, registry) = try fixture(), other = try RecoveryRegistry(url: url)
+        let pantry = try await insert(reference(), into: registry)
+        let record = ArchiveRecord(id: "shop", origin: "owner", revision: "one", kind: .ledger,
+            title: "Tuesday", savedAtMilliseconds: 100, nativePayload: Data("{}".utf8))
+        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "owner", revision: "one")
+        let imported = try await other.apply(other.review(envelope))
+        let ordinary = try XCTUnwrap(imported.records.first)
+        let retained = try await registry.retainedRecoveryCopyIDs()
+        XCTAssertEqual(retained, [pantry.id.uuidString, ordinary.id])
+        _ = try await other.delete(.copy(pantry.id.uuidString))
+        let remaining = try await registry.retainedRecoveryCopyIDs()
+        XCTAssertEqual(remaining, [ordinary.id])
+        _ = try await registry.delete(.copy(ordinary.id))
+        let empty = try await other.retainedRecoveryCopyIDs()
+        XCTAssertTrue(empty.isEmpty)
+    }
     func testLegacyManifestAndExternalReferencesReopenWithoutGraphBytes() async throws {
         let (url, _) = try fixture()
         let legacy = "{\"formatMajor\":1,\"generation\":\"00000000-0000-0000-0000-000000000000\",\"records\":[],\"erasedIdentities\":[]}"
