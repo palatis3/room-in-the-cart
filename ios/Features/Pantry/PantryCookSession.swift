@@ -19,6 +19,8 @@ struct PantryCookRecord: Codable, Equatable {
     let fulfilledNeeds: [StockNeed]
     let resultingObservations: [UUID: UUID]
 
+    var resolutions: [PantryCookResolution.Receipt]? = nil
+    var hasResolvedUses: Bool { resolutions?.isEmpty == false }
     var undo: PantryCookUndoReceipt? = nil
     var isActive: Bool { undo == nil }
 
@@ -39,6 +41,7 @@ struct PantryCookRecord: Codable, Equatable {
               Set(priorClaims.map(\.id)).count == priorClaims.count else { throw PantryCookPort.Failure.changed }
         guard fulfilledNeeds.count == priorClaims.count, Set(fulfilledNeeds.map(\.id)).count == fulfilledNeeds.count,
               fulfilledNeeds.allSatisfy({ $0.amount.amount > .zero }) else { throw PantryCookPort.Failure.changed }
+        try validateResolutions()
         if let undo {
             guard undo.id != draft.id, undo.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
                   undo.confirmedAt >= draft.cookedAt, Set(undo.observations.keys) == inputs.union(outputs),
