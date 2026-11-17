@@ -20,7 +20,7 @@ import XCTest
             PantryCookPort(store: store, ledger: ledger, gate: gate, authorize: { self.allowed }, clock: { self.now })
         }
 
-        @MainActor init(test: XCTestCase, tracked: Bool) async throws {
+        @MainActor init(test: XCTestCase, tracked: Bool, measuredThird: Bool = false) async throws {
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             cleanup = SQLiteFixtureDirectory(directory, test: test)
@@ -51,7 +51,7 @@ import XCTest
             let draft = CookCompletionDraft(inventoryID: store.workspaceID, inventoryRevision: ctx.inventory.state.revision,
                 ledgerID: ledger.workspaceID, shop: shop, meal: ctx.meal, cookedAt: now, servingsMade: .one,
                 parts: [.init(contributionID: ids[0], use: use), .init(contributionID: ids[1], use: use),
-                        .init(contributionID: ids[2], use: .untracked)], leftovers: [])
+                        .init(contributionID: ids[2], use: measuredThird ? .lot(id: lotID, revision: 1, amount: try quantity(1)) : .untracked)], leftovers: [])
             let reviewed = try await port.review(draft)
             try await port.apply(reviewed)
             now.addTimeInterval(60)
@@ -121,12 +121,45 @@ import XCTest
         catch PantryCookPort.Failure.changed {}
     }
 
+    func testTwoMeasuredAmendmentsRestoreOriginalCountOnlyAfterLastUnknownAndKeepOriginalMeasuredUse() async throws {
+        let f = try await Fixture(test: self, tracked: true, measuredThird: true)
+        let original = try await f.context()
+        let ids = original.remainingEventIDs
+        let first = try await f.port.reviewResolution(original, eventID: ids[0], decision: .deduct(lotID: f.lotID, used: quantity(2)))
+        XCTAssertEqual(first.reconstructionBasis?.amount, try Rational(10))
+        XCTAssertEqual(first.reconstruction?.previouslyAccounted, .one)
+        XCTAssertEqual(first.after, .unknown)
+        XCTAssertEqual(first.otherUnresolvedEventsForLot, [ids[1]])
+        try await f.port.applyResolution(first)
+        try await f.port.applyResolution(first)
+        let partial = try await f.context()
+        XCTAssertEqual(partial.lots.first?.observationID, original.lots.first?.observationID)
+        XCTAssertEqual(partial.remainingEventIDs, [ids[1]])
+        do {
+            _ = try await f.port.reviewResolution(partial, eventID: ids[1], decision: .deduct(lotID: f.lotID, used: quantity(8)))
+            XCTFail("Ten minus the original one and the previously measured two cannot cover eight")
+        } catch InventoryError.invalid {}
+        let last = try await f.port.reviewResolution(partial, eventID: ids[1], decision: .deduct(lotID: f.lotID, used: quantity(3)))
+        XCTAssertEqual(last.reconstruction?.previouslyAccounted, try Rational(3))
+        XCTAssertEqual(last.after?.quantity?.amount, try Rational(4))
+        try await f.port.applyResolution(last)
+        try await f.port.applyResolution(first)
+        try await f.port.applyResolution(last)
+        let done = try await f.context()
+        XCTAssertEqual(done.remainingEventIDs, [])
+        XCTAssertEqual(done.lots.first?.count.quantity?.amount, try Rational(4))
+        XCTAssertEqual(done.record.draft, original.record.draft)
+        XCTAssertNil(done.record.resolutions?.first?.resultObservationID)
+        let observations = try await f.store.inventoryRecords(kind: .observation)
+        XCTAssertEqual(observations.count, 3)
+    }
+
     func testPhysicalRecountIncludesSiblingUnknownUsesWithoutAutomaticallyClosingOrDeductingThem() async throws {
         let f = try await Fixture(test: self, tracked: true)
         let original = try await f.context()
         let ids = original.remainingEventIDs
         XCTAssertEqual(original.lots.first?.count, .unknown)
-        XCTAssertEqual(original.actions(eventID: ids[0], lotID: f.lotID), [.recount])
+        XCTAssertEqual(original.actions(eventID: ids[0], lotID: f.lotID), [.recount, .deduct])
         XCTAssertEqual(original.actions(eventID: ids[0], lotID: UUID()), [])
         let review = try await f.port.reviewResolution(original, eventID: ids[0],
             decision: .recount(lotID: f.lotID, remaining: quantity(6), used: nil))
