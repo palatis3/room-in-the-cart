@@ -15,6 +15,7 @@ struct PantryReceiptEntry: View {
     private var aliasScope: AliasScope {
         .init(merchant: draft?.merchant, language: draft?.language, state: model.snapshot?.state)
     }
+    @State private var fileSource = false
     @State private var scan = false
     @State private var draft: ReceiptImportDraft?
     @State private var review: PantryReceiptReview?
@@ -44,6 +45,7 @@ struct PantryReceiptEntry: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(row.name).font(.headline)
                             Text(row.originalLine).font(.caption)
+                            if let place = row.documentLine { Text(receiptProvenance(place)).font(.caption) }
                             if review.existing.contains(row.lineID) {
                                 Text(pantryText("Previously saved on this receipt."))
                             } else if case .linked = row.stock {
@@ -114,6 +116,7 @@ struct PantryReceiptEntry: View {
                 .accessibilityIdentifier("receipt.review")
             } else {
                 Section {
+                    Button(pantryText("Read a receipt file")) { fileSource = true }.accessibilityIdentifier("receipt.document")
                     Button(pantryText("Scan or type receipt lines")) { scan = true }.accessibilityIdentifier("receipt.scan")
                     Text(pantryText("Check the printed wording first. Then confirm what arrived and how much is usable."))
                 }
@@ -136,7 +139,7 @@ struct PantryReceiptEntry: View {
             }
         }
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
-            if origin == nil { draft = nil; review = nil; scan = false }
+            if origin == nil { draft = nil; review = nil; scan = false; fileSource = false }
         }
         .task(id: aliasScope) {
             let scope = aliasScope
@@ -145,6 +148,16 @@ struct PantryReceiptEntry: View {
             do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
             let matches = try? await model.receiptAliases(merchant: merchant, language: language)
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
+        }
+        .sheet(isPresented: $fileSource) {
+            if let state = model.snapshot?.state {
+                NavigationStack {
+                    PantryReceiptDocuments(target: .init(workspaceID: state.workspaceID, containerID: targetID,
+                        objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
+                        model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
+                    }) { accept($0) }
+                }
+            }
         }
         .sheet(isPresented: $scan) {
             if let state = model.snapshot?.state {
@@ -278,6 +291,7 @@ struct PantryReceiptHistory: View {
                     Text(row.name).font(.headline)
                     Text(row.merchant + " · " + row.purchaseDate.formatted(date: .abbreviated, time: .omitted))
                     Text(row.originalLine)
+                    if let place = row.documentLine { Text(receiptProvenance(place)) }
                     Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                     if let paid = row.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(paid))) }
                     else { Text(pantryText("Paid price unknown")) }

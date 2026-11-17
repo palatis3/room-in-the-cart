@@ -101,6 +101,8 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return latest
     }
 
+    var permitsReceiptSource: Bool { canEdit && repository.permitsReceiptSource }
+
     var supportsReceiptAliases: Bool { repository.aliasPersonaID != nil }
 
     func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {

@@ -14,6 +14,25 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         public let id: UUID
         public init(originID: UUID, id: UUID) { self.originID = originID; self.id = id }
     }
+    public struct DocumentLine: Codable, Equatable, Sendable {
+        public enum Method: String, Codable, Sendable { case textFile, pdfText, pdfOCR, imageOCR }
+        public enum Stage: String, Codable, CaseIterable, Sendable { case receipt, order, finalInvoice }
+        public let method: Method
+        public let stage: Stage
+        public let page: Int
+        public let line: Int
+
+        public init(method: Method, stage: Stage, page: Int, line: Int) {
+            self.method = method; self.stage = stage; self.page = page; self.line = line
+        }
+        public var ordinal: Int { (page - 1) * 200 + line - 1 }
+        func validate(ordinal: Int, digest: Data?) throws {
+            guard (1...20).contains(page), (1...200).contains(line), digest?.count == 32,
+                  method == .pdfText || method == .pdfOCR || page == 1,
+                  self.ordinal == ordinal else { throw InventoryError.invalid("receiptPage") }
+        }
+    }
+    public let documentLine: DocumentLine?
     public let savedPickup: SavedPickup?
     public let id: UUID
     public let receiptID: UUID
@@ -37,7 +56,8 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public init(receiptID: UUID, ordinal: Int, lotID: UUID, foodID: UUID, merchant: String, purchaseDate: Date,
                 transactionReference: String?, imageDigest: Data?, originalLine: String, name: String,
                 received: Quantity, usable: Quantity, paidLineTotal: Money?, stock: Stock,
-                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil) {
+                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil) {
+        self.documentLine = documentLine
         self.savedPickup = savedPickup
         self.receiptID = receiptID
         self.ordinal = ordinal
@@ -93,7 +113,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         let corrected = Self(receiptID: receiptID, ordinal: ordinal, lotID: lotID, foodID: foodID, merchant: merchant,
             purchaseDate: purchaseDate, transactionReference: transactionReference, imageDigest: imageDigest, originalLine: originalLine,
             name: name, received: received, usable: usable, paidLineTotal: total, stock: stock,
-            revision: revision + 1, supersedesID: id, savedPickup: savedPickup)
+            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine)
         try corrected.validate()
         return corrected
     }
@@ -103,7 +123,9 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, text.utf8.count <= limit,
                   !text.contains("\0") else { throw InventoryError.invalid("receiptText") }
         }
-        guard (0..<200).contains(ordinal), revision >= 1,
+        if let documentLine { try documentLine.validate(ordinal: ordinal, digest: imageDigest) }
+        else if !(0..<200).contains(ordinal) { throw InventoryError.invalid("receiptLine") }
+        guard revision >= 1,
               lineID == Self.lineID(receiptID: receiptID, ordinal: ordinal),
               id == Self.identity(["observation", lineID.uuidString, String(revision)]),
               supersedesID == (revision == 1 ? nil : Self.identity(["observation", lineID.uuidString, String(revision - 1)])),

@@ -529,6 +529,8 @@ final class PantryRepository {
             facts: [corrected], existing: [], batch: batch), at: now)
     }
 
+    var permitsReceiptSource: Bool { authorize() }
+
     private func requireAccess() throws {
         guard authorize() else { throw Failure.unauthorized }
         guard (1...ReadLimits.standard.payloadBytes).contains(limits.payloadBytes),

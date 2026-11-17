@@ -9,6 +9,7 @@ struct ReceiptImportDraft {
         let id: UUID
         let ordinal: Int
         let original: String
+        var documentLine: ReceiptAcquisition.DocumentLine?
         var nameBeforeAlias: String?
         var appliedAlias: InventoryReceiptAlias?
 
@@ -49,10 +50,10 @@ struct ReceiptImportDraft {
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
         draftID = source.id
         workspaceID = source.target.workspaceID
-        imageDigest = source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
+        imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
         lines = source.receiptLines.enumerated().map { ordinal, line in
-            Line(id: line.id, ordinal: ordinal, original: line.originalText, name: line.reviewedText)
+            Line(id: line.id, ordinal: line.documentLine?.ordinal ?? ordinal, original: line.originalText, documentLine: line.documentLine, name: line.reviewedText)
         }
     }
 
@@ -99,7 +100,7 @@ struct ReceiptImportDraft {
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup)
+                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine)
             try fact.validate()
             return fact
         }
