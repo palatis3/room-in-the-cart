@@ -242,4 +242,108 @@ import LocalStore
         XCTAssertEqual(after.inventory.lots.first { $0.id == original.leftovers[0].id }?.count.quantity?.amount, .zero)
         XCTAssertEqual(model.ingredients.map(\.use), [.undecided, .undecided], "Undo cannot prefill a second completion")
     }
+
+    private func resolution(_ f: Fixture) async -> CookResolutionEditorModel {
+        let model = CookResolutionEditorModel()
+        await model.open(session: f.session, shopID: f.shop, mealID: f.meal, authorize: { [access = f.access] in access.allowed })
+        return model
+    }
+    private func untrackedCompletion(_ f: Fixture, cookedAt: Date? = nil) async throws -> CookCompletionDraft {
+        let model = f.editor
+        explicitNoUse(model)
+        model.ingredients[0].use = .used
+        model.ingredients[0].parts[0].use = .untracked
+        model.ingredients[0].parts[0].relation = .ingredient
+        if let cookedAt { model.cookedAt = cookedAt }
+        await model.prepareReview(); await model.confirm()
+        return try XCTUnwrap(model.completed)
+    }
+
+    func testResolutionOutsidePantryRequiresExplicitChoiceAndUpdatesEffectiveStatus() async throws {
+        let f = try await fixture(), original = try await untrackedCompletion(f)
+        let model = await resolution(f)
+        XCTAssertEqual(model.context?.remainingEventIDs, original.unresolvedUseIDs)
+        XCTAssertThrowsError(try model.decision())
+        model.action = .outsidePantry
+        await model.prepare()
+        let reviewed = try XCTUnwrap(model.review)
+        XCTAssertNil(reviewed.before); XCTAssertNil(reviewed.after)
+        model.keepEditing()
+        let before = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(before.remainingUnresolvedUseIDs, original.unresolvedUseIDs)
+        await model.prepare(); await model.confirm()
+        XCTAssertTrue(model.context?.remainingEventIDs.isEmpty == true)
+        await f.editor.reload()
+        XCTAssertEqual(f.editor.completed, original, "Original unresolved history remains immutable")
+        XCTAssertTrue(f.editor.remainingUnresolvedUseIDs.isEmpty)
+        XCTAssertEqual(f.editor.context?.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(4))
+    }
+
+    func testResolutionNewerCountIncludedDoesNotOfferAnotherDeduction() async throws {
+        let f = try await fixture()
+        _ = try await untrackedCompletion(f, cookedAt: f.now.addingTimeInterval(-10))
+        let model = await resolution(f)
+        model.selectLot(f.lots[0])
+        XCTAssertTrue(model.actions.contains(.alreadyIncluded)); XCTAssertFalse(model.actions.contains(.deduct))
+        model.action = .deduct; model.usedAmount = "1"
+        XCTAssertThrowsError(try model.decision())
+        model.action = .alreadyIncluded; model.usedKnown = true
+        await model.prepare()
+        XCTAssertEqual(model.review?.before, model.review?.after)
+        await model.confirm()
+        let current = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(current.inventory.lots.first { $0.id == f.lots[0] }?.revision, 1)
+        XCTAssertEqual(current.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(4))
+    }
+
+    func testResolutionMeasuredSiblingsRemainUnknownUntilEveryUseIsReviewed() async throws {
+        let f = try await fixture(), editor = f.editor
+        explicitNoUse(editor); editor.ingredients[0].use = .used
+        editor.addPart(ingredientID: editor.ingredients[0].id)
+        for index in editor.ingredients[0].parts.indices {
+            editor.ingredients[0].parts[index].use = .unmeasured
+            editor.ingredients[0].parts[index].relation = .ingredient
+            editor.ingredients[0].parts[index].lotID = f.lots[0]
+        }
+        await editor.prepareReview(); await editor.confirm()
+        let draft = try XCTUnwrap(editor.completed)
+        let model = await resolution(f)
+        XCTAssertTrue(model.batchIsFixed)
+        model.selectLot(f.lots[1]); XCTAssertEqual(model.lotID, f.lots[0])
+        XCTAssertTrue(model.actions.contains(.deduct))
+        model.action = .deduct; model.usedAmount = "1"
+        await model.prepare()
+        XCTAssertEqual(model.review?.reconstructionBasis?.amount, try Rational(4))
+        XCTAssertEqual(model.review?.after, .unknown)
+        await model.confirm()
+        XCTAssertEqual(model.context?.remainingEventIDs.count, 1)
+        model.action = .deduct; model.usedAmount = "1"
+        await model.prepare()
+        XCTAssertEqual(model.review?.after?.quantity?.amount, try Rational(2))
+        await model.confirm()
+        let current = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertTrue(current.remainingUnresolvedUseIDs.isEmpty)
+        XCTAssertEqual(current.completed, draft)
+        XCTAssertEqual(current.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(2))
+    }
+
+    func testResolutionContentionRetainsExactCorrectionForAuthorizedRetry() async throws {
+        let f = try await fixture()
+        _ = try await untrackedCompletion(f)
+        let model = await resolution(f)
+        model.action = .outsidePantry; await model.prepare()
+        let original = try XCTUnwrap(model.review)
+        let lease = try f.gate.beginExclusiveWrite()
+        await model.confirm(); await model.reload()
+        XCTAssertTrue(model.attempted); XCTAssertEqual(model.review, original); XCTAssertFalse(model.canEdit)
+        f.gate.endExclusiveWrite(lease)
+        f.access.allowed = false
+        await model.confirm()
+        XCTAssertEqual(model.review, original)
+        f.access.allowed = true
+        await model.confirm()
+        XCTAssertTrue(model.context?.remainingEventIDs.isEmpty == true)
+        let current = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertTrue(current.remainingUnresolvedUseIDs.isEmpty)
+    }
 }
