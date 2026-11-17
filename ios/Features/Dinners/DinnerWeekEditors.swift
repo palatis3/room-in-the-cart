@@ -47,6 +47,19 @@ struct DinnerOccurrenceView: View {
                         } else { RecipeSourceDisclosure(evidence: evidence) }
                     }
                 }
+                if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
+                    Section {
+                        if pickup.pantryIsActive {
+                            NavigationLink(cookCompletionText("Record cooking and leftovers")) {
+                                CookCompletionEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id)
+                            }.accessibilityIdentifier("dinner.cookCompletion")
+                        } else if pickup.pantryRouteAvailable {
+                            NavigationLink(cookCompletionText("Set up My Pantry to record cooking and leftovers")) {
+                                PantrySetupView(pickup: pickup, ledger: ledger)
+                            }.accessibilityIdentifier("dinner.cookSetup")
+                        }
+                    }
+                }
                 Section { DinnerAwayCarryoverLink(model: model, occurrenceID: meal.id) }
                 Section(dinnerText("Move this dinner")) {
                     Toggle(dinnerText("Assign a date"), isOn: $scheduled)

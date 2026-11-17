@@ -1,0 +1,1791 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A substitution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A substitution"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una sustitución"
+          }
+        }
+      }
+    },
+    "Actual batch used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual batch used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote que se usó"
+          }
+        }
+      }
+    },
+    "Actual substituted food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual substituted food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento que se usó como sustituto"
+          }
+        }
+      }
+    },
+    "Actual substitution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual substitution"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustitución realizada"
+          }
+        }
+      }
+    },
+    "Actual use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso real"
+          }
+        }
+      }
+    },
+    "Add another batch or untracked part": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add another batch or untracked part"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar otro lote o una parte sin registrar"
+          }
+        }
+      }
+    },
+    "Add counted leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add counted leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar sobras contadas"
+          }
+        }
+      }
+    },
+    "Backed after cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed after cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cubierto después de cocinar"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Check saved completion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check saved completion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar la preparación guardada"
+          }
+        }
+      }
+    },
+    "Choose a batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un lote"
+          }
+        }
+      }
+    },
+    "Choose a record type": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a record type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un tipo de registro"
+          }
+        }
+      }
+    },
+    "Choose what happened": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what happened"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir lo que ocurrió"
+          }
+        }
+      }
+    },
+    "Choose what remains": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what remains"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir lo que queda"
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Confirm cooked meal and inventory changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm cooked meal and inventory changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la comida preparada y los cambios de inventario"
+          }
+        }
+      }
+    },
+    "Confirm cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la preparación"
+          }
+        }
+      }
+    },
+    "Confirm the actual servings and time. Recipe quantities do not determine what was used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the actual servings and time. Recipe quantities do not determine what was used."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma las porciones reales y la hora. Las cantidades de la receta no determinan lo que se usó."
+          }
+        }
+      }
+    },
+    "Confirmed leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobras confirmadas"
+          }
+        }
+      }
+    },
+    "Confirmed portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones confirmadas"
+          }
+        }
+      }
+    },
+    "Cooked at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooked at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cocinó el"
+          }
+        }
+      }
+    },
+    "Cooking and its reviewed inventory changes were saved together.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking and its reviewed inventory changes were saved together."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La preparación y los cambios de inventario revisados se guardaron juntos."
+          }
+        }
+      }
+    },
+    "Cooking recorded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación registrada"
+          }
+        }
+      }
+    },
+    "Cooking will be recorded with unresolved use. Inventory still needs review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking will be recorded with unresolved use. Inventory still needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La preparación se registrará con uso sin resolver. El inventario aún necesita revisión."
+          }
+        }
+      }
+    },
+    "Count leftovers independently. They are not inferred from planned portions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count leftovers independently. They are not inferred from planned portions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta las sobras por separado. No se calculan a partir de las porciones planeadas."
+          }
+        }
+      }
+    },
+    "Counts, preferences or the dinner changed, or a unit could not be converted. Reload and review. A newer count may already include this cooking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts, preferences or the dinner changed, or a unit could not be converted. Reload and review. A newer count may already include this cooking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiaron las cantidades, las preferencias o la cena, o no se pudo convertir una unidad. Vuelve a cargar y revisar. Un conteo más reciente podría incluir esta preparación."
+          }
+        }
+      }
+    },
+    "Current details could not be verified. Reopen or reload this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current details could not be verified. Reopen or reload this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron verificar los datos actuales. Vuelve a abrir o cargar esta cena."
+          }
+        }
+      }
+    },
+    "Current food or dinner details could not be verified. Nothing new has been confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current food or dinner details could not be verified. Nothing new has been confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron verificar los datos actuales de los alimentos o la cena. No se ha confirmado nada nuevo."
+          }
+        }
+      }
+    },
+    "Currently free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currently free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible sin reservar"
+          }
+        }
+      }
+    },
+    "Discard this draft and reload current counts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this draft and reload current counts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar este borrador y cargar las cantidades actuales"
+          }
+        }
+      }
+    },
+    "Food not tracked in this pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food not tracked in this pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento no registrado en esta despensa"
+          }
+        }
+      }
+    },
+    "Food remaining after cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food remaining after cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida que queda después de cocinar"
+          }
+        }
+      }
+    },
+    "Held portion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Held portion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porción reservada"
+          }
+        }
+      }
+    },
+    "Held portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Held portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones reservadas"
+          }
+        }
+      }
+    },
+    "How was this part recorded?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How was this part recorded?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo se registró esta parte?"
+          }
+        }
+      }
+    },
+    "I counted leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I counted leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conté las sobras"
+          }
+        }
+      }
+    },
+    "Ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente"
+          }
+        }
+      }
+    },
+    "Ingredient or substitution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient or substitution"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente o sustitución"
+          }
+        }
+      }
+    },
+    "Inventory changes recorded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory changes recorded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios de inventario registrados."
+          }
+        }
+      }
+    },
+    "Inventory needs review. Unresolved use remains linked to this cooking event.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inventory needs review. Unresolved use remains linked to this cooking event."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inventario necesita revisión. El uso sin resolver sigue vinculado a esta preparación."
+          }
+        }
+      }
+    },
+    "Keep editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
+    "Known amount from a pantry batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known amount from a pantry batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad conocida de un lote de la despensa"
+          }
+        }
+      }
+    },
+    "Leftover name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftover name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de las sobras"
+          }
+        }
+      }
+    },
+    "Leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobras"
+          }
+        }
+      }
+    },
+    "Loading current food and dinner…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading current food and dinner…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando alimentos y cena actuales…"
+          }
+        }
+      }
+    },
+    "No leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay sobras"
+          }
+        }
+      }
+    },
+    "No leftovers recorded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No leftovers recorded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se registraron sobras."
+          }
+        }
+      }
+    },
+    "No other held portions change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other held portions change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cambian otras porciones reservadas."
+          }
+        }
+      }
+    },
+    "No pantry quantities change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pantry quantities change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cambian las cantidades de la despensa."
+          }
+        }
+      }
+    },
+    "Not used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se usó"
+          }
+        }
+      }
+    },
+    "Only supported holds for known amounts used by this meal are fulfilled. Other holds are retained.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only supported holds for known amounts used by this meal are fulfilled. Other holds are retained."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se completan las reservas cubiertas para cantidades conocidas usadas en esta comida. Las demás reservas se conservan."
+          }
+        }
+      }
+    },
+    "Planned amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad planeada"
+          }
+        }
+      }
+    },
+    "Private access changed. Reopen the cooking review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private access changed. Reopen the cooking review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el acceso privado. Vuelve a abrir la revisión de la preparación."
+          }
+        }
+      }
+    },
+    "Record cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar la preparación"
+          }
+        }
+      }
+    },
+    "Record cooking and leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record cooking and leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar la preparación y las sobras"
+          }
+        }
+      }
+    },
+    "Record what actually happened even if it differed from your preferences. This is not an eligibility recommendation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record what actually happened even if it differed from your preferences. This is not an eligibility recommendation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra lo que ocurrió, aunque no coincidiera con tus preferencias. Esto no es una recomendación de compatibilidad."
+          }
+        }
+      }
+    },
+    "Reload current dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload current dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar la cena actual"
+          }
+        }
+      }
+    },
+    "Remove leftover row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove leftover row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar esta fila de sobras"
+          }
+        }
+      }
+    },
+    "Remove this part": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this part"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar esta parte"
+          }
+        }
+      }
+    },
+    "Resulting pantry counts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resulting pantry counts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades resultantes en la despensa"
+          }
+        }
+      }
+    },
+    "Retry the same confirmation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma confirmación"
+          }
+        }
+      }
+    },
+    "Review cooking and inventory changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review cooking and inventory changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la preparación y los cambios de inventario"
+          }
+        }
+      }
+    },
+    "Review every ingredient, enter positive known amounts and servings, and confirm whether leftovers remain.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review every ingredient, enter positive known amounts and servings, and confirm whether leftovers remain."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa cada ingrediente, ingresa cantidades y porciones conocidas mayores que cero y confirma si quedan sobras."
+          }
+        }
+      }
+    },
+    "Review possible substitutions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review possible substitutions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar posibles sustituciones"
+          }
+        }
+      }
+    },
+    "Review the food used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the food used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el alimento usado"
+          }
+        }
+      }
+    },
+    "Review this batch’s ingredient and brand details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this batch’s ingredient and brand details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los ingredientes y la marca de este lote"
+          }
+        }
+      }
+    },
+    "Review what was cooked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review what was cooked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar lo que se cocinó"
+          }
+        }
+      }
+    },
+    "Selected batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote seleccionado"
+          }
+        }
+      }
+    },
+    "Servings made": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings made"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones preparadas"
+          }
+        }
+      }
+    },
+    "Shortfall after cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortfall after cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad faltante después de cocinar"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almacenamiento"
+          }
+        }
+      }
+    },
+    "Substitutions to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substitutions to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustituciones por revisar"
+          }
+        }
+      }
+    },
+    "Suggestions need compatible reviewed product details and currently free stock. You can separately record an actual substitution in the cooking form.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions need compatible reviewed product details and currently free stock. You can separately record an actual substitution in the cooking form."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sugerencias requieren datos revisados y compatibles del producto y existencias sin reservar. Puedes registrar por separado una sustitución realizada en el formulario de preparación."
+          }
+        }
+      }
+    },
+    "The batch or preferences changed. Reopen the cooking review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The batch or preferences changed. Reopen the cooking review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el lote o las preferencias. Vuelve a abrir la revisión de la preparación."
+          }
+        }
+      }
+    },
+    "The measured use exceeds available stock. Review the actual count and held portions, or record the use as unmeasured or untracked.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The measured use exceeds available stock. Review the actual count and held portions, or record the use as unmeasured or untracked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El uso medido supera las existencias disponibles. Revisa la cantidad real y las porciones reservadas, o registra el uso como no medido o no registrado."
+          }
+        }
+      }
+    },
+    "The planned ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The planned ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El ingrediente planeado"
+          }
+        }
+      }
+    },
+    "The selected batch’s remaining quantity will become unknown. Existing holds are retained for review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected batch’s remaining quantity will become unknown. Existing holds are retained for review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad restante del lote seleccionado pasará a ser desconocida. Las reservas existentes se conservarán para revisarlas."
+          }
+        }
+      }
+    },
+    "This confirmation may have saved. Retry the same confirmation or check the saved completion before making another change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This confirmation may have saved. Retry the same confirmation or check the saved completion before making another change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es posible que esta confirmación se haya guardado. Reintenta la misma confirmación o consulta la preparación guardada antes de hacer otro cambio."
+          }
+        }
+      }
+    },
+    "This hold needs inventory review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This hold needs inventory review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta reserva necesita una revisión del inventario."
+          }
+        }
+      }
+    },
+    "This records unresolved use without changing a pantry count. It does not mean nothing was used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This records unresolved use without changing a pantry count. It does not mean nothing was used."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto registra un uso sin resolver sin cambiar una cantidad de la despensa. No significa que no se haya usado nada."
+          }
+        }
+      }
+    },
+    "Unlock the same private workspace and reopen this dinner to record cooking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the same private workspace and reopen this dinner to record cooking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el mismo espacio privado y vuelve a abrir esta cena para registrar la preparación."
+          }
+        }
+      }
+    },
+    "Unmeasured amount from a pantry batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmeasured amount from a pantry batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad no medida de un lote de la despensa"
+          }
+        }
+      }
+    },
+    "Use as a reviewed substitution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use as a reviewed substitution"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar como sustitución revisada"
+          }
+        }
+      }
+    },
+    "Used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usó"
+          }
+        }
+      }
+    },
+    "Used an unmeasured amount — remaining count becomes unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used an unmeasured amount — remaining count becomes unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usó una cantidad no medida; la cantidad restante pasa a ser desconocida"
+          }
+        }
+      }
+    },
+    "Used food not tracked in this pantry — unresolved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used food not tracked in this pantry — unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usó un alimento no registrado en esta despensa; sin resolver"
+          }
+        }
+      }
+    },
+    "What you cooked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you cooked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que cocinaste"
+          }
+        }
+      }
+    },
+    "Working…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procesando…"
+          }
+        }
+      }
+    },
+    "Review Undo for this cooking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Undo for this cooking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar Deshacer para esta preparación"
+          }
+        }
+      }
+    },
+    "Undo is available only while the affected counts, leftovers and holds still match this cooking record.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo is available only while the affected counts, leftovers and holds still match this cooking record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer está disponible solo mientras las cantidades, las sobras y las reservas afectadas sigan coincidiendo con este registro."
+          }
+        }
+      }
+    },
+    "Review Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar Deshacer"
+          }
+        }
+      }
+    },
+    "Restore the input counts and holds from before this cooking and remove its confirmed leftover batches. Review these changes before confirming.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the input counts and holds from before this cooking and remove its confirmed leftover batches. Review these changes before confirming."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaura las cantidades y reservas anteriores a esta preparación y elimina los lotes de sobras confirmados. Revisa estos cambios antes de confirmar."
+          }
+        }
+      }
+    },
+    "Input counts to restore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input counts to restore"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades de ingredientes por restaurar"
+          }
+        }
+      }
+    },
+    "Leftover batches to remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leftover batches to remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes de sobras por eliminar"
+          }
+        }
+      }
+    },
+    "Holds to restore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds to restore"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas por restaurar"
+          }
+        }
+      }
+    },
+    "Remove leftover batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove leftover batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar lote de sobras"
+          }
+        }
+      }
+    },
+    "Confirm only after checking these quantities now. The restored counts will be recorded as confirmed now, not as a fresh copy of the old check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm only after checking these quantities now. The restored counts will be recorded as confirmed now, not as a fresh copy of the old check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma solo después de comprobar estas cantidades ahora. Las cantidades restauradas se registrarán como confirmadas ahora, no como una copia actualizada de la comprobación anterior."
+          }
+        }
+      }
+    },
+    "Retry the same Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar el mismo Deshacer"
+          }
+        }
+      }
+    },
+    "Confirm Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar Deshacer"
+          }
+        }
+      }
+    },
+    "Keep cooking record": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep cooking record"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar el registro de preparación"
+          }
+        }
+      }
+    },
+    "Undo could not be reviewed. Counts, leftovers or holds may have changed. Reload the saved cooking record; newer food changes will not be overwritten.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo could not be reviewed. Counts, leftovers or holds may have changed. Reload the saved cooking record; newer food changes will not be overwritten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo revisar Deshacer. Pueden haber cambiado las cantidades, las sobras o las reservas. Vuelve a cargar el registro guardado; no se sobrescribirán los cambios más recientes."
+          }
+        }
+      }
+    },
+    "Undo may have saved. Retry the same Undo or check the saved completion before recording cooking again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo may have saved. Retry the same Undo or check the saved completion before recording cooking again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es posible que Deshacer se haya guardado. Reintenta el mismo Deshacer o consulta la preparación guardada antes de volver a registrarla."
+          }
+        }
+      }
+    },
+    "Cooking was undone. Review every ingredient again before recording another completion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking was undone. Review every ingredient again before recording another completion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se deshizo la preparación. Vuelve a revisar cada ingrediente antes de registrar otra preparación."
+          }
+        }
+      }
+    },
+    "Set up My Pantry to record cooking and leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up My Pantry to record cooking and leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Mi despensa para registrar la preparación y las sobras"
+          }
+        }
+      }
+    },
+    "Recorded ingredient use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded ingredient use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso registrado de ingredientes"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
