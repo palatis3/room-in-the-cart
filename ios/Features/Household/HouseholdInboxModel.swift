@@ -204,7 +204,8 @@ enum ShopperDelivery: Equatable {
         let value = try await service.shopperShop(shopID: shopID)
         var page = try await service.shopperInbox(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
-        guard value.shopId == shopID, page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
+        guard value.shopId == shopID, Set(value.lines.map(\.id)).count == value.lines.count,
+              page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
         let target: String?
         if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply", receipt.shopId == shopID {
             target = receipt.requestId

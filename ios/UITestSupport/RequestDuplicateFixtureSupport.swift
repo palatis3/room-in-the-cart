@@ -61,7 +61,9 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
     private let pageBoundary: Bool
     private let basketName: String
     private let mealNames: [String]
-    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = []) {
+    private let repeatsBasketLine: Bool
+    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = [], repeatsBasketLine: Bool = false) {
+        self.repeatsBasketLine = repeatsBasketLine
         self.mealNames = mealNames
         self.pageBoundary = pageBoundary
         self.basketName = basketName
@@ -103,8 +105,9 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
         if path.hasSuffix("/shops/" + Self.shopID) {
             let quote = try ShopperQuote(scope:"wholeCheckout", complete:true, capMinor:3800, capScope:"wholeCheckout", fee:.fixed(0), taxesMinor:0, depositsMinor:0, discountsMinor:0,
                 observedAt:Date(timeIntervalSince1970:1_793_718_000), expiresAt:Date(timeIntervalSince1970:4_070_908_800))
+            let line: [String: Any] = ["lineId": Self.lineID, "originalItem": basketName, "packs": 1, "unitPriceMinor": 349, "feeEligible": true]
             return try json(["shopId":Self.shopID, "shopRevision":revision, "authorityEpoch":1, "phase":"draft", "quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),
-                "lines":[["lineId":Self.lineID, "originalItem":basketName, "packs":1, "unitPriceMinor":349, "feeEligible":true]]])
+                "lines":repeatsBasketLine ? [line, line] : [line]])
         }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand/tracking") {
             let basket: [[String: Any]] = [["lineId": Self.lineID, "originalItem": basketName, "packs": 1, "unitPriceMinor": 349, "feeEligible": true]]

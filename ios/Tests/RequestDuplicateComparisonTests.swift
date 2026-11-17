@@ -69,6 +69,15 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(RequestDuplicateGrouping.basketCandidates(for: group, lines: [variant, reviewed, product]), [reviewed, product])
     }
     #if DEBUG
+    @MainActor func testRepeatedLineIdentityCannotBecomeAShopperSuggestion() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let server = S23DuplicateFixtureServer(repeatsBasketLine: true)
+        let model = try await s23DuplicateFixtureModel(server: server, outboxURL: directory.appendingPathComponent("outbox.json"))
+        XCTAssertNil(model.shop)
+        XCTAssertTrue(model.requests.isEmpty)
+        XCTAssertEqual(server.commandCount, 0)
+    }
     @MainActor func testBasketSuggestionRequiresCurrentReviewAndKeepsBothRequestOutcomesSeparate() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
