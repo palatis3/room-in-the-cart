@@ -48,7 +48,7 @@ enum RequestDuplicateGrouping {
     static func basketCandidates(for group: RequestDuplicateGroup, lines: [ShopperBasketLine]) -> [ShopperBasketLine] {
         guard let request = group.requests.first else { return [] }
         let name = comparisonName(request.originalItem)
-        let reviewedLinks = Set(group.requests.compactMap(\.linkedLineId))
+        let reviewedLinks = Set(group.requests.compactMap(\.draftBasketLineId))
         return lines.filter { line in
             if let id = UUID(uuidString: line.id), reviewedLinks.contains(id) { return true }
             return !name.isEmpty && comparisonName(line.originalItem) == name

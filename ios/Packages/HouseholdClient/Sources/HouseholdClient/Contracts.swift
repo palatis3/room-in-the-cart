@@ -36,6 +36,7 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public let authorAlias: String?
     public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
     public private(set) var linkedLineId: UUID? = nil
+    public private(set) var draftBasketLineId: UUID? = nil
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
 /// Contributor destinations deliberately omit shopper identity, basket contents and financial details.

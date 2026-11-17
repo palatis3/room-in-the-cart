@@ -8,7 +8,7 @@ export interface OwnRequest {
   ownActionAllowed: boolean; clarification: string | null; followupTo: string | null;
 }
 export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'unknown';
-export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string}
+export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string;draftBasketLineId?:string}
 export interface DeferredRequest {
   sourceShopId:string; sourceAuthorityEpoch:number; requestId:string; requestRevision:number;
   originalItem:string; ownQuantity:string|null; authorAlias:string; authoredAt:string; receivedAt:string;

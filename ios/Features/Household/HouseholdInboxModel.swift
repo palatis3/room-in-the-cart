@@ -20,7 +20,6 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var busy = false
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var requests: [OwnRequest] = []
-    @Published private(set) var matchingMealNeeds: [RequestMealCandidate]?
     @Published private(set) var deferredRequests: [DeferredRequest] = []
     @Published private(set) var deferredPage: DeferredRequestsPage?
     private var deferredLoad = UUID()
@@ -29,6 +28,7 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var preview: ShopperPreview?
     @Published private(set) var trackingRequest: TrackingRequestContext?
     @Published private(set) var requestFood: SharedRequestFoodContext?
+    @Published private(set) var matchingMealNeeds: [RequestMealCandidate]?
     private var reviewedDecision: SharedRequestDecisionReview?
     private var reviewedFood: SharedDemandReview?
     @Published private(set) var delivery: ShopperDelivery = .none

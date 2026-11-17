@@ -178,7 +178,13 @@ async function purchaseFixture(author='Sam') {
   const applied=await f.command('Mia','request.apply',{requestId,previewId:preview.data.previewId,acceptOverage:false,acceptUnknown:false},
     {shopRevision:1,authorityEpoch:1,requestRevision:1});
   assert.equal(applied.status,200,JSON.stringify(applied.data));
-  assert.equal((await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests[0].linkedLineId,undefined);
+  const draft=(await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests[0];
+  assert.equal(draft.draftBasketLineId,f.lineId);
+  assert.equal(draft.linkedLineId,undefined);
+  assert.equal(draft.purchaseOutcome,undefined);
+  const own=(await f.http(author,'GET','/requests/mine')).data.requests[0];
+  assert.equal(own.draftBasketLineId,undefined);
+  assert.equal(own.linkedLineId,undefined);
   const early=await f.command('Mia','request.confirmPurchase',{requestId,lineId:f.lineId,placedRevision:2,outcome:'bought'},
     {shopRevision:2,authorityEpoch:1,requestRevision:applied.data.requestRevision});
   assert.equal(early.data.error.code,'placed_order_required');
@@ -199,7 +205,7 @@ test('only first-hand shopper confirmation changes the added request purchase ou
   const cmd=(extra={},version=base,actor='Mia')=>f.envelope(actor,'request.confirmPurchase',{...body,...extra},version);
   const send=(c,a='Mia')=>f.http(a,'POST','/commands',c);
   const ownBefore=await mine();assert.equal(ownBefore.status,'added');assert.equal(ownBefore.purchaseOutcome,undefined);
-  assert.equal((await shopper()).linkedLineId,f.lineId);assert.equal(ownBefore.linkedLineId,undefined);
+  assert.equal((await shopper()).draftBasketLineId,undefined);assert.equal((await shopper()).linkedLineId,f.lineId);assert.equal(ownBefore.linkedLineId,undefined);
   assert((await f.http('Mia','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
   assert(!(await f.http('Sam','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
   assert.equal((await f.http('Alex','GET',inbox)).status,404);

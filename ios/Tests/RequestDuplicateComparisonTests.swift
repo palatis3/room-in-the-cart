@@ -63,7 +63,7 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         let unmatched = try request("first", item: " MILK ")
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(unmatched)) as? [String: Any])
         object["requestId"] = "second"
-        object["linkedLineId"] = reviewed.id
+        object["draftBasketLineId"] = reviewed.id
         let matched = try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: object))
         let group = try XCTUnwrap(RequestDuplicateGrouping.groups(requests: [unmatched, matched], shopID: "shop", authorized: true).first)
         XCTAssertEqual(RequestDuplicateGrouping.basketCandidates(for: group, lines: [variant, reviewed, product]), [reviewed, product])

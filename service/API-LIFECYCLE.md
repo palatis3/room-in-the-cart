@@ -40,6 +40,10 @@ Enrolled adult contributors may explicitly allow pending requests on their curre
 
 The email-code BFF in API-AUTH.md is implemented but remains disabled until real provider code delivery is configured. These lifecycle APIs do not create a provider login or treat an invitation token as identity.
 
+## Shopper inbox basket links
+
+During a draft pickup, an added request can include `draftBasketLineId` in the assigned shopper’s inbox. It identifies the basket line the shopper previously reviewed. Placing the order switches to `linkedLineId` for lines present in the placed snapshot. A purchase still requires a separate shopper confirmation. Contributor and child own-request responses omit both line identifiers.
+
 ## Scoped helper views and suggestions
 
 The reviewed projection is:
