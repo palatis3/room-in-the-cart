@@ -9223,6 +9223,198 @@
           }
         }
       }
+    },
+    "Private meal feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private meal feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opiniones privadas sobre la comida"
+          }
+        }
+      }
+    },
+    "Unlock the same private workspace to review this meal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the same private workspace to review this meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el mismo espacio privado para revisar esta comida."
+          }
+        }
+      }
+    },
+    "Choose any reactions you want to keep for future meal suggestions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose any reactions you want to keep for future meal suggestions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las reacciones que quieras guardar para futuras sugerencias."
+          }
+        }
+      }
+    },
+    "Feedback changed or could not be saved. Reopen this meal to review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback changed or could not be saved. Reopen this meal to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las opiniones cambiaron o no se pudieron guardar. Vuelve a abrir la comida para revisarlas."
+          }
+        }
+      }
+    },
+    "Save private feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save private feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar mis opiniones privadas"
+          }
+        }
+      }
+    },
+    "Remove my feedback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove my feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mis opiniones"
+          }
+        }
+      }
+    },
+    "Make again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volvería a prepararla"
+          }
+        }
+      }
+    },
+    "Too much effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too much effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiado trabajo"
+          }
+        }
+      }
+    },
+    "Children liked it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Children liked it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les gustó a los niños"
+          }
+        }
+      }
+    },
+    "Too many leftovers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobró demasiada comida"
+          }
+        }
+      }
+    },
+    "You reported too many leftovers. Consider %@ servings for this dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You reported too many leftovers. Consider %@ servings for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentaste que sobró demasiada comida. Considera %@ porciones para esta cena."
+          }
+        }
+      }
+    },
+    "Review smaller portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review smaller portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una cantidad menor de porciones"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
