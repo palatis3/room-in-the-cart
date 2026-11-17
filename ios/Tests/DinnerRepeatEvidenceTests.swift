@@ -90,6 +90,13 @@ import LocalStore
         edited[firstIndex].ingredientEdits = [.init(contributionID: originalIngredient, quantity: nil)]
         let partial = try evidence(workspace, canonical: supply).shoppingNeeds(for: edited, candidates: mealRows)
         XCTAssertEqual(partial.first?.unresolved, true); XCTAssertEqual(partial.first?.toObtain, [])
+        edited[firstIndex].ingredientEdits = [.init(contributionID: originalIngredient,
+            quantity: Quantity(amount: .one, unit: .gram, originalLiteral: "1 g"))]
+        let incompatible = try evidence(workspace, canonical: supply).shoppingNeeds(for: edited, candidates: mealRows)
+        XCTAssertEqual(incompatible.first?.unresolved, true); XCTAssertEqual(incompatible.first?.toObtain, [])
+        let unrelatedWorkspace = try fixture() // Same label, independently created line identity.
+        let unmatched = try XCTUnwrap(evidence(unrelatedWorkspace, canonical: supply).stock.first)
+        XCTAssertTrue(unmatched.free.isEmpty); XCTAssertTrue(unmatched.unresolved)
         let partlyUnknown = try XCTUnwrap(evidence(workspace, canonical: supply, unknownFoodIDs: [food]).stock.first)
         XCTAssertEqual(partlyUnknown.free, [q(5)])
         XCTAssertTrue(partlyUnknown.unresolved, "An independent confirmed lot does not hide a sibling's unknown count.")

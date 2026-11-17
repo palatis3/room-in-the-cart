@@ -144,11 +144,13 @@ struct DinnerRepeatEvidence {
             }
         }
         var seen = Set<UUID>()
+        let confirmedFoodIDs = Set(canonical?.foods.map(\.id) ?? [])
         let stock = foods.filter { seen.insert($0.id).inserted }.map { food in
             DinnerRepeatStockRow(id: food.id, name: food.name,
                 free: canonical?.globallyFreeLots.filter { $0.foodID == food.id }.map(\.usable) ?? [],
                 reserved: canonical?.reservations[food.id] ?? [],
-                unresolved: canonical == nil || canonical?.unresolvedFoodIDs.contains(food.id) == true || unknownFoodIDs.contains(food.id))
+                unresolved: canonical == nil || !confirmedFoodIDs.contains(food.id)
+                    || canonical?.unresolvedFoodIDs.contains(food.id) == true || unknownFoodIDs.contains(food.id))
         }
         var checkedLines = Set<LineKey>()
         let prices = foods.compactMap { food -> String? in
