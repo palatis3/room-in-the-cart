@@ -2499,6 +2499,125 @@
           }
         }
       }
+    },
+    "Reviewed ingredient uses affected by Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed ingredient uses affected by Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usos de ingredientes revisados afectados por Deshacer"
+          }
+        }
+      }
+    },
+    "Original cooking and ingredient-use correction history is retained after Undo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original cooking and ingredient-use correction history is retained after Undo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El historial original de preparación y de correcciones del uso de ingredientes se conserva después de Deshacer."
+          }
+        }
+      }
+    },
+    "Current pantry counts kept unchanged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current pantry counts kept unchanged"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades actuales de la despensa que se conservan"
+          }
+        }
+      }
+    },
+    "Undo is unavailable because a later physical count must be preserved. Review the current food instead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo is unavailable because a later physical count must be preserved. Review the current food instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer no está disponible porque debe conservarse un conteo físico posterior. Revisa el alimento actual."
+          }
+        }
+      }
+    },
+    "A later change affected food used by this cooking. Undo cannot overwrite its current pantry record.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A later change affected food used by this cooking. Undo cannot overwrite its current pantry record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un cambio posterior afectó un alimento usado en esta preparación. Deshacer no puede sobrescribir su registro actual en la despensa."
+          }
+        }
+      }
+    },
+    "Previously accounted use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously accounted use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso ya contabilizado"
+          }
+        }
+      }
+    },
+    "Other unmeasured uses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other unmeasured uses"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otros usos no medidos"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

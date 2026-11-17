@@ -346,4 +346,74 @@ import LocalStore
         let current = try await f.session.load(shopID: f.shop, mealID: f.meal)
         XCTAssertTrue(current.remainingUnresolvedUseIDs.isEmpty)
     }
+
+    func testAmendedUndoShowsPreservedCountsAndRetainedCorrectionHistory() async throws {
+        let f = try await fixture()
+        _ = try await untrackedCompletion(f, cookedAt: f.now.addingTimeInterval(-10))
+        let correction = await resolution(f)
+        correction.selectLot(f.lots[0]); correction.action = .alreadyIncluded
+        await correction.prepare(); await correction.confirm()
+        await f.editor.reload(); await f.editor.prepareUndo()
+        let undo = try XCTUnwrap(f.editor.undoReview)
+        XCTAssertEqual(undo.resolvedUseCount, 1)
+        XCTAssertEqual(undo.preservedCountNames, ["Wraps"])
+        XCTAssertEqual(undo.restoredInputCount, 0)
+        await f.editor.confirmUndo()
+        XCTAssertNil(f.editor.completed)
+        let current = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(current.inventory.lots.first { $0.id == f.lots[0] }?.revision, 1)
+        let loadedSource = try await f.store.load(id: f.shop)
+        let source = try XCTUnwrap(loadedSource)
+        let journey = try JSONDecoder().decode(PickupJourney.self, from: source.payload)
+        XCTAssertEqual(journey.cookedMeals?.first?.resolutions?.count, 1)
+        XCTAssertEqual(journey.cookedMeals?.first?.undo?.resolvedEventIDs?.count, 1)
+    }
+
+    func testAmendedUndoReportsPhysicalRecountAndChangedDrawWithoutOverwriting() async throws {
+        let f = try await fixture()
+        _ = try await untrackedCompletion(f)
+        let correction = await resolution(f)
+        correction.selectLot(f.lots[0]); correction.action = .recount; correction.remainingAmount = "3"
+        await correction.prepare(); await correction.confirm()
+        await f.editor.reload(); await f.editor.prepareUndo()
+        XCTAssertNil(f.editor.undoReview)
+        XCTAssertEqual(f.editor.notice, .undoIndependentCount("Wraps"))
+        let preserved = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(preserved.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(3))
+
+        let other = try await fixture(), editor = other.editor
+        explicitNoUse(editor); editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .unmeasured
+        editor.ingredients[0].parts[0].relation = .ingredient
+        editor.ingredients[0].parts[0].lotID = other.lots[0]
+        await editor.prepareReview(); await editor.confirm()
+        let measured = await resolution(other)
+        measured.action = .deduct; measured.usedAmount = "1"
+        await measured.prepare(); await measured.confirm()
+        let before = try await other.session.load(shopID: other.shop, mealID: other.meal)
+        let lot = try XCTUnwrap(before.inventory.lots.first { $0.id == other.lots[0] })
+        let repository = PantryRepository(store: other.store, mutationGate: other.gate, authorize: { true })
+        let moved = InventoryCommand(id: UUID(), originID: other.store.workspaceID, lotID: lot.id, eventID: UUID(),
+            expectedRevision: lot.revision, occurredAt: other.now, change: .move(.fridge))
+        _ = try await repository.apply(moved, reviewedInventoryRevision: before.inventory.state.revision, at: other.now)
+        await editor.reload(); await editor.prepareUndo()
+        XCTAssertNil(editor.undoReview); XCTAssertEqual(editor.notice, .undoAmendedInputChanged("Wraps"))
+        let after = try await other.session.load(shopID: other.shop, mealID: other.meal)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == lot.id }?.location, .fridge)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == lot.id }?.count.quantity?.amount, try Rational(3))
+    }
+
+    func testReviewLifetimeIgnoresAmbientCancellationButRejectsClosedAndReopenedRoutes() async {
+        let lifetime = CookReviewLifetime(), token = lifetime.begin()
+        let callback = Task { @MainActor in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return lifetime.permits(token)
+        }
+        let allowed = await callback.value
+        XCTAssertTrue(allowed, "A cancelled rendering task does not revoke the visible adult review")
+        lifetime.end(); XCTAssertFalse(lifetime.permits(token))
+        let reopened = lifetime.begin()
+        XCTAssertFalse(lifetime.permits(token), "Old suspended actions cannot regain authority on reopen")
+        XCTAssertTrue(lifetime.permits(reopened))
+    }
 }

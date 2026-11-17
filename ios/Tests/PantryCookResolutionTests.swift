@@ -20,7 +20,7 @@ import XCTest
             PantryCookPort(store: store, ledger: ledger, gate: gate, authorize: { self.allowed }, clock: { self.now })
         }
 
-        @MainActor init(test: XCTestCase, tracked: Bool, measuredThird: Bool = false) async throws {
+        @MainActor init(test: XCTestCase, tracked: Bool, measuredThird: Bool = false, leftover: Bool = false) async throws {
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             cleanup = SQLiteFixtureDirectory(directory, test: test)
@@ -48,10 +48,11 @@ import XCTest
             let ctx = try await port.load(shopID: shop.id, mealID: mealID)
             let ids = ctx.meal.ingredientContributionIDs
             let use: CookCompletionDraft.Part.Use = tracked ? .lot(id: lotID, revision: 1, amount: nil) : .untracked
+            let outputs: [CookCompletionDraft.Leftovers] = leftover ? [.init(name: "Bean lunch", portions: .one, location: .fridge)] : []
             let draft = CookCompletionDraft(inventoryID: store.workspaceID, inventoryRevision: ctx.inventory.state.revision,
                 ledgerID: ledger.workspaceID, shop: shop, meal: ctx.meal, cookedAt: now, servingsMade: .one,
                 parts: [.init(contributionID: ids[0], use: use), .init(contributionID: ids[1], use: use),
-                        .init(contributionID: ids[2], use: measuredThird ? .lot(id: lotID, revision: 1, amount: try quantity(1)) : .untracked)], leftovers: [])
+                        .init(contributionID: ids[2], use: measuredThird ? .lot(id: lotID, revision: 1, amount: try quantity(1)) : .untracked)], leftovers: outputs)
             let reviewed = try await port.review(draft)
             try await port.apply(reviewed)
             now.addTimeInterval(60)
@@ -118,7 +119,7 @@ import XCTest
         XCTAssertEqual(done.record.resolutions?.map(\.eventID), ids)
         XCTAssertEqual(done.record.draft.unresolvedUseIDs, ids)
         do { _ = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID); XCTFail("Later amendments protect history") }
-        catch PantryCookPort.Failure.changed {}
+        catch PantryCookUndoFailure.independentPhysicalCount(let name) { XCTAssertEqual(name, "Beans") }
     }
 
     func testTwoMeasuredAmendmentsRestoreOriginalCountOnlyAfterLastUnknownAndKeepOriginalMeasuredUse() async throws {
@@ -154,6 +155,93 @@ import XCTest
         XCTAssertEqual(observations.count, 3)
     }
 
+    func testUndoOutsideAndAlreadyIncludedKeepsLatestPhysicalCountAndAmendmentHistoryAcrossReopen() async throws {
+        let f = try await Fixture(test: self, tracked: false)
+        let initial = try await f.context()
+        let ids = initial.remainingEventIDs
+        let outside = try await f.port.reviewResolution(initial, eventID: ids[0], decision: .outsidePantry)
+        try await f.port.applyResolution(outside)
+        try await f.physicalCount(7)
+        let recent = try await f.context()
+        let included = try await f.port.reviewResolution(recent, eventID: ids[1], decision: .alreadyIncluded(lotID: f.lotID, used: quantity(1)))
+        try await f.port.applyResolution(included)
+        try await f.physicalCount(5)
+        let before = try await f.context()
+        let undo = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID)
+        XCTAssertEqual(undo.resolvedUseCount, 2)
+        XCTAssertEqual(undo.preservedCountNames, ["Beans"])
+        XCTAssertTrue(undo.restoredInputs.isEmpty)
+        try await f.port.applyUndo(undo)
+        let copy = try ComparisonStore(url: f.pickupURL, inventoryEnabled: true)
+        let ledger = try LedgerStore(url: f.ledgerURL, inventoryProjectionsEnabled: true)
+        f.cleanup.track(copy, ledger)
+        let reopened = PantryCookPort(store: copy, ledger: ledger, gate: f.gate, authorize: { true }, clock: { f.now })
+        try await reopened.applyUndo(undo)
+        try await reopened.applyResolution(outside)
+        let after = try await reopened.load(shopID: f.shop.id, mealID: f.mealID)
+        XCTAssertNil(after.completed)
+        XCTAssertEqual(after.inventory.lots, before.lots)
+        XCTAssertEqual(after.inventory.state.revision, before.inventoryRevision + 1)
+        let stored = try await copy.load(id: f.shop.id)
+        let audit = try JSONDecoder().decode(PickupJourney.self, from: XCTUnwrap(stored?.payload))
+        let record = try XCTUnwrap(audit.cookedMeals?.first)
+        XCTAssertEqual(record.draft, initial.record.draft)
+        XCTAssertEqual(record.resolutions, before.record.resolutions)
+        XCTAssertEqual(record.undo?.resolvedEventIDs, Array(ids.prefix(2)))
+        try record.validate(shopID: f.shop.id)
+    }
+
+    func testUndoReconstructedAndNewlyIdentifiedDrawsRestoresOnlyTheirExactStockLineage() async throws {
+        for tracked in [false, true] {
+            let f = try await Fixture(test: self, tracked: tracked, measuredThird: tracked)
+            let initial = try await f.context()
+            let ids = initial.remainingEventIDs
+            let first = try await f.port.reviewResolution(initial, eventID: ids[0], decision: .deduct(lotID: f.lotID, used: quantity(2)))
+            try await f.port.applyResolution(first)
+            let partial = try await f.context()
+            let next = try await f.port.reviewResolution(partial, eventID: ids[1], decision: .deduct(lotID: f.lotID, used: quantity(3)))
+            try await f.port.applyResolution(next)
+            let undo = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID)
+            XCTAssertEqual(undo.restoredInputs.map(\.lotID), [f.lotID])
+            XCTAssertEqual(undo.restoredInputs.first?.count.quantity?.amount, try Rational(10))
+            XCTAssertEqual(undo.resolvedUseCount, 2)
+            if tracked {
+                try await f.port.applyUndo(undo)
+                try await f.port.applyUndo(undo)
+                let done = try await f.port.load(shopID: f.shop.id, mealID: f.mealID)
+                XCTAssertNil(done.completed)
+                XCTAssertEqual(done.inventory.lots.first?.count.quantity?.amount, try Rational(10))
+            } else {
+                try await f.physicalCount(4)
+                do { try await f.port.applyUndo(undo); XCTFail("The pre-count Undo cannot overwrite a newer balance") }
+                catch PantryCookUndoFailure.amendedInputChanged(let lot) { XCTAssertEqual(lot, "Beans") }
+                let current = try await f.context()
+                XCTAssertEqual(current.lots.first?.count.quantity?.amount, try Rational(4))
+                XCTAssertTrue(current.record.isActive)
+            }
+        }
+    }
+
+    func testResolvedOutsideUseCannotUndoCountedLeftoversHeldForLunch() async throws {
+        let f = try await Fixture(test: self, tracked: false, leftover: true)
+        let original = try await f.context()
+        let outside = try await f.port.reviewResolution(original, eventID: original.remainingEventIDs[0], decision: .outsidePantry)
+        try await f.port.applyResolution(outside)
+        let undo = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID)
+        let output = try XCTUnwrap(original.record.draft.leftovers.first)
+        let hold = InventoryReservation(id: UUID(), originID: f.store.workspaceID, revision: 1, foodID: output.foodID, lotID: output.id,
+            name: "Lunch", amount: try quantity(1), priority: .protected, state: .active)
+        let state = try await f.store.inventoryState()
+        _ = try await f.store.commitInventory(.init(workspaceID: f.store.workspaceID, operationID: UUID(), expectedRevision: state.revision,
+            request: Data([9]), writes: [PantryPersistenceCodec.write(hold, expectedRevision: 0)]), at: f.now)
+        do { try await f.port.applyUndo(undo); XCTFail("A reserved lunch cannot be removed by an old Undo") }
+        catch PantryCookPort.Failure.changed {}
+        let after = try await f.port.load(shopID: f.shop.id, mealID: f.mealID)
+        XCTAssertEqual(after.inventory.reservations, [hold])
+        XCTAssertEqual(after.inventory.lots.first { $0.id == output.id }?.count.quantity?.amount, .one)
+        XCTAssertEqual(after.completed?.id, original.record.draft.id)
+    }
+
     func testPhysicalRecountIncludesSiblingUnknownUsesWithoutAutomaticallyClosingOrDeductingThem() async throws {
         let f = try await Fixture(test: self, tracked: true)
         let original = try await f.context()
@@ -184,6 +272,8 @@ import XCTest
         XCTAssertEqual(final.record.resolutions?.first?.basis?.observationID, original.lots.first?.observationID)
         let observations = try await f.store.inventoryRecords(kind: .observation)
         XCTAssertEqual(observations.count, 3, "Original count, unknown cook use and physical recount remain intact")
+        do { _ = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID); XCTFail("Physical count is independent evidence") }
+        catch PantryCookUndoFailure.independentPhysicalCount(let lot) { XCTAssertEqual(lot, "Beans") }
     }
 }
 
