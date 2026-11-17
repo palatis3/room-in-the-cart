@@ -91,6 +91,8 @@ The household endpoints below use the normal live session and enrolled device. A
 | --- | --- | --- |
 | GET | `/pantry?cursor={lotId}` | A version 1 page with `householdId`, `grantEpoch`, `pantryRevision`, `asOf`, up to 50 `lots`, and `nextCursor`. |
 | POST | `/pantry/commands` | A version 1 receipt with `kind`, `householdId`, `operationId`, `lotId`, `grantEpoch`, and committed `pantryRevision`. |
+| GET | `/pantry/staples?zone={IANA time zone}` | The current adult’s opt-in, revision, reviewed purchase groups and eligible questions in this household. |
+| POST | `/pantry/staples` | Applies a reviewed opt-in, recall, purchase-group edit or answer and returns the current projection. |
 | GET | `/pantry/grants` | The organizer’s version 1 `adults` list. Each active non-organizer adult has `memberId`, `label`, `enabled`, and `grantEpoch`. |
 | POST | `/pantry/grants` | Send `{v:1, memberId, enabled, expectedGrantEpoch}` and receive the current grants list. |
 
@@ -99,3 +101,11 @@ Each lot includes its physical `observation` (observation ID, confirmation time 
 To add a lot, submit `{v:1, kind:"pantry.addLot", clientKey, replayWindow, grantEpoch, pantryRevision, body}`. The body contains `foodName`, `location` (`pantry`, `fridge` or `freezer`), nullable `storedAt` and `useFirstAt`, `exclusionTags`, `confirmedAt`, and nullable `quantity`. A quantity uses the existing exact rational amount, unit and original literal. The server commits one lot and its initial observation together under the household stock revision. A retry from the same device with the original live grant and replay window returns the original receipt. A changed intent needs a new client key. After a grant changes or a stock review goes stale, read the current page before submitting a new intent.
 
 The placed-shop pantry endpoint retains its pantry/freezer location vocabulary. A shopper with standalone pantry authority can select compatible standalone lots through the existing shop commands. The joint allocator uses those same physical observations for reservations and shortfalls.
+
+### Personal staple reminders in a household
+
+The write envelope includes `v: 1`, `zone`, `grantEpoch`, `pantryRevision`, `expectedRevision` (null on first use), `clientKey`, `replayWindow` and a discriminated `action`. The service locks the household and checks the current membership, pantry grant, enrolled device and replay window. Replaying an accepted command returns the current projection. Turning reminders off forgets that adult’s groups and answers.
+
+An adult can `remember` a name for manual recall. The `purchase` action records the receipt day and the exact usable observation of a stored, confirmed delivery lot. It takes an existing `groupId` or a new `name`, with the other field set to null. One physical lot contributes once per adult. `removePurchase` unlinks a reviewed purchase, and `forget` removes the group.
+
+Three comparable purchase days establish an interval. Split lots on one day count together, and a change in usable amount starts a new series. Unresolved source corrections and equivalent or unclassified open demand withhold the question. The pantry projection omits other shoppers’ request details. The `answer` action binds Still have it, Dismiss or a seven-day Snooze to the current question’s basis. Each adult’s enrolled devices read the same answer.

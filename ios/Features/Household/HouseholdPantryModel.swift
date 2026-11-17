@@ -45,6 +45,8 @@ protocol HouseholdPantryServing: Sendable {
     func prepareHouseholdPantryChange(_ body: HouseholdPantryChange, reviewed page: HouseholdPantryPage,
                                         session: HouseholdPantrySession) async throws -> HouseholdPantryIntent
     func submitHouseholdPantryChange(_ intent: HouseholdPantryIntent, session: HouseholdPantrySession) async throws -> HouseholdPantryReceipt
+    func householdStaples(for session: HouseholdPantrySession, zone: String) async throws -> HouseholdStaplePage
+    func changeHouseholdStaples(_ action: HouseholdStapleAction, reviewed: HouseholdStaplePage, session: HouseholdPantrySession) async throws -> HouseholdStaplePage
     func householdPantryGrants(for session: HouseholdPantrySession) async throws -> HouseholdPantryGrants
     func changeHouseholdPantryGrant(_ adult: HouseholdPantryGrants.Adult, enabled: Bool, session: HouseholdPantrySession) async throws -> HouseholdPantryGrants
 }
@@ -62,6 +64,7 @@ extension HouseholdService: HouseholdPantryServing {}
     @Published private(set) var page: HouseholdPantryPage?
     @Published private(set) var lots: [HouseholdPantryPage.Lot] = []
     @Published private(set) var pending: PendingPantryAddition?
+    @Published private(set) var staples: HouseholdStaplePage?
     @Published private(set) var grants: HouseholdPantryGrants?
     @Published private(set) var busy = false
     @Published private(set) var notice: String?
@@ -80,6 +83,7 @@ extension HouseholdService: HouseholdPantryServing {}
         lots.removeAll()
         pending = nil
         grants = nil
+        staples = nil
         session = nil
         storeEpoch = nil
     }
@@ -226,6 +230,29 @@ extension HouseholdService: HouseholdPantryServing {}
             try await store.complete(pending, expectedEpoch: storeEpoch)
             try check(start)
             self.pending = nil
+        }
+    }
+
+    func loadStaples() async {
+        guard let session, let page else { return }
+        await perform { start in
+            staples = nil
+            let result = try await service.householdStaples(for: session, zone: TimeZone.current.identifier)
+            try check(start)
+            guard page.grantEpoch == result.grantEpoch, page.pantryRevision == result.pantryRevision else {
+                throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+            }
+            staples = result
+        }
+    }
+
+    func changeStaples(_ action: HouseholdStapleAction, reviewed: HouseholdStaplePage) async {
+        guard staples == reviewed, let session, let page, page.grantEpoch == reviewed.grantEpoch,
+              page.pantryRevision == reviewed.pantryRevision else { return }
+        await perform { start in
+            let result = try await service.changeHouseholdStaples(action, reviewed: reviewed, session: session)
+            try check(start)
+            staples = result
         }
     }
 

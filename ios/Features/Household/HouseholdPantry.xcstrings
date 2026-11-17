@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld purchase days, usually %lld days apart.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld purchase days, usually %lld days apart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld días de compra, normalmente con %lld días entre ellos."
+          }
+        }
+      }
+    },
+    "%lld reviewed purchases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reviewed purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld compras revisadas"
+          }
+        }
+      }
+    },
+    "1 reviewed purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 reviewed purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 compra revisada"
+          }
+        }
+      }
+    },
     "Adults with pantry access can see stored food, add food and correct counts.": {
       "localizations": {
         "en": {
@@ -81,6 +129,38 @@
         }
       }
     },
+    "Choose a delivery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una entrega"
+          }
+        }
+      }
+    },
+    "Choose the stored deliveries you bought. A reminder needs three comparable purchase days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the stored deliveries you bought. A reminder needs three comparable purchase days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las entregas guardadas que compraste. Un recordatorio requiere tres días de compras comparables."
+          }
+        }
+      }
+    },
     "Clear saved retry": {
       "localizations": {
         "en": {
@@ -141,6 +221,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmar la cantidad corregida"
+          }
+        }
+      }
+    },
+    "Confirm this purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar esta compra"
           }
         }
       }
@@ -209,6 +305,22 @@
         }
       }
     },
+    "Dismiss this reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss this reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar este recordatorio"
+          }
+        }
+      }
+    },
     "Edit addition": {
       "localizations": {
         "en": {
@@ -237,6 +349,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar cantidad"
+          }
+        }
+      }
+    },
+    "Edit purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar compra"
           }
         }
       }
@@ -285,6 +413,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Exclusiones alimentarias"
+          }
+        }
+      }
+    },
+    "Forget this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar este alimento"
+          }
+        }
+      }
+    },
+    "Forget this staple and its reviewed purchases?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this staple and its reviewed purchases?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidar este alimento y sus compras revisadas?"
           }
         }
       }
@@ -401,6 +561,70 @@
         }
       }
     },
+    "Manual recall": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual recall"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio manual"
+          }
+        }
+      }
+    },
+    "Need %@ this week?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need %@ this week?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Necesitas %@ esta semana?"
+          }
+        }
+      }
+    },
+    "New staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo alimento habitual"
+          }
+        }
+      }
+    },
+    "No loaded delivery has a confirmed usable quantity.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No loaded delivery has a confirmed usable quantity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna entrega cargada tiene una cantidad utilizable confirmada."
+          }
+        }
+      }
+    },
     "No pantry access": {
       "localizations": {
         "en": {
@@ -413,6 +637,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Only you can see and answer your reminders on your enrolled devices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only you can see and answer your reminders on your enrolled devices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo tú puedes ver y responder a tus recordatorios en tus dispositivos registrados."
           }
         }
       }
@@ -445,6 +685,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cantidad anterior"
+          }
+        }
+      }
+    },
+    "Purchase day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la compra"
           }
         }
       }
@@ -497,6 +753,22 @@
         }
       }
     },
+    "Remember a staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember a staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar un alimento habitual"
+          }
+        }
+      }
+    },
     "Remove access": {
       "localizations": {
         "en": {
@@ -509,6 +781,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quitar acceso"
+          }
+        }
+      }
+    },
+    "Remove from this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar de este alimento habitual"
           }
         }
       }
@@ -529,6 +817,22 @@
         }
       }
     },
+    "Remove this purchase from the reminder?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this purchase from the reminder?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar esta compra del recordatorio?"
+          }
+        }
+      }
+    },
     "Retry the same change": {
       "localizations": {
         "en": {
@@ -541,6 +845,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reintentar el mismo cambio"
+          }
+        }
+      }
+    },
+    "Review a purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una compra"
           }
         }
       }
@@ -577,6 +897,38 @@
         }
       }
     },
+    "Review purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar compra"
+          }
+        }
+      }
+    },
+    "Reviewed purchases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras revisadas"
+          }
+        }
+      }
+    },
     "Saved pantry change": {
       "localizations": {
         "en": {
@@ -589,6 +941,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambio guardado en la despensa"
+          }
+        }
+      }
+    },
+    "Snooze for one week": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snooze for one week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posponer una semana"
+          }
+        }
+      }
+    },
+    "Staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento habitual"
+          }
+        }
+      }
+    },
+    "Staple name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del alimento habitual"
+          }
+        }
+      }
+    },
+    "Staple reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios de alimentos habituales"
+          }
+        }
+      }
+    },
+    "Still have it": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still have it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía tengo"
+          }
+        }
+      }
+    },
+    "Stored delivery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrega guardada"
           }
         }
       }
@@ -669,6 +1117,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "No hay otros adultos activos a los que puedas dar acceso."
+          }
+        }
+      }
+    },
+    "Turn off my reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off my reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar mis recordatorios"
+          }
+        }
+      }
+    },
+    "Turn off reminders and forget your reviewed purchases?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off reminders and forget your reviewed purchases?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desactivar los recordatorios y olvidar tus compras revisadas?"
+          }
+        }
+      }
+    },
+    "Turn on my reminders": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on my reminders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar mis recordatorios"
+          }
+        }
+      }
+    },
+    "Use the receipt to check the purchase day and the amount of usable food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the receipt to check the purchase day and the amount of usable food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta el recibo para verificar el día de la compra y la cantidad de alimento utilizable."
           }
         }
       }

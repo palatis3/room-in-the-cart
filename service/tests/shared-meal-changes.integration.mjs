@@ -1760,3 +1760,85 @@ test('standalone pantry freezer enters the legacy shared allocator once while fr
  const coverage=ok(await call(f.planner,p.path+'/coverage'));
  assert.equal(coverage.needs.flatMap(n=>n.reservations).find(r=>r.reservationId===pin.operationId).backed.numerator,'1');
 });
+
+test('household staples require reviewed comparable deliveries, live grants and current demand',async()=>{
+ const f=await reservationFixture(),scope=f.base+'/pantry/staples',p=pantryHarness(f);
+ const zone='America/New_York',date=n=>new Date(Date.now()-n*86_400_000).toISOString().slice(0,10);
+ const read=async(actor=f.owner)=>ok(await call(actor,scope+'?zone='+zone));
+ const post=(c,actor=f.owner)=>call(actor,scope,'POST',c);
+ function intent(state,action,actor=f.owner){return {v:1,zone,pantryRevision:state.pantryRevision,grantEpoch:state.grantEpoch,
+   expectedRevision:state.revision,clientKey:randomUUID(),replayWindow:actor.window,action};}
+ const write=async action=>ok(await post(intent(await read(),action)));
+ assert.equal((await call(f.planner,scope)).status,404);
+ assert.equal((await read()).enabled,false);
+ const enabled=await write({kind:'enable',enabled:true});assert.deepEqual(enabled.groups,[]);
+ const recalled=await write({kind:'remember',name:'Oats'});
+ assert.deepEqual(recalled.groups.map(g=>[g.name,g.purchases,g.prompt]),[['Oats',[],null]]);
+ const forgot=await write({kind:'forget',groupId:recalled.groups[0].id});assert.deepEqual(forgot.groups,[]);
+ const added=await p.edit('pantry.storeDelivery',{sourceId:f.sourceId,location:'freezer',storedAt:p.time,useFirstAt:null});
+ assert.equal(added.lotId,f.sourceId);
+ const firstAction={kind:'purchase',groupId:null,name:'Wraps',lotId:f.sourceId,observationId:f.usable.observationId,purchaseDay:date(50)};
+ const envelope=intent(await read(),firstAction),first=ok(await post(envelope));
+ assert.deepEqual(ok(await post(envelope)),first);
+ const [group]=first.groups;assert.equal(group.prompt,null);assert.equal(group.purchases.length,1);
+ const repeated=await write({...firstAction,groupId:group.id,name:null});
+ assert.equal(repeated.groups[0].purchases.length,1);
+ assert.equal((await post(intent(await read(),{...firstAction,name:'Another household staple'}))).status,409);
+ assert.equal((await post(intent(await read(),{...firstAction,groupId:group.id,name:null,observationId:randomUUID()}))).status,409);
+ const manual=await p.create('Wraps');
+ assert.equal((await post(intent(await read(),{...firstAction,groupId:group.id,name:null,lotId:manual.lotId}))).status,404);
+ async function another(day){
+   const shop=await f.shop(),base={shopRevision:1,authorityEpoch:1},h=pantryHarness(f,shop,base);
+   const initial=ok(await call(f.owner,f.base+'/shops/'+shop));
+   ok(await h.send(h.envelope('shop.reportPlaced',{occurredAt:p.time})));base.shopRevision++;
+   const delivery=async()=>ok(await call(f.owner,f.base+'/shops/'+shop+'/delivery-evidence'));
+   const snapshot=await delivery(),source=ok(await h.send(h.envelope('delivery.register',{supplyRevision:snapshot.supplyRevision,
+     placedRevision:snapshot.placedRevision,lineId:initial.lines[0].lineId,segmentKey:randomUUID(),foodName:'Tortillas',exclusionTags:[]}))).sourceId;
+   const arrival=randomUUID(),usable=randomUUID();
+   ok(await h.send(h.envelope('delivery.arrival',{supplyRevision:(await delivery()).supplyRevision,sourceId:source,
+     observationId:arrival,predecessorId:null,arrivedAt:p.time,received:f.quantity(6)})));
+   ok(await h.send(h.envelope('delivery.usable',{supplyRevision:(await delivery()).supplyRevision,sourceId:source,
+     observationId:usable,predecessorId:null,arrivalObservationId:arrival,confirmedAt:p.time,usable:f.quantity(5)})));
+   await h.edit('pantry.storeDelivery',{sourceId:source,location:'freezer',storedAt:p.time,useFirstAt:null});
+   return write({...firstAction,groupId:group.id,name:null,lotId:source,observationId:usable,purchaseDay:date(day)});
+ }
+ assert.equal((await another(43)).groups[0].prompt,null);
+ const current=await another(36),originalQuestion=current.groups[0].prompt;
+ assert.equal(originalQuestion.intervalDays,7);assert.equal(originalQuestion.purchaseDays,3);
+ assert.deepEqual(ok(await post(envelope)),current);
+ assert.equal((await post({...envelope,action:{...firstAction,name:'Other'}})).data.error.code,'key_reused');
+ const newObservation=randomUUID();
+ ok(await f.write('delivery.usable',{...f.usable,supplyRevision:(await f.delivery()).supplyRevision,observationId:newObservation,
+   predecessorId:f.usable.observationId,confirmedAt:new Date().toISOString()}));
+ const requiringReview=await read();assert.equal(requiringReview.groups[0].prompt,null);
+ const currentFirstAction={...firstAction,observationId:newObservation};
+ const reread=await write({...currentFirstAction,groupId:group.id,name:null}),question=reread.groups[0].prompt;
+ assert.equal(reread.groups[0].purchases.length,3);assert.notEqual(question.basis,originalQuestion.basis);
+ const noShopInfo=JSON.stringify(current);assert(!noShopInfo.includes(f.shopId));assert(!noShopInfo.includes(f.planner.id));
+ const open=f.command('request.send',{clientRequestId:randomUUID(),originalItem:'Wraps',ownQuantity:null,authoredAt:p.time,route:'next'});
+ const requested=await f.send(open);assert.equal(requested.status,200,JSON.stringify(requested.data));
+ assert.equal((await read()).groups[0].prompt,null);
+ assert.equal((await post(intent(await read(),{kind:'answer',groupId:group.id,basis:question.basis,choice:'dismiss'}))).status,409);
+ const request=requested.data.request,withdraw=f.command('request.withdraw',{requestId:request.requestId});
+ withdraw.base.requestRevision=request.revision;ok(await f.send(withdraw));
+ const returned=(await read()).groups[0].prompt;assert.equal(returned.basis,question.basis);
+ const snoozed=await write({kind:'answer',groupId:group.id,basis:returned.basis,choice:'snooze'});assert.equal(snoozed.groups[0].prompt,null);
+ assert.deepEqual(await read(),snoozed);
+ const grant=async(enabled,expectedGrantEpoch)=>ok(await call(f.owner,f.base+'/pantry/grants','POST',
+   {v:1,memberId:f.planner.id,enabled,expectedGrantEpoch}));
+ await grant(true,0);
+ const other=await read(f.planner);assert.equal(other.enabled,false);assert.deepEqual(other.groups,[]);
+ const allow=intent(other,{kind:'enable',enabled:true},f.planner);assert.equal(ok(await post(allow,f.planner)).enabled,true);
+ await grant(false,1);assert.equal((await post(allow,f.planner)).status,404);
+ await grant(true,2);assert.equal((await post(allow,f.planner)).status,409);assert.equal((await read(f.planner)).enabled,false);
+ const removed=await write({kind:'removePurchase',groupId:group.id,lotId:f.sourceId});
+ assert.equal(removed.groups[0].purchases.length,2);assert.equal(removed.groups[0].prompt,null);
+ const off=await write({kind:'enable',enabled:false});assert.deepEqual(off.groups,[]);assert.equal((await read()).enabled,false);
+ const regranted=await read(f.planner);
+ const allowed=ok(await post(intent(regranted,{kind:'enable',enabled:true},f.planner),f.planner));
+ const plannerPurchase=intent(allowed,currentFirstAction,f.planner);
+ assert.equal(ok(await post(plannerPurchase,f.planner)).groups.length,1);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.owner.id]);
+ const retained=await read(f.planner);assert.equal(retained.enabled,true);assert.deepEqual(retained.groups,[]);
+ assert.deepEqual(ok(await post(plannerPurchase,f.planner)),retained);
+});

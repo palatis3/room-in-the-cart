@@ -1,3 +1,4 @@
+import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
@@ -279,6 +280,8 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');
           return householdPantry(ctx,cursor===null?null:uuid.parse(cursor));
         }
+        if(path==='/pantry/staples' && method==='GET')return householdStaples(ctx,url.searchParams.get('zone')??'UTC');
+        if(path==='/pantry/staples' && method==='POST')return changeHouseholdStaples(ctx,payload);
         if(path==='/pantry/commands' && method==='POST')return recordHouseholdPantryCommand(ctx,payload);
         if(path==='/pantry/grants' && method==='GET')return pantryGrants(ctx);
         if(path==='/pantry/grants' && method==='POST')return changePantryGrant(ctx,payload);

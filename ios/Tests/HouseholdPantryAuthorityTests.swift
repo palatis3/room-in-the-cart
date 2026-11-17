@@ -86,6 +86,8 @@ private actor PantryTestService: HouseholdPantryServing {
         return try pantryFixture(["v": 1, "kind": "pantry.addLot", "householdId": session.householdID.uuidString,
             "grantEpoch": grantEpoch, "operationId": id, "lotId": id, "pantryRevision": 1])
     }
+    func householdStaples(for session: HouseholdPantrySession, zone: String) throws -> HouseholdStaplePage { throw ClientError.configuration }
+    func changeHouseholdStaples(_ action: HouseholdStapleAction, reviewed: HouseholdStaplePage, session: HouseholdPantrySession) throws -> HouseholdStaplePage { throw ClientError.configuration }
     func householdPantryGrants(for session: HouseholdPantrySession) throws -> HouseholdPantryGrants {
         grantReadCount += 1
         return try pantryFixture(["v": 1, "adults": [["memberId": adultID.uuidString, "label": "Other adult", "enabled": adultEnabled, "grantEpoch": adultEpoch]]])
