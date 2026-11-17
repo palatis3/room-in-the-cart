@@ -24,11 +24,36 @@ struct PantryDigestScope: Equatable {
     }
 }
 
-struct PantryDigestRule: Codable, Equatable {
+struct PantryFoodKeeperSelection: Codable, Equatable {
     let lotID: UUID
     let revision: Int64
+    let range: FoodKeeperReviewedRange
+    static let reference = try? FoodKeeperReference.bundled()
+
+    func applies(to lot: InventoryLot) -> Bool {
+        guard lot.id == lotID, lot.revision == revision, range.storage == lot.location.foodKeeperStorage,
+              let reference = Self.reference else { return false }
+        return range.matches(reference, asOf: range.start)
+    }
+}
+
+extension InventoryLocation {
+    var foodKeeperStorage: FoodKeeperStorage {
+        switch self {
+        case .cupboard: .pantry
+        case .fridge: .refrigerator
+        case .freezer: .freezer
+        }
+    }
+}
+
+struct PantryDigestRule: Codable, Equatable {
+    enum Source: String, Codable { case foodKeeper }
+    let lotID: UUID
+    var revision: Int64
     let day: MealDay
     let handle: UUID
+    var source: Source?
 }
 
 struct PantryDigestDocument: Codable, Equatable {
@@ -39,6 +64,9 @@ struct PantryDigestDocument: Codable, Equatable {
     var minute = 540
     var digestZone = TimeZone.current.identifier
     var rules: [PantryDigestRule] = []
+    // Optional for documents written before the offline guide could save a reviewed range.
+    var foodKeeper: [PantryFoodKeeperSelection]?
+    var selections: [PantryFoodKeeperSelection] { foodKeeper ?? [] }
 
     init(_ scope: PantryDigestScope) { version = 1; origin = scope.origin; owner = scope.owner }
 
@@ -46,29 +74,68 @@ struct PantryDigestDocument: Codable, Equatable {
         guard version == 1, TimeZone(identifier: digestZone) != nil, owner.count == 64, owner.allSatisfy(\.isHexDigit), (0..<1440).contains(minute),
               rules.count <= 32, Set(rules.map(\.lotID)).count == rules.count,
               rules.allSatisfy({ $0.revision > 0 }) else { throw PantryDigestFailure.invalid }
+        guard selections.count <= 32, Set(selections.map(\.lotID)).count == selections.count else { throw PantryDigestFailure.invalid }
+        for choice in selections {
+            let range = choice.range
+            guard choice.revision > 0, range.version > 0, range.productID > 0, range.condition.storage == range.storage,
+                  range.condition.startingEvent == range.event, range.start.timeZoneIdentifier == range.earliest.timeZoneIdentifier,
+                  range.start.timeZoneIdentifier == range.latest.timeZoneIdentifier else { throw PantryDigestFailure.invalid }
+            try range.start.validate()
+            try range.earliest.validate()
+            try range.latest.validate()
+        }
         let days = Dictionary(grouping: rules, by: \.day.iso8601)
         guard days.values.allSatisfy({ Set($0.map(\.handle)).count == 1 }),
               Set(rules.map(\.handle)).count == days.count else { throw PantryDigestFailure.invalid }
         for rule in rules { try rule.day.validate() }
     }
 
-    mutating func set(lot: InventoryLot, day: MealDay?) throws {
+    mutating func set(lot: InventoryLot, day: MealDay?, source: PantryDigestRule.Source? = nil) throws {
         guard lot.count.quantity?.amount != .zero else { throw PantryDigestFailure.changed }
         rules.removeAll { $0.lotID == lot.id }
         if let day {
             guard rules.count < 32 else { throw PantryDigestFailure.capacity }
             try day.validate()
             let existing = rules.first { $0.day.hasSameCivilDate(as: day) }
-            rules.append(.init(lotID: lot.id, revision: lot.revision, day: day, handle: existing?.handle ?? UUID()))
+            rules.append(.init(lotID: lot.id, revision: lot.revision, day: day, handle: existing?.handle ?? UUID(), source: source))
         }
         try validate()
     }
 
+    mutating func setRange(_ range: FoodKeeperReviewedRange?, for lot: InventoryLot, today: MealDay?) throws {
+        var choices = selections.filter { $0.lotID != lot.id }
+        let existing = rules.first { $0.lotID == lot.id }
+        if let range {
+            guard let today, let reference = PantryFoodKeeperSelection.reference, range.matches(reference, asOf: today),
+                  range.storage == lot.location.foodKeeperStorage, lot.count.quantity?.amount != .zero else {
+                throw PantryDigestFailure.changed
+            }
+            guard choices.count < 32 else { throw PantryDigestFailure.capacity }
+            choices.append(.init(lotID: lot.id, revision: lot.revision, range: range))
+            if existing == nil || existing?.source == .foodKeeper {
+                try set(lot: lot, day: range.earliest, source: .foodKeeper)
+            }
+        } else if existing?.source == .foodKeeper {
+            try set(lot: lot, day: nil)
+        }
+        foodKeeper = choices.isEmpty ? nil : choices
+        try validate()
+    }
+
     mutating func reconcile(_ lots: [InventoryLot]) {
-        let heads = Dictionary(uniqueKeysWithValues: lots.map { ($0.id, $0) })
-        rules.removeAll { rule in
-            guard let lot = heads[rule.lotID] else { return true }
-            return lot.revision != rule.revision || lot.count.quantity?.amount == .zero
+        let heads = Dictionary(uniqueKeysWithValues: lots.filter { $0.count.quantity?.amount != .zero }.map { ($0.id, $0) })
+        let choices = selections.filter { heads[$0.lotID] != nil }
+        foodKeeper = choices.isEmpty ? nil : choices
+        rules = rules.compactMap { rule in
+            guard let lot = heads[rule.lotID] else { return nil }
+            if rule.source == .foodKeeper {
+                guard let choice = choices.first(where: { $0.lotID == lot.id }), choice.applies(to: lot),
+                      choice.range.earliest == rule.day else { return nil }
+            }
+            // A manual check is the shopper's own date for this surviving batch, independent of storage guidance.
+            var current = rule
+            current.revision = lot.revision
+            return current
         }
     }
 
@@ -227,6 +294,12 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
         guard authorized() else { throw PantryDigestFailure.changed }
         try await change(scope) { try $0.set(lot: lot, day: day) }
     }
+    func saveRange(_ range: FoodKeeperReviewedRange?, scope: PantryDigestScope, lot: InventoryLot,
+                   authorized: () -> Bool) async throws {
+        guard authorized() else { throw PantryDigestFailure.changed }
+        let today = try range.map { try MealDay(date: now(), timeZoneIdentifier: $0.start.timeZoneIdentifier) }
+        try await change(scope) { try $0.setRange(range, for: lot, today: today) }
+    }
     func setAlerts(_ scope: PantryDigestScope, enabled: Bool, minute: Int, timeZone: TimeZone = .current, authorized: () -> Bool) async throws {
         guard authorized(), (0..<1440).contains(minute) else { throw PantryDigestFailure.changed }
         if enabled {
@@ -308,7 +381,15 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
             for rule in doc.rules {
                 if try await inventory.inventoryRecord(.init(.lot, rule.lotID))?.revision != rule.revision { removed.insert(rule.lotID) }
             }
-            if !removed.isEmpty {
+            var erasedChoices = Set<UUID>()
+            for choice in doc.selections {
+                if try await inventory.inventoryRecord(.init(.lot, choice.lotID)) == nil {
+                    erasedChoices.insert(choice.lotID)
+                }
+            }
+            if !removed.isEmpty || !erasedChoices.isEmpty {
+                let kept = doc.selections.filter { !erasedChoices.contains($0.lotID) }
+                doc.foodKeeper = kept.isEmpty ? nil : kept
                 doc.rules.removeAll { removed.contains($0.lotID) }
                 let retired = prior.subtracting(doc.rules.map(\.handle))
                 try await serialized { [scheduler] in await scheduler.remove(retired) }

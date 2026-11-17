@@ -7,6 +7,7 @@ struct FoodKeeperLookupContext {
     let foodName: String
     let storage: FoodKeeperStorage
     let openedDay: MealDay?
+    var saveRange: ((FoodKeeperReviewedRange) async throws -> Void)? = nil
 }
 
 struct FoodKeeperLookupView: View {
@@ -40,7 +41,7 @@ struct FoodKeeperLookupView: View {
                 }
                 ForEach(matches) { item in
                     NavigationLink {
-                        FoodKeeperDetail(product: item, language: language, context: context)
+                        FoodKeeperDetail(reference: reference, product: item, language: language, context: context)
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(verbatim: item.name(language)).font(.headline)
@@ -62,12 +63,14 @@ struct FoodKeeperLookupView: View {
 }
 
 private struct FoodKeeperDetail: View {
+    let reference: FoodKeeperReference
     let product: FoodKeeperProduct
     let language: FoodKeeperLanguage
     let context: FoodKeeperLookupContext?
     @State private var storage: FoodKeeperStorage
 
-    init(product: FoodKeeperProduct, language: FoodKeeperLanguage, context: FoodKeeperLookupContext?) {
+    init(reference: FoodKeeperReference, product: FoodKeeperProduct, language: FoodKeeperLanguage, context: FoodKeeperLookupContext?) {
+        self.reference = reference
         self.product = product; self.language = language; self.context = context
         _storage = State(initialValue: context?.storage ?? .refrigerator)
     }
@@ -90,9 +93,9 @@ private struct FoodKeeperDetail: View {
                         if let note = rule.note(language) { Text(verbatim: note) }
                         if product.supportsDateWindow(for: condition) {
                             NavigationLink(helpText("Review a date range")) {
-                                FoodKeeperDates(product: product, language: language, condition: condition,
-                                    recordedDay: condition.startingEvent == .opened ? context?.openedDay : nil)
-                            }
+                                FoodKeeperDates(reference: reference, product: product, language: language, condition: condition,
+                                    recordedDay: condition.startingEvent == .opened ? context?.openedDay : nil, save: context?.saveRange)
+                            }.accessibilityIdentifier("foodKeeper.review." + condition.rawValue)
                         }
                     } else { Text(helpText("No matching guidance for this storage condition.")) }
                 }
@@ -107,6 +110,10 @@ private struct FoodKeeperDetail: View {
 }
 
 private struct FoodKeeperDates: View {
+    let reference: FoodKeeperReference
+    let save: ((FoodKeeperReviewedRange) async throws -> Void)?
+    @State private var saving = false
+    @State private var result: String?
     let product: FoodKeeperProduct
     let language: FoodKeeperLanguage
     let condition: FoodKeeperCondition
@@ -114,7 +121,10 @@ private struct FoodKeeperDates: View {
     @State private var date: Date
     @State private var confirmed = false
 
-    init(product: FoodKeeperProduct, language: FoodKeeperLanguage, condition: FoodKeeperCondition, recordedDay: MealDay?) {
+    init(reference: FoodKeeperReference, product: FoodKeeperProduct, language: FoodKeeperLanguage, condition: FoodKeeperCondition,
+         recordedDay: MealDay?, save: ((FoodKeeperReviewedRange) async throws -> Void)?) {
+        self.reference = reference
+        self.save = save
         self.product = product; self.language = language; self.condition = condition; self.recordedDay = recordedDay
         _date = State(initialValue: recordedDay?.date ?? Date())
     }
@@ -123,10 +133,11 @@ private struct FoodKeeperDates: View {
         recordedDay.flatMap { TimeZone(identifier: $0.timeZoneIdentifier) } ?? .current
     }
 
-    private var window: FoodKeeperProduct.Window? {
+    private var window: FoodKeeperReviewedRange? {
         guard let event = condition.startingEvent, let start = try? MealDay(date: date, timeZoneIdentifier: zone.identifier),
               let today = try? MealDay(date: Date(), timeZoneIdentifier: zone.identifier) else { return nil }
-        return product.window(for: condition, storage: condition.storage, event: event, start: start, asOf: today, historyConfirmed: confirmed)
+        return reference.reviewedRange(productID: product.id, condition: condition, storage: condition.storage, event: event,
+                                      start: start, asOf: today, historyConfirmed: confirmed)
     }
 
     var body: some View {
@@ -135,6 +146,9 @@ private struct FoodKeeperDates: View {
             Text(condition.title)
             if let text = product.rule(for: condition)?.guidance(language) { Text(verbatim: text) }
             Section {
+                if save != nil && recordedDay == nil {
+                    Text(helpText("This batch has no recorded starting date for this condition. Choose the day you can confirm."))
+                }
                 DatePicker(condition.anchorTitle, selection: $date, in: ...Date(), displayedComponents: .date)
                     .environment(\.timeZone, zone)
                     .onChange(of: date) { _, _ in confirmed = false }
@@ -154,8 +168,29 @@ private struct FoodKeeperDates: View {
                     }
                     Text(helpText("Use this range to plan a quality check. Food safety also depends on how the food was handled."))
                 }
+                if let save {
+                    Section {
+                        Text(helpText("Use soon will use the start of this range unless you have chosen a manual check date."))
+                        Button(helpText("Save quality range for this batch")) {
+                            guard !saving else { return }
+                            saving = true
+                            Task {
+                                defer { saving = false }
+                                do {
+                                    try await save(window)
+                                    result = helpText("Quality range saved.")
+                                } catch {
+                                    result = helpText("Could not save this range. Check the current batch and try again.")
+                                }
+                            }
+                        }.accessibilityIdentifier("foodKeeper.saveRange")
+                        if let result { Text(result).accessibilityIdentifier("foodKeeper.savedStatus") }
+                    }
+                }
             }
         }
+        .disabled(saving)
+        .onChange(of: confirmed) { _, _ in result = nil }
         .navigationTitle(helpText("Review a date range"))
     }
 
@@ -165,7 +200,7 @@ private struct FoodKeeperDates: View {
     }
 }
 
-private extension FoodKeeperStorage {
+extension FoodKeeperStorage {
     var title: String {
         switch self {
         case .pantry: helpText("Pantry")
@@ -175,7 +210,7 @@ private extension FoodKeeperStorage {
     }
 }
 
-private extension FoodKeeperCondition {
+extension FoodKeeperCondition {
     var title: String {
         switch self {
         case .pantry, .refrigerated, .frozen: helpText("General storage guidance")

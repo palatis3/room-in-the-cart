@@ -244,6 +244,64 @@ final class PantryModelTests: XCTestCase {
 }
 
 extension PantryModelTests {
+    func testReviewedFoodKeeperRangeReopensAndSourceChangesRetireOnlyDerivedDates() async throws {
+        let (directory, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pantry = model(db)
+        await pantry.load()
+        await pantry.prepareNewFood(name: "Pollo enlatado", location: .fridge, amount: "2", unit: .count)
+        await pantry.confirmReview(acknowledgingReservations: true)
+        let lot = try XCTUnwrap(pantry.snapshot?.lots.first)
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let folder = directory.appendingPathComponent("ranges")
+        let scheduler = DigestSchedulerSpy()
+        scheduler.granted = true
+        let digest = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+        let today = try MealDay(date: now, timeZoneIdentifier: "America/New_York")
+        let yesterday = try MealDay(date: now.addingTimeInterval(-86_400), timeZoneIdentifier: today.timeZoneIdentifier)
+        let reference = try FoodKeeperReference.bundled()
+        func reviewed(_ start: MealDay) throws -> FoodKeeperReviewedRange {
+            try XCTUnwrap(reference.reviewedRange(productID: 142, condition: .refrigeratedOpened, storage: .refrigerator,
+                                                  event: .opened, start: start, asOf: today, historyConfirmed: true))
+        }
+        let original = try reviewed(yesterday)
+        try await digest.saveRange(original, scope: scope, lot: lot, authorized: { true })
+        try await digest.setAlerts(scope, enabled: true, minute: 600, authorized: { true })
+        XCTAssertEqual(scheduler.deliveries.count, 1)
+        let reopened = PantryDigestStore(folder: folder, scheduler: scheduler, now: { self.now })
+        XCTAssertEqual(try reopened.document(scope).selections.first?.range, original)
+        XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.earliest)
+        let corrected = try reviewed(today)
+        try await reopened.saveRange(corrected, scope: scope, lot: lot, authorized: { true })
+        XCTAssertEqual(try reopened.document(scope).rules.first?.day, corrected.earliest)
+        await pantry.prepare(lotID: lot.id, action: .opened)
+        await pantry.confirmReview(acknowledgingReservations: true)
+        let openedLot = try XCTUnwrap(pantry.snapshot?.lots.first)
+        try await reopened.reconcile(scope, lots: [openedLot])
+        XCTAssertTrue(scheduler.deliveries.isEmpty)
+        XCTAssertTrue(try reopened.document(scope).rules.isEmpty)
+        XCTAssertFalse(try XCTUnwrap(reopened.document(scope).selections.first).applies(to: openedLot))
+        try await reopened.saveDay(scope, lot: openedLot, day: original.latest, authorized: { true })
+        try await reopened.saveRange(corrected, scope: scope, lot: openedLot, authorized: { true })
+        XCTAssertNil(try reopened.document(scope).rules.first?.source)
+        await pantry.prepare(lotID: lot.id, action: .move(.freezer))
+        await pantry.confirmReview(acknowledgingReservations: true)
+        let frozen = try XCTUnwrap(pantry.snapshot?.lots.first)
+        try await reopened.reconcile(scope, lots: [frozen])
+        XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.latest)
+        XCTAssertFalse(try XCTUnwrap(reopened.document(scope).selections.first).applies(to: frozen))
+        do {
+            try await reopened.saveRange(corrected, scope: scope, lot: frozen, authorized: { true })
+            XCTFail("A refrigerated range cannot be saved for a frozen lot")
+        } catch PantryDigestFailure.changed {}
+        try await reopened.saveRange(nil, scope: scope, lot: frozen, authorized: { true })
+        XCTAssertTrue(try reopened.document(scope).selections.isEmpty)
+        XCTAssertEqual(try reopened.document(scope).rules.first?.day, original.latest)
+        try await reopened.erase(origin: db.workspaceID, whole: true, inventory: db)
+        XCTAssertTrue(try reopened.document(scope).rules.isEmpty)
+        try await db.close()
+    }
+
     func testDigestDenialKeepsManualDatesAndConfirmedDailyGroupSurvivesReopen() async throws {
         let (dir, db) = try await database()
         defer { try? FileManager.default.removeItem(at: dir) }

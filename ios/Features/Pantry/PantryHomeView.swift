@@ -252,6 +252,7 @@ private struct PantryLotView: View {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
+                PantryLotFoodKeeperSection(model: model, lot: lot, accessAllowed: accessAllowed)
                 if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
                     NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
                         .accessibilityIdentifier("pantry.digest.checkDate")
@@ -263,11 +264,11 @@ private struct PantryLotView: View {
                     action("Some left", .someLeft)
                     Button(pantryText("Recount food"), action: recount).frame(minHeight: 44)
                         .accessibilityIdentifier("pantry.recount")
-                    action("Opened now", .opened)
+                    action("Opened now", .opened).accessibilityIdentifier("pantry.opened")
                     ForEach(InventoryLocation.allCases.filter { $0 != lot.location }, id: \.self) { location in
                         Button(pantryFormat("Move to %@", pantryLocationName(location))) {
                             Task { await model.prepare(lotID: lotID, action: .move(location)) }
-                        }.frame(minHeight: 44)
+                        }.frame(minHeight: 44).accessibilityIdentifier("pantry.move." + location.rawValue)
                     }
                     action("Used up", .usedUp)
                 } footer: {

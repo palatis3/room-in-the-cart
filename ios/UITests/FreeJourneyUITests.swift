@@ -143,6 +143,66 @@ import XCTest
     }
     #endif
 
+    func testEnglishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
+        verifyLotFoodKeeper(spanish: false)
+    }
+
+    func testSpanishPantryLotKeepsReviewedFoodKeeperRangeUntilStorageChanges() {
+        verifyLotFoodKeeper(spanish: true)
+    }
+
+    private func verifyLotFoodKeeper(spanish: Bool) {
+        let name = spanish ? "Pollo enlatado" : "Canned chicken"
+        launch(reset: true, spanish: spanish)
+        tap(app.buttons["shop.myPantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.textFields["pantry.foodName"])
+        app.textFields["pantry.foodName"].typeText(name)
+        tap(app.textFields["pantry.amount"])
+        app.textFields["pantry.amount"].typeText("2")
+        for done in ["Done", "Listo"] where app.keyboards.buttons[done].exists { app.keyboards.buttons[done].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", name)).firstMatch
+        tap(row)
+        tap(app.buttons["pantry.move.fridge"])
+        tap(app.buttons["pantry.confirm"])
+        tap(app.buttons["pantry.opened"])
+        tap(app.buttons["pantry.confirm"])
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.product.142"])
+        let unknown = spanish ? "No hay recomendaciones correspondientes a esta condición de almacenamiento." : "No matching guidance for this storage condition."
+        XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
+        tap(app.buttons["foodKeeper.review.refrigerate_after_opening"])
+        XCTAssertFalse(app.buttons["foodKeeper.saveRange"].exists)
+        let confirm = app.switches["foodKeeper.confirmStorage"]
+        reveal(confirm)
+        confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        tap(app.buttons["foodKeeper.saveRange"])
+        let status = app.staticTexts["foodKeeper.savedStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 8))
+        XCTAssertEqual(status.label, spanish ? "Se guardó el intervalo de calidad." : "Quality range saved.")
+        app.terminate()
+        launch(reset: false, spanish: spanish)
+        tap(app.buttons["shop.myPantry"])
+        tap(row)
+        let source = element("pantry.foodKeeper.source")
+        XCTAssertTrue(source.waitForExistence(timeout: 8))
+        XCTAssertTrue(source.label.contains("v128 · #142"))
+        XCTAssertTrue(element("pantry.foodKeeper.range").exists)
+        capture(spanish ? "Intervalo de calidad guardado en el lote" : "Saved USDA range on the ordinary lot after relaunch")
+        tap(app.buttons["pantry.move.freezer"])
+        tap(app.buttons["pantry.confirm"])
+        XCTAssertTrue(element("pantry.foodKeeper.needsReview").waitForExistence(timeout: 8))
+        XCTAssertFalse(element("pantry.foodKeeper.range").exists)
+        tap(app.buttons["pantry.foodKeeper"])
+        tap(app.buttons["foodKeeper.product.142"])
+        XCTAssertTrue(app.staticTexts[unknown].firstMatch.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "foodKeeper.review.")).firstMatch.exists)
+        app.terminate()
+    }
+
     func testOfflineFoodKeeperSearchAndReviewedQualityRangeInEnglishAndSpanish() {
         for spanish in [false, true] {
             launch(reset: true, spanish: spanish)
