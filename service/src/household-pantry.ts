@@ -85,7 +85,7 @@ export async function recordHouseholdPantryCommand(ctx:Context,input:unknown) {
   if(Date.parse(command.body.confirmedAt)>ctx.now.getTime()) throw invalid();
   if(correction) {
     // The household row lock covers legacy shop observations and reservations as well.
-    const lot=(await ctx.db.query(`SELECT delivery_source_id,(SELECT operation_id FROM ritc.pantry_event e
+    const lot=(await ctx.db.query(`SELECT delivery_source_id,(SELECT event_id FROM ritc.pantry_event e
       WHERE (e.household_id,e.lot_id)=(l.household_id,l.lot_id) AND kind='observe'
       ORDER BY pantry_revision DESC LIMIT 1) AS observation_id
       FROM ritc.pantry_lot l WHERE household_id=$1 AND lot_id=$2`,[ctx.householdId,lotId])).rows[0];

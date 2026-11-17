@@ -1,3 +1,4 @@
+import {cookReview} from './shared-cook-completion.js';
 import { changeHouseholdStaples, householdStaples } from './household-staples.js';
 import { recordHouseholdPantryCommand, changePantryGrant, householdPantry, pantryGrants } from './household-pantry.js';
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
@@ -411,7 +412,11 @@ export function createHTTPServer(options:HTTPOptions) {
             if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
             if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
             const cursor=url.searchParams.get('cursor');
-            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor),url.searchParams.get('refrigerated')==='1');
+          }
+          if(tail==='/cook-completion' && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookReview(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')).toLowerCase());
           }
           if(tail==='/cook-copies' && method==='GET') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

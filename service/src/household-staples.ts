@@ -73,7 +73,7 @@ export async function householdStaples(ctx:Context,zone:string) {
     WHERE household_id=$1 AND member_id=$2 ORDER BY name,group_id`,scope(ctx))).rows;
   const purchases=(await ctx.db.query<Purchase>(`SELECT group_id,lot_id,shop_id,arrival_id,usable_id,purchase_day::text FROM ritc.staple_purchase
     WHERE household_id=$1 AND member_id=$2 ORDER BY purchase_day,lot_id`,scope(ctx))).rows;
-  const facts=new Map((await storedDeliveryEvidence(ctx,purchases.map(p=>p.lot_id))).map(x=>[x.sourceId,x]));
+  const facts=new Map((await storedDeliveryEvidence(ctx,purchases.map(p=>p.lot_id),null,true)).map(x=>[x.sourceId,x]));
   // Names are used only to suppress a question. They never create a purchase link.
   // Nothing about the originating request, shop, member or financial records leaves this endpoint.
   const open=(await ctx.db.query<{name:string}>(`SELECT DISTINCT name FROM (
@@ -139,7 +139,7 @@ export async function changeHouseholdStaples(ctx:Context,input:unknown) {
       if((a.groupId===null)!==(a.name!==null) || a.purchaseDay>localDay(ctx.now,c.zone))throw invalid();
       const lot=(await ctx.db.query('SELECT origin_shop_id FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=$2 AND delivery_source_id=lot_id',[ctx.householdId,a.lotId])).rows[0];
       if(!lot)throw unavailable();
-      const [d]=await storedDeliveryEvidence(ctx,[a.lotId],lot.origin_shop_id);
+      const [d]=await storedDeliveryEvidence(ctx,[a.lotId],lot.origin_shop_id,true);
       if(!d?.confirmed || !d.usable || !d.arrival?.arrivedAt || a.observationId!==d.usable.observationId ||
          d.confirmed.quantity.amount.numerator<=0 || a.purchaseDay>localDay(new Date(d.arrival.arrivedAt),c.zone))throw refresh();
       const existing=(await ctx.db.query<Purchase>('SELECT group_id,shop_id,lot_id,purchase_day::text FROM ritc.staple_purchase WHERE household_id=$1 AND member_id=$2',owner)).rows;

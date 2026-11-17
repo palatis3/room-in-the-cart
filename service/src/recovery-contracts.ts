@@ -85,7 +85,7 @@ const scoped = {householdId:id,shopId:id};
 export const sourceSchema = z.object({...scoped,shopId:id.nullable(),id,foodId:id,identityRevision:revision.min(1),
   origin:z.discriminatedUnion('kind',[
     z.object({kind:z.literal('delivery'),sealedOrderRevision:revision,orderLineId:id,segmentKey:id}).strict(),
-    z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer'])}).strict(),
+    z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer','fridge'])}).strict(),
     z.object({kind:z.literal('reviewedImport'),originBindingId:id,reviewId:id,disclosureDigest:hash}).strict(),
   ]),
 }).strict().refine(s=>s.shopId!==null || s.origin.kind==='sharedStock');
@@ -99,7 +99,7 @@ export const reservationSchema = z.object({id,sourceId:id,needId:id,quantity:mea
 // retailer arrival, order line, receipt, or member identity into the projection.
 const pantryObservationHistoryRow = z.object({
   householdId:id, id, sourceId:id, identityRevision:revision.min(1), revision:revision.min(1),
-  predecessorId:id.nullable(), confirmedAt:time, recordedAt:time, quantity:usableQuantitySchema.nullable(),
+  predecessorId:id.nullable(), confirmedAt:time, recordedAt:time, quantity:usableQuantitySchema.nullable(), deliveryUsableId:id.optional(),
 }).strict();
 // Already committed elsewhere, in an exact physical unit. A null hold means
 // the loader could not quantify that source's foreign commitments.

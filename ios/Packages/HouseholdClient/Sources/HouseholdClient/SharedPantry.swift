@@ -96,7 +96,7 @@ public struct SharedPantryPage: Decodable, Equatable, Sendable {
         var observationIDs = Set<UUID>()
         for lot in lots {
             let matches = Set(lot.matches)
-            guard ["manual", "delivery"].contains(lot.origin), ["pantry", "freezer"].contains(lot.location),
+            guard ["manual", "delivery"].contains(lot.origin), ["pantry", "freezer", "fridge"].contains(lot.location),
                   lot.storedAt.map({ householdTimestamp($0).map({ $0 <= readAt }) == true }) ?? true, lot.useFirstAt.map(validHelperTimestamp) ?? true,
                   sharedMealText(lot.foodName, 240), lot.exclusionTags.count <= 20, lot.exclusionTags.allSatisfy({ sharedMealText($0, 240) }),
                   targets.isSuperset(of: matches), matches.count == lot.matches.count, lot.selected || matches.isEmpty else { throw ClientError.invalidResponse }
@@ -107,7 +107,7 @@ public struct SharedPantryPage: Decodable, Equatable, Sendable {
             }
             if let source = sources[lot.id] {
                 guard lot.origin == "delivery", lot.foodName == source.foodName, lot.exclusionTags == source.exclusionTags,
-                      lot.observation?.observationId == source.usable?.observationId, lot.observation?.confirmedAt == source.usable?.confirmedAt,
+                      lot.observation?.observationId == (source.balance?.observationId ?? source.usable?.observationId), lot.observation?.confirmedAt == (source.balance?.confirmedAt ?? source.usable?.confirmedAt),
                       lot.observation?.quantity == source.confirmed?.quantity,
                       matches.isDisjoint(with: source.matches ?? []) else { throw ClientError.invalidResponse }
             }
