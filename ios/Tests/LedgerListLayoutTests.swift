@@ -75,6 +75,30 @@ import CoreDomain
         XCTAssertEqual(reopened.workspace.shops.first, original)
     }
 
+    func testNewStoreNameCorrectionsPreserveReorderedAisles() throws {
+        let shop = try populated("Market A")
+        var layout = LedgerListLayout()
+        _ = try layout.matchStore(in: shop, to: nil)
+        try layout.setStoreOrder(["Dairy", "Produce"], in: shop)
+        var draft = LedgerDepartmentOrderDraft(layout: layout, shop: shop)
+        draft.select(.new, scope: .storeDefault, in: layout, shop: shop)
+        XCTAssertFalse(draft.isNameValid(in: layout), "The initial branch name already belongs to another store.")
+        XCTAssertEqual(draft.aisles, ["Produce", "Dairy"])
+        draft.name = "Another market"
+        XCTAssertTrue(draft.isNameValid(in: layout))
+        draft.aisles.swapAt(0, 1)
+        draft.name = "Market A"
+        XCTAssertFalse(draft.isNameValid(in: layout))
+        XCTAssertEqual(draft.aisles, ["Dairy", "Produce"])
+        draft.name = "Market A Annex"
+        XCTAssertTrue(draft.isNameValid(in: layout))
+        XCTAssertEqual(draft.aisles, ["Dairy", "Produce"])
+        try draft.matchChosenStore(in: &layout, shop: shop)
+        try layout.setStoreOrder(draft.aisles, in: shop)
+        XCTAssertEqual(layout.aisleNames(in: shop), ["Dairy", "Produce"])
+        XCTAssertEqual(layout.departmentDirectory?.stores.values.first { $0.name == "Market A Annex" }?.order, draft.aisles)
+    }
+
     func testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch() throws {
         var a = try populated("Market A")
         let b = try populated("Market A"), other = try populated("Market B")
