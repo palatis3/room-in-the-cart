@@ -50,6 +50,8 @@ import DeviceSurfaces
         case capture, current(RouteHandle), shopping(ShoppingIntentRequest)
     }
     private var pendingShortcut: Shortcut?
+    private var resumeShoppingBinding: ShoppingIntentBinding?
+    private var shoppingExpiry: Task<Void, Never>?
     private var pendingHandle: RouteHandle?
     private var pendingReminderTap: RouteHandle?
     private let directory: URL
@@ -109,7 +111,8 @@ import DeviceSurfaces
             publisher.receive(on: RunLoop.main).sink { [weak self] in Task { @MainActor in await self?.sourceDidChange() } }.store(in: &subscriptions)
         }
         captureRequests.now = clock
-        captureRequests.binding = { [weak self] in self?.shoppingIntentBinding }
+        captureRequests.binding = { [weak self] in self?.shoppingIntentBinding ?? self?.resumeShoppingBinding }
+        captureRequests.waitingOwner = { [weak self] in self?.ownerAwaitingUnlock }
         captureRequests.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in
             guard let self, let request = self.captureRequests.takeRequest() else { return }
             switch request {
@@ -154,6 +157,8 @@ import DeviceSurfaces
     }
     func foreground() async { active = true; await sourceDidChange() }
     func background() {
+        resumeShoppingBinding = shoppingIntentBinding
+        shoppingExpiry?.cancel()
         active = false; nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
         if ledger != nil { captureRequests.takeRequest() }
@@ -170,6 +175,7 @@ import DeviceSurfaces
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
     func scopeChanged() {
+        resumeShoppingBinding = nil; shoppingExpiry?.cancel()
         nonce = UUID(); entries = []; draft = nil; destinationChange = nil; destination = nil; pendingShortcut = nil; pendingHandle = nil
         ownRequestPersona = nil
         if ledger != nil { captureRequests.takeRequest() }
@@ -213,7 +219,7 @@ import DeviceSurfaces
             pendingReminderCancellation = false
         }
         guard privateAuthorized else {
-            if !hasAdultAuthority { pendingShortcut = nil }
+            if !hasAdultAuthority && !waitingForShoppingUnlock { pendingShortcut = nil }
             entries = []; draft = nil
             if !preservesOwnRequest { destination = nil; ownRequestPersona = nil }
             try? projection?.clear(now: clock()); return
@@ -391,6 +397,21 @@ import DeviceSurfaces
     }
     private func receive(_ shortcut: Shortcut) {
         // URL and App Intent delivery may precede persona binding or scene activation.
+        if case .shopping(let request) = shortcut {
+            guard clock() >= request.issuedAt, clock() < request.expiresAt else {
+                pendingShortcut = nil; destination = .unavailable(UUID()); return
+            }
+            shoppingExpiry?.cancel()
+            let seconds = request.expiresAt.timeIntervalSince(clock())
+            shoppingExpiry = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(seconds))
+                guard !Task.isCancelled, let self, case .shopping = self.pendingShortcut else { return }
+                self.pendingShortcut = nil
+            }
+            if ownerAwaitingUnlock != nil && (request.owner == nil || request.owner == ownerAwaitingUnlock) {
+                pendingShortcut = shortcut; return
+            }
+        }
         if ledger == nil || (hasAdultAuthority && (!active || authorityKey == nil || ledger?.ready != true || pickup?.ready != true)) {
             pendingShortcut = shortcut
             return
@@ -400,7 +421,9 @@ import DeviceSurfaces
             openCapture()
         case .shopping(let request):
             guard let binding = shoppingIntentBinding, scope != nil, active, !hasPendingSave,
-                  let workspace = binding.workspace, clock() >= request.issuedAt, clock() < request.expiresAt,
+                  let workspace = binding.workspace,
+                  request.owner.map({ $0 == ShoppingIntentOwner(actor: binding.identity.actorID, subject: binding.identity.subject) }) ?? true,
+                  clock() >= request.issuedAt, clock() < request.expiresAt,
                   request.binding.map({ origin in
                       origin.identity == binding.identity && (origin.workspace == nil ||
                         (origin.workspace == workspace && origin.shop == binding.shop))
@@ -416,6 +439,18 @@ import DeviceSurfaces
             }
         }
     }
+    private var ownerAwaitingUnlock: ShoppingIntentOwner? {
+        guard UIApplication.shared.isProtectedDataAvailable, let access, let household,
+              household.projection?.grantId == nil,
+              household.projection.map({ ["organizer", "shopper"].contains($0.role) }) ?? true,
+              !access.unlocked || household.locked else { return nil }
+        return ShoppingIntentOwner(actor: access.localActorID, subject: household.identity?.subject)
+    }
+    private var waitingForShoppingUnlock: Bool {
+        guard case .shopping(let request) = pendingShortcut, clock() < request.expiresAt,
+              let owner = ownerAwaitingUnlock else { return false }
+        return request.owner == nil || request.owner == owner
+    }
     private var shoppingIntentBinding: ShoppingIntentBinding? {
         guard UIApplication.shared.isProtectedDataAvailable, let access, let household,
               household.projection?.grantId == nil,
@@ -423,8 +458,13 @@ import DeviceSurfaces
         return ShoppingIntentBinding(identity: identity, workspace: ledger?.sourceWorkspaceID, shop: ledger?.shop?.id)
     }
     func allows(_ review: ShoppingIntentReview) -> Bool {
-        privateAuthorized && scope != nil && nonce == review.generation && shoppingIntentBinding == review.binding &&
-            clock() >= review.request.issuedAt && clock() < review.request.expiresAt
+        guard privateAuthorized, scope != nil, nonce == review.generation, let current = shoppingIntentBinding,
+              current.identity == review.binding.identity, current.workspace == review.binding.workspace,
+              clock() >= review.request.issuedAt, clock() < review.request.expiresAt else { return false }
+        switch review.request.action {
+        case .openList: return true
+        case .addItem: return current.shop == review.binding.shop
+        }
     }
 
     private func openCapture() {

@@ -9,7 +9,13 @@ struct ShoppingIntentRequest {
     let action: Action
     let issuedAt: Date
     let binding: ShoppingIntentBinding?
+    let owner: ShoppingIntentOwner?
     var expiresAt: Date { issuedAt.addingTimeInterval(10 * 60) }
+}
+
+struct ShoppingIntentOwner: Equatable {
+    let actor: UUID
+    let subject: String?
 }
 
 struct ShoppingIntentBinding: Equatable {
@@ -24,17 +30,19 @@ struct ShoppingIntentBinding: Equatable {
     @Published public private(set) var pending = false
     private var request: Request?
     var binding: (() -> ShoppingIntentBinding?)?
+    var waitingOwner: (() -> ShoppingIntentOwner?)?
     var now: () -> Date = Date.init
 
     public func requestCapture() { request = .capture; pending = true }
     func requestShopping(_ action: ShoppingIntentRequest.Action) {
         let origin = binding?()
-        if binding != nil && origin == nil {
+        let owner = waitingOwner?()
+        if !UIApplication.shared.isProtectedDataAvailable || (binding != nil && origin == nil && owner == nil) {
             request = .unavailable
         } else if case .addItem(let text) = action, text.utf8.count > StagedListImport.maximumTextBytes {
             request = .unavailable
         } else {
-            request = .shopping(.init(action: action, issuedAt: now(), binding: origin))
+            request = .shopping(.init(action: action, issuedAt: now(), binding: origin, owner: owner))
         }
         pending = true
     }

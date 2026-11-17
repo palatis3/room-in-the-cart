@@ -182,6 +182,20 @@ import CoreDomain
         XCTAssertNil(f.composition.destination)
     }
 
+    func testSleepingShoppingIntentRequiresTheOriginalPickupOnForeground() async throws {
+        let requests = SurfaceCaptureRequests()
+        let f = try await coldURLFixture(captureRequests: requests)
+        f.composition.background()
+        requests.requestShopping(.addItem("Private wording"))
+        for _ in 0..<100 where requests.pending { try await Task.sleep(for: .milliseconds(10)) }
+        XCTAssertNil(f.composition.destination)
+        let saved = await f.ledger.startShop(title: "Other pickup")
+        XCTAssertTrue(saved)
+        await f.composition.foreground()
+        await waitForSurfaceDestination(f.composition)
+        guard case .unavailable = f.composition.destination else { return XCTFail("A shortcut must not carry food text to a different pickup") }
+        XCTAssertTrue(f.ledger.shop?.lines.isEmpty == true)
+    }
     func testShoppingIntentRejectsExpiredWording() async throws {
         let requests = SurfaceCaptureRequests()
         let f = try await coldURLFixture(captureRequests: requests)
