@@ -29,10 +29,15 @@ extension HouseholdClientTests {
         while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; bytes.append(buffer, count: count) }
         return bytes
     }
+    private func installManagementHandler(_ handler: @escaping MockURLProtocol.Handler) -> NSLock {
+        let stateLock = NSLock()
+        MockURLProtocol.handler = { request in try stateLock.withLock { try handler(request) } }
+        return stateLock
+    }
     func testDeviceInventoryUsesEnrolledHeadersAndValidatesCurrentReferenceAndGuardianScope() async throws {
         let auth = try auth(), service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var wrongCurrent = false, guardianScope = false
-        MockURLProtocol.handler = { req in
+        let stateLock = installManagementHandler { req in
             if let value = try self.managementSetup(req) { return value }
             XCTAssertEqual(req.url!.path, "/v1/households/\(self.household)/devices")
             XCTAssertEqual(req.httpMethod, "GET"); XCTAssertEqual(req.value(forHTTPHeaderField: "X-Device-Token"), "private-device-credential")
@@ -43,15 +48,15 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household)
         let page = try await service.managedDevices(); XCTAssertEqual(page.devices.first?.id, managementDevice)
-        wrongCurrent = true
+        stateLock.withLock { wrongCurrent = true }
         do { _ = try await service.managedDevices(); XCTFail("Accepted incorrect current-device flag") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        wrongCurrent = false; guardianScope = true
+        stateLock.withLock { wrongCurrent = false; guardianScope = true }
         do { _ = try await service.managedDevices(); XCTFail("Guardian inventory included adult/current enrollment") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
     }
     func testDeviceRevocationRetainsExactTargetBytesAndRejectsReceiptSubstitution() async throws {
         let auth = try auth(), service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var bodies: [Data] = [], lost = true, wrongReceipt = false
-        MockURLProtocol.handler = { req in
+        let stateLock = installManagementHandler { req in
             if let value = try self.managementSetup(req) { return value }
             XCTAssertEqual(req.url!.path, "/v1/households/\(self.household)/devices/\(self.managementTarget)/revocation")
             bodies.append(self.managementBytes(req)); if lost { throw URLError(.networkConnectionLost) }
@@ -61,15 +66,15 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let intent = try await service.prepareDeviceRevocation(deviceRow())
         for _ in 0..<2 { do { _ = try await service.executeDeviceRevocation(intent); XCTFail() } catch { XCTAssertEqual(error as? ClientError, .transport) } }
-        XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
+        XCTAssertEqual(stateLock.withLock { bodies }, [intent.bytes, intent.bytes])
         let input = try XCTUnwrap(JSONSerialization.jsonObject(with: intent.bytes) as? [String: String]); XCTAssertEqual(input, ["memberId": member])
-        lost = false; wrongReceipt = true
+        stateLock.withLock { lost = false; wrongReceipt = true }
         do { _ = try await service.executeDeviceRevocation(intent); XCTFail("Accepted another device receipt") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        wrongReceipt = false; _ = try await service.executeDeviceRevocation(intent)
-        XCTAssertTrue(bodies.allSatisfy { $0 == intent.bytes })
+        stateLock.withLock { wrongReceipt = false }; _ = try await service.executeDeviceRevocation(intent)
+        XCTAssertTrue(stateLock.withLock { bodies.allSatisfy { $0 == intent.bytes } })
         await service.clearScope()
         do { _ = try await service.executeDeviceRevocation(intent); XCTFail("Rebound action after access ended") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(bodies.count, 4)
+        XCTAssertEqual(stateLock.withLock { bodies.count }, 4)
     }
     func testDeviceRevocationRejectsCurrentDeviceRevokedTargetAndTamperedStoredIntent() throws {
         let binding = GuardianActorBinding(subject: "account", householdID: household, memberID: member, deviceID: managementDevice)
@@ -83,16 +88,16 @@ extension HouseholdClientTests {
     func testScopedHelperCannotUseDeviceManagementAndRevokedSessionClearsEnrollment() async throws {
         let auth = try auth(), vault = MemoryVault(), service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: vault, transport: transport())
         let grant = "10000000-0000-4000-8000-000000000003"; var managementCalls = 0, helper = true
-        MockURLProtocol.handler = { req in
+        let stateLock = installManagementHandler { req in
             if let value = try self.managementSetup(req, role: helper ? "editor" : "organizer", grantID: helper ? grant : nil) { return value }
             managementCalls += 1; return (403, Data(#"{"error":{"code":"access_ended"}}"#.utf8))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household, grantID: grant)
         do { _ = try await service.managedDevices(); XCTFail() } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(managementCalls, 0)
-        await service.clearScope(); helper = false; _ = try await service.enroll(householdID: household)
+        XCTAssertEqual(stateLock.withLock { managementCalls }, 0)
+        await service.clearScope(); stateLock.withLock { helper = false }; _ = try await service.enroll(householdID: household)
         do { _ = try await service.managedDevices(); XCTFail() } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
-        XCTAssertEqual(managementCalls, 1); XCTAssertNil(try vault.read())
+        XCTAssertEqual(stateLock.withLock { managementCalls }, 1); XCTAssertNil(try vault.read())
     }
     func testDeviceIntentStorePreservesExactRetryAndScopedPurgeInvalidatesStaleEpoch() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("device-revocation.json")
