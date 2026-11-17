@@ -60,6 +60,32 @@ import RecordArchive
         try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: food)
         XCTAssertTrue(model.homeScreenChoices.isEmpty)
     }
+    func testTwentyMinuteHomeSummaryRequiresReviewedDurationInsideTheStrictLimit() async throws {
+        let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(2))
+        var kitchen = MealPreferenceSettings()
+        kitchen.availableAppliances = []
+        kitchen.timeLimit = .init(maximumMinutes: 20, strict: true)
+        var equipment = MealEligibilityEvidence(); equipment.requiredAppliances = []
+        let model = TonightMealModel()
+        for duration: Int? in [nil, 25, 20] {
+            var recipe = MealTemplate(title: "Dinner wraps", ingredients: [ingredient])
+            recipe.eligibilityEvidence = equipment; recipe.leadTimeMinutes = duration
+            let source = input(recipe: recipe, food: food, profile: .init(settings: kitchen))
+            await model.refresh(authorize: { true }, load: { source })
+            try model.match(recipeID: recipe.id, ingredientID: ingredient.id, foodID: food)
+            let review = try XCTUnwrap(model.reviews.first)
+            switch duration {
+            case nil:
+                XCTAssertTrue(review.eligibility.unresolved.contains(.durationUnknown))
+                XCTAssertTrue(model.homeScreenChoices.isEmpty)
+            case 25:
+                XCTAssertTrue(review.eligibility.blocked.contains(.durationAboveLimit))
+                XCTAssertTrue(model.homeScreenChoices.isEmpty)
+            default:
+                XCTAssertEqual(model.homeScreenChoices.map(\.recipe.title), ["Dinner wraps"])
+            }
+        }
+    }
     func testNoShopBrowseRequiresExplicitMatchAndAllowsKnownShortfallWithoutClaimingFullCoverage() async throws {
         let food = UUID(), ingredient = MealIngredient(name: "Wraps", quantity: q(4))
         let recipe = MealTemplate(title: "Dinner", ingredients: [ingredient]), model = TonightMealModel()
