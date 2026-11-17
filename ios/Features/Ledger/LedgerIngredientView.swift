@@ -36,7 +36,8 @@ struct LedgerIngredientView: View {
                     Text(ledgerQuantity(try? shop.quantity(forLineID: lineID))).font(.headline)
                         .accessibilityIdentifier("ledgerIngredientTotal")
                     if !line.notes.isEmpty { Text(line.notes) }
-                    if !line.aisle.isEmpty { Text(line.aisle) }
+                    let department = model.workspace.listLayout.department(for: line, in: shop)
+                    if !department.isEmpty { Text(department) }
                     NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }
                     if pickup.journeys.contains(where: { $0.id == shopID && ($0.basket?.current.lines.contains(where: { $0.id == lineID }) == true || $0.plannedNeeds.contains(where: { $0.orderLineID == lineID })) }) {
                         NavigationLink(pTr("Confirm pantry or freezer food")) {
@@ -138,7 +139,7 @@ struct LedgerIngredientView: View {
                 NavigationStack {
                     if let shop, let line {
                         switch destination {
-                        case .line: LedgerLineEditor(model: model, shopID: shopID, line: line)
+                        case .line: LedgerLineEditor(model: model, shop: shop, line: line)
                         case .contribution(let id):
                             if let value = shop.contributions.first(where: { $0.id == id }) {
                                 LedgerContributionEditor(model: model, shopID: shopID, contribution: value)
@@ -169,15 +170,21 @@ struct LedgerIngredientView: View {
 
 private struct LedgerLineEditor: View {
     @ObservedObject var model: LedgerModel
-    let shopID: UUID
+    let shop: ShoppingLedger
     let line: ShoppingLine
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var notes: String
     @State private var aisle: String
-    init(model: LedgerModel, shopID: UUID, line: ShoppingLine) {
-        self.model = model; self.shopID = shopID; self.line = line
-        _name = State(initialValue: line.name); _notes = State(initialValue: line.notes); _aisle = State(initialValue: line.aisle)
+    @State private var remember = false
+    @State private var baseRevision: Int64
+    @State private var originalDepartment: String
+    init(model: LedgerModel, shop: ShoppingLedger, line: ShoppingLine) {
+        self.model = model; self.shop = shop; self.line = line
+        let department = model.workspace.listLayout.department(for: line, in: shop)
+        _name = State(initialValue: line.name); _notes = State(initialValue: line.notes)
+        _aisle = State(initialValue: department); _originalDepartment = State(initialValue: department)
+        _baseRevision = State(initialValue: model.revision)
     }
     var body: some View {
         Form {
@@ -185,9 +192,33 @@ private struct LedgerLineEditor: View {
                 TextField(ledgerText("Item name"), text: $name, axis: .vertical)
                 TextField(ledgerText("Visible notes"), text: $notes, axis: .vertical)
                 TextField(ledgerText("Aisle or group"), text: $aisle, axis: .vertical)
+                if !shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Picker(ledgerText("Department assignment"), selection: $remember) {
+                        Text(ledgerText("This row")).tag(false)
+                        Text(ledgerText("Remember at this store")).tag(true)
+                    }
+                    if remember {
+                        Text(verbatim: shop.basis.branch).font(.footnote)
+                    }
+                }
             }.disabled(model.saving || model.hasPendingSave)
             Button(ledgerText("Save item")) {
-                Task { if await model.editShop(key: "line-\(line.id)", shopID: shopID, { try $0.updateLine(lineID: line.id, name: name, notes: notes, aisle: aisle) }) { dismiss() } }
+                Task {
+                    let saved = await model.change(key: "line-\(line.id)") { workspace in
+                        guard model.revision == baseRevision, workspace.selectedShopID == shop.id,
+                              let index = workspace.shops.firstIndex(where: { $0.id == shop.id }),
+                              let source = workspace.shops[index].lines.first(where: { $0.id == line.id }) else { throw LedgerError.stalePreview }
+                        if name != source.name || notes != source.notes {
+                            try workspace.shops[index].updateLine(lineID: line.id, name: name, notes: notes, aisle: source.aisle)
+                        }
+                        if remember || aisle != originalDepartment {
+                            let current = workspace.shops[index]
+                            guard let edited = current.lines.first(where: { $0.id == line.id }) else { throw LedgerError.stalePreview }
+                            try workspace.listLayout.setDepartment(aisle, for: edited, in: current, remember: remember)
+                        }
+                    }
+                    if saved { dismiss() }
+                }
             }.buttonStyle(PrimaryAction()).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving)
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Edit item"))
