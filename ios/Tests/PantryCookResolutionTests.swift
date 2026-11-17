@@ -112,6 +112,9 @@ import XCTest
         try await f.port.applyResolution(outside)
         let done = try await f.context()
         XCTAssertEqual(done.remainingEventIDs, [])
+        let home = try await f.port.load(shopID: f.shop.id, mealID: f.mealID)
+        XCTAssertEqual(home.remainingUnresolvedUseIDs, [])
+        XCTAssertEqual(home.completed?.unresolvedUseIDs, ids)
         XCTAssertEqual(done.record.resolutions?.map(\.eventID), ids)
         XCTAssertEqual(done.record.draft.unresolvedUseIDs, ids)
         do { _ = try await f.port.reviewUndo(shopID: f.shop.id, mealID: f.mealID); XCTFail("Later amendments protect history") }
