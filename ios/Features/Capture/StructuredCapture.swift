@@ -126,13 +126,10 @@ enum StructuredCaptureParser {
         var unit = UnitOfMeasure.count, packUnit = UnitOfMeasure.count
         var warnings: [CaptureInterpretationWarning] = []
         let originalTokens = tokens
-        if naturalList, let first = tokens.first {
-            tokens[tokens.startIndex] = ListQuantityParser.naturalAmountToken(first)
-        }
         let ranged = ListQuantityParser.takeRange(from: &tokens)
-        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)
+        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true, allowingDecimalComma: naturalList)
         if ranged || number.map({ $0 > .zero }) == true {
-            if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
+            if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original, allowingDecimalComma: naturalList) {
                 if let count = label.count { packCount = String(count) }
                 if let contents = label.amountPerPack, contents.amount > .zero {
                     perPack = contents.amount.description

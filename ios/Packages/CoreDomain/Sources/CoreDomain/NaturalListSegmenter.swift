@@ -177,7 +177,7 @@ public enum NaturalListSegmenter {
                 var fields = ListQuantityParser.itemTokens(String(transcript[start.range.lowerBound..<token.range.lowerBound]))
                 let range = ListQuantityParser.takeRange(from: &fields)
                 if !range {
-                    guard (try? ListQuantityParser.takeAmount(from: &fields, allowingWords: true)) != nil,
+                    guard (try? ListQuantityParser.takeAmount(from: &fields, allowingWords: true, allowingDecimalComma: true)) != nil,
                           ListQuantityParser.takeUnit(from: &fields) != nil else { return nil }
                 }
                 return fields.isEmpty ? tokenIndex : nil

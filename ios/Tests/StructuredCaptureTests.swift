@@ -51,6 +51,11 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(list.lines.last?.amount, "5/2")
         XCTAssertEqual(list.lines.last?.unit, .liter)
         XCTAssertEqual(list.lines.last?.originalText, "2,5 litros de leche")
+        let packs = try StructuredCaptureParser.naturalList("2 latas de leche, 0,5 litros cada una; pan", destination: destination)
+        XCTAssertEqual(packs.lines.map(\.name), ["leche", "pan"])
+        XCTAssertEqual(packs.lines[0].packCount, "2")
+        XCTAssertEqual(packs.lines[0].amountPerPack, "1/2")
+        XCTAssertEqual(packs.lines[0].packUnit, .liter)
     }
 
     func testNaturalCaptureDistinguishesUnspecifiedAmountsFromUnclearSpokenNumbers() throws {
