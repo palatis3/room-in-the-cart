@@ -14,7 +14,7 @@ struct CookCompletionEntry: View {
     @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model = CookCompletionEditorModel()
-    @State private var presentationActive = false
+    @StateObject private var lifetime = CookReviewLifetime()
     private struct Scope: Equatable {
         let identity: CapturePrivateIdentity
         let inventory: UUID
@@ -64,12 +64,12 @@ struct CookCompletionEntry: View {
                 Button(cookCompletionText(model.hasAttemptedMutation ? "Close" : "Cancel")) { dismiss() }.disabled(model.busy)
             }
         }
-        .onDisappear { presentationActive = false; model.invalidate() }
+        .onDisappear { lifetime.end(); model.invalidate() }
         .task(id: scope) {
-            presentationActive = true
+            let token = lifetime.begin()
             model.invalidate()
             guard let original = scope else { return }
-            let authorized = { presentationActive && scope == original && !Task.isCancelled }
+            let authorized = { lifetime.permits(token) && scope == original }
             let session = PantryCookSession(ledger: ledger, pickup: pickup, authorize: authorized)
             await model.open(session: session, shopID: shopID, mealID: mealID, authorize: authorized)
         }

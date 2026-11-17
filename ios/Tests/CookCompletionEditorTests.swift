@@ -402,4 +402,18 @@ import LocalStore
         XCTAssertEqual(after.inventory.lots.first { $0.id == lot.id }?.location, .fridge)
         XCTAssertEqual(after.inventory.lots.first { $0.id == lot.id }?.count.quantity?.amount, try Rational(3))
     }
+
+    func testReviewLifetimeIgnoresAmbientCancellationButRejectsClosedAndReopenedRoutes() async {
+        let lifetime = CookReviewLifetime(), token = lifetime.begin()
+        let callback = Task { @MainActor in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return lifetime.permits(token)
+        }
+        let allowed = await callback.value
+        XCTAssertTrue(allowed, "A cancelled rendering task does not revoke the visible adult review")
+        lifetime.end(); XCTAssertFalse(lifetime.permits(token))
+        let reopened = lifetime.begin()
+        XCTAssertFalse(lifetime.permits(token), "Old suspended actions cannot regain authority on reopen")
+        XCTAssertTrue(lifetime.permits(reopened))
+    }
 }

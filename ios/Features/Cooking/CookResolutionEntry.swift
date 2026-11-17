@@ -9,7 +9,7 @@ struct CookResolutionEntry: View {
     let ingredientNames: [UUID: String]
     let authorize: @MainActor () -> Bool
     @Environment(\.dismiss) private var dismiss
-    @State private var visible = false
+    @StateObject private var lifetime = CookReviewLifetime()
     @StateObject private var model = CookResolutionEditorModel()
     var body: some View {
         Group {
@@ -34,12 +34,12 @@ struct CookResolutionEntry: View {
             }
         }
         .task {
-            visible = true
-            let current = { visible && authorize() && !Task.isCancelled }
+            let token = lifetime.begin()
+            let current = { lifetime.permits(token) && authorize() }
             let session = PantryCookSession(ledger: ledger, pickup: pickup, authorize: current)
             await model.open(session: session, shopID: shopID, mealID: mealID, authorize: current)
         }
-        .onDisappear { visible = false; model.invalidate() }
+        .onDisappear { lifetime.end(); model.invalidate() }
     }
     private func eventName(_ id: UUID, in context: PantryCookResolution.Context) -> String {
         guard let part = context.record.draft.parts.first(where: { $0.id == id }) else { return cookCompletionText("Ingredient") }
