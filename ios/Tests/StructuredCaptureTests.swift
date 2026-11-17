@@ -29,6 +29,10 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertThrowsError(try StructuredCaptureParser.naturalList("milk for this week, bread for next week", destination: destination)) {
             XCTAssertEqual($0 as? StructuredCaptureFailure, .timingReviewRequired)
         }
+        let titled = try StructuredCaptureParser.naturalList("tea, “cake for next week”", destination: destination)
+        XCTAssertNil(titled.timing)
+        XCTAssertEqual(titled.lines.last?.name, "“cake for next week”")
+        XCTAssertEqual(titled.lines.last?.purpose, "")
         XCTAssertEqual(try StructuredCaptureParser.lines(text, destination: destination).count, 1)
     }
 

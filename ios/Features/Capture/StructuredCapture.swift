@@ -68,6 +68,12 @@ enum CaptureNumber {
 }
 
 enum StructuredCaptureParser {
+    // Quoted product wording may contain labels such as “for” or “sin”. Skip
+    // those spans before collecting the suffixes outside the product name.
+    private static let fieldLabels = try! NSRegularExpression(
+        pattern: #""[^"]*"|“[^”]*”|«[^»]*»|\([^()]*\)|\s+(for|para|to|destination:?|destino:?|without|except|sin|excepto)\s+"#,
+        options: .caseInsensitive)
+
     static let guestNouns: Set<String> = ["guest", "guests", "invitado", "invitada", "invitados", "invitadas", "comensal", "comensales"]
 
     static func isGuestProposal(_ text: String) -> Bool {
@@ -97,9 +103,9 @@ enum StructuredCaptureParser {
         var body = original.trimmingCharacters(in: .whitespacesAndNewlines)
         var purpose = "", requestedDestination = "", exclusions = ""
         // Split bounded suffix labels in their actual order, preserving every source word.
-        let expression = try! NSRegularExpression(pattern: #"\s+(for|para|to|destination:?|destino:?|without|except|sin|excepto)\s+"#, options: .caseInsensitive)
         let source = body
-        let labels = expression.matches(in: source, range: NSRange(source.startIndex..., in: source))
+        let labels = fieldLabels.matches(in: source, range: NSRange(source.startIndex..., in: source))
+            .filter { $0.range(at: 1).location != NSNotFound }
         let matches = suffixLabels(in: source, candidates: labels)
         if let first = matches.first, let range = Range(first.range, in: source) { body = String(source[..<range.lowerBound]) }
         for (index, match) in matches.enumerated() {
@@ -189,10 +195,4 @@ enum StructuredCaptureParser {
         return labels
     }
 
-    private static func suffix(_ text: String, pattern: String) -> (String, String)? {
-        guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-              let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range, in: text) else { return nil }
-        return (String(text[..<range.lowerBound]), String(text[range.upperBound...]))
-    }
 }
