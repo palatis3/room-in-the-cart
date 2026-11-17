@@ -592,7 +592,38 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(combined.pantry?.formatted, "7")
         XCTAssertEqual(combined.delivered?.formatted, "0")
         XCTAssertEqual(combined.covered?.formatted, "9")
-        try await exerciseRecovery(service, scope: scope, occurrence: occurrence, delivery: delivery, lot: lot)
+        let cookReview = try await service.sharedCookReview(shopID: delivery.shopId.uuidString.lowercased(), occurrence: occurrence.id)
+        let chosen = try XCTUnwrap(cookReview.needs.first(where: { $0.lots.contains(where: { $0.id == source }) }))
+        let chosenLot = try XCTUnwrap(chosen.lots.first(where: { $0.id == source }))
+        XCTAssertEqual(chosenLot.quantity?.amount.numerator, 7)
+        let output = UUID(), uses: [JSONValue] = cookReview.needs.map { need in
+            var fields: [String: JSONValue] = ["rowId": .string(UUID().uuidString), "needId": .string(need.id.uuidString)]
+            if need.id == chosen.id {
+                fields["kind"] = .string("known"); fields["lotId"] = .string(source.uuidString); fields["headId"] = .string(chosenLot.headId.uuidString)
+                fields["quantity"] = .object(["unit": .string("gram"), "amount": .object(["numerator": .integer(1), "denominator": .integer(1)]), "originalLiteral": .string("1")])
+            } else { fields["kind"] = .string("unknown"); fields["lotId"] = .null; fields["headId"] = .null }
+            return .object(fields)
+        }
+        var cooking = cookReview.base.fields()
+        cooking["uses"] = .array(uses); cooking["servings"] = .integer(3)
+        cooking["outputs"] = .array([.object(["lotId": .string(output.uuidString), "name": .string("Cooked beans"), "portions": .integer(2), "location": .string("fridge")])])
+        let cookCommand = try await operation("cook.complete", fields: cooking)
+        let cooked = try await service.executeSharedShop(cookCommand), replayed = try await service.executeSharedShop(cookCommand)
+        XCTAssertEqual(cooked, replayed)
+        let afterCook = try await service.sharedCookReview(shopID: delivery.shopId.uuidString.lowercased(), occurrence: occurrence.id)
+        XCTAssertEqual(afterCook.completion?.servings, 3)
+        let currentDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
+        let currentPantry = try await service.pantryLots(reviewed: currentDelivery)
+        XCTAssertEqual(currentDelivery.sources.first(where: { $0.id == source })?.confirmed?.quantity.amount.numerator, 6)
+        XCTAssertEqual(currentPantry.lots.first(where: { $0.id == output })?.observation?.quantity?.amount.numerator, 2)
+        var undo = afterCook.base.fields()
+        undo["cookId"] = .string(try XCTUnwrap(cooked.cookId).uuidString.lowercased())
+        let undoCommand = try await operation("cook.undo", fields: undo)
+        _ = try await service.executeSharedShop(undoCommand)
+        let restoredDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
+        let restoredPantry = try await service.pantryLots(reviewed: restoredDelivery)
+        XCTAssertFalse(restoredPantry.lots.contains(where: { $0.id == output }))
+        try await exerciseRecovery(service, scope: scope, occurrence: occurrence, delivery: restoredDelivery, lot: lot)
     }
 
     private func exerciseRecovery(_ service: HouseholdService, scope: HouseholdBootstrap, occurrence: SharedMealOccurrence,

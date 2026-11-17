@@ -1,3 +1,4 @@
+import {counted} from './cook-quantities.js';
 import {reviewedID} from './reviewed-identity.js';
 export {reviewedID} from './reviewed-identity.js';
 import {deliveryCoverage,type SealedMeal,type DeliverySource} from './delivery-coverage.js';
@@ -17,8 +18,8 @@ export interface SharedRecoveryPublication {
 }
 export type RecoveryPublicationLoader=(ctx:Context,shopID:string)=>Promise<SharedRecoveryPublication>;
 type Stock=Awaited<ReturnType<typeof jointInputs>>;
-type Origin='delivery'|'pantry'|'freezer';
-interface ScopedMeal {shopId:string;sealed:SealedMeal;original:RecoveryMeal;current:RecoveryMeal|null}
+type Origin='delivery'|'pantry'|'freezer'|'fridge';
+interface ScopedMeal {shopId:string;sealed:SealedMeal;original:RecoveryMeal;recipe:RecoveryMeal|null;current:RecoveryMeal|null}
 
 const unique=<T>(values:T[])=>[...new Set(values)];
 export function sealedRecoveryMeal(fact:SealedMeal,shopId:string,sources:Stock['sources']):RecoveryMeal {
@@ -79,7 +80,19 @@ async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLo
     // Original identities follow current reviews; replacement identities use their
     // accepted explicit matches while the original lot is still in this scope.
     const current=p.removedOccurrences?.includes(original.occurrenceId)?null:accepted?currentDefinition(stock,shopId,original,accepted):original;
-    return {shopId,sealed,original,current};
+    let remaining=current;
+    if(sealed.completed && current){
+      const needs=current.needs.flatMap(n=>{
+        const pins=stock.sources.flatMap(s=>(s.reservations??[]).filter(p=>p.quantity && p.occurrenceId===sealed.occurrenceId &&
+          p.mealRevision===sealed.revision && p.ingredientId===n.ingredientId && p.groupId===n.groupId)
+          .map(p=>({lot:s.sourceId,quantity:p.quantity!})));
+        if(!pins.length) return [];
+        const unit=pins[0]!.quantity.unit,total=pins.reduce((sum,p)=>add(sum,amount(p.quantity)),zero);
+        return [{...n,quantity:counted(total,unit),matchedSourceIds:pins.map(p=>p.lot)}];
+      });
+      remaining={...current,needs};
+    }
+    return {shopId,sealed,original,recipe:current,current:remaining};
   });
   return {meals,publications};
 }
@@ -152,7 +165,7 @@ function outsideHolds(shop:Shop,graph:Graph,visible:Set<string>){
   return [...held].map(([sourceId,h])=>({sourceId,quantity:h?{unit:h.unit,amount:inUnit(h.value,h.unit)}:null}));
 }
 
-async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader,focus:string|null=null){
+export async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader,focus:string|null=null){
   if(shop.household_id!==ctx.householdId || shop.shopper_id!==ctx.member.member_id || ctx.member.kind!=='adult' ||
      ctx.viewGrantId || ctx.selectedShopId && shop.shop_id!==ctx.selectedShopId) throw unavailable();
   requirePlaced(shop,true);
@@ -193,11 +206,11 @@ async function history(ctx:Context,shop:Shop,state:Loaded){
     if(d.kind==='arrival')arrivals.push({...common,arrivedAt:d.body.arrivedAt,received:d.body.received});
     else usable.push({...common,arrivalObservationId:d.body.arrivalObservationId,confirmedAt:d.body.confirmedAt,usable:d.body.usable});
   }
-  const pantry=await ctx.db.query(`SELECT e.lot_id AS "sourceId",e.operation_id AS id,e.pantry_revision AS revision,e.quantity,
-    e.confirmed_at AS "confirmedAt",o.committed_at AS "recordedAt",lag(e.operation_id) OVER(PARTITION BY e.lot_id ORDER BY e.pantry_revision) AS "predecessorId"
+  const pantry=await ctx.db.query(`SELECT e.lot_id AS "sourceId",e.event_id AS id,e.pantry_revision AS revision,e.quantity,e.delivery_usable_id AS "deliveryUsableId",
+    e.confirmed_at AS "confirmedAt",o.committed_at AS "recordedAt",lag(e.event_id) OVER(PARTITION BY e.lot_id ORDER BY e.pantry_revision) AS "predecessorId"
     FROM ritc.pantry_event e JOIN ritc.operation o USING(household_id,operation_id) WHERE e.household_id=$1 AND e.kind='observe'
     AND e.lot_id=ANY($2::uuid[]) ORDER BY e.lot_id,e.pantry_revision`,[ctx.householdId,ids]);
-  const pantryObservations=pantry.rows.map(r=>({...r,householdId:ctx.householdId,identityRevision:1,confirmedAt:r.confirmedAt.toISOString(),recordedAt:r.recordedAt.toISOString()}));
+  const pantryObservations=pantry.rows.map(({deliveryUsableId,...r})=>({...r,...(deliveryUsableId?{deliveryUsableId}:{}),householdId:ctx.householdId,identityRevision:1,confirmedAt:r.confirmedAt.toISOString(),recordedAt:r.recordedAt.toISOString()}));
   const selectedCarrySourceIds=sources.filter(s=>s.shopId!==shop.shop_id).map(s=>s.id);
   const carrySupplyRevisions=[...new Map(deliveries.filter(d=>d.shop_id!==shop.shop_id).map(d=>
     [d.shop_id,{shopId:d.shop_id,supplyRevision:d.supply_revision}])).values()];
@@ -263,7 +276,7 @@ export async function loadSharedRecoveryDecisionBasis(ctx:Context,shop:Shop,load
   function verifyReplacementCoverage(reviewed:Preview):Preview {
     const replacement=reviewed.intent.replacement;
     const target=state.local.find(m=>m.current?.occurrenceId===replacement.occurrenceId);
-    if(!target?.current || recoveryDigest(target.current)!==reviewed.intent.targetDigest || recoveryDigest(reviewed.base)!==recoveryDigest(state.base))
+    if(!target?.current || target.sealed.completed || recoveryDigest(target.current)!==reviewed.intent.targetDigest || recoveryDigest(reviewed.base)!==recoveryDigest(state.base))
       throw new RecoveryError('stale_target');
     const accepted=currentDefinition(state.stock,shop.shop_id,target.original,replacement);
     const projected=effectiveGraph(state.stock,state.meals.map(m=>m===target?{...m,current:accepted}:m));
@@ -305,7 +318,7 @@ export async function readSharedRecoveryCoverage(ctx:Context,shop:Shop,load:Reco
     const allocations=n.allocations.map(a=>({...a,kind:graph.kinds.get(a.sourceId+'/'+n.ingredientId)!}));
     const from=(kind:Origin)=>n.required?wire(allocations.filter(a=>a.kind===kind).reduce((sum,a)=>add(sum,fraction(a.amount)),zero)):null;
     return {...n,needId:need.id,ingredientId:need.ingredientId,occurrenceId:n.occurrenceId.slice(prefix.length),allocations,
-      delivered:from('delivery'),pantry:from('pantry'),freezer:from('freezer')};
+      delivered:from('delivery'),pantry:from('pantry'),freezer:from('freezer'),fridge:from('fridge')};
   });
   return {shopId:shop.shop_id,placedRevision:shop.placed_revision!,...base,asOf:ctx.now.toISOString(),needs,
     unplannedOccurrenceIds:graph.report.unplannedOccurrenceIds.filter(id=>id.startsWith(prefix)).map(id=>id.slice(prefix.length))};

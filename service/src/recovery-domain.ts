@@ -77,10 +77,11 @@ function validateBasis(input:unknown):RecoveryBasis {
  const pantryRows = b.pantryObservations ?? [];
  unique([...b.arrivals, ...b.usable].map(row => row.shopId + "/" + row.id));
  unique(pantryRows.map(row => row.id));
- unique(pantryRows.map(row => String(row.revision)));
+ unique(pantryRows.map(row => row.sourceId+"/"+row.revision));
  for (const row of pantryRows) {
    requireThat(row.householdId === b.householdId, 'wrong_scope');
-   const source = manual.find(source => source.id === row.sourceId);
+   const source = row.deliveryUsableId ? b.sources.find(s=>s.id===row.sourceId && s.origin.kind==='delivery'
+     && b.usable.some(u=>u.sourceId===s.id && u.id===row.deliveryUsableId)) : manual.find(source => source.id === row.sourceId);
    requireThat(source && row.identityRevision <= source.identityRevision, 'invalid_pantry_observation');
    requireThat(row.revision <= b.base.pantryRevision!);
  }
@@ -112,7 +113,7 @@ function validateBasis(input:unknown):RecoveryBasis {
 export interface CanonicalLot {sourceId:string;foodId:string;identityRevision:number;quantity:Quantity;availableAt:string;arrivalId:string;usableId:string}
 interface ManualLot {
   sourceId:string; foodId:string; identityRevision:number; quantity:Quantity; availableAt:string;
-  location:'pantry'|'freezer'; observationId:string;
+  location:'pantry'|'freezer'|'fridge'; observationId:string;
 }
 type PhysicalLot = CanonicalLot | ManualLot;
 type ArrivalHead = Pick<RecoveryBasis['arrivals'][number], 'id'|'received'|'arrivedAt'|'recordedAt'|'identityRevision'>;
@@ -143,7 +144,11 @@ function supply(b:RecoveryBasis,asOf:string):PhysicalLot[]{
      continue;
    }
    const lot = confirmedLot(source, latest(b.arrivals), latest(b.usable), asOf);
-   if (lot) lots.push(lot);
+   if (lot) {
+     const head=latest((b.pantryObservations??[]).filter(r=>r.deliveryUsableId===lot.usableId));
+     if(!head) lots.push(lot);
+     else if(head.quantity && instant(head.recordedAt)<=instant(asOf)) lots.push({...lot,quantity:head.quantity});
+   }
  }
  return lots.sort((a,c)=>a.sourceId<c.sourceId?-1:1);
 }
