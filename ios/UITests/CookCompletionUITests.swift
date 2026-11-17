@@ -46,6 +46,8 @@ import XCTest
         tap(app.buttons["Cancel"])
         tap(app.buttons["cooking.finish"])
         XCTAssertFalse(app.staticTexts["cook.saved"].exists, "Cancel must not record cooking")
+        let editable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: app.textFields["cook.servings"])
+        XCTAssertEqual(XCTWaiter.wait(for: [editable], timeout: 10), .completed, app.debugDescription)
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.ingredient.'")).firstMatch)
         tap(app.buttons["Used"])
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.part.'")).firstMatch)

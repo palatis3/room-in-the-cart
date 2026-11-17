@@ -215,7 +215,7 @@ extension PantryCookRecord {
     func validateResolutions() throws {
         guard let resolutions else { return }
         let unresolved = Set(draft.unresolvedUseIDs)
-        guard isActive, !resolutions.isEmpty, resolutions.count <= unresolved.count,
+        guard !resolutions.isEmpty, resolutions.count <= unresolved.count,
               Set(resolutions.map(\.eventID)).count == resolutions.count else { throw PantryCookPort.Failure.changed }
         var priorByObservation = [UUID: PantryCookResolution.Receipt]()
         var previousRevision = draft.inventoryRevision

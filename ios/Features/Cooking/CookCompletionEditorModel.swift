@@ -9,7 +9,10 @@ import CoreDomain
     enum PartUse: String, CaseIterable { case undecided, measured, unmeasured, untracked }
     enum Relation: String, CaseIterable { case undecided, ingredient, substitution }
     enum LeftoverChoice: String, CaseIterable { case undecided, none, recorded }
-    enum Notice { case unavailable, invalidEntry, reviewChanged, insufficientStock, uncertain, saved, undoChanged, undoUncertain, undone }
+    enum Notice: Equatable {
+        case unavailable, invalidEntry, reviewChanged, insufficientStock, uncertain, saved, undoChanged, undoUncertain, undone
+        case undoIndependentCount(String?), undoAmendedInputChanged(String?)
+    }
     enum Failure: Error { case incomplete, stale, denied }
     struct Part: Identifiable, Equatable {
         let id: UUID
@@ -263,7 +266,7 @@ import CoreDomain
             undoReview = prepared; notice = nil
         } catch {
             guard token == generation else { return }
-            if !authorize() { invalidate() } else { notice = .undoChanged }
+            if !authorize() { invalidate() } else { notice = undoFailureNotice(error, uncertain: false) }
         }
     }
     func cancelUndo() {
@@ -282,7 +285,15 @@ import CoreDomain
             if token == generation, authorize(), completed == nil, context != nil { notice = .undone }
         } catch {
             guard token == generation else { return }
-            if !authorize() { invalidate() } else { notice = .undoUncertain }
+            if !authorize() { invalidate() } else { notice = undoFailureNotice(error, uncertain: true) }
+        }
+    }
+
+    private func undoFailureNotice(_ error: Error, uncertain: Bool) -> Notice {
+        guard let failure = error as? PantryCookUndoFailure else { return uncertain ? .undoUncertain : .undoChanged }
+        switch failure {
+        case .independentPhysicalCount(let lot): return .undoIndependentCount(lot)
+        case .amendedInputChanged(let lot): return .undoAmendedInputChanged(lot)
         }
     }
 }

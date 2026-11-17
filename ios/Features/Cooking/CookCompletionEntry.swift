@@ -14,7 +14,7 @@ struct CookCompletionEntry: View {
     @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model = CookCompletionEditorModel()
-    @State private var presentationActive = false
+    @StateObject private var lifetime = CookReviewLifetime()
     private struct Scope: Equatable {
         let identity: CapturePrivateIdentity
         let inventory: UUID
@@ -64,12 +64,12 @@ struct CookCompletionEntry: View {
                 Button(cookCompletionText(model.hasAttemptedMutation ? "Close" : "Cancel")) { dismiss() }.disabled(model.busy)
             }
         }
-        .onDisappear { presentationActive = false; model.invalidate() }
+        .onDisappear { lifetime.end(); model.invalidate() }
         .task(id: scope) {
-            presentationActive = true
+            let token = lifetime.begin()
             model.invalidate()
             guard let original = scope else { return }
-            let authorized = { presentationActive && scope == original && !Task.isCancelled }
+            let authorized = { lifetime.permits(token) && scope == original }
             let session = PantryCookSession(ledger: ledger, pickup: pickup, authorize: authorized)
             await model.open(session: session, shopID: shopID, mealID: mealID, authorize: authorized)
         }
@@ -370,6 +370,12 @@ private struct CookCompletionUndoView: View {
                 LabeledContent(cookCompletionText("Input counts to restore"), value: String(review.restoredInputCount))
                 LabeledContent(cookCompletionText("Leftover batches to remove"), value: String(review.removedLeftoverCount))
                 LabeledContent(cookCompletionText("Holds to restore"), value: String(review.restoredHoldCount))
+                LabeledContent(cookCompletionText("Reviewed ingredient uses affected by Undo"), value: String(review.resolvedUseCount))
+                Text(cookCompletionText("Original cooking and ingredient-use correction history is retained after Undo."))
+                if !review.preservedCountNames.isEmpty {
+                    Text(cookCompletionText("Current pantry counts kept unchanged")).font(.headline)
+                    ForEach(Array(review.preservedCountNames.enumerated()), id: \.offset) { _, name in Text(name) }
+                }
                 ForEach(Array(review.restoredInputs.enumerated()), id: \.offset) { _, input in
                     LabeledContent(input.name, value: pantryCount(input.count))
                 }
@@ -421,5 +427,9 @@ private func cookNoticeText(_ notice: CookCompletionEditorModel.Notice) -> Strin
     case .undoChanged: cookCompletionText("Undo could not be reviewed. Counts, leftovers or holds may have changed. Reload the saved cooking record; newer food changes will not be overwritten.")
     case .undoUncertain: cookCompletionText("Undo may have saved. Retry the same Undo or check the saved completion before recording cooking again.")
     case .undone: cookCompletionText("Cooking was undone. Review every ingredient again before recording another completion.")
+    case .undoIndependentCount(let name):
+        cookCompletionText("Undo is unavailable because a later physical count must be preserved. Review the current food instead.") + (name.map { " · " + $0 } ?? "")
+    case .undoAmendedInputChanged(let name):
+        cookCompletionText("A later change affected food used by this cooking. Undo cannot overwrite its current pantry record.") + (name.map { " · " + $0 } ?? "")
     }
 }

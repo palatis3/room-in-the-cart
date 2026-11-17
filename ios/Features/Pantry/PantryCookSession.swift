@@ -20,7 +20,6 @@ struct PantryCookRecord: Codable, Equatable {
     let resultingObservations: [UUID: UUID]
 
     var resolutions: [PantryCookResolution.Receipt]? = nil
-    var hasResolvedUses: Bool { resolutions?.isEmpty == false }
     var undo: PantryCookUndoReceipt? = nil
     var isActive: Bool { undo == nil }
 
@@ -44,10 +43,18 @@ struct PantryCookRecord: Codable, Equatable {
               fulfilledNeeds.allSatisfy({ $0.amount.amount > .zero }) else { throw PantryCookPort.Failure.changed }
         try validateResolutions()
         if let undo {
-            guard undo.id != draft.id, undo.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
-                  undo.confirmedAt >= draft.cookedAt, Set(undo.observations.keys) == inputs.union(outputs),
+            let deductions = (resolutions ?? []).compactMap { row -> UUID? in
+                if case .deduct(let id, _) = row.decision { return id }
+                return nil
+            }
+            guard !(resolutions ?? []).contains(where: { $0.decision.action == .recount }),
+                  undo.resolvedEventIDs == resolutions?.map(\.eventID),
+                  (resolutions ?? []).allSatisfy({ $0.confirmedAt <= undo.confirmedAt }),
+                  undo.id != draft.id, undo.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
+                  undo.confirmedAt >= draft.cookedAt, Set(undo.observations.keys) == inputs.union(outputs).union(deductions),
                   Set(undo.observations.values).count == undo.observations.count,
-                  Set(undo.observations.values).isDisjoint(with: resultingObservations.values)
+                  Set(undo.observations.values).isDisjoint(with: resultingObservations.values),
+                  Set(undo.observations.values).isDisjoint(with: (resolutions ?? []).compactMap(\.resultObservationID))
             else { throw PantryCookPort.Failure.changed }
         }
         for row in priorCounts { try row.count.validate() }
