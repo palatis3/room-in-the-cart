@@ -225,10 +225,11 @@ final class PantryModelTests: XCTestCase {
 @MainActor private final class DigestSchedulerSpy: PantryDigestScheduling {
     var granted = false
     var requests = 0
+    var onRequest: (() -> Void)?
     var deliveries: [PantryDigestDelivery] = []
     var removed = Set<UUID>()
     func permission(request: Bool) async throws -> Bool {
-        if request { requests += 1 }
+        if request { requests += 1; onRequest?() }
         return granted
     }
     func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws { self.deliveries = deliveries }
@@ -278,6 +279,46 @@ extension PantryModelTests {
         XCTAssertEqual(spy.deliveries, [fire])
         try await reopened.saveDay(scope, lot: second, day: nil, authorized: { true })
         XCTAssertTrue(spy.deliveries.isEmpty)
+        try await db.close()
+    }
+
+    func testDigestPermissionScopeAndDateChangesReplaceAlertsWhileKeepingInAppChoices() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let model = model(db); await model.load()
+        let lot = try await add(model)
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: db.workspaceID, identity: owner)
+        let scheduler = DigestSchedulerSpy(); scheduler.granted = true
+        let digest = PantryDigestStore(folder: dir.appendingPathComponent("digest"), scheduler: scheduler, now: { self.now })
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let first = try MealDay(year: 2027, month: 12, day: 11, timeZoneIdentifier: zone.identifier)
+        let later = try MealDay(year: 2027, month: 12, day: 12, timeZoneIdentifier: zone.identifier)
+        try await digest.saveDay(scope, lot: lot, day: first, authorized: { true })
+        var allowed = true
+        scheduler.onRequest = { allowed = false }
+        do {
+            try await digest.setAlerts(scope, enabled: true, minute: 600, timeZone: zone, authorized: { allowed })
+            XCTFail("A late system grant cannot enable another session")
+        } catch PantryDigestFailure.changed {}
+        XCTAssertFalse(try digest.document(scope).enabled)
+        XCTAssertTrue(scheduler.deliveries.isEmpty)
+        scheduler.onRequest = nil
+        try await digest.setAlerts(scope, enabled: true, minute: 600, timeZone: zone, authorized: { true })
+        let before = try XCTUnwrap(scheduler.deliveries.first)
+        try await digest.saveDay(scope, lot: lot, day: later, authorized: { true })
+        let replacement = try XCTUnwrap(scheduler.deliveries.first)
+        XCTAssertEqual(scheduler.deliveries.count, 1)
+        XCTAssertNotEqual(before.handle, replacement.handle)
+        XCTAssertEqual(replacement.date.timeIntervalSince(before.date), 86_400)
+        scheduler.granted = false
+        try await digest.reconcile(scope, lots: [lot])
+        XCTAssertTrue(scheduler.deliveries.isEmpty)
+        XCTAssertTrue(digest.notificationsUnavailable)
+        XCTAssertEqual(try digest.document(scope).rules.first?.day, later)
+        try await digest.setAlerts(scope, enabled: false, minute: 600, timeZone: zone, authorized: { true })
+        XCTAssertFalse(try digest.document(scope).enabled)
+        XCTAssertEqual(try digest.document(scope).rules.first?.day, later)
         try await db.close()
     }
 
