@@ -5,6 +5,7 @@ private struct PreferenceTermsField: View {
     let title: String
     @Binding var terms: [String]
     @State private var text: String
+    @FocusState private var focused: Bool
     init(_ title: String, terms: Binding<[String]>) {
         self.title = title
         _terms = terms
@@ -12,6 +13,14 @@ private struct PreferenceTermsField: View {
     }
     var body: some View {
         workingTextField(title, text: $text, axis: .vertical)
+            .focused($focused)
+            .toolbar {
+                if focused {
+                    ToolbarItem(placement: .keyboard) {
+                        Button(dinnerText("Done")) { focused = false }.accessibilityIdentifier("preferences.keyboardDone")
+                    }
+                }
+            }
             .onChange(of: text) { _, next in terms = DinnerEntry.list(next) }
             .onChange(of: terms) { _, next in
                 if DinnerEntry.list(text) != next { text = next.joined(separator: "\n") }
