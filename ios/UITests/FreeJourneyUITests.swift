@@ -1775,13 +1775,20 @@ import XCTest
             }
         }
 
-        tapVisibleFormRow(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        if spanish {
+            tapVisibleFormRow(element(dayNoteID))
+            tapVisibleFormRow(app.buttons["dinner.day.protectLunch"])
+        } else {
+            tapVisibleFormRow(app.buttons["Protect a lunch or side"])
+        }
         XCTAssertTrue(app.navigationBars[copy("Protect food", "Proteger alimentos")].waitForExistence(timeout: 8))
         fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
         fill("2", into: copy("Protected amount", "Cantidad protegida"), requireDone: true)
         fill(purpose, into: copy("Purpose, such as lunch", "Finalidad, por ejemplo almuerzo"), requireDone: true)
-        enableSwitch(assignDate)
-        chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
+        if !spanish {
+            enableSwitch(assignDate)
+            chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
+        }
         tap(app.buttons[copy("Review protected need", "Revisar necesidad protegida")])
         let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewNeed-")).firstMatch
         reveal(reviewed)

@@ -428,11 +428,19 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         var next = self; try next.saveIdea(draft, access: access, at: now); try next.accept(dinner, access: access, at: now); self = next
         return dinner
     }
-    public mutating func recordWeekNote(_ note: DinnerWeekNote, access: DinnerAccessContext, at now: Date) throws {
+    public mutating func recordWeekNote(_ note: DinnerWeekNote, replacing original: DinnerWeekNote? = nil,
+                                        access: DinnerAccessContext, at now: Date) throws {
         try access.validate(shopID: note.shopID, at: now)
+        let index = weekNotes.firstIndex { $0.id == note.id }
+        let current = index.map { weekNotes[$0] }
+        guard current == nil || current?.shopID == note.shopID else { throw DinnerPlanningError.forbidden }
+        if current == note { return }
+        guard current == original else { throw DinnerPlanningError.stalePreview }
         var next = self
-        if let i = next.weekNotes.firstIndex(where: { $0.id == note.id }) { next.weekNotes[i] = note } else { next.weekNotes.append(note) }
-        try next.validate(); next.revisionID = UUID(); self = next
+        if let index { next.weekNotes[index] = note } else { next.weekNotes.append(note) }
+        try next.validate()
+        next.revisionID = UUID()
+        self = next
     }
     public mutating func saveProposal(_ proposal: DinnerProposal, access: DinnerAccessContext, at now: Date) throws {
         try access.validate(shopID: proposal.shopID, at: now)

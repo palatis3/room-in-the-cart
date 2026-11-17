@@ -358,13 +358,30 @@ struct DinnerGuestsView: View {
 struct DinnerNoteView: View {
     @ObservedObject var model: DinnerFeatureModel
     let day: MealDay
+    @EnvironmentObject private var pickup: PickupModel
     @State private var id = UUID()
-    @State private var existingDay: MealDay?
+    @State private var original: DinnerWeekNote?
+    @State private var initialEditor: DinnerFeatureModel.EditorIdentity?
     @State private var kind = DinnerWeekNote.Kind.away
     @State private var text = ""
     @Environment(\.dismiss) private var dismiss
-    private var editingDay: MealDay { existingDay ?? day }
+    private var editingDay: MealDay { original?.day ?? day }
+
+    init(model: DinnerFeatureModel, day: MealDay) {
+        self.model = model
+        self.day = day
+        _initialEditor = State(initialValue: model.editorIdentity)
+    }
+
     var body: some View {
+        if let initialEditor, model.editorIdentity == initialEditor {
+            editor(for: initialEditor)
+        } else {
+            Text(dinnerText("Planning access changed or expired. Reconnect and review again.")).padding()
+        }
+    }
+
+    private func editor(for identity: DinnerFeatureModel.EditorIdentity) -> some View {
         Form {
             Section {
                 Text(dinnerDay(editingDay))
@@ -374,8 +391,11 @@ struct DinnerNoteView: View {
                 TextField(dinnerText("Notes"), text: $text, axis: .vertical)
                 Text(dinnerText("A day note does not remove or rescale chosen dinners. Review those changes separately."))
                 Button(dinnerText("Save day note")) {
-                    guard let shop = model.shop else { return }
-                    Task { if await model.saveNote(DinnerWeekNote(id: id, shopID: shop.id, day: editingDay, kind: kind, text: text)) { dismiss() } }
+                    let note = DinnerWeekNote(id: original?.id ?? id, shopID: identity.shopID, day: editingDay, kind: kind, text: text)
+                    let reviewed = original
+                    Task {
+                        if await model.saveNote(note, replacing: reviewed, editor: identity) { dismiss() }
+                    }
                 }.disabled(!model.editable)
             }
             if kind == .away || kind == .carryoverReview {
@@ -383,10 +403,24 @@ struct DinnerNoteView: View {
             }
             Section(dinnerText("Existing notes")) {
                 ForEach(model.state.weekNotes.filter { $0.shopID == model.shop?.id && $0.day.hasSameCivilDate(as: day) }) { note in
-                    Button { id = note.id; existingDay = note.day; kind = note.kind; text = note.text } label: {
+                    Button { original = note; kind = note.kind; text = note.text } label: {
                         VStack(alignment: .leading) { Text(dinnerNoteKind(note.kind)); Text(note.text) }
                     }
                 }
+            }
+            Section(dinnerText("Adjust plans for this day")) {
+                if let meals = try? model.currentMeals(pickup: pickup) {
+                    ForEach(meals.on(editingDay)) { meal in
+                        NavigationLink(meal.title) {
+                            DinnerOccurrenceView(model: model, occurrenceID: meal.id)
+                        }
+                    }
+                } else {
+                    Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                }
+                NavigationLink(dinnerText("Protect a lunch or side")) {
+                    DinnerReservationView(model: model, day: editingDay)
+                }.accessibilityIdentifier("dinner.day.protectLunch")
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Day note")).dinnerAccess(model)
@@ -400,11 +434,29 @@ struct DinnerReservationView: View {
     @State private var amount = ""
     @State private var unit = UnitOfMeasure.count
     @State private var purpose = ""
-    @State private var scheduled = false
-    @State private var date = Date()
+    @State private var scheduled: Bool
+    @State private var date: Date
+    @State private var calendarZone: String
+    @State private var initialEditor: DinnerFeatureModel.EditorIdentity?
     @State private var parent: UUID?
     @State private var showPreview = false
+    init(model: DinnerFeatureModel, day: MealDay? = nil) {
+        self.model = model
+        _scheduled = State(initialValue: day != nil)
+        _date = State(initialValue: day?.date ?? Date())
+        _calendarZone = State(initialValue: day?.timeZoneIdentifier ?? model.shop?.basis.timeZoneIdentifier ?? TimeZone.current.identifier)
+        _initialEditor = State(initialValue: model.editorIdentity)
+    }
+
     var body: some View {
+        if let initialEditor, model.editorIdentity == initialEditor {
+            form
+        } else {
+            Text(dinnerText("Planning access changed or expired. Reconnect and review again.")).padding()
+        }
+    }
+
+    private var form: some View {
         Form {
             Section {
                 TextField(dinnerText("Food name"), text: $name).focused($field, equals: .food)
@@ -413,7 +465,10 @@ struct DinnerReservationView: View {
                 DinnerUnitPicker(unit: $unit)
                 TextField(dinnerText("Purpose, such as lunch"), text: $purpose).focused($field, equals: .purpose)
                 Toggle(dinnerText("Assign a date"), isOn: $scheduled)
-                if scheduled { DatePicker(dinnerText("Needed date"), selection: $date, displayedComponents: .date) }
+                if scheduled {
+                    DatePicker(dinnerText("Needed date"), selection: $date, displayedComponents: .date)
+                        .environment(\.timeZone, TimeZone(identifier: calendarZone) ?? .current)
+                }
             }
             Section(dinnerText("Use existing quantity")) {
                 Picker(dinnerText("Existing source"), selection: $parent) {
@@ -428,8 +483,8 @@ struct DinnerReservationView: View {
                 Button(dinnerText("Review protected need")) {
                     field = nil
                     do {
-                        guard let shop = model.shop, let quantity = try DinnerEntry.quantity(amount, unit: unit) else { throw DomainError.invalidNumber }
-                        let day = try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled)
+                        guard let quantity = try DinnerEntry.quantity(amount, unit: unit) else { throw DomainError.invalidNumber }
+                        let day = try DinnerEntry.date(date, zone: calendarZone, scheduled: scheduled)
                         showPreview = model.prepare([.reserve(DinnerReservation(name: name, quantity: quantity, purpose: purpose, day: day, withinContributionID: parent))])
                     } catch { model.report(error) }
                 }.disabled(!model.editable)
