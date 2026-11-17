@@ -1778,6 +1778,8 @@ test('ingredient substitutions enforce the reviewed profile at planner proposal 
   assert.equal((await propose({...review,evidence:{...evidence,reviewedIngredientDetails:['peanut oil']}})).status,409);
   ok(await propose(review));
   ok(await call(f.owner,path,'POST',{...command,clientKey:randomUUID(),expectedRevision:profile.revision,settings:{...settings,exclusions:['rice']}}));
+  const page=ok(await call(f.planner,f.changePath));
+  assert.equal(page.proposals[0].requiresPreferenceReview,true);
   const apply=(extra)=>call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:f.proposal.occurrenceId,baseMealRevision:2,meal,...extra}));
   assert.equal((await apply({changeProposalId:f.proposal.proposalId})).status,409);
   assert.equal((await apply({preferenceReview:review})).status,409);

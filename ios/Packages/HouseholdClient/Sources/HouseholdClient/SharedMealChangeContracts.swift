@@ -136,10 +136,11 @@ public struct SharedMealChangeRequest: Codable, Equatable, Sendable {
 }
 public struct SharedMealChangePage: Codable, Equatable, Sendable {
     public struct Proposal: Codable, Equatable, Identifiable, Sendable {
+        public var requiresPreferenceReview: Bool? = nil
         public let proposalId: UUID; public let request: SharedMealChangeRequest; public let original: SharedMeal?; public let state: String
         public var id: UUID { proposalId }
         public func isCurrent(in page: SharedMealChangePage) -> Bool {
-            (request.preferenceReview == nil || request.preferenceReview?.revision == page.preferenceRevision) && state == "pending" && page.phase == "draft" && request.shopRevision == page.shopRevision && request.authorityEpoch == page.authorityEpoch && request.grantRevision == page.grantRevision && (request.baseMealRevision == nil ? (original == nil && !page.meals.contains { $0.id == request.occurrenceId }) : page.meals.contains { $0.id == request.occurrenceId && $0.revision == request.baseMealRevision && $0.meal == original })
+            requiresPreferenceReview != true && state == "pending" && page.phase == "draft" && request.shopRevision == page.shopRevision && request.authorityEpoch == page.authorityEpoch && request.grantRevision == page.grantRevision && (request.baseMealRevision == nil ? (original == nil && !page.meals.contains { $0.id == request.occurrenceId }) : page.meals.contains { $0.id == request.occurrenceId && $0.revision == request.baseMealRevision && $0.meal == original })
         }
     }
     public let shopId: UUID; public let shopRevision: Int; public let authorityEpoch: Int; public let grantRevision: Int

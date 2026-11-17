@@ -151,11 +151,15 @@ export function mealEligibility(value: Settings | null, ingredients: string[], e
 
 export const recipeReview = z.object({revision:id, evidence:mealEvidence.optional()}).strict();
 
+export function ingredientsChanged(original: SharedMealValue, next: SharedMealValue) {
+  const identities = (meal: SharedMealValue) => (meal.planning?.ingredients ?? [])
+    .map(i => ({id:i.id,name:i.name})).sort((a,b)=>a.id.localeCompare(b.id));
+  return digest(identities(original)) !== digest(identities(next));
+}
+
 export async function checkIngredientChange(ctx: Context, original: SharedMealValue | undefined,
     next: SharedMealValue | null, review?: z.infer<typeof recipeReview>) {
-  if (!original || !next) return;
-  const identities = (meal: SharedMealValue) => (meal.planning?.ingredients ?? []).map(i => ({id:i.id,name:i.name})).sort((a,b)=>a.id.localeCompare(b.id));
-  if (digest(identities(original)) === digest(identities(next))) return;
+  if (!original || !next || !ingredientsChanged(original,next)) return;
   const current = await mealConstraints(ctx);
   if (!review && !current.settings) return;
   if (review?.revision !== current.revision) throw refresh();

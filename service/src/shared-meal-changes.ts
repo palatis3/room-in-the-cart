@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Context, HouseholdRepository } from './repository.js';
 import type { MealMoves } from './meal-moves.js';
-import {checkIngredientChange, mealConstraints, recipeReview} from './meal-preferences.js';
+import {checkIngredientChange, ingredientsChanged, mealConstraints, recipeReview} from './meal-preferences.js';
 import { digest } from './database.js';
 import { ServiceError, unavailable } from './errors.js';
 import { requireApprovedSharedIdea } from './shared-meal-ideas.js';
@@ -22,14 +22,23 @@ export class SharedMealChanges {
   constructor(private readonly repo: HouseholdRepository, private readonly moves: MealMoves) {}
   async read(ctx: Context, id: string) {
     const { shop, shopper, plannerId, grantRevision } = await this.moves.context(ctx, id, true);
-    const rows = (await ctx.db.query(`SELECT c.proposal_id,c.body,c.original_meal,c.state FROM ritc.shared_meal_change c
+    const rows = (await ctx.db.query(`SELECT c.proposal_id,c.body,c.original_meal,c.state,
+       i.preference_revision AS idea_preference_revision,i.revision AS idea_revision FROM ritc.shared_meal_change c
+      LEFT JOIN ritc.shared_meal_idea i ON i.household_id=c.household_id AND i.shop_id=c.shop_id AND i.idea_id=(c.body->>'approvedIdeaId')::uuid
       JOIN ritc.member a ON a.household_id=c.household_id AND a.member_id=c.actor_id AND a.state='active'
       WHERE c.household_id=$1 AND c.shop_id=$2 AND c.authority_epoch=$3 AND c.grant_revision=$4 AND (c.actor_id=$5 OR (c.base_meal_revision IS NULL AND c.actor_id=$6))
       ORDER BY (c.state='pending') DESC,c.created_at DESC,c.proposal_id LIMIT 100`, [ctx.householdId,id,shop.authority_epoch,grantRevision,plannerId,shopper?ctx.member.member_id:plannerId])).rows;
     const profile = await mealConstraints(ctx);
     return { ...(profile.revision ? {preferenceRevision:profile.revision}:{}), shopId:id, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch, grantRevision,
       phase:shop.phase, shopper, meals:await this.repo.meals(ctx,id),
-      proposals:rows.map(row => ({ proposalId:row.proposal_id, request:row.body, original:row.original_meal, state:row.state })) };
+      proposals:rows.map(row => {
+        const changed = row.original_meal ? ingredientsChanged(row.original_meal,row.body.meal) : true;
+        const revision = row.original_meal ? row.body.preferenceReview?.revision ?? null : row.idea_preference_revision;
+        const staleReview = row.state === 'pending' && changed &&
+          (revision !== profile.revision || (!row.original_meal && row.idea_revision !== row.body.approvedIdeaRevision));
+        return { proposalId:row.proposal_id, request:row.body, original:row.original_meal, state:row.state,
+          ...(staleReview ? {requiresPreferenceReview:true}:{}) };
+      }) };
   }
   async propose(ctx: Context, id: string, input: z.infer<typeof sharedMealChangeSchema>) {
     const { shop, shopper, grantRevision } = await this.moves.context(ctx,id,true);

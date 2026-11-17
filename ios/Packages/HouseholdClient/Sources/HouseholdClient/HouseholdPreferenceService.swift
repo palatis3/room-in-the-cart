@@ -96,6 +96,7 @@ extension HouseholdService {
         guard try currentHouseholdDeviceSession() == session else { throw ClientError.accessEnded }
         let result: HouseholdAdultGrants = try await perform("meal-preferences/grants", method: "GET", omitSelectedShop: true)
         try result.validate(for: session)
+        guard try currentHouseholdDeviceSession() == session else { throw ClientError.accessEnded }
         return result
     }
     public func setPreferenceRead(_ enabled: Bool, adult: HouseholdAdultGrants.Adult, session: HouseholdDeviceSession) async throws -> HouseholdAdultGrants {
@@ -104,6 +105,7 @@ extension HouseholdService {
         let change = Change(v: 1, memberId: adult.id, enabled: enabled, expectedGrantEpoch: adult.grantEpoch)
         let result: HouseholdAdultGrants = try await perform("meal-preferences/grants", method: "POST", body: try JSONEncoder().encode(change), omitSelectedShop: true)
         try result.validate(for: session)
+        guard try currentHouseholdDeviceSession() == session else { throw ClientError.accessEnded }
         return result
     }
 }
