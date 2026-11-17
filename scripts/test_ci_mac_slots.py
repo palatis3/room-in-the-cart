@@ -59,7 +59,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual({row['provider'] for row in fixtures}, {'github', 'bitrise', 'bitrise-m4'})
         # Lock the provider and concurrency group for each planned fixture.
         self.assertEqual([(row['provider'], row['macos_slot']) for row in fixtures], [
-            ('bitrise', 1), ('bitrise-m4', 2), ('github', 3), ('bitrise-m4', 0),
+            ('bitrise', 1), ('bitrise-m4', 2), ('bitrise-m4', 3), ('bitrise-m4', 0),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 2), ('bitrise-m4', 2),
             ('bitrise-m4', 0), ('bitrise-m4', 1), ('bitrise', 2), ('bitrise-m4', 3),
             ('bitrise-m4', 4), ('bitrise', 0), ('bitrise', 1), ('bitrise', 2),
@@ -88,6 +88,7 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertEqual(len(fixtures), 26)
         self.assertEqual([(r['shard'], r['macos_slot'], r['m4_slot']) for r in fixtures if 'm4_slot' in r], [
             ('contributor-balanced-05', 2, 5),
+            ('contributor-balanced-01', 3, 5),
             ('contributor-balanced-04', 0, 1),
             ('contributor-balanced-03', 4, 2),
             ('SharedCreatedMealUndoUITests-testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple', 2, 0),

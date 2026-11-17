@@ -188,6 +188,9 @@ def matrix(inventory=None, *, github_mac_only=False):
         "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 7,
     }
     m4_slots = {
+        # Both the original job and one scoped retry failed before XCTest on
+        # GitHub's runtime retirement guard. Keep its whole 13-case group.
+        "contributor-balanced-01": 5,
         # Dinner hit the same GitHub runtime retirement failure. Shared Records'
         # runtime queries and owned cleanup also timed out on GitHub. Lanes 3
         # and 4 finished early while required fixture groups were still running.
