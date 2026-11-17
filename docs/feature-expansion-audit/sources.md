@@ -13,7 +13,7 @@ Preparation only; no provider activated and no user data transmitted to an extra
 - Image and transcription docs checked for optional provider boundary only; no model, price, SDK or credentials selected. https://developers.openai.com/api/docs/guides/images-vision and https://developers.openai.com/api/docs/guides/speech-to-text
 - Supabase changelog checked: recent CLI v3 defaults/confirmation change; no Flutter SDK change applies to this native Swift/TypeScript service. No CLI upgrade/migration introduced. Existing custom service still owns household authorization. https://supabase.com/changelog.md
 
-Technical inference for later plan: native capture, reviewed proposals, stable identities and existing exact arithmetic can deliver core requested behavior without a mandatory paid AI dependency. That is a proposed engineering choice, not a provider capability claim.
+Technical inference for the original plan: native capture, reviewed proposals, stable identities and existing exact arithmetic can deliver core requested behavior without a mandatory paid AI dependency. That is a proposed engineering choice, not a provider capability claim. Subsequent user instruction adds optional remote assistance to implementation through [the support supplement](../FEATURE-SUPPORT-PLAN.md); the earlier notes about leaving it for later consideration describe the original review, not the amended scope. Local/manual operation remains complete.
 
 ## Follow-up source findings
 

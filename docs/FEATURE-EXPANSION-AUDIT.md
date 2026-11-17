@@ -4,9 +4,9 @@ November 17, 2026. The [implementation plan](FEATURE-EXPANSION-PLAN.md) covers a
 
 Reviewed v1 SHA256: `07c3795f5a8d53f23bf817270c9ee7acfbfc1b477cece7889bd52229e0f53b76`.
 Reviewed v2 SHA256: `491d032c7f246c89de6d02d677bf2e35c527ff7cbcf2b9a0717fe628c1c2b813`.
-Published plan SHA256: `50a8e9c2aca70ea9583fd745d1cf67bbf3fbcaae97feeba50e47bd5bdd4fc40c`.
+Original published plan SHA256: `50a8e9c2aca70ea9583fd745d1cf67bbf3fbcaae97feeba50e47bd5bdd4fc40c` (before the subsequent support amendment).
 
-The published version removes accidental leading patch markers and updates factual approval/baseline/link text; implementation contracts are unchanged from approved v2. Original drafts and detailed v1 findings remain in `.build/FeatureExpansionNov17/`. This compact record avoids publishing routine raw evidence.
+That original published version removes accidental leading patch markers and updates factual approval/baseline/link text; its implementation contracts are unchanged from approved v2. The later user-requested [support amendment](FEATURE-SUPPORT-PLAN.md) changes provider implementation scope and is reviewed separately; the original three approvals must not be represented as covering it. Original drafts and detailed v1 findings remain in `.build/FeatureExpansionNov17/`. This compact record avoids publishing routine raw evidence.
 
 ## Material corrections before approval
 
