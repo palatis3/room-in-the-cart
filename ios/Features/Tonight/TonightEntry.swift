@@ -78,6 +78,8 @@ struct TonightEntry: View {
     private var content: some View {
         List {
             Section {
+                NavigationLink(tonightText("Private meal preferences")) { PrivateMealPreferencesEntry(ledger: ledger) }
+                    .accessibilityIdentifier("tonight.preferences")
                 Text(tonightText("Review your private preferences first, then match recipe ingredients to pantry food. Food reserved for other plans is already excluded."))
                 if model.input?.workspace.dinnerPlanning.privateMealPreferences == nil {
                     Text(tonightText("No private preference profile is saved. Restrictions have not been checked."))
