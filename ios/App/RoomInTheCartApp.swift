@@ -316,7 +316,7 @@ struct ShopView: View {
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
+                if let journey = pickup.resumableJourney(for: ledger.shop?.id), !journey.offers.isEmpty {
                     let timelineStart = Date()
                     TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
                         if let offer = journey.nextUnfilledOffer(at: context.date) {
