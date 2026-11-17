@@ -9189,6 +9189,70 @@
           }
         }
       }
+    },
+    "Available cooking time in minutes, if limited": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available cooking time in minutes, if limited"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo disponible para cocinar, en minutos, si hay un límite"
+          }
+        }
+      }
+    },
+    "Require meals within this time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require meals within this time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exigir que las comidas estén listas dentro de este tiempo"
+          }
+        }
+      }
+    },
+    "Total preparation time exceeds your available time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total preparation time exceeds your available time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tiempo total de preparación supera tu tiempo disponible."
+          }
+        }
+      }
+    },
+    "Total elapsed preparation time is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total elapsed preparation time is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el tiempo total de preparación."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
