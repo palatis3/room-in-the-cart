@@ -95,7 +95,7 @@ struct LedgerIngredientView: View {
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
                             if !contribution.exclusions.isEmpty {
-                                Text(ledgerFormat("Exclusions: %@", contribution.exclusions.joined(separator: ", ")))
+                                Text(ledgerFormat("Exclusions: %@", ledgerExclusionsText(contribution.exclusions)))
                             }
                             ForEach(shop.allocations.filter { $0.demandContributionID == contribution.id }, id: \.id) { link in
                                 Text(ledgerFormat("Linked within existing quantity: %@", ledgerQuantity(link.quantity)))

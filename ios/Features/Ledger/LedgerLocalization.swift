@@ -31,6 +31,13 @@ extension ShoppingLedger {
     }
 }
 
+// A meal and its ingredient may retain the same rule independently.
+// Keep original wording and source order while showing each exact rule once.
+func ledgerExclusionsText(_ values: [String]) -> String {
+    var seen = Set<String>()
+    return values.filter { seen.insert($0).inserted }.joined(separator: ", ")
+}
+
 func ledgerAmountInput(_ value: Rational) -> String {
     value.denominator == 1 ? "\(value.numerator)" : "\(value.numerator)/\(value.denominator)"
 }
