@@ -225,6 +225,7 @@ final class PantryModelTests: XCTestCase {
 @MainActor private final class DigestSchedulerSpy: PantryDigestScheduling {
     var granted = false
     var requests = 0
+    var replacementCount = 0
     var onRequest: (() -> Void)?
     var deliveries: [PantryDigestDelivery] = []
     var removed = Set<UUID>()
@@ -232,7 +233,10 @@ final class PantryModelTests: XCTestCase {
         if request { requests += 1; onRequest?() }
         return granted
     }
-    func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws { self.deliveries = deliveries }
+    func replace(_ deliveries: [PantryDigestDelivery], keepingDelivered: Set<UUID>) async throws {
+        replacementCount += 1
+        self.deliveries = deliveries
+    }
     func remove(_ handles: Set<UUID>) async {
         removed.formUnion(handles)
         deliveries.removeAll { handles.contains($0.handle) }
@@ -254,6 +258,7 @@ extension PantryModelTests {
         let travelDay = try MealDay(year: day.year, month: day.month, day: day.day, timeZoneIdentifier: "Europe/Madrid")
         try await digest.saveDay(scope, lot: second, day: travelDay, authorized: { true })
         XCTAssertEqual(spy.requests, 0)
+        XCTAssertEqual(spy.replacementCount, 0)
         XCTAssertTrue(spy.deliveries.isEmpty)
         do {
             try await digest.setAlerts(scope, enabled: true, minute: 570, timeZone: try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier)), authorized: { true })

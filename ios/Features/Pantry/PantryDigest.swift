@@ -213,9 +213,15 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     }
     private func change(_ scope: PantryDigestScope, _ mutate: (inout PantryDigestDocument) throws -> Void) async throws {
         var doc = try document(scope)
+        let wasEnabled = doc.enabled
         try mutate(&doc)
         try write(doc, to: file(scope))
-        try await schedule(doc)
+        if doc.enabled {
+            try await schedule(doc)
+        } else if wasEnabled {
+            try await serialized { [scheduler] in await scheduler.remove(Set(doc.rules.map(\.handle))) }
+            notificationsUnavailable = false
+        }
     }
     func saveDay(_ scope: PantryDigestScope, lot: InventoryLot, day: MealDay?, authorized: () -> Bool) async throws {
         guard authorized() else { throw PantryDigestFailure.changed }
@@ -238,13 +244,28 @@ struct PantryDigestDelivery: Equatable { let handle: UUID; let date: Date; let z
     func failClosed() async {
         do { try await suspendNotifications() } catch { notificationsUnavailable = true }
     }
-    func suspendNotifications() async throws { try await schedule(nil) }
+    func suspendNotifications() async throws {
+        // Every delivery is registered under a random handle saved before scheduling.
+        // Removing these identifiers also works before iOS has requested alert permission.
+        guard FileManager.default.fileExists(atPath: folder.path) else { return }
+        let urls = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" }
+        do {
+            let handles = Set(try urls.flatMap { try read($0).rules.map(\.handle) })
+            if !handles.isEmpty { try await serialized { [scheduler] in await scheduler.remove(handles) } }
+            notificationsUnavailable = false
+        } catch {
+            // Recover unknown handles from the isolated OS namespace when private metadata is corrupt.
+            try await schedule(nil)
+        }
+    }
     func reconcile(_ scope: PantryDigestScope, lots: [InventoryLot]) async throws {
         var doc = try document(scope)
         let old = doc
         doc.reconcile(lots)
         if doc != old { try write(doc, to: file(scope)) }
-        try await schedule(doc)
+        if doc.enabled { try await schedule(doc) }
+        else { try await suspendNotifications() }
     }
 
     private func documents(for origin: UUID) throws -> [URL] {
