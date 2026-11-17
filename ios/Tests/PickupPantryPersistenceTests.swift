@@ -165,7 +165,6 @@ import SQLite3
         XCTAssertFalse(saved); XCTAssertTrue(cached.hasPendingPantrySave)
         let entry = try XCTUnwrap(f.pendingStore.read()); XCTAssertNil(entry.acknowledgment)
         unlock(&lock)
-        try await f.inventory.close()
         let (reopened, journal) = try reopen(f)
         let restored = await self.model(f, store: reopened, pending: journal)
         XCTAssertTrue(restored.hasPendingPantrySave)
@@ -175,8 +174,32 @@ import SQLite3
         XCTAssertEqual(state, before); XCTAssertEqual(sources, sourceBefore)
         let staleRetry = await cached.retrySave(); XCTAssertFalse(staleRetry)
         XCTAssertNil(try journal.read(), "Cached retry may not recreate discarded intent bytes.")
+        XCTAssertFalse(cached.hasPendingSave, "An independently discarded save must not permanently block the old model.")
+        XCTAssertTrue(cached.ready)
+        XCTAssertTrue(cached.journey?.notes.isEmpty == true)
         let finalState = try await reopened.inventoryState(); XCTAssertEqual(finalState, before)
         XCTAssertTrue(restored.journey?.notes.isEmpty == true)
+        let freshSaved = await note("Fresh review", in: cached)
+        XCTAssertTrue(freshSaved, cached.error ?? "")
+        XCTAssertEqual(cached.journey?.notes.map(\.text), ["Fresh review"])
+    }
+
+    func testCachedCommittedSaveRecognizesAnotherModelCleanupWithoutReplayingOldSource() async throws {
+        let f = try await fixture(), cached = await self.model(f)
+        f.fault.fail = true
+        let saved = await note("Committed once", in: cached)
+        XCTAssertFalse(saved); XCTAssertTrue(cached.hasPendingPantrySave)
+        let (reopened, journal) = try reopen(f)
+        let other = await self.model(f, store: reopened, pending: journal)
+        let recovered = await other.retrySave(); XCTAssertTrue(recovered)
+        let later = await note("Later edit", in: other); XCTAssertTrue(later)
+        let before = try await reopened.inventoryState()
+        let retried = await cached.retrySave()
+        XCTAssertTrue(retried, cached.error ?? "")
+        XCTAssertFalse(cached.hasPendingSave); XCTAssertTrue(cached.ready)
+        XCTAssertNil(try journal.read())
+        XCTAssertEqual(cached.journey?.notes.map(\.text), ["Committed once", "Later edit"])
+        let after = try await reopened.inventoryState(); XCTAssertEqual(after, before)
     }
 
     func testRestoredActionNeedsFreshScopedAuthorizationBeforeUncommittedRetry() async throws {

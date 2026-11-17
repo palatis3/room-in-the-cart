@@ -1247,6 +1247,7 @@ extension PickupModel {
         guard !saving, let configuration = pantryConfiguration, let store, pendingPantry != nil else { return false }
         saving = true; defer { saving = false }
         do {
+            if let resolved = try await reconcileClearedPantryPending(configuration, store: store) { return resolved }
             let entry = try currentPantryPending(configuration)
             let recovery = try pantryPort(configuration: configuration, store: store, entry: entry)
             if let committed = try await recovery.recover(entry.submission) {
@@ -1272,6 +1273,28 @@ extension PickupModel {
                 : "Could not confirm the save. Retry the exact reviewed change.")
             return false
         }
+    }
+
+    /// Another model may already have cleared this journal after adoption or
+    /// discard. Establish the outcome from SQLite before releasing cached work;
+    /// never recreate a missing submission or treat an unreadable file as absent.
+    private func reconcileClearedPantryPending(_ configuration: PantryConfiguration,
+                                               store: ComparisonStore) async throws -> Bool? {
+        guard let entry = pendingPantry, try configuration.pendingStore.read() == nil else { return nil }
+        let port = try pantryPort(configuration: configuration, store: store)
+        let committed = try await port.reconcileForDiscard(entry.submission, whenUnapplied: {
+            guard entry.acknowledgment == nil, try configuration.pendingStore.read() == nil else {
+                throw PickupModelError.pending
+            }
+        })
+        guard configuration.authorize(), pendingPantry == entry,
+              try configuration.pendingStore.read() == nil else { throw PickupModelError.pending }
+        pending = nil; pendingPantry = nil; hasPendingSave = false
+        ready = false
+        await load()
+        if committed != nil, ready, case .select(let id) = entry.selection,
+           journeys.contains(where: { $0.id == id }) { selectedID = id }
+        return committed != nil && ready
     }
 
     private func adoptPantry(_ result: PantryPickupCommitPort.Result, entry: PantryPickupPendingStore.Entry,
@@ -1305,6 +1328,7 @@ extension PickupModel {
         guard let configuration = pantryConfiguration, let store else { return }
         saving = true; defer { saving = false }
         do {
+            if try await reconcileClearedPantryPending(configuration, store: store) != nil { return }
             let entry = try currentPantryPending(configuration)
             let port = try pantryPort(configuration: configuration, store: store, entry: entry)
             if let committed = try await port.reconcileForDiscard(entry.submission, whenUnapplied: {
