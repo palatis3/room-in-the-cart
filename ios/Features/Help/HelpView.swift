@@ -22,6 +22,8 @@ struct HelpCenterView: View {
                 Text(helpText("Start with a pack comparison. No account or connection is needed for your private shopping tools."))
             }
             Section(helpText("Using Room in the Cart")) {
+                NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
+                    .accessibilityIdentifier("help.foodKeeper")
                 ForEach(HelpTopic.allCases) { topic in
                     NavigationLink { HelpArticleView(topic: topic) } label: { Text(topic.title) }
                         .accessibilityIdentifier("help.topic." + topic.rawValue)
