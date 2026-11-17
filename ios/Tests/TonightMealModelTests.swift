@@ -66,7 +66,7 @@ import RecordArchive
         let missing = try XCTUnwrap(TonightMealModel.missingQuantity(row))
         XCTAssertEqual(missing.unit, .gram)
         XCTAssertEqual(missing.amount, try Rational(500))
-        XCTAssertEqual(try missing.converted(to: .kilogram).amount, try Rational(1, 2))
+        XCTAssertEqual(try missing.converted(to: .kilogram), try Rational(1, 2))
         let unknown = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [grams.id: food, kilos.id: food],
             globallyFreeLots: [lot], unresolvedFoods: [food], profile: nil)
         XCTAssertTrue(unknown.ingredients.allSatisfy { TonightMealModel.missingQuantity($0) == nil })
