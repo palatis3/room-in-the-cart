@@ -1,0 +1,534 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Adults with pantry access can see stored food and add food for the household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adults with pantry access can see stored food and add food for the household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los adultos con acceso a la despensa pueden ver los alimentos guardados y añadir alimentos para el hogar."
+          }
+        }
+      }
+    },
+    "An earlier retry ended when pantry access changed. Check the stock before adding food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier retry ended when pantry access changed. Check the stock before adding food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento anterior terminó al cambiar el acceso a la despensa. Revisa las existencias antes de añadir alimentos."
+          }
+        }
+      }
+    },
+    "Check the food name, amount and exclusions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the food name, amount and exclusions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba el nombre, la cantidad y las exclusiones del alimento."
+          }
+        }
+      }
+    },
+    "Check the stock below. Retrying sends the same addition.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the stock below. Retrying sends the same addition."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las existencias que aparecen abajo. Al reintentar, se vuelve a enviar el mismo registro."
+          }
+        }
+      }
+    },
+    "Clear saved retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear saved retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar el reintento guardado"
+          }
+        }
+      }
+    },
+    "Clear the saved retry after checking stock?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the saved retry after checking stock?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres eliminar el reintento guardado después de revisar las existencias?"
+          }
+        }
+      }
+    },
+    "Confirm and add food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm and add food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar y añadir el alimento"
+          }
+        }
+      }
+    },
+    "Earlier addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Edit addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el alimento"
+          }
+        }
+      }
+    },
+    "Food added to the household pantry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food added to the household pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió el alimento a la despensa del hogar."
+          }
+        }
+      }
+    },
+    "Food added. Reload to see the updated stock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food added. Reload to see the updated stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió el alimento. Vuelve a cargar la despensa para ver las existencias actualizadas."
+          }
+        }
+      }
+    },
+    "Food exclusions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones alimentarias"
+          }
+        }
+      }
+    },
+    "Grant access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar acceso"
+          }
+        }
+      }
+    },
+    "Grant pantry access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant pantry access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres dar acceso a la despensa?"
+          }
+        }
+      }
+    },
+    "Has pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Household pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa del hogar"
+          }
+        }
+      }
+    },
+    "I checked the stock. Clear retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the stock. Clear retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya revisé las existencias. Eliminar reintento."
+          }
+        }
+      }
+    },
+    "Load more food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más alimentos"
+          }
+        }
+      }
+    },
+    "Manage pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar acceso a la despensa"
+          }
+        }
+      }
+    },
+    "No pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin acceso a la despensa"
+          }
+        }
+      }
+    },
+    "Pantry access has changed. Check household access again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry access has changed. Check household access again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el acceso a la despensa. Vuelve a comprobar el acceso al hogar."
+          }
+        }
+      }
+    },
+    "Refrigerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerador"
+          }
+        }
+      }
+    },
+    "Reload pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar la despensa"
+          }
+        }
+      }
+    },
+    "Reload pantry access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload pantry access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar permisos de la despensa"
+          }
+        }
+      }
+    },
+    "Remove access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar acceso"
+          }
+        }
+      }
+    },
+    "Remove pantry access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove pantry access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quieres quitar el acceso a la despensa?"
+          }
+        }
+      }
+    },
+    "Retry the same addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar el mismo registro"
+          }
+        }
+      }
+    },
+    "Review pantry addition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el alimento"
+          }
+        }
+      }
+    },
+    "Stored food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos guardados"
+          }
+        }
+      }
+    },
+    "The pantry or its permissions changed. Reload and check the stock before adding food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry or its permissions changed. Reload and check the stock before adding food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la despensa o sus permisos. Vuelve a cargarla y revisa las existencias antes de añadir alimentos."
+          }
+        }
+      }
+    },
+    "The result could not be confirmed. Reload the pantry to check stock and any saved retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result could not be confirmed. Reload the pantry to check stock and any saved retry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar el resultado. Vuelve a cargar la despensa para revisar las existencias y los reintentos guardados."
+          }
+        }
+      }
+    },
+    "The retry period has ended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The retry period has ended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminó el plazo para reintentar."
+          }
+        }
+      }
+    },
+    "There are no other active adults to manage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no other active adults to manage."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay otros adultos activos a los que puedas dar acceso."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

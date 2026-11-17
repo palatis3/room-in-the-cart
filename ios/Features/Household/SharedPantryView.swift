@@ -69,7 +69,12 @@ struct SharedPantryView: View {
 }
 
 func pantryLocation(_ location: String) -> String {
-    location == "freezer" ? ht("Freezer") : ht("Pantry")
+    switch location {
+    case "pantry": ht("Pantry")
+    case "fridge": pantryText("Refrigerator")
+    case "freezer": ht("Freezer")
+    default: ht("Unknown")
+    }
 }
 
 private struct SharedPantryRegistration: View {

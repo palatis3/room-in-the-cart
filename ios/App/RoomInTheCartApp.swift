@@ -446,6 +446,7 @@ struct SettingsView: View {
             }
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
+                HouseholdPantryLink(household: household)
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
             }
             if surfaces.privateAuthorized {
