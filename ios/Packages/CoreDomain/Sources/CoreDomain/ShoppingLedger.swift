@@ -1469,7 +1469,7 @@ private func validateExclusions(_ exclusions: [String]) throws {
     guard exclusions.count <= 100 else { throw LedgerError.invalid("exclusions") }
     for exclusion in exclusions { try ledgerText(exclusion, nonempty: true, maximum: 512) }
 }
-private func permittedProduct(_ name: String, exclusions: [String]) throws {
+func permittedProduct(_ name: String, exclusions: [String]) throws {
     guard !exclusions.isEmpty else { return }
     let words = normalizedProduct(name).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
     let product = " " + words.joined(separator: " ") + " "
