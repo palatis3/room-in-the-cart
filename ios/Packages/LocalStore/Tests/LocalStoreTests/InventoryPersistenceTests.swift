@@ -288,6 +288,82 @@ final class InventoryPersistenceTests: XCTestCase {
         try await store.close()
     }
 
+    func testRetirementEvidencePagesKeepKindsAndOriginalIdentityAcrossRestart() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let lots = [lot(), lot(), lot()].sorted { $0.record.key.id.uuidString < $1.record.key.id.uuidString }
+        let observation = linked(.observation, lotID: lots[0].record.key.id, id: lots[0].record.key.id)
+        _ = try await activate(store, writes: lots + [observation])
+        let operation = UUID()
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: operation,
+            expectedRevision: 1, request: Data([7]), erasures: (lots + [observation]).map {
+                .init(key: $0.record.key, expectedRevision: 1)
+            }))
+        let first = try await store.inventoryTombstones(kind: .lot, expectedInventoryRevision: 2, limit: 2)
+        let second = try await store.inventoryTombstones(kind: .lot, expectedInventoryRevision: 2, after: first.last?.key.id, limit: 2)
+        XCTAssertEqual(first.count, 2); XCTAssertEqual(second.count, 1)
+        XCTAssertEqual((first + second).map(\.key), lots.map { $0.record.key })
+        XCTAssertTrue((first + second).allSatisfy { $0.operationID == operation && $0.erasedRevision == 1 && $0.workspaceID == store.workspaceID })
+        let observations = try await store.inventoryTombstones(kind: .observation, expectedInventoryRevision: 2)
+        XCTAssertEqual(observations.map(\.key), [observation.record.key])
+        let empty = try await store.inventoryTombstones(kind: .lot, expectedInventoryRevision: 2, after: second.last?.key.id)
+        XCTAssertTrue(empty.isEmpty)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let reread = try await reopened.inventoryTombstones(kind: .lot, expectedInventoryRevision: 2)
+        XCTAssertEqual(reread, first + second)
+        try await reopened.close()
+    }
+
+    func testRetiredSourcePagesUseFullIdentityAndRejectChangedScanRevision() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true), parent = lot()
+        let origins = [UUID(), UUID()].sorted { $0.uuidString < $1.uuidString }
+        let sources = [InventorySourceIdentity(originID: origins[0], sourceID: "arrival/a"),
+                       InventorySourceIdentity(originID: origins[0], sourceID: "arrival/b"),
+                       InventorySourceIdentity(originID: origins[1], sourceID: "arrival/a")]
+        let links = sources.map { linked(.sourceLink, lotID: parent.record.key.id, source: $0) }
+        _ = try await activate(store, writes: [parent] + links)
+        let operation = UUID()
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: operation,
+            expectedRevision: 1, request: Data([2]), erasures: links.map { .init(key: $0.record.key, expectedRevision: 1) }))
+        let first = try await store.inventoryRetiredSources(expectedInventoryRevision: 2, limit: 2)
+        let second = try await store.inventoryRetiredSources(expectedInventoryRevision: 2, after: first.last?.source, limit: 2)
+        XCTAssertEqual(first.count, 2); XCTAssertEqual(second.count, 1)
+        XCTAssertEqual((first + second).map(\.source), sources)
+        XCTAssertTrue((first + second).allSatisfy { $0.operationID == operation && $0.workspaceID == store.workspaceID })
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 2,
+            request: Data([3]), writes: [lot(parent.record.key.id, revision: 2)]))
+        do { _ = try await store.inventoryRetiredSources(expectedInventoryRevision: 2, after: first.last?.source); XCTFail("stale source scan") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+        do { _ = try await store.inventoryTombstones(kind: .sourceLink, expectedInventoryRevision: 2); XCTFail("stale tombstone scan") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .staleInventory) }
+        try await store.close()
+    }
+
+    func testRetirementEvidenceRejectsDisabledInvalidAndCorruptReadsWithoutRepair() async throws {
+        let legacy = try ComparisonStore(url: url)
+        do { _ = try await legacy.inventoryTombstones(kind: .lot, expectedInventoryRevision: 0); XCTFail("disabled") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
+        do { _ = try await legacy.inventoryRetiredSources(expectedInventoryRevision: 0); XCTFail("disabled") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .inventoryDisabled) }
+        try await legacy.close()
+        let store = try ComparisonStore(url: url, inventoryEnabled: true), parent = lot()
+        _ = try await activate(store, writes: [parent])
+        for limit in [0, InventoryPersistenceLimits.pageItems + 1] {
+            do { _ = try await store.inventoryTombstones(kind: .lot, expectedInventoryRevision: 1, limit: limit); XCTFail("bad bound") }
+            catch { XCTAssertEqual(error as? ComparisonStoreError, .invalidInput) }
+            do { _ = try await store.inventoryRetiredSources(expectedInventoryRevision: 1, limit: limit); XCTFail("bad bound") }
+            catch { XCTAssertEqual(error as? ComparisonStoreError, .invalidInput) }
+        }
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([2]), erasures: [.init(key: parent.record.key, expectedRevision: 1)]))
+        try sql("DROP TRIGGER inventory_tombstone_update")
+        try sql("UPDATE inventory_tombstones SET operation_id = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'")
+        do { _ = try await store.inventoryTombstones(kind: .lot, expectedInventoryRevision: 2); XCTFail("corrupt evidence is not absence") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .corruptRecord) }
+        XCTAssertEqual(try scalar("SELECT count(*) FROM inventory_tombstones"), 1)
+        try await store.close()
+    }
+
     private enum TestError: Error { case sqlite }
     private func sql(_ query: String) throws {
         var db: OpaquePointer?; guard sqlite3_open(url.path, &db) == SQLITE_OK else { throw TestError.sqlite }
