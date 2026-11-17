@@ -240,17 +240,24 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
                 case reserve(occurrenceId: UUID, mealRevision: Int, ingredientId: UUID, groupId: UUID, quantity: SharedMealQuantity?)
             }
             public let lotId: UUID
+            public let eventId, deliveryUsableId: UUID?
             public let pantryRevision: Int
             public let recordedAt: String
             public let details: Details
             public var kind: String {
                 switch details { case .observe: "observe"; case .select: "select"; case .match: "match"; case .reserve: "reserve" }
             }
-            private enum K: String, CodingKey { case kind, lotId, pantryRevision, recordedAt, confirmedAt, quantity, selected, occurrenceId, mealRevision, ingredientId, matched, groupId }
+            private enum K: String, CodingKey { case kind, lotId, pantryRevision, recordedAt, eventId, deliveryUsableId, confirmedAt, quantity, selected, occurrenceId, mealRevision, ingredientId, matched, groupId }
             public init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: K.self)
                 let kind = try c.decode(String.self, forKey: .kind)
-                let common: Set<String> = ["kind", "lotId", "pantryRevision", "recordedAt"]
+                eventId = c.contains(.eventId) ? try c.decode(UUID.self, forKey: .eventId) : nil
+                deliveryUsableId = c.contains(.deliveryUsableId) ? try c.decode(UUID.self, forKey: .deliveryUsableId) : nil
+                var common: Set<String> = ["kind", "lotId", "pantryRevision", "recordedAt"]
+                if kind == "observe", eventId != nil {
+                    common.insert("eventId")
+                    if deliveryUsableId != nil { common.insert("deliveryUsableId") }
+                }
                 switch kind {
                 case "observe":
                     try demandExactKeys(decoder, common.union(["confirmedAt", "quantity"]))
@@ -296,10 +303,13 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             try demandRequire(demandUnique(carried.map { $0.source.sourceId }))
             lots = try trackingDecode([Lot].self, from: c.superDecoder(forKey: .lots), shape: .array(historyObject(["lotId", "deliverySourceId", "location", "storedAt", "useFirstAt", "foodName", "exclusionTags"])))
             events = try c.decode([Event].self, forKey: .events)
-            try demandRequire(lots.count <= 2000 && events.count <= 2000 && demandUnique(lots.map(\.lotId)) && demandUnique(events.map(\.pantryRevision)))
+            try demandRequire(lots.count <= 2000 && events.count <= 2000 && demandUnique(lots.map(\.lotId)))
+            let batched = events.filter { $0.eventId != nil }, legacy = events.filter { $0.eventId == nil }
+            try demandRequire(demandUnique(batched.compactMap(\.eventId)) && demandUnique(batched.map { $0.lotId.uuidString + "/" + String($0.pantryRevision) }))
+            try demandRequire(demandUnique(legacy.map(\.pantryRevision)) && Set(legacy.map(\.pantryRevision)).isDisjoint(with: batched.map(\.pantryRevision)))
             let identifiers = Set(lots.map(\.lotId))
             for lot in lots {
-                try demandRequire(["pantry", "freezer"].contains(lot.location) && historyText(lot.foodName, 240))
+                try demandRequire(["pantry", "freezer", "fridge"].contains(lot.location) && historyText(lot.foodName, 240))
                 try demandRequire((lot.storedAt.map { demandTime($0) != nil } ?? true) && (lot.useFirstAt.map { demandTime($0) != nil } ?? true))
                 try demandRequire(lot.exclusionTags.count <= 20 && lot.exclusionTags.allSatisfy { historyText($0, 240) })
             }
@@ -453,7 +463,15 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             for event in history.events {
                 switch event.details {
                 case .observe:
-                    try demandRequire(history.lots.first { $0.lotId == event.lotId }?.deliverySourceId == nil)
+                    if history.lots.first(where: { $0.lotId == event.lotId })?.deliverySourceId != nil {
+                        let observations = carried.first { $0.source.sourceId == event.lotId }?.observations ?? deliveries.observations
+                        try demandRequire(event.eventId != nil && observations.contains { fact in
+                            if case .usable(let usable) = fact.body {
+                                return usable.sourceId == event.lotId && usable.observationId == event.deliveryUsableId
+                            }
+                            return false
+                        })
+                    } else { try demandRequire(event.deliveryUsableId == nil) }
                 case .select: break
                 case .match(let occurrence, let revision, let ingredient, _):
                     let meal = mealRevisions.first { $0.occurrenceId.uuid == occurrence && $0.revision == revision }?.meal

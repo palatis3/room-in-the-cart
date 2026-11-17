@@ -1880,6 +1880,10 @@ test('shared cooking batches lot splits, fulfills only actual holds, recovers it
  assert.equal((await f.review()).completion.servings,3);
  const stock=(await f.stock()).lots;
  assert.deepEqual([f.sourceId,f.manual,output.lotId].map(id=>stock.find(l=>l.lotId===id).observation.quantity.amount.numerator),[3,3,2]);
+ const history=ok(await call(f.owner,f.base+'/shops/'+f.shopId+'/records/history/v1')).record.stockHistory;
+ const savedBatch=history.events.filter(e=>e.pantryRevision===receipt.pantryRevision);
+ assert.equal(savedBatch.length,3);assert.equal(new Set(savedBatch.map(e=>e.eventId)).size,3);
+ assert.equal(savedBatch.find(e=>e.lotId===f.sourceId).deliveryUsableId,f.usable.observationId);
  const facts=(await admin.query('SELECT count(*)::int n,count(DISTINCT pantry_revision)::int revisions,count(DISTINCT event_id)::int ids FROM ritc.pantry_event WHERE household_id=$1 AND operation_id=$2',[f.h,receipt.operationId])).rows[0];
  assert.deepEqual(facts,{n:3,revisions:1,ids:3});
  assert.equal((await f.delivery()).sources.find(s=>s.sourceId===f.sourceId).reservations[0].quantity,null);

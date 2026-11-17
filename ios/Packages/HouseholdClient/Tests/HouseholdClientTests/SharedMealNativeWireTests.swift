@@ -614,6 +614,10 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(afterCook.completion?.servings, 3)
         let currentDelivery = try await service.deliveryEvidence(shopID: delivery.shopId.uuidString.lowercased())
         let currentPantry = try await service.pantryLots(reviewed: currentDelivery)
+        let captured = try await service.sharedRecordHistory(shopID: delivery.shopId)
+        let batch = try XCTUnwrap(captured.record.stockHistory).events.filter { $0.pantryRevision == cooked.pantryRevision }
+        XCTAssertEqual(batch.count, 2)
+        XCTAssertEqual(Set(batch.compactMap(\.eventId)).count, 2)
         XCTAssertEqual(currentDelivery.sources.first(where: { $0.id == source })?.confirmed?.quantity.amount.numerator, 6)
         XCTAssertEqual(currentPantry.lots.first(where: { $0.id == output })?.observation?.quantity?.amount.numerator, 2)
         var undo = afterCook.base.fields()
