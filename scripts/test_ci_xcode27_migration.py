@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, M4_BUILD_JOBS, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
+from check_ci_workflows import FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, M4_RUNNER, RELEASE_BUILD_JOB, CORE_BUILD_JOB, POLICY, ROUTED_NATIVE_JOBS, native_job, parse_workflow
 from check_ios_performance import compare_baseline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(init['with']['build-mode'], 'manual')
                     self.assertEqual(init['with']['languages'], 'swift')
                 else:
-                    runner = M4_RUNNER if key in M4_BUILD_JOBS else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
+                    runner = M4_RUNNER if key == RELEASE_BUILD_JOB else (FIXTURE_CONSUMER_RUNNER if name.endswith('-tests') else FIXTURE_RUNNER) if key in ROUTED_NATIVE_JOBS else 'xcode-27'
                     self.assertEqual(job['runs-on'], runner, key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
                     if key == ('ios-deep.yml', 'storekit'):
@@ -65,7 +65,7 @@ class Xcode27MigrationTests(unittest.TestCase):
             self.assertIn('if [ "${RUNNER_ENVIRONMENT:-}" = self-hosted ]; then', command)
             self.assertIn('bitrise_xcode=/Applications/Xcode-27.1.0.app/Contents/Developer', command)
             self.assertIn('Build version 27A9275', command)
-            if (workflow, name) in M4_BUILD_JOBS | {('ci.yml', 'ios-build')}:
+            if (workflow, name) in {RELEASE_BUILD_JOB, CORE_BUILD_JOB}:
                 producer = jobs[name]
                 self.assertEqual(producer['timeout-minutes'], 75 if name == 'ios-build' else 45)
                 steps = producer['steps']
