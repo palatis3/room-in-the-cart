@@ -1598,6 +1598,91 @@
           }
         }
       }
+    },
+    "Estimated additional groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated additional groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo estimado de los alimentos que faltan"
+          }
+        }
+      }
+    },
+    "Priced groceries so far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priced groceries so far"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal de alimentos con precio"
+          }
+        }
+      }
+    },
+    "Confirmed pantry food covers these recipe amounts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed pantry food covers these recipe amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos confirmados en la despensa cubren estas cantidades."
+          }
+        }
+      }
+    },
+    "Based on observed package prices. Check current prices, fees and taxes at checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on observed package prices. Check current prices, fees and taxes at checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La estimación usa precios observados. Revisa los precios, los cargos y los impuestos al pagar."
+          }
+        }
+      }
+    },
+    "Some amounts or package prices still need review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some amounts or package prices still need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún quedan cantidades o precios de paquetes por revisar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

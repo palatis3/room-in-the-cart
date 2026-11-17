@@ -100,7 +100,7 @@ struct TonightEntry: View {
                     ForEach(preview.recipe.ingredients) { ingredient in
                         LabeledContent(ingredient.name, value: ledgerQuantity(ingredient.quantity))
                     }
-                    Text(tonightText("Checkout cash is incomplete until current packs, prices, fees, and minimums are reviewed. Pantry coverage is not a price estimate."))
+                    TonightPricesView(estimate: preview.estimate)
                     Text(tonightText("Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."))
                     Button(tonightText("Apply dinner choice")) { Task { await apply(preview) } }
                         .disabled(applying || ledger.saving || ledger.hasPendingSave).accessibilityIdentifier("tonight.apply")
@@ -192,7 +192,10 @@ struct TonightEntry: View {
             }
             if let minutes = review.recipe.leadTimeMinutes { Text(tonightText("Reviewed preparation minutes") + ": \(minutes)") }
             else { Text(tonightText("Preparation time has not been reviewed.")) }
-            Text(tonightText("Checkout cash estimate incomplete."))
+            if review.eligibility.eligible, let input = model.input, let ledgerID = ledger.sourceWorkspaceID {
+                TonightPricesView(estimate: try? TonightPurchaseEstimate.estimate(review, workspace: input.workspace,
+                    workspaceID: ledgerID, shopID: input.workspace.selectedShopID, at: Date()))
+            }
         } label: {
             VStack(alignment: .leading) {
                 Text(review.recipe.title).font(.headline)
