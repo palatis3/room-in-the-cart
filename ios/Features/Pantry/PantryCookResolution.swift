@@ -54,10 +54,7 @@ enum PantryCookResolution {
         let inventoryRevision: Int64
         let ledgerRevision: Int64
         let journeyRevision: Int64
-        var remainingEventIDs: [UUID] {
-            let closed = Set((record.resolutions ?? []).map(\.eventID))
-            return record.draft.unresolvedUseIDs.filter { !closed.contains($0) }
-        }
+        var remainingEventIDs: [UUID] { record.remainingUnresolvedUseIDs }
 
         func actions(eventID: UUID, lotID: UUID?) -> Set<Action> {
             guard remainingEventIDs.contains(eventID),
@@ -72,18 +69,9 @@ enum PantryCookResolution {
                   !record.draft.leftovers.contains(where: { $0.id == lotID }) else { return result }
             result.insert(.recount)
             guard lot.count.quantity != nil else { return result }
-            // A prior amendment to this cook may have created a new head by subtraction.
-            // Other untracked rows were expressly excluded from that arithmetic.
-            let previous = record.resolutions?.first { $0.resultObservationID == lot.observationID }
-            if previous?.decision.action == .recount {
-                result.insert(.alreadyIncluded)
-            } else if previous?.decision.action == .deduct || record.resultingObservations[lotID] == lot.observationID
-                        || lot.confirmedAt < record.draft.cookedAt {
-                result.insert(.deduct)
-            } else if lot.confirmedAt > record.draft.cookedAt {
-                // The shopper must explicitly attest this count included the event.
-                // An equal timestamp with no causal link is ambiguous and requires a count.
-                result.insert(.alreadyIncluded)
+            let prior = record.resolutions?.first { $0.resultObservationID == lot.observationID }
+            if let action = record.countAction(lotID: lotID, observationID: lot.observationID, confirmedAt: lot.confirmedAt, prior: prior) {
+                result.insert(action)
             }
             return result
         }
@@ -147,11 +135,29 @@ enum PantryCookResolution {
 }
 
 extension PantryCookRecord {
+    var remainingUnresolvedUseIDs: [UUID] {
+        let closed = Set((resolutions ?? []).map(\.eventID))
+        return draft.unresolvedUseIDs.filter { !closed.contains($0) }
+    }
+
+    fileprivate func countAction(lotID: UUID, observationID: UUID, confirmedAt: Date,
+                                 prior: PantryCookResolution.Receipt?) -> PantryCookResolution.Action? {
+        // A physical recount covers all preceding uses. A subtraction covers only its own event.
+        if prior?.decision.action == .recount { return .alreadyIncluded }
+        if prior?.decision.action == .deduct || resultingObservations[lotID] == observationID || confirmedAt < draft.cookedAt {
+            return .deduct
+        }
+        // A newer count needs explicit confirmation from the person who knows its basis.
+        // With equal times and no causal link, only a fresh recount establishes a safe balance.
+        return confirmedAt > draft.cookedAt ? .alreadyIncluded : nil
+    }
+
     func validateResolutions() throws {
         guard let resolutions else { return }
         let unresolved = Set(draft.unresolvedUseIDs)
         guard isActive, !resolutions.isEmpty, resolutions.count <= unresolved.count,
               Set(resolutions.map(\.eventID)).count == resolutions.count else { throw PantryCookPort.Failure.changed }
+        var priorByObservation = [UUID: PantryCookResolution.Receipt]()
         var previousRevision = draft.inventoryRevision
         for row in resolutions {
             guard unresolved.contains(row.eventID), row.inventoryRevision > previousRevision,
@@ -164,14 +170,19 @@ extension PantryCookRecord {
             }
             guard (row.decision.lotID != nil) == (row.basis != nil),
                   !draft.leftovers.contains(where: { $0.id == row.decision.lotID }) else { throw PantryCookPort.Failure.changed }
-            if let basis = row.basis {
+            if let basis = row.basis, let lotID = row.decision.lotID {
                 try basis.count.validate()
+                if row.decision.action != .recount {
+                    guard row.decision.action == countAction(lotID: lotID, observationID: basis.observationID,
+                        confirmedAt: basis.confirmedAt, prior: priorByObservation[basis.observationID]) else { throw PantryCookPort.Failure.changed }
+                }
                 guard basis.revision >= 1, basis.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
                       basis.confirmedAt <= row.confirmedAt, basis.count.quantity.map({ $0.unit == basis.unit }) ?? true
                 else { throw PantryCookPort.Failure.changed }
             }
             let writes = row.decision.action == .deduct || row.decision.action == .recount
             let expectedID = writes ? PantryCookResolution.identity("observation", draft: draft, eventID: row.eventID) : nil
+            if let expectedID { priorByObservation[expectedID] = row }
             guard row.resultObservationID == expectedID,
                   row.after == (try PantryCookResolution.result(row.decision, basis: row.basis)) else { throw PantryCookPort.Failure.changed }
         }
@@ -196,7 +207,7 @@ extension PantryCookPort {
     private typealias Resolution = PantryCookResolution
 
     private func resolutionContext(_ read: Read) throws -> PantryCookResolution.Context {
-        guard let record = read.journey.cookedMeals?.first(where: { $0.isActive && $0.draft.meal.id == read.context.meal.id }),
+        guard let record = read.context.completedRecord,
               record.draft.meal == read.context.meal, record.draft.ledgerID == read.context.ledgerID,
               record.draft.inventoryID == read.context.inventory.state.workspaceID else { throw Failure.changed }
         return .init(record: record, lots: read.context.inventory.lots, inventoryRevision: read.context.inventory.state.revision,

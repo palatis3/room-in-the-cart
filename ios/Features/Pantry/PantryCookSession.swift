@@ -60,7 +60,9 @@ struct PantryCookRecord: Codable, Equatable {
         let ledgerID: UUID
         let shop: ShoppingLedger
         let meal: MealOccurrence
-        let completed: CookCompletionDraft?
+        let completedRecord: PantryCookRecord?
+        var completed: CookCompletionDraft? { completedRecord?.draft }
+        var remainingUnresolvedUseIDs: [UUID] { completedRecord?.remainingUnresolvedUseIDs ?? [] }
         let asOf: Date
         let preferences: MealPreferenceProfile?
     }
@@ -128,9 +130,9 @@ struct PantryCookRecord: Codable, Equatable {
         if let history = journey.mealRecovery, history.domain.events.contains(where: { $0.request.target.id == mealID }) {
             throw Failure.changed
         }
-        let completed = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }?.draft
+        let completedRecord = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }
         let context = PantryCookSession.Context(inventory: inventory, ledgerID: ledger.workspaceID, shop: shop, meal: meal,
-            completed: completed, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences)
+            completedRecord: completedRecord, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences)
         var owned: [UUID: Set<UUID>] = [:]
         var sourceNeeds: [UUID: StockNeed] = [:]
         if journey.mealSource?.shop.mealOccurrences.contains(meal) == true {
