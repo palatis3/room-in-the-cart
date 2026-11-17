@@ -10,6 +10,7 @@ import RecordArchive
 struct RecordsMediaUITestFileAdapter {
     let save: @MainActor (RecordsFileDocument) throws -> Void
     let selectedURL: @MainActor () -> URL?
+    var recipePage: (@MainActor (String) async throws -> Data)? = nil
 }
 private struct RecordsMediaUITestFilesKey: EnvironmentKey {
     static let defaultValue: RecordsMediaUITestFileAdapter? = nil

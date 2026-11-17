@@ -1,6 +1,227 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Import a recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import a recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar una receta mediante un enlace"
+          }
+        }
+      }
+    },
+    "Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos pueden contener una receta, una lista o un grafo. Se conserva el texto original de los ingredientes y del rendimiento."
+          }
+        }
+      }
+    },
+    "Edit recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar receta"
+          }
+        }
+      }
+    },
+    "Skip this recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip this recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir esta receta"
+          }
+        }
+      }
+    },
+    "HTTPS recipe link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTPS recipe link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace HTTPS de la receta"
+          }
+        }
+      }
+    },
+    "This iPhone contacts the website when you choose Read recipe. You can edit the results before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone contacts the website when you choose Read recipe. You can edit the results before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone se conecta al sitio web al elegir Leer receta. Puedes editar los resultados antes de guardarlos."
+          }
+        }
+      }
+    },
+    "Reading recipe…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading recipe…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo la receta…"
+          }
+        }
+      }
+    },
+    "Read recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer receta"
+          }
+        }
+      }
+    },
+    "Could not read recipe data from this public HTTPS page. Check the link, choose a recipe file, or use a recipe photo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read recipe data from this public HTTPS page. Check the link, choose a recipe file, or use a recipe photo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la receta de esta página HTTPS pública. Revisa el enlace, elige un archivo de recetas o usa una foto de la receta."
+          }
+        }
+      }
+    },
+    "Missing servings or yield": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing servings or yield"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan las porciones o el rendimiento"
+          }
+        }
+      }
+    },
+    "Missing ingredients": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan los ingredientes"
+          }
+        }
+      }
+    },
+    "Missing instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan las instrucciones"
+          }
+        }
+      }
+    },
+    "Steps, one per paragraph": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps, one per paragraph"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasos, uno por párrafo"
+          }
+        }
+      }
+    },
     "Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected.": {
       "extractionState": "manual",
       "localizations": {
