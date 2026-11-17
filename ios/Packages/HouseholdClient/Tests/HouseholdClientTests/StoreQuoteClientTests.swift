@@ -29,7 +29,7 @@ extension HouseholdClientTests {
         let auth = try auth(), shop = UUID(), base = try quotePage(shop: shop), options = EnteredStoreQuoteOptions(first: quoteOption(),second: quoteOption(checkout: 3500,trip: 400))
         let service = HouseholdService(configuration: try .init(baseURL: URL(string:"https://service.test")!),auth:auth,deviceVault:MemoryVault(),transport:transport())
         var bodies: [Data] = [], revision = 3, revoked = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") { return (201,Data(#"{"deviceId":"device","deviceToken":"secret"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") {
@@ -49,18 +49,18 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
         _ = try await service.enroll(householdID:household)
         let intent = try await service.prepareStoreQuote(shopID:shop,action:.pairs,request:.init(page:base,options:options))
-        let first = try await service.executeStoreQuote(intent); revision = 4
+        let first = try await service.executeStoreQuote(intent); stateLock.withLock { revision = 4 }
         let retry = try await service.executeStoreQuote(intent)
-        XCTAssertEqual(first,retry); XCTAssertEqual(bodies,[intent.bytes,intent.bytes])
-        revoked = true
+        XCTAssertEqual(first,retry); XCTAssertEqual(stateLock.withLock { bodies },[intent.bytes,intent.bytes])
+        stateLock.withLock { revoked = true }
         do { _ = try await service.executeStoreQuote(intent); XCTFail("Revoked adult reused old receipt") } catch {}
-        XCTAssertEqual(bodies.count,2)
+        XCTAssertEqual(stateLock.withLock { bodies.count },2)
     }
     func testStoreQuoteDifferentSelectedShopCannotReadOrReplay() async throws {
         let auth = try auth(), selected = UUID(), other = UUID()
         let service = HouseholdService(configuration:try .init(baseURL:URL(string:"https://service.test")!),auth:auth,deviceVault:MemoryVault(),transport:transport())
         var quoteReads = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") { return (201,Data(#"{"deviceId":"device","deviceToken":"secret"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") {
@@ -71,7 +71,7 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
         _ = try await service.enroll(householdID:household); _ = try await service.selectShop(selected)
         do { _ = try await service.storeQuotes(shopID:other); XCTFail("Cross-shop read") } catch { XCTAssertEqual(error as? ClientError,.accessEnded) }
-        XCTAssertEqual(quoteReads,0)
+        XCTAssertEqual(stateLock.withLock { quoteReads },0)
     }
     private func storeQuoteBody(_ request: URLRequest) throws -> Data {
         if let body = request.httpBody { return body }

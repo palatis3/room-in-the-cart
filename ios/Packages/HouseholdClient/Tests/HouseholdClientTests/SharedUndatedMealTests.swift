@@ -50,7 +50,7 @@ extension HouseholdClientTests {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
             auth: auth, deviceVault: MemoryVault(), transport: transport())
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             let path = try XCTUnwrap(request.url?.path)
             if path.hasSuffix("/devices") { return try response(["deviceId": "device", "deviceToken": "test"]) }
@@ -97,11 +97,11 @@ extension HouseholdClientTests {
         var changed = before.meal; changed.title = "Wrap lunch with guests"
         let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: before.id, meal: changed, reason: "Reviewed servings")
         try await service.executeSharedMealChange(intent)
-        XCTAssertTrue(proposed)
+        XCTAssertTrue(stateLock.withLock { proposed })
         let plan = try await service.mealPlan(shopID: shop)
         try await service.proposeMealMove(id: UUID(), occurrenceID: before.id, day: "2026-11-09", plan: plan)
         let after = try await service.sharedMealChanges(shopID: shop)
-        XCTAssertTrue(moved)
+        XCTAssertTrue(stateLock.withLock { moved })
         XCTAssertEqual(after.meals.first?.id, before.id)
         XCTAssertEqual(after.meals.first?.meal.day, "2026-11-09")
         XCTAssertEqual(after.meals.first?.meal.planning, before.meal.planning)

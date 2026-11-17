@@ -17,7 +17,7 @@ extension HouseholdClientTests {
         let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
         var committed = false, code = "tracking_candidate_changed", events: [String] = [], posted: [Data] = []
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -37,24 +37,24 @@ extension HouseholdClientTests {
         try await outbox.append(unrelated)
         do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Stale monetary proof accepted") } catch {}
         var rows = try await outbox.operations(); XCTAssertEqual(rows, [unrelated])
-        XCTAssertEqual(events, ["lookupExactOperation", "recomputeUncommittedCandidate"])
+        XCTAssertEqual(stateLock.withLock { events }, ["lookupExactOperation", "recomputeUncommittedCandidate"])
         for ambiguous in ["refresh_required", "stale_base", "tracking_stale_state"] {
-            code = ambiguous
+            stateLock.withLock { code = ambiguous }
             do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Conflict accepted") } catch {}
             rows = try await outbox.operations(); XCTAssertEqual(rows, [unrelated, operation]); XCTAssertEqual(rows.last?.bytes, operation.bytes)
         }
-        committed = true; events = []
+        stateLock.withLock { committed = true; events = [] }
         _ = try await service.sendSharedTracking(operation, outbox: outbox)
         rows = try await outbox.operations(); XCTAssertEqual(rows, [unrelated])
-        XCTAssertEqual(events, ["lookupExactOperation", "returnReceipt"])
-        XCTAssertTrue(posted.allSatisfy { $0 == operation.bytes })
+        XCTAssertEqual(stateLock.withLock { events }, ["lookupExactOperation", "returnReceipt"])
+        XCTAssertTrue(stateLock.withLock { posted.allSatisfy { $0 == operation.bytes } })
     }
     func testTrackingMoneyAcknowledgmentEchoCannotGrantUnselectedConsent() async throws {
         typealias F = TrackingWriteFixture
         let fixture = try F.scenario(), review = try F.candidateReview(fixture), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var previews = 0, grantExtra = true
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -67,11 +67,11 @@ extension HouseholdClientTests {
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         do { _ = try await service.acceptSharedTrackingCandidate(review); XCTFail("Unknown accepted without choice") } catch {}
-        XCTAssertEqual(previews, 0)
+        XCTAssertEqual(stateLock.withLock { previews }, 0)
         do { _ = try await service.acceptSharedTrackingCandidate(review, acceptUnknown: true); XCTFail("Server changed consent") } catch {}
-        grantExtra = false
+        stateLock.withLock { grantExtra = false }
         let result = try await service.acceptSharedTrackingCandidate(review, acceptUnknown: true)
-        XCTAssertEqual(result.preview.moneyAcknowledgments, .init(acceptOverage: false, acceptUnknown: true)); XCTAssertEqual(previews, 2)
+        XCTAssertEqual(result.preview.moneyAcknowledgments, .init(acceptOverage: false, acceptUnknown: true)); XCTAssertEqual(stateLock.withLock { previews }, 2)
     }
     func testRequestUndoHTTPWholeReviewReservedReceiptAndDurableExactRetry() async throws {
         typealias F = RequestUndoFixture
@@ -79,7 +79,7 @@ extension HouseholdClientTests {
         var service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
         let shop = try F.shop(), raw = F.candidate("partition"), rawPreview = try F.preview(raw)
         var posted: [Data] = [], commits = 0, reads = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -97,7 +97,7 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let history = try await service.requestAcceptanceHistory(shop: shop); XCTAssertEqual(history.items.count, 1)
         let candidate = try await service.requestAcceptanceUndoCandidate(shop: shop, targetOperationID: .init(UUID(uuidString: F.id(90))!))
-        XCTAssertTrue(posted.isEmpty)
+        XCTAssertTrue(stateLock.withLock { posted.isEmpty })
         let review = try await service.previewRequestAcceptanceUndo(shop: shop, candidate: candidate, packs: F.packs(), acceptOverage: false, acceptUnknown: false)
         let operation = try await service.prepareRequestAcceptanceUndo(review)
         XCTAssertEqual(operation.sharedRequestUndoBinding?.reservedOperationID.string, F.id(95))
@@ -108,7 +108,7 @@ extension HouseholdClientTests {
         let rows = try await OperationOutbox(url: url).operations(); XCTAssertEqual(rows, [operation])
         service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport()); _ = try await service.enroll(householdID: household)
         _ = try await service.sendRequestAcceptanceUndo(try XCTUnwrap(rows.first), outbox: outbox)
-        XCTAssertEqual(posted, [operation.bytes, operation.bytes]); XCTAssertEqual(commits, 1); XCTAssertEqual(reads, 2)
+        XCTAssertEqual(stateLock.withLock { posted }, [operation.bytes, operation.bytes]); XCTAssertEqual(stateLock.withLock { commits }, 1); XCTAssertEqual(stateLock.withLock { reads }, 2)
         let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
     }
 }
@@ -153,7 +153,7 @@ extension HouseholdClientTests {
         let operation = try F.pending(), auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var deny = point == .cleanup, commands = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -169,16 +169,16 @@ extension HouseholdClientTests {
         let held = HeldRequestUndoOutbox(store: store, point: point, arrived: { arrived.fulfill() })
         let original = Task { try await service.sendRequestAcceptanceUndo(operation, outbox: held) }
         await fulfillment(of: [arrived], timeout: 2)
-        if point == .append { XCTAssertEqual(commands, 0); await service.clearScope() }
-        deny = false; _ = try await service.enroll(householdID: household)
+        if point == .append { XCTAssertEqual(stateLock.withLock { commands }, 0); await service.clearScope() }
+        stateLock.withLock { deny = false }; _ = try await service.enroll(householdID: household)
         let newOperation = try F.pending(); try await store.append(newOperation)
         await held.release()
         do { _ = try await original.value; XCTFail("Old invocation crossed lease") } catch { XCTAssertEqual(error as? ClientError, .cancelled) }
         var rows = try await store.operations(); XCTAssertTrue(rows.contains(newOperation))
         if point == .append {
-            XCTAssertEqual(commands, 0); XCTAssertTrue(rows.contains(operation))
+            XCTAssertEqual(stateLock.withLock { commands }, 0); XCTAssertTrue(rows.contains(operation))
             _ = try await service.sendRequestAcceptanceUndo(operation, outbox: store)
             rows = try await store.operations(); XCTAssertEqual(rows, [newOperation])
-        } else { XCTAssertEqual(rows, [newOperation]); XCTAssertEqual(commands, 1) }
+        } else { XCTAssertEqual(rows, [newOperation]); XCTAssertEqual(stateLock.withLock { commands }, 1) }
     }
 }

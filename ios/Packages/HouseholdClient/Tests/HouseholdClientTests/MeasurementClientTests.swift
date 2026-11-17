@@ -19,7 +19,7 @@ extension HouseholdClientTests {
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var writes: [(String, [String: Any])] = []
         let status: [String: Any] = ["noticeVersion": MeasurementNotice.currentVersion, "consent": ["consentId": consent.uuidString, "noticeVersion": MeasurementNotice.currentVersion, "grantedAt": "2026-11-03T15:00:00Z"]]
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"secret"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") {
@@ -43,18 +43,19 @@ extension HouseholdClientTests {
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household)
-        XCTAssertTrue(writes.isEmpty, "Enrollment must never grant measurement consent")
+        XCTAssertTrue(stateLock.withLock { writes.isEmpty }, "Enrollment must never grant measurement consent")
         let enabled = try await service.grantMeasurementConsent(noticeVersion: MeasurementNotice.currentVersion)
         let grant = try XCTUnwrap(enabled.consent)
         let result = try await service.sendMeasurementFeedback(shopID: shop, answer: .init(outcome: .late, baseline: .list, comparison: .different), consent: grant)
         XCTAssertEqual(result.feedbackId, feedback)
         try await service.removeMeasurementFeedback(shopID: shop, feedbackID: feedback)
         try await service.withdrawMeasurementConsent(grant)
-        XCTAssertEqual(writes.count, 4)
-        XCTAssertEqual(Set(writes[0].1.keys), ["noticeVersion"])
-        XCTAssertEqual(Set(writes[1].1.keys), ["consentId", "noticeVersion", "outcome", "baseline", "comparison"])
-        XCTAssertEqual(Set(writes[2].1.keys), ["feedbackId"])
-        XCTAssertEqual(Set(writes[3].1.keys), ["consentId"])
-        XCTAssertFalse(try JSONSerialization.data(withJSONObject: writes.map(\.1)).isEmpty)
+        let recordedWrites = stateLock.withLock { writes }
+        XCTAssertEqual(recordedWrites.count, 4)
+        XCTAssertEqual(Set(recordedWrites[0].1.keys), ["noticeVersion"])
+        XCTAssertEqual(Set(recordedWrites[1].1.keys), ["consentId", "noticeVersion", "outcome", "baseline", "comparison"])
+        XCTAssertEqual(Set(recordedWrites[2].1.keys), ["feedbackId"])
+        XCTAssertEqual(Set(recordedWrites[3].1.keys), ["consentId"])
+        XCTAssertFalse(try JSONSerialization.data(withJSONObject: recordedWrites.map(\.1)).isEmpty)
     }
 }

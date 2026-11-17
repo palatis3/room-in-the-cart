@@ -17,7 +17,7 @@ extension HouseholdClientTests {
             requiredLeadMinutes: nil, elapsedMinutes: 0, ingredients: [.init(id: UUID(), name: "Rice", quantity: nil, exclusions: [])])
         let candidateJSON: FallbackJSON = ["candidateId": candidate.uuidString, "revision": 1, "usual": false, "recipe": try object(recipe)]
         var role = "shopper", hasSeat = false, writes = 0
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let row: FallbackJSON
             switch request.url!.lastPathComponent {
@@ -63,12 +63,12 @@ extension HouseholdClientTests {
         let other = try decode(stored, as: PendingFallbackWrite.self)
         XCTAssertFalse(library.belongsToSameDevice(as: other))
         do { _ = try await fresh.executeFallback(other); XCTFail("Wrong device replay") } catch ClientError.accessEnded {}
-        hasSeat = true
+        stateLock.withLock { hasSeat = true }
         let until = try await fresh.assistanceValidUntil(shopID: id)
         XCTAssertNotNil(until)
-        role = "contributor"
+        stateLock.withLock { role = "contributor" }
         do { _ = try await fresh.executeFallback(restored); XCTFail("Withdrawn shopper kept write access") } catch ClientError.accessEnded {}
-        XCTAssertEqual(writes, 2)
+        XCTAssertEqual(stateLock.withLock { writes }, 2)
     }
 
     func testFallbackOptionsBindReviewedTargetSourceQuantityAndWholePackTerms() throws {

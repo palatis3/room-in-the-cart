@@ -20,7 +20,7 @@ extension HouseholdClientTests {
             let page = expected.page, auth = try auth(), vault = MemoryVault(), configuration = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
             var service = HouseholdService(configuration: configuration, auth: auth, deviceVault: vault, transport: transport())
             var posts: [Data] = [], sources = 0, candidates = 0, previews = 0, windows = 0
-            MockURLProtocol.handler = { request in
+            let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
                 if let response = self.authResponse(request) { return response }
                 let path = request.url!.path
                 if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -59,9 +59,9 @@ extension HouseholdClientTests {
             if mode == "undo" { catalog = nil }
             else { catalog = try await service.sharedTrackingMealActionSources(page: current, action: expected.candidate.action.command) }
             let review = try await service.sharedTrackingCandidate(page: current, kind: expected.intent.kind, mealSources: catalog, transferredChanges: expected.intent.transferredChanges)
-            XCTAssertEqual(previews, 0); XCTAssertEqual(windows, 0); XCTAssertTrue(posts.isEmpty)
+            XCTAssertEqual(stateLock.withLock { previews }, 0); XCTAssertEqual(stateLock.withLock { windows }, 0); XCTAssertTrue(stateLock.withLock { posts.isEmpty })
             do { _ = try await service.acceptSharedTrackingCandidate(review); XCTFail("Missing independent unknown acceptance") } catch {}
-            XCTAssertEqual(previews, 0)
+            XCTAssertEqual(stateLock.withLock { previews }, 0)
             let accepted = try await service.acceptSharedTrackingCandidate(review, acceptUnknown: true)
             let operation = try await service.prepareSharedTrackingApply(accepted)
             XCTAssertEqual(operation.sharedTrackingBinding?.targetOperationID?.string, mode == "undo" ? F.id(90) : nil)
@@ -74,8 +74,8 @@ extension HouseholdClientTests {
             XCTAssertEqual(restored, [operation]); XCTAssertEqual(restored.first?.bytes, operation.bytes)
             service = HouseholdService(configuration: configuration, auth: auth, deviceVault: vault, transport: transport()); _ = try await service.enroll(householdID: household)
             _ = try await service.sendSharedTracking(try XCTUnwrap(restored.first), outbox: outbox)
-            XCTAssertEqual(posts, [operation.bytes, operation.bytes]); XCTAssertEqual(candidates, 1); XCTAssertEqual(previews, 1); XCTAssertEqual(windows, 1)
-            XCTAssertEqual(sources, mode == "undo" ? 0 : 1)
+            XCTAssertEqual(stateLock.withLock { posts }, [operation.bytes, operation.bytes]); XCTAssertEqual(stateLock.withLock { candidates }, 1); XCTAssertEqual(stateLock.withLock { previews }, 1); XCTAssertEqual(stateLock.withLock { windows }, 1)
+            XCTAssertEqual(stateLock.withLock { sources }, mode == "undo" ? 0 : 1)
             let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
         }
     }

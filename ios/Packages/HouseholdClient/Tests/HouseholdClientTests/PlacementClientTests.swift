@@ -51,7 +51,7 @@ extension HouseholdClientTests {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let other = UUID().uuidString.lowercased(), report = try placementCapture().report(occurredAt: placementDate)
         var bootstraps = 0, bodies: [Data] = [], expired = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
@@ -71,13 +71,13 @@ extension HouseholdClientTests {
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         _ = try await service.selectShop(UUID(uuidString: other))
-        let before = bootstraps
+        let before = stateLock.withLock { bootstraps }
         do { _ = try await service.executePlacementReport(report); XCTFail("Lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
         let receipt = try await service.executePlacementReport(report); XCTAssertEqual(receipt.disposition, "pending_reconciliation")
-        expired = true
+        stateLock.withLock { expired = true }
         do { _ = try await service.executePlacementReport(report); XCTFail("Expired replay") } catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "refresh_required", correlationID: nil, retryAfter: nil)) }
         let status = try await service.placementReportStatus(report); XCTAssertEqual(status?.state, "applied")
-        XCTAssertEqual(bootstraps, before); XCTAssertEqual(bodies, [report.bytes, report.bytes, report.bytes])
+        XCTAssertEqual(stateLock.withLock { bootstraps }, before); XCTAssertEqual(stateLock.withLock { bodies }, [report.bytes, report.bytes, report.bytes])
         let current = try await service.bootstrap(); XCTAssertEqual(current.shopId, other)
     }
     func testPlacementMinimalReporterDTOsRejectUnexpectedCurrentBudgetFields() throws {
@@ -94,7 +94,7 @@ extension HouseholdClientTests {
         let row = try placementPending(), page = PlacementReportPage(shopId: placementShopID, shopRevision: 4, authorityEpoch: 3, phase: "frozen", frozenRevision: 4, reports: [try placementPending()], nextCursor: nil)
         let review = try PlacementReviewIntent(subject: "account", householdID: household, memberID: member, deviceID: "device", page: page, report: row, choice: .apply, replayWindow: placementWindow)
         var bodies: [Data] = [], lostRole = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let result = self.authResponse(request) { return result }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
@@ -110,8 +110,8 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let pending = try await service.pendingPlacementReports(shopID: placementShopID); XCTAssertEqual(pending, page)
         do { _ = try await service.executePlacementReview(review); XCTFail("Lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
-        let receipt = try await service.executePlacementReview(review); XCTAssertEqual(receipt.shopRevision, 5); XCTAssertEqual(bodies, [review.bytes, review.bytes])
-        lostRole = true
+        let receipt = try await service.executePlacementReview(review); XCTAssertEqual(receipt.shopRevision, 5); XCTAssertEqual(stateLock.withLock { bodies }, [review.bytes, review.bytes])
+        stateLock.withLock { lostRole = true }
         do { _ = try await service.pendingPlacementReports(shopID: placementShopID); XCTFail("Former shopper read") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         let report = try placementCapture().report(occurredAt: placementDate)
         let reporterReceipt = try await service.executePlacementReport(report); XCTAssertEqual(reporterReceipt.disposition, "pending_reconciliation")
@@ -125,7 +125,7 @@ extension HouseholdClientTests {
     func testPlacementCaptureFetchesReviewedSnapshotAndWindowOnceBeforeLocalOfflineSeal() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let reviewed = try placementShopValue(); var snapshots = 0, windows = 0, offline = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if offline { XCTFail("Offline seal performed network work"); throw URLError(.notConnectedToInternet) }
             if let result = self.authResponse(request) { return result }
             let path = request.url!.path
@@ -138,9 +138,9 @@ extension HouseholdClientTests {
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let prepared = try await service.preparePlacementSnapshot(reviewed: reviewed)
         XCTAssertEqual(prepared.snapshot, reviewed); XCTAssertEqual(prepared.replayWindow, placementWindow)
-        offline = true
+        stateLock.withLock { offline = true }
         let report = try prepared.report(occurredAt: placementDate)
         let restored = try JSONDecoder().decode(PlacementReportIntent.self, from: encoded(report)); try restored.validate()
-        XCTAssertEqual(restored.bytes, report.bytes); XCTAssertEqual(snapshots, 1); XCTAssertEqual(windows, 1)
+        XCTAssertEqual(restored.bytes, report.bytes); XCTAssertEqual(stateLock.withLock { snapshots }, 1); XCTAssertEqual(stateLock.withLock { windows }, 1)
     }
 }

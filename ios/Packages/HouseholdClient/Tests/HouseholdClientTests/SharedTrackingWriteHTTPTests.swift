@@ -17,7 +17,7 @@ extension HouseholdClientTests {
             let auth = try auth(), vault = MemoryVault(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
             var service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
             var commands: [Data] = [], windows = 0, previews = 0, commits = 0, reads = 0
-            MockURLProtocol.handler = { request in
+            let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
                 if let response = self.authResponse(request) { return response }
                 let path = request.url!.path
                 if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -48,10 +48,10 @@ extension HouseholdClientTests {
             XCTAssertEqual(read, page)
             _ = try await service.sharedTrackingHistory(page: read)
             let candidate = try await service.sharedTrackingCandidate(page: page, kind: intent.kind, requestPreview: intent.requestPreview)
-            XCTAssertEqual(windows, 0); XCTAssertEqual(previews, 0); XCTAssertTrue(commands.isEmpty)
+            XCTAssertEqual(stateLock.withLock { windows }, 0); XCTAssertEqual(stateLock.withLock { previews }, 0); XCTAssertTrue(stateLock.withLock { commands.isEmpty })
             // Dropping this candidate is Cancel: no command/outbox/window is created.
             let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
-            XCTAssertTrue(commands.isEmpty); XCTAssertEqual(windows, 0)
+            XCTAssertTrue(stateLock.withLock { commands.isEmpty }); XCTAssertEqual(stateLock.withLock { windows }, 0)
             let operation = try await service.prepareSharedTrackingApply(accepted)
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
             XCTAssertEqual(envelope.body["demandReview"], .object(["previewId": .string(F.id(61)), "previewDigest": .string(String(repeating: "c", count: 64)), "trackingVersion": .integer(2)]))
@@ -64,11 +64,11 @@ extension HouseholdClientTests {
             do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Lost reply must remain pending") } catch { XCTAssertEqual(error as? ClientError, .transport) }
             let persisted = try await OperationOutbox(url: url).operations()
             XCTAssertEqual(persisted, [operation]); XCTAssertEqual(persisted.first?.bytes, operation.bytes)
-            let readsBeforeRetry = reads
+            let readsBeforeRetry = stateLock.withLock { reads }
             service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport()); _ = try await service.enroll(householdID: household)
             _ = try await service.sendSharedTracking(try XCTUnwrap(persisted.first), outbox: outbox)
-            XCTAssertEqual(commands, [operation.bytes, operation.bytes]); XCTAssertEqual(commits, 1)
-            XCTAssertEqual(windows, 1); XCTAssertEqual(previews, 1); XCTAssertEqual(reads, readsBeforeRetry)
+            XCTAssertEqual(stateLock.withLock { commands }, [operation.bytes, operation.bytes]); XCTAssertEqual(stateLock.withLock { commits }, 1)
+            XCTAssertEqual(stateLock.withLock { windows }, 1); XCTAssertEqual(stateLock.withLock { previews }, 1); XCTAssertEqual(stateLock.withLock { reads }, readsBeforeRetry)
             let left = try await outbox.operations(); XCTAssertTrue(left.isEmpty)
         }
     }
@@ -77,7 +77,7 @@ extension HouseholdClientTests {
         let p = try F.page(F.fixture()), auth = try auth(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
         var commands: [Data] = []
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -93,10 +93,10 @@ extension HouseholdClientTests {
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         XCTAssertEqual(envelope.body, ["trackingReview": .object(["previewId": .string(F.id(60)), "previewDigest": .string(String(repeating: "c", count: 64)), "trackingVersion": .integer(2)])])
         _ = try await service.executeSharedShop(operation) // Generic dispatch cannot drop the v2 binding.
-        XCTAssertEqual(commands.count, 1)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 1)
         let unbound = try PendingOperation(envelope: envelope, householdID: household, memberID: member, deviceID: "device")
         do { _ = try await service.executeSharedShop(unbound); XCTFail("Unbound v2 freeze reached HTTP") } catch {}
-        XCTAssertEqual(commands.count, 1)
+        XCTAssertEqual(stateLock.withLock { commands.count }, 1)
     }
 }
 
@@ -169,7 +169,7 @@ extension HouseholdClientTests {
         let auth = try auth(), config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: MemoryVault(), transport: transport())
         var oversized = true
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             let path = request.url!.path
             if path.hasSuffix("/devices") { return (201, try F.bytes(["deviceId": "device", "deviceToken": "test"])) }
@@ -179,7 +179,7 @@ extension HouseholdClientTests {
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         do { _ = try await service.sharedTracking(shopID: p.shopId.uuid); XCTFail("Oversized read accepted") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
-        oversized = false
+        stateLock.withLock { oversized = false }
         let held = HeldResponse(), arrived = expectation(description: "held tracking candidate")
         MockURLProtocol.intercept = { request in
             if request.request.url?.path.hasSuffix("/tracking/candidates") == true { held.set(request); arrived.fulfill(); return true }; return false

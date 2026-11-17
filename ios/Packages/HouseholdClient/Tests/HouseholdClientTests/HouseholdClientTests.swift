@@ -12,6 +12,14 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
         set { callbackLock.withLock { callbacks.handler = newValue } }
     }
 
+    // Async tests must use the returned lock for their shared fixture state too.
+    // This lock ends before startLoading delivers the response to URLSession.
+    static func installHandlerWithStateLock(_ handler: @escaping Handler) -> NSLock {
+        let stateLock = NSLock()
+        self.handler = { request in try stateLock.withLock { try handler(request) } }
+        return stateLock
+    }
+
     static var intercept: Interceptor? {
         get { callbackLock.withLock { callbacks.intercept } }
         set { callbackLock.withLock { callbacks.intercept = newValue } }
@@ -65,7 +73,7 @@ final class HouseholdClientTests: XCTestCase {
     }
     func testOTPVerifiesIdentityAndRotatesRefreshOnlyInVault() async throws {
         let vault = MemoryVault(); let auth = try auth(vault); var paths: [String] = []
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             paths.append(request.url!.path)
             XCTAssertEqual(request.value(forHTTPHeaderField: "apikey"), "sb_publishable_unit_test")
             return self.authResponse(request)!
@@ -73,7 +81,7 @@ final class HouseholdClientTests: XCTestCase {
         let result = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         XCTAssertEqual(result.identity.subject, "account")
         XCTAssertEqual(try vault.read(), "rotated")
-        XCTAssertEqual(paths, ["/auth/v1/verify", "/auth/v1/user"])
+        XCTAssertEqual(stateLock.withLock { paths }, ["/auth/v1/verify", "/auth/v1/user"])
     }
     func testIdentityMismatchNeverStoresSession() async throws {
         let vault = MemoryVault(); let auth = try auth(vault)
@@ -110,7 +118,7 @@ final class HouseholdClientTests: XCTestCase {
     func testServiceRetriesIdenticalBodyAndClearsRevokedScope() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var bodies: [Data] = []; var revoked = false
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer access")
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-secret"}"#.utf8)) }
@@ -131,8 +139,8 @@ final class HouseholdClientTests: XCTestCase {
         let bootstrap = try await service.enroll(householdID: household)
         let operation = try await service.prepare(envelope: .init(replayWindow: "window", shopId: "shop", kind: "request.send", base: .init(shopRevision: 0, authorityEpoch: 0), body: ["originalItem": .string("Rice")]), bootstrap: bootstrap)
         for _ in 0..<2 { do { _ = try await service.execute(operation); XCTFail("Expected transport failure") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
-        XCTAssertEqual(bodies, [operation.bytes, operation.bytes])
-        revoked = true
+        XCTAssertEqual(stateLock.withLock { bodies }, [operation.bytes, operation.bytes])
+        stateLock.withLock { revoked = true }
         do { _ = try await service.bootstrap(); XCTFail("Revoked access") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         do { _ = try await service.bootstrap(); XCTFail("Scope retained") } catch { XCTAssertEqual(error as? ClientError, .sessionNeeded) }
     }
@@ -170,7 +178,7 @@ final class HouseholdClientTests: XCTestCase {
     func testEnrollmentResumesSameDeviceAfterClientRecreation() async throws {
         let auth = try auth(); let vault = MemoryVault(); var registrations = 0
         let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") {
                 registrations += 1
@@ -184,7 +192,7 @@ final class HouseholdClientTests: XCTestCase {
         _ = try await first.enroll(householdID: household)
         let recreated = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
         _ = try await recreated.enroll(householdID: household)
-        XCTAssertEqual(registrations, 1)
+        XCTAssertEqual(stateLock.withLock { registrations }, 1)
     }
     private final class EnrollmentServer {
         let household: String, member: String
@@ -339,7 +347,7 @@ final class HouseholdClientTests: XCTestCase {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         var cursors: [String?] = []
-        MockURLProtocol.handler = { request in
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
             if let response = self.authResponse(request) { return response }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-secret"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, Data("{\"household\":{\"id\":\"\(self.household)\",\"label\":\"Home\"},\"memberId\":\"\(self.member)\",\"role\":\"contributor\",\"shopId\":null,\"enrolled\":true,\"queueConsent\":false,\"capabilities\":[]}".utf8)) }
@@ -352,6 +360,6 @@ final class HouseholdClientTests: XCTestCase {
         _ = try await service.ownRequests(cursor: member)
         do { _ = try await service.ownRequests(cursor: "../other"); XCTFail("Invalid cursor accepted") }
         catch { XCTAssertEqual(error as? ClientError, .configuration) }
-        XCTAssertEqual(cursors, [member])
+        XCTAssertEqual(stateLock.withLock { cursors }, [member])
     }
 }
