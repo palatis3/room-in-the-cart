@@ -88,6 +88,7 @@ public struct DinnerPreparation: Codable, Equatable, Sendable {
 public struct DinnerScenario: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public let commitments: DinnerCommitmentSet
+    public var reviewedFoodDetails: [UUID: MealEligibilityEvidence]? = nil
     public let acceptedDinnerIDs: [UUID]
     public let demands: [DinnerDemand]
     public let stock: [ConfirmedStockLot]
@@ -130,7 +131,9 @@ public struct DinnerScenarioResult: Equatable, Sendable {
     public let foodCoverageComplete: Bool
     public let timingFeasible: Bool?
     public let issues: [String]
-    public var feasible: Bool { foodCoverageComplete && timingFeasible == true }
+    public var preferenceRevision: UUID?
+    public var preferenceResults: [MealEligibilityPolicy.Result] = []
+    public var feasible: Bool { foodCoverageComplete && timingFeasible == true && preferenceResults.allSatisfy(\.eligible) }
 }
 public struct DinnerPairingResult: Equatable, Sendable {
     public enum Status: String, Sendable { case proposals, noNewPairing, noFeasiblePair, searchIncomplete }
@@ -148,7 +151,7 @@ public struct DinnerRecoveryResult: Equatable, Sendable {
 }
 
 public enum DinnerScenarioEngine {
-    public static func evaluate(_ scenario: DinnerScenario, acceptedDinners: [AcceptedDinner], cap: CheckoutCap? = nil, ledger: ShoppingLedger? = nil, state: DinnerPlanningState? = nil) throws -> DinnerScenarioResult {
+    public static func evaluate(_ scenario: DinnerScenario, acceptedDinners: [AcceptedDinner], cap: CheckoutCap? = nil, ledger: ShoppingLedger? = nil, state: DinnerPlanningState? = nil, preferences: MealPreferenceProfile? = nil) throws -> DinnerScenarioResult {
         try scenario.commitments.validate(); try scenario.preparation.validate()
         guard scenario.context.commitmentsID == scenario.commitments.id, scenario.acceptedChanges >= 0,
               scenario.demands.count <= 2_000, scenario.packs.count <= 1_000, scenario.stock.count <= 2_000,
@@ -161,9 +164,11 @@ public enum DinnerScenarioEngine {
                   pack.offer.price.map({ $0.minorUnits >= 0 }) ?? true else { throw DinnerPlanningError.invalid("packEvidence") }
             if case .confirmed(let limit) = pack.availability, let limit, limit < 0 { throw DinnerPlanningError.invalid("availability") }
         }
+        var preferenceResults: [MealEligibilityPolicy.Result] = []
         for id in scenario.acceptedDinnerIDs {
             guard let dinner = acceptedDinners.first(where: { $0.id == id }) else { throw DinnerPlanningError.notFound(id) }
             try dinner.template.validate()
+            if preferences != nil { preferenceResults.append(MealEligibilityPolicy.evaluate(profile: preferences, template: dinner.template)) }
         }
         // Automatic scenarios must contain an approved meal; manually entered staples can
         // still be priced through CheckoutEngine directly.
@@ -189,20 +194,27 @@ public enum DinnerScenarioEngine {
         // Explicit food matches must not hide a known exclusion in a pack or stock
         // label behind a benign ingredient name. This only enforces recorded rules;
         // it does not infer ingredients or certify allergen safety from a label.
-        func validateMatchedLabel(_ label: String, foodID: UUID) throws {
+        func validateMatchedLabel(_ label: String, foodID: UUID, sourceID: UUID) throws {
             guard !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            if let preferences, scenario.demands.contains(where: { $0.foodID == foodID }) {
+                let details = scenario.reviewedFoodDetails?[sourceID]
+                try details?.validate()
+                let result = MealEligibilityPolicy.evaluateFood(profile: preferences, labels: [label], evidence: details)
+                if !result.eligible || !result.softDifferences.isEmpty { preferenceResults.append(result) }
+            }
             for demand in scenario.demands where demand.foodID == foodID {
                 let isDinner = scenario.commitments.commitments.first(where: { $0.id == demand.commitmentID })?.kind == .dinner
                 let sourceID = demand.acceptedDinnerID ?? (isDinner && scenario.acceptedDinnerIDs.count == 1 ? scenario.acceptedDinnerIDs.first : nil)
                 let source = acceptedDinners.first { $0.id == sourceID }
+
                 let ingredientRules = source?.template.ingredients.filter { demand.ingredientID == nil || $0.id == demand.ingredientID }.flatMap(\.exclusions) ?? []
                 let check = MealTemplate(title: "Reviewed food match", ingredients: [MealIngredient(name: label, quantity: nil, exclusions: demand.exclusions)],
                     exclusions: (source?.template.exclusions ?? []) + ingredientRules)
                 try check.validate()
             }
         }
-        for pack in scenario.packs { try validateMatchedLabel(pack.offer.label, foodID: pack.foodID) }
-        for lot in scenario.stock { try validateMatchedLabel(lot.name, foodID: lot.foodID) }
+        for pack in scenario.packs { try validateMatchedLabel(pack.offer.label, foodID: pack.foodID, sourceID: pack.id) }
+        for lot in scenario.stock { try validateMatchedLabel(lot.name, foodID: lot.foodID, sourceID: lot.id) }
 
         // A single known demand cannot prove an entire accepted recipe is covered.
         // Legacy unbound scenarios remain readable, but need review before claiming
@@ -356,14 +368,15 @@ public enum DinnerScenarioEngine {
         if scenario.preparation.isFeasible == nil { issues.append("Preparation time is unconfirmed") }
         else if scenario.preparation.isFeasible == false { issues.append("Known preparation cannot fit the available time") }
         return DinnerScenarioResult(scenarioID: scenario.id, quote: quote, checkout: checkout, stockAllocation: stock,
-            packs: packResults, foodCoverageComplete: foodComplete, timingFeasible: scenario.preparation.isFeasible, issues: issues)
+            packs: packResults, foodCoverageComplete: foodComplete, timingFeasible: scenario.preparation.isFeasible, issues: issues,
+            preferenceRevision: preferences?.revision, preferenceResults: preferenceResults)
     }
     public static func pair(current: DinnerScenario, alternatives: [DinnerScenario], selectedAcceptedDinnerIDs: Set<UUID>,
         state: DinnerPlanningState, cap: CheckoutCap?, access: DinnerAccessContext, at now: Date, isolated: Bool = false, searchLimit: Int = 32, ledger: ShoppingLedger? = nil) throws -> DinnerPairingResult {
         try access.validate(shopID: ledger?.id ?? access.shopID, at: now, budget: true)
         guard access.hasPaidTools || isolated else { throw DinnerPlanningError.paidAccessRequired }
         guard (1...128).contains(searchLimit), alternatives.count <= 500 else { throw DinnerPlanningError.invalid("searchLimit") }
-        let baseline = try evaluate(current, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)
+        let baseline = try evaluate(current, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state, preferences: state.preferences(for: access))
         var compared: [(DinnerScenario, DinnerScenarioResult)] = []
         let alreadySelected = selectedAcceptedDinnerIDs.union(current.acceptedDinnerIDs)
         var newChoices = 0, examined = 0
@@ -374,7 +387,7 @@ public enum DinnerScenarioEngine {
                   scenario.baselineComplete == current.baselineComplete else { throw DinnerPlanningError.reviewRequired("changedOriginalItems") }
             if Set(scenario.acceptedDinnerIDs).isSubset(of: alreadySelected) { continue }
             newChoices += 1
-            let result = try evaluate(scenario, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)
+            let result = try evaluate(scenario, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state, preferences: state.preferences(for: access))
             _ = try CheckoutEngine.compare(before: baseline.quote, after: result.quote, cap: cap)
             compared.append((scenario, result))
         }
@@ -395,7 +408,7 @@ public enum DinnerScenarioEngine {
         for alternative in alternatives {
             guard !alternative.acceptedDinnerIDs.isEmpty,
                   alternative.acceptedDinnerIDs.allSatisfy({ id in state.acceptedDinners.contains(where: { $0.id == id && $0.acceptedFallback }) }) else { continue }
-            evaluated.append((alternative, try evaluate(alternative, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)))
+            evaluated.append((alternative, try evaluate(alternative, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state, preferences: state.preferences(for: access))))
         }
         let feasible = evaluated.filter { pair in
             guard pair.1.feasible else { return false }
