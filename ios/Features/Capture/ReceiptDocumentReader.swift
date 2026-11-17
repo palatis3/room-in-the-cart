@@ -10,16 +10,28 @@ import UniformTypeIdentifiers
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
 enum ReceiptDocumentFailure: Error, Equatable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout }
 
-struct ReceiptDocumentBytes: Sendable, Transferable {
-    static let maximumBytes = 10_000_000
-    let data: Data
-    let kind: ReceiptDocumentKind
+enum ReceiptPhotoSelection: Sendable, Transferable {
+    case selected(ReceiptDocumentBytes)
+    case rejected(ReceiptDocumentFailure)
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(importedContentType: .image) { received in
-            try Self.read(received.file, kind: .image)
+            do { return Self.selected(try ReceiptDocumentBytes.read(received.file, kind: .image)) }
+            catch let failure as ReceiptDocumentFailure { return Self.rejected(failure) }
         }
     }
+
+    var bytes: ReceiptDocumentBytes {
+        get throws {
+            switch self { case .selected(let input): return input; case .rejected(let failure): throw failure }
+        }
+    }
+}
+
+struct ReceiptDocumentBytes: Sendable {
+    static let maximumBytes = 10_000_000
+    let data: Data
+    let kind: ReceiptDocumentKind
 
     static func read(_ url: URL, kind: ReceiptDocumentKind) throws -> Self {
         do { return Self(data: try readRegularFile(at: url, maximumBytes: maximumBytes), kind: kind) }

@@ -105,8 +105,8 @@ struct PantryReceiptDocuments: View {
         .onChange(of: photo) { _, item in
             guard let item else { return }
             start {
-                guard let input = try await item.loadTransferable(type: ReceiptDocumentBytes.self) else { throw ReceiptDocumentFailure.unavailable }
-                return input
+                guard let input = try await item.loadTransferable(type: ReceiptPhotoSelection.self) else { throw ReceiptDocumentFailure.unavailable }
+                return try input.bytes
             }
         }
         .onChange(of: merchant) { _, _ in confirmed = false }
