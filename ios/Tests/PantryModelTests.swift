@@ -73,6 +73,28 @@ final class PantryModelTests: XCTestCase {
         try await reopened.close()
     }
 
+    func testSameScopeAppearanceKeepsReviewWhileExplicitRefreshAndLossClearIt() async throws {
+        let (dir, db) = try await database()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        var allowed = true
+        let model = PantryModel(repository: PantryRepository(store: db, authorize: { allowed }))
+        await model.loadOnAppearance(accessAllowed: true)
+        let lot = try await add(model)
+        await model.prepare(lotID: lot.id, action: .someLeft)
+        let original = try XCTUnwrap(model.review?.command.id)
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(model.review?.command.id, original)
+        await model.load()
+        XCTAssertNil(model.review)
+        await model.prepare(lotID: lot.id, action: .someLeft)
+        XCTAssertNotNil(model.review)
+        allowed = false
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertNil(model.review)
+        XCTAssertNil(model.snapshot)
+        XCTAssertEqual(model.phase, .accessDenied)
+        try await db.close()
+    }
     func testOversizedReviewDoesNotTrapPendingSaveAndSmallerEditStillWorks() async throws {
         let (directory, store) = try await database()
         defer { try? FileManager.default.removeItem(at: directory) }
