@@ -92,16 +92,24 @@ import CoreDomain
         do {
             let loaded = try await session.load(shopID: shopID, mealID: mealID)
             guard token == generation, authorize() else { invalidate(); return }
-            let loadedIngredients = loaded.meal.ingredientContributionIDs.compactMap { id in
-                loaded.shop.contributions.first { $0.id == id && $0.removedAt == nil }.map {
-                    Ingredient(id: id, name: $0.productName, planned: $0.quantity, exclusions: $0.exclusions)
+            let loadedIngredients: [Ingredient]
+            if let recovery = loaded.recovery {
+                let rules = Dictionary(uniqueKeysWithValues: recovery.ingredientRules.map { ($0.needID, $0.exclusions) })
+                loadedIngredients = try recovery.meal.ingredients.map { row in
+                    guard let exclusions = rules[row.need.id] else { throw Failure.stale }
+                    return Ingredient(id: row.need.id, name: row.foodName, planned: row.need.amount, exclusions: exclusions)
+                }
+            } else {
+                let contributions = Dictionary(uniqueKeysWithValues: loaded.shop.contributions.filter { $0.removedAt == nil }.map { ($0.id, $0) })
+                loadedIngredients = try loaded.meal.ingredientContributionIDs.map { id in
+                    guard let row = contributions[id] else { throw Failure.stale }
+                    return Ingredient(id: id, name: row.productName, planned: row.quantity, exclusions: row.exclusions)
                 }
             }
-            guard loadedIngredients.count == loaded.meal.ingredientContributionIDs.count else { throw Failure.stale }
             context = loaded; completed = loaded.completed; review = nil; attemptedApply = false; notice = nil
             undoReview = nil; attemptedUndo = false
             operationID = UUID(); foodDetails = [:]
-            cookedAt = loaded.asOf; servings = loaded.meal.servings.description; ingredients = loadedIngredients
+            cookedAt = loaded.asOf; servings = loaded.servings.description; ingredients = loadedIngredients
             leftoverChoice = .undecided; leftovers = []
         } catch {
             guard token == generation else { return }
@@ -120,7 +128,7 @@ import CoreDomain
     }
     func addLeftover() {
         guard canEdit, leftovers.count < 20, let context else { return }
-        leftovers.append(Leftover(name: context.meal.title))
+        leftovers.append(Leftover(name: context.title))
     }
     func keepEditing() {
         guard !attemptedApply, !busy, authorize() else { return }
@@ -144,7 +152,7 @@ import CoreDomain
     func suggestions(for ingredientID: UUID) -> [Suggestion] {
         guard let context, let ingredient = ingredients.first(where: { $0.id == ingredientID }), authorize() else { return [] }
         var restrictions = MealPreferenceSettings()
-        restrictions.exclusions = context.meal.exclusions + ingredient.exclusions
+        restrictions.exclusions = context.exclusions + ingredient.exclusions
         let extra = MealPreferenceProfile(settings: restrictions)
         var results: [Suggestion] = []
         for lot in context.inventory.lots {
@@ -206,7 +214,7 @@ import CoreDomain
         return CookCompletionDraft(id: operationID, inventoryID: context.inventory.state.workspaceID,
             inventoryRevision: context.inventory.state.revision, ledgerID: context.ledgerID,
             shop: context.shop, meal: context.meal, cookedAt: cookedAt, servingsMade: made,
-            parts: parts, leftovers: outputs, preferenceRevision: context.preferences?.revision)
+            parts: parts, leftovers: outputs, preferenceRevision: context.preferences?.revision, recoveredMeal: context.recovery?.meal)
     }
     func prepareReview() async {
         guard let session, canEdit else { return }

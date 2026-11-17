@@ -82,7 +82,7 @@ private struct CookCompletionForm: View {
         Form {
             if let context = model.context {
                 Section(cookCompletionText("What you cooked")) {
-                    Text(context.meal.title).font(.headline)
+                    Text(context.title).font(.headline)
                     Text(cookCompletionText("Confirm the actual servings and time. Recipe quantities do not determine what was used."))
                     TextField(cookCompletionText("Servings made"), text: $model.servings)
                         .keyboardType(.numbersAndPunctuation).accessibilityIdentifier("cook.servings")
@@ -234,7 +234,7 @@ private struct CookCompletionReviewView: View {
     var body: some View {
         List {
             Section(cookCompletionText("Review what was cooked")) {
-                Text(review.draft.meal.title).font(.headline)
+                Text(review.draft.cookedTitle).font(.headline)
                 LabeledContent(cookCompletionText("Servings made"), value: review.draft.servingsMade.description)
                 LabeledContent(cookCompletionText("Cooked at"), value: review.draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
                 ForEach(review.draft.parts) { part in
@@ -288,7 +288,7 @@ private struct CookCompletionSavedView: View {
         List {
             Section {
                 Text(cookCompletionText("Cooking recorded")).font(.headline).accessibilityIdentifier("cook.saved")
-                Text(draft.meal.title)
+                Text(draft.cookedTitle)
                 LabeledContent(cookCompletionText("Servings made"), value: draft.servingsMade.description)
                 Text(draft.cookedAt.formatted(date: .abbreviated, time: .shortened))
                 Text(cookCompletionText(draft.unresolvedUseIDs.isEmpty ? "Inventory changes recorded." : "Inventory needs review. Unresolved use remains linked to this cooking event."))
@@ -297,7 +297,9 @@ private struct CookCompletionSavedView: View {
             Section(cookCompletionText("Recorded ingredient use")) {
                 ForEach(draft.parts) { part in
                     VStack(alignment: .leading) {
-                        Text(model.context?.shop.contributions.first { $0.id == part.contributionID }?.productName ?? cookCompletionText("Ingredient"))
+                        Text(draft.recoveredMeal?.ingredients.first { $0.need.id == part.contributionID }?.foodName
+                             ?? model.context?.shop.contributions.first { $0.id == part.contributionID }?.productName
+                             ?? cookCompletionText("Ingredient"))
                         Text(cookUseText(part.use, lots: model.context?.inventory.lots ?? []))
                         if let substitute = part.substitution { Text(cookCompletionText("Actual substitution") + ": " + substitute) }
                     }

@@ -1579,10 +1579,11 @@ struct PickupPersistenceLocation {
         }
         try value.validateRecipientSends()
         try value.mealSource?.validate()
+        let recordedReplacements = (value.cookedMeals ?? []).compactMap { $0.draft.recoveredMeal }
         if let history = value.mealRecovery {
-            try history.validate()
+            try history.validate(recordedReplacements: recordedReplacements)
             try value.validateRecoveryRawBasis(history)
-        }
+        } else if !recordedReplacements.isEmpty { throw PickupModelError.invalid }
         try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,

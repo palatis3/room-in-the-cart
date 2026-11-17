@@ -37,6 +37,11 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
     public let shopID: UUID
     public let shopRevision: UUID
     public let meal: MealOccurrence
+    /// A pickup replacement keeps the original ledger occurrence for provenance.
+    /// Its individual portion needs are the reviewed rows, even when two use the same ingredient.
+    public let recoveredMeal: RecoveryMeal?
+    public var ingredientRowIDs: [UUID] { recoveredMeal?.needs.map(\.id) ?? meal.ingredientContributionIDs }
+    public var cookedTitle: String { recoveredMeal?.title ?? meal.title }
     public let preferenceRevision: UUID?
     public var unresolvedUseIDs: [UUID] {
         parts.compactMap { part in
@@ -52,7 +57,8 @@ public struct CookCompletionDraft: Codable, Equatable, Sendable, Identifiable {
     public var leftovers: [Leftovers]
 
     public init(id: UUID = UUID(), inventoryID: UUID, inventoryRevision: Int64, ledgerID: UUID, shop: ShoppingLedger,
-                meal: MealOccurrence, cookedAt: Date, servingsMade: Rational, parts: [Part], leftovers: [Leftovers], preferenceRevision: UUID? = nil) {
+                meal: MealOccurrence, cookedAt: Date, servingsMade: Rational, parts: [Part], leftovers: [Leftovers], preferenceRevision: UUID? = nil, recoveredMeal: RecoveryMeal? = nil) {
+        self.recoveredMeal = recoveredMeal
         self.preferenceRevision = preferenceRevision
         self.id = id; self.inventoryID = inventoryID; self.inventoryRevision = inventoryRevision; self.ledgerID = ledgerID
         shopID = shop.id; shopRevision = shop.revisionID; self.meal = meal; self.cookedAt = cookedAt
@@ -87,19 +93,24 @@ public enum CookCompletion {
     /// and pantry mapping. A draft cannot designate someone else's reservation.
     public static func review(_ draft: CookCompletionDraft, inventoryID: UUID, inventoryRevision: Int64,
                               ledgerID: UUID, shop: ShoppingLedger, lots: [InventoryLot], reservations: [InventoryReservation],
-                              mealClaims: [UUID: Set<UUID>], at now: Date) throws -> Review {
+                              mealClaims: [UUID: Set<UUID>], at now: Date, recoveredMeal: RecoveryMeal? = nil) throws -> Review {
         guard draft.inventoryID == inventoryID, draft.inventoryRevision == inventoryRevision, draft.ledgerID == ledgerID,
               draft.shopID == shop.id, draft.shopRevision == shop.revisionID, draft.meal.removedAt == nil,
-              shop.mealOccurrences.contains(draft.meal) else { throw InventoryError.stale }
+              shop.mealOccurrences.contains(draft.meal), draft.recoveredMeal == recoveredMeal,
+              recoveredMeal.map({ $0.id == draft.meal.id }) ?? true else { throw InventoryError.stale }
         guard draft.servingsMade > .zero, draft.cookedAt.timeIntervalSinceReferenceDate.isFinite, draft.cookedAt <= now,
               draft.parts.count <= 500, draft.leftovers.count <= 20 else { throw InventoryError.invalid("cookAmounts") }
         let rows = Dictionary(grouping: draft.parts, by: \.contributionID)
-        let ingredients = Set(draft.meal.ingredientContributionIDs)
+        let orderedIngredients = draft.ingredientRowIDs
+        let ingredients = Set(orderedIngredients)
+        if recoveredMeal == nil {
+            let live = shop.contributions.filter { ingredients.contains($0.id) && $0.removedAt == nil &&
+                $0.source == .meal(occurrenceID: draft.meal.id) }
+            guard live.count == ingredients.count else { throw InventoryError.stale }
+        }
         guard Set(rows.keys) == ingredients, Set(draft.parts.map(\.id)).count == draft.parts.count,
               Set(draft.leftovers.map(\.id)).count == draft.leftovers.count,
-              Set(mealClaims.keys).isSubset(of: ingredients),
-              shop.contributions.filter({ ingredients.contains($0.id) && $0.removedAt == nil &&
-                  $0.source == .meal(occurrenceID: draft.meal.id) }).count == ingredients.count
+              Set(mealClaims.keys).isSubset(of: ingredients), ingredients.count == orderedIngredients.count
         else { throw InventoryError.invalid("cookIngredients") }
         let before = try InventoryProjection.build(originID: inventoryID, lots: lots, reservations: reservations, at: now)
         let stock = Dictionary(uniqueKeysWithValues: lots.map { ($0.id, $0) })
@@ -112,7 +123,7 @@ public enum CookCompletion {
         }
         var uses: [UUID: UsedLot] = [:], fulfilled: [UUID: Rational] = [:], credited: [UUID: Rational] = [:]
         var unresolved: [UUID] = []
-        for ingredient in draft.meal.ingredientContributionIDs {
+        for ingredient in orderedIngredients {
             let entries = rows[ingredient] ?? []
             var perLot: [UUID: Rational] = [:]
             for part in entries {

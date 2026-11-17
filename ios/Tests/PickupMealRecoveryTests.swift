@@ -71,7 +71,7 @@ import LocalStore
         var inventory: ComparisonStore?
         if canonical {
             let store = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
-            let ledgerStore = try LedgerStore(url: directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+            let ledgerStore = try XCTUnwrap(ledger.pantryBackingStore(gate: gate))
             cleanup.track(store, ledgerStore)
             let mapping = try PantryLegacyMigration.map(originID: store.workspaceID,
                 heads: try await store.list().map(PantryLegacyMigration.SourceHead.init), ledger: .unavailable, at: now)
@@ -141,6 +141,51 @@ import LocalStore
         XCTAssertTrue(replayed, "Read-authorized acknowledgment of a saved event does not need the old action grant.")
         XCTAssertEqual(f.model.journey, actual)
         XCTAssertEqual(f.model.allocation?.demands.first { $0.id == reviewed.definition.meal.needs[0].id }?.allocated, .zero)
+    }
+
+    func testCookingReplacementConsumesBeansOnceAndUndoRestoresOnlyItsOwnReservation() async throws {
+        let f = try await fixture(canonical: true)
+        let shop = try XCTUnwrap(f.ledger.shop)
+        let session = PantryCookSession(ledger: f.ledger, pickup: f.model, authorize: { true })
+        let original = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        let oldDraft = CookCompletionDraft(inventoryID: original.inventory.state.workspaceID,
+            inventoryRevision: original.inventory.state.revision, ledgerID: original.ledgerID, shop: shop, meal: original.meal,
+            cookedAt: now, servingsMade: .one, parts: original.meal.ingredientContributionIDs.map {
+                .init(contributionID: $0, use: .notUsed)
+            }, leftovers: [])
+        let oldReview = try await session.review(oldDraft)
+        let replacement = try review(f)
+        let replaced = await f.model.applyMealRecovery(replacement, currentAuthority: { f.authority })
+        XCTAssertTrue(replaced, f.model.error ?? "")
+        do { try await session.apply(oldReview); XCTFail("A preview for quesadillas cannot record the replacement beans") }
+        catch {}
+        let fresh = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        let recovered = try XCTUnwrap(fresh.recovery?.meal)
+        let row = try XCTUnwrap(recovered.ingredients.first)
+        let beans = try XCTUnwrap(fresh.inventory.lots.first { $0.foodID == f.beans })
+        let draft = CookCompletionDraft(inventoryID: fresh.inventory.state.workspaceID,
+            inventoryRevision: fresh.inventory.state.revision, ledgerID: fresh.ledgerID, shop: fresh.shop, meal: fresh.meal,
+            cookedAt: now, servingsMade: recovered.servings,
+            parts: [.init(contributionID: row.need.id, use: .lot(id: beans.id, revision: beans.revision, amount: q(4)))],
+            leftovers: [], recoveredMeal: recovered)
+        let checked = try await session.review(draft)
+        XCTAssertEqual(checked.draft.cookedTitle, "Wednesday beans")
+        XCTAssertEqual(checked.reservations.count, 1)
+        try await session.apply(checked)
+        try await session.apply(checked)
+        let after = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertEqual(after.completed, draft)
+        XCTAssertEqual(after.inventory.lots.first { $0.id == beans.id }?.count.quantity?.amount, .zero)
+        XCTAssertEqual(f.model.journey?.physicalStockNeeds.first { $0.id == row.need.id }?.amount.amount, .zero)
+        let untouched = fresh.inventory.reservations.filter { $0.id != checked.reservations.first?.id }
+        for claim in untouched { XCTAssertTrue(after.inventory.reservations.contains(claim)) }
+        let undo = try await session.reviewUndo(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertEqual(undo.restoredHoldCount, 1)
+        try await session.applyUndo(undo)
+        let restored = try await session.load(shopID: shop.id, mealID: f.wednesday)
+        XCTAssertNil(restored.completed)
+        XCTAssertEqual(restored.inventory.lots.first { $0.id == beans.id }?.count, beans.count)
+        XCTAssertEqual(f.model.journey?.physicalStockNeeds.first { $0.id == row.need.id }?.amount, row.need.amount)
     }
 
     func testCanonicalRecountRejectsOldRecoveryPreviewAndFreshUnknownStaysUnresolved() async throws {

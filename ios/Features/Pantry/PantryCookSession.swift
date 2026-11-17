@@ -31,7 +31,8 @@ struct PantryCookRecord: Codable, Equatable {
         guard draft.shopID == shopID, draft.meal.removedAt == nil, draft.inventoryRevision >= 0,
               draft.servingsMade > .zero, draft.cookedAt.timeIntervalSinceReferenceDate.isFinite,
               draft.parts.count <= 500, draft.leftovers.count <= 20, Set(draft.parts.map(\.id)).count == draft.parts.count,
-              Set(draft.parts.map(\.contributionID)) == Set(draft.meal.ingredientContributionIDs),
+              Set(draft.parts.map(\.contributionID)) == Set(draft.ingredientRowIDs),
+              draft.recoveredMeal.map({ $0.id == draft.meal.id }) ?? true,
               Set(priorCounts.map(\.lotID)) == inputs, priorCounts.count == inputs.count,
               inputs.isDisjoint(with: outputs), outputs.count == draft.leftovers.count,
               Set(resultingObservations.keys) == inputs.union(outputs),
@@ -60,6 +61,11 @@ struct PantryCookRecord: Codable, Equatable {
         let completed: CookCompletionDraft?
         let asOf: Date
         let preferences: MealPreferenceProfile?
+        let recovery: PickupRecoveryMealDefinition?
+
+        var title: String { recovery?.meal.title ?? meal.title }
+        var servings: Rational { recovery?.meal.servings ?? meal.servings }
+        var exclusions: [String] { recovery?.meal.exclusions ?? meal.exclusions }
     }
     let ledger: LedgerModel
     let pickup: PickupModel
@@ -120,26 +126,42 @@ struct PantryCookRecord: Codable, Equatable {
             // local cook receipt is created only when the shopper commits.
             journey = PickupJourney(id: shopID, savedAt: now)
         }
-        // A recovered replacement can have a different ingredient set from the
-        // ledger occurrence. Its recovery screen must supply its exact version.
+        let recovery: PickupRecoveryMealDefinition?
         if let history = journey.mealRecovery, history.domain.events.contains(where: { $0.request.target.id == mealID }) {
-            throw Failure.changed
-        }
+            guard history.source.ledgerWorkspaceID == ledger.workspaceID,
+                  let sealed = history.source.shop.mealOccurrences.first(where: { $0.id == mealID }),
+                  let calendar = history.ledgerCalendarBasis.first(where: { $0.occurrenceID == mealID }),
+                  calendar.day == meal.scheduledDay,
+                  let current = try history.definition(for: mealID) else { throw Failure.changed }
+            var compared = meal
+            compared.scheduledDay = sealed.scheduledDay
+            guard compared == sealed else { throw Failure.changed }
+            recovery = current
+        } else { recovery = nil }
         let completed = journey.cookedMeals?.first { $0.isActive && $0.draft.meal.id == mealID }?.draft
         let context = PantryCookSession.Context(inventory: inventory, ledgerID: ledger.workspaceID, shop: shop, meal: meal,
-            completed: completed, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences)
+            completed: completed, asOf: now, preferences: workspace.dinnerPlanning.privateMealPreferences, recovery: recovery)
         var owned: [UUID: Set<UUID>] = [:]
         var sourceNeeds: [UUID: StockNeed] = [:]
-        if journey.mealSource?.shop.mealOccurrences.contains(meal) == true {
+        if recovery != nil || (journey.mealSource?.ledgerWorkspaceID == ledger.workspaceID && journey.mealSource?.shop.mealOccurrences.contains(meal) == true) {
             let sources = try await store.list().map(PantryLegacyMigration.SourceHead.init)
             guard authorize() else { throw Failure.unavailable }
             let plan = try PantryLegacyMigration.map(originID: store.workspaceID, heads: sources,
                 ledger: .available(originID: ledger.workspaceID, revision: ledgerRecord.revision, workspace: workspace), at: now)
             let exclusive = Set(plan.claimLinks.filter { $0.journeyIDs == [shopID] }.map(\.reservationID))
-            let needs = Dictionary(uniqueKeysWithValues: journey.physicalStockNeeds.map { ($0.id, $0) })
-            for detail in journey.needDetails where detail.sourceOccurrenceID == mealID {
-                guard let contribution = detail.sourceContributionID, meal.ingredientContributionIDs.contains(contribution),
-                      let need = needs[detail.id] else { continue }
+            let needs = Dictionary(uniqueKeysWithValues: try journey.remainingPhysicalNeeds().map { ($0.id, $0) })
+            let bindings: [(UUID, UUID)]
+            if let recovery {
+                bindings = recovery.meal.ingredients.map { ($0.need.id, $0.need.id) }
+            } else {
+                bindings = journey.needDetails.compactMap { detail in
+                    guard detail.sourceOccurrenceID == mealID, let row = detail.sourceContributionID,
+                          meal.ingredientContributionIDs.contains(row) else { return nil }
+                    return (row, detail.id)
+                }
+            }
+            for (contribution, needID) in bindings {
+                guard let need = needs[needID], need.priority != .protected else { continue }
                 let id = try PantryLegacyMigration.claimIdentity(originID: store.workspaceID, needID: need.id, foodID: need.foodID)
                 if exclusive.contains(id), inventory.reservations.contains(where: { $0.id == id && $0.foodID == need.foodID && $0.state == .active }) {
                     owned[contribution, default: []].insert(id)
@@ -157,9 +179,13 @@ struct PantryCookRecord: Codable, Equatable {
         let context = read.context
         guard context.completed == nil else { throw Failure.alreadyCompleted }
         guard draft.preferenceRevision == context.preferences?.revision else { throw Failure.changed }
+        if context.recovery != nil {
+            guard let event = read.journey.mealRecovery?.domain.events.last(where: { $0.request.target.id == draft.meal.id }),
+                  event.appliedAt <= draft.cookedAt else { throw Failure.changed }
+        }
         return try CookCompletion.review(draft, inventoryID: context.inventory.state.workspaceID, inventoryRevision: context.inventory.state.revision,
             ledgerID: context.ledgerID, shop: context.shop, lots: context.inventory.lots, reservations: context.inventory.reservations,
-            mealClaims: read.claims, at: context.asOf)
+            mealClaims: read.claims, at: context.asOf, recoveredMeal: context.recovery?.meal)
     }
     func review(_ draft: CookCompletionDraft) async throws -> CookCompletion.Review {
         let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }

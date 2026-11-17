@@ -80,4 +80,39 @@ final class CookCompletionTests: XCTestCase {
         draft.parts.removeLast()
         XCTAssertThrowsError(try evaluate(draft, shop, [wraps], [claim, protected], owned: [ids[0]: [claim.id]]))
     }
+    func testRecoveredDinnerMustMatchTheReviewedReplacementAndItsPortionNeedRows() throws {
+        let (shop, original) = try makeMeal()
+        let beans = try lot("Beans", count: 4)
+        let ingredient = UUID()
+        let ids = [UUID(), UUID()]
+        func replacement(revision: UUID) throws -> RecoveryMeal {
+            let groups = try [1, 3].enumerated().map { offset, amount in
+                RecoveryIngredient(ingredientID: ingredient, groupID: nil, foodName: beans.name,
+                    need: StockNeed(id: ids[offset], foodID: beans.foodID, name: beans.name,
+                        amount: try q(Int64(amount)), priority: .required))
+            }
+            return RecoveryMeal(id: original.id, revisionID: revision, templateID: nil, templateVersion: nil,
+                title: "Beans for dinner", servings: try Rational(4), ingredients: groups, scheduledDay: nil,
+                due: nil, timeZoneID: "UTC", exclusions: [], remainingElapsedMinutes: nil,
+                requiredLeadMinutes: nil, advanceStepsCompleted: false)
+        }
+        let current = try replacement(revision: UUID())
+        let draft = CookCompletionDraft(inventoryID: origin, inventoryRevision: 6, ledgerID: ledger, shop: shop,
+            meal: original, cookedAt: now, servingsMade: try Rational(4),
+            parts: try current.ingredients.map { row in .init(contributionID: row.need.id,
+                use: .lot(id: beans.id, revision: 1, amount: try q(1))) }, leftovers: [], recoveredMeal: current)
+        func check(_ draft: CookCompletionDraft, against current: RecoveryMeal?) throws -> CookCompletion.Review {
+            try CookCompletion.review(draft, inventoryID: origin, inventoryRevision: 6, ledgerID: ledger, shop: shop,
+                lots: [beans], reservations: [], mealClaims: [:], at: now, recoveredMeal: current)
+        }
+        let checked = try check(draft, against: current)
+        XCTAssertEqual(checked.changes.count, 1)
+        XCTAssertEqual(checked.changes.first?.lot.count.quantity?.amount, try Rational(2))
+        XCTAssertThrowsError(try check(draft, against: replacement(revision: UUID())))
+        XCTAssertThrowsError(try check(draft, against: nil))
+        var stale = draft
+        stale.parts = original.ingredientContributionIDs.map { .init(contributionID: $0, use: .notUsed) }
+        XCTAssertThrowsError(try check(stale, against: current))
+    }
+
 }
