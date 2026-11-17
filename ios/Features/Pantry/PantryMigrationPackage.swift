@@ -44,7 +44,7 @@ import LocalStore
         let plan: InventoryMigrationPlan
         let chunks: [InventoryMigrationChunk]
     }
-    private static let namespace = "pantry-legacy-provenance/v1"
+    nonisolated private static let namespace = "pantry-legacy-provenance/v1"
 
     /// The coordinator must retain the token used to enumerate these exact source heads.
     /// Never fetch a newer token for an older mapped plan: tombstones are not present in
@@ -141,7 +141,7 @@ import LocalStore
     }
 
     /// Reject a different origin/migration, substituted body/key, or SQL metadata before exposing provenance.
-    static func provenance(_ record: InventoryRecord, migrationID: UUID, originID: UUID) throws -> Envelope {
+    nonisolated static func provenance(_ record: InventoryRecord, migrationID: UUID, originID: UUID) throws -> Envelope {
         guard record.key.kind == .intent, record.revision == 1, record.payloadVersion == 1,
               record.lotID == nil, record.source == nil, !record.payload.isEmpty,
               record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalidRecord }
@@ -293,14 +293,14 @@ import LocalStore
         guard !bytes.isEmpty, bytes.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.capacity }
         return bytes
     }
-    private static func canonical<T: Encodable>(_ value: T) throws -> Data {
+    nonisolated private static func canonical<T: Encodable>(_ value: T) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(value)
     }
-    private static func provenanceID(_ body: Provenance, migrationID: UUID, originID: UUID) throws -> UUID {
+    nonisolated private static func provenanceID(_ body: Provenance, migrationID: UUID, originID: UUID) throws -> UUID {
         try identity("\(migrationID.uuidString)/\(originID.uuidString)", body)
     }
-    private static func identity<T: Encodable>(_ scope: String, _ value: T) throws -> UUID {
+    nonisolated private static func identity<T: Encodable>(_ scope: String, _ value: T) throws -> UUID {
         let payload = try canonical(value)
         var bytes = Array(SHA256.hash(data: Data((namespace + "/" + scope + "/").utf8) + payload).prefix(16))
         bytes[6] = (bytes[6] & 0x0f) | 0x80; bytes[8] = (bytes[8] & 0x3f) | 0x80

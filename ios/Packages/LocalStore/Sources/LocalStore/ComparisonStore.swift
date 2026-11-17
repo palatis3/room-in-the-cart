@@ -18,6 +18,7 @@ public struct UnavailableComparison: Equatable, Sendable, Identifiable {
 }
 
 public struct ComparisonListing: Equatable, Sendable {
+    public static let empty = ComparisonListing(records: [], unavailable: [])
     public let records: [SavedComparison]
     public let unavailable: [UnavailableComparison]
 }

@@ -33,6 +33,7 @@ public enum InventoryEngine {
             var recordsObservation = false
             switch command.change {
             case .create: throw InventoryError.stale
+            case .reservation: throw InventoryError.invalid("reservationNeedsClaims")
             case .count(let value, let id):
                 count = value; observationID = id; confirmedAt = command.occurredAt
                 unit = value.quantity?.unit ?? current.unit

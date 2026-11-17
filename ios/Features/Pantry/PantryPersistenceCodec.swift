@@ -53,6 +53,15 @@ enum PantryPersistenceCodec {
         return result
     }
 
+    static func write(_ claim: InventoryReservation, expectedRevision: Int64) throws -> InventoryWrite {
+        try claim.validate()
+        guard expectedRevision >= 0, expectedRevision < Int64.max, claim.revision == expectedRevision + 1 else {
+            throw Failure.invalidRecord
+        }
+        return InventoryWrite(record: InventoryRecord(key: .init(.reservation, claim.id), revision: claim.revision,
+            payload: try encode(claim), lotID: claim.lotID), expectedRevision: expectedRevision)
+    }
+
     static func lot(_ record: InventoryRecord) throws -> InventoryLot {
         let value = try decode(InventoryLot.self, record, kind: .lot)
         try value.validate()

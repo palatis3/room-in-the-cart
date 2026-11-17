@@ -42,7 +42,7 @@ public enum InventoryPrivacyErasure {
         id: claim.id, originID: claim.originID, revision: claim.revision + 1,
         foodID: claim.foodID, lotID: lostPin ? nil : claim.lotID, name: claim.name,
         amount: uncertainBacking ? nil : claim.amount, priority: claim.priority,
-        state: claim.state == .released ? .released : .unresolved)
+        state: claim.state == .released ? .released : .unresolved, personal: claim.personal)
       try value.validate()
       redacted.append(value)
       return value

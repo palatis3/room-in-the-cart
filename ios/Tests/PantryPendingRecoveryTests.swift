@@ -53,6 +53,48 @@ import LocalStore
             reviewedInventoryRevision: result.current.state.revision, at: date ?? now)
     }
 
+    func testDirectLunchReservationAndPartialReleaseRecoverExactClaimAfterSQLiteReopen() async throws {
+        let f = try await fixture()
+        let a = editor(f)
+        await a.load()
+        await a.prepareNewFood(name: "Cooked portions", location: .fridge, amount: "4", unit: .count)
+        await a.confirmReview(acknowledgingReservations: false)
+        let before = try XCTUnwrap(a.snapshot), lot = try XCTUnwrap(before.lots.first)
+        func basis(_ snapshot: PantryRepository.Snapshot) -> PantryReviewedFood {
+            .init(id: lot.foodID, name: lot.name, inventoryWorkspaceID: snapshot.state.workspaceID, inventoryRevision: snapshot.state.revision)
+        }
+        let day = try MealDay(year: 2026, month: 11, day: 18, timeZoneIdentifier: "America/New_York")
+        await a.prepareReservation(.reserve(purpose: "School lunch", amount: "2", day: day), lotID: lot.id, basis: basis(before))
+        let review = try XCTUnwrap(a.review)
+        let pending = try repository(f).stagePending(review.command, reviewedInventoryRevision: review.before.state.revision)
+        let committed = try await rawApply(f, pending)
+        XCTAssertEqual(committed.receipt.heads.map(\.key.kind), [.reservation])
+        let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(fresh)
+        let recovered = PantryModel(repository: PantryRepository(store: fresh, mutationGate: f.gate, pendingStore: f.journal,
+                                                                 authorize: { true }), clock: { self.now })
+        await recovered.load()
+        XCTAssertNil(try f.journal.read())
+        let held = try XCTUnwrap(recovered.snapshot)
+        let claim = try XCTUnwrap(held.reservations.first)
+        XCTAssertEqual(claim.name, "School lunch")
+        XCTAssertEqual(claim.personal?.day, day)
+        XCTAssertEqual(held.availability.lots.first?.free?.amount, try Rational(2))
+        await recovered.prepareReservation(.release(claim, amount: "1"), lotID: lot.id, basis: basis(held))
+        await recovered.confirmReview(acknowledgingReservations: true)
+        let partial = try XCTUnwrap(recovered.snapshot)
+        let remaining = try XCTUnwrap(partial.reservations.first)
+        XCTAssertEqual(remaining.amount?.amount, .one)
+        XCTAssertEqual(partial.availability.lots.first?.free?.amount, try Rational(3))
+        await recovered.prepareReservation(.release(remaining, amount: nil), lotID: lot.id, basis: basis(partial))
+        await recovered.confirmReview(acknowledgingReservations: true)
+        let replay = try await rawApply(f, pending)
+        XCTAssertTrue(replay.replayed)
+        XCTAssertEqual(replay.current.reservations.map(\.state), [.released])
+        XCTAssertEqual(replay.current.availability.lots.first?.free?.amount, try Rational(4))
+        XCTAssertEqual(replay.current.lots, before.lots)
+    }
+
     func testRestartRestoresExactAddBeforeEditableStateAndNeverInventsOldReview() async throws {
         let f = try await fixture(), original = try await stagedAdd(f)
         let reopened = editor(f, at: now.addingTimeInterval(3600))

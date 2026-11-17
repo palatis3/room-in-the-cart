@@ -16,6 +16,31 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
+        launch(reset: true)
+        let pantry = app.buttons["shop.myPantry"]
+        XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing from the empty Shop")
+        pantry.tap()
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        let name = app.textFields["pantry.foodName"]
+        tap(name); name.typeText("Dry lentils")
+        let amount = app.textFields["pantry.amount"]
+        tap(amount); amount.typeText("2")
+        if app.keyboards.buttons["Done"].exists { app.keyboards.buttons["Done"].tap() }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Dry lentils")).firstMatch
+        XCTAssertTrue(lot.waitForExistence(timeout: 10))
+        let lotID = lot.identifier
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(pantry.waitForExistence(timeout: 12), "Pantry entry is missing after relaunch")
+        pantry.tap()
+        XCTAssertTrue(app.buttons[lotID].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["pantry.setup.apply"].exists)
+    }
+
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
     func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
         launch(reset: true, sourceRemoval: true)

@@ -258,6 +258,23 @@ public actor LedgerStore {
         }
     }
 
+    /// Reads one immutable revision at the reviewed physical ledger head.
+    public func inventoryErasureHistory(revision: Int64, expectedHead: Int64) throws
+        -> (record: LedgerRecord, projection: LedgerInventoryProjectionBinding?) {
+        guard revision >= 1, revision <= expectedHead else { throw LedgerStoreError.invalidInput }
+        return try database.transaction(immediate: false) {
+            let current = try database.workspace()
+            guard current.id == workspaceID else { throw LedgerStoreError.erased }
+            guard current.revision == expectedHead else {
+                throw LedgerStoreError.staleRevision(expected: expectedHead, actual: current.revision)
+            }
+            let record = try database.historyRecord(revision, origin: workspaceID)
+            guard try database.hasInventoryProjectionOperation(record.operationID) else { return (record, nil) }
+            guard let receipt = try database.inventoryProjectionReceipt(record.operationID) else { throw LedgerStoreError.corruptRecord }
+            return (record, receipt.binding)
+        }
+    }
+
     public func retiredWorkspaceIDs() throws -> [UUID] { try tombstones().map(\.workspaceID) }
 
     /// Idempotent. Releasing the actor also closes its connection.
@@ -523,6 +540,16 @@ final class LedgerDatabase: @unchecked Sendable {
         }
         guard sqlite3_step(row) == SQLITE_DONE else { throw LedgerStoreError.corruptRecord }
         return result
+    }
+
+    func historyRecord(_ revision: Int64, origin: UUID) throws -> LedgerRecord {
+        let row = try statement("SELECT \(Self.columns) FROM ledger_revisions WHERE workspace_id=? AND revision=?",
+                                values: [.text(origin.uuidString), .integer(revision)])
+        defer { sqlite3_finalize(row) }
+        guard sqlite3_step(row) == SQLITE_ROW else { throw LedgerStoreError.corruptRecord }
+        let value = try decode(row, workspaceID: origin)
+        guard value.revision == revision, sqlite3_step(row) == SQLITE_DONE else { throw LedgerStoreError.corruptRecord }
+        return value
     }
 
     func record(operationID: UUID, workspaceID: UUID) throws -> LedgerRecord? {

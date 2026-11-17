@@ -1,6 +1,8 @@
 import XCTest
+import CryptoKit
 import CoreDomain
 import LocalStore
+import RecordArchive
 @testable import RoomInTheCart
 
 @MainActor final class PantryLegacyMigrationTests: XCTestCase {
@@ -8,6 +10,7 @@ import LocalStore
     private func q(_ amount: Int64) -> Quantity { .init(amount: try! Rational(amount), unit: .count, originalLiteral: String(amount)) }
 
     private struct Fixture {
+        let directory: URL
         let cleanup: SQLiteFixtureDirectory
         let pickup: PickupModel
         let ledger: LedgerModel
@@ -54,7 +57,7 @@ import LocalStore
         let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: q(8), disposition: .received, receivedAt: now)
         let observation = UsableObservation(id: UUID(), receipt: key, usable: q(8), confirmedAt: now, confirmedMatchToOrderLine: true)
         let received = await pickup.receive(receipt, usable: observation); XCTAssertTrue(received)
-        return Fixture(cleanup: cleanup, pickup: pickup, ledger: ledger, food: food, meal: meal, receipt: receipt, observation: observation)
+        return Fixture(directory: directory, cleanup: cleanup, pickup: pickup, ledger: ledger, food: food, meal: meal, receipt: receipt, observation: observation)
     }
 
     private func context(_ fixture: Fixture) throws -> PantryLegacyMigration.LedgerContext {
@@ -65,6 +68,152 @@ import LocalStore
         let snapshot = try await fixture.pickup.archiveSnapshot()
         return try PantryLegacyMigration.map(originID: snapshot.workspaceID,
             heads: snapshot.records.map(PantryLegacyMigration.SourceHead.init), ledger: ledger ?? context(fixture), at: now)
+    }
+
+    func testErasureScanFindsHistoricalPackProofAndKeepsCollateralReceiptAndPin() async throws {
+        let f = try await fixture()
+        let store = try ComparisonStore(url: f.directory.appendingPathComponent("erasure.sqlite"), inventoryEnabled: true)
+        let repository = PantryRepository(store: store, authorize: { true })
+        f.cleanup.track(store, repository)
+        let origin = store.workspaceID, operation = UUID()
+        let current = try XCTUnwrap(f.pickup.journey), shop = try XCTUnwrap(f.ledger.shop)
+        let standalone = try InventoryEngine.prepare(.init(id: operation, originID: origin, lotID: UUID(), eventID: UUID(),
+            expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: f.food, name: "Separate freezer wraps",
+                source: .manual(originID: origin, sourceID: UUID()), location: .freezer, unit: .count,
+                count: .exact(q(6))), observationID: UUID())), current: nil, at: now)
+        let lot = standalone.lot
+        let needs = current.rawPhysicalStockNeeds.filter { $0.foodID == f.food && $0.amount.amount > .zero }
+        let claims = needs.map { InventoryReservation(id: UUID(), originID: origin, revision: 1, foodID: f.food,
+            lotID: lot.id, name: $0.name, amount: $0.amount, priority: $0.priority) }
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: f.food)
+        let proof = try LedgerCanonicalPackStockEvidence.review(
+            scope: .init(journeyID: shop.id, journeyRevision: current.revision,
+                basketRevisionID: XCTUnwrap(current.basket?.current.id), shopRevisionID: shop.revisionID, lineID: f.food),
+            basis: .init(originID: origin, inventoryRevision: 1, sourceHeads: [.init(journeyID: shop.id, revision: 1)]),
+            requirement: requirement, claimBindings: zip(needs, claims).map { .init(need: $0.0, reservationID: $0.1.id) },
+            canonicalLots: [lot], canonicalReservations: claims,
+            projection: InventoryProjection.build(originID: origin, lots: [lot], reservations: claims, at: now),
+            eligibility: [.init(lotID: lot.id, source: lot.source, observationID: lot.observationID,
+                status: .eligible, receiptEvidenceDigest: nil)])
+        let originalPack = try XCTUnwrap(current.ledgerPackSelections.first)
+        let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
+            confirmedAtHome: try proof.confirmedQuantity(for: requirement), protectedAmount: requirement.protectedQuantity,
+            offerA: originalPack.request.offerA, offerB: originalPack.request.offerB)
+        let pack = try LedgerPackSelection(workspaceID: originalPack.sourceWorkspaceID, shop: shop,
+            lineID: f.food, request: request, selectedOfferID: originalPack.selectedOfferID, at: now,
+            source: "Saved shelf review", canonicalStockEvidence: proof)
+        XCTAssertEqual(pack.formatVersion, 3)
+        var old = current
+        old.ledgerPackSelections = [pack]
+        try PickupModel.validate(old)
+        let historical = try await store.save(id: shop.id, title: shop.title, payload: JSONEncoder().encode(old), savedAt: now)
+        let head = try await store.save(id: shop.id, title: shop.title, payload: JSONEncoder().encode(current), savedAt: now)
+        let mapping = try PantryLegacyMigration.map(originID: origin, heads: [.init(head)], ledger: .unavailable, at: now)
+        let receipt = try XCTUnwrap(mapping.lots.first)
+        let received = try InventoryEngine.prepare(.init(id: operation, originID: origin, lotID: receipt.id, eventID: UUID(),
+            expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: receipt.foodID, name: receipt.name,
+                source: receipt.source, location: receipt.location, unit: receipt.unit, count: receipt.count),
+                observationID: receipt.observationID)), current: nil, at: now)
+        let pin = InventoryReservation(id: UUID(), originID: origin, revision: 1, foodID: f.food, lotID: receipt.id,
+            name: "Saved for another lunch", amount: q(2), priority: .protected)
+        let pinRow = InventoryRecord(key: .init(.reservation, pin.id), revision: pin.revision,
+            payload: try JSONEncoder().encode(pin), lotID: pin.lotID)
+        let token = try await store.inventorySourceToken()
+        var writes = try PantryPersistenceCodec.writes(standalone)
+        writes += try PantryPersistenceCodec.writes(received)
+        writes.append(.init(record: pinRow, expectedRevision: 0))
+        _ = try await store.commitInventory(.init(workspaceID: origin, operationID: operation, expectedRevision: 0,
+            request: Data(operation.uuidString.utf8), mode: .activate, sourceToken: token, writes: writes), at: now)
+        let snapshot = try await repository.load(at: now)
+        let context = try PantryErasureDependencies.Context(snapshot: snapshot, mapping: mapping, sourceToken: token, at: now)
+        let selected = PantryErasureDependencies.Selection.lot(lot.id, revision: lot.revision)
+        let preview = try await PantryErasureDependencies.scan(store: store, selection: selected, context: context, authorize: { true })
+
+        let historicalProof = try XCTUnwrap(preview.inspections.first { $0.container == .pickup(shop.id, revision: historical.revision) })
+        XCTAssertTrue(historicalProof.matches.contains(.init(subject: .lot(lot.id), role: .incidentalCopy)))
+        XCTAssertEqual(historicalProof.sourceFactLotIDs, [receipt.id])
+        XCTAssertFalse(preview.inspections.contains { $0.container == .pickup(shop.id, revision: head.revision) })
+        XCTAssertTrue(preview.sqlDependenciesVerified)
+        XCTAssertEqual(preview.collateralPickupIDs, [shop.id])
+        XCTAssertTrue(preview.needsExpandedReview)
+        XCTAssertEqual(preview.explicitlySelectedLotIDs, [lot.id])
+        XCTAssertEqual(preview.retainedReceiptLotIDsInCollateralPickups, [receipt.id])
+        XCTAssertEqual(preview.retainedPhysicalLotIDs, [receipt.id])
+        XCTAssertEqual(preview.retainedReservations, [pin])
+        let pickupSelection = PantryErasureDependencies.Selection.pickup(shop.id, revision: head.revision,
+            payloadDigest: Data(SHA256.hash(data: head.payload)))
+        let pickupPreview = try await PantryErasureDependencies.scan(store: store, selection: pickupSelection,
+            context: context, authorize: { true })
+        XCTAssertEqual(pickupPreview.pickupSourceCandidateLotIDs, [receipt.id])
+        XCTAssertTrue(pickupPreview.explicitlySelectedLotIDs.isEmpty)
+        XCTAssertEqual(pickupPreview.retainedPhysicalLotIDs, [receipt.id, lot.id])
+        XCTAssertEqual(pickupPreview.retainedReservations, [pin])
+        let after = try await repository.load(at: now)
+        XCTAssertEqual(after.state, snapshot.state)
+        XCTAssertEqual(after.lots, snapshot.lots)
+        XCTAssertEqual(after.reservations, snapshot.reservations)
+
+        let paired = try LedgerStore(url: f.directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+        f.cleanup.track(paired)
+        let coordinator = PantryErasureCoordinator(inventory: store, ledger: paired, gate: PantryMutationGate(),
+            pendingDirectory: f.directory.appendingPathComponent("pending"),
+            registry: try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json")),
+            worker: try PantryArchiveWorker(root: f.directory.appendingPathComponent("archives")),
+            journalDirectory: f.directory.appendingPathComponent("privacy"),
+            cleanup: { _, _ in XCTFail("Unreviewed collateral reached cleanup") }, authorize: { true }, clock: { self.now })
+        let impact = try await coordinator.prepare(selected)
+        XCTAssertEqual(impact.blockers, [.collateralPickups]); XCTAssertFalse(impact.canCommit)
+        XCTAssertEqual(impact.collateralPickupIDs, [shop.id])
+        XCTAssertEqual(impact.retainedReceiptFoodNames, [receipt.name]); XCTAssertEqual(impact.foodNames, [lot.name])
+        do { _ = try await coordinator.commit(impact); XCTFail("Historical contact is insufficient authorization") }
+        catch PantryErasureCoordinator.Failure.blocked { }
+        let untouched = try await repository.load(at: now); XCTAssertEqual(untouched.state, snapshot.state)
+
+        let future = InventoryRecord(key: .init(.intent, UUID()), revision: 1,
+            payload: Data(#"{"namespace":"pantry-future/v2","privateEvidence":"opaque"}"#.utf8))
+        _ = try await store.commitInventory(.init(workspaceID: origin, operationID: UUID(),
+            expectedRevision: snapshot.state.revision, request: Data("add future intent".utf8),
+            writes: [.init(record: future, expectedRevision: 0)]), at: now)
+        let updated = try await repository.load(at: now)
+        let updatedContext = try PantryErasureDependencies.Context(snapshot: updated, mapping: mapping,
+            sourceToken: await store.inventorySourceToken(), at: now)
+        let blocked = try await PantryErasureDependencies.scan(store: store, selection: selected,
+            context: updatedContext, authorize: { true })
+        XCTAssertTrue(blocked.sqlHistoriesComplete)
+        XCTAssertFalse(blocked.sqlDependenciesVerified)
+        XCTAssertEqual(blocked.unresolvedSQLReasons, [.unknownNamespace])
+        XCTAssertEqual(blocked.remainingScopes, [.externalCopiesNotScanned])
+        XCTAssertEqual(blocked.retainedReservations, [pin])
+
+        // After a reviewed whole-origin retirement, even a foreign pickup or
+        // ledger wrapper cannot make the old pack proof independent.
+        _ = try await store.eraseInventoryOrigin(expectedRevision: updated.state.revision, sourceToken: updatedContext.sourceToken,
+            operationID: UUID(), at: now)
+        let replacement = try ComparisonStore(url: f.directory.appendingPathComponent("replacement.sqlite"), inventoryEnabled: true)
+        f.cleanup.track(replacement)
+        let foreignPickupOrigin = "pickups/" + UUID().uuidString
+        func archive(_ bytes: Data, origin: String, kind: ArchiveRecordKind) -> ArchiveRecord {
+            .init(id: shop.id.uuidString, origin: origin, revision: ArchiveCodec.digest(bytes), kind: kind,
+                title: shop.title, savedAtMilliseconds: 1_800_000_000_000, nativePayload: bytes)
+        }
+        struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+        var ledgerWithProof = f.ledger.workspace
+        ledgerWithProof.packSelections = [pack]
+        let ordinaryPickup = archive(try RecordsNativeCodec.canonical(old), origin: foreignPickupOrigin, kind: .pickup)
+        let ledgerOrigin = "ledger/" + paired.workspaceID.uuidString
+        let ordinaryLedger = archive(try RecordsNativeCodec.canonical(LedgerDocument(workspace: ledgerWithProof)), origin: ledgerOrigin, kind: .ledger)
+        for record in [ordinaryPickup, ordinaryLedger] {
+            try RecordsNativeCodec.validate(record)
+            do {
+                try await PantryArchivePrivacyValidator.validate(record, inventory: replacement, ledger: paired, gate: PantryMutationGate(),
+                    retiredOrigins: [origin], authorize: { true })
+                XCTFail("Ordinary backup contained the retired origin's v3 pack proof")
+            } catch PantryArchivePrivacyValidator.Failure.retired { }
+        }
+        let independent = archive(try RecordsNativeCodec.canonical(LedgerDocument(workspace: f.ledger.workspace)), origin: ledgerOrigin, kind: .ledger)
+        try await PantryArchivePrivacyValidator.validate(independent, inventory: replacement, ledger: paired, gate: PantryMutationGate(),
+            retiredOrigins: [origin], authorize: { true })
+
     }
 
     func testReceiptCorrectionKeepsOnePhysicalLotAndFullObservationSupersession() async throws {
@@ -131,9 +280,13 @@ import LocalStore
         let projection = try InventoryProjection.build(originID: conflict.originID, lots: conflict.lots,
             reservations: conflict.reservations, at: now)
         XCTAssertTrue(projection.lots.allSatisfy { $0.free == nil })
-        let reversed = try PantryLegacyMigration.map(originID: snapshot.workspaceID,
+        let reversed = try PantryLegacyMigration.mapWithJourneys(originID: snapshot.workspaceID,
             heads: snapshot.records.reversed().map(PantryLegacyMigration.SourceHead.init), ledger: .unavailable, at: now)
-        XCTAssertEqual(conflict, reversed)
+        XCTAssertEqual(conflict, reversed.plan)
+        let expectedJourneys = try snapshot.records.sorted { $0.id.uuidString < $1.id.uuidString }.map {
+            try JSONDecoder().decode(PickupJourney.self, from: $0.payload)
+        }
+        XCTAssertEqual(reversed.journeys, expectedJourneys)
     }
 
     private func carryover(_ f: Fixture) throws -> DinnerAwayCarryoverModel {
@@ -215,6 +368,19 @@ import LocalStore
     func testMalformedOrDuplicateSourceSetDoesNotReturnPartialMigration() async throws {
         let f = try await fixture(), snapshot = try await f.pickup.archiveSnapshot()
         let head = PantryLegacyMigration.SourceHead(try XCTUnwrap(snapshot.records.first))
+        let original = try JSONDecoder().decode(PickupJourney.self, from: head.payload)
+        var futureVersion = original
+        futureVersion.version = original.version + 1
+        var prematureFeedback = original
+        prematureFeedback.closedAt = nil
+        prematureFeedback.feedback = PickupFeedback(decision: .unchanged, baseline: .list, comparison: .same)
+        for invalid in [futureVersion, prematureFeedback] {
+            let badHead = PantryLegacyMigration.SourceHead(id: head.id, revision: head.revision,
+                payload: try JSONEncoder().encode(invalid), savedAt: head.savedAt)
+            XCTAssertThrowsError(try PickupModel.validate(invalid))
+            XCTAssertThrowsError(try PantryLegacyMigration.mapWithJourneys(originID: snapshot.workspaceID,
+                heads: [badHead], ledger: .unavailable, at: now))
+        }
         XCTAssertThrowsError(try PantryLegacyMigration.map(originID: snapshot.workspaceID, heads: [head, head], ledger: .unavailable, at: now)) {
             XCTAssertEqual($0 as? PantryLegacyMigration.Failure, .duplicateSource)
         }

@@ -16,6 +16,137 @@ import LocalStore
         let gate: PantryMutationGate
         let stockID: UUID
     }
+    func testLivePairedModelsActivateOnlyAfterReviewAndRevokeEarlierEditors() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self), gate = PantryMutationGate()
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"),
+            inventoryProjectionsEnabled: true, mutationGate: gate, usesLivePantry: true)
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"),
+            mutationGate: gate, usesLivePantry: true)
+        cleanup.track(ledger, pickup)
+        await ledger.open()
+        try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+        await pickup.load()
+        XCTAssertTrue(pickup.pantryRouteAvailable)
+        XCTAssertTrue(pickup.journeys.isEmpty)
+        XCTAssertFalse(pickup.pantryIsActive)
+        let setup = try pickup.makePantrySetupCoordinator(authorize: { true })
+        let review = try await setup.prepare()
+        XCTAssertEqual(review.sourceCount, 0)
+        XCTAssertFalse(pickup.pantryIsActive)
+        _ = try await setup.apply(review)
+        let refreshed = await pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed, pickup.error ?? "")
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        XCTAssertTrue(editor.canEdit)
+
+        pickup.suspendPrivatePantry()
+        XCTAssertFalse(pickup.pantryRouteAvailable)
+        try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+        await pickup.load()
+        XCTAssertTrue(pickup.pantryRouteAvailable)
+        XCTAssertTrue(pickup.pantryIsActive)
+        await editor.load()
+        XCTAssertEqual(editor.phase, .accessDenied)
+        let newEditor = try XCTUnwrap(pickup.makePantryModel())
+        await newEditor.load()
+        XCTAssertTrue(newEditor.canEdit)
+    }
+
+    func testConfirmedNewOriginPreservesRetirementAcrossRelaunchAndKeepsOrdinaryLedgerUsable() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self), gate = PantryMutationGate()
+        let ledgerURL = directory.appendingPathComponent("ledger.sqlite"), pickupURL = directory.appendingPathComponent("pickup.sqlite")
+        let ledger = LedgerModel(databaseURL: ledgerURL, inventoryProjectionsEnabled: true, mutationGate: gate, usesLivePantry: true)
+        let pickup = PickupModel(databaseURL: pickupURL, mutationGate: gate, usesLivePantry: true)
+        cleanup.track(ledger, pickup)
+        await ledger.open()
+        try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+        await pickup.load()
+        let setup = try pickup.makePantrySetupCoordinator(authorize: { true })
+        _ = try await setup.apply(setup.prepare())
+        let refreshed = await pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let original = try XCTUnwrap(pickup.pantryErasureStores?.inventory)
+        let state = try await original.inventoryState(), token = try await original.inventorySourceToken()
+        let receipt = try await original.eraseInventoryOrigin(expectedRevision: state.revision, sourceToken: token, operationID: UUID())
+        pickup.invalidatePantryAfterErasure()
+        await pickup.load()
+        XCTAssertTrue(pickup.pantryRestartAvailable)
+        XCTAssertFalse(pickup.pantryRouteAvailable)
+        let listed = try await pickup.archiveListing()
+        XCTAssertEqual(listed.listing, .empty)
+        let ledgerSaved = await ledger.startShop(title: "Separate ledger")
+        XCTAssertTrue(ledgerSaved, ledger.error ?? "")
+        do {
+            try await pickup.restartRetiredPantry(authorize: { false })
+            XCTFail("Restart required current authorization")
+        } catch { XCTAssertEqual(pickup.sourceWorkspaceID, original.workspaceID) }
+
+        try await pickup.restartRetiredPantry(authorize: { true })
+        let replacement = try XCTUnwrap(pickup.sourceWorkspaceID)
+        XCTAssertNotEqual(original.workspaceID, replacement)
+        XCTAssertEqual(pickup.retiredPantryOrigins, [original.workspaceID])
+        XCTAssertFalse(pickup.pantryIsActive)
+        XCTAssertTrue(pickup.pantrySetupAvailable)
+        let recorded = try await original.inventoryOriginRetirement()
+        XCTAssertEqual(recorded, receipt)
+
+        let reopened = PickupModel(databaseURL: pickupURL, mutationGate: gate, usesLivePantry: true)
+        cleanup.track(reopened)
+        try await reopened.bindPrivatePantry(ledger: ledger, authorize: { true })
+        await reopened.load()
+        XCTAssertEqual(reopened.sourceWorkspaceID, replacement)
+        XCTAssertEqual(reopened.retiredPantryOrigins, [original.workspaceID])
+        XCTAssertTrue(reopened.pantrySetupAvailable)
+    }
+
+    func testErasureBroadcastImmediatelyRevokesBothLiveWindowsAndTheirDisplayedEditors() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self), gate = PantryMutationGate()
+        var windows: [(LedgerModel, PickupModel)] = []
+        for _ in 0..<2 {
+            let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"),
+                inventoryProjectionsEnabled: true, mutationGate: gate, usesLivePantry: true)
+            let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"),
+                mutationGate: gate, usesLivePantry: true)
+            cleanup.track(ledger, pickup)
+            await ledger.open()
+            try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+            await pickup.load()
+            windows.append((ledger, pickup))
+        }
+        let setup = try windows[0].1.makePantrySetupCoordinator(authorize: { true })
+        let review = try await setup.prepare()
+        _ = try await setup.apply(review)
+        var editors: [PantryModel] = []
+        for (_, pickup) in windows {
+            let refreshed = await pickup.refreshPantryStock()
+            XCTAssertTrue(refreshed)
+            let model = try XCTUnwrap(pickup.makePantryModel())
+            await model.load()
+            XCTAssertTrue(model.canEdit)
+            editors.append(model)
+        }
+
+        let origin = try XCTUnwrap(windows[0].1.sourceWorkspaceID)
+        let lease = try gate.beginExclusiveWrite()
+        defer { gate.endExclusiveWrite(lease) }
+        try await gate.invalidateForErasure(origin: origin, initiator: nil)
+        for (_, pickup) in windows {
+            XCTAssertFalse(pickup.pantryRouteAvailable)
+            XCTAssertNil(pickup.pantrySnapshot)
+        }
+        for editor in editors {
+            XCTAssertEqual(editor.phase, .accessDenied)
+            XCTAssertNil(editor.snapshot)
+        }
+    }
+
     private func fixture() async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -39,6 +170,29 @@ import LocalStore
         return Fixture(directory: directory, cleanup: cleanup, store: store, ledgerStore: ledgerStore,
             pickup: pickup, ledger: ledger, gate: gate, stockID: stockID)
     }
+    func testLiveBindingRetriesAnUnavailableDatabaseFromTheSameWindowModels() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url = directory.appendingPathComponent("pickup.sqlite")
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self), gate = PantryMutationGate()
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"),
+            inventoryProjectionsEnabled: true, mutationGate: gate, usesLivePantry: true)
+        let pickup = PickupModel(databaseURL: url, mutationGate: gate, usesLivePantry: true)
+        cleanup.track(ledger, pickup)
+        await ledger.open()
+        do {
+            try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+            XCTFail("A directory cannot open as a pickup database")
+        } catch { XCTAssertFalse(pickup.pantryRouteAvailable) }
+
+        try FileManager.default.removeItem(at: url)
+        try await pickup.bindPrivatePantry(ledger: ledger, authorize: { true })
+        await pickup.load()
+        XCTAssertTrue(pickup.pantryRouteAvailable)
+        XCTAssertFalse(pickup.pantryIsActive)
+        XCTAssertTrue(pickup.journeys.isEmpty)
+    }
+
     private func coordinator(_ f: Fixture) -> PantryMigrationCoordinator {
         let instant = now
         return PantryMigrationCoordinator(store: f.store, ledger: f.ledgerStore, gate: f.gate,
@@ -60,10 +214,14 @@ import LocalStore
         cleanup.track(store, ledger)
         let flow = PantryMigrationCoordinator(store: store, ledger: ledger, gate: PantryMutationGate(),
             authorize: { true }, clock: { instant })
+        let initialState = try await flow.setupState()
+        XCTAssertEqual(initialState, .inactive)
         let review = try await flow.prepare()
         XCTAssertEqual(review.sourceCount, 0); XCTAssertEqual(review.lotCount, 0)
         let applied = try await flow.apply(review)
         XCTAssertTrue(applied.state.active)
+        let activatedState = try await flow.setupState()
+        XCTAssertEqual(activatedState, .active)
         let current = try await PantryRepository(store: store, authorize: { true }).load(at: now)
         XCTAssertTrue(current.lots.isEmpty); XCTAssertTrue(current.reservations.isEmpty)
         let pickups = try await store.list(), plans = try await ledger.load()

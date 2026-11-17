@@ -7,7 +7,7 @@ import CoreDomain
 /// its small manifest must never embed these chunks. No file here activates a store.
 @MainActor final class PantryArchiveStorage {
     enum Failure: Error, Equatable { case invalidLocation, invalidPackage, occupied, missing, tooLarge, io }
-    struct Reference: Codable, Equatable {
+    struct Reference: Codable, Equatable, Sendable {
         let bundleID: UUID
         let manifestDigest: Data
     }
@@ -24,7 +24,7 @@ import CoreDomain
         /// Each file is independently bounded; all are required for import readiness.
         let files: [FilePart]
     }
-    private struct Header: Codable {
+    struct Header: Codable {
         let namespace: String
         let version: Int
         let archive: PantryArchiveCodec.Manifest
@@ -33,7 +33,7 @@ import CoreDomain
         let evidenceItemCount: Int
         let evidenceChainDigest: Data
     }
-    private struct EvidencePage: Codable {
+    struct EvidencePage: Codable {
         let version: Int
         let bundleID: UUID
         let index: Int

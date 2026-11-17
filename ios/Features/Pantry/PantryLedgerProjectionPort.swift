@@ -77,7 +77,7 @@ import LocalStore
     }
 
     /// Typed archival evidence only. Neither reader recognizes a committed operation or grants replay authority.
-    static func archiveBinding(_ record: InventoryRecord) throws -> IntentBinding {
+    nonisolated static func archiveBinding(_ record: InventoryRecord) throws -> IntentBinding {
         guard record.key.kind == .intent, record.revision == 1, record.payloadVersion == 1,
               record.lotID == nil, record.source == nil, record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.invalidBinding }
         let value = try JSONDecoder().decode(IntentBinding.self, from: record.payload)
@@ -88,7 +88,7 @@ import LocalStore
               kind.allSatisfy({ (65...90).contains($0) || (97...122).contains($0) || (48...57).contains($0) || [45,46,58,95].contains($0) }) else { throw Failure.invalidBinding }
         return value
     }
-    static func archiveDisposition(_ record: InventoryRecord, bindingRecord: InventoryRecord) throws -> ReviewDisposition {
+    nonisolated static func archiveDisposition(_ record: InventoryRecord, bindingRecord: InventoryRecord) throws -> ReviewDisposition {
         let intent = try archiveBinding(bindingRecord)
         let source = Source(inventoryWorkspaceID: intent.binding.inventoryWorkspaceID,
             inventoryOperationID: intent.binding.inventoryOperationID, inventoryRequest: Data(), sourceIntentID: bindingRecord.key.id)

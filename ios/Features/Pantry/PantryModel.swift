@@ -3,12 +3,25 @@ import Foundation
 import CoreDomain
 import LocalStore
 
+/// Explicit identity selected from a currently authorized ingredient or need.
+/// This value is presentation input, never an authorization or archive capability.
+struct PantryReviewedFood: Equatable {
+    let id: UUID
+    let name: String
+    let inventoryWorkspaceID: UUID
+    let inventoryRevision: Int64
+
+    func matches(_ state: InventoryState) -> Bool {
+        state.workspaceID == inventoryWorkspaceID && state.revision == inventoryRevision
+    }
+}
+
 /// Private, app-owned presentation state. The repository rechecks live authority
 /// on every suspension; the generation also prevents a revoked view republishing a result.
 @MainActor
-final class PantryModel: ObservableObject {
+final class PantryModel: ObservableObject, PantryErasureObserver {
     enum Phase: Equatable { case idle, ready, migrationRequired, accessDenied, unavailable }
-    enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, changeTooLarge }
+    enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, insufficientFree, partialReleaseInvalid, changeTooLarge }
     enum Action { case haveEnough, someLeft, opened, move(InventoryLocation), usedUp, recount(String, UnitOfMeasure) }
     typealias Pending = PantryPendingStore.Entry
 
@@ -23,17 +36,24 @@ final class PantryModel: ObservableObject {
     @Published private(set) var pendingWasCommitted = false
     private let repository: PantryRepository
     private let clock: () -> Date
+    private let purchaseOptions: (@MainActor (InventoryState) -> [PantryRecentPurchase])?
     private let willMutateOrRecover: (@MainActor () -> Void)?
     private let didSave: (@MainActor () async -> Void)?
     private var generation = UUID()
 
     init(repository: PantryRepository, clock: @escaping () -> Date = Date.init,
+         recentPurchases: (@MainActor (InventoryState) -> [PantryRecentPurchase])? = nil,
          willMutateOrRecover: (@MainActor () -> Void)? = nil,
          didSave: (@MainActor () async -> Void)? = nil) {
         self.repository = repository
         self.clock = clock
+        self.purchaseOptions = recentPurchases
         self.willMutateOrRecover = willMutateOrRecover
         self.didSave = didSave
+        repository.observeErasure(self)
+    }
+    func invalidatePantryPresentation(origin: UUID, initiatedHere: Bool) {
+        if repository.originID == origin { accessLost() }
     }
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
@@ -74,13 +94,46 @@ final class PantryModel: ObservableObject {
         }
     }
 
-    func prepareNewFood(name: String, existingFoodID: UUID? = nil,
+    var recentPurchases: [PantryRecentPurchase] {
+        guard phase == .ready, let snapshot else { return [] }
+        return purchaseOptions?(snapshot.state) ?? []
+    }
+
+    /// A single revision contains both the observed remaining quantity and
+    /// its location. Receipt amounts never become a second acquisition.
+    func prepareRecentPurchase(_ purchase: PantryRecentPurchase, amount: String, location: InventoryLocation) async {
+        guard canEdit, let snapshot else { return }
+        guard purchase.reviewedFood.matches(snapshot.state), recentPurchases.contains(purchase),
+              let lot = snapshot.lots.first(where: { $0.id == purchase.id }),
+              lot.foodID == purchase.reviewedFood.id,
+              lot.source == .receipt(originID: snapshot.state.workspaceID, key: purchase.receiptKey) else {
+            requiresFreshReview = true; notice = .stale; return
+        }
+        do {
+            let now = clock()
+            let count = try Self.count(amount, unit: lot.unit)
+            let update = InventoryLotRevision(observation: .init(count: count, observationID: UUID(), observedAt: now), location: location)
+            let command = InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lot.id, eventID: UUID(),
+                expectedRevision: lot.revision, occurredAt: now, change: .revise(update))
+            await prepare(command, reviewedFood: purchase.reviewedFood)
+        } catch { notice = .invalidEntry }
+    }
+
+    func prepareNewFood(name: String, existingFoodID: UUID? = nil, reviewedFood: PantryReviewedFood? = nil,
                         location: InventoryLocation, amount: String, unit: UnitOfMeasure) async {
         guard canEdit, let snapshot else { return }
+        guard reviewedFood?.matches(snapshot.state) != false else {
+            requiresFreshReview = true; notice = .stale; return
+        }
         do {
             let foodID: UUID
             let reviewedName: String
-            if let existingFoodID {
+            guard existingFoodID == nil || reviewedFood == nil else { throw InventoryError.invalid("food") }
+            if let reviewedFood {
+                foodID = reviewedFood.id
+                reviewedName = snapshot.lots.first(where: { $0.foodID == reviewedFood.id })?.name
+                    ?? reviewedFood.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            } else if let existingFoodID {
                 // Explicit selection, never a name-based identity merge.
                 guard let food = snapshot.lots.first(where: { $0.foodID == existingFoodID }) else {
                     throw InventoryError.invalid("food")
@@ -94,7 +147,7 @@ final class PantryModel: ObservableObject {
             let seed = InventoryLotSeed(foodID: foodID, name: reviewedName,
                 source: .manual(originID: origin, sourceID: lotID), location: location, unit: unit, count: count)
             await prepare(InventoryCommand(id: UUID(), originID: origin, lotID: lotID, eventID: UUID(),
-                expectedRevision: nil, occurredAt: clock(), change: .create(seed, observationID: UUID())))
+                expectedRevision: nil, occurredAt: clock(), change: .create(seed, observationID: UUID())), reviewedFood: reviewedFood)
         } catch { notice = .invalidEntry }
     }
 
@@ -115,7 +168,36 @@ final class PantryModel: ObservableObject {
         } catch { notice = .invalidEntry }
     }
 
-    func prepare(_ command: InventoryCommand) async {
+    enum ReservationAction {
+        case reserve(purpose: String, amount: String, day: MealDay?)
+        case release(InventoryReservation, amount: String?)
+    }
+
+    func prepareReservation(_ action: ReservationAction, lotID: UUID, basis: PantryReviewedFood) async {
+        guard canEdit, let snapshot, let lot = snapshot.lots.first(where: { $0.id == lotID }) else { return }
+        guard basis.matches(snapshot.state), basis.id == lot.foodID else { requiresFreshReview = true; notice = .stale; return }
+        do {
+            let edit: InventoryReservationEdit
+            switch action {
+            case let .reserve(purpose, amount, day):
+                guard let quantity = try Self.count(amount, unit: lot.unit).quantity else { throw DomainError.invalidNumber }
+                edit = .reserve(id: UUID(), purpose: purpose.trimmingCharacters(in: .whitespacesAndNewlines), amount: quantity, day: day)
+            case let .release(claim, amount):
+                guard snapshot.reservations.contains(claim), let held = claim.amount else { throw InventoryError.stale }
+                let quantity: Quantity?
+                if let amount {
+                    guard let parsed = try Self.count(amount, unit: held.unit).quantity else { throw DomainError.invalidNumber }
+                    quantity = parsed
+                } else { quantity = nil }
+                edit = .release(id: claim.id, expectedRevision: claim.revision, amount: quantity)
+            }
+            try edit.validate()
+            await prepare(InventoryCommand(id: UUID(), originID: snapshot.state.workspaceID, lotID: lot.id,
+                eventID: UUID(), expectedRevision: lot.revision, occurredAt: clock(), change: .reservation(edit)), reviewedFood: basis)
+        } catch { notice = .invalidEntry }
+    }
+
+    func prepare(_ command: InventoryCommand, reviewedFood: PantryReviewedFood? = nil) async {
         guard canEdit else { return }
         let token = generation
         busy = true; notice = nil; savedLotID = nil
@@ -123,10 +205,16 @@ final class PantryModel: ObservableObject {
         do {
             let result = try await repository.review(command, at: clock())
             guard token == generation else { return }
+            guard reviewedFood?.matches(result.before.state) != false else {
+                snapshot = result.before; requiresFreshReview = true; notice = .stale; return
+            }
             snapshot = result.before; review = result; requiresFreshReview = false
         } catch {
             guard token == generation else { return }
-            if error as? InventoryError == .capacity { notice = .changeTooLarge }
+            if error as? InventoryError == .invalid("reservationExceedsFree") || error as? InventoryError == .invalid("reservationWouldMoveOtherFood") {
+                notice = .insufficientFree
+            } else if error as? InventoryError == .invalid("partialRelease") { notice = .partialReleaseInvalid }
+            else if error as? InventoryError == .capacity { notice = .changeTooLarge }
             else if error is DomainError { notice = .invalidEntry }
             else if let inventoryError = error as? InventoryError, case .invalid = inventoryError { notice = .invalidEntry }
             else { fail(error, saving: false) }

@@ -4,89 +4,91 @@ import CoreDomain
 import LocalStore
 import RecordArchive
 
-/// Opens only a locally bound independent copy. Registry membership/lifetime and
-/// current private access remain the caller's authority; archive metadata grants none.
+/// The registry authorizes creation once; existing copies reopen their exact
+/// physical database. Large archive validation and restoration run off MainActor.
 @MainActor final class PantryRecoveryCoordinator {
     enum Failure: Error, Equatable { case unauthorized, invalidLocation, invalidIdentity, missingIdentity, changedPlan, retired, invalidActivation, io }
     typealias Authorization = @MainActor (UUID, PantryArchiveStorage.Reference) async throws -> Bool
-    struct Identity: Codable, Equatable {
-        let version: Int
-        let copyID: UUID
-        let reference: PantryArchiveStorage.Reference
-        let workspaceID: UUID
-        let restorationID: UUID
-        let preparedAt: Date
-    }
+    typealias Identity = PantryArchiveWorker.RestorationContext
     struct Opened {
-        /// Caller owns closing this actor and binding subsequent operations to its recovery lease.
         let store: ComparisonStore
         let identity: Identity
-        /// Immutable derived baseline/history, not the mutable current physical stock.
-        let baseline: PantryArchiveCodec.Snapshot
-        let original: PantryArchiveStorage.VerifiedBundle
+        /// Small verified handle; historical facts never become executable jobs.
+        let source: PantryArchiveHandle
         let current: PantryRepository.Snapshot
     }
-    private struct Body: Codable, Equatable { let identity: Identity; let plan: InventoryMigrationPlan }
+    private struct Body: Codable { let identity: Identity; let plan: InventoryMigrationPlan }
     private struct Manifest: Codable { let body: Body; let digest: Data }
-    private struct Activation: Codable {
-        let identityDigest: Data
-        let receipt: LocalStore.InventoryOperationReceipt
-    }
+    private struct Activation: Codable { let identityDigest: Data; let receipt: LocalStore.InventoryOperationReceipt }
     static let manifestFilename = "pantry-recovery-v1.json"
     static let activationFilename = "pantry-activation-v1.json"
     static let databaseFilename = "pickup.sqlite"
     private static let maximumMetadataBytes = 16_384
     private let root: URL
-    private let archives: PantryArchiveStorage
+    private let worker: PantryArchiveWorker
     private let gate: PantryMutationGate
     private let protectedWorkspaceIDs: () -> Set<UUID>
     private let authorize: Authorization
 
-    init(root: URL, archives: PantryArchiveStorage, gate: PantryMutationGate,
+    init(root: URL, worker: PantryArchiveWorker, gate: PantryMutationGate,
          protectedWorkspaceIDs: @escaping () -> Set<UUID>, authorize: @escaping Authorization) throws {
         guard root.isFileURL else { throw Failure.invalidLocation }
-        self.root = root.standardizedFileURL; self.archives = archives; self.gate = gate
+        self.root = root.standardizedFileURL; self.worker = worker; self.gate = gate
         self.protectedWorkspaceIDs = protectedWorkspaceIDs; self.authorize = authorize
         try Self.directory(self.root, create: true)
     }
-
-    /// Only the registry's durable first-materialization path may call create.
-    /// Reopening a previously materialized copy MUST use open, including after files disappear.
     func create(copyID: UUID, reference: PantryArchiveStorage.Reference, at date: Date) async throws -> Opened {
         try await materialize(copyID: copyID, reference: reference, at: date, allowCreation: true)
     }
     func open(copyID: UUID, reference: PantryArchiveStorage.Reference, at date: Date) async throws -> Opened {
         try await materialize(copyID: copyID, reference: reference, at: date, allowCreation: false)
     }
+    /// Reads only the app-owned recovery marker and actual SQLite identity.
+    /// Cleanup never needs the imported package and cannot recreate a missing store.
+    static func workspaceForCleanup(directory: URL, protectedWorkspaceIDs: Set<UUID>) async throws -> UUID {
+        try Self.directory(directory, create: false)
+        let identity = try manifest(directory).body.identity
+        guard UUID(uuidString: directory.lastPathComponent) == identity.copyID,
+              !protectedWorkspaceIDs.contains(identity.workspaceID) else { throw Failure.invalidIdentity }
+        let url = directory.appendingPathComponent(databaseFilename)
+        try requireDatabase(url)
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let actual = store.workspaceID
+        try await store.close()
+        guard actual == identity.workspaceID, !protectedWorkspaceIDs.contains(actual) else { throw Failure.invalidIdentity }
+        return actual
+    }
     private func materialize(copyID: UUID, reference: PantryArchiveStorage.Reference, at date: Date,
                              allowCreation: Bool) async throws -> Opened {
         try await access(copyID, reference)
         let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
-        // Always reopen protected external history, never trust a cached VerifiedBundle.
-        let original = try archives.open(reference)
-        guard date.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidIdentity }
-        let directory = root.appendingPathComponent(copyID.uuidString, isDirectory: true)
-        if !Self.exists(directory) {
-            guard allowCreation else { throw Failure.missingIdentity }
-            try await provision(directory: directory, copyID: copyID, reference: reference,
-                original: original, at: date)
-        }
-        try Self.directory(directory, create: false)
-        let manifest = try Self.manifest(directory)
-        try Self.protect(directory.appendingPathComponent(Self.manifestFilename), permissions: 0o600)
-        let identity = manifest.body.identity
-        guard identity.copyID == copyID, identity.reference == reference,
-              !protectedWorkspaceIDs().contains(identity.workspaceID) else { throw Failure.invalidIdentity }
-        let baseline = try PantryArchiveRestore.prepare(original.captured.snapshot, newOriginID: identity.workspaceID,
-            restorationID: identity.restorationID, at: identity.preparedAt)
-        let chunks = try Self.chunks(baseline)
-        let rebuilt = try Self.plan(identity, sourceToken: manifest.body.plan.sourceToken, chunks: chunks)
-        guard rebuilt == manifest.body.plan else { throw Failure.changedPlan }
-        let url = directory.appendingPathComponent(Self.databaseFilename)
-        try Self.requireDatabase(url)
+        let source = try await worker.open(reference: reference)
         try await access(copyID, reference)
-        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        guard date.timeIntervalSinceReferenceDate.isFinite else { throw Failure.invalidIdentity }
+        var restoration: PantryRestorationHandle?
+        var openedStore: ComparisonStore?
         do {
+            let directory = root.appendingPathComponent(copyID.uuidString, isDirectory: true)
+            if !Self.exists(directory) {
+                guard allowCreation else { throw Failure.missingIdentity }
+                restoration = try await provision(directory: directory, copyID: copyID, source: source, at: date)
+            }
+            try Self.directory(directory, create: false)
+            let manifest = try Self.manifest(directory), identity = manifest.body.identity
+            try Self.protect(directory.appendingPathComponent(Self.manifestFilename), permissions: 0o600)
+            guard identity.copyID == copyID, identity.reference == reference,
+                  !protectedWorkspaceIDs().contains(identity.workspaceID) else { throw Failure.invalidIdentity }
+            if restoration == nil {
+                restoration = try await worker.prepareRestoration(source: source, context: identity,
+                    sourceToken: manifest.body.plan.sourceToken)
+            }
+            try await access(copyID, reference)
+            guard let prepared = restoration, prepared.context == identity,
+                  prepared.plan == manifest.body.plan else { throw Failure.changedPlan }
+            let plan = prepared.plan, url = directory.appendingPathComponent(Self.databaseFilename)
+            try Self.requireDatabase(url)
+            let store = try ComparisonStore(url: url, inventoryEnabled: true)
+            openedStore = store
             try Self.protectDatabase(url)
             guard store.workspaceID == identity.workspaceID,
                   !protectedWorkspaceIDs().contains(store.workspaceID) else { throw Failure.invalidIdentity }
@@ -95,16 +97,18 @@ import RecordArchive
             if Self.exists(acknowledgmentURL) {
                 let acknowledgment = try Self.activation(acknowledgmentURL, manifest: manifest)
                 try Self.protect(acknowledgmentURL, permissions: 0o600)
-                let durable = try await store.inventoryMigrationActivation(rebuilt)
+                let durable = try await store.inventoryMigrationActivation(plan)
                 try await access(copyID, reference)
                 guard state.active, state.revision >= acknowledgment.receipt.revision,
                       durable == acknowledgment.receipt else { throw Failure.invalidActivation }
             } else {
-                let progress = try await store.beginInventoryMigration(rebuilt); try await access(copyID, reference)
+                let progress = try await store.beginInventoryMigration(plan); try await access(copyID, reference)
                 guard progress.status != .cancelled else { throw Failure.retired }
                 if progress.status == .staging {
-                    guard progress.plan == rebuilt, progress.nextChunk <= chunks.count else { throw Failure.changedPlan }
-                    for chunk in chunks.dropFirst(progress.nextChunk) {
+                    guard progress.plan == plan, progress.nextChunk <= plan.expectedChunkCount else { throw Failure.changedPlan }
+                    for index in progress.nextChunk..<plan.expectedChunkCount {
+                        let chunk = try await worker.restorationChunk(prepared, index: index)
+                        try await access(copyID, reference)
                         _ = try await store.stageInventoryMigration(id: identity.restorationID, chunk: chunk)
                         try await access(copyID, reference)
                     }
@@ -112,102 +116,58 @@ import RecordArchive
                 let receipt = try await store.finishInventoryMigration(id: identity.restorationID, at: identity.preparedAt)
                 try await access(copyID, reference)
                 try Self.validate(receipt, identity: identity)
-                let acknowledgment = Activation(identityDigest: manifest.digest, receipt: receipt)
-                try Self.write(ArchiveCodec.canonical(acknowledgment), to: acknowledgmentURL)
+                try Self.write(ArchiveCodec.canonical(Activation(identityDigest: manifest.digest, receipt: receipt)), to: acknowledgmentURL)
             }
-            // These read-only awaits expose no state until the caller's async authority is checked again.
             let current = try await PantryRepository(store: store, authorize: { !Task.isCancelled }).load(at: max(date, identity.preparedAt))
             try await access(copyID, reference)
             guard current.state.workspaceID == identity.workspaceID else { throw Failure.invalidIdentity }
             try Self.protectDatabase(url)
-            return Opened(store: store, identity: identity, baseline: baseline, original: original, current: current)
+            try await worker.discardRestoration(prepared); restoration = nil
+            try await access(copyID, reference)
+            return Opened(store: store, identity: identity, source: source, current: current)
         } catch {
-            try? await store.close()
+            if let openedStore { try? await openedStore.close() }
+            if let restoration { try? await worker.discardRestoration(restoration) }
             throw error
         }
     }
 
-    private func provision(directory: URL, copyID: UUID, reference: PantryArchiveStorage.Reference,
-                           original: PantryArchiveStorage.VerifiedBundle, at date: Date) async throws {
-        guard date >= original.captured.snapshot.descriptor.capturedAt else { throw Failure.invalidIdentity }
+    private func provision(directory: URL, copyID: UUID, source: PantryArchiveHandle,
+                           at date: Date) async throws -> PantryRestorationHandle {
+        guard date >= source.descriptor.capturedAt else { throw Failure.invalidIdentity }
         let temporary = root.appendingPathComponent("pantry-preparing-" + UUID().uuidString, isDirectory: true)
         try Self.directory(temporary, create: true)
         defer { try? FileManager.default.removeItem(at: temporary) }
         let url = temporary.appendingPathComponent(Self.databaseFilename)
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        var restoration: PantryRestorationHandle?
         do {
             try Self.protectDatabase(url)
             guard !protectedWorkspaceIDs().contains(store.workspaceID) else { throw Failure.invalidIdentity }
-            let identity = Identity(version: 1, copyID: copyID, reference: reference, workspaceID: store.workspaceID,
-                restorationID: UUID(), preparedAt: date)
-            let baseline = try PantryArchiveRestore.prepare(original.captured.snapshot, newOriginID: identity.workspaceID,
-                restorationID: identity.restorationID, at: date)
-            let token = try await store.inventorySourceToken(); try await access(copyID, reference)
-            let plan = try Self.plan(identity, sourceToken: token, chunks: Self.chunks(baseline))
-            let body = Body(identity: identity, plan: plan)
+            let identity = Identity(version: 1, copyID: copyID, reference: source.reference,
+                workspaceID: store.workspaceID, restorationID: UUID(), preparedAt: date)
+            let token = try await store.inventorySourceToken(); try await access(copyID, source.reference)
+            let prepared = try await worker.prepareRestoration(source: source, context: identity, sourceToken: token)
+            restoration = prepared
+            try await access(copyID, source.reference)
+            let body = Body(identity: identity, plan: prepared.plan)
             let manifest = Manifest(body: body, digest: PantryArchiveCapture.digest(try ArchiveCodec.canonical(body)))
             try Self.write(ArchiveCodec.canonical(manifest), to: temporary.appendingPathComponent(Self.manifestFilename))
-            try await store.close(); try await access(copyID, reference)
+            try await store.close(); try await access(copyID, source.reference)
             try Self.protectDatabase(url)
             guard !Self.exists(directory) else { throw Failure.invalidIdentity }
-            // Publish identity AND inactive SQLite together; an interrupted unpublished
-            // scratch directory cannot become a different copy's recovery identity.
             try FileManager.default.moveItem(at: temporary, to: directory)
+            return prepared
         } catch {
             try? await store.close()
+            if let restoration { try? await worker.discardRestoration(restoration) }
             throw error
         }
     }
-
     private func access(_ copyID: UUID, _ reference: PantryArchiveStorage.Reference) async throws {
         try Task.checkCancellation()
         guard try await authorize(copyID, reference) else { throw Failure.unauthorized }
         try Task.checkCancellation()
-    }
-    private static func plan(_ identity: Identity, sourceToken: InventorySourceToken,
-                             chunks: [InventoryMigrationChunk]) throws -> InventoryMigrationPlan {
-        guard sourceToken.workspaceID == identity.workspaceID else { throw Failure.invalidIdentity }
-        var digest = InventoryMigrationManifest.initialDigest, count = 0
-        for chunk in chunks { digest = try InventoryMigrationManifest.appending(chunk, to: digest); count += chunk.records.count }
-        return .init(migrationID: identity.restorationID, workspaceID: identity.workspaceID, expectedRevision: 0,
-            sourceToken: sourceToken, reviewContext: try ArchiveCodec.canonical(identity), expectedChunkCount: chunks.count,
-            expectedRecordCount: count, manifestDigest: digest)
-    }
-    private static func chunks(_ baseline: PantryArchiveCodec.Snapshot) throws -> [InventoryMigrationChunk] {
-        var records: [InventoryRecord] = []
-        for lot in baseline.lots {
-            records.append(.init(key: .init(.lot, lot.id), revision: 1, payload: try ArchiveCodec.canonical(lot)))
-        }
-        for observation in baseline.observations {
-            records.append(.init(key: .init(.observation, observation.id), revision: 1,
-                payload: try ArchiveCodec.canonical(observation), lotID: observation.lotID))
-        }
-        for claim in baseline.reservations {
-            records.append(.init(key: .init(.reservation, claim.id), revision: 1,
-                payload: try ArchiveCodec.canonical(claim), lotID: claim.lotID))
-        }
-        for link in baseline.sourceLinks {
-            records.append(.init(key: .init(.sourceLink, link.lotID), revision: 1, payload: try ArchiveCodec.canonical(link),
-                lotID: link.lotID, source: try PantryPersistenceCodec.sourceIdentity(link.source)))
-        }
-        records.sort { ($0.key.kind.rawValue, $0.key.id.uuidString) < ($1.key.kind.rawValue, $1.key.id.uuidString) }
-        var result: [InventoryMigrationChunk] = [], pending: [InventoryRecord] = [], bytes = 0
-        func flush() throws {
-            guard !pending.isEmpty else { return }
-            let chunk = InventoryMigrationChunk(index: result.count, records: pending)
-            _ = try InventoryMigrationManifest.appending(chunk, to: InventoryMigrationManifest.initialDigest)
-            result.append(chunk); pending = []; bytes = 0
-        }
-        // Match LocalStore's canonical encoder for its exact encoded chunk budget.
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        for record in records {
-            guard record.payload.count <= InventoryPersistenceLimits.recordBytes else { throw Failure.changedPlan }
-            let size = try encoder.encode(record).count
-            if pending.count == InventoryPersistenceLimits.batchItems || bytes + size + 2_048 > InventoryPersistenceLimits.batchBytes { try flush() }
-            pending.append(record); bytes += size + 1
-        }
-        try flush()
-        return result
     }
     private static func manifest(_ directory: URL) throws -> Manifest {
         let data = try read(directory.appendingPathComponent(manifestFilename))
@@ -281,7 +241,7 @@ import RecordArchive
         try handle.synchronize()
     }
     private static func read(_ url: URL) throws -> Data {
-        let descriptor = Darwin.open(url.path, O_RDONLY | O_NOFOLLOW)
+        let descriptor = Darwin.open(url.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
         guard descriptor >= 0 else { throw Failure.missingIdentity }
         let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true); defer { try? handle.close() }
         var info = stat()

@@ -32,6 +32,22 @@ import RecordArchive
             sourceLinks: source.sourceLinks, history: history ?? source.history)
     }
 
+    func testDatedPersonalLunchSurvivesArchiveAndIndependentRestoreKeepsItsHoldUnresolved() throws {
+        let source = try snapshot(), lot = try XCTUnwrap(source.lots.first)
+        let day = try MealDay(year: 2026, month: 11, day: 18, timeZoneIdentifier: "America/New_York")
+        let claim = InventoryReservation(id: UUID(), originID: source.descriptor.originID, revision: 1, foodID: lot.foodID,
+            lotID: lot.id, name: "Packed lunch", amount: try quantity(2), priority: .protected, personal: .init(day: day))
+        let saved = replacing(source, reservations: [claim])
+        let decoded = try PantryArchiveCodec.decode(PantryArchiveCodec.encode(saved))
+        XCTAssertEqual(decoded.reservations, [claim])
+        let restored = try PantryArchiveRestore.prepare(decoded, newOriginID: UUID(), restorationID: UUID(), at: now)
+        XCTAssertEqual(restored.reservations.first?.personal?.day, day)
+        XCTAssertEqual(restored.reservations.first?.state, .unresolved)
+        let projection = try InventoryProjection.build(originID: restored.descriptor.originID, lots: restored.lots,
+            reservations: restored.reservations, at: now)
+        XCTAssertNil(projection.lots.first?.free)
+    }
+
     func testCompleteGraphRoundTripPreservesObservationHistoryAndPhysicalSource() throws {
         let original = try snapshot(), lot = try XCTUnwrap(original.lots.first)
         let command = InventoryCommand(id: UUID(), originID: original.descriptor.originID, lotID: lot.id, eventID: UUID(),

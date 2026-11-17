@@ -436,6 +436,11 @@ struct PickupNewStockSection: View {
     @State private var stockObservedAt = Date()
     @State private var useFirst = false
     var body: some View {
+        if model.pantryIsActive {
+            PickupCanonicalAddSection(model: model, ingredientID: ingredientID)
+        } else { legacyForm }
+    }
+    private var legacyForm: some View {
         Section(pTr("Confirm pantry or freezer food")) {
             if let ingredientID,
                let match = model.journey?.reviewedStockMatches.first(where: { $0.id == ingredientID }) {
@@ -476,6 +481,7 @@ struct PickupNewStockSection: View {
             .onChange(of: useFirst) { _, _ in stockConfirmed = false }
     }
     private func addStock() {
+        guard !model.pantryIsActive else { return }
         do {
             guard !stockName.isEmpty, let quantity = try ComparisonModel.quantity(stockAmount, stockUnit) else { throw CocoaError(.validationMissingMandatoryProperty) }
             let journeyID = model.journey?.id ?? newJourneyID
@@ -499,6 +505,154 @@ struct PickupNewStockSection: View {
         guard savedDraft != nil else { return }
         stockID = UUID(); stockName = ""; stockAmount = ""; stockConfirmed = false
         useFirst = false; stockObservedAt = Date()
+    }
+}
+
+/// A route is an explicit identity binding, not permission to read or write.
+/// It is resolved after an authorized refresh and expires when that source changes.
+struct PickupPantryAddContext: Equatable {
+    let workspaceID: UUID
+    let journeyID: UUID?
+    let journeyRevision: Int64?
+    let reviewedFood: PantryReviewedFood?
+
+    @MainActor static func resolve(model: PickupModel, ingredientID: UUID?) throws -> Self {
+        guard let context = try model.pantryReviewContext(), model.journey?.closedAt == nil else {
+            throw PickupStockReviewError.stale
+        }
+        let food: PantryReviewedFood?
+        if let ingredientID {
+            guard let match = model.journey?.reviewedStockMatches.first(where: { $0.id == ingredientID }) else {
+                throw PickupStockReviewError.stale
+            }
+            food = .init(id: match.id, name: match.name, inventoryWorkspaceID: context.snapshot.state.workspaceID,
+                         inventoryRevision: context.snapshot.state.revision)
+        } else { food = nil }
+        return .init(workspaceID: context.snapshot.state.workspaceID, journeyID: model.journey?.id,
+                     journeyRevision: model.journey?.revision, reviewedFood: food)
+    }
+
+    @MainActor func matches(model: PickupModel) -> Bool {
+        guard model.pantryIsActive, model.sourceWorkspaceID == workspaceID,
+              model.journey?.id == journeyID, model.journey?.revision == journeyRevision,
+              model.journey?.closedAt == nil else { return false }
+        guard let reviewedFood else { return true }
+        return model.journey?.reviewedStockMatches.contains {
+            $0.id == reviewedFood.id && $0.name == reviewedFood.name
+        } == true
+    }
+}
+
+private struct PickupCanonicalAddSection: View {
+    @ObservedObject var model: PickupModel
+    let ingredientID: UUID?
+    @State private var selectedFoodID: UUID?
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    var body: some View {
+        Section(pantryText("Add food")) {
+            if presentation.scope(presentationID: UUID()) == nil {
+                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+            } else {
+                if ingredientID == nil, model.pantryReadIsCurrent {
+                    Picker(pTr("Reviewed matching food need"), selection: $selectedFoodID) {
+                        Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
+                        ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                }
+                NavigationLink {
+                    PickupPantryAddDestination(model: model, ingredientID: ingredientID ?? selectedFoodID)
+                } label: { Text(pantryText("Add food")).frame(minHeight: 44) }
+                Text(pTr("Only confirmed matching food enters allocation. Do not enter the same batch twice."))
+            }
+        }
+        .privacySensitive()
+    }
+}
+
+private struct PickupPantryAddDestination: View {
+    @ObservedObject var model: PickupModel
+    let ingredientID: UUID?
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    @State private var pantry: PantryModel?
+    @State private var admittedPresentation: PickupStockReviewPresentation?
+    @State private var admittedContext: PickupPantryAddContext?
+    @State private var generation = UUID()
+    @State private var opening = false
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+                 workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+                 childPresented: guardianChild?.presented == true, household: household)
+    }
+    private var accessAllowed: Bool {
+        admittedPresentation == presentation && presentation.scope(presentationID: UUID()) != nil
+            && admittedContext?.matches(model: model) == true
+    }
+    var body: some View {
+        Group {
+            if let pantry, accessAllowed {
+                PantryAddFoodEntryView(model: pantry, accessAllowed: accessAllowed, reviewedFood: admittedContext?.reviewedFood,
+                                       refreshContext: { invalidate(); await openEntry() })
+            } else {
+                Form {
+                    if presentation.scope(presentationID: UUID()) == nil {
+                        Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                    } else {
+                        PickupSaveStatus(model: model, onRetried: { Task { await openEntry() } })
+                        if model.hasPendingSave, model.error == nil {
+                            Text(pantryText("A saved change is waiting for recovery. Retry it or review its saved status."))
+                            Button(pTr("Retry save")) { Task { if await model.retrySave() { await openEntry() } } }
+                                .disabled(model.saving)
+                        }
+                        if opening || model.saving { ProgressView(pantryText("Working…")) }
+                        else if !model.hasPendingSave {
+                            Text(pantryText("Could not load a complete pantry. No partial availability is shown."))
+                            Button(pantryText("Refresh pantry")) { Task { await openEntry() } }.frame(minHeight: 44)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(pantryText("Add food"))
+        .privacySensitive()
+        .task { await openEntry() }
+        .onChange(of: presentation) { _, _ in invalidate(); Task { await openEntry() } }
+        .onChange(of: model.selectedID) { _, _ in invalidate() }
+        .onChange(of: model.journey?.revision) { _, _ in
+            if admittedContext?.matches(model: model) == false { invalidate() }
+        }
+        .onChange(of: model.hasPendingSave) { _, pending in
+            if !pending && pantry == nil { Task { await openEntry() } }
+        }
+        .onDisappear { invalidate() }
+    }
+    private func invalidate() {
+        generation = UUID(); pantry?.accessLost(); pantry = nil
+        admittedPresentation = nil; admittedContext = nil; opening = false
+    }
+    private func openEntry() async {
+        guard pantry == nil, !opening else { return }
+        invalidate()
+        let token = generation, initialPresentation = presentation
+        guard initialPresentation.scope(presentationID: UUID()) != nil, model.pantryIsActive,
+              !model.hasPendingSave, !model.saving else { return }
+        opening = true
+        defer { if generation == token { opening = false } }
+        guard await model.refreshPantryStock(), !Task.isCancelled, generation == token,
+              presentation == initialPresentation,
+              let context = try? PickupPantryAddContext.resolve(model: model, ingredientID: ingredientID),
+              let entry = model.makePantryModel() else { return }
+        admittedPresentation = initialPresentation; admittedContext = context; pantry = entry
     }
 }
 

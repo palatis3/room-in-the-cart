@@ -183,6 +183,25 @@ public actor RecoveryRegistry {
         try refreshFromDisk()
         return Set(manifest.records.map(\.id)).union((manifest.pantryCopies ?? []).map { $0.id.uuidString })
     }
+    /// Only permanent local decisions authorize removing an owned archive directory.
+    public func permanentlyRetiredPantryBundleIDs() throws -> Set<UUID> {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        return Set(manifest.retiredPantryBundles ?? [])
+    }
+    /// Includes recoverable undo bodies. Erasure review must not overlook a copy
+    /// just because the independent recovery UI can currently undo its removal.
+    public func pantryErasureBasis() throws -> (generation: UUID, pantry: [RecoveredPantryCopy], records: [RecoveredRecord]) {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        var pantry = Dictionary(uniqueKeysWithValues: (manifest.pantryCopies ?? []).map { ($0.id, $0) })
+        var records = Dictionary(uniqueKeysWithValues: manifest.records.map { ($0.id, $0) })
+        for copy in pantryUndo.values.joined() where pantry[copy.id] == nil { pantry[copy.id] = copy }
+        for copy in undo.values.joined() where records[copy.id] == nil { records[copy.id] = copy }
+        return (manifest.generation, pantry.values.sorted { $0.id.uuidString < $1.id.uuidString },
+                records.values.sorted { $0.id < $1.id })
+    }
+
     public func listPantry() throws -> [RecoveredPantryCopy] {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
@@ -203,12 +222,16 @@ public actor RecoveryRegistry {
         } ?? ((manifest.pantryCopies ?? []).contains { $0.reference.originID == reference.originID } ? .sibling : .absent)
         return .init(reference: reference, disposition: disposition, existingCopy: existing, generation: manifest.generation)
     }
-    public func applyPantry(_ reviewed: PantryRecoveryReview, now: Date = Date()) throws -> RecoveredPantryCopy {
+    public func applyPantry(_ reviewed: PantryRecoveryReview, now: Date = Date(),
+                           installVerifiedFiles: @Sendable () throws -> Void = {}) throws -> RecoveredPantryCopy {
         let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
         let checked = try pantryReview(reviewed.reference)
         guard checked.canApply else { throw ArchiveError.conflict }
-        if checked.disposition == .identical, let existing = checked.existingCopy { return existing }
+        if checked.disposition == .identical, let existing = checked.existingCopy {
+            try installVerifiedFiles()
+            return existing
+        }
         guard reviewed.generation == manifest.generation else { throw ArchiveError.staleReview }
         guard now.timeIntervalSince1970.isFinite, now.timeIntervalSince1970 > 0,
               now.timeIntervalSince1970 < Double(Int64.max / 1000),
@@ -216,7 +239,21 @@ public actor RecoveryRegistry {
         let copy = RecoveredPantryCopy(id: UUID(), reference: checked.reference,
             recoveredAtMilliseconds: ArchiveCodec.milliseconds(now), lifetime: UUID(), materialization: .unmaterialized)
         var next = manifest; next.pantryCopies = (next.pantryCopies ?? []) + [copy]
-        try persist(&next); return copy
+        // Register first. A crash leaves only explicitly confirmed, leased staging
+        // for repair. No permanent plaintext is published for an unregistered import.
+        try persist(&next)
+        try installVerifiedFiles()
+        return copy
+    }
+
+    /// Completes a previously confirmed file installation under the same lock
+    /// as registration and retirement. Never creates or revives a registry row.
+    public func finishRegisteredPantryFiles(_ reference: PantryRecoveryReference,
+                                            install: @Sendable () throws -> Void) throws {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard (manifest.pantryCopies ?? []).contains(where: { $0.reference == reference }) else { return }
+        try install()
     }
     /// Exact copy/lifetime checks bind an existing recovery lease after awaits.
     public func currentPantryCopy(_ expected: RecoveredPantryCopy) throws -> RecoveredPantryCopy {
@@ -274,7 +311,9 @@ public actor RecoveryRegistry {
               current.allSatisfy({ value in review.copies.contains(value) }) else { throw ArchiveError.deletionSelectionChanged }
         var next = manifest
         next.pantryCopies?.removeAll { ids.contains($0.id) }
-        next.erasedPantryBundles = Array(Set(next.erasedPantryBundles ?? []).union(review.copies.map { $0.reference.bundleID }))
+        let removed = Set(review.copies.map { $0.reference.bundleID })
+        next.erasedPantryBundles = Array(Set(next.erasedPantryBundles ?? []).union(removed))
+        next.retiredPantryBundles = Array(Set(next.retiredPantryBundles ?? []).union(removed))
         try persist(&next)
     }
     /// Local erasure reconciliation names verified affected packages. Imported
@@ -628,7 +667,12 @@ public actor RecoveryRegistry {
         var next = manifest
         next.erasedOrigins = Array(all)
         next.records.removeAll { all.contains($0.record.origin) }
+        let removed = (next.pantryCopies ?? []).filter { all.contains($0.reference.originID.uuidString) }.map { $0.reference.bundleID }
         next.pantryCopies?.removeAll { all.contains($0.reference.originID.uuidString) }
+        if !removed.isEmpty {
+            next.erasedPantryBundles = Array(Set(next.erasedPantryBundles ?? []).union(removed))
+            next.retiredPantryBundles = Array(Set(next.retiredPantryBundles ?? []).union(removed))
+        }
         purgeBackups(&next, removedCopies: [])
         try persist(&next)
         let invalidUndo = undo.filter { $0.value.contains { all.contains($0.record.origin) } }.map(\.key)

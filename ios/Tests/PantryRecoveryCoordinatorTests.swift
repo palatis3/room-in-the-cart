@@ -10,6 +10,7 @@ import RecordArchive
         let directory: URL
         let cleanup: SQLiteFixtureDirectory
         let archives: PantryArchiveStorage
+        let worker: PantryArchiveWorker
         let bundle: PantryArchiveStorage.VerifiedBundle
         let root: URL
         let gate: PantryMutationGate
@@ -58,12 +59,118 @@ import RecordArchive
         let archives = try PantryArchiveStorage(root: directory.appendingPathComponent("archives"))
         let capture = PantryArchiveCapture(inventory: inventory, ledger: ledger, pending: pending, gate: gate, authorize: { _, _ in true })
         let captured = try await capture.capture(at: now), bundle = try await capture.publish(captured, to: archives)
-        return Fixture(directory: directory, cleanup: cleanup, archives: archives, bundle: bundle,
+        return Fixture(directory: directory, cleanup: cleanup, archives: archives, worker: try PantryArchiveWorker(root: directory.appendingPathComponent("archives")), bundle: bundle,
             root: directory.appendingPathComponent("Recoveries"), gate: gate, originalStore: inventory)
     }
     private func coordinator(_ f: Fixture, authorize: @escaping PantryRecoveryCoordinator.Authorization = { _, _ in true }) throws -> PantryRecoveryCoordinator {
-        try .init(root: f.root, archives: f.archives, gate: f.gate,
+        try .init(root: f.root, worker: f.worker, gate: f.gate,
             protectedWorkspaceIDs: { [f.originalStore.workspaceID] }, authorize: authorize)
+    }
+
+    func testDisplayedRecoveredPantryPersistsEditsAndClosesBeforeCopyCleanup() async throws {
+        let f = try await fixture(), instant = now
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
+        let reference = PantryRecoveryReference(bundleID: f.bundle.reference.bundleID,
+            manifestDigest: f.bundle.reference.manifestDigest, originID: f.originalStore.workspaceID,
+            inventoryRevision: f.bundle.captured.snapshot.descriptor.inventoryRevision)
+        let copy = try await registry.applyPantry(registry.reviewPantry(reference), now: now)
+        let lifetime = RecordsRecoveryLifetime()
+        let session = RecordsPantrySession(copy: copy, root: f.root, worker: f.worker, registry: registry,
+            lifetime: lifetime, gate: f.gate, protectedWorkspaceIDs: { [f.originalStore.workspaceID] },
+            authorize: { true }, clock: { instant })
+        f.cleanup.track(session)
+        let opened = await session.open(); XCTAssertTrue(opened)
+        let model = try XCTUnwrap(session.model), lot = try XCTUnwrap(model.snapshot?.lots.first)
+        await model.prepare(lotID: lot.id, action: .someLeft)
+        await model.confirmReview(acknowledgingReservations: true)
+        XCTAssertEqual(model.snapshot?.lots.first?.count, .someLeft)
+        let identity = try XCTUnwrap(session.identity)
+        let activeWrite = try f.gate.beginWrite()
+        let closing = Task { await session.close() }
+        for _ in 0..<100 where session.phase != .closing { await Task.yield() }
+        XCTAssertEqual(session.phase, .closing)
+        XCTAssertNotNil(session.store, "An active writer keeps the physical store alive until its lease ends")
+        f.gate.endWrite(activeWrite)
+        let closed = await closing.value; XCTAssertTrue(closed)
+        XCTAssertFalse(session.hasAccess); XCTAssertNil(session.store); XCTAssertNil(model.snapshot)
+        let currentCopies = try await registry.listPantry(), ready = try XCTUnwrap(currentCopies.first)
+        let resumed = RecordsPantrySession(copy: ready, root: f.root, worker: f.worker, registry: registry,
+            lifetime: lifetime, gate: f.gate, protectedWorkspaceIDs: { [f.originalStore.workspaceID] },
+            authorize: { true }, clock: { instant })
+        f.cleanup.track(resumed)
+        let reopened = await resumed.open(); XCTAssertTrue(reopened)
+        XCTAssertEqual(resumed.identity, identity)
+        XCTAssertEqual(resumed.model?.snapshot?.lots.first?.count, .someLeft)
+        lifetime.invalidate(); resumed.invalidate()
+        _ = try await registry.delete(.copy(copy.id.uuidString))
+        XCTAssertFalse(resumed.hasAccess); XCTAssertNil(resumed.model?.snapshot)
+        let folder = f.root.appendingPathComponent(copy.id.uuidString)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.path))
+        let released = await resumed.close(); XCTAssertTrue(released)
+        await lifetime.drain()
+        let media = CaptureMediaStore(directory: f.directory.appendingPathComponent("media"))
+        let corrections = CaptureCorrectionStore(directory: f.directory.appendingPathComponent("corrections"))
+        do {
+            try await RecordsRecoveryCapture.erase(directory: folder, protectedWorkspaceIDs: [identity.workspaceID],
+                media: media, corrections: corrections)
+            XCTFail("Cleanup must not retire a protected live workspace")
+        } catch { }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.path))
+        try await RecordsRecoveryCapture.erase(directory: folder, protectedWorkspaceIDs: [f.originalStore.workspaceID],
+            media: media, corrections: corrections)
+        // A retry uses the same locally recorded physical scope, not imported lineage.
+        try await RecordsRecoveryCapture.erase(directory: folder, protectedWorkspaceIDs: [f.originalStore.workspaceID],
+            media: media, corrections: corrections)
+        try FileManager.default.removeItem(at: folder)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+    }
+
+    func testEditedRecoveredPantryReexportsWithoutDependingOnOriginalPackage() async throws {
+        let f = try await fixture(), instant = now
+        let registry = try RecoveryRegistry(url: f.directory.appendingPathComponent("registry.json"))
+        let reference = PantryRecoveryReference(bundleID: f.bundle.reference.bundleID,
+            manifestDigest: f.bundle.reference.manifestDigest, originID: f.originalStore.workspaceID,
+            inventoryRevision: f.bundle.captured.snapshot.descriptor.inventoryRevision)
+        let copy = try await registry.applyPantry(registry.reviewPantry(reference), now: now)
+        let session = RecordsPantrySession(copy: copy, root: f.root, worker: f.worker, registry: registry,
+            lifetime: RecordsRecoveryLifetime(), gate: f.gate, protectedWorkspaceIDs: { [f.originalStore.workspaceID] },
+            authorize: { true }, clock: { instant })
+        f.cleanup.track(session)
+        let opened = await session.open(); XCTAssertTrue(opened)
+        let model = try XCTUnwrap(session.model), lot = try XCTUnwrap(model.snapshot?.lots.first)
+        await model.prepare(lotID: lot.id, action: .someLeft)
+        await model.confirmReview(acknowledgingReservations: true)
+        let export = try await session.captureArchive()
+        XCTAssertEqual(export.descriptor.originID, session.store?.workspaceID)
+        XCTAssertNotEqual(export.descriptor.originID, f.originalStore.workspaceID)
+        let key = EncryptedArchive.generateKey()
+        let package = try await f.worker.encryptedExport(export, key: key)
+        let closed = await session.close(); XCTAssertTrue(closed)
+        try FileManager.default.removeItem(at: f.directory.appendingPathComponent("archives")
+            .appendingPathComponent(f.bundle.reference.bundleID.uuidString))
+
+        let importedWorker = try PantryArchiveWorker(root: f.directory.appendingPathComponent("otherArchives"))
+        let prepared = try await importedWorker.prepareImport(url: package.url, key: key)
+        let imported = prepared.handle
+        let otherRegistry = try RecoveryRegistry(url: f.directory.appendingPathComponent("otherRegistry.json"))
+        let importedReference = PantryRecoveryReference(bundleID: imported.reference.bundleID,
+            manifestDigest: imported.reference.manifestDigest, originID: imported.descriptor.originID,
+            inventoryRevision: imported.descriptor.inventoryRevision)
+        let review = try await otherRegistry.reviewPantry(importedReference)
+        let otherCopy = try await importedWorker.applyImport(prepared, review: review, registry: otherRegistry, now: now)
+        try await importedWorker.discardImport(prepared, registry: otherRegistry)
+        let other = RecordsPantrySession(copy: otherCopy, root: f.directory.appendingPathComponent("OtherRecoveries"),
+            worker: importedWorker, registry: otherRegistry, lifetime: RecordsRecoveryLifetime(), gate: PantryMutationGate(),
+            protectedWorkspaceIDs: { [f.originalStore.workspaceID] }, authorize: { true }, clock: { instant })
+        f.cleanup.track(other)
+        let restored = await other.open(); XCTAssertTrue(restored)
+        XCTAssertEqual(other.model?.snapshot?.lots.first?.count, .someLeft)
+        XCTAssertNotEqual(other.store?.workspaceID, imported.descriptor.originID)
+        let originalRows = try await f.originalStore.inventoryRecords(kind: .lot)
+        let originalLot = try PantryPersistenceCodec.lot(XCTUnwrap(originalRows.first))
+        XCTAssertEqual(originalLot.count, f.bundle.captured.snapshot.lots.first?.count)
+        let otherClosed = await other.close(); XCTAssertTrue(otherClosed)
+        try await f.worker.discardExport(package)
     }
 
     func testIndependentRestorePreservesEvidenceButNeverCreatesExecutablePendingOrLedger() async throws {
@@ -75,7 +182,8 @@ import RecordArchive
         XCTAssertEqual(opened.current.lots.first?.confirmedAt, now)
         XCTAssertEqual(opened.current.reservations.first?.state, .unresolved)
         XCTAssertNil(opened.current.availability.lots.first?.free)
-        XCTAssertTrue(opened.baseline.history.contains { if case .foodPending = $0 { return true }; return false })
+        XCTAssertEqual(opened.source.reference, f.bundle.reference)
+        XCTAssertTrue(try f.archives.open(opened.source.reference).captured.snapshot.history.contains { if case .foodPending = $0 { return true }; return false })
         let intents = try await opened.store.inventoryRecords(kind: .intent)
         let events = try await opened.store.inventoryRecords(kind: .event)
         XCTAssertTrue(intents.isEmpty); XCTAssertTrue(events.isEmpty)
@@ -152,7 +260,7 @@ import RecordArchive
         XCTAssertEqual(reopened.identity, recovered.identity)
         XCTAssertEqual(reopened.current.lots.first?.location, .fridge)
         XCTAssertEqual(reopened.current.lots.first?.revision, 2)
-        XCTAssertEqual(reopened.baseline.lots.first?.location, .freezer)
+        XCTAssertEqual(try f.archives.open(reopened.source.reference).captured.snapshot.lots.first?.location, .freezer)
         try await reopened.store.close()
     }
 
@@ -204,7 +312,7 @@ import RecordArchive
         let f = try await fixture(), copyID = UUID()
         let opened = try await coordinator(f).create(copyID: copyID, reference: f.bundle.reference, at: now)
         let origin = opened.identity.workspaceID; try await opened.store.close()
-        let protected = try PantryRecoveryCoordinator(root: f.root, archives: f.archives, gate: f.gate,
+        let protected = try PantryRecoveryCoordinator(root: f.root, worker: f.worker, gate: f.gate,
             protectedWorkspaceIDs: { [origin] }, authorize: { _, _ in true })
         do { _ = try await protected.open(copyID: copyID, reference: f.bundle.reference, at: now); XCTFail("Root namespaces cannot become recovered copies") }
         catch { XCTAssertEqual(error as? PantryRecoveryCoordinator.Failure, .invalidIdentity) }
