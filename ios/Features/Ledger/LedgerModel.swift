@@ -108,6 +108,7 @@ private enum LedgerDeletionJournal {
     var pendingLedgerDeletionReview: WholeLedgerDeletionReview? { pendingLedgerDeletion?.review }
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
+        var authorize: (@MainActor () -> Bool)? = nil
         let onShopSelected: ((UUID) -> Void)?
         let key: String
         let workspace: LedgerWorkspace
@@ -206,13 +207,22 @@ private enum LedgerDeletionJournal {
         await change(key: key, onShopSelected: nil, edit)
     }
 
-    private func change(key: String, onShopSelected: ((UUID) -> Void)?, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+    func saveMealPreferences(_ settings: MealPreferenceSettings, expectedRevision: UUID?, workspaceID: UUID,
+                             authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await change(key: "meal-preferences", onShopSelected: nil, authorize: authorize) { candidate in
+            guard self.sourceWorkspaceID == workspaceID else { throw LedgerModelError.notReady }
+            try candidate.dinnerPlanning.updateMealPreferences(settings, expectedRevision: expectedRevision)
+        }
+    }
+
+    private func change(key: String, onShopSelected: ((UUID) -> Void)?, authorize: (@MainActor () -> Bool)? = nil, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         guard !saving, ready, !hasPendingLedgerDeletion else { return false }
         if pending != nil {
             error = ledgerText("Retry or discard the unsaved change before making another change.")
             return false
         }
         do {
+            guard authorize?() != false else { throw LedgerModelError.notReady }
             var candidate = workspace
             try edit(&candidate)
             try candidate.validate()
@@ -226,7 +236,7 @@ private enum LedgerDeletionJournal {
                 error = ledgerText("This change is too large to save. Reduce the amount of data and try again.")
                 return false
             }
-            let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
+            let change = PendingSave(authorize: authorize, onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
                                      operationID: UUID(), savedAt: clock())
             pending = change
             hasPendingSave = true
@@ -307,6 +317,7 @@ private enum LedgerDeletionJournal {
 
     private func commit(_ pending: PendingSave, to store: LedgerStore) async -> Bool {
         do {
+            guard pending.authorize?() != false else { throw LedgerModelError.notReady }
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
             // No other mutation can start while saving, including during actor suspension.

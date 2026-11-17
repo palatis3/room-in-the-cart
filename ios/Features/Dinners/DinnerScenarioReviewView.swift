@@ -124,6 +124,9 @@ struct DinnerScenarioReviewView: View {
             }
             Text(result.foodCoverageComplete ? dinnerText("Reviewed food coverage is complete") : dinnerText("Food coverage is unresolved"))
             Text(result.timingFeasible == true ? dinnerText("Reviewed preparation fits the available time") : dinnerText("Preparation timing is unresolved or does not fit"))
+            ForEach(Array(result.preferenceResults.enumerated()), id: \.offset) { match in
+                MealPreferenceIssues(result: match.element)
+            }
             ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
         }.padding(.vertical, 6).accessibilityElement(children: .combine)
     }

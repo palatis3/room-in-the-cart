@@ -17,6 +17,25 @@ import XCTest
 
 #if DEBUG && targetEnvironment(simulator)
     /// F02: ordinary Dinners removal, with an independently checked SQLite history.
+    func testPrivateMealPreferencesReviewAndRelaunchWithoutStartingPickup() {
+        launch(reset: true)
+        func open() {
+            tap(app.tabBars.buttons["Dinners"])
+            tap(element("dinner.mealPreferences"))
+        }
+        open()
+        let field = element("preferences.exclusions")
+        tap(field); field.typeText("peanut")
+        tap(element("preferences.review"))
+        tap(element("preferences.save"))
+        XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false)
+        open()
+        reveal(field)
+        XCTAssertEqual(field.value as? String, "peanut")
+    }
+
     func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
         launch(reset: true, sourceRemoval: true)
         func openAllDinners() {

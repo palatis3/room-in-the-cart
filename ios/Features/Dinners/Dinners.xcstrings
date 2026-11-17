@@ -1,6 +1,694 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A brand differs from your preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A brand differs from your preferences."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una marca difiere de tus preferencias."
+          }
+        }
+      }
+    },
+    "Additional ingredients, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Additional ingredients, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes adicionales, uno por línea"
+          }
+        }
+      }
+    },
+    "Available appliances, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available appliances, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparatos disponibles, uno por línea"
+          }
+        }
+      }
+    },
+    "Brand details are unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brand details are unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconocen las marcas."
+          }
+        }
+      }
+    },
+    "Brands reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brands reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas revisadas"
+          }
+        }
+      }
+    },
+    "Brands used, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brands used, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas utilizadas, una por línea"
+          }
+        }
+      }
+    },
+    "Disliked ingredient: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disliked ingredient: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente que no te gusta: %@"
+          }
+        }
+      }
+    },
+    "Disliked ingredients, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disliked ingredients, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes que no te gustan, uno por línea"
+          }
+        }
+      }
+    },
+    "Excluded ingredient: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded ingredient: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente excluido: %@"
+          }
+        }
+      }
+    },
+    "Excluded ingredients, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded ingredients, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes excluidos, uno por línea"
+          }
+        }
+      }
+    },
+    "Hard constraints": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hard constraints"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos obligatorios"
+          }
+        }
+      }
+    },
+    "High effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mucho esfuerzo"
+          }
+        }
+      }
+    },
+    "Ingredient details reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient details reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles de los ingredientes revisados"
+          }
+        }
+      }
+    },
+    "Ingredient details still need review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient details still need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún hay que revisar los detalles de los ingredientes."
+          }
+        }
+      }
+    },
+    "Keep editing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
+    "Limit recipes to available appliances": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit recipes to available appliances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limitar las recetas a los aparatos disponibles"
+          }
+        }
+      }
+    },
+    "Low effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poco esfuerzo"
+          }
+        }
+      }
+    },
+    "Meal preference details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal preference details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles para las preferencias de comidas"
+          }
+        }
+      }
+    },
+    "Medium effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esfuerzo moderado"
+          }
+        }
+      }
+    },
+    "No meal patterns match the current constraints.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No meal patterns match the current constraints."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún modelo de comida cumple los requisitos actuales."
+          }
+        }
+      }
+    },
+    "Preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencias"
+          }
+        }
+      }
+    },
+    "Preferences could not be saved. Check the entries or reopen the current version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences could not be saved. Check the entries or reopen the current version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron guardar las preferencias. Revisa los datos o vuelve a abrir la versión actual."
+          }
+        }
+      }
+    },
+    "Preferred brands, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred brands, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcas preferidas, una por línea"
+          }
+        }
+      }
+    },
+    "Preferred maximum effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred maximum effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esfuerzo máximo preferido"
+          }
+        }
+      }
+    },
+    "Private meal preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private meal preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferencias privadas de comidas"
+          }
+        }
+      }
+    },
+    "Recipe effort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe effort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esfuerzo de la receta"
+          }
+        }
+      }
+    },
+    "Recipe effort is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe effort is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el esfuerzo que requiere esta receta."
+          }
+        }
+      }
+    },
+    "Remove all preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove all preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar todas las preferencias"
+          }
+        }
+      }
+    },
+    "Require meals without these dislikes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require meals without these dislikes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exigir comidas sin estos ingredientes"
+          }
+        }
+      }
+    },
+    "Require preferred brands": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require preferred brands"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exigir las marcas preferidas"
+          }
+        }
+      }
+    },
+    "Require this effort limit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require this effort limit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exigir este límite de esfuerzo"
+          }
+        }
+      }
+    },
+    "Required appliances are unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required appliances are unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconocen los aparatos necesarios."
+          }
+        }
+      }
+    },
+    "Required appliances reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required appliances reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparatos necesarios revisados"
+          }
+        }
+      }
+    },
+    "Required appliances, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required appliances, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparatos necesarios, uno por línea"
+          }
+        }
+      }
+    },
+    "Review ingredient and appliance details against your meal preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient and appliance details against your meal preferences."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara los ingredientes y aparatos con tus preferencias de comidas."
+          }
+        }
+      }
+    },
+    "Review preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar preferencias"
+          }
+        }
+      }
+    },
+    "Reviewed food details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed food details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles revisados del alimento"
+          }
+        }
+      }
+    },
+    "Save reviewed preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed preferences"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar preferencias revisadas"
+          }
+        }
+      }
+    },
+    "These choices apply to future meal proposals. Earlier meal records keep their original details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These choices apply to future meal proposals. Earlier meal records keep their original details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas opciones se aplican a futuras propuestas de comidas. Los registros anteriores conservan sus detalles originales."
+          }
+        }
+      }
+    },
+    "This meal exceeds your preferred effort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This meal exceeds your preferred effort."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comida supera tu nivel de esfuerzo preferido."
+          }
+        }
+      }
+    },
+    "Unavailable appliances: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable appliances: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparatos no disponibles: %@"
+          }
+        }
+      }
+    },
+    "Unlock your private workspace to review meal preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock your private workspace to review meal preferences."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea tu espacio privado para revisar las preferencias de comidas."
+          }
+        }
+      }
+    },
+    "Unspecified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unspecified"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin especificar"
+          }
+        }
+      }
+    },
     "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
       "extractionState": "manual",
       "localizations": {
