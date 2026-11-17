@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.iOS(.v17), .macOS(.v13)],
     products: [.library(name: "CoreDomain", targets: ["CoreDomain"])],
     targets: [
-        .target(name: "CoreDomain"),
+        .target(name: "CoreDomain", resources: [.process("Resources")]),
         .testTarget(name: "CoreDomainTests", dependencies: ["CoreDomain"])
     ]
 )

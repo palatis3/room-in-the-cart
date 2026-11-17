@@ -1,6 +1,470 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Search using one word": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search using one word"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar con una sola palabra"
+          }
+        }
+      }
+    },
+    "Quality check date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality check date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha para revisar la calidad"
+          }
+        }
+      }
+    },
+    "Range starts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Range starts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio del intervalo"
+          }
+        }
+      }
+    },
+    "Range ends": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Range ends"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del intervalo"
+          }
+        }
+      }
+    },
+    "Food storage guide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food storage guide"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guía de conservación de alimentos"
+          }
+        }
+      }
+    },
+    "Search foods or categories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search foods or categories"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar alimentos o categorías"
+          }
+        }
+      }
+    },
+    "No matching FoodKeeper entry. Try another food name or category.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching FoodKeeper entry. Try another food name or category."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una entrada correspondiente en FoodKeeper. Prueba con otro nombre de alimento o categoría."
+          }
+        }
+      }
+    },
+    "The offline storage reference could not be opened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The offline storage reference could not be opened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la guía de conservación sin conexión."
+          }
+        }
+      }
+    },
+    "Opening storage reference…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening storage reference…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abriendo la guía de conservación…"
+          }
+        }
+      }
+    },
+    "Batch storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch storage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almacenamiento del lote"
+          }
+        }
+      }
+    },
+    "Storage location": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lugar de almacenamiento"
+          }
+        }
+      }
+    },
+    "No matching guidance for this storage condition.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching guidance for this storage condition."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay recomendaciones correspondientes a esta condición de almacenamiento."
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente"
+          }
+        }
+      }
+    },
+    "These ranges describe storage quality under the stated conditions. Follow the package directions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These ranges describe storage quality under the stated conditions. Follow the package directions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos intervalos se refieren a la calidad en las condiciones indicadas. Sigue las instrucciones del envase."
+          }
+        }
+      }
+    },
+    "Review a date range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a date range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar un intervalo de fechas"
+          }
+        }
+      }
+    },
+    "I confirmed the date, storage history and package directions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirmed the date, storage history and package directions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmé la fecha, cómo se ha almacenado el alimento y las instrucciones del envase."
+          }
+        }
+      }
+    },
+    "Estimated quality range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated quality range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervalo estimado de calidad"
+          }
+        }
+      }
+    },
+    "Use this range to plan a quality check. Food safety also depends on how the food was handled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this range to plan a quality check. Food safety also depends on how the food was handled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa este intervalo para revisar la calidad. La seguridad también depende de cómo se haya manipulado el alimento."
+          }
+        }
+      }
+    },
+    "Pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa"
+          }
+        }
+      }
+    },
+    "Refrigerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refrigerador"
+          }
+        }
+      }
+    },
+    "Freezer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freezer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Congelador"
+          }
+        }
+      }
+    },
+    "General storage guidance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General storage guidance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orientación general de almacenamiento"
+          }
+        }
+      }
+    },
+    "From purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde la compra"
+          }
+        }
+      }
+    },
+    "After opening": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After opening"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de abrir"
+          }
+        }
+      }
+    },
+    "After thawing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After thawing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de descongelar"
+          }
+        }
+      }
+    },
+    "Purchase date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de compra"
+          }
+        }
+      }
+    },
+    "Date opened": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date opened"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de apertura"
+          }
+        }
+      }
+    },
+    "Date thawed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date thawed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de descongelación"
+          }
+        }
+      }
+    },
+    "Starting date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de inicio"
+          }
+        }
+      }
+    },
     "Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup.": {
       "extractionState": "manual",
       "localizations": {
