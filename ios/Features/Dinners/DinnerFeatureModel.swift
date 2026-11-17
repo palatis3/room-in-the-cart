@@ -79,7 +79,8 @@ extension DinnerWorkspaceStore {
         guard let preview, shop?.id == preview.proposal.shopID, let access = try? access(for: preview.proposal.shopID) else { return false }
         let namespace: String
         switch access.scope { case .local(let id): namespace = "local:\(id.uuidString)"; case .household(let id): namespace = "household:\(id)" }
-        return namespace == preview.proposal.namespace && access.actorID == preview.proposal.authorID
+        return namespace == preview.proposal.namespace && access.actorID == preview.proposal.authorID &&
+            preview.proposal.preferenceRevision == state.preferences(for: access)?.revision
     }
     var canApply: Bool {
         guard editable, canReviewPreview, let preview, !preview.needsPurchaseAmendment, !preview.proposal.isIsolatedPreview,
@@ -215,15 +216,36 @@ extension DinnerWorkspaceStore {
             return previewGuests(occurrenceID: occurrenceID, servings: totals, isolated: !paid)
         } catch { preview = nil; fail(error); return false }
     }
+    var mealPreferences: MealPreferenceProfile? {
+        guard let shop, let context = try? access(for: shop.id) else { return nil }
+        return state.preferences(for: context)
+    }
+    var ideaPatterns: [MealTemplate] {
+        ideaCatalog.filter { MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $0).blocked.isEmpty }.sorted {
+            let left = MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $0)
+            let right = MealEligibilityPolicy.evaluate(profile: mealPreferences, template: $1)
+            if left.eligible != right.eligible { return left.eligible }
+            if left.softDifferences.count != right.softDifferences.count {
+                return left.softDifferences.count < right.softDifferences.count
+            }
+            return $0.id.uuidString < $1.id.uuidString
+        }
+    }
     func newIdea(seed: UInt64, exclusions: [String], manual: MealTemplate? = nil) throws -> DinnerIdeaDraft {
         guard let shop else { throw DinnerPlanningError.invalid("shop") }
         _ = try access(for: shop.id)
         if let manual {
-            return DinnerIdeaDraft(requestID: UUID(), catalogVersion: "manual-v1", template: manual,
+            var draft = DinnerIdeaDraft(requestID: UUID(), catalogVersion: "manual-v1", template: manual,
                 hardExclusions: exclusions, createdAt: clock())
+            draft.preferenceRevision = mealPreferences?.revision
+            return draft
         }
+        let patterns = ideaPatterns
+        guard !patterns.isEmpty else { throw DinnerPlanningError.reviewRequired("manualIdeaEntry") }
+        let selected = patterns[Int(seed % UInt64(patterns.count))]
         var draft = try DinnerIdeaEngine.draft(requestID: UUID(), draftID: UUID(), catalogVersion: "reviewed-catalog-v1",
-            catalog: ideaCatalog, seed: seed, householdExclusions: exclusions, at: clock())
+            catalog: [selected], seed: 0, householdExclusions: exclusions, at: clock())
+        draft.preferenceRevision = mealPreferences?.revision
         draft.assumptions = [dinnerText("Check which ingredients are available and how much usable food the recipe makes.")]
         return draft
     }
@@ -303,6 +325,7 @@ extension DinnerWorkspaceStore {
         case DinnerPlanningError.paidAccessRequired: error = dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")
         case DinnerPlanningError.stalePreview: error = dinnerText("The pickup or dinner plan changed. Make a new preview before applying.")
         case DinnerPlanningError.lockedBasket: error = dinnerText("This basket is locked. Save a proposal for a purchase amendment.")
+        case DinnerPlanningError.reviewRequired("mealPreferences"): error = dinnerText("Review ingredient and appliance details against your meal preferences.")
         case DinnerPlanningError.reviewRequired: error = dinnerText("Review the ingredients, portion bindings, availability and quote basis before continuing.")
         case LedgerError.allocationExceedsQuantity: error = dinnerText("That quantity is already reserved or exceeds the available amount.")
         default: error = dinnerText("Check the entered amounts, dates and required fields. Nothing has been applied.")

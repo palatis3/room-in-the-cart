@@ -104,6 +104,60 @@ import SQLite3
             reviewedInventoryRevision: before.state.revision, at: now)
     }
 
+    func testTonightChoiceRejectsRecountsAndCommitsOneReopenablePickupWithoutStockMutation() async throws {
+        let f = try await fixture()
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let repository = PantryRepository(store: f.inventory, mutationGate: f.gate, authorize: { f.state.allowed })
+        f.cleanup.track(repository)
+        let lotID = UUID(), foodID = UUID()
+        let initial = try await repository.load(at: now)
+        let creation = InventoryCommand(id: UUID(), originID: f.inventory.workspaceID, lotID: lotID, eventID: UUID(),
+            expectedRevision: nil, occurredAt: now, change: .create(InventoryLotSeed(foodID: foodID, name: "Rice",
+                source: .manual(originID: f.inventory.workspaceID, sourceID: lotID), location: .cupboard,
+                unit: .count, count: .exact(q(3))), observationID: UUID()))
+        _ = try await repository.apply(creation, reviewedInventoryRevision: initial.state.revision, at: now)
+        let ingredient = MealIngredient(name: "Rice", quantity: q(2))
+        let meal = MealTemplate(title: "Rice bowls", ingredients: [ingredient])
+        let stored = await f.ledger.change(key: "save-tonight-recipe") { $0.mealTemplates.append(meal) }
+        XCTAssertTrue(stored)
+        let identity = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        func prepare() async throws -> TonightPlanChoice.Review {
+            let refreshed = await f.pickup.refreshPantryStock()
+            XCTAssertTrue(refreshed)
+            let context = try XCTUnwrap(f.pickup.pantryReviewContext())
+            let supply = try DinnerPantrySupply.build(context: context, shopID: f.shop)
+            let match = try PantryMealMatcher.review(recipe: meal, reviewedFoods: [ingredient.id: foodID],
+                globallyFreeLots: supply.globallyFreeLots, unresolvedFoods: supply.unresolvedFoodIDs, profile: nil)
+            return try TonightPlanChoice.prepare(match: match, pantryBasis: supply.basis, destinationShopID: nil,
+                newShopTitle: "Tonight choice", ledger: f.ledger, pickup: f.pickup, currentIdentity: { identity })
+        }
+        let outdated = try await prepare()
+        let before = f.ledger.workspace
+        let originalStock = try await repository.load(at: now)
+        let rice = try XCTUnwrap(originalStock.lots.first { $0.id == lotID })
+        _ = try await repository.apply(.init(id: UUID(), originID: f.inventory.workspaceID, lotID: lotID, eventID: UUID(),
+            expectedRevision: rice.revision, occurredAt: now, change: .count(.exact(q(2)), observationID: UUID())),
+            reviewedInventoryRevision: originalStock.state.revision, at: now)
+        let rejected = await TonightPlanChoice.apply(outdated, ledger: f.ledger, pickup: f.pickup, currentIdentity: { identity })
+        XCTAssertFalse(rejected)
+        XCTAssertEqual(f.ledger.workspace, before)
+        let choice = try await prepare()
+        let stockBefore = try await repository.load(at: now)
+        let denied = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { nil })
+        XCTAssertFalse(denied)
+        XCTAssertEqual(f.ledger.workspace, before)
+        let saved = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { identity })
+        XCTAssertTrue(saved, f.ledger.error ?? "")
+        let reopened = await reopen(f)
+        let retried = await TonightPlanChoice.apply(choice, ledger: reopened, pickup: f.pickup, currentIdentity: { identity })
+        XCTAssertTrue(retried, reopened.error ?? "")
+        XCTAssertEqual(reopened.workspace.shops.count, before.shops.count + 1)
+        XCTAssertEqual(reopened.shop?.mealOccurrences.map(\.title), ["Rice bowls"])
+        XCTAssertEqual(reopened.workspace.dinnerPlanning.applyReceipts.count, 1)
+        let stockAfter = try await repository.load(at: now)
+        XCTAssertEqual(stockAfter.state, stockBefore.state)
+    }
+
     func testReviewedLedgerRetryRechecksActionPermissionWithoutReplacingPendingBody() async throws {
         let f = try await fixture()
         try await f.ledger.configurePantryPackRecovery(f.port)

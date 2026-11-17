@@ -107,6 +107,7 @@ struct DinnerTemplateEditor: View {
                 Section(dinnerText("Review dinner")) {
                     Text(reviewed.title).font(.headline)
                     Text(dinnerFormat("Servings: %@", reviewed.servings.description))
+                    MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: reviewed))
                     ForEach(reviewed.ingredients) { ingredient in
                         VStack(alignment: .leading) { Text(ingredient.name); Text(dinnerQuantity(ingredient.quantity)) }
                             .accessibilityElement(children: .combine)
@@ -216,6 +217,7 @@ struct DinnerTemplateEditor: View {
                 showPreview = model.prepare([.choose(PlannedDinner(template: template, day: day))])
             } else if purpose == .idea {
                 var idea = try originalIdea ?? model.newIdea(seed: 0, exclusions: DinnerEntry.list(draft.exclusions), manual: template)
+                idea.preferenceRevision = model.mealPreferences?.revision
                 idea.template = template; idea.yieldConfirmed = yieldConfirmed; idea.availabilityConfirmed = availabilityConfirmed
                 supplyEvidence = supplyEvidence.filter { row in
                     row.workspaceID == model.localIdeaWorkspaceID && row.shopID == model.shop?.id &&
@@ -252,6 +254,9 @@ struct DinnerTemplateFields: View {
                 .accessibilityLabel(dinnerText("Remaining lead time in minutes, optional"))
             workingTextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
                 .accessibilityLabel(dinnerText("Completed steps, one per line"))
+        }
+        Section(dinnerText("Meal preference details")) {
+            MealEvidenceFields(draft: $draft.evidence)
         }
         Section(dinnerText("Ingredients")) {
             Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
@@ -382,7 +387,7 @@ struct DinnerIdeasView: View {
                 }
                 if !model.ideaCatalog.isEmpty {
                     Section(dinnerText("Room in the Cart meal patterns")) {
-                        let patterns = model.ideaCatalog.sorted { $0.id.uuidString < $1.id.uuidString }
+                        let patterns = model.ideaPatterns
                         Picker(dinnerText("Starting meal"), selection: $patternIndex) {
                             ForEach(Array(patterns.enumerated()), id: \.element.id) { index, pattern in
                                 Text(pattern.title).tag(index)
@@ -394,6 +399,10 @@ struct DinnerIdeasView: View {
                                 generated = try model.newIdea(seed: UInt64(patternIndex), exclusions: DinnerEntry.list(exclusions))
                             } catch { model.report(error) }
                         }
+                        .disabled(!patterns.indices.contains(patternIndex))
+                        if patterns.indices.contains(patternIndex) {
+                            MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: patterns[patternIndex]))
+                        } else { Text(dinnerText("No meal patterns match the current constraints.")) }
                         if let generated {
                             Text(generated.template.title)
                             NavigationLink(dinnerText("Review prepared idea")) { DinnerTemplateEditor(model: model, purpose: .idea, idea: generated) }
