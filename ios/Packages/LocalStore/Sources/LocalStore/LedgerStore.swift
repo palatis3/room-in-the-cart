@@ -32,6 +32,7 @@ public enum LedgerStoreError: Error, Equatable, Sendable {
     case corruptRecord
     case database(Int32)
     case closed
+    case inventoryProjectionDisabled
 }
 
 /// A separate, installation-local ledger database. The domain owns the opaque payload's
@@ -40,11 +41,12 @@ public enum LedgerStoreError: Error, Equatable, Sendable {
 public actor LedgerStore {
     public nonisolated let workspaceID: UUID
     public nonisolated static let maximumPayloadBytes = 4 * 1_024 * 1_024
-    private let database: LedgerDatabase
+    let database: LedgerDatabase
+    let inventoryProjectionsEnabled: Bool
 
     /// The parent directory must already exist. Use a dedicated `ledger.sqlite` URL;
     /// this store cannot open or migrate the independent comparison database.
-    public init(url: URL) throws {
+    public init(url: URL, inventoryProjectionsEnabled: Bool = false) throws {
         guard url.isFileURL else { throw LedgerStoreError.invalidURL }
         let database = try LedgerDatabase(url: url)
         do {
@@ -54,7 +56,7 @@ public actor LedgerStore {
             // while other connections initialize or append revisions.
             let version = try database.transaction(immediate: false) {
                 let version = try database.integer("PRAGMA user_version")
-                guard version <= 2 else { throw LedgerStoreError.unsupportedSchema(version) }
+                guard version <= (inventoryProjectionsEnabled ? 3 : 2) else { throw LedgerStoreError.unsupportedSchema(version) }
                 guard version >= 0 else { throw LedgerStoreError.unrecognizedSchema }
                 if version == 0 {
                     guard try database.integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -86,8 +88,12 @@ public actor LedgerStore {
             try database.execute("PRAGMA secure_delete = ON")
             try database.execute("PRAGMA journal_size_limit = 0")
             if version < 2 { try database.migrate() }
+            if inventoryProjectionsEnabled && version < 3 { try database.migrateInventoryProjections() }
+            let finalVersion = try database.integer("PRAGMA user_version")
+            guard finalVersion <= (inventoryProjectionsEnabled ? 3 : 2) else { throw LedgerStoreError.unsupportedSchema(finalVersion) }
             self.workspaceID = try database.workspace().id
             self.database = database
+            self.inventoryProjectionsEnabled = inventoryProjectionsEnabled
         } catch {
             try? database.close()
             throw error
@@ -110,36 +116,42 @@ public actor LedgerStore {
         guard expectedRevision >= 0, savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw LedgerStoreError.invalidInput }
         return try database.transaction {
-            let current = try database.current(workspaceID: workspaceID)
-            guard try !database.isRetiredOperation(operationID) else { throw LedgerStoreError.erased }
-            guard try database.tombstones("WHERE operation_id = ?", values: [.text(operationID.uuidString)]).isEmpty
-            else { throw LedgerStoreError.operationConflict }
-            if let previous = try database.record(operationID: operationID, workspaceID: workspaceID) {
-                guard previous.revision - 1 == expectedRevision, previous.payload == payload
-                else { throw LedgerStoreError.operationConflict }
-                return previous
-            }
-            let actualRevision = current?.revision ?? 0
-            guard expectedRevision == actualRevision else {
-                throw LedgerStoreError.staleRevision(expected: expectedRevision, actual: actualRevision)
-            }
-            guard actualRevision < Int64.max else { throw LedgerStoreError.invalidInput }
-            let revision = actualRevision + 1
-            try database.run("""
-                INSERT INTO ledger_revisions
-                    (workspace_id, revision, base_revision, operation_id, payload, payload_sha256, saved_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, [.text(workspaceID.uuidString), .integer(revision), .integer(expectedRevision),
-                      .text(operationID.uuidString), .blob(payload), .blob(Data(SHA256.hash(data: payload))),
-                      .real(savedAt.timeIntervalSinceReferenceDate)])
-            let changed = try database.run("""
-                UPDATE ledger_workspace SET head_revision = ?
-                WHERE singleton = 1 AND id = ? AND COALESCE(head_revision, 0) = ?
-                """, [.integer(revision), .text(workspaceID.uuidString), .integer(expectedRevision)])
-            guard changed == 1 else { throw LedgerStoreError.corruptRecord }
-            return LedgerRecord(workspaceID: workspaceID, revision: revision, payload: payload,
-                                savedAt: savedAt, operationID: operationID)
+            guard try !database.hasInventoryProjectionOperation(operationID) else { throw LedgerStoreError.operationConflict }
+            return try saveSnapshot(payload: payload, expectedRevision: expectedRevision, operationID: operationID, savedAt: savedAt)
         }
+    }
+
+    // Caller validates inputs and owns the transaction. Pantry projection adds its binding before the same COMMIT.
+    func saveSnapshot(payload: Data, expectedRevision: Int64, operationID: UUID, savedAt: Date) throws -> LedgerRecord {
+        let current = try database.current(workspaceID: workspaceID)
+        guard try !database.isRetiredOperation(operationID) else { throw LedgerStoreError.erased }
+        guard try database.tombstones("WHERE operation_id = ?", values: [.text(operationID.uuidString)]).isEmpty
+        else { throw LedgerStoreError.operationConflict }
+        if let previous = try database.record(operationID: operationID, workspaceID: workspaceID) {
+            guard previous.revision - 1 == expectedRevision, previous.payload == payload
+            else { throw LedgerStoreError.operationConflict }
+            return previous
+        }
+        let actualRevision = current?.revision ?? 0
+        guard expectedRevision == actualRevision else {
+            throw LedgerStoreError.staleRevision(expected: expectedRevision, actual: actualRevision)
+        }
+        guard actualRevision < Int64.max else { throw LedgerStoreError.invalidInput }
+        let revision = actualRevision + 1
+        try database.run("""
+            INSERT INTO ledger_revisions
+                (workspace_id, revision, base_revision, operation_id, payload, payload_sha256, saved_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, [.text(workspaceID.uuidString), .integer(revision), .integer(expectedRevision),
+                  .text(operationID.uuidString), .blob(payload), .blob(Data(SHA256.hash(data: payload))),
+                  .real(savedAt.timeIntervalSinceReferenceDate)])
+        let changed = try database.run("""
+            UPDATE ledger_workspace SET head_revision = ?
+            WHERE singleton = 1 AND id = ? AND COALESCE(head_revision, 0) = ?
+            """, [.integer(revision), .text(workspaceID.uuidString), .integer(expectedRevision)])
+        guard changed == 1 else { throw LedgerStoreError.corruptRecord }
+        return LedgerRecord(workspaceID: workspaceID, revision: revision, payload: payload,
+                            savedAt: savedAt, operationID: operationID)
     }
 
     /// Permanently erases this entire workspace, including all shops, reusable meals,
@@ -190,6 +202,9 @@ public actor LedgerStore {
                 INSERT INTO ledger_retired_operations (operation_id, workspace_id)
                 SELECT operation_id, workspace_id FROM ledger_revisions WHERE workspace_id = ?
                 """, [.text(target.uuidString)])
+            if try database.integer("PRAGMA user_version") >= 3 {
+                try database.run("DELETE FROM ledger_inventory_projections WHERE ledger_workspace_id = ?", [.text(target.uuidString)])
+            }
             try database.run("DELETE FROM ledger_revisions WHERE workspace_id = ?", [.text(target.uuidString)])
             let removed = try database.run("DELETE FROM ledger_workspace WHERE id = ? AND COALESCE(head_revision, 0) = ?",
                                            [.text(target.uuidString), .integer(expectedRevision)])
@@ -212,12 +227,12 @@ public actor LedgerStore {
     public func close() throws { try database.close() }
 }
 
-private enum LedgerValue {
+enum LedgerValue {
     case text(String), integer(Int64), real(Double), blob(Data)
 }
 
 /// Exclusively owned by its LedgerStore actor after synchronous initialization.
-private final class LedgerDatabase: @unchecked Sendable {
+final class LedgerDatabase: @unchecked Sendable {
     private var handle: OpaquePointer?
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     private static let applicationID: Int64 = 0x5249544C // RITL
@@ -266,7 +281,7 @@ private final class LedgerDatabase: @unchecked Sendable {
         try transaction {
             // A second connection may have completed migration while we waited.
             var version = try integer("PRAGMA user_version")
-            if version == 2 { try validate(version: 2); return }
+            if version == 2 || version == 3 { try validate(version: version); return }
             guard version == 0 || version == 1 else { throw LedgerStoreError.unsupportedSchema(version) }
             if version == 0 {
                 guard try integer("SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'") == 0
@@ -380,7 +395,7 @@ private final class LedgerDatabase: @unchecked Sendable {
             last = record.revision
         }
         guard last == workspace.revision else { throw LedgerStoreError.corruptRecord }
-        if version == 2 {
+        if version >= 2 {
             let receipts = try tombstones("", values: [])
             let retired = Dictionary(uniqueKeysWithValues: receipts.map { ($0.workspaceID, $0) })
             guard retired[workspace.id] == nil,
@@ -410,6 +425,7 @@ private final class LedgerDatabase: @unchecked Sendable {
                 else { throw LedgerStoreError.corruptRecord }
             }
         }
+        if version == 3 { try validateInventoryProjectionSchema() }
     }
 
     func checkIntegrity() throws {
@@ -521,7 +537,7 @@ private final class LedgerDatabase: @unchecked Sendable {
         try exists("SELECT 1 FROM ledger_revisions WHERE operation_id = ?", values: [.text(id.uuidString)])
     }
 
-    private func exists(_ sql: String, values: [LedgerValue]) throws -> Bool {
+    func exists(_ sql: String, values: [LedgerValue]) throws -> Bool {
         let row = try statement(sql, values: values)
         defer { sqlite3_finalize(row) }
         let status = sqlite3_step(row)
@@ -554,7 +570,7 @@ private final class LedgerDatabase: @unchecked Sendable {
                             savedAt: Date(timeIntervalSinceReferenceDate: time), operationID: operationID)
     }
 
-    private func text(_ row: OpaquePointer, _ column: Int32) throws -> String {
+    func text(_ row: OpaquePointer, _ column: Int32) throws -> String {
         guard sqlite3_column_type(row, column) == SQLITE_TEXT, let pointer = sqlite3_column_text(row, column)
         else { throw LedgerStoreError.corruptRecord }
         let bytes = UnsafeBufferPointer(start: pointer, count: Int(sqlite3_column_bytes(row, column)))
@@ -563,7 +579,7 @@ private final class LedgerDatabase: @unchecked Sendable {
         return result
     }
 
-    private func blob(_ row: OpaquePointer, _ column: Int32, limit: Int) throws -> Data {
+    func blob(_ row: OpaquePointer, _ column: Int32, limit: Int) throws -> Data {
         guard sqlite3_column_type(row, column) == SQLITE_BLOB else { throw LedgerStoreError.corruptRecord }
         let count = Int(sqlite3_column_bytes(row, column))
         guard count <= limit else { throw LedgerStoreError.corruptRecord }
@@ -572,7 +588,7 @@ private final class LedgerDatabase: @unchecked Sendable {
         return Data(bytes: pointer, count: count)
     }
 
-    private func statement(_ sql: String, values: [LedgerValue] = []) throws -> OpaquePointer {
+    func statement(_ sql: String, values: [LedgerValue] = []) throws -> OpaquePointer {
         guard let handle else { throw LedgerStoreError.closed }
         var prepared: OpaquePointer?
         let status = sqlite3_prepare_v2(handle, sql, -1, &prepared, nil)
