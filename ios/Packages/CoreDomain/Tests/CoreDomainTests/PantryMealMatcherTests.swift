@@ -53,6 +53,7 @@ final class PantryMealMatcherTests: XCTestCase {
             let review = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: bindings, globallyFreeLots: [stock],
                 unresolvedFoods: [foodID], profile: nil)
             XCTAssertFalse(review.allIngredientsCovered)
+            XCTAssertTrue(PantryMealMatcher.ranked([review]).isEmpty)
         }
         XCTAssertThrowsError(try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [UUID(): foodID],
             globallyFreeLots: [], unresolvedFoods: [], profile: nil))

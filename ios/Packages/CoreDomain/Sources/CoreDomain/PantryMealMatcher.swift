@@ -8,6 +8,10 @@ public enum PantryMealMatcher {
         public let coverage: StockDemandCoverage?
         public let hasUnresolvedStock: Bool
         public var id: UUID { ingredient.id }
+        public var hasConfirmedStock: Bool {
+            guard !hasUnresolvedStock, let coverage, coverage.issues.isEmpty, let amount = coverage.allocated else { return false }
+            return amount > .zero
+        }
         public var covered: Bool {
             guard !hasUnresolvedStock, let coverage else { return false }
             return coverage.issues.isEmpty && coverage.allocated != nil && coverage.shortfall == .zero
@@ -17,9 +21,11 @@ public enum PantryMealMatcher {
     public struct Review: Identifiable, Equatable, Sendable {
         public let recipe: MealTemplate
         public var id: UUID { recipe.id }
+        public let preferenceRevision: UUID?
         public let eligibility: MealEligibilityPolicy.Result
         public let ingredients: [IngredientReview]
         public let useFirstLotIDs: Set<UUID>
+        public var hasConfirmedPantryFood: Bool { ingredients.contains(where: \.hasConfirmedStock) }
         public var allIngredientsCovered: Bool {
             eligibility.eligible && !ingredients.isEmpty && ingredients.allSatisfy(\.covered)
         }
@@ -35,7 +41,7 @@ public enum PantryMealMatcher {
         try profile?.settings.validate()
         var eligibility = MealEligibilityPolicy.evaluate(profile: profile, template: recipe)
         guard eligibility.eligible else {
-            return Review(recipe: recipe, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
+            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
         }
         let ingredientIDs = Set(recipe.ingredients.map(\.id))
         guard Set(reviewedFoods.keys).isSubset(of: ingredientIDs) else { throw DinnerPlanningError.stalePreview }
@@ -68,7 +74,7 @@ public enum PantryMealMatcher {
             for issue in food.softDifferences where !eligibility.softDifferences.contains(issue) { eligibility.softDifferences.append(issue) }
         }
         guard eligibility.eligible else {
-            return Review(recipe: recipe, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
+            return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: [], useFirstLotIDs: [])
         }
         let allocation = try ConfirmedStockAllocator.allocate(lots: lots, needs: needs)
         let demandByID = Dictionary(uniqueKeysWithValues: allocation.demands.map { ($0.id, $0) })
@@ -80,12 +86,12 @@ public enum PantryMealMatcher {
         let useFirst = Set(lots.filter { $0.useFirst == true }.map(\.id))
         let supported = Set(reviews.filter { !$0.hasUnresolvedStock && $0.coverage?.issues.isEmpty == true }.map(\.id))
         let used = Set(allocation.allocations.filter { $0.amount > .zero && supported.contains($0.needID) }.map(\.lotID))
-        return Review(recipe: recipe, eligibility: eligibility, ingredients: reviews, useFirstLotIDs: useFirst.intersection(used))
+        return Review(recipe: recipe, preferenceRevision: profile?.revision, eligibility: eligibility, ingredients: reviews, useFirstLotIDs: useFirst.intersection(used))
     }
 
     /// Use the library order for ties. Unknown effort sorts after reviewed effort.
     public static func ranked(_ reviews: [Review]) -> [Review] {
-        let eligible = reviews.filter { $0.eligibility.eligible }
+        let eligible = reviews.filter { $0.eligibility.eligible && $0.hasConfirmedPantryFood }
         let scored = eligible.enumerated().map { entry in
             (review: entry.element, index: entry.offset,
              covered: entry.element.ingredients.filter(\.covered).count)
