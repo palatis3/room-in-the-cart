@@ -168,7 +168,9 @@ extension DinnerLibraryPairings {
     /// Keep the real lot's identity and label. Only the currently unallocated balance can be reviewed.
     static func unreservedLots(_ journey: PickupJourney, at now: Date) throws -> [ConfirmedStockLot] {
         let stock = PickupFallbackOptions.lots(journey, at: now)
-        let reserved = try ConfirmedStockAllocator.allocate(lots: stock, needs: PickupFallbackOptions.needs(journey))
+        // Honor exact carryover pins without broadening this comparison's eligible receipt set.
+        let reserved = try ConfirmedCarryoverAllocator.allocate(lots: stock, needs: PickupFallbackOptions.needs(journey),
+                                                                reservations: journey.carryoverStockReservations)
         return stock.compactMap { lot in
             guard let balance = reserved.remainingLots.first(where: { $0.lotID == lot.id }), balance.issues.isEmpty,
                   reserved.demands.filter({ $0.foodID == lot.foodID }).allSatisfy({ $0.issues.isEmpty }),
