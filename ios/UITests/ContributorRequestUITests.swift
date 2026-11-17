@@ -12,6 +12,39 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testHouseholdMealPreferencesOrganizerReviewsAndAdultReads() {
+        app.launchArguments = ["--ui-testing", "--household-meal-organizer", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        func open() { tap(app.buttons["household.mealPreferences"]) }
+        open()
+        let edit = app.buttons["household.preferences.edit"]
+        tap(edit)
+        let field = element("preferences.exclusions")
+        tap(field)
+        field.typeText("peanut")
+        let done = app.buttons["preferences.keyboardDone"]
+        tap(done)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
+        tap(element("preferences.review"))
+        tap(element("preferences.save"))
+        let rule = NSPredicate(format: "label CONTAINS %@", "peanut")
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        let grant = app.switches["Alex"]
+        tap(grant)
+        tap(app.navigationBars.buttons.firstMatch)
+        open()
+        XCTAssertTrue(grant.waitForExistence(timeout: 10))
+        XCTAssertEqual(grant.value as? String, "1")
+        app.terminate()
+
+        app.launchArguments = ["--ui-testing", "--household-meal-reader", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        open()
+        XCTAssertTrue(app.staticTexts.matching(rule).firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(edit.exists)
+        XCTAssertFalse(app.switches["Alex"].exists)
+    }
+
     func testOrganizerCorrectsNewPantryCountAndRecoversLostReceiptOnReopen() {
         app.launchArguments = ["--ui-testing", "--household-pantry-correction", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

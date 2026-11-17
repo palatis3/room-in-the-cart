@@ -57,6 +57,7 @@ private struct HouseholdMealPreferencesView: View {
                                 .id(page.revision)
                             }
                             Button(dinnerText("Edit household preferences")) { editing = true }
+                                .accessibilityIdentifier("household.preferences.edit")
                             if let grants {
                                 Section(dinnerText("Adults who can read preferences")) {
                                     ForEach(grants.adults) { adult in
