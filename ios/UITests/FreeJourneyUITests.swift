@@ -310,6 +310,10 @@ import XCTest
         open()
         let field = element("preferences.exclusions")
         tap(field); field.typeText("peanut")
+        let done = app.buttons["preferences.keyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "preferences.keyboardDone"))
         tap(element("preferences.review"))
         tap(element("preferences.save"))
         XCTAssertTrue(app.buttons["dinnerStartPickup"].waitForExistence(timeout: 8))
