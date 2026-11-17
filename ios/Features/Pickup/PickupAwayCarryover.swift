@@ -37,6 +37,7 @@ struct AwayCarryoverIntent: Codable, Equatable, Identifiable {
     let counted: Quantity
     let plan: DinnerCarryoverPlan
     var recoveryRevision: UUID? = nil
+    var canonical: PantryAwayCarryoverBinding? = nil
 }
 struct AwayCarryoverRecord: Codable, Equatable, Identifiable {
     enum Phase: String, Codable { case prepared, reserved, completed, cancelled }
@@ -113,7 +114,16 @@ enum AwayCarryoverEngine {
     }
     static func validate(_ intent: AwayCarryoverIntent) throws {
         try intent.plan.validate()
+        try intent.canonical?.validate(for: intent)
         let link = intent.plan.link
+        // A canonical recount reviews today's physical head. A qualitative count
+        // supplies no numeric ceiling; only the newly checked amount is proposed.
+        // The legacy path retains its historical remaining-quantity ceiling.
+        let recount = intent.canonical?.recountsPhysicalSource == true
+        let countUnit = recount ? intent.canonical!.lot.unit : intent.supply.quantity.unit
+        let ceiling: Quantity?
+        if recount { ceiling = intent.canonical!.lot.count.quantity }
+        else { ceiling = intent.supply.quantity }
         guard !intent.actorID.isEmpty, intent.pickupRevision >= 0, intent.sourceNeed.priority != .protected,
               intent.supply.foodID == intent.sourceNeed.orderLineID, link.sourceNeedID == intent.sourceNeed.id,
               link.sourceSupplyID == intent.supply.id, intent.counted.amount > .zero,
@@ -124,19 +134,19 @@ enum AwayCarryoverEngine {
               intent.plan.day.timeZoneIdentifier == originalDay.timeZoneIdentifier,
               intent.plan.day.iso8601 > originalDay.iso8601,
               intent.plan.day.iso8601 >= (try MealDay(date: link.observedAt, timeZoneIdentifier: intent.plan.day.timeZoneIdentifier)).iso8601,
-              let count = try intent.counted.converted(to: intent.supply.quantity.unit), count <= intent.supply.quantity.amount,
+              let count = try intent.counted.converted(to: countUnit), ceiling.map({ count <= $0.amount }) ?? true,
               let reserved = try link.quantity.converted(to: intent.sourceNeed.amount.unit), reserved > .zero,
               reserved <= intent.sourceNeed.amount.amount else { throw AwayCarryoverError.invalid }
         switch intent.supply {
         case .batch(let lot): guard lot.source != .manual, link.confirmedSupplyID == lot.id else { throw AwayCarryoverError.invalid }
         case .received(let receipt, let observation):
             guard observation.confirmedMatchToOrderLine, observation.receipt == receipt.key,
-                  link.confirmedSupplyID == targetID(intent.id, "physical-observation") else { throw AwayCarryoverError.invalid }
+                  link.confirmedSupplyID == (recount ? observation.id : targetID(intent.id, "physical-observation")) else { throw AwayCarryoverError.invalid }
         }
     }
     /// Reconciles the original sealed result by content, not a global revision.
     /// Unrelated settlement or other-lot writes do not change these identities.
-    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney, at instant: Date) throws {
+    static func assertTransferred(_ intent: AwayCarryoverIntent, in value: PickupJourney, at instant: Date) throws {
         try validate(intent)
         guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard value.id == intent.plan.link.sourceShopID,
@@ -149,6 +159,9 @@ enum AwayCarryoverEngine {
         } else {
             guard value.needs.first(where: { $0.id == intent.sourceNeed.id }) == (try reducedNeed(intent)) else { throw AwayCarryoverError.stale }
         }
+    }
+    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney, at instant: Date) throws {
+        try assertTransferred(intent, in: value, at: instant)
         switch intent.supply {
         case .batch(let lot):
             let expected = ConfirmedStockLot(id: lot.id, foodID: lot.foodID, name: lot.name, usable: intent.counted,
@@ -165,6 +178,14 @@ enum AwayCarryoverEngine {
     /// Recounts an existing identity and transfers one eligible demand quantity.
     /// Original purchase facts and protected demands are never changed.
     static func reserving(_ intent: AwayCarryoverIntent, in original: PickupJourney, at instant: Date) throws -> PickupJourney {
+        try reservingSource(intent, in: original, at: instant, checkLegacyAllocation: true)
+    }
+    /// The canonical adapter must prove the complete resulting graph before save.
+    static func reservingCanonicalSource(_ intent: AwayCarryoverIntent, in original: PickupJourney, at instant: Date) throws -> PickupJourney {
+        try reservingSource(intent, in: original, at: instant, checkLegacyAllocation: false)
+    }
+    private static func reservingSource(_ intent: AwayCarryoverIntent, in original: PickupJourney, at instant: Date,
+                                        checkLegacyAllocation: Bool) throws -> PickupJourney {
         try validate(intent)
         guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard original.id == intent.plan.link.sourceShopID, original.pickup != nil,
@@ -179,6 +200,9 @@ enum AwayCarryoverEngine {
             value.stockLots[index] = ConfirmedStockLot(id: lot.id, foodID: lot.foodID, name: lot.name, usable: intent.counted,
                 confirmedAt: intent.plan.link.observedAt, source: lot.source, useFirst: lot.useFirst == true)
         case .received(let receipt, let observation):
+            // Canonical recounts are independent pantry observations. Keep the
+            // original received/usable facts intact, including their quantity cap.
+            guard checkLegacyAllocation else { break }
             let corrected = UsableObservation(id: intent.plan.link.confirmedSupplyID, receipt: receipt.key, usable: intent.counted,
                 confirmedAt: intent.plan.link.observedAt, supersedesID: observation.id, confirmedMatchToOrderLine: true)
             guard var pickup = value.pickup else { throw AwayCarryoverError.invalid }
@@ -200,6 +224,7 @@ enum AwayCarryoverEngine {
         value.stockNeeds.append(targetNeed(intent))
         if let record = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) { value.awayCarryovers[record].phase = .reserved }
         else { value.awayCarryovers.append(AwayCarryoverRecord(intent: intent, phase: .reserved)) }
+        guard checkLegacyAllocation else { return value }
         let before = try original.carryoverAllocation(at: instant), after = try value.carryoverAllocation(at: instant)
         guard after.demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
         for demand in before.demands where demand.foodID == intent.sourceNeed.orderLineID && demand.id != intent.sourceNeed.id {
@@ -288,10 +313,11 @@ extension PickupJourney {
     }
     var records: [AwayCarryoverRecord] { pickup.journeys.first(where: { $0.id == dinner.shop?.id })?.awayCarryovers ?? [] }
     var pending: AwayCarryoverRecord? { records.first { $0.phase == .prepared || $0.phase == .reserved } }
-    private func access(_ shopID: UUID, workspaceID: UUID? = nil, actorID: String? = nil) throws -> DinnerAccessContext {
+    private func access(_ shopID: UUID, workspaceID: UUID? = nil, actorID: String? = nil,
+                        sourceOperationID: UUID? = nil, duringLedgerWrite: Bool = false) throws -> DinnerAccessContext {
         guard dinner.shop?.id == shopID, pickup.journey?.id == shopID,
-              dinner.store.ready, !dinner.store.saving, !dinner.store.hasPendingSave,
-              pickup.ready, !pickup.saving, !pickup.hasPendingSave,
+              dinner.store.ready, duringLedgerWrite || (!dinner.store.saving && !dinner.store.hasPendingSave),
+              pickup.ready, sourceOperationID.map(pickup.isValidatingRecoverySave) == true || (!pickup.saving && !pickup.hasPendingSave),
               let access = dinner.accessProvider(shopID), case .local(let id) = access.scope,
               id == dinner.store.sourceWorkspaceID, workspaceID == nil || workspaceID == id,
               actorID == nil || actorID == access.actorID else { throw AwayCarryoverError.authority }
@@ -309,7 +335,10 @@ extension PickupJourney {
             let authority = try access(shop.id)
             guard case .local(let workspaceID) = authority.scope else { throw AwayCarryoverError.authority }
             let confirmedID: UUID
-            switch supply { case .batch: confirmedID = supply.id; case .received: confirmedID = AwayCarryoverEngine.targetID(id, "physical-observation") }
+            switch supply {
+            case .batch: confirmedID = supply.id
+            case .received: confirmedID = pickup.pantryIsActive ? supply.id : AwayCarryoverEngine.targetID(id, "physical-observation")
+            }
             let link = DinnerCarryoverLink(operationID: id, sourceShopID: shop.id, sourceOccurrenceID: meal.id,
                 sourceNeedID: need.id, sourceSupplyID: supply.id, confirmedSupplyID: confirmedID,
                 reservationID: AwayCarryoverEngine.targetID(id, "reservation"), quantity: reserved, observedAt: observedAt)
@@ -318,10 +347,14 @@ extension PickupJourney {
                 revisionID: AwayCarryoverEngine.targetID(id, "ledger-revision"), baseRevisionID: shop.revisionID,
                 source: current, day: day, servings: servings, link: link, purchasedSource: current == meal ? nil : meal,
                 ingredientExclusions: journey.recoveryCurrentDetails.first(where: { $0.id == need.id })?.exclusions)
-            let intent = AwayCarryoverIntent(workspaceID: workspaceID, actorID: authority.actorID, pickupRevision: journey.revision,
+            var intent = AwayCarryoverIntent(workspaceID: workspaceID, actorID: authority.actorID, pickupRevision: journey.revision,
                 planningRevisionID: dinner.state.revisionID, sourceNeed: need, supply: supply, counted: counted, plan: plan,
                 recoveryRevision: try journey.mealRecovery.map { try MealRecoveryEngine.project($0.domain).revisionID })
-            _ = try AwayCarryoverEngine.reserving(intent, in: journey, at: clock())
+            if pickup.pantryIsActive {
+                guard let ledger = dinner.store as? LedgerModel, let context = try pickup.pantryReviewContext() else { throw AwayCarryoverError.authority }
+                intent = try PantryAwayCarryoverEvidence.bind(intent, context: context)
+                try PantryAwayCarryoverEvidence.preview(intent, journey: journey, context: context, ledger: ledger, at: clock())
+            } else { _ = try AwayCarryoverEngine.reserving(intent, in: journey, at: clock()) }
             var ledgerPreview = shop; try ledgerPreview.appendConfirmedCarryover(plan, at: clock())
             review = intent; message = nil; return true
         } catch { review = nil; message = pTr("Recount the existing physical food and choose a later real date. The carryover must not take food reserved for another meal."); return false }
@@ -334,6 +367,7 @@ extension PickupJourney {
     @discardableResult func retry(_ record: AwayCarryoverRecord) async -> Bool { await complete(record.intent, seal: false) }
     private func complete(_ intent: AwayCarryoverIntent, seal: Bool) async -> Bool {
         guard !busy else { return false }; busy = true; defer { busy = false }
+        if pickup.pantryIsActive { return await completeCanonical(intent, seal: seal) }
         do {
             _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
             if let completed = records.first(where: { $0.id == intent.id }), completed.phase == .completed {
@@ -378,6 +412,165 @@ extension PickupJourney {
                 value.awayCarryovers[index].phase = .completed
             }) else { throw AwayCarryoverError.pending }
             review = nil; message = pTr("The dated carryover and its physical-food reservation are saved. Original purchases and protected lunches are unchanged."); return true
+        } catch {
+            message = pTr("Carryover is not complete. Its saved operation can be retried after reviewing current access and pending save controls. No second stock lot or dinner will be created.")
+            return false
+        }
+    }
+
+    func supplies(for need: AllocationNeed, in journey: PickupJourney) -> [AwayCarryoverSupply] {
+        let old = AwayCarryoverEngine.supplies(for: need, in: journey)
+        guard pickup.pantryIsActive else { return old }
+        guard let context = try? pickup.pantryReviewContext() else { return [] }
+        return old.filter { (try? PantryAwayCarryoverEvidence.selectedLot($0, context: context)) != nil }
+    }
+    func supplyCount(_ supply: AwayCarryoverSupply) -> String {
+        guard pickup.pantryIsActive else { return pQuantity(supply.quantity) }
+        guard let context = try? pickup.pantryReviewContext(),
+              let row = try? PantryAwayCarryoverEvidence.selectedLot(supply, context: context) else { return pTr("Unresolved") }
+        return pantryCount(row.current.count)
+    }
+    func supplyObservedAt(_ supply: AwayCarryoverSupply) -> Date? {
+        guard pickup.pantryIsActive else { return supply.observedAt }
+        guard let context = try? pickup.pantryReviewContext(),
+              let row = try? PantryAwayCarryoverEvidence.selectedLot(supply, context: context) else { return nil }
+        return row.current.confirmedAt
+    }
+    func prepareSavedReservation(_ record: AwayCarryoverRecord) -> Bool {
+        do {
+            guard !busy, pickup.pantryIsActive, record.phase == .reserved, record.intent.canonical == nil,
+                  let ledger = dinner.store as? LedgerModel, let journey = pickup.journey,
+                  let context = try pickup.pantryReviewContext() else { throw AwayCarryoverError.stale }
+            _ = try access(journey.id, workspaceID: record.intent.workspaceID, actorID: record.intent.actorID)
+            let intent = try PantryAwayCarryoverEvidence.bind(record.intent, context: context, recountsPhysicalSource: false)
+            _ = try PantryAwayCarryoverEvidence.adoptReserved(intent, journey: journey, context: context, ledger: ledger, at: clock())
+            review = intent; message = nil; return true
+        } catch { review = nil; message = pTr("The saved reservation needs a current pantry review. No food or calendar entry changed."); return false }
+    }
+    @discardableResult func cancelPrepared(_ record: AwayCarryoverRecord) async -> Bool {
+        guard !busy, pickup.pantryIsActive, record.phase == .prepared else { return false }
+        busy = true; defer { busy = false }
+        do {
+            guard await pickup.refreshPantryStock() else { throw AwayCarryoverError.stale }
+            let saved = try await saveCanonicalPhase(record.intent, phase: .cancelled)
+            if saved { review = nil; message = pTr("Preparation cancelled. The physical count and original dinner demand are unchanged.") }
+            return saved
+        } catch { message = pTr("The saved reservation needs a current pantry review. No food or calendar entry changed."); return false }
+    }
+    private func canonicalContext(_ intent: AwayCarryoverIntent) throws -> PantryPackStockReview.Context {
+        guard let ledger = dinner.store as? LedgerModel, ledger.ready,
+              ledger.sourceWorkspaceID == intent.workspaceID, pickup.journey?.id == intent.plan.link.sourceShopID,
+              let context = try pickup.pantryReviewContext(forRecoveryOperationID: intent.id) else { throw AwayCarryoverError.authority }
+        return context
+    }
+    private func hasExactTarget(_ intent: AwayCarryoverIntent) throws -> Bool {
+        guard var shop = dinner.shop, shop.id == intent.plan.link.sourceShopID else { throw AwayCarryoverError.stale }
+        guard shop.mealOccurrences.contains(where: { $0.id == intent.plan.occurrenceID }) else { return false }
+        try shop.appendConfirmedCarryover(intent.plan, at: clock())
+        return true
+    }
+    private func phaseReview(_ intent: AwayCarryoverIntent, phase: AwayCarryoverRecord.Phase,
+                             at instant: Date) throws -> PantryAwayCarryoverEvidence.Review {
+        guard let ledger = dinner.store as? LedgerModel, let journey = pickup.journey else { throw AwayCarryoverError.authority }
+        let context = try canonicalContext(intent)
+        if phase == .completed {
+            guard try hasExactTarget(intent) else { throw AwayCarryoverError.stale }
+            return try PantryAwayCarryoverEvidence.complete(intent, journey: journey, context: context, ledger: ledger, at: instant)
+        }
+        _ = try access(journey.id, workspaceID: intent.workspaceID, actorID: intent.actorID, sourceOperationID: intent.id)
+        if phase == .cancelled {
+            return try PantryAwayCarryoverEvidence.cancelPrepared(intent, journey: journey, context: context, ledger: ledger, at: instant)
+        }
+        guard dinner.shop?.revisionID == intent.plan.baseRevisionID, dinner.state.revisionID == intent.planningRevisionID else { throw AwayCarryoverError.stale }
+        if phase == .prepared {
+            guard journey.closedAt == nil, journey.revision == intent.pickupRevision else { throw AwayCarryoverError.stale }
+            return try PantryAwayCarryoverEvidence.prepare(intent, journey: journey, context: context, ledger: ledger, at: instant)
+        }
+        if let existing = journey.awayCarryovers.first(where: { $0.id == intent.id }), existing.phase == .reserved, existing.intent.canonical == nil {
+            return try PantryAwayCarryoverEvidence.adoptReserved(intent, journey: journey, context: context, ledger: ledger, at: instant)
+        }
+        return try PantryAwayCarryoverEvidence.reserve(intent, journey: journey, context: context, ledger: ledger, at: instant)
+    }
+    private func authorizesPending(_ intent: AwayCarryoverIntent, candidate: PickupJourney) -> Bool {
+        do {
+            guard let record = candidate.awayCarryovers.first(where: { $0.id == intent.id }), record.intent == intent else { return false }
+            var expected = try phaseReview(intent, phase: record.phase, at: candidate.savedAt).candidate
+            guard expected.revision < Int64.max else { return false }
+            expected.savedAt = candidate.savedAt; expected.revision += 1
+            try expected.synchronizeRecoveryOutside(at: candidate.savedAt)
+            return expected == candidate
+        } catch { return false }
+    }
+    private func saveCanonicalPhase(_ intent: AwayCarryoverIntent, phase: AwayCarryoverRecord.Phase) async throws -> Bool {
+        let prepared = try phaseReview(intent, phase: phase, at: clock())
+        return await pickup.saveRecoveryCandidate(prepared.candidate, operationID: intent.id, reviewedPantry: prepared.writeReview) { [weak self] in
+            guard let self else { return false }
+            do { _ = try self.phaseReview(intent, phase: phase, at: self.clock()); return true }
+            catch { return false }
+        }
+    }
+    private func completeCanonical(_ intent: AwayCarryoverIntent, seal: Bool) async -> Bool {
+        do {
+            guard let ledger = dinner.store as? LedgerModel, ledger.sourceWorkspaceID == intent.workspaceID else { throw AwayCarryoverError.authority }
+            // Recovery of an exact committed source submission precedes action
+            // authorization. A restored uncommitted action needs a new runtime grant.
+            if let candidate = pickup.pendingRecoveryCandidate(operationID: intent.id) {
+                guard candidate.awayCarryovers.first(where: { $0.id == intent.id })?.intent == intent else { throw AwayCarryoverError.stale }
+                let recovered = await pickup.retryRecoveryCandidate(operationID: intent.id, authorize: { [weak self] in
+                    self?.authorizesPending(intent, candidate: candidate) == true
+                }, matches: { $0 == candidate })
+                guard recovered else { throw AwayCarryoverError.pending }
+            }
+            guard !pickup.hasPendingSave, !ledger.hasPendingSave, await pickup.refreshPantryStock() else { throw AwayCarryoverError.pending }
+            _ = try canonicalContext(intent)
+            if let existing = records.first(where: { $0.id == intent.id }), existing.phase == .completed {
+                guard existing.intent == intent, try hasExactTarget(intent) else { throw AwayCarryoverError.stale }
+                review = nil; return true
+            }
+            // Calendar receipt recognition precedes fresh food feasibility. A
+            // later recount/consumption cannot undo an already-created target.
+            if let existing = records.first(where: { $0.id == intent.id }), existing.phase == .reserved,
+               existing.intent == intent, try hasExactTarget(intent) {
+                guard try await saveCanonicalPhase(intent, phase: .completed) else { throw AwayCarryoverError.pending }
+                review = nil; return true
+            }
+            _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
+            if records.first(where: { $0.id == intent.id }) == nil {
+                guard seal, intent.canonical != nil, try await saveCanonicalPhase(intent, phase: .prepared) else { throw AwayCarryoverError.stale }
+            }
+            guard let stored = records.first(where: { $0.id == intent.id }), stored.phase != .cancelled else { throw AwayCarryoverError.stale }
+            if stored.phase == .prepared {
+                guard stored.intent == intent, intent.canonical != nil,
+                      try await saveCanonicalPhase(intent, phase: .reserved) else { throw AwayCarryoverError.stale }
+            } else if stored.phase == .reserved, stored.intent != intent {
+                var historical = intent; historical.canonical = nil
+                guard seal, stored.intent == historical, stored.intent.canonical == nil,
+                      try await saveCanonicalPhase(intent, phase: .reserved) else { throw AwayCarryoverError.stale }
+            }
+            guard records.first(where: { $0.id == intent.id }) == .init(intent: intent, phase: .reserved), intent.canonical != nil,
+                  let current = pickup.journey else { throw AwayCarryoverError.stale }
+            let context = try canonicalContext(intent)
+            try PantryAwayCarryoverEvidence.assertReserved(intent, journey: current, context: context, at: clock())
+            _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
+            let basis = PantryAwayCarryoverEvidence.basis(context)
+            let saved = await ledger.change(key: "physical-carryover:v1:\(intent.id)", reviewedPantryBasis: basis, authorize: { [weak self] in
+                guard let self, let current = self.pickup.journey else { return false }
+                do {
+                    _ = try self.access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID, duringLedgerWrite: true)
+                    let latest = try self.canonicalContext(intent)
+                    guard PantryAwayCarryoverEvidence.basis(latest) == basis,
+                          self.dinner.state.revisionID == intent.planningRevisionID else { return false }
+                    try PantryAwayCarryoverEvidence.assertReserved(intent, journey: current, context: latest, at: self.clock())
+                    return true
+                } catch { return false }
+            }) { workspace in
+                guard workspace.dinnerPlanning.revisionID == intent.planningRevisionID,
+                      let index = workspace.shops.firstIndex(where: { $0.id == intent.plan.link.sourceShopID }) else { throw AwayCarryoverError.stale }
+                try workspace.shops[index].appendConfirmedCarryover(intent.plan, at: self.clock())
+            }
+            guard saved, await pickup.refreshPantryStock(), try await saveCanonicalPhase(intent, phase: .completed) else { throw AwayCarryoverError.pending }
+            review = nil; message = pTr("The dated carryover and its physical-food reservation are saved. Original purchases and protected lunches are unchanged.")
+            return true
         } catch {
             message = pTr("Carryover is not complete. Its saved operation can be retried after reviewing current access and pending save controls. No second stock lot or dinner will be created.")
             return false

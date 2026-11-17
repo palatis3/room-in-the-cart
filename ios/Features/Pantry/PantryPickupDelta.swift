@@ -111,6 +111,7 @@ extension PantryLegacyMigration.SourceHead {
         let beforeSources = Set(beforePlan.lots.map(\.source))
         var revisions: [InventorySource: InventoryLotRevision] = [:]
         var manualChanges: [InventorySource: ConfirmedStockLot] = [:]
+        var carryoverCounts: [InventorySource: InventoryCountRevision] = [:]
         var affectedNeedIDs = Set<UUID>()
         for head in changed {
             let old = before[head.id], next = after[head.id]!
@@ -141,6 +142,31 @@ extension PantryLegacyMigration.SourceHead {
             let oldCarryovers = Dictionary(uniqueKeysWithValues: (old?.awayCarryovers ?? []).map { ($0.id, $0) })
             let newCarryovers = Dictionary(uniqueKeysWithValues: next.awayCarryovers.map { ($0.id, $0) })
             for id in Set(oldCarryovers.keys).union(newCarryovers.keys) where oldCarryovers[id] != newCarryovers[id] {
+                if let next = newCarryovers[id], next.phase == .reserved,
+                   oldCarryovers[id] == nil || oldCarryovers[id]?.phase == .prepared,
+                   let binding = next.intent.canonical, binding.recountsPhysicalSource {
+                    try binding.validate(for: next.intent)
+                    guard oldCarryovers[id] == nil || oldCarryovers[id]?.intent == next.intent,
+                          lots[binding.lot.id] == binding.lot else { throw Failure.staleSource }
+                    // This phase records an explicit recount even when its amount
+                    // happens to equal a stale copied source value. Completing or
+                    // adopting an already-reserved operation never recounts food.
+                    let observation = InventoryCountRevision(count: .exact(next.intent.counted),
+                        observationID: try identity(operationID, "observation", binding.lot.source),
+                        observedAt: next.intent.plan.link.observedAt)
+                    if let other = carryoverCounts[binding.lot.source], other != observation {
+                        throw Failure.ambiguousPhysicalChange
+                    }
+                    carryoverCounts[binding.lot.source] = observation
+                }
+                if let old = oldCarryovers[id], let new = newCarryovers[id], old.intent == new.intent,
+                   (old.phase == .reserved || old.phase == .completed),
+                   (new.phase == .reserved || new.phase == .completed) {
+                    // Acknowledging the calendar write is bookkeeping. It cannot
+                    // reactivate a canonical claim later released by consumption.
+                    // Actual changed physical needs were collected above.
+                    continue
+                }
                 if let value = oldCarryovers[id] { affectedNeedIDs.insert(value.intent.plan.link.reservationID) }
                 if let value = newCarryovers[id] { affectedNeedIDs.insert(value.intent.plan.link.reservationID) }
             }
@@ -165,6 +191,14 @@ extension PantryLegacyMigration.SourceHead {
                 observationID: try identity(operationID, "observation", source), observedAt: observation.confirmedAt))
         }
         var writes: [InventoryWrite] = []
+        for (source, observation) in carryoverCounts {
+            guard let id = sourceIDs[source], let current = lots[id] else { throw Failure.missingCanonicalSource }
+            if let existing = revisions[source]?.observation, existing != observation { throw Failure.ambiguousPhysicalChange }
+            guard current.count != observation.count || current.confirmedAt != observation.observedAt else { continue }
+            let prior = revisions[source]
+            revisions[source] = .init(observation: observation, foodID: prior?.foodID, name: prior?.name,
+                useFirst: prior?.useFirst, location: prior?.location)
+        }
         for mapped in afterPlan.lots.sorted(by: { $0.id.uuidString < $1.id.uuidString }) {
             if let id = sourceIDs[mapped.source] {
                 guard let revision = revisions[mapped.source], let current = lots[id] else { continue }

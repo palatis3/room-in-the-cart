@@ -47,6 +47,15 @@ public enum RecoveryDeleteScope: Sendable, Equatable {
         case .allRecovered: return true
         }
     }
+    fileprivate func includes(_ copy: RecoveredPantryCopy) -> Bool {
+        switch self {
+        case .copy(let id): return copy.id.uuidString == id
+        case .copies(let ids): return ids.contains(copy.id.uuidString)
+        case .origin(let origin): return copy.reference.originID.uuidString == origin
+        case .allRecovered: return true
+        }
+    }
+
 }
 
 public struct RecoveryDeletionReview: Sendable {
@@ -56,16 +65,18 @@ public struct RecoveryDeletionReview: Sendable {
         let lifetime: UUID?
     }
     private let versions: [String: Version]
-    public var count: Int { versions.count }
-    public var copyIDs: Set<String> { Set(versions.keys) }
+    private let pantryVersions: [UUID: RecoveredPantryCopy]
+    public var count: Int { versions.count + pantryVersions.count }
+    public var copyIDs: Set<String> { Set(versions.keys).union(pantryVersions.keys.map(\.uuidString)) }
 
-    public init(scope: RecoveryDeleteScope, displayedCopies: [RecoveredRecord]) {
+    public init(scope: RecoveryDeleteScope, displayedCopies: [RecoveredRecord], displayedPantryCopies: [RecoveredPantryCopy] = []) {
         self.scope = scope
         versions = Self.versions(of: displayedCopies.filter(scope.includes))
+        pantryVersions = Dictionary(uniqueKeysWithValues: displayedPantryCopies.filter(scope.includes).map { ($0.id, $0) })
     }
 
-    fileprivate func matches(_ copies: [RecoveredRecord]) -> Bool {
-        versions == Self.versions(of: copies)
+    fileprivate func matches(_ copies: [RecoveredRecord], pantry: [RecoveredPantryCopy]) -> Bool {
+        versions == Self.versions(of: copies) && pantryVersions == Dictionary(uniqueKeysWithValues: pantry.map { ($0.id, $0) })
     }
 
     private static func versions(of copies: [RecoveredRecord]) -> [String: Version] {
@@ -122,10 +133,16 @@ public actor RecoveryRegistry {
         var erasedOrigins: [String]? = []
         var erasedMediaSources: [ArchiveMediaSourceIdentity]? = []
         var encryptedBackups: [BackupMark]?
+        var pantryCopies: [RecoveredPantryCopy]?
+        var erasedPantryBundles: [UUID]?
+        // Local source erasure is irreversible even while another registry
+        // instance retains an ordinary recovered-copy deletion Undo token.
+        var retiredPantryBundles: [UUID]?
     }
     private let url: URL
     private var manifest: Manifest
     private var undo: [UUID: [RecoveredRecord]] = [:]
+    private var pantryUndo: [UUID: [RecoveredPantryCopy]] = [:]
     private static let emptyGeneration = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
     public init(url: URL) throws {
         guard url.isFileURL else { throw ArchiveError.unavailable }
@@ -138,6 +155,115 @@ public actor RecoveryRegistry {
         }
     }
     public static let maximumRegistryBytes = 64 * 1_048_576
+    public func listPantry() throws -> [RecoveredPantryCopy] {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        return (manifest.pantryCopies ?? []).sorted { $0.recoveredAtMilliseconds > $1.recoveredAtMilliseconds }
+    }
+    public func reviewPantry(_ reference: PantryRecoveryReference) throws -> PantryRecoveryReview {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        return try pantryReview(reference)
+    }
+    private func pantryReview(_ reference: PantryRecoveryReference) throws -> PantryRecoveryReview {
+        try reference.validate()
+        let existing = manifest.pantryCopies?.first { $0.reference.bundleID == reference.bundleID }
+        let erased = (manifest.erasedOrigins ?? []).contains(reference.originID.uuidString) ||
+            (manifest.erasedPantryBundles ?? []).contains(reference.bundleID)
+        let disposition: RecoveryDisposition = erased ? .erased : existing.map {
+            $0.reference == reference ? .identical : .quarantined
+        } ?? ((manifest.pantryCopies ?? []).contains { $0.reference.originID == reference.originID } ? .sibling : .absent)
+        return .init(reference: reference, disposition: disposition, existingCopy: existing, generation: manifest.generation)
+    }
+    public func applyPantry(_ reviewed: PantryRecoveryReview, now: Date = Date()) throws -> RecoveredPantryCopy {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let checked = try pantryReview(reviewed.reference)
+        guard checked.canApply else { throw ArchiveError.conflict }
+        if checked.disposition == .identical, let existing = checked.existingCopy { return existing }
+        guard reviewed.generation == manifest.generation else { throw ArchiveError.staleReview }
+        guard now.timeIntervalSince1970.isFinite, now.timeIntervalSince1970 > 0,
+              now.timeIntervalSince1970 < Double(Int64.max / 1000),
+              (manifest.pantryCopies?.count ?? 0) < 10_000 else { throw ArchiveError.tooLarge }
+        let copy = RecoveredPantryCopy(id: UUID(), reference: checked.reference,
+            recoveredAtMilliseconds: ArchiveCodec.milliseconds(now), lifetime: UUID(), materialization: .unmaterialized)
+        var next = manifest; next.pantryCopies = (next.pantryCopies ?? []) + [copy]
+        try persist(&next); return copy
+    }
+    /// Exact copy/lifetime checks bind an existing recovery lease after awaits.
+    public func currentPantryCopy(_ expected: RecoveredPantryCopy) throws -> RecoveredPantryCopy {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard let current = manifest.pantryCopies?.first(where: { $0.id == expected.id }),
+              current.reference == expected.reference, current.lifetime == expected.lifetime else { throw ArchiveError.staleReview }
+        return current
+    }
+    public func beginPantryMaterialization(_ expected: RecoveredPantryCopy) throws -> PantryMaterializationStart {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard let index = manifest.pantryCopies?.firstIndex(where: { $0.id == expected.id }),
+              let current = manifest.pantryCopies?[index], current.reference == expected.reference,
+              current.lifetime == expected.lifetime else { throw ArchiveError.staleReview }
+        guard case .unmaterialized = current.materialization else { return .init(copy: current, permitsCreation: false) }
+        var next = manifest
+        next.pantryCopies?[index].materialization = .started(attemptID: UUID())
+        try persist(&next)
+        return .init(copy: manifest.pantryCopies![index], permitsCreation: true)
+    }
+    /// Caller supplies the locally verified actual SQLite origin, never an origin
+    /// claimed by an import. Completing the exact same binding is idempotent.
+    public func finishPantryMaterialization(_ started: RecoveredPantryCopy, workspaceID: UUID) throws -> RecoveredPantryCopy {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        guard workspaceID != started.reference.originID,
+              let index = manifest.pantryCopies?.firstIndex(where: { $0.id == started.id }),
+              let current = manifest.pantryCopies?[index], current.reference == started.reference,
+              current.lifetime == started.lifetime else { throw ArchiveError.staleReview }
+        if case .ready(let existing) = current.materialization {
+            guard existing == workspaceID else { throw ArchiveError.conflict }; return current
+        }
+        guard case .started = current.materialization,
+              current.materialization == started.materialization else { throw ArchiveError.staleReview }
+        guard !(manifest.pantryCopies ?? []).contains(where: {
+            $0.id != current.id && $0.materialization == .ready(workspaceID: workspaceID)
+        }) else { throw ArchiveError.conflict }
+        var next = manifest; next.pantryCopies?[index].materialization = .ready(workspaceID: workspaceID)
+        try persist(&next); return manifest.pantryCopies![index]
+    }
+    public func reviewPantryDeletion(copyIDs: Set<UUID>) throws -> PantryDeletionReview {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let selected = (manifest.pantryCopies ?? []).filter { copyIDs.contains($0.id) }
+        guard !selected.isEmpty, Set(selected.map(\.id)) == copyIDs else { throw ArchiveError.unavailable }
+        return .init(copies: selected, generation: manifest.generation)
+    }
+    public func deletePantry(_ review: PantryDeletionReview) throws {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let ids = Set(review.copies.map(\.id))
+        let current = (manifest.pantryCopies ?? []).filter { ids.contains($0.id) }
+        guard current.count == review.copies.count,
+              current.allSatisfy({ value in review.copies.contains(value) }) else { throw ArchiveError.deletionSelectionChanged }
+        var next = manifest
+        next.pantryCopies?.removeAll { ids.contains($0.id) }
+        next.erasedPantryBundles = Array(Set(next.erasedPantryBundles ?? []).union(review.copies.map { $0.reference.bundleID }))
+        try persist(&next)
+    }
+    /// Local erasure reconciliation names verified affected packages. Imported
+    /// tombstones are inert; the app must derive this set from local authority.
+    public func registerErasedPantryBundles(_ bundles: Set<UUID>) throws {
+        let lock = try acquireLock(); defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let known = Set(manifest.erasedPantryBundles ?? [])
+        let retired = Set(manifest.retiredPantryBundles ?? [])
+        let invalidUndo = pantryUndo.filter { $0.value.contains { bundles.contains($0.reference.bundleID) } }.map(\.key)
+        for id in invalidUndo { pantryUndo[id] = nil; undo[id] = nil }
+        guard !bundles.isSubset(of: known) || !bundles.isSubset(of: retired) else { return }
+        var next = manifest; next.erasedPantryBundles = Array(known.union(bundles))
+        next.retiredPantryBundles = Array(retired.union(bundles))
+        next.pantryCopies?.removeAll { bundles.contains($0.reference.bundleID) }
+        try persist(&next)
+    }
     public func list() -> [RecoveredRecord] { manifest.records.sorted { $0.recoveredAtMilliseconds > $1.recoveredAtMilliseconds } }
     public func load(id: String) -> RecoveredRecord? { manifest.records.first { $0.id == id } }
     /// Refreshes under the same file lock used by writes, including other registry instances.
@@ -354,39 +480,48 @@ public actor RecoveryRegistry {
         try delete(review.scope, review: review)
     }
     private func delete(_ scope: RecoveryDeleteScope, review: RecoveryDeletionReview?) throws -> RecoveryUndoToken {
-        let lock = try acquireLock()
-        defer { releaseLock(lock) }
+        let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
         let removed = manifest.records.filter(scope.includes)
-        if let review, !review.matches(removed) { throw ArchiveError.deletionSelectionChanged }
-        guard !removed.isEmpty else { throw ArchiveError.unavailable }
-        let ids = Set(removed.map(\.id))
+        let removedPantry = (manifest.pantryCopies ?? []).filter(scope.includes)
+        if let review, !review.matches(removed, pantry: removedPantry) { throw ArchiveError.deletionSelectionChanged }
+        guard !removed.isEmpty || !removedPantry.isEmpty else { throw ArchiveError.unavailable }
+        let ids = Set(removed.map(\.id)), pantryIDs = Set(removedPantry.map(\.id))
         var next = manifest
         next.records.removeAll { ids.contains($0.id) }
+        next.pantryCopies?.removeAll { pantryIDs.contains($0.id) }
         next.erasedIdentities = Array(Set(next.erasedIdentities).union(removed.map(\.receipt.identity)))
+        next.erasedPantryBundles = Array(Set(next.erasedPantryBundles ?? []).union(removedPantry.map { $0.reference.bundleID }))
         purgeBackups(&next, removedCopies: ids)
         try persist(&next)
-        let token = RecoveryUndoToken(id: UUID()); undo[token.id] = removed
+        let token = RecoveryUndoToken(id: UUID()); undo[token.id] = removed; pantryUndo[token.id] = removedPantry
         return token
     }
-    /// Undo bytes remain only in memory until exit or discardUndo, never in an on-disk trash.
+    /// Undo remains only in memory. Pantry references retain storage identity but
+    /// acquire a new lifetime so late Files/open callbacks cannot reuse old leases.
     public func undoDelete(_ token: RecoveryUndoToken) throws {
-        let lock = try acquireLock()
-        defer { releaseLock(lock) }
+        let lock = try acquireLock(); defer { releaseLock(lock) }
         try refreshFromDisk()
-        guard let records = undo[token.id] else { throw ArchiveError.unavailable }
-        guard !records.contains(where: { (manifest.erasedOrigins ?? []).contains($0.record.origin) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }) else { throw ArchiveError.conflict }
+        let records = undo[token.id] ?? [], pantry = pantryUndo[token.id] ?? []
+        guard !records.isEmpty || !pantry.isEmpty else { throw ArchiveError.unavailable }
+        guard !records.contains(where: { (manifest.erasedOrigins ?? []).contains($0.record.origin) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) }),
+              !pantry.contains(where: { (manifest.erasedOrigins ?? []).contains($0.reference.originID.uuidString) ||
+                  (manifest.retiredPantryBundles ?? []).contains($0.reference.bundleID) }) else { throw ArchiveError.conflict }
         var next = manifest
         let erasedMedia = Set(next.erasedMediaSources ?? [])
         let restorable = try records.map { try scrubbing($0, erasedMedia: erasedMedia) }
         for record in restorable where !next.records.contains(where: { $0.receipt.identity == record.receipt.identity }) {
-            var restored = record
-            restored.backupLifetime = UUID()
-            next.records.append(restored)
+            var restored = record; restored.backupLifetime = UUID(); next.records.append(restored)
         }
-        let identities = Set(restorable.map(\.receipt.identity))
+        for copy in pantry where !(next.pantryCopies ?? []).contains(where: { $0.reference.bundleID == copy.reference.bundleID }) {
+            let restored = RecoveredPantryCopy(id: copy.id, reference: copy.reference,
+                recoveredAtMilliseconds: copy.recoveredAtMilliseconds, lifetime: UUID(), materialization: copy.materialization)
+            next.pantryCopies = (next.pantryCopies ?? []) + [restored]
+        }
+        let identities = Set(restorable.map(\.receipt.identity)), bundles = Set(pantry.map { $0.reference.bundleID })
         next.erasedIdentities.removeAll { identities.contains($0) }
-        try persist(&next); undo[token.id] = nil
+        next.erasedPantryBundles?.removeAll { bundles.contains($0) }
+        try persist(&next); undo[token.id] = nil; pantryUndo[token.id] = nil
     }
     /// Local domain tombstones override every revision/projection of the erased source.
     /// This also purges recovered private text and in-memory deletion undo for that source.
@@ -405,7 +540,8 @@ public actor RecoveryRegistry {
         next.records.removeAll { ids.contains($0.id) }
         purgeBackups(&next, removedCopies: ids)
         try persist(&next)
-        undo = undo.filter { !$0.value.contains { all.contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) } }
+        let invalidUndo = undo.filter { $0.value.contains { all.contains(ArchiveSourceIdentity(origin: $0.record.origin, recordID: $0.record.id)) } }.map(\.key)
+        for id in invalidUndo { undo[id] = nil; pantryUndo[id] = nil }
     }
     /// Whole-workspace erasure also covers shops that only occur in older backups.
     public func registerErasedOrigins(_ origins: [String]) throws {
@@ -419,9 +555,13 @@ public actor RecoveryRegistry {
         var next = manifest
         next.erasedOrigins = Array(all)
         next.records.removeAll { all.contains($0.record.origin) }
+        next.pantryCopies?.removeAll { all.contains($0.reference.originID.uuidString) }
         purgeBackups(&next, removedCopies: [])
         try persist(&next)
-        undo = undo.filter { !$0.value.contains { all.contains($0.record.origin) } }
+        let invalidUndo = undo.filter { $0.value.contains { all.contains($0.record.origin) } }.map(\.key)
+        for id in invalidUndo { undo[id] = nil; pantryUndo[id] = nil }
+        let invalidPantryUndo = pantryUndo.filter { $0.value.contains { all.contains($0.reference.originID.uuidString) } }.map(\.key)
+        for id in invalidPantryUndo { pantryUndo[id] = nil; undo[id] = nil }
     }
     /// A source-reference removal also scrubs embedded evidence in earlier copies.
     /// Preserve each copy ID and its isolated edited workspace. The sanitized copy
@@ -454,7 +594,7 @@ public actor RecoveryRegistry {
         let receipt = try ArchiveCodec.receipt(record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id)
         return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds, backupLifetime: saved.backupLifetime)
     }
-    public func discardUndo() { undo.removeAll() }
+    public func discardUndo() { undo.removeAll(); pantryUndo.removeAll() }
     /// Roll back only snapshots inserted by this reviewed batch; identical pre-existing
     /// copies survive. Removing receipts permits a later intentional import retry.
     public func undoImport(insertedCopyIDs: [String]) throws {
@@ -464,7 +604,8 @@ public actor RecoveryRegistry {
         let ids = Set(insertedCopyIDs)
         var next = manifest
         next.records.removeAll { ids.contains($0.id) }
-        guard next.records.count != manifest.records.count else { return }
+        next.pantryCopies?.removeAll { ids.contains($0.id.uuidString) }
+        guard next.records.count != manifest.records.count || next.pantryCopies != manifest.pantryCopies else { return }
         purgeBackups(&next, removedCopies: ids)
         try persist(&next)
     }
@@ -491,6 +632,23 @@ public actor RecoveryRegistry {
         do { current = try JSONDecoder().decode(Manifest.self, from: bytes) } catch { throw ArchiveError.malformed }
         guard current.formatMajor == 1 else { throw ArchiveError.unsupportedVersion }
         var identities = Set<ArchiveIdentity>(), copies = Set<String>()
+        let pantry = current.pantryCopies ?? [], erasedBundles = current.erasedPantryBundles ?? []
+        let retiredBundles = current.retiredPantryBundles ?? []
+        guard pantry.count <= 10_000, Set(pantry.map(\.id)).count == pantry.count,
+              Set(pantry.map { $0.reference.bundleID }).count == pantry.count,
+              Set(erasedBundles).count == erasedBundles.count,
+              Set(retiredBundles).count == retiredBundles.count,
+              Set(retiredBundles).isSubset(of: Set(erasedBundles)) else { throw ArchiveError.integrity }
+        var materializedOrigins = Set<UUID>()
+        for copy in pantry {
+            try copy.reference.validate()
+            guard copy.recoveredAtMilliseconds > 0, !erasedBundles.contains(copy.reference.bundleID),
+                  !(current.erasedOrigins ?? []).contains(copy.reference.originID.uuidString),
+                  copies.insert(copy.id.uuidString).inserted else { throw ArchiveError.integrity }
+            if case .ready(let origin) = copy.materialization {
+                guard origin != copy.reference.originID, materializedOrigins.insert(origin).inserted else { throw ArchiveError.integrity }
+            }
+        }
         let origins = Set(current.erasedOrigins ?? [])
         guard origins.allSatisfy(ArchiveCodec.identifier) else { throw ArchiveError.integrity }
         let sources = Set(current.erasedSources ?? [])

@@ -1,6 +1,7 @@
 import XCTest
 import CoreDomain
 import LocalStore
+import SQLite3
 @testable import RoomInTheCart
 
 @MainActor final class PantryPackModelRecoveryTests: XCTestCase {
@@ -101,6 +102,54 @@ import LocalStore
         _ = try await repository.apply(.init(id: UUID(), originID: f.inventory.workspaceID, lotID: lot.id,
             eventID: UUID(), expectedRevision: lot.revision, occurredAt: now, change: .count(.someLeft, observationID: UUID())),
             reviewedInventoryRevision: before.state.revision, at: now)
+    }
+
+    func testReviewedLedgerRetryRechecksActionPermissionWithoutReplacingPendingBody() async throws {
+        let f = try await fixture()
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let basis = try XCTUnwrap(review(f).canonicalStockEvidence?.basis)
+        let repository = PantryRepository(store: f.inventory, mutationGate: f.gate, authorize: { true })
+        f.cleanup.track(repository)
+        let before = try await repository.load(at: now), lot = try XCTUnwrap(before.lots.first)
+        let competingCommand = InventoryCommand(id: UUID(), originID: f.inventory.workspaceID, lotID: lot.id,
+            eventID: UUID(), expectedRevision: lot.revision, occurredAt: now,
+            change: .count(.someLeft, observationID: UUID()))
+        var competingWrite: Task<Bool, Never>?
+        var allowed = true
+        var connection: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(f.directory.appendingPathComponent("ledger.sqlite").path, &connection), SQLITE_OK)
+        let lock = try XCTUnwrap(connection)
+        defer { sqlite3_close(lock) }
+        XCTAssertEqual(sqlite3_exec(lock, "BEGIN IMMEDIATE", nil, nil, nil), SQLITE_OK)
+        let originalRevision = f.ledger.revision
+        let saved = await f.ledger.change(key: "reviewed carryover", reviewedPantryBasis: basis, authorize: {
+            if competingWrite == nil {
+                competingWrite = Task {
+                    do {
+                        _ = try await repository.apply(competingCommand, reviewedInventoryRevision: before.state.revision, at: self.now)
+                        return false
+                    } catch PantryMutationGate.Failure.busy { return true }
+                    catch { return false }
+                }
+            }
+            return allowed
+        }) {
+            $0.shops.append(ShoppingLedger(title: "Original reviewed destination"))
+        }
+        XCTAssertFalse(saved); XCTAssertTrue(f.ledger.hasPendingSave)
+        let excluded = await competingWrite?.value
+        XCTAssertEqual(excluded, true, "A count writer cannot enter while a stock-backed ledger save is suspended.")
+        XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK)
+        allowed = false
+        let denied = await f.ledger.retrySave()
+        XCTAssertFalse(denied); XCTAssertTrue(f.ledger.hasPendingSave)
+        let stillSaved = try await f.ledgerStore.load()
+        XCTAssertEqual(stillSaved?.revision, originalRevision)
+        allowed = true
+        let retried = await f.ledger.retrySave()
+        XCTAssertTrue(retried, f.ledger.error ?? "")
+        XCTAssertEqual(f.ledger.revision, originalRevision + 1)
+        XCTAssertEqual(f.ledger.workspace.shops.filter { $0.title == "Original reviewed destination" }.count, 1)
     }
 
     func testOrdinaryDinnerEditRejectsStalePantryBasisBeforePendingThenAcceptsFreshReview() async throws {

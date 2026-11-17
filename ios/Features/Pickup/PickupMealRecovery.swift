@@ -171,7 +171,6 @@ extension PickupJourney {
     }
 
     var currentRepairNeeds: [AllocationNeed] {
-        guard mealRecovery != nil else { return needs }
         let urgentIDs = Set(recoveryCurrentUrgent.map(\.id))
         return recoveryCurrentAllocationNeeds.filter { !urgentIDs.contains($0.id) }
     }

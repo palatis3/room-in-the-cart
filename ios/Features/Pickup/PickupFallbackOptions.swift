@@ -70,6 +70,7 @@ struct PickupFallbackReview {
                               knownDue: true, due: min(due, journey.savedMealDeadline(for: target) ?? due))
         repair.extraTrip = displayed.requiresTrip && agreedTrip == displayed
         repair.repeatMeal = displayed.repeatRequired && agreedRepeat == displayed
+        repair.reviewedPantryBasis = displayed.reviewedPantryBasis
         return repair
     }
 }
@@ -99,6 +100,7 @@ struct PickupFallbackOption: Identifiable, Equatable {
     let merchandise: Money
     let extraCash: Money
     let repeatRequired: Bool
+    var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil
     var requiresTrip: Bool { packCount > 0 }
     var instruction: String {
         var lines = [title,dinnerFormat("Servings: %@",portions.description)]
@@ -128,8 +130,11 @@ enum PickupFallbackOptions {
     }
 
     static func ranked(journey: PickupJourney, library: [AcceptedDinner], chosenTemplates: Set<UUID>, draft: PickupFallbackDraft,
-                       at now: Date, paid: Bool) throws -> [PickupFallbackOption] {
+                       at now: Date, paid: Bool, canonical: PickupFallbackCanonicalSupply? = nil) throws -> [PickupFallbackOption] {
         guard paid else { throw DinnerPlanningError.paidAccessRequired }
+        guard canonical == nil || (canonical?.journeyID == journey.id && canonical?.journeyRevision == journey.revision) else {
+            throw MealRecoveryError.stale
+        }
         let commitments = needs(journey)
         guard let target = commitments.first(where: { $0.id == draft.target && $0.priority != .protected }),
               !journey.recoveryCurrentUrgent.contains(where: { $0.id == target.id && $0.resolved }),
@@ -138,10 +143,11 @@ enum PickupFallbackOptions {
         let deadline = min(enteredDeadline, savedDeadline ?? enteredDeadline)
         guard deadline >= now else { return [] }
         let portions = try DinnerEntry.positive(draft.portions)
-        let outside = commitments.filter { $0.id != target.id }.map {
+        let supply = try canonical?.supply(for: target)
+        let outside = supply == nil ? commitments.filter { $0.id != target.id }.map {
             StockNeed(id: $0.id, foodID: $0.foodID, name: $0.name, amount: $0.amount, priority: .protected)
-        }
-        let stock = lots(journey, at: now)
+        } : []
+        let stock = supply?.lots ?? lots(journey, at: now)
         let available = Int(min(525_600, deadline.timeIntervalSince(now)/60))
         let rules = journey.recoveryCurrentDetails.first { $0.id == target.id }?.exclusions ?? []
         var results: [PickupFallbackOption] = []
@@ -160,6 +166,7 @@ enum PickupFallbackOptions {
                 guard let match = review.ingredients[ingredient.id], let food = match.foodID, let original = ingredient.quantity,
                       original.amount > .zero else { valid = false; break }
                 let labels = [ingredient.name, match.packLabel] + stock.filter { $0.foodID == food }.map(\.name)
+                    + (canonical?.foodLabels[food] ?? [])
                 for name in labels where !name.isEmpty {
                     let check = MealTemplate(title: dinner.template.title, ingredients: [.init(name: name, quantity: nil)],
                                              exclusions: rules + dinner.template.exclusions + ingredient.exclusions)
@@ -179,6 +186,7 @@ enum PickupFallbackOptions {
             var count: Int64 = 0, cost: Int64 = 0
             for (food, group) in Dictionary(grouping: demands, by: \.foodID) {
                 guard let exemplar = group.first else { continue }
+                guard supply?.unresolvedFoods.contains(food) != true else { valid = false; break }
                 // An unconvertible protected claim makes the shared supply uncertain for every competing need.
                 let competing = Set((outside + demands).filter { $0.foodID == food }.map(\.id))
                 guard allocation.demands.filter({ competing.contains($0.id) }).allSatisfy({ $0.issues.isEmpty && $0.shortfall != nil }) else { valid = false; break }
@@ -189,8 +197,18 @@ enum PickupFallbackOptions {
                           let converted = try Quantity(amount: gap, unit: demand.amount.unit, originalLiteral: "").converted(to: exemplar.amount.unit) else { valid = false; break }
                     short = try short.adding(converted)
                 }
+                if let supply {
+                    for gap in supply.outsideGaps where gap.foodID == food {
+                        guard let converted = try gap.amount.converted(to: exemplar.amount.unit) else { valid = false; break }
+                        short = try short.adding(converted)
+                    }
+                }
                 guard valid else { break }
                 if short == .zero { continue }
+                // Unknown food cannot prove a smallest top-up, and a new package
+                // is never a substitute for a reservation pinned to an exact lot.
+                guard supply?.unknownCountFoods.contains(food) != true,
+                      supply?.pinnedTargetFoods.contains(food) != true else { valid = false; break }
                 guard let offer = offers[food], let limit = Int64(offer.availablePacks), limit > 0,
                       let yield = try? DinnerEntry.quantity(offer.packYield, unit: offer.packUnit),
                       let usable = try yield.converted(to: exemplar.amount.unit), usable > .zero,
@@ -223,7 +241,7 @@ enum PickupFallbackOptions {
             let exclusions = Set(rules + dinner.template.exclusions + dinner.template.ingredients.flatMap(\.exclusions)).sorted()
             buys.sort { ($0.label, $0.id.uuidString) < ($1.label, $1.id.uuidString) }
             results.append(.init(id: dinner.id,title: dinner.template.title,buys: buys,
-                                 portions: portions,ingredients: ingredients,exclusions: exclusions,minutes: elapsed + travel,packCount: count,merchandise: .init(minorUnits: cost),extraCash: extraCash,repeatRequired: repeatRequired))
+                                 portions: portions,ingredients: ingredients,exclusions: exclusions,minutes: elapsed + travel,packCount: count,merchandise: .init(minorUnits: cost),extraCash: extraCash,repeatRequired: repeatRequired, reviewedPantryBasis: canonical?.basis))
         }
         return results.sorted {
             if $0.packCount != $1.packCount { return $0.packCount < $1.packCount }

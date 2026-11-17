@@ -92,6 +92,9 @@ struct PickupRepairDraft {
     }
     var extraTrip = false
     var repeatMeal = false
+    // An assisted instruction keeps its stock review through manual text edits.
+    // Clearing/restarting the draft is the explicit path back to unbound manual entry.
+    var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
 
     mutating func synchronize(with journey: PickupJourney?) {
         if shopID != journey?.id {
@@ -210,6 +213,13 @@ struct PickupRepairView: View {
                 if repairDraft.fields.knownDue { DatePicker(pTr("Meal deadline"), selection: $repairDraft.fields.due) }
                 Text(pTr("Include thawing, soaking and marinating time unless those steps are already complete. A note does not confirm new stock or settle a shortage."))
                 Button(pTr("Save reviewed repair instructions")) { saveRepair() }
+                if repairDraft.reviewedPantryBasis != nil {
+                    Button(dinnerText("Start a new manual instruction")) {
+                        let target = repairDraft.fields.needID
+                        repairDraft = PickupRepairDraft(shopID: model.journey?.id)
+                        repairDraft.fields.needID = target
+                    }
+                }
             }.disabled(submittingRepair || model.saving || model.hasPendingSave)
             ForEach(model.journey?.currentRepairInstructions ?? []) { repair in
                 Section(pTr("Saved meal instruction")) {
@@ -253,13 +263,11 @@ struct PickupRepairView: View {
             model.error = pTr("Choose a need and enter instructions and valid preparation minutes.")
             return
         }
+        let pantryBasis = repairDraft.reviewedPantryBasis
         submittingRepair = true
         Task {
             defer { submittingRepair = false }
-            if await model.change({ value in
-                guard value.id == journey.id else { throw MealRecoveryError.stale }
-                try value.recordRepair(repair)
-            }) {
+            if await model.saveReviewedRepair(repair, journeyID: journey.id, reviewedPantryBasis: pantryBasis) {
                 repairDraft.synchronize(with: model.journey)
             }
         }

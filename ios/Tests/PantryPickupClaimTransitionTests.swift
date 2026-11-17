@@ -237,6 +237,30 @@ import LocalStore
         try await assertReopened(f, equals: third.current)
     }
 
+    func testCompletingCalendarWriteCannotReactivateIndependentlyReleasedCanonicalPin() async throws {
+        let f = try await fixture(.manual)
+        let supply = try XCTUnwrap(f.pickup.journey?.stockLots.first { $0.id == f.bID })
+        let intent = try prepare(f, mealID: f.meals[0], supply: .batch(supply), counted: 4, reserved: 4)
+        _ = try await prepared(intent, in: f)
+        let (_, reservedResult) = try await reserved(intent, in: f)
+        let claimID = try await claimID(intent.plan.link.reservationID, in: f)
+        let original = try XCTUnwrap(reservedResult.current.reservations.first { $0.id == claimID })
+        let released = InventoryReservation(id: original.id, originID: original.originID, revision: original.revision + 1,
+            foodID: original.foodID, lotID: original.lotID, name: original.name, amount: original.amount,
+            priority: original.priority, state: .released)
+        _ = try await f.store.commitInventory(.init(workspaceID: f.store.workspaceID, operationID: UUID(),
+            expectedRevision: reservedResult.current.state.revision, request: Data("explicit consumption releases carryover".utf8),
+            writes: [.init(record: .init(key: .init(.reservation, released.id), revision: released.revision,
+                payload: JSONEncoder().encode(released), lotID: released.lotID), expectedRevision: original.revision)]), at: now)
+        let (submission, completedResult) = try await completed(intent, in: f)
+        XCTAssertEqual(completedResult.current.reservations.first { $0.id == claimID }, released)
+        XCTAssertEqual(completedResult.current.lots, reservedResult.current.lots)
+        let replay = try await f.port.apply(submission)
+        XCTAssertTrue(replay.replayed)
+        XCTAssertEqual(replay.current.reservations.first { $0.id == claimID }, released)
+        try await assertReopened(f, equals: completedResult.current)
+    }
+
     func testReceivedPinSurvivesObservationReplacementAndCannotBorrowCompatibleAAfterCorrection() async throws {
         let f = try await fixture(.received), initial = try await snapshot(f), receipt = try XCTUnwrap(f.receipt)
         let b = try XCTUnwrap(initial.lots.first { $0.source == .receipt(originID: f.store.workspaceID, key: receipt.key) })

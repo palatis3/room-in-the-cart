@@ -70,6 +70,40 @@ func validateInventoryMigrationChunk(_ chunk: InventoryMigrationChunk) throws {
 }
 
 extension ComparisonStore {
+    /// Payload-free proof that this exact migration activated this physical
+    /// database. Unlike replay/progress, later key erasure does not hide it.
+    /// This does not authorize reading or restoring any imported record.
+    public func inventoryMigrationActivation(_ expected: InventoryMigrationPlan) throws -> InventoryOperationReceipt? {
+        guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }
+        guard expected.version == 1, expected.workspaceID == workspaceID,
+              expected.expectedRevision >= 0, expected.expectedRevision < Int64.max,
+              expected.sourceToken.workspaceID == workspaceID,
+              expected.sourceToken.digest.count == 32, expected.sourceToken.generation >= 0,
+              !expected.reviewContext.isEmpty, expected.reviewContext.count <= InventoryPersistenceLimits.requestBytes,
+              (0...1_000_000).contains(expected.expectedChunkCount),
+              (0...256_000_000).contains(expected.expectedRecordCount),
+              expected.expectedRecordCount >= expected.expectedChunkCount,
+              expected.expectedRecordCount <= expected.expectedChunkCount * InventoryPersistenceLimits.batchItems,
+              expected.manifestDigest.count == 32 else { throw ComparisonStoreError.invalidInput }
+        let digest = inventoryDigest(try inventoryCanonical(expected))
+        return try database.transaction(immediate: false) {
+            guard let header = try database.migrationHeader(expected.migrationID) else { return nil }
+            guard header.digest == digest else { throw ComparisonStoreError.operationConflict }
+            guard header.status == .active else { return nil }
+            guard header.nextChunk == expected.expectedChunkCount, header.recordCount == expected.expectedRecordCount,
+                  header.chainDigest == expected.manifestDigest,
+                  let stored = try database.inventoryReceipt(expected.migrationID),
+                  stored.digest == digest, stored.requestDigest == digest else { throw ComparisonStoreError.corruptRecord }
+            let receipt = stored.receipt, state = try database.inventoryState(workspaceID: workspaceID)
+            guard state.active, state.revision >= receipt.revision,
+                  receipt.workspaceID == workspaceID, receipt.operationID == expected.migrationID,
+                  receipt.migrationID == expected.migrationID, receipt.revision == expected.expectedRevision + 1,
+                  receipt.heads.isEmpty, receipt.comparisonHeads.isEmpty,
+                  receipt.committedAt.timeIntervalSinceReferenceDate.isFinite else { throw ComparisonStoreError.corruptRecord }
+            return receipt
+        }
+    }
+
     @discardableResult
     public func beginInventoryMigration(_ plan: InventoryMigrationPlan) throws -> InventoryMigrationProgress {
         guard inventoryEnabled else { throw ComparisonStoreError.inventoryDisabled }

@@ -195,6 +195,33 @@ final class InventoryMigrationTests: XCTestCase {
         try await store.close()
     }
 
+    func testHistoricalActivationProofVerifiesActualDatabaseWithoutReplayingErasedKeys() async throws {
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        let record = lot(), values = chunks([record]), reviewed = try await plan(store, chunks: values)
+        let missing = try await store.inventoryMigrationActivation(reviewed); XCTAssertNil(missing)
+        _ = try await store.beginInventoryMigration(reviewed)
+        let staged = try await store.inventoryMigrationActivation(reviewed); XCTAssertNil(staged)
+        _ = try await store.stageInventoryMigration(id: reviewed.migrationID, chunk: values[0])
+        let receipt = try await store.finishInventoryMigration(id: reviewed.migrationID)
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 1,
+            request: Data([8]), erasures: [.init(key: record.key, expectedRevision: 1)]))
+        do { _ = try await store.finishInventoryMigration(id: reviewed.migrationID); XCTFail("Replay stays forbidden") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .erased) }
+        let proof = try await store.inventoryMigrationActivation(reviewed)
+        XCTAssertEqual(proof, receipt); XCTAssertTrue(proof?.heads.isEmpty == true)
+        let records = try await store.inventoryRecords(kind: .lot); XCTAssertTrue(records.isEmpty)
+        let changed = InventoryMigrationPlan(migrationID: reviewed.migrationID, workspaceID: reviewed.workspaceID,
+            expectedRevision: reviewed.expectedRevision, sourceToken: reviewed.sourceToken, reviewContext: Data([99]),
+            expectedChunkCount: reviewed.expectedChunkCount, expectedRecordCount: reviewed.expectedRecordCount,
+            manifestDigest: reviewed.manifestDigest)
+        do { _ = try await store.inventoryMigrationActivation(changed); XCTFail("Changed original plan") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .operationConflict) }
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        let afterRestart = try await reopened.inventoryMigrationActivation(reviewed); XCTAssertEqual(afterRestart, receipt)
+        try await reopened.close()
+    }
+
     func testChangedStagedPayloadCannotPassFinalManifestVerification() async throws {
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
         let values = chunks([lot()]), reviewed = try await plan(store, chunks: values)

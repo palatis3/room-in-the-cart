@@ -447,6 +447,13 @@ struct PickupPersistenceLocation {
         await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize,
             reviewedPantry: reviewedPantry)
     }
+    /// Read-only original candidate for an authorized recovery screen. Returning
+    /// it never stages/rebases a command or grants permission to apply it.
+    func pendingRecoveryCandidate(operationID: UUID) -> PickupJourney? {
+        guard ready, pantryConfiguration?.authorize() != false,
+              let pending, pending.recoveryOperationID == operationID else { return nil }
+        return pending.value
+    }
     func retryRecoveryCandidate(operationID: UUID, authorize: (@MainActor () -> Bool)? = nil,
                                 matches: (PickupJourney) -> Bool) async -> Bool {
         guard let pending, pending.recoveryOperationID == operationID, matches(pending.value) else { return false }
@@ -766,8 +773,9 @@ struct PickupPersistenceLocation {
     }
     @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
         recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil,
-        reviewedLedger: CheckoutLedgerBasis? = nil, reviewedPantry: PantryWriteReview? = nil) async -> Bool {
-        guard reviewedPantry == nil || pantryIsActive else { return false }
+        reviewedLedger: CheckoutLedgerBasis? = nil, reviewedPantry: PantryWriteReview? = nil,
+        reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) async -> Bool {
+        guard (reviewedPantry == nil && reviewedPantryBasis == nil) || pantryIsActive else { return false }
         guard ready, !saving, pending == nil, evaluateAuthorization(authorize, operationID: recoveryOperationID) else { return false }
         do {
             saving = true
@@ -807,6 +815,14 @@ struct PickupPersistenceLocation {
                     .prepare(operationID: UUID(), changedHeads: [head], preparedAt: instant)
                 guard reviewedLedger?.matches(review.submission.request) ?? true else { throw LedgerCheckoutError.staleSource }
                 guard reviewedPantry?.matches(review) ?? true else { throw ComparisonStoreError.staleInventory }
+                if let basis = reviewedPantryBasis {
+                    let heads = review.sourceRevisions.map {
+                        LedgerCanonicalPackStockEvidence.SourceHead(journeyID: $0.key, revision: $0.value)
+                    }.sorted { $0.journeyID.uuidString < $1.journeyID.uuidString }
+                    guard basis.originID == review.submission.request.originID,
+                          basis.inventoryRevision == review.submission.request.inventoryRevision,
+                          basis.sourceHeads == heads else { throw ComparisonStoreError.staleInventory }
+                }
                 guard review.submission.request.inventoryRevision == pantrySnapshot.state.revision,
                       revisions.allSatisfy({ (review.sourceRevisions[$0.key] ?? 0) == $0.value }),
                       configuration.authorize(), evaluateAuthorization(authorize, operationID: recoveryOperationID) else { throw ComparisonStoreError.staleInventory }
@@ -924,6 +940,32 @@ struct PickupPersistenceLocation {
         }
         current.feedback = feedback
         return await save(current, selecting: false, authorize: authorized)
+    }
+
+    /// A dated manual instruction never consumes food. An assisted instruction
+    /// must still match the pantry basis that supplied its availability claims.
+    @discardableResult func saveReviewedRepair(_ repair: PickupRepair, journeyID: UUID,
+        reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil) async -> Bool {
+        guard ready, !saving else { return false }
+        if hasPendingSave {
+            return await retryRecoveryCandidate(operationID: repair.id, matches: {
+                $0.id == journeyID && $0.repairs.first(where: { $0.id == repair.id }) == repair
+            })
+        }
+        if pantryIsActive, !(await refreshPantryStock()) { return false }
+        guard var value = journey, value.id == journeyID else { return false }
+        if let existing = value.repairs.first(where: { $0.id == repair.id }) {
+            guard existing == repair else { return false }
+            return pantryIsActive ? true : await confirmSavedRevision(of: journeyID)
+        }
+        do {
+            try value.recordRepair(repair)
+            return await save(value, selecting: false, recoveryOperationID: repair.id,
+                reviewedPantryBasis: reviewedPantryBasis)
+        } catch {
+            self.error = recoveryText("The meal or food changed. Review the replacement again before saving.")
+            return false
+        }
     }
 
     @discardableResult func change(reviewedLedger: CheckoutLedgerBasis? = nil, _ edit: (inout PickupJourney) throws -> Void) async -> Bool {

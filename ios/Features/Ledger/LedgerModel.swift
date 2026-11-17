@@ -123,6 +123,7 @@ private enum LedgerDeletionJournal {
         let operationID: UUID
         let savedAt: Date
         let reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
+        let authorize: (@MainActor () -> Bool)?
     }
     private var pending: PendingSave?
 
@@ -235,8 +236,15 @@ private enum LedgerDeletionJournal {
         await change(key: key, onShopSelected: nil, reviewedPantryBasis: reviewedPantryBasis, edit)
     }
 
+    func change(key: String, reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?,
+                authorize: @escaping @MainActor () -> Bool,
+                _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, reviewedPantryBasis: reviewedPantryBasis, authorize: authorize, edit)
+    }
+
     private func change(key: String, onShopSelected: ((UUID) -> Void)?,
                         reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                        authorize: (@MainActor () -> Bool)? = nil,
                         _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         guard !saving, ready, !hasPendingLedgerDeletion, !hasPendingPantryProjection, pendingPantryPack == nil else { return false }
         if pending != nil {
@@ -244,8 +252,12 @@ private enum LedgerDeletionJournal {
             return false
         }
         do {
-            let lease = try mutationGate?.beginWrite()
-            defer { if let lease { mutationGate?.endWrite(lease) } }
+            let exclusive = reviewedPantryBasis != nil
+            let lease = try exclusive ? mutationGate?.beginExclusiveWrite() : mutationGate?.beginWrite()
+            defer { if let lease {
+                if exclusive { mutationGate?.endExclusiveWrite(lease) } else { mutationGate?.endWrite(lease) }
+            } }
+            guard authorize?() != false else { throw LedgerModelError.notReady }
             var candidate = workspace
             try edit(&candidate)
             try candidate.validate()
@@ -260,8 +272,9 @@ private enum LedgerDeletionJournal {
                 return false
             }
             if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
+            guard authorize?() != false else { throw LedgerModelError.notReady }
             let change = PendingSave(onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
-                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis)
+                                     operationID: UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: authorize)
             pending = change
             hasPendingSave = true
             return await commit(change, to: store)
@@ -333,8 +346,11 @@ private enum LedgerDeletionJournal {
         saving = true
         defer { saving = false }
         do {
-            let lease = try mutationGate?.beginWrite()
-            defer { if let lease { mutationGate?.endWrite(lease) } }
+            let exclusive = pending.reviewedPantryBasis != nil
+            let lease = try exclusive ? mutationGate?.beginExclusiveWrite() : mutationGate?.beginWrite()
+            defer { if let lease {
+                if exclusive { mutationGate?.endExclusiveWrite(lease) } else { mutationGate?.endWrite(lease) }
+            } }
             return await commit(pending, to: store)
         } catch {
             self.error = pantryText("Pantry setup is in progress. Retry this change when it finishes.")
@@ -356,15 +372,19 @@ private enum LedgerDeletionJournal {
 
     private func commit(_ pending: PendingSave, to store: LedgerStore) async -> Bool {
         do {
-            if let basis = pending.reviewedPantryBasis {
-                guard let port = pantryPackPort, port.hasReadAccess else { throw LedgerModelError.notReady }
-                try requirePantryPackPort(port)
-                // Existing exact receipts remain readable after food changes. The
-                // store's save validates the original payload/base/operation tuple.
-                if try await store.savedOperation(id: pending.operationID) == nil {
-                    try await verifyPantryBasis(basis)
+            if pending.reviewedPantryBasis != nil || pending.authorize != nil {
+                if pending.reviewedPantryBasis != nil {
+                    guard let port = pantryPackPort, port.hasReadAccess else { throw LedgerModelError.notReady }
+                    try requirePantryPackPort(port)
                 }
-                guard port.hasReadAccess else { throw LedgerModelError.notReady }
+                // The store validates an existing receipt's complete original
+                // tuple. A new write still needs current action and food authority.
+                if try await store.savedOperation(id: pending.operationID) == nil {
+                    guard pending.authorize?() != false else { throw LedgerModelError.notReady }
+                    if let basis = pending.reviewedPantryBasis { try await verifyPantryBasis(basis) }
+                    guard pending.authorize?() != false else { throw LedgerModelError.notReady }
+                }
+                if pending.reviewedPantryBasis != nil, pantryPackPort?.hasReadAccess != true { throw LedgerModelError.notReady }
             }
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
                                               operationID: pending.operationID, savedAt: pending.savedAt)
