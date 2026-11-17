@@ -51,7 +51,7 @@ struct DinnerRecipeMatchDraft: Identifiable {
 }
 struct DinnerBaselineCostDraft: Identifiable {
     let id: UUID
-    let name: String
+    var name: String
     var cost = ""
     var feeEligible = true
 }
@@ -80,6 +80,7 @@ struct DinnerScenarioDraft {
     var leftoverPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     private(set) var matchedMeals: [DinnerScenarioMealDraftSnapshot] = []
     var baseline: [DinnerBaselineCostDraft]
+    var essentials: [DinnerBaselineCostDraft] = []
     var baselineComplete = false
     var baselineExcludesComparedRecipes = false
     var store = ""
@@ -159,7 +160,10 @@ struct DinnerScenarioDraft {
                 guard food.outsideReservationsReviewed, let quantity = try DinnerEntry.quantity(food.stockAmount, unit: food.stockUnit) else { throw DinnerPlanningError.reviewRequired("stockReservations") }
                 stock.append(ConfirmedStockLot(id: food.stockID, foodID: food.id, name: food.name, usable: quantity, confirmedAt: food.stockDate, source: food.stockSource))
             }
-            if let amount = try DinnerEntry.quantity(food.outsideAmount, unit: food.outsideUnit) {
+            if let amount = try DinnerEntry.quantity(food.outsideAmount, unit: food.outsideUnit), amount.amount > .zero {
+                guard leftoverPantryBasis == nil || !reviewedLeftovers.contains(where: { $0.foodID == food.id }) else {
+                    throw DinnerPlanningError.reviewRequired("canonicalReservationsAlreadyExcluded")
+                }
                 guard food.outsideReservationsReviewed else { throw DinnerPlanningError.reviewRequired("outsideReservations") }
                 outside.append(StockNeed(id: food.reservationID, foodID: food.id, name: food.name, amount: amount, priority: .protected))
             }
@@ -180,7 +184,10 @@ struct DinnerScenarioDraft {
                         price: try DinnerEntry.money(food.packPrice)), availability: available, thresholdEligible: food.feeEligible))
             }
         }
-        let lines = try baseline.map { CheckoutLine(id: $0.id, name: $0.name, cost: try evidence($0.cost, missing: "Unchanged basket line cost is unknown"), thresholdEligible: $0.feeEligible) }
+        guard essentials.allSatisfy({ !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            throw DinnerPlanningError.reviewRequired("essentialName")
+        }
+        let lines = try (baseline + essentials).map { CheckoutLine(id: $0.id, name: $0.name, cost: try evidence($0.cost, missing: "Unchanged basket line cost is unknown"), thresholdEligible: $0.feeEligible) }
         let context = CheckoutContext(storeID: store, branchID: branch, mode: mode,
             slot: ISO8601DateFormatter().string(from: slot), commitmentsID: commitmentSetID, observedAt: observedAt, source: source)
         let enteredFee = try evidence(fee, missing: "Fees are unknown")

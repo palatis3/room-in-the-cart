@@ -15,6 +15,7 @@ struct DinnerScenarioReviewView: View {
     var library: DinnerLibraryPairings?
     var reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis?
     @State private var showReplacement = false
+    @State private var currentCost: DinnerScenarioResult?
     @State private var pairing: DinnerPairingResult?
     @State private var recovery: DinnerRecoveryResult?
     @State private var acceptsExtraTrip = false
@@ -22,6 +23,13 @@ struct DinnerScenarioReviewView: View {
         List {
             Section {
                 Text(dinnerText("Review complete scenarios before changing a chosen dinner."))
+                Button(dinnerText("Price the current dinner plan")) {
+                    do {
+                        currentCost = try model.cost(of: current, cap: cap)
+                        pairing = nil; recovery = nil
+                    }
+                    catch { currentCost = nil; model.report(error) }
+                }.accessibilityIdentifier("dinnerCurrentCost")
                 Button(model.paid ? dinnerText("Compare dinner pairings") : dinnerText("Explore pairings without applying")) {
                     do { pairing = try model.pair(current: current, alternatives: alternatives, selected: selectedAcceptedDinnerIDs, cap: cap, isolated: !model.paid); recovery = nil }
                     catch { model.report(error) }
@@ -32,6 +40,9 @@ struct DinnerScenarioReviewView: View {
                     do { recovery = try model.recover(alternatives: alternatives, cap: cap, extraTripAccepted: acceptsExtraTrip); pairing = nil }
                     catch { model.report(error) }
                 }.disabled(!model.paid)
+            }
+            if let currentCost, pairing == nil, recovery == nil {
+                Section { scenario(currentCost) }
             }
             if let pairing {
                 Section(dinnerText("Pairing review")) {
@@ -87,14 +98,26 @@ struct DinnerScenarioReviewView: View {
         VStack(alignment: .leading, spacing: 6) {
             let source = ([current] + alternatives).first { $0.id == result.scenarioID }
             Text(result.scenarioID == current.id ? dinnerText("Current plan") : dinnerText("Candidate plan")).font(.title3.bold())
-            Text(dinnerFormat("Checkout: %@", dinnerMoney(result.checkout.total.exact))).font(.headline)
+            if let total = result.checkout.total.exact {
+                Text(dinnerFormat("Checkout: %@", dinnerMoney(total))).font(.headline)
+            } else if let upper = result.checkout.total.upperBound {
+                Text(dinnerFormat("Estimated checkout range: %@ to %@", dinnerMoney(result.checkout.total.lowerBound), dinnerMoney(upper))).font(.headline)
+            } else {
+                Text(dinnerFormat("Incomplete checkout · at least %@", dinnerMoney(result.checkout.total.lowerBound))).font(.headline)
+            }
             Text(dinnerCap(result.checkout.cap))
             if let source {
+                Text(dinnerFormat("Price evidence: %@ · %@", source.context.source,
+                    source.context.observedAt.formatted(date: .abbreviated, time: .shortened)))
                 ForEach(source.acceptedDinnerIDs, id: \.self) { id in
                     if let dinner = model.state.acceptedDinners.first(where: { $0.id == id }) { Text(dinner.template.title).font(.headline) }
                 }
+                Text(dinnerText("Ingredient values include food on hand at the reviewed pack prices. Each estimate is rounded to the nearest cent."))
                 ForEach(source.commitments.commitments) { c in
                     Text("\(c.name) · \(c.portions.description) \(c.protected ? dinnerText("Protected commitment") : dinnerText("Required portions"))")
+                    let value = result.ingredientValues[c.id]
+                    Text(dinnerFormat("Ingredients used at reviewed pack prices: %@", dinnerMoney(value?.total)))
+                    Text(dinnerFormat("Ingredient value per serving: %@", dinnerMoney(value?.perServing)))
                 }
                 if let baseline = pairing?.baseline, baseline.scenarioID != result.scenarioID,
                    baseline.feasible && result.feasible {
@@ -112,6 +135,13 @@ struct DinnerScenarioReviewView: View {
                     let name = source.demands.first { $0.id == need.id }?.name ?? source.otherReservations.first { $0.id == need.id }?.name ?? dinnerText("Protected need")
                     Text(dinnerFormat("%@ · confirmed stock allocated: %@ %@", name, need.allocated?.description ?? dinnerText("Unresolved"), dinnerUnit(need.unit)))
                 }
+                ForEach(source.baselineLines) { line in
+                    if case .exact(let cost) = line.cost {
+                        Text(dinnerFormat("Other basket item · %@ · %@", line.name, dinnerMoney(cost)))
+                    } else {
+                        Text(dinnerFormat("Other basket item · %@ · %@", line.name, dinnerText("Unresolved")))
+                    }
+                }
                 ForEach(result.packs, id: \.foodID) { pack in
                     let demand = source.demands.first { $0.foodID == pack.foodID }
                     let unit = demand?.quantity?.unit
@@ -127,6 +157,7 @@ struct DinnerScenarioReviewView: View {
             Text(result.timingFeasible == true ? dinnerText("Reviewed preparation fits the available time") : dinnerText("Preparation timing is unresolved or does not fit"))
             ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
         }.padding(.vertical, 6).accessibilityElement(children: .combine)
+            .accessibilityIdentifier("dinnerCost-\(result.scenarioID)")
     }
     private func pairingStatus(_ status: DinnerPairingResult.Status) -> String {
         switch status {

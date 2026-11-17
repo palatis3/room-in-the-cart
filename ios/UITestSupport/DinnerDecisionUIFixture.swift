@@ -75,6 +75,9 @@ import CoreDomain
         for index in draft.matches.indices { draft.matches[index].foodID = food.id }
         for index in library.candidates.indices { library.candidates[index].hands = "10"; library.candidates[index].lead = "15" }
         for index in draft.baseline.indices { draft.baseline[index].cost = "2" }
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing-dinner-cost") {
+            draft.essentials = [DinnerBaselineCostDraft(id: UUID(), name: "Laundry soap", cost: "4.50", feeEligible: false)]
+        }
         draft.fee = "1"; draft.feeThreshold = "7"; draft.tax = "0"; draft.deposits = "0"; draft.availableMinutes = "30"
         draft.currentHands = "10"; draft.currentLead = "10"; draft.store = "Market"; draft.source = "Reviewed"
         draft.recipeYieldsReviewed = true; draft.baselineComplete = true; draft.baselineExcludesComparedRecipes = true
