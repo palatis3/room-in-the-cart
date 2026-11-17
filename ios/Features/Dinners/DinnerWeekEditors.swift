@@ -49,6 +49,16 @@ struct DinnerOccurrenceView: View {
                 }
                 if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
                     Section {
+                        NavigationLink(recordsText("Cook this dinner")) {
+                            ChosenDinnerCookingEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id) {
+                                guard model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID,
+                                      let current = model.shop, current.id == shop.id,
+                                      case .original(let original) = try model.currentMealDestination(meal.id, pickup: pickup) else {
+                                    throw PickupMealRecoveryError.sourceChanged
+                                }
+                                return try DinnerCookingPage(original: original, shop: current)
+                            }
+                        }.accessibilityIdentifier("cooking.openDinner")
                         if pickup.pantryIsActive {
                             NavigationLink(cookCompletionText("Record cooking and leftovers")) {
                                 CookCompletionEntry(ledger: ledger, pickup: pickup, shopID: shop.id, mealID: meal.id)

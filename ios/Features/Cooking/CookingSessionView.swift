@@ -10,6 +10,7 @@ import SwiftUI
     let steps: [RecipeStep]
     let ingredients: [String]
     let legacyNotes: String
+    let yieldText: String
     let finishTitle: String?
     let finish: () -> Finish
     @StateObject private var model: CookingSessionModel
@@ -20,9 +21,9 @@ import SwiftUI
     @FocusState private var editingMinutes: Bool
     @AccessibilityFocusState private var instructionFocused: Bool
 
-    init(title: String, steps: [RecipeStep], ingredients: [String], legacyNotes: String,
+    init(title: String, steps: [RecipeStep], ingredients: [String], legacyNotes: String, yieldText: String = "",
          context: CookingSessionContext, finishTitle: String? = nil, @ViewBuilder finish: @escaping () -> Finish) {
-        self.title = title; self.steps = steps; self.ingredients = ingredients; self.legacyNotes = legacyNotes
+        self.title = title; self.steps = steps; self.ingredients = ingredients; self.legacyNotes = legacyNotes; self.yieldText = yieldText
         self.finishTitle = finishTitle; self.finish = finish
         _model = StateObject(wrappedValue: CookingSessionModel(context: context, count: max(1, steps.count)))
     }
@@ -36,6 +37,7 @@ import SwiftUI
                 Form {
                     Section {
                         Text(verbatim: title).font(.title2.bold())
+                        if !yieldText.isEmpty { Text(verbatim: yieldText) }
                         if let step {
                             Text(String(format: recordsText("Step %lld of %lld"), Int64(index + 1), Int64(steps.count))).font(.headline)
                             Text(verbatim: step.instruction).font(.title3).textSelection(.enabled)
@@ -72,6 +74,7 @@ import SwiftUI
                     if let message = model.message { Text(message).accessibilityAddTraits(.updatesFrequently) }
                     if let finishTitle {
                         NavigationLink { finish() } label: { Text(verbatim: finishTitle) }
+                            .accessibilityIdentifier("cooking.finish")
                     }
                     Button(recordsText("End session and remove its timers"), role: .destructive) { confirmEnd = true }
                         .accessibilityIdentifier("cooking.end")

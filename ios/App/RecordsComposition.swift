@@ -1135,7 +1135,7 @@ private struct RecordsRecipeAdoptionView: View {
             if let cooking {
                 NavigationLink(recordsText("Cook this recipe")) {
                     CookingSessionView(title: recipe.title, steps: recipe.cookingSteps, ingredients: recipe.ingredients,
-                        legacyNotes: recipe.notes, context: cooking,
+                        legacyNotes: recipe.notes, yieldText: recipe.yieldText, context: cooking,
                         finishTitle: ledger.shop == nil ? nil : recordsText("Choose a dinner for this pickup")) {
                             dinnerEditor
                         }

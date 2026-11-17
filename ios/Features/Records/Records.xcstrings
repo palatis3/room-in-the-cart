@@ -5785,6 +5785,23 @@
           }
         }
       }
+    },
+    "Cook this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar esta cena"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
