@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 import CoreDomain
 import LocalStore
@@ -58,13 +59,22 @@ import RecordArchive
             writes: PantryPersistenceCodec.writes(prepared)), at: command.occurredAt)
     }
 
-    private func receiptDraft(_ store: ComparisonStore) throws -> ReceiptImportDraft {
+    private func receiptDraft(_ store: ComparisonStore, document: Bool = false) throws -> ReceiptImportDraft {
         let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: store.workspaceID, containerID: UUID(),
             objectID: UUID(), revision: 1, kind: .receiptEvidence), originalText: "RICE\nBEANS\nFEE",
             reviewedLabel: "East market", imageJPEG: nil, barcode: nil,
             receiptLines: [.init(originalText: "RICE", reviewedText: "Rice"), .init(originalText: "BEANS", reviewedText: "Beans"),
                            .init(originalText: "FEE")], capturedAt: now)
-        var draft = try ReceiptImportDraft(source: source)
+        let evidence: SourceMediaRecord
+        if document {
+            let raw = Data(source.originalText.utf8)
+            let extracted = ExtractedReceiptDocument(digest: Data(SHA256.hash(data: raw)), pages: [
+                .init(id: 1, method: .textFile, lines: source.receiptLines.enumerated().map { .init(id: $0.offset + 1, text: $0.element.originalText) })
+            ])
+            evidence = try extracted.source(target: source.target, merchant: source.reviewedLabel, stage: .finalInvoice,
+                selection: [.init(page: 1, line: 1), .init(page: 1, line: 2), .init(page: 1, line: 3)], at: now)
+        } else { evidence = source }
+        var draft = try ReceiptImportDraft(source: evidence)
         draft.reference = "transaction-14"
         draft.dateConfirmed = true
         draft.purchaseDate = now
@@ -78,12 +88,14 @@ import RecordArchive
         let f = try await fixture()
         let repository = PantryRepository(store: f.store, aliasPersonaID: UUID(), authorize: { true })
         f.cleanup.track(repository)
-        var draft = try receiptDraft(f.store)
+        var draft = try receiptDraft(f.store, document: true)
         let state = try await f.store.inventoryState()
         let review = try await repository.reviewReceipt(draft, expected: state, at: now)
         XCTAssertEqual(review.facts.count, 1)
         let first = try XCTUnwrap(review.facts.first)
         XCTAssertNil(first.paidLineTotal)
+        XCTAssertEqual(first.documentLine, .init(method: .textFile, stage: .finalInvoice, page: 1, line: 1))
+        XCTAssertEqual(first.originalLine, "RICE")
         try await repository.applyReceipt(review, at: now)
         try await repository.applyReceipt(review, at: now)
         let snapshot = try await repository.load(at: now)
@@ -96,7 +108,7 @@ import RecordArchive
         let mapping = try PantryLegacyMigration.map(originID: f.store.workspaceID, heads: [], ledger: .unavailable, at: now)
         let projection = try PantryLiveStockProjection.buildGlobal(snapshot: snapshot, mapping: mapping, at: now)
         XCTAssertEqual(projection.lot(canonicalID: first.lotID)?.free?.amount, try Rational(2))
-        let same = try await repository.reviewReceipt(try receiptDraft(f.store), expected: snapshot.state, at: now)
+        let same = try await repository.reviewReceipt(try receiptDraft(f.store, document: true), expected: snapshot.state, at: now)
         XCTAssertNil(same.batch)
         draft.lines[1].treatment = .add
         draft.lines[1].received = "1"
