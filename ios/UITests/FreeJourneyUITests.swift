@@ -111,7 +111,7 @@ import XCTest
         let setting = app.switches["adultHomeSummary.useSoon"]
         reveal(setting)
         XCTAssertEqual(setting.value as? String, "0")
-        setting.tap()
+        setting.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertEqual(setting.value as? String, "1")
         XCUIDevice.shared.press(.home)
         let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -119,25 +119,25 @@ import XCTest
         let addButton = board.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Add Widget")).firstMatch
         let edit = board.buttons["Edit"]
         if edit.exists { edit.tap() }
-        XCTAssertTrue(addButton.waitForExistence(timeout: 8))
+        XCTAssertTrue(addButton.waitForExistence(timeout: 8), board.debugDescription)
         addButton.tap()
         let search = board.searchFields.firstMatch
-        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        XCTAssertTrue(search.waitForExistence(timeout: 10), board.debugDescription)
         search.tap()
         search.typeText("Room in the Cart")
         let appResult = board.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Room in the Cart")).firstMatch
-        XCTAssertTrue(appResult.waitForExistence(timeout: 10))
+        XCTAssertTrue(appResult.waitForExistence(timeout: 10), board.debugDescription)
         appResult.tap()
         let useSoon = board.staticTexts["Use soon"].firstMatch
         for _ in 0..<5 where !useSoon.isHittable { board.swipeLeft() }
-        XCTAssertTrue(useSoon.isHittable)
-        XCTAssertTrue(addButton.isHittable)
+        XCTAssertTrue(useSoon.isHittable, board.debugDescription)
+        XCTAssertTrue(addButton.isHittable, board.debugDescription)
         addButton.tap()
         let done = board.buttons["Done"]
         if done.waitForExistence(timeout: 8) { done.tap() }
         let entry = board.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@",
             "Batches to check today or earlier: 1")).firstMatch
-        XCTAssertTrue(entry.waitForExistence(timeout: 35))
+        XCTAssertTrue(entry.waitForExistence(timeout: 35), board.debugDescription)
         let screenshot = XCTAttachment(screenshot: board.screenshot())
         screenshot.name = "Opted-in Use soon Home Screen count"; screenshot.lifetime = .keepAlways; add(screenshot)
         app.terminate()
