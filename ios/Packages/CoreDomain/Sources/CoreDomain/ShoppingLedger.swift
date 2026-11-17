@@ -809,7 +809,21 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func updateLine(lineID: UUID, name: String, notes: String, aisle: String, at: Date = Date()) throws {
         try mutate("updateLine", at: at) { next in
             let index = try next.lineIndex(lineID)
-            for source in next.contributions(forLineID: lineID) { try permittedProduct(name, exclusions: source.exclusions) }
+            let sources = next.contributions(forLineID: lineID)
+            for source in sources { try permittedProduct(name, exclusions: source.exclusions) }
+            let renamed = Set(sources.filter { $0.source.isMeal && $0.productName != name }.map(\.id))
+            if !renamed.isEmpty {
+                for position in next.mealOccurrences.indices {
+                    let occurrence = next.mealOccurrences[position]
+                    guard var steps = occurrence.recipeSteps else { continue }
+                    let affected = Set(occurrence.ingredientContributionIDs.indices.filter {
+                        renamed.contains(occurrence.ingredientContributionIDs[$0])
+                    })
+                    guard !affected.isEmpty else { continue }
+                    for index in steps.indices { steps[index].ingredientIndices.removeAll(where: affected.contains) }
+                    next.mealOccurrences[position].recipeSteps = steps
+                }
+            }
             next.lines[index].name = name; next.lines[index].notes = notes; next.lines[index].aisle = aisle
             for index in next.contributions.indices where next.contributions[index].lineID == lineID && next.contributions[index].removedAt == nil {
                 next.contributions[index].productName = name
