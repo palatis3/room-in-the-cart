@@ -265,7 +265,7 @@ extension PickupJourney {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends, mealSource, mealRecovery, earlierQuotes, basketPriceTerms
+        case recipientSends, mealSource, mealRecovery, cookedMeals, earlierQuotes, basketPriceTerms
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, frozenCaps, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -307,6 +307,7 @@ extension PickupJourney {
         recipientSends = try container.decodeIfPresent([RecipientSend].self, forKey: .recipientSends)
         mealSource = try container.decodeIfPresent(PickupCheckoutMealSource.self, forKey: .mealSource)
         mealRecovery = try container.decodeIfPresent(PickupMealRecoveryHistory.self, forKey: .mealRecovery)
+        cookedMeals = try container.decodeIfPresent([PantryCookRecord].self, forKey: .cookedMeals)
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
         feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
@@ -828,8 +829,6 @@ struct PickupPersistenceLocation {
         }
     }
 
-    /// Unlike load(), refreshes an already-ready model. It never replaces a
-    /// pending submission, acknowledges it, or copies its old authorization.
     func cookCompletionPort(ledger: LedgerModel, authorize: @escaping @MainActor () -> Bool) throws -> PantryCookPort {
         guard let store, let configuration = pantryConfiguration, pantryIsActive, ready, !saving, !hasPendingSave,
               ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger, configuration.authorize(), authorize() else {
@@ -841,6 +840,8 @@ struct PickupPersistenceLocation {
                 !ledger.saving && !ledger.hasPendingSave && ledger.pantryBackingStore(gate: configuration.gate) === configuration.ledger
         }, clock: clock)
     }
+    /// Unlike load(), refreshes an already-ready model. It never replaces a
+    /// pending submission, acknowledges it, or copies its old authorization.
     @discardableResult func refreshPantryStock() async -> Bool {
         guard let configuration = pantryConfiguration, let store else { return false }
         pantryReadIsCurrent = false

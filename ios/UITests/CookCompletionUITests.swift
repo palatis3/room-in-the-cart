@@ -77,7 +77,9 @@ import XCTest
         tap(app.buttons["cook.resolution.review"])
         tap(app.buttons["cook.resolution.confirm"])
         XCTAssertTrue(app.staticTexts["cook.resolution.complete"].waitForExistence(timeout: 12), app.debugDescription)
-        tap(app.buttons["Cancel"])
+        // The covered cooking screen also has Cancel. Dismiss the visible
+        // resolution sheet so its onDismiss reload can publish the saved status.
+        tap(app.navigationBars["Review unresolved ingredient use"].buttons["Cancel"])
         let resolved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Inventory changes recorded."), object: app.staticTexts["cook.inventoryStatus"])
         XCTAssertEqual(XCTWaiter.wait(for: [resolved], timeout: 10), .completed, app.debugDescription)
         XCTAssertFalse(app.buttons["cook.resolution.open"].exists, "The original unresolved history must not appear as unfinished after resolution")
