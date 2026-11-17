@@ -185,6 +185,11 @@ import CoreDomain
         f.composition.scopeChanged()
         XCTAssertFalse(f.composition.allows(item))
         XCTAssertNil(f.composition.destination)
+        let target = try XCTUnwrap(item.binding.shop)
+        let committed = await f.ledger.editShop(key: "expired-shortcut-preview", shopID: target,
+            authorize: { f.composition.allows(item) }) { _ in XCTFail("Stale wording must not edit a pickup") }
+        XCTAssertFalse(committed)
+        XCTAssertEqual(f.ledger.revision, revision)
     }
 
     func testSleepingShoppingIntentRequiresTheOriginalPickupOnForeground() async throws {

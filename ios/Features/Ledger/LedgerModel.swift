@@ -379,8 +379,9 @@ private enum LedgerDeletionJournal {
     }
 
     @discardableResult
-    func editShop(key: String, shopID: UUID, _ edit: (inout ShoppingLedger) throws -> Void) async -> Bool {
-        await change(key: key) { workspace in
+    func editShop(key: String, shopID: UUID, authorize: (@MainActor () -> Bool)? = nil,
+                  _ edit: (inout ShoppingLedger) throws -> Void) async -> Bool {
+        await change(key: key, onShopSelected: nil, authorize: authorize) { workspace in
             guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw LedgerModelError.noShop }
             try edit(&workspace.shops[index])
         }

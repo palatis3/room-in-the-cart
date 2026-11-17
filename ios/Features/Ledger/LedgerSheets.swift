@@ -238,7 +238,7 @@ struct LedgerImportView: View {
                         firstDraft.failedToApply()
                         focus = .status
                     }
-                } else if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
+                } else if await model.editShop(key: "import-\(preview.id)", shopID: shopID, authorize: authorizeEntry, { try $0.commitImport(preview, decisions: decisions) }) {
                     dismiss()
                 } else { focus = .status }
             }
