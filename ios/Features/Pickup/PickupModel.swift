@@ -349,6 +349,12 @@ struct PickupPersistenceLocation {
         let pendingStore: PantryPickupPendingStore
         let gate: PantryMutationGate
         let authorize: () -> Bool
+        let foodPendingStore: PantryPendingStore?
+        init(ledger: LedgerStore, pendingStore: PantryPickupPendingStore, gate: PantryMutationGate,
+             authorize: @escaping () -> Bool, foodPendingStore: PantryPendingStore? = nil) {
+            self.ledger = ledger; self.pendingStore = pendingStore; self.gate = gate
+            self.authorize = authorize; self.foodPendingStore = foodPendingStore
+        }
     }
     @Published private(set) var journeys: [PickupJourney] = []
     @Published var selectedID: UUID?
@@ -456,15 +462,35 @@ struct PickupPersistenceLocation {
               let mapping = pantryReaderMapping else { throw PickupModelError.missing }
         return try PantryLiveStockProjection.build(snapshot: snapshot, mapping: mapping, journeyID: journeyID, at: clock())
     }
+    func canonicalPackContext(for journeyID: UUID) throws -> PantryPackStockReview.Context? {
+        guard pantryIsActive else { return nil }
+        guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent,
+              !saving, !hasPendingSave, let snapshot = pantrySnapshot,
+              let mapping = pantryReaderMapping, journeys.contains(where: { $0.id == journeyID }) else {
+            throw PickupModelError.missing
+        }
+        return .init(snapshot: snapshot, mapping: mapping, asOf: clock())
+    }
     /// All private pantry entry points use this factory so an independent count
     /// updates the pickup/cook read basis after the repository releases its lease.
     func makePantryModel() -> PantryModel? {
         guard let configuration = pantryConfiguration, let store, configuration.authorize(),
               !hasPendingSave, !saving, pantrySnapshot != nil else { return nil }
-        return PantryModel(repository: PantryRepository(store: store, mutationGate: configuration.gate,
-            authorize: configuration.authorize), clock: clock, didSave: { [weak self] in
-                _ = await self?.refreshPantryStock()
-            })
+        do {
+            guard configuration.pendingStore.inventoryWorkspaceID == store.workspaceID else { throw PickupModelError.missing }
+            let defaultPending = try configuration.pendingStore.makeFoodPendingStore()
+            let pending = configuration.foodPendingStore ?? defaultPending
+            guard pending.inventoryWorkspaceID == store.workspaceID,
+                  pending.fileURL == defaultPending.fileURL else { throw PickupModelError.missing }
+            return PantryModel(repository: PantryRepository(store: store, mutationGate: configuration.gate,
+                pendingStore: pending, authorize: configuration.authorize), clock: clock,
+                willMutateOrRecover: { [weak self] in self?.pantryReadIsCurrent = false }, didSave: { [weak self] in
+                    _ = await self?.refreshPantryStock()
+                })
+        } catch {
+            self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+            return nil
+        }
     }
 
     /// Unlike load(), refreshes an already-ready model. It never replaces a

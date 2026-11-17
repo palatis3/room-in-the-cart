@@ -53,6 +53,12 @@ import LocalStore
 
     func read() throws -> Entry? { try withLock { try readUnlocked() } }
 
+    /// Both editors reopen the same origin-scoped journal directory. The food
+    /// journal has its own filename and cannot replace a pickup submission.
+    func makeFoodPendingStore() throws -> PantryPendingStore {
+        try PantryPendingStore(directory: directory, inventoryWorkspaceID: inventoryWorkspaceID)
+    }
+
     /// Repairs attributes after an interrupted atomic write without ever creating
     /// a journal that another authorized owner has already discarded.
     func ensureProtected(expected: Entry) throws {

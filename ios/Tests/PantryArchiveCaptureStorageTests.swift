@@ -79,6 +79,49 @@ import RecordArchive
         }
     }
 
+    func testFoodPendingRoundTripRemainsInertAndRestoreCannotReuseItsOrigin() async throws {
+        let f = try await fixture()
+        let original = try await f.capture.capture(at: now)
+        let lot = try XCTUnwrap(original.snapshot.lots.first)
+        let journal = try f.pending.makeFoodPendingStore()
+        let command = InventoryCommand(id: UUID(), originID: f.inventory.workspaceID, lotID: lot.id,
+            eventID: UUID(), expectedRevision: lot.revision, occurredAt: now,
+            change: .count(.someLeft, observationID: UUID()))
+        let entry = try journal.save(command: command, reviewedInventoryRevision: original.scope.inventoryRevision)
+        let captured = try await f.capture.capture(at: now)
+        XCTAssertEqual(captured.snapshot.lots, original.snapshot.lots, "Uncommitted food stays evidence, not current stock.")
+        XCTAssertTrue(captured.snapshot.history.contains(.foodPending(entry)))
+        XCTAssertEqual(captured.scope.foodPendingDigest, PantryArchiveCapture.digest(try ArchiveCodec.canonical(entry)))
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("archives"))
+        let bundle = try await f.capture.publish(captured, to: storage)
+        let reopened = try storage.open(bundle.reference)
+        XCTAssertTrue(reopened.captured.snapshot.history.contains(.foodPending(entry)))
+        let newOrigin = UUID()
+        let restored = try PantryArchiveRestore.prepare(reopened.captured.snapshot, newOriginID: newOrigin,
+            restorationID: UUID(), at: now)
+        XCTAssertTrue(restored.history.contains(.foodPending(entry)))
+        XCTAssertTrue(restored.events.isEmpty, "Recovery history must never execute the original pending command.")
+        XCTAssertEqual(restored.lots.first?.count, lot.count)
+        XCTAssertThrowsError(try PantryArchiveRestore.prepare(restored, newOriginID: entry.command.originID,
+            restorationID: UUID(), at: now))
+        XCTAssertEqual(try journal.read(), entry, "Export and restore preparation cannot acknowledge live pending work.")
+    }
+
+    func testNewOrCorruptFoodJournalPreventsPublishingEarlierCapture() async throws {
+        let f = try await fixture(), captured = try await f.capture.capture(at: now)
+        let lot = try XCTUnwrap(captured.snapshot.lots.first)
+        let journal = try f.pending.makeFoodPendingStore()
+        _ = try journal.save(command: .init(id: UUID(), originID: f.inventory.workspaceID, lotID: lot.id,
+            eventID: UUID(), expectedRevision: lot.revision, occurredAt: now, change: .move(.fridge)),
+            reviewedInventoryRevision: captured.scope.inventoryRevision)
+        let storage = try PantryArchiveStorage(root: f.directory.appendingPathComponent("archives"))
+        do { _ = try await f.capture.publish(captured, to: storage); XCTFail("New pending food must be captured before publication.") }
+        catch { XCTAssertEqual(error as? PantryArchiveCapture.Failure, .stale) }
+        try Data("corrupt".utf8).write(to: journal.fileURL)
+        do { _ = try await f.capture.capture(at: now); XCTFail("Corrupt pending food must never be silently omitted.") }
+        catch { XCTAssertEqual(error as? PantryPendingStore.Failure, .corrupt) }
+    }
+
     func testUnknownIntentAndCorruptPendingPreventCompleteCapture() async throws {
         let f = try await fixture()
         let captured = try await f.capture.capture(at: now)

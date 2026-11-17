@@ -284,6 +284,61 @@ import SQLite3
         XCTAssertEqual(pickup.pantrySnapshot?.state, pantry.snapshot?.state)
     }
 
+    func testPantryFactoryReopensOriginalFoodEditAndRefreshesPickupAfterRetry() async throws {
+        let f = try await fixture(), pickup = await model(f)
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let lot = try XCTUnwrap(editor.snapshot?.lots.first { $0.name == "Freezer wraps" })
+        await editor.prepare(lotID: lot.id, action: .recount("3", .count))
+        let review = try XCTUnwrap(editor.review)
+        let journal = try f.pendingStore.makeFoodPendingStore()
+        let original = try journal.save(command: review.command, reviewedInventoryRevision: review.before.state.revision)
+        XCTAssertNil(try f.pendingStore.read(), "A food command must not occupy the pickup journal.")
+        let reopened = try XCTUnwrap(pickup.makePantryModel())
+        await reopened.load()
+        XCTAssertEqual(reopened.pending, original)
+        XCTAssertFalse(reopened.canEdit)
+        await reopened.retryPending()
+        XCTAssertNil(reopened.pending); XCTAssertNil(try journal.read())
+        XCTAssertEqual(reopened.notice, .saved)
+        XCTAssertEqual(pickup.pantrySnapshot?.state, reopened.snapshot?.state)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3))
+        let after = try await f.inventory.inventoryState()
+        await reopened.retryPending()
+        let repeated = try await f.inventory.inventoryState()
+        XCTAssertEqual(repeated, after, "Retry after cleanup must not record the count twice.")
+    }
+
+    func testFoodCleanupFailureRefreshesCommittedCoverageWhileKeepingRecoveryBlocked() async throws {
+        let f = try await fixture(), instant = now
+        var failRemoval = true
+        let foodPending = try PantryPendingStore(directory: f.directory.appendingPathComponent("pending"),
+            inventoryWorkspaceID: f.inventory.workspaceID, removeFile: { url in
+                if failRemoval { throw CocoaError(.fileWriteUnknown) }
+                try FileManager.default.removeItem(at: url)
+            })
+        let pickup = PickupModel(store: f.inventory, clock: { instant }, pantry: .init(ledger: f.ledger,
+            pendingStore: f.pendingStore, gate: f.gate, authorize: { true }, foodPendingStore: foodPending))
+        f.cleanup.track(pickup)
+        await pickup.load()
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let lot = try XCTUnwrap(editor.snapshot?.lots.first { $0.name == "Freezer wraps" })
+        await editor.prepare(lotID: lot.id, action: .recount("3", .count))
+        await editor.confirmReview(acknowledgingReservations: true)
+        XCTAssertNotNil(editor.pending); XCTAssertFalse(editor.canEdit)
+        XCTAssertNotNil(try foodPending.read()?.acknowledgment)
+        XCTAssertEqual(editor.notice, .saveFailed)
+        XCTAssertTrue(pickup.pantryReadIsCurrent)
+        XCTAssertEqual(pickup.allocation?.demands.first?.allocated, try Rational(3), "Cleanup failure cannot leave the old six units visible as current.")
+        let committed = try await f.inventory.inventoryState()
+        failRemoval = false
+        await editor.retryPending()
+        XCTAssertNil(editor.pending); XCTAssertNil(try foodPending.read())
+        let recovered = try await f.inventory.inventoryState()
+        XCTAssertEqual(recovered, committed)
+    }
+
     func testCanonicalRefreshPreservesExactUncommittedJournalUntilExplicitDiscard() async throws {
         let f = try await fixture(), pickup = await model(f)
         let pantry = try XCTUnwrap(pickup.makePantryModel())

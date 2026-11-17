@@ -7,7 +7,7 @@ import LocalStore
 @MainActor
 final class PantryRepository {
     enum Failure: Error, Equatable {
-        case inactive, unauthorized, wrongWorkspace, inconsistentSnapshot, invalidProvenance
+        case inactive, unauthorized, wrongWorkspace, inconsistentSnapshot, invalidProvenance, pendingUnavailable
     }
 
     struct ReadLimits {
@@ -46,17 +46,28 @@ final class PantryRepository {
         let replayed: Bool
     }
 
+    enum PendingRecovery {
+        case waiting(PantryPendingStore.Entry, Snapshot)
+        case committed(PantryPendingStore.Entry?, Result)
+        case cleared(Snapshot)
+    }
+
+    /// Nil is supported for component fixtures/read-only adapters only. App-owned
+    /// standalone editors must share a configured journal and mutation gate.
+    let pendingStore: PantryPendingStore?
     private let store: ComparisonStore
     private let authorize: () -> Bool
     private let limits: ReadLimits
     private let mutationGate: PantryMutationGate?
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
+         pendingStore: PantryPendingStore? = nil,
          authorize: @escaping () -> Bool) {
         self.store = store
         self.authorize = authorize
         self.limits = limits
         self.mutationGate = mutationGate
+        self.pendingStore = pendingStore
     }
 
     /// Read every live claim, including other shops. Never publish partially read pages.
@@ -128,6 +139,13 @@ final class PantryRepository {
         try requireAccess()
         let lease = try mutationGate?.beginWrite()
         defer { if let lease { mutationGate?.endWrite(lease) } }
+        return try await applyUnlocked(command, reviewedInventoryRevision: reviewedInventoryRevision, at: now)
+    }
+
+    private func applyUnlocked(_ command: InventoryCommand, reviewedInventoryRevision: Int64, at now: Date,
+                               checkPending: () throws -> Void = {}) async throws -> Result {
+        try requireAccess()
+        try checkPending()
         guard command.originID == store.workspaceID else { throw Failure.wrongWorkspace }
         let request = try PantryPersistenceCodec.request(command, inventoryRevision: reviewedInventoryRevision)
         if let prior = try await store.inventoryCommittedOperation(id: command.id, request: request) {
@@ -147,9 +165,114 @@ final class PantryRepository {
         let batch = InventoryBatch(workspaceID: current.state.workspaceID, operationID: command.id,
             expectedRevision: reviewedInventoryRevision, request: request, writes: writes)
         try requireAccess()
+        try checkPending()
         let receipt = try await store.commitInventory(batch, at: now)
         try requireAccess()
         return Result(receipt: receipt, current: try await load(at: now), replayed: false)
+    }
+
+    /// An editor may publish an editable snapshot only after checking the journal
+    /// under the same lease as this complete read. Competing confirmations fail
+    /// closed and are restored on the next load.
+    func loadForEditing(at now: Date) async throws -> Snapshot {
+        try requireAccess()
+        guard let pendingStore else { return try await load(at: now) }
+        guard let mutationGate, pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
+        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
+        let current = try await load(at: now)
+        try requireAccess()
+        guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
+        return current
+    }
+
+    func readPending() throws -> PantryPendingStore.Entry? {
+        try requireAccess()
+        guard let pendingStore else { return nil }
+        guard pendingStore.inventoryWorkspaceID == store.workspaceID, mutationGate != nil else { throw Failure.pendingUnavailable }
+        return try pendingStore.read()
+    }
+
+    /// Persist reviewed identities before the first possible database mutation.
+    /// A failed atomic-write/attribute step is reconciled by readPending; never
+    /// replace a possibly written intent with a newly generated command.
+    func stagePending(_ command: InventoryCommand, reviewedInventoryRevision: Int64) throws -> PantryPendingStore.Entry {
+        try requireAccess()
+        guard let pendingStore, let mutationGate,
+              pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
+        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        return try pendingStore.save(command: command, reviewedInventoryRevision: reviewedInventoryRevision)
+    }
+
+    /// Restore/recognize before editable state. A cached intent whose journal was
+    /// cleared by another model is reconciled against SQLite, never recreated.
+    /// Discard proves receipt absence while the same lease excludes resumed writers.
+    func recoverPending(_ expected: PantryPendingStore.Entry, at now: Date,
+                        commitIfUnapplied: Bool = false, discardIfUnapplied: Bool = false) async throws -> PendingRecovery {
+        try requireAccess()
+        guard let pendingStore, let mutationGate,
+              pendingStore.inventoryWorkspaceID == store.workspaceID,
+              expected.command.originID == store.workspaceID else { throw Failure.pendingUnavailable }
+        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        let original = try pendingStore.read()
+        if let original {
+            guard original.hasSameOriginal(as: expected),
+                  expected.acknowledgment == nil || expected.acknowledgment == original.acknowledgment else {
+                throw PantryPendingStore.Failure.operationConflict
+            }
+            try pendingStore.ensureProtected(expected: original)
+        }
+        func unchanged() throws {
+            try requireAccess()
+            guard try pendingStore.read() == original else { throw PantryPendingStore.Failure.operationConflict }
+        }
+        let request = try PantryPersistenceCodec.request(expected.command, inventoryRevision: expected.reviewedInventoryRevision)
+        let receipt = try await store.inventoryCommittedOperation(id: expected.operationID, request: request)
+        try unchanged()
+        if let receipt {
+            let current = try await load(at: now)
+            try unchanged()
+            return .committed(original, Result(receipt: receipt, current: current, replayed: true))
+        }
+        guard expected.acknowledgment == nil, original?.acknowledgment == nil else {
+            throw PantryPendingStore.Failure.operationConflict
+        }
+        guard let original else {
+            let current = try await load(at: now)
+            try unchanged()
+            return .cleared(current)
+        }
+        if discardIfUnapplied {
+            try unchanged()
+            try pendingStore.discardUnapplied(expected: original)
+            let current = try await load(at: now)
+            try requireAccess()
+            guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.operationConflict }
+            return .cleared(current)
+        }
+        if commitIfUnapplied {
+            let result = try await applyUnlocked(original.command, reviewedInventoryRevision: original.reviewedInventoryRevision,
+                                                 at: now, checkPending: unchanged)
+            try unchanged()
+            return .committed(original, result)
+        }
+        let current = try await load(at: now)
+        try unchanged()
+        return .waiting(original, current)
+    }
+
+    /// Only after the model adopts current state, persist recognition before
+    /// cleanup. A failed removal retains the acknowledged exact original intent.
+    func finishPendingAdoption(_ expected: PantryPendingStore.Entry, result: Result) throws {
+        try requireAccess()
+        guard let pendingStore, let mutationGate,
+              pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
+        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        let acknowledged = try pendingStore.acknowledgeAdoption(expected: expected, receipt: result.receipt,
+                                                              currentInventoryRevision: result.current.state.revision)
+        try requireAccess()
+        try pendingStore.clearAcknowledged(expected: acknowledged)
+        try requireAccess()
     }
 
     /// Shared by single-food edits and atomic shopping deltas. Call after validating

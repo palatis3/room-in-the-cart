@@ -126,7 +126,7 @@ final class LedgerPackStockReviewTests: XCTestCase {
         XCTAssertEqual(review.result.offerA.packsToBuy, 2)
     }
 
-    @MainActor func testStockAddedAfterNoStockReviewRejectsOldChoiceAndNoStockStillBuysTwo() async throws {
+    @MainActor func testStockAddedAfterCommittedNoStockChoiceAllowsExactReplayButExcludesItFromCheckout() async throws {
         let f = try await fixture(stock: nil)
         let review = try packReview(f)
         XCTAssertNil(review.stockEvidence)
@@ -135,8 +135,12 @@ final class LedgerPackStockReviewTests: XCTestCase {
         let lot = ConfirmedStockLot(id: UUID(), foodID: f.line, name: "Wraps at home", usable: q(8), confirmedAt: Date().addingTimeInterval(-1), source: .pantry)
         try accepted(await f.pickup.saveStockLot(lot, in: f.shop))
         XCTAssertTrue(try checkout(f).packSelections.isEmpty)
-        do { _ = try await review.save(offerID: "a", ledger: f.ledger, pickup: f.pickup); XCTFail("A formerly no-stock choice cannot bypass new reviewed stock") }
-        catch { XCTAssertEqual(error as? LedgerPackError, .staleSource) }
+        let revision = f.ledger.revision
+        try accepted(try await review.save(offerID: "a", ledger: f.ledger, pickup: f.pickup))
+        XCTAssertEqual(f.ledger.revision, revision, "Recognizing the completed operation must not write another selection.")
+        XCTAssertTrue(try checkout(f).packSelections.isEmpty, "Replay recognition is not fresh stock evidence.")
+        do { _ = try await review.save(offerID: "b", ledger: f.ledger, pickup: f.pickup); XCTFail("A different choice under the same operation ID must conflict.") }
+        catch { XCTAssertEqual(error as? LedgerPackError, .operationConflict) }
     }
 
     @MainActor func testCachedCheckoutRejectsChangedStockButRecordsAnExplicitAlreadyPlacedOriginalOrder() async throws {

@@ -10,10 +10,7 @@ final class PantryModel: ObservableObject {
     enum Phase: Equatable { case idle, ready, migrationRequired, accessDenied, unavailable }
     enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, changeTooLarge }
     enum Action { case haveEnough, someLeft, opened, move(InventoryLocation), usedUp, recount(String, UnitOfMeasure) }
-    struct Pending: Equatable {
-        let command: InventoryCommand
-        let reviewedInventoryRevision: Int64
-    }
+    typealias Pending = PantryPendingStore.Entry
 
     @Published private(set) var snapshot: PantryRepository.Snapshot?
     @Published private(set) var review: PantryRepository.Review?
@@ -23,15 +20,19 @@ final class PantryModel: ObservableObject {
     @Published private(set) var busy = false
     @Published private(set) var requiresFreshReview = false
     @Published private(set) var savedLotID: UUID?
+    @Published private(set) var pendingWasCommitted = false
     private let repository: PantryRepository
     private let clock: () -> Date
+    private let willMutateOrRecover: (@MainActor () -> Void)?
     private let didSave: (@MainActor () async -> Void)?
     private var generation = UUID()
 
     init(repository: PantryRepository, clock: @escaping () -> Date = Date.init,
+         willMutateOrRecover: (@MainActor () -> Void)? = nil,
          didSave: (@MainActor () async -> Void)? = nil) {
         self.repository = repository
         self.clock = clock
+        self.willMutateOrRecover = willMutateOrRecover
         self.didSave = didSave
     }
 
@@ -40,7 +41,7 @@ final class PantryModel: ObservableObject {
     func accessLost() {
         generation = UUID()
         snapshot = nil; review = nil; pending = nil; savedLotID = nil
-        phase = .accessDenied; notice = nil; busy = false; requiresFreshReview = false
+        phase = .accessDenied; notice = nil; busy = false; requiresFreshReview = false; pendingWasCommitted = false
     }
 
     func load() async {
@@ -52,7 +53,18 @@ final class PantryModel: ObservableObject {
         // uncertain save's original command or reviewed global revision.
         if pending == nil { review = nil }
         do {
-            let current = try await repository.load(at: clock())
+            if repository.pendingStore != nil {
+                let stored = try repository.readPending()
+                if let original = pending ?? stored {
+                    pending = original
+                    willMutateOrRecover?()
+                    let recovery = try await repository.recoverPending(original, at: clock())
+                    guard token == generation else { return }
+                    try await adopt(recovery, token: token)
+                    return
+                }
+            }
+            let current = try await repository.loadForEditing(at: clock())
             guard token == generation else { return }
             snapshot = current; phase = .ready
             if pending == nil { notice = nil; requiresFreshReview = false }
@@ -132,6 +144,25 @@ final class PantryModel: ObservableObject {
             notice = .reservationReviewRequired; return
         }
         pending = Pending(command: review.command, reviewedInventoryRevision: review.before.state.revision)
+        pendingWasCommitted = false
+        if repository.pendingStore != nil {
+            do {
+                pending = try repository.stagePending(review.command, reviewedInventoryRevision: review.before.state.revision)
+            } catch {
+                // An atomic write may have succeeded before protection failed.
+                // Keep the exact candidate; retry reconciles it, never recreates
+                // a missing file that another editor could have discarded.
+                let stagingError = error
+                do {
+                    if let retained = try repository.readPending() {
+                        pending = retained
+                        if retained.command != review.command { self.review = nil }
+                    }
+                } catch { fail(error, saving: true); return }
+                fail(stagingError, saving: true)
+                return
+            }
+        }
         await retryPending()
     }
 
@@ -140,7 +171,14 @@ final class PantryModel: ObservableObject {
         let token = generation
         busy = true; notice = nil
         defer { if token == generation { busy = false } }
+        willMutateOrRecover?()
         do {
+            if repository.pendingStore != nil {
+                let recovery = try await repository.recoverPending(pending, at: clock(), commitIfUnapplied: true)
+                guard token == generation else { return }
+                try await adopt(recovery, token: token)
+                return
+            }
             let result = try await repository.apply(pending.command,
                 reviewedInventoryRevision: pending.reviewedInventoryRevision, at: clock())
             guard token == generation else { return }
@@ -157,8 +195,57 @@ final class PantryModel: ObservableObject {
     /// disk/readback failure might have committed, so it requires exact retry first.
     func discardStaleReview() async {
         guard !busy, requiresFreshReview else { return }
-        pending = nil; review = nil; notice = nil; requiresFreshReview = false
-        await load()
+        if repository.pendingStore != nil, let pending {
+            let token = generation
+            busy = true
+            defer { if token == generation { busy = false } }
+            willMutateOrRecover?()
+            do {
+                let recovery = try await repository.recoverPending(pending, at: clock(), discardIfUnapplied: true)
+                guard token == generation else { return }
+                try await adopt(recovery, token: token)
+            } catch {
+                guard token == generation else { return }
+                fail(error, saving: true)
+            }
+        } else {
+            pending = nil; review = nil; notice = nil; requiresFreshReview = false
+            await load()
+        }
+    }
+
+    private func adopt(_ recovery: PantryRepository.PendingRecovery, token: UUID) async throws {
+        guard token == generation else { return }
+        switch recovery {
+        case .waiting(let entry, let current):
+            snapshot = current; phase = .ready; pending = entry; review = nil; pendingWasCommitted = false
+            requiresFreshReview = current.state.revision != entry.reviewedInventoryRevision
+            notice = requiresFreshReview ? .stale : .saveFailed
+            await didSave?()
+        case .cleared(let current):
+            snapshot = current; phase = .ready; pending = nil; review = nil; savedLotID = nil
+            pendingWasCommitted = false; requiresFreshReview = false; notice = nil
+            await didSave?()
+        case .committed(let entry, let result):
+            // Current heads are adopted before durable acknowledgment. Cleanup
+            // failure keeps the original pending operation blocked for exact retry.
+            snapshot = result.current; phase = .ready; pendingWasCommitted = true; requiresFreshReview = false
+            if let entry {
+                pending = entry
+                do { try repository.finishPendingAdoption(entry, result: result) }
+                catch {
+                    // Acknowledgment/cleanup does not decide whether the inventory
+                    // changed. Readers must adopt this known current state while
+                    // the exact original journal stays blocked for cleanup retry.
+                    await didSave?()
+                    guard token == generation else { return }
+                    throw error
+                }
+            }
+            pending = nil; review = nil; requiresFreshReview = false
+            pendingWasCommitted = false; notice = .saved; savedLotID = result.receipt.heads.first { $0.key.kind == .lot }?.key.id
+            await didSave?()
+        }
     }
 
     private func fail(_ error: Error, saving: Bool) {
@@ -168,7 +255,7 @@ final class PantryModel: ObservableObject {
                 accessLost(); return
             case .inactive:
                 snapshot = nil; review = nil; pending = nil; phase = .migrationRequired; notice = nil; return
-            case .inconsistentSnapshot, .invalidProvenance: break
+            case .inconsistentSnapshot, .invalidProvenance, .pendingUnavailable: break
             }
         }
         if error as? ComparisonStoreError == .erased {

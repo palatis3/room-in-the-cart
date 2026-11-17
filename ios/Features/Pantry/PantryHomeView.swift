@@ -328,21 +328,37 @@ private struct PantryReviewView: View {
                             .accessibilityIdentifier("pantry.acknowledgeReservations")
                     }
                 }
-                if let notice = model.notice { Text(pantryNotice(notice)).accessibilityIdentifier("pantry.reviewStatus") }
+                if let notice = model.notice {
+                    Text(model.pendingWasCommitted ? pantryText("Your change is saved. Retry to finish recovery.") : pantryNotice(notice))
+                        .accessibilityIdentifier("pantry.reviewStatus")
+                }
+            } else if accessAllowed, let pending = model.pending {
+                Section(pantryText("Review pending save")) {
+                    PantryPendingSummary(entry: pending)
+                    Text(pantryText("A saved change is waiting for recovery. Retry it or review its saved status."))
+                    if let notice = model.notice {
+                        Text(model.pendingWasCommitted ? pantryText("Your change is saved. Retry to finish recovery.") : pantryNotice(notice))
+                    }
+                }
+            } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
+            if accessAllowed {
                 if model.pending != nil {
                     Section {
                         if model.requiresFreshReview {
                             Button(pantryText("Discard stale review and refresh")) {
-                                Task { await model.discardStaleReview(); dismiss() }
+                                Task { await model.discardStaleReview(); if model.pending == nil { dismiss() } }
                             }.frame(minHeight: 44).disabled(model.busy)
                         } else {
                             Button(pantryText("Retry exact save")) { Task { await model.retryPending() } }
                                 .frame(minHeight: 44).disabled(model.busy).accessibilityIdentifier("pantry.retrySave")
-                            Text(pantryText("The save result is uncertain. Retry the same reviewed change before starting another."))
+                            Text(pantryText(model.pendingWasCommitted || model.pending?.acknowledgment != nil
+                                ? "Your change is saved. Retry to finish recovery."
+                                : "The save result is uncertain. Retry the same reviewed change before starting another."))
                         }
                     }
                 }
-            } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
+            }
+
         }
         .navigationTitle(pantryText("Review pantry change"))
         .toolbar {
@@ -359,5 +375,32 @@ private struct PantryReviewView: View {
         .interactiveDismissDisabled(model.busy || model.pending != nil)
         .onDisappear { if model.pending == nil { model.cancelReview() } }
         .privacySensitive()
+    }
+}
+
+/// Original intent only. No old before/after reservation preview is reconstructed
+/// from today's inventory when an editor reopens after process death.
+private struct PantryPendingSummary: View {
+    let entry: PantryPendingStore.Entry
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(pantryFormat("Batch %@", String(entry.command.lotID.uuidString.suffix(8))))
+            switch entry.command.change {
+            case .create(let seed, _):
+                Text(pantryText("Add food")).font(.headline)
+                Text(seed.name)
+                Text(pantryCount(seed.count))
+                Text(pantryLocationName(seed.location))
+            case .count(let count, _):
+                Text(pantryText("Recount food")).font(.headline)
+                Text(pantryCount(count))
+            case .opened(let date):
+                LabeledContent(pantryText("Opened"), value: date.formatted(date: .abbreviated, time: .shortened))
+            case .move(let location): Text(pantryFormat("Move to %@", pantryLocationName(location)))
+            case .usedUp: Text(pantryText("Used up"))
+            case .revise: Text(pantryText("Review pantry change"))
+            }
+            Text(entry.command.occurredAt.formatted(date: .abbreviated, time: .shortened))
+        }.accessibilityElement(children: .combine)
     }
 }

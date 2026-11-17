@@ -47,6 +47,7 @@ import RecordArchive
         case migration(PantryMigrationPackage.Envelope)
         case sourceHead(originID: UUID, PantryLegacyMigration.SourceHead)
         case pickupPending(PantryPickupPendingStore.Entry)
+        case foodPending(PantryPendingStore.Entry)
         case projection(ProjectionEvidence)
         case originalLot(InventoryLot)
         case originalObservation(originID: UUID, InventoryObservation)
@@ -356,6 +357,9 @@ import RecordArchive
             guard let ledger = entry.submission.request.ledgerOriginID, entry.submission.preparedAt <= date else { throw Failure.invalid }
             for head in entry.submission.changedHeads { try ArchiveCodec.preflight(head.payload, maximum: ComparisonStore.maximumPayloadBytes) }
             try PantryPickupPendingStore.validateArchiveEntry(entry, inventoryWorkspaceID: entry.submission.request.originID, ledgerWorkspaceID: ledger)
+        case .foodPending(let entry):
+            guard entry.command.occurredAt <= date else { throw Failure.invalid }
+            try PantryPendingStore.validateArchiveEntry(entry, inventoryWorkspaceID: entry.command.originID)
         case .projection(let value):
             let row = InventoryRecord(key: .init(.intent, value.sourceIntentID), revision: 1, payload: try ArchiveCodec.canonical(value.binding))
             _ = try PantryLedgerProjectionPort.archiveBinding(row)

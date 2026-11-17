@@ -24,6 +24,7 @@ import RecordArchive
         let ledgerOperationID: UUID?
         let ledgerPayloadDigest: Data?
         let pendingDigest: Data?
+        let foodPendingDigest: Data?
         let capturedAt: Date
     }
     /// Payload-free archival evidence. Importing these never authorizes root erasure.
@@ -68,6 +69,8 @@ import RecordArchive
         let ledgerRetirements = try await ledger.tombstones(); try access()
         guard pending.inventoryWorkspaceID == inventory.workspaceID else { throw Failure.wrongOrigin }
         let pendingEntry = try pending.read()
+        let foodPending = try pending.makeFoodPendingStore()
+        let foodPendingEntry = try foodPending.read()
         var budget = 0
         func account(_ bytes: Int) throws {
             let sum = budget.addingReportingOverflow(bytes)
@@ -204,12 +207,16 @@ import RecordArchive
             try account(ArchiveCodec.canonical(entry).count)
             history.append(.pickupPending(entry))
         }
+        if let entry = foodPendingEntry {
+            try account(ArchiveCodec.canonical(entry).count)
+            history.append(.foodPending(entry))
+        }
         let finalState = try await inventory.inventoryState(); try access()
         let finalToken = try await inventory.inventorySourceToken(); try access()
         let finalLedger = try await ledger.load(); try access()
         let finalRetired = try await ledger.tombstones(); try access()
         guard finalState == initial, finalToken == token, finalLedger == ledgerHead, finalRetired == ledgerRetirements,
-              try pending.read() == pendingEntry else { throw Failure.stale }
+              try pending.read() == pendingEntry, try foodPending.read() == foodPendingEntry else { throw Failure.stale }
         let snapshot = PantryArchiveCodec.Snapshot(descriptor: .init(originID: inventory.workspaceID,
             inventoryRevision: initial.revision, capturedAt: date), lots: lots, observations: observations, events: events,
             reservations: claims, sourceLinks: links, history: history)
@@ -217,7 +224,8 @@ import RecordArchive
         let scope = Scope(version: 1, inventoryOriginID: inventory.workspaceID, inventoryRevision: initial.revision,
             sourceToken: token, ledgerOriginID: ledger.workspaceID, ledgerRevision: ledgerHead?.revision ?? 0,
             ledgerOperationID: ledgerHead?.operationID, ledgerPayloadDigest: ledgerHead.map { Self.digest($0.payload) },
-            pendingDigest: try pendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) }, capturedAt: date)
+            pendingDigest: try pendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) },
+            foodPendingDigest: try foodPendingEntry.map { Self.digest(try ArchiveCodec.canonical($0)) }, capturedAt: date)
         let result = Captured(snapshot: snapshot, scope: scope, evidence: evidence)
         try Self.validate(result); try access()
         return result
@@ -236,7 +244,8 @@ import RecordArchive
               token == scope.sourceToken, ledger.workspaceID == scope.ledgerOriginID,
               (head?.revision ?? 0) == scope.ledgerRevision, head?.operationID == scope.ledgerOperationID,
               head.map({ Self.digest($0.payload) }) == scope.ledgerPayloadDigest,
-              try pending.read().map({ Self.digest(try ArchiveCodec.canonical($0)) }) == scope.pendingDigest else { throw Failure.stale }
+              try pending.read().map({ Self.digest(try ArchiveCodec.canonical($0)) }) == scope.pendingDigest,
+              try pending.makeFoodPendingStore().read().map({ Self.digest(try ArchiveCodec.canonical($0)) }) == scope.foodPendingDigest else { throw Failure.stale }
         return try storage.publish(captured, bundleID: bundleID)
     }
 
@@ -260,9 +269,14 @@ import RecordArchive
               (scope.ledgerRevision == 0) == (scope.ledgerPayloadDigest == nil),
               scope.ledgerPayloadDigest.map({ $0.count == 32 }) ?? true else { throw Failure.invalidEvidence }
         let pending = captured.snapshot.history.compactMap { value -> PantryPickupPendingStore.Entry? in
-            if case .pickupPending(let entry) = value { return entry }; return nil
+            if case .pickupPending(let entry) = value, entry.submission.request.originID == scope.inventoryOriginID { return entry }; return nil
         }
         guard pending.count <= 1, try pending.first.map({ digest(try ArchiveCodec.canonical($0)) }) == scope.pendingDigest else { throw Failure.invalidEvidence }
+        let foodPending = captured.snapshot.history.compactMap { value -> PantryPendingStore.Entry? in
+            if case .foodPending(let entry) = value, entry.command.originID == scope.inventoryOriginID { return entry }; return nil
+        }
+        guard foodPending.count <= 1,
+              try foodPending.first.map({ digest(try ArchiveCodec.canonical($0)) }) == scope.foodPendingDigest else { throw Failure.invalidEvidence }
         var unique: Set<Data> = [], statuses: [UUID: ProjectionStatus] = [:], retiredLedgers: Set<UUID> = []
         for item in captured.evidence {
             guard unique.insert(digest(try ArchiveCodec.canonical(item))).inserted else { throw Failure.invalidEvidence }
